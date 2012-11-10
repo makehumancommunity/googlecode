@@ -35,6 +35,7 @@ def exportProxyObj(human, name, options):
     the.Options = options
     the.Config.separatefolder = True
     print(options.items())
+    the.Config.pngTexture = options["pngTexture"]
     (the.Stuff, stuffs) = mh2collada.setupStuff(name, obj, {}, [], the.Config)
     (scale, unit) = options["scale"]   
     #name = export_config.goodName(name)
@@ -110,8 +111,10 @@ def writeMaterial(fp, stuff, human):
             return
     else:
         path = "data/textures"
-        file = export_config.getOutFileName("texture.png", path, True, human, the.Config)
-        textures = [(path, os.path.basename(file))]
+        if the.Config.pngTexture:
+            textures = [(path, "texture.png")]
+        else:
+            textures = [(path, "texture.tif")]
     for (folder, texfile) in textures:  
         path = export_config.getOutFileName(texfile, folder, True, human, the.Config)        
         (fname, ext) = os.path.splitext(texfile)  

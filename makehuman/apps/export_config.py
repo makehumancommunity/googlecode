@@ -400,10 +400,9 @@ def getSubFolder(path, name):
 def getOutFileName(filePath, fromDir, isTexture, human, config):
     srcDir = os.path.realpath(os.path.expanduser(fromDir))
     filename = os.path.basename(filePath)
-    if human and (filename == "texture.png"):
+    if human and (filename == "texture.tif"):
         texname = human.getTexture()
-        fromPath = texname
-        #fromPath = texname.replace("png", "tif")
+        fromPath = texname.replace("png", "tif")
         fileDir = os.path.dirname(fromPath)         
         filename = os.path.basename(fromPath)
         #print(filePath, fromDir, fileDir, fromPath)

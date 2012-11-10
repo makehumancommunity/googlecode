@@ -68,7 +68,7 @@ class CProxy:
         self.dispStrength = 0.2
         self.obj_file = None
         self.material_file = None
-        self.maskLayer = -1
+        self.maskLayer = 0
         self.textureLayer = 0
         self.objFileLayer = 0
         self.uvtexLayerName = {0 : "UVTex"}
@@ -112,12 +112,6 @@ class CProxy:
             else:
                 vert.co = parent.verts[refVert].co
 
-    def getUuid(self):
-        if self.uuid:
-            return self.uuid
-        else:
-            return self.name
-            
 #
 #    class CMaterial
 #
@@ -844,13 +838,11 @@ def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
         shapes = getProxyShapes(rawShapes, proxy.verts)
         return (verts, vnormals, proxy.texVerts, faces, weights, shapes)
     else:
-        verts = []
-        vnormals = []
-        for v in obj.verts:
-            verts.append(v.co)
-            vnormals.append(v.no)
+        verts = [tuple(v) for v in obj.coord]
+        vnormals = [tuple(n) for n in obj.vnorm]
+        texcoords = [tuple(t) for t in obj.texco]
         faces = mhx_main.loadFacesIndices(obj)
-        return (verts, vnormals, obj.uvValues, faces, rawWeights, rawShapes)
+        return (verts, vnormals, texcoords, faces, rawWeights, rawShapes)
 
 #
 #    getProxyWeights(rawWeights, proxy):

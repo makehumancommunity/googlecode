@@ -31,7 +31,7 @@ from mathutils import *
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import *
 
-from . import utils, props, target, source, simplify
+from . import utils, props, target, source
 from . import globvar as the
 from .utils import MocapError
 
@@ -123,12 +123,7 @@ def readBvhFile(context, filepath, scn, scan):
     startFrame = scn.McpStartFrame
     endFrame = scn.McpEndFrame
     frameno = 1
-    if scn.McpFlipYAxis:
-        flipMatrix = Matrix.Rotation(math.pi, 3, 'X') * Matrix.Rotation(math.pi, 3, 'Y')
-    else:
-        flipMatrix = Matrix.Rotation(0, 3, 'X')
-    if True or scn.McpRot90Anim:
-        flipMatrix = Matrix.Rotation(math.pi/2, 3, 'X') * flipMatrix
+    rot90 = scn.McpRot90Anim
     if (scn.McpSubsample):
         ssFactor = scn.McpSSFactor
     else:
@@ -162,7 +157,6 @@ def readBvhFile(context, filepath, scn, scan):
         key = words[0].upper()
         if key == 'HIERARCHY':
             status = Hierarchy
-            ended = False
         elif key == 'MOTION':
             if level != 0:
                 raise MocapError("Tokenizer out of kilter %d" % level)    
@@ -188,17 +182,21 @@ def readBvhFile(context, filepath, scn, scan):
             elif key == 'JOINT':
                 node = CNode(words, node)
                 nodes.append(node)
-                ended = False
             elif key == 'OFFSET':
                 (x,y,z) = (float(words[1]), float(words[2]), float(words[3]))
-                node.offset = scale * flipMatrix * Vector((x,y,z))
+                if rot90:                    
+                    node.offset = scale*Vector((x,-z,y))
+                else:
+                    node.offset = scale*Vector((x,y,z))
             elif key == 'END':
                 node = CNode(words, node)
-                ended = True
             elif key == 'CHANNELS':
                 oldmode = None
                 for word in words[2:]:
-                    (index, mode, sign) = channelYup(word)
+                    if rot90:
+                        (index, mode, sign) = channelZup(word)
+                    else:
+                        (index, mode, sign) = channelYup(word)
                     if mode != oldmode:
                         indices = []
                         node.channels.append((mode, indices))
@@ -207,11 +205,6 @@ def readBvhFile(context, filepath, scn, scan):
             elif key == '{':
                 level += 1
             elif key == '}':
-                if not ended:
-                    node = CNode(["End", "Site"], node)
-                    node.offset = scale * flipMatrix * Vector((0,1,0))
-                    node = node.parent
-                    ended = True
                 level -= 1
                 node = node.parent
             else:
@@ -241,7 +234,7 @@ def readBvhFile(context, filepath, scn, scan):
             if (frame >= startFrame and
                 frame <= endFrame and
                 frame % ssFactor == 0):
-                addFrame(words, frameno, nodes, pbones, scale, flipMatrix)
+                addFrame(words, frameno, nodes, pbones, scale)
                 if frameno % 200 == 0:
                     print(frame)
                 frameno += 1
@@ -249,7 +242,7 @@ def readBvhFile(context, filepath, scn, scan):
 
     fp.close()
     if not rig:
-        raise MocapError("Bvh file \n%s\n is corrupt: No rig defined" % filepath)
+    	raise MocapError("Bvh file \n%s\n is corrupt: No rig defined" % filepath)
     utils.setInterpolation(rig)
     time2 = time.clock()
     print("Bvh file %s loaded in %.3f s" % (filepath, time2-time1))
@@ -259,13 +252,12 @@ def readBvhFile(context, filepath, scn, scan):
     return (rig, trgRig)
 
 #
-#    addFrame(words, frame, nodes, pbones, scale, flipMatrix):
+#    addFrame(words, frame, nodes, pbones, scale):
 #
 
-def addFrame(words, frame, nodes, pbones, scale, flipMatrix):
+def addFrame(words, frame, nodes, pbones, scale):
     m = 0
     first = True
-    flipInv = flipMatrix.inverted()
     for node in nodes:
         name = node.name
         try:
@@ -280,7 +272,7 @@ def addFrame(words, frame, nodes, pbones, scale, flipMatrix):
                         vec[index] = sign*float(words[m])
                         m += 1
                     if first:
-                        pb.location = node.inverse * (scale * flipMatrix * vec - node.head)
+                        pb.location = node.inverse * (scale * vec - node.head)
                         pb.keyframe_insert('location', frame=frame, group=name)
                     first = False
                 elif mode == Rotation:
@@ -289,7 +281,7 @@ def addFrame(words, frame, nodes, pbones, scale, flipMatrix):
                         angle = sign*float(words[m])*Deg2Rad
                         mats.append(Matrix.Rotation(angle, 3, axis))
                         m += 1
-                    mat = node.inverse * flipMatrix *mats[0] * mats[1] * mats[2] * flipInv * node.matrix
+                    mat = node.inverse * mats[0] * mats[1] * mats[2] * node.matrix
                     utils.setRotation(pb, mat, frame, name)
 
     return
@@ -390,11 +382,11 @@ def renameBones(srcRig, scn):
         (trgName, twist) = getTargetFromSource(srcName)
         eb = ebones[srcName]
         if trgName:
+            eb.name = trgName
+            trgBones[trgName] = CEditBone(eb)
             if action:
                 grp = action.groups[srcName]
                 grp.name = trgName
-            eb.name = trgName
-            trgBones[trgName] = CEditBone(eb)
             setbones.append((eb, trgName))
         else:
             eb.name = '_' + srcName
@@ -624,11 +616,10 @@ class VIEW3D_OT_LoadAndRenameBvhButton(bpy.types.Operator, ImportHelper):
     filepath = StringProperty(name="File Path", description="Filepath used for importing the BVH file", maxlen=1024, default="")
 
     def execute(self, context):
-        scn = context.scene
         try:
             (srcRig, trgRig) = readBvhFile(context, self.properties.filepath, context.scene, False)        
             renameAndRescaleBvh(context, srcRig, trgRig)
-            if scn.McpRescale:
+            if context.scene.McpRescale:
                 simplify.rescaleFCurves(context, srcRig, scn.McpRescaleFactor)
             print("%s loaded and renamed" % srcRig.name)
         except MocapError:

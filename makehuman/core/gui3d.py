@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-:Authors:    
+:Authors:
+    Manuel Bastioni,
     Marc Flerackers
 
 :Version: 1.0
@@ -2090,7 +2091,8 @@ class ProgressBar(View):
 
         self.bar.mesh.setScale(progress, 1.0, 1.0)
         if redraw:
-            app.redrawNow()
+            # app.redrawNow()
+            mh.drawOneMesh(self.bar.mesh)
 
 
 # TextView widget

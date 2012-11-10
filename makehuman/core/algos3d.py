@@ -10,7 +10,7 @@ MakeHuman 3D Transformation functions.
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Marc Flerackers
+**Authors:**           Manuel Bastioni, Marc Flerackers
 
 **Copyright(c):**      MakeHuman Team 2001-2011
 
@@ -47,6 +47,8 @@ import aljabr
 import textures3d
 import files3d
 import os
+import numpy as np
+import traceback
 
 NMHVerts = 18528
 
@@ -78,127 +80,119 @@ class Target:
         """
         
         self.name = name
-        self.data = [0, 0, 0] * len(obj.verts)
-        self.faces = []
-        self.verts = []
         self.morphFactor = -1
-        fileDescriptor = None
 
-        while fileDescriptor == None:
-            try:
-                fileDescriptor = open(name)
-            except:
-                if "caucasian" in name:
-                    if not "female_young" in name:
-                        print 'Unable to open %s'%(name)
-                        if "female_child" in name:
-                            name = name.replace("female_child", "female_young")
-                        elif "female_old" in name:
-                            name = name.replace("female_old", "female_young")
-                        elif "male_child" in name:
-                            name = name.replace("male_child", "female_young")
-                        elif "male_young" in name:
-                            name = name.replace("male_young", "female_young")
-                        elif "male_old" in name:
-                            name = name.replace("male_old", "female_young")
-                        else:
-                            print 'Unable to open %s'%(name)
-                            return
-                        print 'Trying %s instead'%(name)
-                    else:
-                        print 'Unable to open %s'%(name)
-                        return
-                else:
-                    if "asian" in name:
-                        print 'Unable to open %s'%(name)
-                        name = name.replace("asian", "caucasian")
-                        print 'Trying %s instead'%(name)
-                    elif "african" in name:
-                        print 'Unable to open %s'%(name)
-                        name = name.replace("african", "caucasian")
-                        print 'Trying %s instead'%(name)
-                    else:
-                        print 'Unable to open %s'%(name)
-                        return
+        try:
+            self._load(self.name)
+        except:
+            self.verts = []
+            print 'Unable to open %s'%(name)
+            return
 
-        facesToRecalculate = set()  # Indices of faces affected by the target, to put in buffer
-        verticesToRecalculate = []  # Indices of vertices affected by the targets, to put in buffer
+        self.faces = obj.getFacesForVertices(self.verts)
 
-        for line in fileDescriptor:
-            translationData = line.split()
-            if len(translationData) == 4:
-                vertIndex = int(translationData[0])
-                if vertIndex >= NMHVerts:
+    @staticmethod
+    def convert_all():
+        obj = Target(None, None)
+        for root, dirs, files in os.walk('data'):
+            for name in files:
+                base, ext = os.path.splitext(name)
+                if ext != '.target':
                     continue
-                verticesToRecalculate.append(vertIndex)
+                path = os.path.join(root, name)
+                try:
+                    obj._load_text(path)
+                    obj._save_binary(path)
+                except StandardError, e:
+                    print name, e
+
+    dtype = [('index','u4'),('vector','(3,)f4')]
+    dtype_ext = [('index','<u4'),('vector','(3,)<f4')]
+
+    def _load_text(self, name):
+        data = []
+        with open(name) as fd:
+            for line in fd:
+                translationData = line.split()
+                if len(translationData) != 4:
+                    continue
+                vertIndex = int(translationData[0])
                 translationVector = (float(translationData[1]), float(translationData[2]), float(translationData[3]))
-                self.data[vertIndex] = translationVector
+                data.append((vertIndex, translationVector))
 
-                vertToModify = obj.verts[vertIndex]
-                for face in vertToModify.sharedFaces:
-                    facesToRecalculate.add(face.idx)
+        self.raw = np.asarray(data, dtype=Target.dtype)
 
-        self.faces = tuple(facesToRecalculate)
-        self.verts = tuple(verticesToRecalculate)
+    def _save_binary(self, name):
+        print 'compiling %s' % name
+        try:
+            name, ext = os.path.splitext(name)
+            name = '%s%s%s' % (name, os.path.extsep, 'bin')
+            np.asarray(self.raw, dtype=Target.dtype_ext).tofile(name)
+        except StandardError, e:
+            traceback.print_exc()
+            # pass
 
-        fileDescriptor.close()
-        
+    def _load_binary(self, name):
+        if not os.path.exists(name):
+            raise RuntimeError()
+        bname = '%s%s%s' % (os.path.splitext(name)[0], os.path.extsep, 'bin')
+        if not os.path.exists(bname):
+            print 'compiled file missing: %s' % bname
+            raise RuntimeError()
+        if os.stat(bname).st_mtime < os.stat(name).st_mtime:
+            print 'compiled file out of date: %s' % bname
+            raise RuntimeError()
+        self.raw = np.asarray(np.fromfile(bname, dtype=Target.dtype_ext), dtype=Target.dtype)
+
+    def _load(self, name):
+        try:
+            self._load_binary(name)
+        except StandardError, e:
+            self._load_text(name)
+            self._save_binary(name)
+        self.verts = self.raw['index']
+        self.data = self.raw['vector']
+
     def apply(self, obj, morphFactor, update=True, calcNormals=True, faceGroupToUpdateName=None, scale=(1.0,1.0,1.0)):
         global theHuman
         
         self.morphFactor = morphFactor                
 
-        if self.verts:
+        if len(self.verts):
             
             if morphFactor or calcNormals or update:
             
                 if faceGroupToUpdateName:
-
                     # if a facegroup is provided, apply it ONLY to the verts used
                     # by the specified facegroup.
-                
-                    faceGroupToUpdate = obj.getFaceGroup(faceGroupToUpdateName)
-                    verticesToUpdate = set()
-                    facesToRecalculate = list(faceGroupToUpdate.faces)
-                    for f in facesToRecalculate:
-                        for v in f.verts:
-                            verticesToUpdate.add(v)
-                            
-                else:
+                    vmask, fmask = obj.getVertexAndFaceMasksForGroups([faceGroupToUpdateName])
 
+                    srcVerts = np.argwhere(vmask[self.verts])[...,0]
+                    facesToRecalculate = self.faces[fmask[self.faces]]
+                else:
                     # if a vertgroup is not provided, all verts affected by
                     # the targets will be modified
 
-                    facesToRecalculate = [obj.faces[i] for i in self.faces]
-                    verticesToUpdate = [obj.verts[i] for i in self.verts]
+                    facesToRecalculate = self.faces
+                    srcVerts = np.s_[...]
+
+                dstVerts = self.verts[srcVerts]
 
             if morphFactor:
-                
                 # Adding the translation vector
 
-                for v in verticesToUpdate:
-                    targetVect = self.data[v.idx]
-                    dv0 = targetVect[0] * morphFactor * scale[0]
-                    dv1 = targetVect[1] * morphFactor * scale[1]
-                    dv2 = targetVect[2] * morphFactor * scale[2]
-                    v.co[0] += dv0
-                    v.co[1] += dv1
-                    v.co[2] += dv2                    
-                    if not hasattr(self, "isWarp"):
-                        sv = theHuman.shadowVerts[v.idx]
-                        sv[0] += dv0
-                        sv[1] += dv1
-                        sv[2] += dv2     
+                scale = np.array(scale) * morphFactor
+                obj.coord[dstVerts] += self.data[srcVerts] * scale[None,:]
+                obj.markCoords(dstVerts, coor=True)
 
             if calcNormals:
-                obj.calcNormals(1, 1, verticesToUpdate, facesToRecalculate)
+                obj.calcNormals(1, 1, dstVerts, facesToRecalculate)
             if update:
-                obj.update(verticesToUpdate)
+                obj.update(dstVerts)
 
             return True
             
         return False
-
 
 def getTarget(obj, targetPath):
     """
@@ -897,12 +891,9 @@ def resetObj(obj, update=None, calcNorm=None):
     """
 
     originalVerts = files3d.loadVertsCoo(obj.path)
-    for (i, v) in enumerate(obj.verts):
-        v.co[0] = originalVerts[i][0]
-        v.co[1] = originalVerts[i][1]
-        v.co[2] = originalVerts[i][2]
-        if update:
-            v.update()
+    obj.changeCoords(originalVerts)
+    if update:
+        obj.update()
     if calcNorm:
         obj.calcNormals()
 

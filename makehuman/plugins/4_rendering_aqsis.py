@@ -72,7 +72,7 @@ class AqsisTaskView(gui3d.TaskView):
         def onClicked(event):
             
             if not which("aqsis"):
-                gui3d.app.prompt('Aqsis not found', 'You don\'t seem to have aqsis installed.', 'Download', 'Cancel', self.downloadAqsis)
+                self.app.prompt('Aqsis not found', 'You don\'t seem to have aqsis installed.', 'Download', 'Cancel', self.downloadAqsis)
                 return
             
             if not self.sceneToRender:
@@ -99,8 +99,6 @@ class AqsisTaskView(gui3d.TaskView):
         
         gui3d.TaskView.onShow(self, event)
         self.renderButton.setFocus()
-        gui3d.app.prompt('Warning', 'The rendering is still an experimental feature since posing is not yet implemented.',
-            'OK', helpId='alphaRenderWarning')
 
     def downloadAqsis(self):
     

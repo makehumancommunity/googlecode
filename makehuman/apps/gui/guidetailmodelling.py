@@ -607,8 +607,6 @@ class DetailModelingTaskView(gui3d.TaskView):
     def onShow(self, event):
         gui3d.app.tool = self.tool
         self.translationButton.setFocus()
-        #self.sliders[0].setFocus()
-        #self.syncSliders()
         gui3d.TaskView.onShow(self, event)
 
     def onHide(self, event):
@@ -640,20 +638,13 @@ class DetailModelingTaskView(gui3d.TaskView):
         elif values[0] == 'microdetail':
             human.setDetail('data/targets/microdetails/' + values[1] + '.target', float(values[2]))
         else:
-            try:
-                fval = float(values[1])
-            except:
-                fval = None
-            if fval == None:
-                print "Ignored modifier", values
-                return
             modifier = self.modifiers.get(values[0], None)
             if modifier:
-                modifier.setValue(human, fval)
+                modifier.setValue(human, float(values[1]))
             else:
                 modifier = self.oldModifiers.get(values[0], None)
                 if modifier:
-                    modifier.setValue(human, fval)
+                    modifier.setValue(human, float(values[1]))
        
     def saveHandler(self, human, file):
         

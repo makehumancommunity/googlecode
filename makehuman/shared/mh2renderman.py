@@ -10,7 +10,7 @@ B{Product Home Page:} U{http://www.makehuman.org/}
 
 B{Code Home Page:}    U{http://code.google.com/p/makehuman/}
 
-B{Authors:}           Marc Flerackers
+B{Authors:}           Manuel Bastioni, Marc Flerackers
 
 B{Copyright(c):}      MakeHuman Team 2001-2011
 
@@ -134,19 +134,12 @@ class ImageLight:
             dstW = dstImg.width
             dstH = dstImg.height
 
-            pointlights = [(-10.99, 20.0, 20.0, 1.0)]
-
             for v in mesh.verts:
 
-                c = 0.0
-
-                for light in pointlights:
-                    ld = aljabr.vnorm(aljabr.vsub(light[:-1], v.co))
-                    s = aljabr.vdot(v.no, ld)
-                    c += s * light[-1]
-                
-                c = max(0, min(255, int(c*255)))
-                v.setColor([c, c, c, 255])
+                ld = aljabr.vnorm(aljabr.vsub((-10.99, 20.0, 20.0,), v.co))
+                s = aljabr.vdot(v.no, ld)
+                s = max(0, min(255, int(s*255)))
+                v.setColor([s, s, s, 255])
 
             for g in mesh.faceGroups:
 
@@ -162,7 +155,7 @@ class ImageLight:
 
             #dstImg.resize(128, 128);
 
-            dstImg.save(os.path.join(mh.getPath(''), 'data', 'skins', 'lighting.png'))
+            dstImg.save(os.path.join(mh.getPath(''), 'data', 'skins', 'lighting.tga'))
             #gui3d.app.selectedHuman.setTexture(os.path.join(mh.getPath(''), 'data', 'skins', 'lighting.tga'))
 
             mesh.setColor([255, 255, 255, 255])
@@ -602,7 +595,6 @@ class RMRScene:
         #self.lastRotation = [0,0,0]
         #self.lastCameraPosition = [self.camera.eyeX, -self.camera.eyeY, self.camera.eyeZ]
         #self.firstTimeRendering = True
-        self.renderResult = ""
 
         #resource paths
         self.renderPath = os.path.join(mh.getPath('render'), 'renderman_output')
@@ -741,7 +733,7 @@ class RMRScene:
         """
         This function creates the frame definition for a Renderman scene.
         """
-        self.renderResult = str(time.time())+".tif"
+        imgFile = str(time.time())+".tif"
 
 
         #Getting global settings
@@ -757,7 +749,7 @@ class RMRScene:
         ribSceneHeader.setSearchShaderPath([self.usrShaderPath])
         ribSceneHeader.setSearchTexturePath([self.appTexturePath,self.usrTexturePath,self.hairTexturePath,self.skinTexturePath])
         ribSceneHeader.fov = self.camera.fovAngle
-        ribSceneHeader.displayName = os.path.join(self.ribsPath, self.renderResult).replace('\\', '/')
+        ribSceneHeader.displayName = os.path.join(self.ribsPath, imgFile).replace('\\', '/')
         ribSceneHeader.displayType = "file"
         ribSceneHeader.displayColor = "rgba"
         ribSceneHeader.displayName2 = "Final Render"
@@ -912,7 +904,6 @@ class RMRScene:
         filesTorender.append((self.sceneFileName, 'Rendering scene'))
 
         renderThread = RenderThread(self.app, filesTorender)
-        renderThread.renderPath = os.path.join(self.ribsPath, self.renderResult).replace('\\', '/')
         renderThread.start()
 
 from threading import Thread
@@ -924,7 +915,6 @@ class RenderThread(Thread):
         Thread.__init__(self)
         self.app = app
         self.filenames = filenames
-        self.renderPath = ""
 
     def run(self):
         
@@ -946,8 +936,6 @@ class RenderThread(Thread):
                 pass
 
             mh.callAsync(lambda:self.app.progress(1.0))
-            
-        gui3d.app.prompt("Render finished", "The image is saved in {0}".format(self.renderPath), "OK", helpId="'renderFinishedPrompt'")
             
             
 

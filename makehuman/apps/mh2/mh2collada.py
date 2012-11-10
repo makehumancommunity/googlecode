@@ -348,12 +348,12 @@ def filterMesh(mesh1, obj, deleteGroups, deleteVerts):
     
     killVerts = {}
     killUvs = {}
-    killFaces = {}    
-    for v in obj.verts:
-        killVerts[v.idx] = False
-    for f in obj.faces:
-        killFaces[f.idx] = False        
-        for vt in f.uv:
+    killFaces = {}
+    for vidx in xrange(obj.getVertexCount()):
+        killVerts[vidx] = False
+    for fidx in xrange(obj.getFaceCount()):
+        killFaces[fidx] = False
+        for vt in obj.getFaceUVs(fidx):
             killUvs[vt] = False
             
     for vn in deleteVerts:
@@ -368,11 +368,11 @@ def filterMesh(mesh1, obj, deleteGroups, deleteVerts):
              ("lash" in fg.name)) or
              mh2proxy.deleteGroup(fg.name, deleteGroups)):
             print("  kill %s" % fg.name) 
-            for f in fg.faces:            
-                killFaces[f.idx] = True
-                for v in f.verts:
-                    killVerts[v.idx] = True
-                for vt in f.uv:                    
+            for fidx in obj.getFacesForGroups([fg.name]):
+                killFaces[fidx] = True
+                for vidx in obj.getFaceVerts(fidx):
+                    killVerts[vidx] = True
+                for vt in obj.getFaceUVs(fidx):
                     killUvs[vt] = True
     
     n = 0
@@ -522,11 +522,6 @@ def exportDae(human, name, fp):
 #
 
 def setupStuff(name, obj, amt, rawTargets, cfg):
-    global StuffTextures, StuffTexFiles, StuffMaterials
-
-    StuffTextures = {}
-    StuffTexFiles = {}
-    StuffMaterials = {}
     stuffs = []
     stuff = CStuff(name, None)
     if amt:
@@ -594,13 +589,14 @@ def writeImages(obj, fp, stuff, human):
         human = None
     else:
         path = "data/textures"
-        texfile = "texture.png"
-        textures = [(path, os.path.basename(texfile))]
-    for (folder, texname) in textures: 
-        path = export_config.getOutFileName(texname, folder, True, human, the.Config)        
-        texfile = os.path.basename(path)
-        (fname, ext) = os.path.splitext(texname)  
-        name = "%s_%s" % (fname, ext[1:])
+        if the.Config.pngTexture:
+            textures = [(path, "texture.png")]
+        else:
+            textures = [(path, "texture.tif")]
+    for (folder, texfile) in textures:  
+        path = export_config.getOutFileName(texfile, folder, True, human, the.Config)        
+        (fname, ext) = os.path.splitext(texfile)  
+        name = "%s_tif" % fname
         if the.Config.separatefolder:
             texpath = "textures/"+texfile
         else:
@@ -657,18 +653,8 @@ DefaultMaterialSettings = {
 }
 
 def getNamesFromStuff(stuff):
-    global StuffTextures, StuffTexFiles, StuffMaterials
     if not stuff.type:
         return ("SkinShader", None, "SkinShader")
-        
-    try:
-        texname = StuffTextures[stuff.name]
-        texfile = StuffTexFiles[stuff.name]
-        matname = StuffMaterials[stuff.name]
-        return (texname, texfile, matname)
-    except KeyError:
-        pass
-    
     texname = None
     texfile = None
     matname = None
@@ -676,36 +662,17 @@ def getNamesFromStuff(stuff):
         (folder, fname) = stuff.texture
         (texname, ext) = os.path.splitext(fname)
         texfile = ("%s_%s" % (texname, ext[1:]))
-        while texname in StuffTextures.values():
-            texname = nextName(texname)
-        StuffTextures[stuff.name] = texname
-        StuffTexFiles[stuff.name] = texfile
     if stuff.material:
         matname = stuff.material.name
-        while matname in StuffMaterials.values():
-            matname = nextName(matname)
-        StuffMaterials[stuff.name] = matname
     return (texname, texfile, matname)
-    
-    
-def nextName(string):
-    try:
-        n = int(string[-3:])
-    except:
-        n = -1
-    if n >= 0:
-        return "%s%03d" % (string[:-3], n+1)
-    else:
-        return string + "_001"
-        
 
 def writeEffects(obj, fp, stuff):
     (texname, texfile, matname) = getNamesFromStuff(stuff)
     if not stuff.type:
-        tex = "texture_png"
+        tex = "texture_tif"
         writeEffectStart(fp, "SkinShader")
         writeSurfaceSampler(fp, tex)
-        #writeSurfaceSampler(fp, "texture_ref_png")
+        writeSurfaceSampler(fp, "texture_ref_tif")
         writePhongStart(fp)
         writeTexture(fp, 'diffuse', tex)
         writeTexture(fp, 'transparent', tex)
@@ -714,7 +681,6 @@ def writeEffects(obj, fp, stuff):
         writeIntensity(fp, 'transparency', None, 0)
         writePhongEnd(fp)            
     elif matname:
-        matname = matname.replace(" ", "_")
         mat = stuff.material
         writeEffectStart(fp, matname)
         writeSurfaceSampler(fp, texfile)
@@ -806,7 +772,6 @@ def writeSurfaceSampler(fp, tex):
 def writeMaterials(obj, fp, stuff):
     (texname, texfile, matname) = getNamesFromStuff(stuff)
     if matname:
-        matname = matname.replace(" ", "_")
         fp.write(
 '    <material id="%s" name="%s">\n' % (matname, matname) +
 '      <instance_effect url="#%s-effect"/>\n' % matname +
@@ -1188,7 +1153,6 @@ def writeNode(obj, fp, pad, stuff):
 
     (texname, texfile, matname) = getNamesFromStuff(stuff)    
     if matname:
-        matname = matname.replace(" ", "_")    
         fp.write(
 '%s    <bind_material>\n' % pad +
 '%s      <technique_common>\n' % pad +

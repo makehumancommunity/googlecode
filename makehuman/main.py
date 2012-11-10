@@ -7,7 +7,7 @@ B{Product Home Page:} U{http://www.makehuman.org/}
 
 B{Code Home Page:}    U{http://code.google.com/p/makehuman/}
 
-B{Authors:}           Marc Flerackers
+B{Authors:}           Manuel Bastioni, Marc Flerackers
 
 B{Copyright(c):}      MakeHuman Team 2001-2011
 
@@ -75,6 +75,7 @@ def recursiveDirNames(root):
   return(pathlist)
 
 sys.path.append("./")
+sys.path.append('./lib')
 sys.path.append("./apps")
 sys.path.append("./shared")
 sys.path.append("./shared/mhx/templates")
@@ -759,7 +760,7 @@ class MHApplication(gui3d.Application):
             'OK', helpId='alphaWarning')
         self.progressBar.blocker = self.progressBar.addObject(gui3d.Object( [0, 0, 9.7], gui3d.RectangleMesh(800, 600), visible=False))
         self.dialog.blocker.mesh.setColor([0, 0, 0, 128])
-        self.progressBar.blocker.mesh.setColor([0, 0, 0, 0])
+        self.progressBar.blocker.mesh.setColor([0, 0, 0, 128])
         self.splash.hide()
         self.progressBar.blocker.show()
         mh.setCaption("MakeHuman - [Untitled]")
@@ -1126,8 +1127,8 @@ class MHApplication(gui3d.Application):
     def setCameraGroupsViewDistance(self, groupNames, view='front', distance=10):
     
         human = self.selectedHuman
-        vertices, faces = human.meshData.getVerticesAndFacesForGroups(groupNames)
-        center = centroid([v.co for v in vertices])
+        vertices = human.meshData.getCoords(human.meshData.getVerticesForGroups(groupNames))
+        center = centroid(vertices)
         
         self.setCameraCenterViewDistance(center, view, distance)
     
@@ -1272,7 +1273,6 @@ class MHApplication(gui3d.Application):
         for shortcut, m in self.shortcuts.iteritems():
             if m == method:
                 return shortcut
-        return (0, 0)
                 
     # Mouse actions
     def setMouseAction(self, modifier, key, method):
