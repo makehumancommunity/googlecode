@@ -1146,7 +1146,15 @@ class Action(QtGui.QAction, Widget):
                 path = themePath
         if not os.path.isfile(path):
             path = os.path.join('data', 'icons', 'notfound.png')
-        return QtGui.QIcon(path)
+        icon = QtGui.QIcon(path)
+        # Allows setting custom icons for active, selected and disabled states
+        for (name, mode) in [ ("disabled", QtGui.QIcon.Disabled), 
+                              ("active", QtGui.QIcon.Active),
+                              ("selected", QtGui.QIcon.Selected) ]:
+            customIconPath = "%s_%s.png" % (os.path.splitext(path)[0], name)
+            if os.path.isfile(customIconPath):
+                icon.addFile(customIconPath, QtCore.QSize(), mode)
+        return icon
 
     @classmethod
     def getGroup(cls, name):
