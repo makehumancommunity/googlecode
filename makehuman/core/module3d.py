@@ -257,8 +257,6 @@ class Object3D(object):
         """
     
         # Clear remote data
-        self.detach()
-
         self._faceGroups = []
 
         del self.fvert
