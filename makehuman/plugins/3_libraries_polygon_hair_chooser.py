@@ -31,6 +31,29 @@ import gui
 import filechooser as fc
 import log
 
+class Action(object):
+
+    def __init__(self, name, human, library, before, after, postAction=None):
+        self.name = name
+        self.human = human
+        self.library = library
+        self.before = before
+        self.after = after
+        self.postAction = postAction
+
+    def do(self):
+        self.library.setHair(self.human, self.after)
+        if self.postAction:
+            self.postAction()
+        return True
+
+    def undo(self):
+        self.library.setHair(self.human, self.before)
+        if self.postAction:
+            self.postAction()
+        return True
+
+
 class HairTaskView(gui3d.TaskView):
     
     def __init__(self, category):
@@ -39,7 +62,7 @@ class HairTaskView(gui3d.TaskView):
         hairDir = os.path.join(mh.getPath(''), 'data', 'hairstyles')
         if not os.path.exists(hairDir):
             os.makedirs(hairDir)
-        self.filechooser = self.addTopWidget(fc.FileChooser([hairDir , 'data/hairstyles'], 'obj', 'thumb', 'data/hairstyles/notfound.thumb'))
+        self.filechooser = self.addTopWidget(fc.FileChooser([hairDir , 'data/hairstyles'], 'mhclo', 'thumb', 'data/hairstyles/notfound.thumb'))
         self.addLeftWidget(self.filechooser.sortBox)
       
         self.oHeadCentroid = [0.0, 7.436, 0.03 + 0.577]
@@ -47,48 +70,63 @@ class HairTaskView(gui3d.TaskView):
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
-            
-            mhclo = filename.replace('.obj', '.mhclo')
-            self.setHair(gui3d.app.selectedHuman, filename, mhclo)
+            human = gui3d.app.selectedHuman
+            if human.hairProxy:
+                oldFile = human.hairProxy.file
+            else:
+                oldFile = 'clear.mhclo'
+            gui3d.app.do(Action("Change hair",
+                human,
+                self,
+                oldFile,
+                filename))
             if gui3d.app.settings.get('jumpToModelling', True):
                 mh.changeCategory('Modelling')
 
-    def setHair(self, human, obj, mhclo):
+    def setHair(self, human, mhclo):
 
         if human.hairObj:
             gui3d.app.removeObject(human.hairObj)
             human.hairObj = None
             human.hairProxy = None
 
-        if os.path.basename(obj) == "clear.obj":
+        if os.path.basename(mhclo) == "clear.mhclo":
             return
             
+        human.hairProxy = mh2proxy.readProxyFile(human.meshData, mhclo, False)
+        if not human.hairProxy:
+            log.error("Failed to load %s", mhclo)
+            return
+
+        obj = human.hairProxy.obj_file
+        obj = os.path.join(obj[0], obj[1])
         mesh = files3d.loadMesh(obj)
-        if mesh:
-            human.hairProxy = mh2proxy.readProxyFile(human.meshData, mhclo, False)
-            if human.hairProxy.texture:
-                (folder, name) = human.hairProxy.texture
-                tex = os.path.join(folder, name)
-                mesh.setTexture(tex)
-            else:
-                tex = obj.replace('.obj', '_texture.png')
-                mesh.setTexture(tex)
+        if not mesh:
+            log.error("Failed to load %s", obj)
+            return
+        if human.hairProxy.texture:
+            (folder, name) = human.hairProxy.texture
+            tex = os.path.join(folder, name)
+            mesh.setTexture(tex)
+        else:
+            tex = obj.replace('.obj', '_texture.png')
+            mesh.setTexture(tex)
 
-            human.hairObj = gui3d.app.addObject(gui3d.Object(human.getPosition(), mesh))
-            human.hairObj.setRotation(human.getRotation())
-            human.hairObj.mesh.setCameraProjection(0)
-            human.hairObj.mesh.setSolid(human.mesh.solid)
-            if human.hairProxy.cull:
-                human.hairObj.mesh.setCull(1)
-            else:
-                human.hairObj.mesh.setCull(None)
-            human.hairObj.mesh.setTransparentPrimitives(len(human.hairObj.mesh.faces))
-            human.hairObj.mesh.priority = 20
-                
-            hairName = human.hairObj.mesh.name.split('.')[0]
+        human.hairObj = gui3d.app.addObject(gui3d.Object(human.getPosition(), mesh))
+        human.hairObj.setRotation(human.getRotation())
+        human.hairObj.mesh.setCameraProjection(0)
+        human.hairObj.mesh.setSolid(human.mesh.solid)
+        if human.hairProxy.cull:
+            human.hairObj.mesh.setCull(1)
+        else:
+            human.hairObj.mesh.setCull(None)
+        human.hairObj.mesh.setTransparentPrimitives(len(human.hairObj.mesh.faces))
+        human.hairObj.mesh.priority = 20
 
-            self.adaptHairToHuman(human)
-            human.hairObj.setSubdivided(human.isSubdivided())
+        hairName = human.hairObj.mesh.name.split('.')[0]
+
+        self.adaptHairToHuman(human)
+        human.hairObj.setSubdivided(human.isSubdivided())
 
     def adaptHairToHuman(self, human):
 
@@ -114,8 +152,10 @@ class HairTaskView(gui3d.TaskView):
         
         human = event.human
         if event.change == 'reset':
+            log.message("deleting hair")
             if human.hairObj:
-                human.hairObj.mesh.clear()
+                gui3d.app.removeObject(human.hairObj)
+                #human.hairObj.mesh.clear()
                 human.hairObj = None
                 human.hairProxy = None
         
