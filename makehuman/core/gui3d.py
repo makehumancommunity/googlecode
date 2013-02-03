@@ -189,9 +189,11 @@ class Object(events3d.EventHandler):
         if self.proxy:
         
             self.proxy = None
+            self.detachMesh(self.__proxyMesh)
             self.__proxyMesh.clear()
             self.__proxyMesh = None
             if self.__proxySubdivisionMesh:
+                self.detachMesh(self.__proxySubdivisionMesh)
                 self.__proxySubdivisionMesh.clear()
                 self.__proxySubdivisionMesh = None
             self.mesh = self.__seedMesh
