@@ -1043,6 +1043,9 @@ class MHApplication(gui3d.Application, mh.Application):
         human.applyAllTargets(self.progress)
         self.setFilenameCaption("Untitled")
         self.setFileModified(False)
+        self.undoStack = []
+        self.redoStack = []
+        self.syncUndoRedo()
 
     # Camera navigation
     def rotateCamera(self, axis, amount):
