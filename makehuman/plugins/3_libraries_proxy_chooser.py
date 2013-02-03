@@ -29,6 +29,29 @@ import mh2proxy
 import filechooser as fc
 import log
 
+class Action(object):
+
+    def __init__(self, name, human, library, before, after, postAction=None):
+        self.name = name
+        self.human = human
+        self.library = library
+        self.before = before
+        self.after = after
+        self.postAction = postAction
+
+    def do(self):
+        self.library.setProxy(self.human, self.after)
+        if self.postAction:
+            self.postAction()
+        return True
+
+    def undo(self):
+        self.library.setProxy(self.human, self.before)
+        if self.postAction:
+            self.postAction()
+        return True
+
+
 class ProxyFileSort(fc.FileSort):
     
     def __init__(self):
@@ -90,10 +113,18 @@ class ProxyTaskView(gui3d.TaskView):
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
-            
-            self.setProxy(gui3d.app.selectedHuman, filename)
-
-            mh.changeCategory('Modelling')
+            human = gui3d.app.selectedHuman
+            if human.proxy:
+                oldFile = human.proxy.file
+            else:
+                oldFile = "clear.proxy"
+            gui3d.app.do(Action("Change proxy",
+                human,
+                self,
+                oldFile,
+                filename))
+            if gui3d.app.settings.get('jumpToModelling', True):
+                mh.changeCategory('Modelling')
         
     def setProxy(self, human, filename):
 
@@ -119,6 +150,7 @@ class ProxyTaskView(gui3d.TaskView):
         
         human = event.human
         if event.change == 'reset':
+            log.message('deleting proxy')
             human.setProxy(None)
             
     def onHumanChanged(self, event):
