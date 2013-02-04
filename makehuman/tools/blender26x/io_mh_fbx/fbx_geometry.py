@@ -35,13 +35,14 @@ class FbxGeometryBase(FbxObject):
 
     def __init__(self, subtype, btype):
         FbxObject.__init__(self, 'Geometry', subtype, btype)
+        self.normalLayers = []
         self.uvLayers = []
         self.materialLayers = []
         self.textureLayers = []
         self.shapeKeys = {}
+        self.blendDeformers = {}
         self.hastex = False
         self.materials = []
-        self.blendDeformer = None
         
 
     def parseNodes(self, pnodes):
@@ -49,6 +50,8 @@ class FbxGeometryBase(FbxObject):
         for pnode in pnodes:
             if pnode.key == 'Layer' : 
                 pass
+            elif pnode.key == 'LayerElementNormal' : 
+                self.normalLayers.append( FbxLayerElementNormal().parse(pnode) )
             elif pnode.key == 'LayerElementUV' : 
                 self.uvLayers.append( FbxLayerElementUV().parse(pnode) )
             elif pnode.key == 'LayerElementMaterial' : 
@@ -74,7 +77,7 @@ class FbxGeometryBase(FbxObject):
         for mn,mat in enumerate(rna.materials):
             if mat:
                 parent = fbx.nodes.objects[ob.name]
-                fbx.nodes.materials[mat.name].makeLink(parent)
+                fbx.nodes.materials[mat.name].makeOOLink(parent)
                 self.materials.append(mat)
                 
                 for mtex in mat.texture_slots:
@@ -86,31 +89,47 @@ class FbxGeometryBase(FbxObject):
         self.textureLayers.append(FbxLayerElementTexture().make(layer, 0, self.hastex))            
         return self
 
+
+    def addDefinition(self, definitions):     
+        FbxObject.addDefinition(self, definitions)
+        for node in self.shapeKeys.values():
+            node.addDefinition(definitions)
+        for node in self.blendDeformers.values():
+            node.addDefinition(definitions)
+
                                 
     def writeFooter(self, fp):
-        if not( self.uvLayers or self.materialLayers or self.textureLayers ):
-            FbxObject.writeFooter(self, fp)
-            return
-            
-        for layer in self.uvLayers:
-            layer.writeFbx(fp)
-        for layer in self.materialLayers:
-            layer.writeFbx(fp)
-        for layer in self.textureLayers:
-            layer.writeFbx(fp)
+        if (self.normalLayers or 
+            self.uvLayers or 
+            self.materialLayers or 
+            self.textureLayers):
+            for layer in self.normalLayers:
+                layer.writeFbx(fp)
+            for layer in self.uvLayers:
+                layer.writeFbx(fp)
+            for layer in self.materialLayers:
+                layer.writeFbx(fp)
+            for layer in self.textureLayers:
+                layer.writeFbx(fp)
 
-        fp.write(
-            '        Layer: 0 {\n' +
-            '            Version: 100\n')
-        if self.uvLayers:
-            self.writeLayerElement(fp, "LayerElementUV")
-        if self.materialLayers:
-            self.writeLayerElement(fp, "LayerElementMaterial")
-        if self.textureLayers:
-            self.writeLayerElement(fp, "LayerElementTexture")
-        fp.write('        }\n')
+            fp.write(
+                '        Layer: 0 {\n' +
+                '            Version: 100\n')
+            if self.normalLayers:
+                self.writeLayerElement(fp, "LayerElementNormal")
+            if self.uvLayers:
+                self.writeLayerElement(fp, "LayerElementUV")
+            if self.materialLayers:
+                self.writeLayerElement(fp, "LayerElementMaterial")
+            if self.textureLayers:
+                self.writeLayerElement(fp, "LayerElementTexture")
+            fp.write('        }\n')
 
         FbxObject.writeFooter(self, fp)         
+        for node in self.shapeKeys.values():
+            node.writeFbx(fp)
+        for node in self.blendDeformers.values():
+            node.writeFbx(fp)
 
 
     def writeLayerElement(self, fp, type):
@@ -120,7 +139,15 @@ class FbxGeometryBase(FbxObject):
             '                TypedIndex: 0\n' +
             '            }\n')
                 
-        
+
+    def writeLinks(self, fp):
+        FbxObject.writeLinks(self, fp)
+        for node in self.shapeKeys.values():
+            node.writeLinks(fp)
+        for node in self.blendDeformers.values():        
+            node.writeLinks(fp)
+    
+    
     def build(self, rna):
         for node in self.uvLayers:
             node.build(rna)
@@ -173,6 +200,45 @@ class FbxLayerElement(FbxStuff):
         layer.name = self.get("Name")
         return
         
+#------------------------------------------------------------------
+#   Normal Layer
+#------------------------------------------------------------------
+
+class FbxLayerElementNormal(FbxLayerElement):
+
+    def __init__(self):
+        FbxLayerElement.__init__(self, 'LayerElementNormal')
+        self.normals = CArray("Normals", float, 3)
+
+
+    def parseNodes(self, pnodes):
+        rest = []        
+        for pnode in pnodes:
+            if pnode.key == 'Normals':
+                self.normals.parse(pnode)
+            else:
+                rest.append(pnode)
+        return FbxLayerElement.parseNodes(self, rest)
+
+        
+    def make(self, layer, index, faces):
+        FbxLayerElement.make(self, layer, index)
+        self.setMulti([
+            ("MappingInformationType", "ByPolygonVertex"),
+            ("ReferenceInformationType", "Direct")
+        ])
+        if fbx.usingMakeHuman:
+            normals = [f.normal for f in faces]
+        else:
+            normals = [b2f(f.normal) for f in faces for vn in f.vertices]
+        self.normals.make(normals)
+        return self
+        
+        
+    def writeHeader(self, fp):
+        FbxLayerElement.writeHeader(self, fp)
+        self.normals.writeFbx(fp)
+
 
 #------------------------------------------------------------------
 #   UV Layer

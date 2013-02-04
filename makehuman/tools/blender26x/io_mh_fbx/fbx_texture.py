@@ -74,7 +74,7 @@ class FbxFileTexture(FbxObject):
         img = tex.image
         if img:
             self.image = fbx.nodes.images[img.name].make(img)
-            fbx.nodes.images[img.name].makeLink(self)
+            fbx.nodes.images[img.name].makeOOLink(self)
             
         self.setMulti([
             ("Type", "TextureVideoClip"),
@@ -107,8 +107,9 @@ class FbxFileTexture(FbxObject):
         _ = self.get("Texture_Alpha_Source")
         cropping = self.get("Cropping")
         
-        imgNodes = self.getBChildren('IMAGE')
-        for node,channel in imgNodes:
+        links = self.getBChildLinks('IMAGE')
+        for link in links:
+            node = link.child
             if node.name == imgname:
                 tex.image = fbx.data[node.id]
 

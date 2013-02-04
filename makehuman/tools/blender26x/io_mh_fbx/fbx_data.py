@@ -34,6 +34,7 @@ from . import fbx_texture
 from . import fbx_image
 from . import fbx_object
 from . import fbx_anim
+from . import fbx_constraint
 
 
 class NodeStruct:
@@ -93,6 +94,10 @@ def parseNodes(pnode):
     fbx.root = RootNode()
     fbx.nodes = {}
     fbx.takes = []
+
+    pObjectsNode = None
+    pLinksNode = None
+    pTakesNode = None
     
     for pnode1 in pnode.values:
         if pnode1.key == "Objects":
@@ -102,29 +107,44 @@ def parseNodes(pnode):
         elif pnode1.key == "Takes":
             pTakesNode = pnode1
            
+    if pObjectsNode:
+        for pnode2 in pObjectsNode.values:
+            createNode(pnode2)
+            
+    if pLinksNode:            
+        for pnode2 in pLinksNode.values:
+            parseLink(pnode2)
 
-    for pnode2 in pObjectsNode.values:
-        createNode(pnode2)
-    for pnode2 in pLinksNode.values:
-        parseLink(pnode2)
-    for pnode2 in pObjectsNode.values:
-        parseObjectProperty(pnode2)
-    for pnode2 in pTakesNode.values:
-        node = fbx_anim.FbxTake()
-        fbx.takes.append(node)
-        node.parse(pnode2)
+    if pObjectsNode:
+        for pnode2 in pObjectsNode.values:
+            parseObjectProperty(pnode2)
+
+    if pTakesNode:
+        for pnode2 in pTakesNode.values:
+            node = fbx_anim.FbxTake()
+            fbx.takes.append(node)
+            node.parse(pnode2)
         
 
 def parseLink(pnode):
-    childId = pnode.values[1]
-    parId = pnode.values[2]
-    if len(pnode.values) > 3:
+    oo = pnode.values[0]
+    if oo == "OO":
+        child = fbx.idstruct[pnode.values[1]]
+        parent = fbx.idstruct[pnode.values[2]]
+        child.makeOOLink(parent)  
+    elif oo == "OP":
+        child = fbx.idstruct[pnode.values[1]]
+        parent = fbx.idstruct[pnode.values[2]]
         channel = pnode.values[3]
+        child.makeOPLink(parent, channel)  
+    elif oo == "PO":
+        child = fbx.idstruct[pnode.values[1]]
+        parent = fbx.idstruct[pnode.values[3]]
+        channel = pnode.values[2]
+        child.makePOLink(parent, channel)  
     else:
-        channel = None
-    childNode = fbx.idstruct[childId]
-    parNode = fbx.idstruct[parId]
-    childNode.makeChannelLink(parNode, channel)    
+        fbx.debug("parseLink %s" % oo)
+        halt      
     
 
 def createNode(pnode):
@@ -178,6 +198,12 @@ def createNode(pnode):
         node = fbx_armature.FbxPose()
     elif pnode.key == 'Bone':            
         node = fbx_armature.CBone()
+    elif pnode.key == 'Constraint':            
+        if subtype == "Single Chain IK":
+            node = fbx_constraint.FbxConstraintSingleChainIK()
+        else:
+            fbx.debug("Bug: %s %s" % (pnode.key, pnode))
+            halt            
     elif pnode.key == 'Deformer':     
         if subtype == 'Skin':
             node = fbx_deformer.FbxSkin()
@@ -248,6 +274,8 @@ def buildObjects(context):
         #    data = bpy.data.fcurves.new(node.name)
         elif node.ftype == "Pose":
             data = node
+        elif node.ftype == "Constraint":
+            data = node
         elif node.ftype == "NodeAttribute":
             if node.typeflags == "Light":
                 data = bpy.data.lamps.new(node.name, type='POINT')
@@ -264,6 +292,7 @@ def buildObjects(context):
         
     for node in fbx.nodes.values():
         if node.ftype == "Model":
+            print(node)
             if node.subtype in ["LimbNode"]:
                 continue
             elif node.subtype == "Null":
@@ -272,18 +301,16 @@ def buildObjects(context):
                     amt = bpy.data.armatures.new(node.name)
                     data = bpy.data.objects.new(node.name, amt)
                     scn.objects.link(data)
-                    fbx.data[node.id] = data
                 elif btype == 'EMPTY':
                     data = bpy.data.objects.new(node.name, None)
-                    fbx.data[node.id] = data
                     scn.objects.link(data)
             else:
-                for child,channel in node.children:
-                    if child.subtype == node.subtype:
-                        data = bpy.data.objects.new(node.name, fbx.data[child.id])
+                for link in node.children:
+                    if link.child.subtype == node.subtype:
+                        data = bpy.data.objects.new(node.name, fbx.data[link.child.id])
                         scn.objects.link(data)
                         break
-                fbx.data[node.id] = data
+            fbx.data[node.id] = data
                     
     fbx.message("  Building objects")
     for node in fbx.nodes.values():
@@ -493,7 +520,7 @@ def makeNodes(context):
             if first:
                 astack = fbx.nodes.astacks[alayer.name] = fbx_anim.CAnimationStack().make(alayer)
                 first = False
-            alayer.makeLink(astack)
+            alayer.makeOOLink(astack)
 
 
 def makeTakes(context):

@@ -27,6 +27,7 @@ from .fbx_model import *
 from .fbx_object import CObject
 from .fbx_deformer import FbxSkin
 from .fbx_null import CNull
+from .fbx_constraint import *
 
 
 #------------------------------------------------------------------
@@ -43,10 +44,11 @@ class CArmature(FbxObject):
         self.boneList = []
         self.deformers = []
         self.object = None
+        self.owner = None
 
     def make(self, rig):
         FbxObject.make(self, rig)
-        self.object = fbx.nodes.objects[rig.name]
+        self.object = self.owner = fbx.nodes.objects[rig.name]
         for bone in oneOf(rig.data.bones.values(), rig.data.bones):
             if bone.parent == None:
                 self.roots.append(bone)                
@@ -56,6 +58,11 @@ class CArmature(FbxObject):
             self.pose.make(rig, self.bones)
         for deformer in self.deformers:
             deformer.make(rig)
+        for node in self.boneList:
+            pb = rig.pose.bones[node.name]
+            for cns in pb.constraints:
+                if cns.type == 'IK':
+                    node.constraints.append( FbxConstraintSingleChainIK().make(cns, node, self) )
         return self            
         
         
@@ -108,20 +115,20 @@ class CArmature(FbxObject):
     
     
     def buildArmature1(self, parent, ob):
-        self.object = ob
+        self.object = self.owner = ob
         scn = bpy.context.scene
         old = scn.objects.active
         scn.objects.active = ob
 
         infos = {}
-        for child,_ in parent.children:
-            if isinstance(child, CBone):
-                BoneInfo(child, infos).collect(child, infos, None)
+        for link in parent.children:
+            if isinstance(link.child, CBone):
+                BoneInfo(link.child, infos).collect(link.child, infos, None)
 
         bpy.ops.object.mode_set(mode='EDIT')        
-        for child,_ in parent.children:
-            if isinstance(child, CBone):
-                nodes = child.buildBone(infos, ob.data)        
+        for link in parent.children:
+            if isinstance(link.child, CBone):
+                nodes = link.child.buildBone(infos, ob)        
 
         bpy.ops.object.mode_set(mode='POSE')  
         for node in nodes:
@@ -279,18 +286,20 @@ class CBone(CModel):
     def __init__(self, subtype='LimbNode'):
         CModel.__init__(self, subtype, 'BONE')
         self.attribute = CBoneAttribute()
-        self.object = None
+        self.owner = None
         self.datum = None
         self.pose = None
         self.matrixLocal = None
         self.transform = None
         self.transformLink = None
         self.head = None
+        self.constraints = []
             
 
     def make(self, bone, parent):
         CModel.make(self, bone)
         self.parent = parent
+        self.datum = bone
 
         if parent.btype == 'OBJECT':
             self.matrixLocal = b2fRot4(bone.matrix_local)
@@ -314,7 +323,10 @@ class CBone(CModel):
             ("Lcl Scaling", scaling)
         ])
 
-        self.attribute.make(bone)
+        self.attribute.make(bone)        
+        self.makeOOLink(self.parent)
+        self.attribute.makeOOLink(self)   
+        
         return self
        
 
@@ -344,17 +356,23 @@ class CBone(CModel):
         self.attribute.addDefinition(definitions)
         
 
-    def writeLinks(self, fp):
-        self.writeLink(fp, self.parent)
-        self.attribute.writeLink(fp, self)
-
-    
-    def writeHeader(self, fp):
+    def writeFooter(self, fp):
+        CModel.writeFooter(self, fp)   
         self.attribute.writeFbx(fp)
-        CModel.writeHeader(self, fp)   
+        for cns in self.constraints:
+            cns.writeFbx(fp)
 
     
-    def buildBone(self, infos, amt):      
+    def writeLinks(self, fp):
+        CModel.writeLinks(self, fp)   
+        self.attribute.writeLinks(fp)
+        for cns in self.constraints:
+            cns.writeLinks(fp)
+
+    
+    def buildBone(self, infos, ob):      
+        amt = ob.data
+        self.owner = ob
         nodes = [self]
         eb = amt.edit_bones.new(self.name)
         info = infos[self.name]
@@ -363,14 +381,14 @@ class CBone(CModel):
         if info.parent:
             eb.parent = amt.edit_bones[info.parent.name]
         eb.roll = info.roll
-        for child,_ in self.children:
-            if isinstance(child, CBone):
-                nodes += child.buildBone(infos, amt)
+        for link in self.children:
+            if isinstance(link.child, CBone):
+                nodes += link.child.buildBone(infos, ob)
         return nodes
         
         
     def build4(self):
-        parent,_ = self.getFParent('Model')
+        parent = self.getFParent('Model')
         if (not parent) or (parent.id != 0):
             return
         
@@ -381,8 +399,8 @@ class CBone(CModel):
         
         amtNode = CArmature()
         obNode = CObject("Null")
-        self.makeLink(obNode)
-        amtNode.makeLink(obNode)
+        self.makeOOLink(obNode)
+        amtNode.makeOOLink(obNode)
 
         amtNode.buildArmature1(obNode, ob)
         obNode.buildObject(ob)
@@ -409,9 +427,9 @@ class BoneInfo:
    
     def collect(self, node, infos, parent):   
         trans = Vector(node.getProp("Lcl Translation"))
-        has,euler = node.getProp2("Lcl Rotation")
+        has,euler = node.getProp2("PreRotation")
         if not has:
-            _,euler = node.getProp2("PreRotation")
+            _,euler = node.getProp2("Lcl Rotation")
         scale = node.getProp("Lcl Scaling")
         self.euler = Euler(Vector(euler)*R, 'XYZ')
         rot = self.euler.to_matrix()  
@@ -428,9 +446,9 @@ class BoneInfo:
 
         sum = Vector((0,0,0))
         nChildren = 0
-        for child,_ in node.children:
-            if child.btype == 'BONE':
-                cinfo = BoneInfo(child, infos).collect(child, infos, self)
+        for link in node.children:
+            if link.child.btype == 'BONE':
+                cinfo = BoneInfo(link.child, infos).collect(link.child, infos, self)
                 self.children.append(cinfo)
                 sum += cinfo.head
                 nChildren += 1

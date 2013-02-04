@@ -22,7 +22,6 @@ from . import fbx
 from .fbx_basic import *
 from .fbx_props import *
 from .fbx_model import *
-from . import fbx_scene
 from .fbx_object import *
 from .fbx_armature import *
 
@@ -40,9 +39,9 @@ class CNull(CObject):
 
 
     def getBtype(self):
-        for child,channel in self.children:
-            if child.subtype == 'LimbNode':
-                self.node = child
+        for link in self.children:
+            if link.child.subtype == 'LimbNode':
+                self.node = link.child
                 return 'ARMATURE'
 
         return 'EMPTY'
@@ -54,7 +53,7 @@ class CNull(CObject):
         if btype == 'ARMATURE':
             return CArmature().buildArmature(self)
         elif btype == 'EMPTY':    
-            return self
+            return CObject.build3(self)
         else:
             halt
 

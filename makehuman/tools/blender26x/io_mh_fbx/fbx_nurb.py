@@ -133,8 +133,8 @@ class CNurbsCollection(FbxStuff):
             mnode.name = spline.name
             snode = CNurbsSurface().make(spline)
             self.splines.append((mnode,snode))
-            mnode.makeLink(parent)
-            snode.makeLink(mnode)
+            mnode.makeOOLink(parent)
+            snode.makeOOLink(mnode)
             
 
     def writeFbx(self, fp):

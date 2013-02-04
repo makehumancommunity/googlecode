@@ -39,7 +39,7 @@ class CScene(CModel):
                 node = fbx.nodes.objects[ob.name]
             except KeyError:
                 continue
-            node.makeLink(self)
+            node.makeOOLink(self)
             self.objects.append(ob)
         return self
 
@@ -47,9 +47,9 @@ class CScene(CModel):
     def build3(self):
         scn = fbx.data[self.id]
         return scn
-        objects,channel = self.getBChildren('OBJECT')
-        for node in objects:
-            ob = fbx.data[node.id]
+        links = self.getBChildLinks('OBJECT')
+        for link in links:
+            ob = fbx.data[link.child.id]
             scn.objects.link(ob)
             scn.objects.active = ob
         return scn

@@ -46,6 +46,12 @@ def oneOf(mhCase, blenderCase):
     else:
         return blenderCase
 
+class CNoName:
+    def __init__(self):
+        self.name = ""
+      
+NoName = CNoName()
+
 #------------------------------------------------------------------
 #   FbxPlug
 #------------------------------------------------------------------

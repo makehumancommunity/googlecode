@@ -157,6 +157,19 @@ class ExportFBX(bpy.types.Operator, ExportHelper):
         return {'FINISHED'}
  
   
+class VIEW3D_OT_PresetButton(bpy.types.Operator):
+    bl_idname = "fbx.preset"
+    bl_label = "Preset"
+    bl_options = {'UNDO'}
+    preset = StringProperty()
+
+    def execute(self, context):
+        if self.preset == "Blender":
+            fbx.settings.blender()
+        elif self.preset == "Maya":
+            fbx.settings.maya()
+        return {'FINISHED'}
+
   
 class FbxTestPanel(bpy.types.Panel):
     bl_label = "FBX Test"
@@ -165,6 +178,8 @@ class FbxTestPanel(bpy.types.Panel):
     
     def draw(self, context):    
         scn = context.scene
+        self.layout.operator("fbx.preset", text="Maya Presets").preset="Maya"
+        self.layout.operator("fbx.preset", text="Blender Presets").preset="Blender"
         self.layout.prop(scn, "FbxFile")
         self.layout.operator("fbx.test_export")
         self.layout.operator("fbx.test_import").filepath=("/home/myblends/fbx-stuff/%s.fbx" % scn.FbxFile)

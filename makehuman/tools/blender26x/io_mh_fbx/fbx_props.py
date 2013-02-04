@@ -54,7 +54,10 @@ class CProperties70(FbxPlug):
         except KeyError:
             prop = None
         if prop is None:
-            prop = self.properties[key] = template[key].newProp(key)
+            try:
+                prop = self.properties[key] = template[key].newProp(key)
+            except KeyError:
+                return
         prop.value = value
         prop.isSet = True
         
@@ -212,16 +215,21 @@ class CProperty(FbxPlug):
         return ("<CProperty n:%s v:%s t:%s s:%s a:%s i:%s>" % 
                 (self.name, self.value, self.ftype, self.supertype, self.anim, self.isSet))     
     
-    def parse(self, pnode0):
-        values = pnode0.values
+    def parse(self, pnode):
+        values = pnode.values
         self.name = values[0]
         self.ftype = values[1]
         self.supertype = values[2]
         self.anim = values[3]
         if len(values) > 5:
             self.value = values[4:]
-        else:
+        elif len(values) == 5:
             self.value = values[4]
+        elif values[1] in ["Compound"]:
+            pass
+        else:
+            fbx.debug("%s: %s" % (pnode.key, pnode.values))
+            halt
         return self    
 
     def set(self, name, value, anim):

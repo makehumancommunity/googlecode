@@ -53,7 +53,8 @@ class FbxMesh(FbxGeometryBase):
         self.mesh = None
         self.vertices = CArray("Vertices", float, 3)
         self.normals = CArray("Normals", float, 3)
-        self.faces = CArray("PolygonVertexIndex", float, -1)
+        self.edges = CArray("Normals", int, 2)
+        self.faces = CArray("PolygonVertexIndex", int, -1)
         
 
     def parseNodes(self, pnodes):
@@ -63,6 +64,8 @@ class FbxMesh(FbxGeometryBase):
                 self.vertices.parse(pnode)
             elif pnode.key == 'Normals':
                 self.normals.parse(pnode)
+            elif pnode.key == 'Edges':
+                self.edges.parse(pnode)
             elif pnode.key == 'PolygonVertexIndex':
                 self.faces.parse(pnode)
             else:
@@ -77,6 +80,7 @@ class FbxMesh(FbxGeometryBase):
         
         self.vertices.make( [b2f(v.co) for v in me.vertices] )
         self.normals.make( [b2f(v.normal) for v in me.vertices] )
+        #edges = [list(e.vertices) for f in me.polygons for e in f.edges]
         faces = [list(f.vertices) for f in me.polygons]
         nFaces = len(me.polygons)
         self.faces.make(faces)
@@ -97,6 +101,7 @@ class FbxMesh(FbxGeometryBase):
             self.uvLayers.append(FbxLayerElementUV().make(uvloop, index, uvfaces))
         
         if me.shape_keys:
+            self.normalLayers.append(FbxLayerElementNormal().make(NoName, 0, me.polygons))
             obNode = fbx.nodes.objects[ob.name]
             baseVerts = me.vertices
             for index,skey in enumerate(me.shape_keys.key_blocks):
@@ -106,9 +111,8 @@ class FbxMesh(FbxGeometryBase):
                     node = FbxShape().make(skey, baseVerts)
                     self.shapeKeys[skey.name] = node
                     obNode.setPropLong("%s.%s" % (me.name, skey.name), "Shape", "", "A+",0)
-                    #node.makeLink(self)
-            self.blendDeformer = FbxBlendShape().make(self, me)
-            self.blendDeformer.makeLink(self)
+                    deform = self.blendDeformers[skey.name] = FbxBlendShape().make(skey, node)
+                    deform.makeOOLink(self)
             
         matfaces = [f.material_index for f in me.polygons]
         return FbxGeometryBase.make(self, me, ob, matfaces)
@@ -119,35 +123,20 @@ class FbxMesh(FbxGeometryBase):
         self.vertices.writeFbx(fp)
         self.normals.writeFbx(fp)
         self.faces.writeFbx(fp)
+        #self.edges.writeFbx(fp)
         fp.write(
             '       GeometryVersion: 124\n')
-                
-
-    def writeFooter(self, fp):
-        FbxGeometryBase.writeFooter(self, fp)
-        for node in self.shapeKeys.values():
-            node.writeFbx(fp)
-        if self.blendDeformer:
-            self.blendDeformer.writeFbx(fp)
-            
-
-    def writeLinks(self, fp):
-        FbxGeometryBase.writeLinks(self, fp)
-        for node in self.shapeKeys.values():
-            node.writeLinks(fp)
-        if self.blendDeformer:        
-            self.blendDeformer.writeLinks(fp)
-            
+                            
 
     def build3(self):
         me = fbx.data[self.id]
         verts = [f2b(v) for v in self.vertices.values]
         me.from_pydata(verts, [], self.faces.values)
 
-        obNode,_ = self.getBParent('OBJECT')
-        matNodes = obNode.getBChildren('MATERIAL')
-        for node,channel in matNodes:
-            mat = fbx.data[node.id]
+        obNode = self.getBParent('OBJECT')
+        links = obNode.getBChildLinks('MATERIAL')
+        for link in links:
+            mat = fbx.data[link.child.id]
             me.materials.append(mat)
             
         return FbxGeometryBase.build(self, me)
@@ -161,6 +150,7 @@ class FbxShape(FbxObject):
 
     def __init__(self, subtype='Shape'):
         FbxObject.__init__(self, 'Geometry', subtype, 'SHAPEKEY')
+        self.datum = None
         self.indexes = CArray("Indexes", int, 1)
         self.vertices = CArray("Vertices", float, 3)
         self.normals = CArray("Normals", float, 3)
@@ -210,21 +200,22 @@ class FbxShape(FbxObject):
 
 
     def build4(self):        
-        subdef,_ = self.getBParent('BLEND_CHANNEL_DEFORMER')
-        deformer,_ = subdef.getBParent('BLEND_DEFORMER')
-        meNode,_ = deformer.getBParent('MESH')
+        subdef = self.getBParent('BLEND_CHANNEL_DEFORMER')
+        deformer = subdef.getBParent('BLEND_DEFORMER')
+        meNode = deformer.getBParent('MESH')
         me = fbx.data[meNode.id]
-        obNode,_ = meNode.getBParent('OBJECT')
+        obNode = meNode.getBParent('OBJECT')
         ob = fbx.data[obNode.id]
         if not me.shape_keys:
             ob.shape_key_add("Basis")
         ob.active_shape_key_index = 0
         base = ob.active_shape_key
-        skey = ob.shape_key_add(self.name)
+        skey = self.datum = ob.shape_key_add(self.name)
         n = 0
         for vn in self.indexes.values:
             dx = f2b( self.vertices.values[n] )
             n += 1
             skey.data[vn].co = me.vertices[vn].co + Vector(dx)
+        deformer.build(skey, ob)
         subdef.build(skey, ob)
   

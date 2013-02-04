@@ -144,7 +144,7 @@ class FbxSurfaceMaterial(FbxObject):
                     ]
                     for use,ftype in channels:
                         if use:     
-                            node.makeChannelLink(self, ftype)
+                            node.makeOPLink(self, ftype)
 
         self.setProps([
             ("ShadingModel", self.shader),
@@ -183,9 +183,10 @@ class FbxSurfaceMaterial(FbxObject):
             	mat.specular_intensity = self.getProp("SpecularFactor")
             	mat.specular_hardness = self.getProp("ShininessExponent")
 
-        texNodes = self.getBChildren('TEXTURE')
-        for node,channel in texNodes:
-            tex = fbx.data[node.id]
+        links = self.getBChildLinks('TEXTURE')
+        for link in links:
+            tex = fbx.data[link.child.id]
+            channel = link.channel
             mtex = mat.texture_slots.add()
             mtex.texture = tex
             mtex.texture_coords = 'UV'

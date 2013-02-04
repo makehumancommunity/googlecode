@@ -113,11 +113,11 @@ class CObject(CModel):
             halt
             
         if self.datanode:
-            self.datanode.makeLink(self)
+            self.datanode.makeOOLink(self)
             
         if ob.parent:
             parent = fbx.nodes.objects[ob.parent.name]
-            self.makeLink(parent)
+            self.makeOOLink(parent)
             
     
     def build3(self):
@@ -127,16 +127,16 @@ class CObject(CModel):
     def buildObject(self, ob):
         self.datum = self.object = ob
         if self.links:
-            pnode,_ = self.links[0]
-            if pnode.id != 0 and pnode.btype == 'OBJECT':
-                ob.parent = fbx.data[pnode.id]
+            parnode = self.links[0].parent
+            if parnode.id != 0 and parnode.btype == 'OBJECT':
+                ob.parent = fbx.data[parnode.id]
                 if fbx.settings.lockChildren:
                     ob.lock_location = (True,True,True)
                     ob.lock_rotation = (True,True,True)
                     ob.lock_scale = (True,True,True)
                 
         if self.properties:
-            ob.location = self.getProp("Lcl Translation")
+            ob.location = f2b(self.getProp("Lcl Translation"))
             ob.rotation_euler = self.getProp("Lcl Rotation")
             ob.scale = self.getProp("Lcl Scaling")
         return ob    

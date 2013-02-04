@@ -27,6 +27,7 @@ from math import *
 import os
 import log
 
+from fastmath import *
 import object_collection
 import export_config
 from mhx import the
@@ -51,7 +52,7 @@ class Operator:
 def initialize():
     global RnaNames
     RnaNames = {}
-    for rnaType in ['OBJECT', 'MESH', 'ARMATURE', 'MATERIAL', 'TEXTURE', 'IMAGE', 'SCENE', 'BONE']:
+    for rnaType in ['OBJECT', 'MESH', 'ARMATURE', 'MATERIAL', 'TEXTURE', 'IMAGE', 'SCENE', 'BONE', 'POSE']:
         RnaNames[rnaType] = {}
 
 
@@ -172,6 +173,7 @@ class Bone(Rna):
         self.children = []
         self.matrix_local = Matrix()
         self.matrix = Matrix()
+        self.constraints = []
         
 
     def getLength(self):
@@ -215,6 +217,12 @@ class Bone(Rna):
         self.matrix_local.matrix[:3,3] = self.head.vector
 
 
+class Pose(Rna):
+    def __init__(self, name, bones):
+        Rna.__init__(self, name, 'POSE')
+        self.bones = bones
+        
+
 #------------------------------------------------------------------
 #   Mesh
 #------------------------------------------------------------------
@@ -244,7 +252,7 @@ class Mesh(Rna):
         nTargets = len(stuff.meshInfo.targets)
 
         self.vertices = [MeshVertex(n, v) for (n,v) in enumerate(stuff.meshInfo.verts)]
-        self.polygons = [MeshPolygon(n, [v[0] for v in f]) for (n,f) in enumerate(stuff.meshInfo.faces)]
+        self.polygons = [MeshPolygon(n, [v[0] for v in f], stuff.meshInfo.verts) for (n,f) in enumerate(stuff.meshInfo.faces)]
 
         if stuff.meshInfo.uvValues:
             self.uv_layers.append(UvLayer(stuff.meshInfo.uvValues, stuff.meshInfo.faces))
@@ -289,10 +297,16 @@ class MeshGroup:
 
         
 class MeshPolygon:
-    def __init__(self, idx, verts):
+    def __init__(self, idx, fverts, meverts):
         self.index = idx
-        self.vertices = verts
+        self.vertices = fverts
         self.material_index = 0
+        co0 = meverts[fverts[0]]
+        co1 = meverts[fverts[1]]
+        co2 = meverts[fverts[2]]
+        e1 = vsub3d(co1,co0)
+        e2 = vsub3d(co2,co1)
+        self.normal = vnorm3d(vcross3d(e1,e2))
         
         
 class UvLayer:
@@ -314,11 +328,13 @@ class UvLoop:
 class ShapeKeys:
     def __init__(self):
         self.key_blocks = []
+        self.animation_data = None
         
         
 class KeyBlock:
     def __init__(self, name, shape):
         self.name = name
+        self.value = 0.0
         self.data = shape
         target = list(shape.items())
         target.sort()                
@@ -478,12 +494,13 @@ class Object(Rna):
                         content.vertices[vn].addToGroup(index, w)
                     index += 1
         elif self.data.rnaType == 'ARMATURE':
+            self.pose = Pose(self.data.name, self.data.bones)
             pass
         
     def __repr__(self):
         return ("<%s: %s type=%s data=%s parent=%s>" % (self.rnaType, self.name, self.type, self.data, self.parent))        
 
-   
+
 #------------------------------------------------------------------
 #   Scene and Action
 #------------------------------------------------------------------

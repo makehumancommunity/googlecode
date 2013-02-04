@@ -25,6 +25,7 @@ Fbx exporter
 import os.path
 import sys
 
+import gui3d
 import export_config
 import object_collection
 import read_expression
@@ -94,7 +95,9 @@ def exportFbx(human, filepath, options):
     #bpy.addMesh(name, human.meshData, False)
     
     filename = "%s.fbx" % outpath
+    gui3d.app.progress(0, text="Exporting %s" % filename)
     io_mh_fbx.fbx_export.exportFbxFile(bpy.context, filename)
+    gui3d.app.progress(1)
     posemode.exitPoseMode()        
     return
 

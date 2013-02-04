@@ -222,7 +222,6 @@ def readExpressions(human, t0, t1):
 """
 
 def readExpressionUnits(human, t0, t1):
-    print "REU", human
     shapeList = []
     t,dt = initTimes(ExpressionUnits, 0.0, 1.0)
     

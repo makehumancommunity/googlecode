@@ -146,14 +146,16 @@ class CAnimationLayer(FbxObject):
         user = self.users[0]
         for key,group in groups.items():
             node = user
+            print(user, key, group)
             if group.shape:
-                node = user.subdeformers[group.sub]
+                node = user.blendDeformers[group.sub]
+                print(node)
             elif group.pose:
                 if user.btype == 'ARMATURE':
                     node = user.bones[group.sub]                
             acnode = self.acnodes[key] = FbxAnimationCurveNode().make(group, node)
-            acnode.makeLink(self)
-            acnode.makeChannelLink(node, acnode.channel)
+            acnode.makeOOLink(self)
+            acnode.makeOPLink(node, acnode.channel)
         return self
                                 
 
@@ -176,7 +178,8 @@ class CAnimationLayer(FbxObject):
 
 
     def build5(self):
-        for acnode,_ in self.children:
+        for link in self.children:
+            acnode = link.child
             if acnode.ftype == 'AnimationCurveNode':
                 acnode.build()
 
@@ -231,7 +234,7 @@ def getDataPath(channel, btype, rna):
         return bchannel,('pose.bones["%s"].%s' % (rna.name, bchannel))
     elif btype == 'OBJECT':
         return bchannel,bchannel
-    elif btype == 'BLEND_CHANNEL_DEFORMER':
+    elif btype == 'BLEND_DEFORMER':
         return bchannel,('key_blocks["%s"].%s' % (rna.name, bchannel))
     else:
         fbx.debug("getDataPath %s %s %s" % (channel, btype, rna))
@@ -303,7 +306,7 @@ class FbxAnimationCurveNode(FbxObject):
             string,fIndex,factor = fChannel[bIndex]
             offset = offsets[fIndex]
             acu = self.acurves[fIndex] = FbxAnimationCurve().make(fcu, offset, factor*deg)
-            acu.makeChannelLink(self, string)
+            acu.makeOPLink(self, string)
 
         return self
                                 
@@ -331,15 +334,12 @@ class FbxAnimationCurveNode(FbxObject):
     def build(self):
         rna = None
         group = None
-        user = None
-        user,channel = self.getBParent(['BONE', 'OBJECT', 'BLEND_CHANNEL_DEFORMER'])
-        if not user:
-            print("No user", self)
-            print(self.links)
-            halt
-        
+        link = self.getBParentLink(['BONE', 'OBJECT', 'BLEND_DEFORMER'])
+        print(self.links)
+        user = link.parent
+        owner = user.owner
+        channel = link.channel
         rna = user.datum
-        ob = user.object
         group = rna.name
 
         if channel in ["Lcl Rotation"]:
@@ -371,13 +371,13 @@ class FbxAnimationCurveNode(FbxObject):
             halt
 
         
-        for child,fChannel in self.children:       
-            fIndex,bIndex,factor = indexer[fChannel]
+        for link in self.children:       
+            fIndex,bIndex,factor = indexer[link.channel]
             bchannel,datapath = getDataPath(channel, user.btype, rna)
-            ob.keyframe_insert(datapath, bIndex, frame=0, group=group)
-            act = ob.animation_data.action
+            owner.keyframe_insert(datapath, bIndex, frame=0, group=group)
+            act = owner.animation_data.action
             fcu = getFCurveFromAction(act, datapath, bIndex)
-            child.build(fcu, offsets[fIndex], factor*rad)
+            link.child.build(fcu, offsets[fIndex], factor*rad)
             
 
 def getFCurveFromAction(act, datapath, index):

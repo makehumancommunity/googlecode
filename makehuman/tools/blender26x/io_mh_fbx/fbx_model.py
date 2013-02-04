@@ -144,6 +144,7 @@ Prefix = {
     "AnimationCurve" : "AnimCurve", 
     "NodeAttribute" : "NodeAttribute", 
     "Pose" : "Pose", 
+    "Constraint" : "Constraint",
 
     "Null" : None
 }
@@ -156,6 +157,51 @@ Prefix2 = {
         "BlendShapeChannel" : "SubDeformer",
     },
 }
+
+class OOLink:
+    def __init__(self, child, parent):
+        self.child = child
+        self.parent = parent
+        self.channel = None
+        
+    def __repr__(self):
+        return ("<OO %s -> %s>" % (self.child, self.parent))
+
+    def writeFbx(self, fp):
+        fp.write(
+            '    ;%s::%s, %s::%s\n' % (self.child.prefix, self.child.name, self.parent.prefix, self.parent.name) +
+            '    C: "OO",%d,%d\n\n' % (self.child.id, self.parent.id) )
+    
+        
+class OPLink:
+    def __init__(self, child, parent, channel):
+        self.child = child
+        self.parent = parent
+        self.channel = channel
+        
+    def __repr__(self):
+        return ("<OP %s -> %s, %s>" % (self.child, self.parent, self.channel))
+
+    def writeFbx(self, fp):
+        fp.write(
+            '    ;%s::%s, %s::%s\n' % (self.child.prefix, self.child.name, self.parent.prefix, self.parent.name) +
+            '    C: "OP",%d,%d, "%s"\n\n' % (self.child.id, self.parent.id, self.channel) )
+        
+        
+class POLink:
+    def __init__(self, child, parent, channel):
+        self.child = child
+        self.parent = parent
+        self.channel = channel
+
+    def __repr__(self):
+        return ("<PO %s, %s -> %s>" % (self.child, self.channel, self.parent))
+
+    def writeFbx(self, fp):
+        fp.write(
+            '    ;%s::%s, %s::%s\n' % (self.child.prefix, self.child.name, self.parent.prefix, self.parent.name) +
+            '    C: "PO",%d, "%s",%d\n\n' % (self.child.id, self.channel, self.parent.id) )
+        
 
 class FbxObject(FbxStuff):
 
@@ -210,58 +256,80 @@ class FbxObject(FbxStuff):
                 alayer.users.append(self)
         return self                
         
-                
-    def makeChannelLink(self, parent, channel):
+    
+    def testDiff(self, parent):
         if self == parent:
             fbx.message("Linking to self %s" % self)
-            return
             halt
-        self.links.append((parent,channel))
-        parent.children.append((self,channel))
+
+    
+    def makeOOLink(self, parent):
+        self.testDiff(parent)
+        link = OOLink(self, parent)
+        self.links.append(link)
+        parent.children.append(link)
 
         
-    def makeLink(self, parent):
-        self.makeChannelLink(parent, None)
+    def makeOPLink(self, parent, channel):
+        self.testDiff(parent)
+        link = OPLink(self, parent, channel)
+        self.links.append(link)
+        parent.children.append(link)
 
+        
+    def makePOLink(self, parent, channel):
+        self.testDiff(parent)
+        link = POLink(self, parent, channel)
+        self.links.append(link)
+        parent.children.append(link)
 
-    def getBParent(self, btypes):
+        
+    def getBParentLink(self, btypes):
         if not isinstance(btypes, list):
             btypes = [btypes]
         for link in self.links:
-            if link[0].btype in btypes:
+            if link.parent.btype in btypes:
                 return link
-        return None,None                
+        return None
         
         
-    def getBParentRecursive(self, btype):
-        for link in self.links:
-            if link[0].btype == btype:
-                return link
-        for link in self.links:
-            parent = link[0].getBParentRecursive(btype)
-            if parent:
-                return parent
-                
-
+    def getBParent(self, btypes):
+        link = self.getBParentLink(btypes)
+        if link:
+            return link.parent
+        else:
+            return None
+        
+        
     def getFParent(self, ftype):
         for link in self.links:
-            if link[0].ftype == ftype:
-                return link
-        return None,None               
+            if link.parent.ftype == ftype:
+                return link.parent
+        return None
         
 
     def getFParent2(self, ftype, subtype):
         for link in self.links:
-            if (link[0].ftype == ftype) and (link[0].subtype == subtype):
-                return link
+            if (link.parent.ftype == ftype) and (link.parent.subtype == subtype):
+                return link.parent
         return None                
         
-    def getBChildren(self, btype):
+
+    def getBChildLinks(self, btype):
         links = []
         for link in self.children:
-            if link[0].btype == btype:
+            if link.child.btype == btype:
                 links.append(link)
         return links
+
+                
+    def getChannelChildLinks(self, channel):
+        links = []
+        for link in self.children:
+            if link.channel == channel:
+                links.append(link)
+        return links
+
                 
     def writeHeader(self, fp):
         fp.write('    %s: %d, "%s::%s", "%s" {\n' % (self.ftype, self.id, self.prefix, self.name, self.subtype))
@@ -271,25 +339,9 @@ class FbxObject(FbxStuff):
         if self.links:
             links = self.links
         else:
-            links = [(fbx.root, None)]
+            links = [OOLink(self, fbx.root)]
         for link in links:
-            node,channel = link
-            if channel:
-                self.writeChannelLink(fp, node, channel)
-            else:
-                self.writeLink(fp, node)
-            
-
-    def writeChannelLink(self, fp, node, channel):
-        fp.write(
-            '    ;%s::%s, %s::%s\n' % (self.prefix, self.name, node.prefix, node.name) +
-            '    C: "OP",%d,%d, "%s"\n\n' % (self.id, node.id, channel) )
-
-
-    def writeLink(self, fp, node):
-        fp.write(
-            '    ;%s::%s, %s::%s\n' % (self.prefix, self.name, node.prefix, node.name) +
-            '    C: "OO",%d,%d\n\n' % (self.id, node.id) )
+            link.writeFbx(fp)
 
 
 #------------------------------------------------------------------

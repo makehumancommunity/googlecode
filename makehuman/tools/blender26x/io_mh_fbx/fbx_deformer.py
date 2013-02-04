@@ -49,6 +49,7 @@ class FbxSkin(FbxObject):
     def make(self, ob):
         FbxObject.make(self, ob)
         
+        self.makeOOLink(self.meshNode)
         amtNode = fbx.nodes.armatures[ob.data.name]
         for vgroup in self.object.vertex_groups:
             try:
@@ -58,9 +59,10 @@ class FbxSkin(FbxObject):
             if boneNode:
                 subdef = FbxCluster().make(vgroup, boneNode, self.object)
                 self.subdeformers[vgroup.index] = subdef
-
+                subdef.makeOOLink(self)
+                boneNode.makeOOLink(subdef)
         return self
-
+    
     
     def addDefinition(self, definitions):     
         FbxObject.addDefinition(self, definitions)
@@ -68,29 +70,24 @@ class FbxSkin(FbxObject):
             subdef.addDefinition(definitions)
 
 
-    def writeLinks(self, fp):
-        self.writeLink(fp, self.meshNode)
-        for subdef in self.subdeformers.values():
-            subdef.writeLink(fp, self)
-            try:
-                bone = self.rigNode.bones[subdef.name]
-            except KeyError:
-                continue
-            bone.writeLink(fp, subdef)
-
-    
-    def writeHeader(self, fp):
+    def writeFooter(self, fp):
+        FbxObject.writeFooter(self, fp)
         for subdef in self.subdeformers.values():
             subdef.writeFbx(fp)
-        FbxObject.writeHeader(self, fp)
+        
+
+    def writeLinks(self, fp):
+        FbxObject.writeLinks(self, fp)
+        for subdef in self.subdeformers.values():            
+            subdef.writeLinks(fp)
         
 
     def build5(self):            
-        meNode,_ = self.getBParent('MESH')
-        obNode,_ = meNode.getBParent('OBJECT') 
+        meNode = self.getBParent('MESH')
+        obNode = meNode.getBParent('OBJECT')
         ob = fbx.data[obNode.id]
 
-        rigNode,_ = obNode.getFParent2('Model', 'Null')
+        rigNode = obNode.getFParent2('Model', 'Null')
         if rigNode:
             rig = fbx.data[rigNode.id]
             mod = ob.modifiers.new(rig.name, 'ARMATURE')
@@ -99,8 +96,8 @@ class FbxSkin(FbxObject):
             mod.use_vertex_groups = True
             ob.parent = rig
         
-        for child,_ in self.children:
-            child.buildVertGroups(ob)
+        for link in self.children:
+            link.child.buildVertGroups(ob)
             
  
 
@@ -169,49 +166,37 @@ class FbxBlendShape(FbxObject):
     def __init__(self, subtype='BlendShape'):
         FbxObject.__init__(self, 'Deformer', subtype, 'BLEND_DEFORMER')
         self.mesh = None
-        self.object = None
-        self.subdeformers = {}
+        self.owner = None
+        self.subdeformer = None
         
    
-    def make(self, meshNode, me):
-        FbxObject.make(self, me)
-        self.meshNode = meshNode
-        self.mesh = me
-        
-        for index,skey in enumerate(me.shape_keys.key_blocks):
-            if index > 0:
-                skeyNode = meshNode.shapeKeys[skey.name]
-                subdef = FbxBlendShapeChannel().make(skey)
-                self.subdeformers[skey.name] = subdef
-                subdef.makeLink(self)
-                skeyNode.makeLink(subdef)
-
+    def make(self, skey, node):
+        FbxObject.make(self, skey)
+        subdef = FbxBlendShapeChannel().make(skey)
+        self.subdeformer = subdef
+        subdef.makeOOLink(self)
+        node.makeOOLink(subdef)
         return self
 
     
     def addDefinition(self, definitions):     
         FbxObject.addDefinition(self, definitions)
-        for subdef in self.subdeformers.values():
-            subdef.addDefinition(definitions)
+        self.subdeformer.addDefinition(definitions)
 
 
     def writeLinks(self, fp):
         FbxObject.writeLinks(self, fp)
-        for subdef in self.subdeformers.values():
-            subdef.writeLinks(fp)
-
-    
+        self.subdeformer.writeLinks(fp)
+        
 
     def writeFooter(self, fp):
         FbxObject.writeFooter(self, fp)
-        for subdef in self.subdeformers.values():
-            subdef.writeFbx(fp)
+        self.subdeformer.writeFbx(fp)
         
 
-    def build4(self):        
-        meNode,_ = self.getBParent('MESH')
-        obNode,_ = meNode.getBParent('OBJECT') 
-        self.object = fbx.data[obNode.id]
+    def build(self, skey, ob):    
+        self.datum = skey
+        self.owner = ob.data.shape_keys
             
 
 class FbxBlendShapeChannel(FbxObject):
@@ -219,7 +204,7 @@ class FbxBlendShapeChannel(FbxObject):
     def __init__(self, subtype='BlendShapeChannel'):
          FbxObject.__init__(self, 'Deformer', subtype, 'BLEND_CHANNEL_DEFORMER')
          self.datum = None
-         self.object = None
+         self.owner = None
          self.fullWeights = CArray('FullWeights', int, 1)
 
          
@@ -249,6 +234,6 @@ class FbxBlendShapeChannel(FbxObject):
     def build(self, skey, ob):
         self.datum = skey
         skey.value = self.get("DeformPercent")
-        self.object = ob.data.shape_keys
+        self.owner = ob.data.shape_keys
         
         
