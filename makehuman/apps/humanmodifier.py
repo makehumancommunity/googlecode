@@ -185,6 +185,8 @@ class ModifierSlider(gui.Slider):
     def onChange(self, value):
         
         human = gui3d.app.selectedHuman
+        if self.value is None:
+            self.value = self.modifier.getValue(human)
         if self.value != value:
             gui3d.app.do(ModifierAction(human, self.modifier, self.value, value, self.update))
         if human.isSubdivided():
