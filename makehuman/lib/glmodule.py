@@ -192,6 +192,7 @@ def OnInit():
         # Start with writing relevant info to the debug dump in case stuff goes
         # wrong at a later time
         debugdump = DebugDump()
+        debugdump.appendGL()
         debugdump.appendMessage("GL.VENDOR: " + glGetString(GL_VENDOR))
         debugdump.appendMessage("GL.RENDERER: " + glGetString(GL_RENDERER))
         debugdump.appendMessage("GL.VERSION: " + glGetString(GL_VERSION))

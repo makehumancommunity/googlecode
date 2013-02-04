@@ -74,10 +74,14 @@ class DebugDump:
         if sys.platform == 'win32':
             debug.write("PLATFORM.WIN32_VER: " + string.join(platform.win32_ver()," ") + "\n");
 
-        import OpenGL
         import numpy
-        debug.write("PYOPENGL.VERSION: " + OpenGL.__version__ + "\n");
         debug.write("NUMPY.VERSION: " + numpy.__version__ + "\n");
+        debug.close()
+
+    def appendGL(this):
+        import OpenGL
+        debug = open(this.debugpath, "a")
+        debug.write("PYOPENGL.VERSION: " + OpenGL.__version__ + "\n");
         debug.close()
 
     def appendMessage(this,message):

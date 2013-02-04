@@ -25,6 +25,8 @@ Python compatibility layer replacing the old C functions of MakeHuman.
 from core import G
 from getpath import getPath
 
+from glmodule import updatePickingBuffer, grabScreen, hasRenderSkin, renderSkin
+
 from image import Image
 from texture import Texture, getTexture, reloadTextures
 from shader import Shader
@@ -33,8 +35,6 @@ from camera import Camera
 from qtui import Keys, Buttons, Modifiers, Application
 from qtui import callAsyncThread, setShortcut
 from qtui import getSaveFileName, getOpenFileName, getExistingDirectory
-
-from glmodule import updatePickingBuffer, grabScreen, hasRenderSkin, renderSkin
 
 from inifile import parseINI, formatINI
 
