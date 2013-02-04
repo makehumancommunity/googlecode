@@ -170,8 +170,7 @@ class HairTaskView(gui3d.TaskView):
         if not os.path.exists(os.path.realpath(mhclo)):
             log.notice('HairTaskView.loadHandler: %s does not exist. Skipping.', mhclo)
             return
-        obj = mhclo.replace(".mhclo", ".obj")
-        self.setHair(human, obj, mhclo)
+        self.setHair(human, mhclo)
         
     def saveHandler(self, human, file):
         
