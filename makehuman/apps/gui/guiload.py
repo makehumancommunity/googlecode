@@ -116,6 +116,7 @@ class LoadTaskView(gui3d.TaskView):
             del gui3d.app.undoStack[:]
             del gui3d.app.redoStack[:]
             gui3d.app.modified = False
+            gui3d.app.clearUndoRedo()
 
             name = os.path.basename(filename).replace('.mhm', '')
 

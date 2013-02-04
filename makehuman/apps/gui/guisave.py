@@ -81,6 +81,7 @@ class SaveTaskView(gui3d.TaskView):
             human = gui3d.app.selectedHuman
             human.save(path, name)
             gui3d.app.modified = False
+            #gui3d.app.clearUndoRedo()
             
             gui3d.app.setFilenameCaption(filename)
             gui3d.app.setFileModified(False)

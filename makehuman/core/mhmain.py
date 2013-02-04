@@ -539,6 +539,11 @@ class MHApplication(gui3d.Application, mh.Application):
         self.actions.redo.setEnabled(bool(self.redoStack))
         self.redraw()
 
+    def clearUndoRedo(self):
+        self.undoStack = []
+        self.redoStack = []
+        self.syncUndoRedo()
+
     # Settings
 
     def loadSettings(self):
@@ -1043,9 +1048,7 @@ class MHApplication(gui3d.Application, mh.Application):
         human.applyAllTargets(self.progress)
         self.setFilenameCaption("Untitled")
         self.setFileModified(False)
-        self.undoStack = []
-        self.redoStack = []
-        self.syncUndoRedo()
+        self.clearUndoRedo()
 
     # Camera navigation
     def rotateCamera(self, axis, amount):
