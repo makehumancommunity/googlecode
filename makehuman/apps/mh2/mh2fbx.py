@@ -37,8 +37,8 @@ fbxpath = "tools/blender26x"
 if fbxpath not in sys.path:
     sys.path.append(fbxpath)
     
-import io_mh_fbx
-# bpy must be imported after io_mh_fbx
+import io_fbx
+# bpy must be imported after io_fbx
 import bpy
 
 
