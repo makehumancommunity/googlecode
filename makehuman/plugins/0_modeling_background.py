@@ -37,6 +37,29 @@ import filechooser as fc
 import log
 from language import language
 
+class Action(object):
+
+    def __init__(self, name, library, side, before, after, postAction=None):
+        self.name = name
+        self. side = side
+        self.library = library
+        self.before = before
+        self.after = after
+        self.postAction = postAction
+
+    def do(self):
+        self.library.changeBackgroundImage(self.side, self.after)
+        if self.postAction:
+            self.postAction()
+        return True
+
+    def undo(self):
+        self.library.changeBackgroundImage(self.side, self.before)
+        if self.postAction:
+            self.postAction()
+        return True
+
+
 def pointInRect(point, rect):
 
     if point[0] < rect[0] or point[0] > rect[2] or point[1] < rect[1] or point[1] > rect[3]:
@@ -55,7 +78,16 @@ class BackgroundTaskView(gui3d.TaskView):
 
         self.texture = mh.Texture()
 
+        self.sides = { 'front': [0,0,0], 
+                       'back': [0,180,0], 
+                       'left': [0,-90,0], 
+                       'right': [0,90,0],
+                       'top': [90,0,0],
+                       'bottom': [-90,0,0] }
+
         self.filenames = {}
+        for side in self.sides.keys():
+            self.filenames[side] = None
 
         mesh = geometry3d.RectangleMesh(1, 1)
         self.backgroundImage = gui3d.app.categories['Modelling'].addObject(gui3d.Object([0, 0, 1], mesh, visible=False))
@@ -86,45 +118,92 @@ class BackgroundTaskView(gui3d.TaskView):
         def onFileSelected(filename):
 
             if self.bgImageFrontRadioButton.selected:
-                self.filenames['front'] = filename
+                side = 'front'
             elif self.bgImageBackRadioButton.selected:
-                self.filenames['back'] = filename
+                side = 'back'
             elif self.bgImageLeftRadioButton.selected:
-                self.filenames['left'] = filename
+                side = 'left'
             elif self.bgImageRightRadioButton.selected:
-                self.filenames['right'] = filename
+                side = 'right'
             elif self.bgImageTopRadioButton.selected:
-                self.filenames['top'] = filename
+                side = 'top'
             elif self.bgImageBottomRadioButton.selected:
-                self.filenames['bottom'] = filename
+                side = 'bottom'
 
-            self.texture.loadImage(mh.Image(os.path.join(self.backgroundsFolder, filename)))
+            filePath = os.path.join(self.backgroundsFolder, filename)
 
-            bg = self.backgroundImage
-            bg.mesh.setTexture(os.path.join(self.backgroundsFolder, filename))
+            if self.filenames[side]:
+                oldBg = self.filenames[side][0]
+            else:
+                oldBg = None
+            gui3d.app.do(Action("Change background",
+                self,
+                side,
+                oldBg,
+                filename))
 
-            aspect = 1.0 * self.texture.width / self.texture.height
-            bg.setPosition([-aspect, -1, 0])
-            bg.mesh.resize(2.0 * aspect, 2.0)
-
-            # Switch to orthogonal view
-            gui3d.app.modelCamera.switchToOrtho()
-
-            bg.show()
-            self.backgroundImageToggle.setChecked(True)
-
+            gui3d.app.selectedHuman.setRotation(self.sides[side])
             mh.changeTask('Modelling', 'Background')
             mh.redraw()
 
-    def toggleBackground(self):
-        if not self.backgroundImageToggle.isChecked():
-            self.backgroundImage.hide()
-            mh.redraw()
-        elif self.backgroundImage.hasTexture():
-            self.backgroundImage.show()
-            mh.redraw()
+    def changeBackgroundImage(self, side, texturePath):
+        if not side:
+            return
+
+        if texturePath:
+            # Determine aspect ratio of texture
+            self.texture.loadImage(mh.Image(texturePath))
+            aspect = 1.0 * self.texture.width / self.texture.height
+
+            self.filenames[side] = (texturePath, aspect)
         else:
-            mh.changeTask('Library', 'Background')
+            self.filenames[side] = None
+
+        if side == self.getCurrentSide():
+            # Reload current texture
+            self.setBackgroundImage(side)
+
+        self.setBackgroundEnabled(self.isBackgroundSet())
+
+    def getCurrentSide(self):
+        rot = gui3d.app.selectedHuman.getRotation()
+        for (side, rotation) in self.sides.items():
+            if rot == rotation:
+                return side
+        # Indicates an arbitrary non-defined view
+        return None
+
+    def setBackgroundEnabled(self, enable):
+        if enable:
+            if self.isBackgroundSet():
+                self.backgroundImage.show()
+                # Switch to orthogonal view
+                gui3d.app.modelCamera.switchToOrtho()
+                self.backgroundImageToggle.setChecked(True)
+                mh.redraw()
+            else:
+                mh.changeTask('Library', 'Background')
+        else: # Disable
+            self.backgroundImage.hide()
+            # Switch to perspective view
+            gui3d.app.modelCamera.switchToPerspective()
+            self.backgroundImageToggle.setChecked(False)
+            mh.redraw()
+
+    def isBackgroundSet(self):
+        for bgFile in self.filenames.values():
+            if bgFile:
+                return True
+        return False
+
+    def isBackgroundShowing(self):
+        return self.backgroundImage.isShown()
+
+    def isBackgroundEnabled(self):
+        return self.backgroundImageToggle.isChecked()
+
+    def toggleBackground(self):
+        self.setBackgroundEnabled(self.backgroundImageToggle.isChecked())
         
     def projectBackground(self):
         if not self.backgroundImage.isVisible():
@@ -182,25 +261,35 @@ class BackgroundTaskView(gui3d.TaskView):
     def onHumanTranslated(self, event):
         pass
 
+    def onHumanChanging(self, event):
+        
+        human = event.human
+        if event.change == 'reset':
+            for side in self.sides.keys():
+                self.filenames[side] = None
+            self.setBackgroundEnabled(False)
+
     def setBackgroundImage(self, side):
-        filename = self.filenames.get(side)
+        if not side:
+            self.backgroundImage.hide()
+            return
+
+        if self.filenames.get(side):
+            (filename, aspect) = self.filenames.get(side)
+        else:
+            filename = aspect = None
         if filename:
-            self.backgroundImage.mesh.setTexture(os.path.join(self.backgroundsFolder, filename))
+            self.backgroundImage.setPosition([-aspect, -1, 0])
+            self.backgroundImage.mesh.resize(2.0 * aspect, 2.0)
+
+            self.backgroundImage.mesh.setTexture(filename)
+            self.backgroundImage.show()
+        else:
+            self.backgroundImage.hide()
 
     def onHumanRotated(self, event):
-        rot = gui3d.app.selectedHuman.getRotation()
-        if rot==[0,0,0]:
-            self.setBackgroundImage('front')
-        elif rot==[0,180,0]:
-            self.setBackgroundImage('back')
-        elif rot==[0,-90,0]:
-            self.setBackgroundImage('left')
-        elif rot==[0,90,0]:
-            self.setBackgroundImage('right')
-        elif rot==[90,0,0]:
-            self.setBackgroundImage('top')
-        elif rot==[-90,0,0]:
-            self.setBackgroundImage('bottom')
+        self.setBackgroundImage(self.getCurrentSide())
+
 
 # This method is called when the plugin is loaded into makehuman
 # The app reference is passed so that a plugin can attach a new category, task, or other GUI elements
