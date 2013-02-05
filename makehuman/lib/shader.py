@@ -35,35 +35,181 @@ class Uniform(object):
         self.name = name
         self.pytype = pytype
         self.dims = dims
+        self.value = None
 
     def __call__(self, index, values):
         raise NotImplementedError
 
-class VectorUniform(object):
-    def __init__(self, index, name, pytype, dims, type, func):
+    def update(self, pgm):
+        pass
+
+class VectorUniform(Uniform):
+    uniformTypes = {
+        GL_FLOAT:               ((1,),  np.float32,     float,  glUniform1fv,		glGetUniformfv),
+        GL_FLOAT_VEC2:          ((2,),  np.float32,     float,  glUniform2fv,		glGetUniformfv),
+        GL_FLOAT_VEC3:          ((3,),  np.float32,     float,  glUniform3fv,		glGetUniformfv),
+        GL_FLOAT_VEC4:          ((4,),  np.float32,     float,  glUniform4fv,		glGetUniformfv),
+        GL_INT:                 ((1,),  np.int32,       int,    glUniform1iv,		glGetUniformiv),
+        GL_INT_VEC2:            ((2,),  np.int32,       int,    glUniform2iv,		glGetUniformiv),
+        GL_INT_VEC3:            ((3,),  np.int32,       int,    glUniform3iv,		glGetUniformiv),
+        GL_INT_VEC4:            ((4,),  np.int32,       int,    glUniform4iv,		glGetUniformiv),
+        GL_UNSIGNED_INT:        ((1,),  np.uint32,      int,    glUniform1uiv,		glGetUniformuiv),
+        GL_UNSIGNED_INT_VEC2:   ((2,),  np.uint32,      int,    glUniform2uiv,		glGetUniformuiv),
+        GL_UNSIGNED_INT_VEC3:   ((3,),  np.uint32,      int,    glUniform3uiv,		glGetUniformuiv),
+        GL_UNSIGNED_INT_VEC4:   ((4,),  np.uint32,      int,    glUniform4uiv,		glGetUniformuiv),
+        GL_BOOL:                ((1,),  np.int32,       bool,   glUniform1iv,		glGetUniformiv),
+        GL_BOOL_VEC2:           ((2,),  np.int32,       bool,   glUniform2iv,		glGetUniformiv),
+        GL_BOOL_VEC3:           ((3,),  np.int32,       bool,   glUniform3iv,		glGetUniformiv),
+        GL_BOOL_VEC4:           ((4,),  np.int32,       bool,   glUniform4iv,		glGetUniformiv),
+        GL_FLOAT_MAT2:          ((2,2), np.float32,     float,  glUniformMatrix2fv,	glGetUniformfv),
+        GL_FLOAT_MAT2x3:        ((2,3), np.float32,     float,  glUniformMatrix2x3fv,	glGetUniformfv),
+        GL_FLOAT_MAT2x4:        ((2,4), np.float32,     float,  glUniformMatrix2x4fv,	glGetUniformfv),
+        GL_FLOAT_MAT3x2:        ((3,2), np.float32,     float,  glUniformMatrix3x2fv,	glGetUniformfv),
+        GL_FLOAT_MAT3:          ((3,3), np.float32,     float,  glUniformMatrix3fv,	glGetUniformfv),
+        GL_FLOAT_MAT3x4:        ((3,4), np.float32,     float,  glUniformMatrix3x4fv,	glGetUniformfv),
+        GL_FLOAT_MAT4x2:        ((4,2), np.float32,     float,  glUniformMatrix4x2fv,	glGetUniformfv),
+        GL_FLOAT_MAT4x3:        ((4,3), np.float32,     float,  glUniformMatrix4x3fv,	glGetUniformfv),
+        GL_FLOAT_MAT4:          ((4,4), np.float32,     float,  glUniformMatrix4fv,	glGetUniformfv),
+        }
+
+    if 'glUniform1dv' in globals():
+        uniformTypes2 = {
+            GL_DOUBLE:              ((1,),  np.float64,     float,  glUniform1dv,		glGetUniformdv),
+            GL_DOUBLE_VEC2:         ((2,),  np.float64,     float,  glUniform2dv,		glGetUniformdv),
+            GL_DOUBLE_VEC3:         ((3,),  np.float64,     float,  glUniform3dv,		glGetUniformdv),
+            GL_DOUBLE_VEC4:         ((4,),  np.float64,     float,  glUniform4dv,		glGetUniformdv),
+            GL_DOUBLE_MAT2:         ((2,2), np.float64,     float,  glUniformMatrix2dv,		glGetUniformdv),
+            GL_DOUBLE_MAT2x3:       ((2,3), np.float64,     float,  glUniformMatrix2x3dv,	glGetUniformdv),
+            GL_DOUBLE_MAT2x4:       ((2,4), np.float64,     float,  glUniformMatrix2x4dv,	glGetUniformdv),
+            GL_DOUBLE_MAT3x2:       ((3,2), np.float64,     float,  glUniformMatrix3x2dv,	glGetUniformdv),
+            GL_DOUBLE_MAT3:         ((3,3), np.float64,     float,  glUniformMatrix3dv,		glGetUniformdv),
+            GL_DOUBLE_MAT3x4:       ((3,4), np.float64,     float,  glUniformMatrix3x4dv,	glGetUniformdv),
+            GL_DOUBLE_MAT4x2:       ((4,2), np.float64,     float,  glUniformMatrix4x2dv,	glGetUniformdv),
+            GL_DOUBLE_MAT4x3:       ((4,3), np.float64,     float,  glUniformMatrix4x3dv,	glGetUniformdv),
+            GL_DOUBLE_MAT4:         ((4,4), np.float64,     float,  glUniformMatrix4dv,		glGetUniformdv),
+            }
+
+    @classmethod
+    def check(cls, type):
+        if hasattr(cls, 'uniformTypes2') and cls.uniformTypes2:
+            cls.uniformTypes.update(cls.uniformTypes2)
+            cls.uniformTypes2.clear()
+        return type in cls.uniformTypes
+
+    def __init__(self, index, name, type):
+        dims, dtype, pytype, glfunc, glquery = self.uniformTypes[type]
         super(VectorUniform, self).__init__(index, name, pytype, dims)
-        self.type = type
-        self.func = func
+        self.dtype = dtype
+        self.glfunc = glfunc
+        self.glquery = glquery
 
-    def __call__(self, data):
-        self.call(self.values(data))
+    def set(self, data):
+        values = np.asarray(data, dtype=self.dtype).reshape(self.dims)
+        if len(self.dims) > 1:
+            self.glfunc(self.index, 1, GL_TRUE, values)
+        else:
+            self.glfunc(self.index, len(values), values)
 
-    def values(self, data):
-        return np.asarray(data, dtype=self.type).reshape(self.dims)
-
-    def call(self, values):
-        self.func(self.index, len(values), values)
-
-class MatrixUniform(VectorUniform):
-    def call(self, values):
-        self.func(self.index, 1, GL_TRUE, values)
+    def update(self, pgm):
+        values = np.zeros(self.dims, dtype=self.dtype)
+        self.glquery(pgm, self.index, values)
+        if len(self.dims) > 1:
+            values = values.T
+        self.values = values
+        log.debug('VectorUniform(%s) = %s', self.name, self.values)
+        return self.values
 
 class SamplerUniform(Uniform):
-    def __init__(self, index, name, target):
+
+    textureTargets = {
+        GL_SAMPLER_1D:                                  GL_TEXTURE_1D,
+        GL_SAMPLER_2D:                                  GL_TEXTURE_2D,
+        GL_SAMPLER_3D:                                  GL_TEXTURE_3D,
+        GL_SAMPLER_CUBE:                                GL_TEXTURE_CUBE_MAP,
+        GL_SAMPLER_1D_SHADOW:                           GL_TEXTURE_1D,
+        GL_SAMPLER_2D_SHADOW:                           GL_TEXTURE_2D,
+        GL_SAMPLER_1D_ARRAY:                            GL_TEXTURE_1D_ARRAY,
+        GL_SAMPLER_2D_ARRAY:                            GL_TEXTURE_2D_ARRAY,
+        GL_SAMPLER_1D_ARRAY_SHADOW:                     GL_TEXTURE_1D_ARRAY,
+        GL_SAMPLER_2D_ARRAY_SHADOW:                     GL_TEXTURE_2D_ARRAY,
+        GL_SAMPLER_2D_MULTISAMPLE:                      GL_TEXTURE_2D_MULTISAMPLE,
+        GL_SAMPLER_2D_MULTISAMPLE_ARRAY:                GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
+        GL_SAMPLER_CUBE_SHADOW:                         GL_TEXTURE_CUBE_MAP,
+        GL_SAMPLER_BUFFER:                              GL_TEXTURE_BUFFER,
+        GL_SAMPLER_2D_RECT:                             GL_TEXTURE_RECTANGLE,
+        GL_SAMPLER_2D_RECT_SHADOW:                      GL_TEXTURE_RECTANGLE,
+        GL_INT_SAMPLER_1D:                              GL_TEXTURE_1D,
+        GL_INT_SAMPLER_2D:                              GL_TEXTURE_2D,
+        GL_INT_SAMPLER_3D:                              GL_TEXTURE_3D,
+        GL_INT_SAMPLER_CUBE:                            GL_TEXTURE_CUBE_MAP,
+        GL_INT_SAMPLER_1D_ARRAY:                        GL_TEXTURE_1D_ARRAY,
+        GL_INT_SAMPLER_2D_ARRAY:                        GL_TEXTURE_2D_ARRAY,
+        GL_INT_SAMPLER_2D_MULTISAMPLE:                  GL_TEXTURE_2D_MULTISAMPLE,
+        GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:            GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
+        GL_INT_SAMPLER_BUFFER:                          GL_TEXTURE_BUFFER,
+        GL_INT_SAMPLER_2D_RECT:                         GL_TEXTURE_RECTANGLE,
+        GL_UNSIGNED_INT_SAMPLER_1D:                     GL_TEXTURE_1D,
+        GL_UNSIGNED_INT_SAMPLER_2D:                     GL_TEXTURE_2D,
+        GL_UNSIGNED_INT_SAMPLER_3D:                     GL_TEXTURE_3D,
+        GL_UNSIGNED_INT_SAMPLER_CUBE:                   GL_TEXTURE_CUBE_MAP,
+        GL_UNSIGNED_INT_SAMPLER_1D_ARRAY:               GL_TEXTURE_1D_ARRAY,
+        GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:               GL_TEXTURE_2D_ARRAY,
+        GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:         GL_TEXTURE_2D_MULTISAMPLE,
+        GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:   GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
+        GL_UNSIGNED_INT_SAMPLER_BUFFER:                 GL_TEXTURE_BUFFER,
+        GL_UNSIGNED_INT_SAMPLER_2D_RECT:                GL_TEXTURE_RECTANGLE,
+        }
+
+    if 'GL_IMAGE_1D' in globals():    
+        try:
+            textureTargets2 = {
+                GL_IMAGE_1D:                                    GL_TEXTURE_1D,
+                GL_IMAGE_2D:                                    GL_TEXTURE_2D,
+                GL_IMAGE_3D:                                    GL_TEXTURE_3D,
+                GL_IMAGE_2D_RECT:                               GL_TEXTURE_2D_RECTANGLE,
+                GL_IMAGE_CUBE:                                  GL_TEXTURE_CUBE_MAP,
+                GL_IMAGE_BUFFER:                                GL_TEXTURE_BUFFER,
+                GL_IMAGE_1D_ARRAY:                              GL_TEXTURE_1D_ARRAY,
+                GL_IMAGE_2D_ARRAY:                              GL_TEXTURE_2D_ARRAY,
+                GL_IMAGE_2D_MULTISAMPLE:                        GL_TEXTURE_2D_MULTISAMPLE,
+                GL_IMAGE_2D_MULTISAMPLE_ARRAY:                  GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
+                GL_INT_IMAGE_1D:                                GL_TEXTURE_1D,
+                GL_INT_IMAGE_2D:                                GL_TEXTURE_2D,
+                GL_INT_IMAGE_3D:                                GL_TEXTURE_3D,
+                GL_INT_IMAGE_2D_RECT:                           GL_TEXTURE_2D_RECTANGLE,
+                GL_INT_IMAGE_CUBE:                              GL_TEXTURE_CUBE_MAP,
+                GL_INT_IMAGE_BUFFER:                            GL_TEXTURE_BUFFER,
+                GL_INT_IMAGE_1D_ARRAY:                          GL_TEXTURE_1D_ARRAY,
+                GL_INT_IMAGE_2D_ARRAY:                          GL_TEXTURE_2D_ARRAY,
+                GL_INT_IMAGE_2D_MULTISAMPLE:                    GL_TEXTURE_2D_MULTISAMPLE,
+                GL_INT_IMAGE_2D_MULTISAMPLE_ARRAY:              GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
+                GL_UNSIGNED_INT_IMAGE_1D:                       GL_TEXTURE_1D,
+                GL_UNSIGNED_INT_IMAGE_2D:                       GL_TEXTURE_2D,
+                GL_UNSIGNED_INT_IMAGE_3D:                       GL_TEXTURE_3D,
+                GL_UNSIGNED_INT_IMAGE_2D_RECT:                  GL_TEXTURE_2D_RECTANGLE,
+                GL_UNSIGNED_INT_IMAGE_CUBE:                     GL_TEXTURE_CUBE_MAP,
+                GL_UNSIGNED_INT_IMAGE_BUFFER:                   GL_TEXTURE_BUFFER,
+                GL_UNSIGNED_INT_IMAGE_1D_ARRAY:                 GL_TEXTURE_1D_ARRAY,
+                GL_UNSIGNED_INT_IMAGE_2D_ARRAY:                 GL_TEXTURE_2D_ARRAY,
+                GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE:           GL_TEXTURE_2D_MULTISAMPLE,
+                GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY:     GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
+                }
+        except:
+            pass
+
+    @classmethod
+    def check(cls, type):
+        if hasattr(cls, 'textureTargets2') and cls.textureTargets2:
+            cls.textureTargets.update(cls.textureTargets2)
+            cls.textureTargets2.clear()
+        return type in cls.textureTargets
+
+    def __init__(self, index, name, type):
+        target = self.textureTargets[type]
         super(SamplerUniform, self).__init__(index, name, str, (1,))
         self.target = target
 
-    def __call__(self, data):
+    def set(self, data):
         cls = type(self)
         glActiveTexture(GL_TEXTURE0 + cls.currentSampler)
         glBindTexture(self.target, texture.getTexture(data).textureId)
@@ -155,155 +301,26 @@ class Shader(object):
             return
 
         self.uniforms = None
-
-    uniformTypes = {
-        GL_FLOAT:               ((1,),  np.float32,     float,  glUniform1fv),
-        GL_FLOAT_VEC2:          ((2,),  np.float32,     float,  glUniform2fv),
-        GL_FLOAT_VEC3:          ((3,),  np.float32,     float,  glUniform3fv),
-        GL_FLOAT_VEC4:          ((4,),  np.float32,     float,  glUniform4fv),
-        GL_INT:                 ((1,),  np.int32,       int,    glUniform1iv),
-        GL_INT_VEC2:            ((2,),  np.int32,       int,    glUniform2iv),
-        GL_INT_VEC3:            ((3,),  np.int32,       int,    glUniform3iv),
-        GL_INT_VEC4:            ((4,),  np.int32,       int,    glUniform4iv),
-        GL_UNSIGNED_INT:        ((1,),  np.uint32,      int,    glUniform1uiv),
-        GL_UNSIGNED_INT_VEC2:   ((2,),  np.uint32,      int,    glUniform2uiv),
-        GL_UNSIGNED_INT_VEC3:   ((3,),  np.uint32,      int,    glUniform3uiv),
-        GL_UNSIGNED_INT_VEC4:   ((4,),  np.uint32,      int,    glUniform4uiv),
-        GL_BOOL:                ((1,),  np.int32,       bool,   glUniform1iv),
-        GL_BOOL_VEC2:           ((2,),  np.int32,       bool,   glUniform2iv),
-        GL_BOOL_VEC3:           ((3,),  np.int32,       bool,   glUniform3iv),
-        GL_BOOL_VEC4:           ((4,),  np.int32,       bool,   glUniform4iv),
-        GL_FLOAT_MAT2:          ((2,2), np.float32,     float,  glUniformMatrix2fv),
-        GL_FLOAT_MAT2x3:        ((2,3), np.float32,     float,  glUniformMatrix2x3fv),
-        GL_FLOAT_MAT2x4:        ((2,4), np.float32,     float,  glUniformMatrix2x4fv),
-        GL_FLOAT_MAT3x2:        ((3,2), np.float32,     float,  glUniformMatrix3x2fv),
-        GL_FLOAT_MAT3:          ((3,3), np.float32,     float,  glUniformMatrix3fv),
-        GL_FLOAT_MAT3x4:        ((3,4), np.float32,     float,  glUniformMatrix3x4fv),
-        GL_FLOAT_MAT4x2:        ((4,2), np.float32,     float,  glUniformMatrix4x2fv),
-        GL_FLOAT_MAT4x3:        ((4,3), np.float32,     float,  glUniformMatrix4x3fv),
-        GL_FLOAT_MAT4:          ((4,4), np.float32,     float,  glUniformMatrix4fv),
-        }
-
-    if 'glUniform1dv' in globals():
-        uniformTypes2 = {
-            GL_DOUBLE:              ((1,),  np.float64,     float,  glUniform1dv),
-            GL_DOUBLE_VEC2:         ((2,),  np.float64,     float,  glUniform2dv),
-            GL_DOUBLE_VEC3:         ((3,),  np.float64,     float,  glUniform3dv),
-            GL_DOUBLE_VEC4:         ((4,),  np.float64,     float,  glUniform4dv),
-            GL_DOUBLE_MAT2:         ((2,2), np.float64,     float,  glUniformMatrix2dv),
-            GL_DOUBLE_MAT2x3:       ((2,3), np.float64,     float,  glUniformMatrix2x3dv),
-            GL_DOUBLE_MAT2x4:       ((2,4), np.float64,     float,  glUniformMatrix2x4dv),
-            GL_DOUBLE_MAT3x2:       ((3,2), np.float64,     float,  glUniformMatrix3x2dv),
-            GL_DOUBLE_MAT3:         ((3,3), np.float64,     float,  glUniformMatrix3dv),
-            GL_DOUBLE_MAT3x4:       ((3,4), np.float64,     float,  glUniformMatrix3x4dv),
-            GL_DOUBLE_MAT4x2:       ((4,2), np.float64,     float,  glUniformMatrix4x2dv),
-            GL_DOUBLE_MAT4x3:       ((4,3), np.float64,     float,  glUniformMatrix4x3dv),
-            GL_DOUBLE_MAT4:         ((4,4), np.float64,     float,  glUniformMatrix4dv),
-            }
-
-    textureTargets = {
-        GL_SAMPLER_1D:                                  GL_TEXTURE_1D,
-        GL_SAMPLER_2D:                                  GL_TEXTURE_2D,
-        GL_SAMPLER_3D:                                  GL_TEXTURE_3D,
-        GL_SAMPLER_CUBE:                                GL_TEXTURE_CUBE_MAP,
-        GL_SAMPLER_1D_SHADOW:                           GL_TEXTURE_1D,
-        GL_SAMPLER_2D_SHADOW:                           GL_TEXTURE_2D,
-        GL_SAMPLER_1D_ARRAY:                            GL_TEXTURE_1D_ARRAY,
-        GL_SAMPLER_2D_ARRAY:                            GL_TEXTURE_2D_ARRAY,
-        GL_SAMPLER_1D_ARRAY_SHADOW:                     GL_TEXTURE_1D_ARRAY,
-        GL_SAMPLER_2D_ARRAY_SHADOW:                     GL_TEXTURE_2D_ARRAY,
-        GL_SAMPLER_2D_MULTISAMPLE:                      GL_TEXTURE_2D_MULTISAMPLE,
-        GL_SAMPLER_2D_MULTISAMPLE_ARRAY:                GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
-        GL_SAMPLER_CUBE_SHADOW:                         GL_TEXTURE_CUBE_MAP,
-        GL_SAMPLER_BUFFER:                              GL_TEXTURE_BUFFER,
-        GL_SAMPLER_2D_RECT:                             GL_TEXTURE_RECTANGLE,
-        GL_SAMPLER_2D_RECT_SHADOW:                      GL_TEXTURE_RECTANGLE,
-        GL_INT_SAMPLER_1D:                              GL_TEXTURE_1D,
-        GL_INT_SAMPLER_2D:                              GL_TEXTURE_2D,
-        GL_INT_SAMPLER_3D:                              GL_TEXTURE_3D,
-        GL_INT_SAMPLER_CUBE:                            GL_TEXTURE_CUBE_MAP,
-        GL_INT_SAMPLER_1D_ARRAY:                        GL_TEXTURE_1D_ARRAY,
-        GL_INT_SAMPLER_2D_ARRAY:                        GL_TEXTURE_2D_ARRAY,
-        GL_INT_SAMPLER_2D_MULTISAMPLE:                  GL_TEXTURE_2D_MULTISAMPLE,
-        GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:            GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
-        GL_INT_SAMPLER_BUFFER:                          GL_TEXTURE_BUFFER,
-        GL_INT_SAMPLER_2D_RECT:                         GL_TEXTURE_RECTANGLE,
-        GL_UNSIGNED_INT_SAMPLER_1D:                     GL_TEXTURE_1D,
-        GL_UNSIGNED_INT_SAMPLER_2D:                     GL_TEXTURE_2D,
-        GL_UNSIGNED_INT_SAMPLER_3D:                     GL_TEXTURE_3D,
-        GL_UNSIGNED_INT_SAMPLER_CUBE:                   GL_TEXTURE_CUBE_MAP,
-        GL_UNSIGNED_INT_SAMPLER_1D_ARRAY:               GL_TEXTURE_1D_ARRAY,
-        GL_UNSIGNED_INT_SAMPLER_2D_ARRAY:               GL_TEXTURE_2D_ARRAY,
-        GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE:         GL_TEXTURE_2D_MULTISAMPLE,
-        GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY:   GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
-        GL_UNSIGNED_INT_SAMPLER_BUFFER:                 GL_TEXTURE_BUFFER,
-        GL_UNSIGNED_INT_SAMPLER_2D_RECT:                GL_TEXTURE_RECTANGLE,
-        }
-
-    if 'GL_IMAGE_1D' in globals():    
-        try:
-            textureTargets2 = {
-                GL_IMAGE_1D:                                    GL_TEXTURE_1D,
-                GL_IMAGE_2D:                                    GL_TEXTURE_2D,
-                GL_IMAGE_3D:                                    GL_TEXTURE_3D,
-                GL_IMAGE_2D_RECT:                               GL_TEXTURE_2D_RECTANGLE,
-                GL_IMAGE_CUBE:                                  GL_TEXTURE_CUBE_MAP,
-                GL_IMAGE_BUFFER:                                GL_TEXTURE_BUFFER,
-                GL_IMAGE_1D_ARRAY:                              GL_TEXTURE_1D_ARRAY,
-                GL_IMAGE_2D_ARRAY:                              GL_TEXTURE_2D_ARRAY,
-                GL_IMAGE_2D_MULTISAMPLE:                        GL_TEXTURE_2D_MULTISAMPLE,
-                GL_IMAGE_2D_MULTISAMPLE_ARRAY:                  GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
-                GL_INT_IMAGE_1D:                                GL_TEXTURE_1D,
-                GL_INT_IMAGE_2D:                                GL_TEXTURE_2D,
-                GL_INT_IMAGE_3D:                                GL_TEXTURE_3D,
-                GL_INT_IMAGE_2D_RECT:                           GL_TEXTURE_2D_RECTANGLE,
-                GL_INT_IMAGE_CUBE:                              GL_TEXTURE_CUBE_MAP,
-                GL_INT_IMAGE_BUFFER:                            GL_TEXTURE_BUFFER,
-                GL_INT_IMAGE_1D_ARRAY:                          GL_TEXTURE_1D_ARRAY,
-                GL_INT_IMAGE_2D_ARRAY:                          GL_TEXTURE_2D_ARRAY,
-                GL_INT_IMAGE_2D_MULTISAMPLE:                    GL_TEXTURE_2D_MULTISAMPLE,
-                GL_INT_IMAGE_2D_MULTISAMPLE_ARRAY:              GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
-                GL_UNSIGNED_INT_IMAGE_1D:                       GL_TEXTURE_1D,
-                GL_UNSIGNED_INT_IMAGE_2D:                       GL_TEXTURE_2D,
-                GL_UNSIGNED_INT_IMAGE_3D:                       GL_TEXTURE_3D,
-                GL_UNSIGNED_INT_IMAGE_2D_RECT:                  GL_TEXTURE_2D_RECTANGLE,
-                GL_UNSIGNED_INT_IMAGE_CUBE:                     GL_TEXTURE_CUBE_MAP,
-                GL_UNSIGNED_INT_IMAGE_BUFFER:                   GL_TEXTURE_BUFFER,
-                GL_UNSIGNED_INT_IMAGE_1D_ARRAY:                 GL_TEXTURE_1D_ARRAY,
-                GL_UNSIGNED_INT_IMAGE_2D_ARRAY:                 GL_TEXTURE_2D_ARRAY,
-                GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE:           GL_TEXTURE_2D_MULTISAMPLE,
-                GL_UNSIGNED_INT_IMAGE_2D_MULTISAMPLE_ARRAY:     GL_TEXTURE_2D_MULTISAMPLE_ARRAY,
-                }
-        except:
-            pass
-
+        self.updateUniforms()
 
     def getUniforms(self):
         if self.uniforms is None:
-            if hasattr(self, 'uniformTypes2') and self.uniformTypes2:
-                self.uniformTypes.update(self.uniformTypes2)
-                self.uniformTypes2.clear()
-
-            if hasattr(self, 'textureTargets2') and self.textureTargets2:
-                self.textureTargets.update(self.textureTargets2)
-                self.textureTargets2.clear()
-
             parameterCount = glGetProgramiv(self.shaderId, GL_ACTIVE_UNIFORMS)
             self.uniforms = []
             for index in xrange(parameterCount):
                 name, size, type = glGetActiveUniform(self.shaderId, index)
-                if type in self.uniformTypes:
-                    dims, nptype, pytype, glfunc = self.uniformTypes[type]
-                    if len(values.shape) > 1:
-                        func = MatrixUniform(index, name, pytype, dims, nptype, glfunc)
-                    else:
-                        func = VectorUniform(index, name, pytype, dims, nptype, glfunc)
-                elif type in self.textureTargets:
-                    target = self.textureTargets[type]
-                    func = SamplerUniform(index, name, target)
-                self.uniforms.append(func)
+                if VectorUniform.check(type):
+                    uniform = VectorUniform(index, name, type)
+                elif SamplerUniform.check(type):
+                    uniform = SamplerUniform(index, name, type)
+                uniform.update(self.shaderId)
+                self.uniforms.append(uniform)
 
         return self.uniforms
+
+    def updateUniforms(self):
+        for uniform in self.getUniforms():
+            uniform.update(self.shaderId)
 
     def setUniforms(self, params):
         SamplerUniform.reset()
@@ -311,7 +328,7 @@ class Shader(object):
         for uniform in self.getUniforms():
             value = params.get(name)
             if value is not None:
-                uniform(value)
+                uniform.set(value)
 
 _shaderCache = {}
 
