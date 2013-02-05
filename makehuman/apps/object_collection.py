@@ -248,7 +248,8 @@ def setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden
     foundProxy,deleteVerts = setupProxies('Proxy', name, obj, stuffs, meshInfo, cfg.proxyList, deleteGroups, deleteVerts)
     if not foundProxy:
         # If we subdivide here, helpers will not be removed.
-        if False and subdivide:
+        if subdivide:
+            stuff.meshInfo = meshInfo
             stuff.setObject3dMesh(human.getSubdivisionMesh(False,progressCallback = lambda p: progress(0,p*0.5)),
                                   stuff.meshInfo.weights, rawTargets)
         else:
