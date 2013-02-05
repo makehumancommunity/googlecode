@@ -169,7 +169,7 @@ class GroupBox(QtGui.QGroupBox, Widget):
 
     def removeWidget(self, widget):
         self.layout.removeWidget(widget)
-        # widget.setParent(None)
+        widget.setParent(None)
 
     @property
     def children(self):
@@ -442,10 +442,25 @@ class RadioButton(QtGui.QRadioButton, ButtonBase):
             if radio.selected:
                 return radio
 
+class ListItem(QtGui.QListWidgetItem):
+    def setUserData(self, data):
+        self.setData(QtCore.Qt.UserRole, data)
+
+    def getUserData(self):
+        return self.data(QtCore.Qt.UserRole).toPyObject()
+
+    @property
+    def text(self):
+        return unicode(self.text())
+
 class ListView(QtGui.QListWidget, Widget):
     def __init__(self):
         super(ListView, self).__init__()
         Widget.__init__(self)
+        self.connect(self, QtCore.SIGNAL('itemActivated(QListWidgetItem *)'), self._activate)
+
+    def _activate(self, item):
+        self.callEvent('onActivate', item)
 
     def setData(self, items):
         self.clear()
@@ -459,12 +474,12 @@ class ListView(QtGui.QListWidget, Widget):
         return cls._brushes[color]
 
     def addItem(self, text, color = None, data = None):
-        item = QtGui.QListWidgetItem(self)
+        item = ListItem(self)
         item.setText(text)
         if color is not None:
             item.setForeground(self.getBrush(color))
         if data is not None:
-            item.setData(QtCore.Qt.UserRole, data)
+            item.setUserData(data)
         super(ListView, self).addItem(item)
 
     def getSelectedItem(self):
@@ -474,7 +489,7 @@ class ListView(QtGui.QListWidget, Widget):
         return None
 
     def getItemData(self, row):
-        return self.item(row).data(QtCore.Qt.UserRole).toPyObject()
+        return self.item(row).getUserData()
 
     def showItem(self, row, state):
         self.item(row).setHidden(not state)
@@ -1067,7 +1082,7 @@ class TreeView(QtGui.QTreeWidget, Widget):
     def __init__(self, parent = None):
         super(TreeView, self).__init__(parent)
         Widget.__init__(self)
-        self.connect(self, QtCore.SIGNAL('itemDoubleClicked(QTreeWidgetItem *,int)'), self._activate)
+        self.connect(self, QtCore.SIGNAL('itemActivated(QTreeWidgetItem *,int)'), self._activate)
         self.connect(self, QtCore.SIGNAL('itemExpanded(QTreeWidgetItem *)'), self._expand)
         if TreeView._dirIcon is None:
             TreeView._dirIcon = self.style().standardIcon(QtGui.QStyle.SP_DirIcon)
@@ -1210,16 +1225,27 @@ class SizePolicy(object):
     MinimumExpanding    = QtGui.QSizePolicy.MinimumExpanding
     Ignored             = QtGui.QSizePolicy.Ignored
 
+class TableItem(QtGui.QTableWidgetItem):
+    def setUserData(self, data):
+        self.setData(QtCore.Qt.UserRole, data)
+
+    def getUserData(self):
+        return self.data(QtCore.Qt.UserRole).toPyObject()
+
+    @property
+    def text(self):
+        return unicode(self.text())
+
 class TableView(QtGui.QTableWidget, Widget):
     def __init__(self):
         super(TableView, self).__init__()
         Widget.__init__(self)
 
     def setItem(self, row, col, text, data = None):
-        item = QtGui.QTableWidgetItem(text)
+        item = TableItem(text)
         if data is not None:
-            item.setData(QtCore.Qt.UserRole, data)
+            item.setUserData(data)
         super(TableView, self).setItem(row, col, item)
 
     def getItemData(self, row, col):
-        return self.item(row, col).data(QtCore.Qt.UserRole).toPyObject()
+        return self.item(row, col).getUserData()

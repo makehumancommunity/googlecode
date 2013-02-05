@@ -35,7 +35,7 @@ class Uniform(object):
         self.name = name
         self.pytype = pytype
         self.dims = dims
-        self.value = None
+        self.values = None
 
     def __call__(self, index, values):
         raise NotImplementedError
@@ -326,7 +326,7 @@ class Shader(object):
         SamplerUniform.reset()
 
         for uniform in self.getUniforms():
-            value = params.get(name)
+            value = params.get(uniform.name)
             if value is not None:
                 uniform.set(value)
 
