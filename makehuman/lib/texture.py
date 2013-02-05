@@ -160,7 +160,7 @@ def getTexture(path, cache=None):
         if texture is False:
             return texture
 
-        if os.path.getmtime(path) >= texture.modified:
+        if os.path.getmtime(path) > texture.modified:
             log.message('reloading %s', path)   # TL: unicode problems unbracketed
 
             try:
