@@ -35,6 +35,28 @@ import armature
 import warpmodifier
 import posemode
 
+class Action(object):
+
+    def __init__(self, name, library, before, after, postAction=None):
+        self.name = name
+        self.library = library
+        self.before = before
+        self.after = after
+        self.postAction = postAction
+
+    def do(self):
+        self.library.loadMhpFile(self.after)
+        if self.postAction:
+            self.postAction()
+        return True
+
+    def undo(self):
+        self.library.loadMhpFile(self.before)
+        if self.postAction:
+            self.postAction()
+        return True
+
+
 #
 #   Pose library
 #
@@ -62,10 +84,19 @@ class PoseLoadTaskView(gui3d.TaskView):
         self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
         self.mediaSync = None
 
+        self.lastPose = None
+
         @self.filechooser.mhEvent
         def onFileSelected(filepath):
+            if self.lastPose:
+                oldFile = self.lastPose
+            else:
+                oldFile = "clear.mhp"
 
-            self.loadMhpFile(filepath)
+            gui3d.app.do(Action("Change pose",
+                self,
+                oldFile,
+                filepath))
             mh.changeCategory('Modelling')
             
         @self.update.mhEvent
@@ -79,6 +110,8 @@ class PoseLoadTaskView(gui3d.TaskView):
 
         human = gui3d.app.selectedHuman
 
+        self.lastPose = filepath
+
         if os.path.basename(filepath) == "clear.mhp":
             posemode.exitPoseMode()
             posemode.resetPoseMode()
@@ -87,8 +120,8 @@ class PoseLoadTaskView(gui3d.TaskView):
         posemode.enterPoseMode()
         folder = os.path.dirname(filepath)
         (fname, ext) = os.path.splitext(os.path.basename(filepath))
-        modpath = '%s/${gender}-${age}-${tone}-${weight}-%s.target' % (folder, fname)
-        modpath = modpath.replace("\\","/")
+        filenamePattern = "${gender}-${age}-${tone}-${weight}-%s.target" % fname
+        modpath = os.path.join(folder, filenamePattern)
         log.debug('PoseLoadTaskView.loadMhpFile: %s %s', filepath, modpath)
         modifier = PoseModifier(modpath)
         modifier.updateValue(human, 1.0)
@@ -118,7 +151,10 @@ class PoseLoadTaskView(gui3d.TaskView):
                 
     def onHumanChanging(self, event):
         posemode.changePoseMode(event)
-                
+
+        if event.change == 'reset':
+            self.lastPose = None
+
     def onHumanChanged(self, event):
         posemode.changePoseMode(event)
 
