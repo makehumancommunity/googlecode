@@ -33,9 +33,9 @@ import posemode
 from mhx import the, mhx_custom
 import log
 
-fbxpath = "tools/blender26x"
-if fbxpath not in sys.path:
-    sys.path.append(fbxpath)
+#fbxpath = "tools/blender26x"
+#if fbxpath not in sys.path:
+#    sys.path.append(fbxpath)
     
 import io_fbx
 # bpy must be imported after io_fbx
@@ -96,7 +96,7 @@ def exportFbx(human, filepath, options):
     
     filename = "%s.fbx" % outpath
     gui3d.app.progress(0, text="Exporting %s" % filename)
-    io_mh_fbx.fbx_export.exportFbxFile(bpy.context, filename)
+    io_fbx.fbx_export.exportFbxFile(bpy.context, filename)
     gui3d.app.progress(1)
     posemode.exitPoseMode()        
     return
