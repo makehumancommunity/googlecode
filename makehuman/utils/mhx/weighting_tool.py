@@ -640,6 +640,14 @@ def symmetrizeWeights(context, left2right):
             nameStripped = vgrp.name[:-2]
             right[nameStripped] = vgrp
             rightIndex[vgrp.index] = nameStripped
+        elif vgrp.name[:4].lower() == 'left':
+            nameStripped = vgrp.name[4:]
+            left[nameStripped] = vgrp
+            leftIndex[vgrp.index] = nameStripped
+        elif vgrp.name[:5].lower() == 'right':
+            nameStripped = vgrp.name[5:]
+            right[nameStripped] = vgrp
+            rightIndex[vgrp.index] = nameStripped
         elif vgrp.name[-4:].lower() == 'left':
             nameStripped = vgrp.name[:-4]
             left[nameStripped] = vgrp
@@ -715,7 +723,7 @@ def symmetrizeWeights(context, left2right):
                 rgrp.add([rv.index], grp.weight, 'REPLACE')
             else:                
                 gn = grp.group
-                print("*** No rgrp for %s %s %s" % (grp, gn, ob.vertex_groups[gn]))
+                print("*** No rgrp for v %s g %s %s" % (vn, gn, ob.vertex_groups[gn].name))
     return len(rverts)
 
 def printGroups(name, groups, indices, vgroups):
