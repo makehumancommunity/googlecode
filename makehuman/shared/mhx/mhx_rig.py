@@ -31,7 +31,7 @@ import os
 import sys
 import mh2proxy
 import armature
-import read_expression
+import read_shapekeys
 import log
 
 from . import the
@@ -843,7 +843,7 @@ def writeAllProperties(fp, typ, config):
     
     if config.expressionunits:
         fp.write("#if toggle&T_Shapekeys\n")
-        for skey in read_expression.ExpressionUnits:
+        for skey in read_shapekeys.ExpressionUnits:
             fp.write("  DefProp Float Mhs%s 0.0 %s min=-1.0,max=2.0 ;\n" % (skey, skey))
         fp.write("#endif\n")
     return

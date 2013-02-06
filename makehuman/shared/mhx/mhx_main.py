@@ -41,7 +41,7 @@ import export_config
 import armature
 import warpmodifier
 import posemode
-import read_expression
+import read_shapekeys
 
 from . import the
 from . import mhx_rig
@@ -1107,7 +1107,7 @@ def printProxyVGroup(fp, vgroups):
 #
 
 def writeCorrectives(fp, human, drivers, folder, landmarks, proxy, t0, t1):    
-    shapeList = read_expression.readCorrectives(drivers, human, folder, landmarks, t0, t1)
+    shapeList = read_shapekeys.readCorrectives(drivers, human, folder, landmarks, t0, t1)
     for (shape, pose, lr) in shapeList:
         writeShape(fp, pose, lr, shape, 0, 1, proxy)
     
@@ -1138,14 +1138,14 @@ def writeShapeKeys(fp, human, name, config, proxy):
     """
     if (not proxy or proxy.type == 'Proxy'):        
         if config.faceshapes:
-            shapeList = read_expression.readFaceShapes(human, rig_panel_25.BodyLanguageShapeDrivers, 0.6, 0.7)
+            shapeList = read_shapekeys.readFaceShapes(human, rig_panel_25.BodyLanguageShapeDrivers, 0.6, 0.7)
             for (pose, shape, lr, min, max) in shapeList:
                 writeShape(fp, pose, lr, shape, min, max, proxy)
     """
     
     if not proxy:
         if config.expressionunits:
-            shapeList = read_expression.readExpressionUnits(human, 0.7, 0.9)
+            shapeList = read_shapekeys.readExpressionUnits(human, 0.7, 0.9)
             for (pose, shape) in shapeList:
                 writeShape(fp, pose, "Sym", shape, -1, 2, proxy)
         
@@ -1182,7 +1182,7 @@ def writeShapeKeys(fp, human, name, config, proxy):
 
     if not proxy:
         if config.expressionunits:
-            armature.drivers.writeShapePropDrivers(fp, read_expression.ExpressionUnits, proxy, "Mhs")
+            armature.drivers.writeShapePropDrivers(fp, read_shapekeys.ExpressionUnits, proxy, "Mhs")
             
         skeys = []
         for (skey, val, string, min, max) in  config.customProps:
@@ -1194,9 +1194,9 @@ def writeShapeKeys(fp, human, name, config, proxy):
 "  end AnimationData\n\n")
 
     if config.expressionunits and not proxy:
-        exprList = read_expression.readExpressionMhm("data/expressions")
+        exprList = read_shapekeys.readExpressionMhm("data/expressions")
         writeExpressions(fp, exprList, "Expression")        
-        visemeList = read_expression.readExpressionMhm("data/visemes")
+        visemeList = read_shapekeys.readExpressionMhm("data/visemes")
         writeExpressions(fp, visemeList, "Viseme")        
 
     fp.write(

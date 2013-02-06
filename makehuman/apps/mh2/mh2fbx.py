@@ -28,7 +28,7 @@ import sys
 import gui3d
 import export_config
 import object_collection
-import read_expression
+import read_shapekeys
 import posemode
 from mhx import the, mhx_custom
 import log
@@ -56,7 +56,7 @@ def exportFbx(human, filepath, options):
 
     rawTargets = []
     if options["expressions"]:
-        shapeList = read_expression.readExpressionUnits(human, 0, 1)
+        shapeList = read_shapekeys.readExpressionUnits(human, 0, 1)
         rawTargets += shapeList
 
     if options["customshapes"]:
