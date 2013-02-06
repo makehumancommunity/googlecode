@@ -294,15 +294,16 @@ class Slider(QtGui.QWidget, Widget):
         self.layout.setColumnMinimumWidth(1, 1)
         self.layout.setColumnStretch(0, 1)
         self.layout.setColumnStretch(1, 0)
+        self.layout.setColumnStretch(2, 0)
         self.layout.addWidget(self.label, 1, 0, 1, 1)
-        self.layout.addWidget(self.slider, 2, 0, 1, 2)
+        self.layout.addWidget(self.slider, 2, 0, 1, -1)
         if not self.text:
             self.label.hide()
 
         if image is not None:
             self.image = QtGui.QLabel()
             self.image.setPixmap(self._getImage(image))
-            self.layout.addWidget(self.image, 0, 0, 1, 2)
+            self.layout.addWidget(self.image, 0, 0, 1, -1)
         else:
             self.image = None
 
@@ -310,8 +311,14 @@ class Slider(QtGui.QWidget, Widget):
             self.edit = NarrowLineEdit(5)
             self.connect(self.edit, QtCore.SIGNAL('returnPressed()'), self._enter)
             self.layout.addWidget(self.edit, 1, 1, 1, 1)
+            if hasattr(self.valueConverter, 'units'):
+                self.units = QtGui.QLabel(self.valueConverter.units)
+                self.layout.addWidget(self.units, 1, 2, 1, 1)
+            else:
+                self.units = None
         else:
             self.edit = None
+            self.units = None
 
         self._sync(value)
         self._update_image()
@@ -755,6 +762,7 @@ class StackedBox(QtGui.QStackedWidget, Widget):
     def addWidget(self, widget):
         w = QtGui.QWidget()
         layout = QtGui.QVBoxLayout(w)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(widget)
         layout.addStretch()
         super(StackedBox, self).addWidget(w)
