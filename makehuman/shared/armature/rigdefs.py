@@ -85,6 +85,7 @@ class CArmature:
         self.name = "Armature"
         self.config = config
         self.human = human
+        self.mesh = human.meshData
         self.modifier = None
         self.locations = {}
         self.rigHeads = {}
@@ -104,6 +105,8 @@ class CArmature:
         else:
             self.visible = 1
             self.last = 1
+
+        mhx.mhx_rig.setupRig(self)
 
         self.matrixGlobal = tm.identity_matrix()
         self.restCoords = None
@@ -912,11 +915,10 @@ def createRig(human, rigtype):
     fp = None
     config.mhx25 = True
     amt = CArmature(human, config)
-    mhx.mhx_rig.setupRig(amt)
 
     the.createdArmature = amt
     for (bname, roll, parent, flags, layers, bbone) in config.armatureBones:
-        if info.config.exporting or layers & ACTIVE_LAYERS:
+        if config.exporting or layers & ACTIVE_LAYERS:
             bone = CBone(amt, bname, roll, parent, flags, layers, bbone)
             amt.boneList.append(bone)        
             amt.bones[bname] = bone
@@ -931,13 +933,13 @@ def createRig(human, rigtype):
 
     #setupCircles(fp)
 
-    mhx.mhx_rig.writeControlPoses(fp, info)
+    mhx.mhx_rig.writeControlPoses(fp, amt)
     amt.checkDirty()
     return amt
 
-    mhx.mhx_rig.writeAllActions(fp, info)
+    mhx.mhx_rig.writeAllActions(fp, amt)
 
-    drivers = mhx.mhx_rig.writeAllDrivers(fp, info)
+    drivers = mhx.mhx_rig.writeAllDrivers(fp, amt)
     amt.assignDrivers(drivers)
     
     #amt.display()

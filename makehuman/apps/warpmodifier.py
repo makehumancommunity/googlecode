@@ -25,7 +25,6 @@ TODO
 __docformat__ = 'restructuredtext'
 
 import algos3d
-import files3d
 import fastmath
 import math
 from operator import mul

@@ -121,6 +121,7 @@ def newSetupJoints (info, joints):
             raise NameError("Unknown %s" % typ)
     return
 
+
 def moveOriginToFloor(info):
     if info.config.feetonground:
         info.origin = info.locations['floor']
@@ -130,6 +131,7 @@ def moveOriginToFloor(info):
         info.origin = [0,0,0]
     return
 
+
 def setupHeadsTails(info, headsTails):
     info.rigHeads = {}
     info.rigTails = {}
@@ -137,6 +139,7 @@ def setupHeadsTails(info, headsTails):
         info.rigHeads[bone] = findLocation(info, head)
         info.rigTails[bone] = findLocation(info, tail)
     return 
+
 
 def findLocation(info, joint):
     try:
@@ -245,9 +248,6 @@ def addBone24(bone, cond, roll, parent, flags, layers, bbone, fp):
     fp.write("\tend bone\n")
     return
 
-#
-#    writeBoneGroups(fp, info):
-#
 
 def writeBoneGroups(fp, info):
     log.message("BG %s", info.config.boneGroups)
@@ -261,11 +261,6 @@ def writeBoneGroups(fp, info):
 "    end BoneGroup\n")
     return
 
-
-#
-#    writeAction(fp, cond, name, action, lr, ikfk):
-#    writeFCurves(fp, name, (x01, y01, z01, w01), (x21, y21, z21, w21)):
-#
 
 def writeAction(fp, cond, name, action, lr, ikfk):
     fp.write("Action %s %s\n" % (name,cond))
@@ -288,6 +283,7 @@ def writeAction(fp, cond, name, action, lr, ikfk):
     fp.write("end Action\n\n")
     return
 
+
 def writeFCurves(fp, name, quats):
     n = len(quats)
     for index in range(4):
@@ -302,9 +298,6 @@ def writeFCurves(fp, name, quats):
 "  end FCurve \n")
     return
 
-#
-#    writeFkIkSwitch(fp, drivers)
-#
 
 def writeFkIkSwitch(fp, drivers):
     for (bone, cond, cnsFK, cnsIK, targ, channel, mx) in drivers:
@@ -313,11 +306,7 @@ def writeFkIkSwitch(fp, drivers):
             writeDriver(fp, cond, 'AVERAGE', "", "pose.bones[\"%s\"].constraints[\"%s\"].influence" % (bone, cnsName), -1, (mx,-mx), [cnsData])
         for cnsName in cnsIK:
             writeDriver(fp, cond, 'AVERAGE', "", "pose.bones[\"%s\"].constraints[\"%s\"].influence" % (bone, cnsName), -1, (0,mx), [cnsData])
-                       #
-#    setupCircle(fp, name, r):
-#    setupCube(fp, name, r):
-#    setupCircles(fp):
-#
+
 
 def setupCircle(fp, name, r):
     fp.write("\n"+
@@ -372,6 +361,7 @@ def setupCubeMesh(fp, name, r, offs):
 "end Mesh\n")
     return
 
+
 def setupCube(fp, name, r, offs):
     setupCubeMesh(fp, name, r, offs)
     fp.write(
@@ -379,6 +369,7 @@ def setupCube(fp, name, r, offs):
 "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
 "  parent Refer Object CustomShapes ;\n" +
 "end Object\n")
+
 
 def setupCylinder(fp, name, r, h, offs, mat):
     try:
@@ -581,7 +572,7 @@ def setupRig(info):
             info.rigHeads[bone] = findLocation(info, head)
             info.rigTails[bone] = findLocation(info, tail)
 
-        appendRigBones(boneList, info.mesh, "", L_MAIN, [], config)
+        appendRigBones(boneList, info.mesh, "", L_MAIN, [], info)
         log.debug("BL %s", str(boneList[0]))
         config.boneGroups = []
         config.recalcRoll = []              
@@ -636,8 +627,9 @@ def setupRig(info):
                 verts.append(mh2proxy.proxyCoord(bary))
             (locations, boneList, weights) = read_rig.readRigFile(proxy.rig, info.mesh, verts=verts) 
             proxy.weights = prefixWeights(weights, proxy.name, body)
-            appendRigBones(boneList, info.mesh, proxy.name, L_CLO, body, config)
+            appendRigBones(boneList, info.mesh, proxy.name, L_CLO, body, info)
     return
+
 
 def prefixWeights(weights, prefix, body):
     pweights = {}
@@ -648,50 +640,53 @@ def prefixWeights(weights, prefix, body):
             pweights[prefix+name] = weights[name]
     return pweights
 
-def appendRigBones(boneList, obj, prefix, layer, body, config):        
-        for data in boneList:
-            (bone0, head, tail, roll, parent0, options) = data
-            if bone0 in body:
-                continue
-            bone = prefix + bone0
-            if parent0 == "-":
-                parent = None
-            elif parent0 in body:
-                parent = parent0
-            else:
-                parent = prefix + parent0
-            flags = F_DEF|F_CON
-            for (key, value) in options.items():
-                if key == "-nc":
-                    flags &= ~F_CON
-                elif key == "-nd":
-                    flags &= ~F_DEF
-                elif key == "-res":
-                    flags |= F_RES
-                elif key == "-circ":
-                    name = "Circ"+value[0]
-                    config.customShapes[name] = (key, int(value[0]))
-                    addPoseInfo(bone, ("CS", name), config)
-                    flags |= F_WIR
-                elif key == "-box":
-                    name = "Box" + value[0]
-                    config.customShapes[name] = (key, int(value[0]))
-                    addPoseInfo(bone, ("CS", name), config)
-                    flags |= F_WIR
-                elif key == "-ik":
-                    try:
-                        pt = options["-pt"]
-                    except KeyError:
-                        pt = None
-                    log.debug("%s %s", value, pt)
-                    value.append(pt)
-                    addPoseInfo(bone, ("IK", value), config)
-                elif key == "-ik":
-                    pass
-            config.armatureBones.append((bone, roll, parent, flags, layer, NoBB))
-            info.rigHeads[bone] = aljabr.vsub(head, info.origin)
-            info.rigTails[bone] = aljabr.vsub(tail, info.origin)
-            
+
+def appendRigBones(boneList, obj, prefix, layer, body, info):        
+    config = info.config
+    for data in boneList:
+        (bone0, head, tail, roll, parent0, options) = data
+        if bone0 in body:
+            continue
+        bone = prefix + bone0
+        if parent0 == "-":
+            parent = None
+        elif parent0 in body:
+            parent = parent0
+        else:
+            parent = prefix + parent0
+        flags = F_DEF|F_CON
+        for (key, value) in options.items():
+            if key == "-nc":
+                flags &= ~F_CON
+            elif key == "-nd":
+                flags &= ~F_DEF
+            elif key == "-res":
+                flags |= F_RES
+            elif key == "-circ":
+                name = "Circ"+value[0]
+                config.customShapes[name] = (key, int(value[0]))
+                addPoseInfo(bone, ("CS", name), config)
+                flags |= F_WIR
+            elif key == "-box":
+                name = "Box" + value[0]
+                config.customShapes[name] = (key, int(value[0]))
+                addPoseInfo(bone, ("CS", name), config)
+                flags |= F_WIR
+            elif key == "-ik":
+                try:
+                    pt = options["-pt"]
+                except KeyError:
+                    pt = None
+                log.debug("%s %s", value, pt)
+                value.append(pt)
+                addPoseInfo(bone, ("IK", value), config)
+            elif key == "-ik":
+                pass
+        config.armatureBones.append((bone, roll, parent, flags, layer, NoBB))
+        info.rigHeads[bone] = aljabr.vsub(head, info.origin)
+        info.rigTails[bone] = aljabr.vsub(tail, info.origin)
+        
+        
 def addPoseInfo(bone, info, config):
     try:
         config.poseInfo[bone]
@@ -700,6 +695,7 @@ def addPoseInfo(bone, info, config):
     config.poseInfo[bone].append(info)
     return        
         
+
 def swapParentNames(bones, changes):
     nbones = []
     for bone in bones:
@@ -709,6 +705,7 @@ def swapParentNames(bones, changes):
         except KeyError:
             nbones.append(bone)
     return nbones
+
 
 def writeControlPoses(fp, info):
     config = info.config
@@ -758,6 +755,7 @@ def writeControlPoses(fp, info):
     #    mod.ControlPoses(fp, config)
 
     return
+
 
 def writeAllActions(fp, info):
     #rig_arm_25.ArmWriteActions(fp)
