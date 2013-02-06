@@ -286,12 +286,10 @@ class BaseModifier(object):
 class Modifier(BaseModifier):
 
     def __init__(self, left, right):
-        
+        super(Modifier, self).__init__()
         self.left = left
         self.right = right
         self.targets = [[self.left], [self.right]]
-        self.verts = None
-        self.faces = None
 
     def setValue(self, human, value, update=1):
         
