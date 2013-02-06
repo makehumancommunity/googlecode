@@ -136,7 +136,7 @@ class CObject(CModel):
                     ob.lock_scale = (True,True,True)
                 
         if self.properties:
-            ob.location = f2b(self.getProp("Lcl Translation"))
+            ob.location = fbx.f2b(self.getProp("Lcl Translation"))
             ob.rotation_euler = self.getProp("Lcl Rotation")
             ob.scale = self.getProp("Lcl Scaling")
         return ob    

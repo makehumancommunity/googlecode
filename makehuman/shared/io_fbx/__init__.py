@@ -108,19 +108,20 @@ class ImportFBX(bpy.types.Operator, ImportHelper):
     filter_glob = StringProperty(default="*.fbx", options={'HIDDEN'})
 
     createNewScene = BoolProperty(name="Create New Scene", default=False)
-    yUp = BoolProperty(name="Y Up", description="Import from app with Y up convention", default=True)        
+    zUp = BoolProperty(name="Z up", description="Use Z as global up axis (always Y up in FBX file)", default=True)        
     boneAxis = EnumProperty(
         name="Bone Axis", 
-        description="Axis pointing along bone",
+        description="Axis pointing along bone (always X in FBX file)",
         items=(('X','X','X',0),('Y','Y','Y',1),('Z','Z','Z',2)), 
-        default = 'Y',
+        default = 'X',
     )
     minBoneLength = FloatProperty(name="Minimal Bone Length", min=0.01, max=100.0, default=1.0)
     mirrorFix = BoolProperty(name="Bone Mirror Fix", description="Try to fix problem with mirrored bones", default=True)        
     
     def execute(self, context):
         fbx.settings.createNewScene = self.createNewScene
-        fbx.settings.yUp = self.yUp
+        fbx.settings.zUp = self.zUp
+        fbx.setCsysChangers()
         if self.boneAxis == 'X':
             fbx.settings.boneAxis = 0
         elif self.boneAxis == 'Y':
@@ -131,6 +132,13 @@ class ImportFBX(bpy.types.Operator, ImportHelper):
         fbx.settings.mirrorFix = self.mirrorFix
         fbx_import.importFbxFile(context, self.filepath)
         return {'FINISHED'}
+        
+    def draw(self, context):
+        self.layout.prop(self, "createNewScene")
+        self.layout.prop(self, "zUp")
+        self.layout.prop(self, "boneAxis", expand=True)
+        self.layout.prop(self, "minBoneLength")
+        self.layout.prop(self, "mirrorFix")
 
  
 class ExportFBX(bpy.types.Operator, ExportHelper):
@@ -142,19 +150,28 @@ class ExportFBX(bpy.types.Operator, ExportHelper):
     filename_ext = ".fbx"
     filter_glob = StringProperty(default="*.fbx", options={'HIDDEN'} )
     
-    yUp = BoolProperty(name="Y Up", description="Import from app with Y up convention", default=True)        
+    zUp = BoolProperty(name="Z Up", description="Use Z as global up axis (always Y up in FBX file)", default=True)        
     includePropertyTemplates = BoolProperty(name="Include Property Templates", description="Include property templates in exported file", default=True)
     makeSceneNode = BoolProperty(name="Make Scene Node", default=False)
     selectedOnly = BoolProperty(name="Selected Objects Only", default=True)
 
     def execute(self, context):
-        fbx.settings.yUp = self.yUp
+        fbx.settings.zUp = self.zUp
+        fbx.setCsysChangers()
         fbx.settings.includePropertyTemplates = self.includePropertyTemplates
         fbx.settings.makeSceneNode = self.makeSceneNode
         fbx.settings.selectedOnly = self.selectedOnly
         fbx_export.exportFbxFile(context, self.filepath)
         return {'FINISHED'}
  
+    def draw(self, context):
+        self.layout.prop(self, "includePropertyTemplates")
+        self.layout.prop(self, "makeSceneNode")
+        self.layout.prop(self, "selectedOnly")
+        self.layout.prop(self, "zUp")
+        self.layout.prop(self, "minBoneLength")
+        self.layout.prop(self, "mirrorFix")
+
   
 class VIEW3D_OT_PresetButton(bpy.types.Operator):
     bl_idname = "fbx.preset"
@@ -167,8 +184,8 @@ class VIEW3D_OT_PresetButton(bpy.types.Operator):
             fbx.settings.blender()
         elif self.preset == "Maya":
             fbx.settings.maya()
-        elif self.preset == "MakeHuman":
-            fbx.settings.makehuman()
+        elif self.preset == "Maya2Blender":
+            fbx.settings.maya2Blender()
         return {'FINISHED'}
 
   
@@ -180,8 +197,8 @@ class FbxTestPanel(bpy.types.Panel):
     def draw(self, context):    
         scn = context.scene
         self.layout.operator("fbx.preset", text="Maya Presets").preset="Maya"
+        self.layout.operator("fbx.preset", text="Maya->Blender Presets").preset="Maya2Blender"
         self.layout.operator("fbx.preset", text="Blender Presets").preset="Blender"
-        self.layout.operator("fbx.preset", text="MakeHuman Presets").preset="MakeHuman"
         self.layout.prop(scn, "FbxFile")
         self.layout.operator("fbx.test_export")
         self.layout.operator("fbx.test_import").filepath=("/home/myblends/fbx-stuff/%s.fbx" % scn.FbxFile)

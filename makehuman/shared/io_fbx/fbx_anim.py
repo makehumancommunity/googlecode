@@ -146,10 +146,8 @@ class CAnimationLayer(FbxObject):
         user = self.users[0]
         for key,group in groups.items():
             node = user
-            print(user, key, group)
             if group.shape:
                 node = user.blendDeformers[group.sub]
-                print(node)
             elif group.pose:
                 if user.btype == 'ARMATURE':
                     node = user.bones[group.sub]                
@@ -277,12 +275,12 @@ class FbxAnimationCurveNode(FbxObject):
 
         if self.channel in ["Lcl Rotation"]:
             deg = D
-            fChannel = FRotChannel
+            fChannel = fbx.FRotChannel
             offsets = user.getProp(self.channel)
             self.setPropLong("d", "Compound", "", "A", kvec)
         elif self.channel in ["Lcl Translation"]:
             deg = 1
-            fChannel = FTransChannel
+            fChannel = fbx.FTransChannel
             offsets = user.getProp(self.channel)
             self.setPropLong("d", "Compound", "", "A", kvec)
         elif self.channel in ["DeformPercent"]:
@@ -318,8 +316,6 @@ class FbxAnimationCurveNode(FbxObject):
 
 
     def writeFooter(self, fp):
-        print("acnode footer")
-        print(self.acurves.values())
         FbxObject.writeFooter(self, fp)            
         for index,acu in self.acurves.items():
             acu.writeFbx(fp)        
@@ -335,7 +331,6 @@ class FbxAnimationCurveNode(FbxObject):
         rna = None
         group = None
         link = self.getBParentLink(['BONE', 'OBJECT', 'BLEND_DEFORMER'])
-        print(self.links)
         user = link.parent
         owner = user.owner
         channel = link.channel
@@ -344,7 +339,7 @@ class FbxAnimationCurveNode(FbxObject):
 
         if channel in ["Lcl Rotation"]:
             rad = R
-            indexer = BRotIndex
+            indexer = fbx.BRotIndex
             try:
                 offsets = user.getProp(channel)
             except KeyError:
@@ -352,9 +347,9 @@ class FbxAnimationCurveNode(FbxObject):
 
         elif channel in ["Lcl Translation"]:
             rad = 1
-            indexer = BTransIndex
+            indexer = fbx.BTransIndex
             try:
-                offsets = f2b(user.getProp(channel))
+                offsets = fbx.f2b(user.getProp(channel))
             except KeyError:
                 offsets = (0,0,0)
 

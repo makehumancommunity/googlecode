@@ -17,6 +17,8 @@
 # ##### END GPL LICENSE BLOCK #####
 
 import bpy
+from math import pi
+from mathutils import *
 
 try:
     bpy.usingMakeHuman
@@ -48,51 +50,185 @@ allNodes = {}
 templates = {}
 
 
+#------------------------------------------------------------------
+#   Coordinate system conversion
+#   The FBX file always uses the Y up convention.
+#   
+#------------------------------------------------------------------
+
+
+def b2fZup(vec):
+    return Vector((vec[0], vec[2], -vec[1]))
+
+def f2bZup(vec):
+    return Vector((vec[0], -vec[2], vec[1]))
+    
+def b2fEulerZup(eu):
+    return Vector((eu[0], eu[2], -eu[1]))
+
+def f2bEulerZup(eu):
+    return Vector((eu[0], -eu[2], eu[1]))
+    
+def b2fRot4Zup(mat):
+    return b2fGlobRot * mat
+    
+def f2bRot4Zup(mat):
+    return f2bGlobRot * mat
+    
+  
+def b2fYup(vec):
+    return vec
+
+def f2bYup(vec):
+    return vec
+
+def b2fEulerYup(eu):
+    return eu
+
+def f2bEulerYup(eu):
+    return eu
+
+def b2fRot4Yup(mat):
+    return mat
+    
+def f2bRot4Yup(mat):
+    return mat
+
+
+# string : (fIndex, bIndex, factor)
+
+BTransIndexZup = {
+    "d|X" : (0, 0, 1),
+    "d|Y" : (1, 2, -1),
+    "d|Z" : (2, 1, 1),
+}
+
+BRotIndexZup = {
+    "d|X" : (0, 0, 1),
+    "d|Y" : (1, 2, -1),
+    "d|Z" : (2, 1, 1),
+}
+
+# bIndex : (string, fIndex, factor)
+
+FRotChannelZup = {
+    0 : ("d|X", 0, 1),
+    1 : ("d|Z", 2, 1),
+    2 : ("d|Y", 1, -1),
+}
+
+FTransChannelZup = {
+    0 : ("d|X", 0, 1),
+    1 : ("d|Z", 2, 1),
+    2 : ("d|Y", 1, -1),
+}
+
+BTransIndexYup = {
+    "d|X" : (0, 0, 1),
+    "d|Y" : (1, 1, 1),
+    "d|Z" : (2, 2, 1),
+}
+
+BRotIndexYup = {
+    "d|X" : (0, 0, 1),
+    "d|Y" : (1, 1, 1),
+    "d|Z" : (2, 2, 1),
+}
+
+FRotChannelYup = {
+    0 : ("d|X", 0, 1),
+    1 : ("d|Y", 1, 1),
+    2 : ("d|Z", 2, 1),
+}
+
+FTransChannelYup = {
+    0 : ("d|X", 0, 1),
+    1 : ("d|Y", 1, 1),
+    2 : ("d|Z", 2, 1),
+}
+
+
+def setCsysChangers():
+    global b2f, f2b, b2fEuler, f2bEuler, b2fRot4, f2bRot4 
+    global f2bGlobRot, b2fGlobRot
+    global BTransIndex, BRotIndex, FRotChannel, FTransChannel
+   
+    if settings.zUp:
+        message("Coordinate system Z up")
+        f2bGlobRot = Matrix.Rotation(pi/2, 4, 'X')
+        b2fGlobRot = Matrix.Rotation(-pi/2, 4, 'X')
+
+        b2f = b2fZup
+        f2b = f2bZup
+        b2fEuler = b2fEulerZup
+        f2bEuler = f2bEulerZup
+        b2fRot4 = b2fRot4Zup
+        f2bRot4 = f2bRot4Zup
+        
+        BTransIndex = BTransIndexZup
+        BRotIndex = BRotIndexZup
+        FRotChannel = FRotChannelZup
+        FTransChannel = FTransChannelZup
+        
+    else:
+        message("Coordinate system Y up")
+        b2f = b2fYup
+        f2b = f2bYup
+        b2fEuler = b2fEulerYup
+        f2bEuler = f2bEulerYup
+        b2fRot4 = b2fRot4Yup
+        f2bRot4 = f2bRot4Yup
+
+        BTransIndex = BTransIndexYup
+        BRotIndex = BRotIndexYup
+        FRotChannel = FRotChannelYup
+        FTransChannel = FTransChannelYup
+        
+
+#------------------------------------------------------------------
+#   Settings
+#------------------------------------------------------------------
+
+
 class Settings:
-    def blender(self):
+    def __init__(self):
         self.createNewScene = False
         self.writeAllNodes = True
         self.includePropertyTemplates = True
         self.makeSceneNode = False
         self.selectedOnly = True
         self.lockChildren = True
-        self.yUp = False
-        self.boneAxis = 1
+        self.zUp = False
+        self.normals = False    
+    
+    def maya(self):
+        self.zUp = False
+        self.boneAxis = 0
         self.minBoneLength = 1.0
         self.mirrorFix = False
-        self.useIkEffectors = False
-        self.normals = False
+        self.useIkEffectors = True
+        setCsysChangers()
        
-    def maya(self):
-        self.createNewScene = False
-        self.writeAllNodes = True
-        self.includePropertyTemplates = True
-        self.makeSceneNode = False
-        self.selectedOnly = True
-        self.lockChildren = True
-        self.yUp = True
+    def maya2Blender(self):
+        self.zUp = True
         self.boneAxis = 0
         self.minBoneLength = 1.0
         self.mirrorFix = True
         self.useIkEffectors = True
-        self.normals = False
+        setCsysChangers()
        
-    def makehuman(self):
-        self.createNewScene = False
-        self.writeAllNodes = True
-        self.includePropertyTemplates = True
-        self.makeSceneNode = False
-        self.selectedOnly = True
-        self.lockChildren = True
-        self.yUp = False
-        self.boneAxis = 0
+    def blender(self):
+        self.zUp = True
+        self.boneAxis = 1
         self.minBoneLength = 1.0
         self.mirrorFix = False
         self.useIkEffectors = False
-        self.normals = False
-       
+        setCsysChangers()
+              
             
 settings = Settings()
-settings.makehuman()
+setCsysChangers()
+settings.maya()
+
 
 

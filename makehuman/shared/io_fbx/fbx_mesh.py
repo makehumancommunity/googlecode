@@ -78,9 +78,9 @@ class FbxMesh(FbxGeometryBase):
         me = ob.data
         self.mesh = me
         
-        self.vertices.make( [b2f(v.co) for v in me.vertices] )
+        self.vertices.make( [fbx.b2f(v.co) for v in me.vertices] )
         if fbx.settings.normals:
-            self.normals.make( [b2f(v.normal) for v in me.vertices] )
+            self.normals.make( [fbx.b2f(v.normal) for v in me.vertices] )
         #edges = [list(e.vertices) for f in me.polygons for e in f.edges]
         faces = [list(f.vertices) for f in me.polygons]
         nFaces = len(me.polygons)
@@ -132,7 +132,7 @@ class FbxMesh(FbxGeometryBase):
 
     def build3(self):
         me = fbx.data[self.id]
-        verts = [f2b(v) for v in self.vertices.values]
+        verts = [fbx.f2b(v) for v in self.vertices.values]
         me.from_pydata(verts, [], self.faces.values)
 
         obNode = self.getBParent('OBJECT')
@@ -185,7 +185,7 @@ class FbxShape(FbxObject):
             nVerts = len(skey.data)
             vectors = [skey.data[vn].co - v.co for vn,v in enumerate(baseVerts)]
             indexes = [vn for vn in range(nVerts) if vectors[vn].length > 1e-4]
-            vertices = [b2f(vectors[vn]) for vn in indexes]
+            vertices = [fbx.b2f(vectors[vn]) for vn in indexes]
         
             self.indexes.make(indexes)
             self.vertices.make(vertices)
@@ -215,7 +215,7 @@ class FbxShape(FbxObject):
         skey = self.datum = ob.shape_key_add(self.name)
         n = 0
         for vn in self.indexes.values:
-            dx = f2b( self.vertices.values[n] )
+            dx = fbx.f2b( self.vertices.values[n] )
             n += 1
             skey.data[vn].co = me.vertices[vn].co + Vector(dx)
         deformer.build(skey, ob)

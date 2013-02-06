@@ -230,7 +230,7 @@ def createNode(pnode):
         fbx.nodes[node.id] = node
     else:
         fbx.debug("Bug: %s %s" % (pnode.key, pnode))
-        halt
+        #halt
         
 
 
@@ -247,7 +247,7 @@ def buildObjects(context):
 
     fbx.data = {}
     scn = context.scene
-    setCsysChangers()
+    fbx.setCsysChangers()
     
     fbx.message("  Creating nodes")
     
@@ -407,7 +407,7 @@ def activateData(datum):
 def makeNodes(context):
 
     resetFbx()
-    setCsysChangers()
+    fbx.setCsysChangers()
     fbx.root = RootNode()
     fbx.nodes = NodeStruct()
     fbx.active = NodeStruct()

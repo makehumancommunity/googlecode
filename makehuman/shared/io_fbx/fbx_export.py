@@ -20,6 +20,7 @@ import bpy
 import os
 
 from . import fbx
+from . import fbx_basic
 from .fbx_basic import *
 from .fbx_props import *
 from .fbx_model import *
@@ -180,6 +181,7 @@ Definitions:  {
 def exportFbxFile(context, filepath):    
     filepath = filepath.replace('\\','/')
     fbx.message('Export "%s"' % filepath)
+    print("Exp", fbx.b2f)
     fbx.filepath = filepath
     fbx.activeFolder = os.path.dirname(filepath)
 
@@ -251,6 +253,7 @@ class VIEW3D_OT_TestExportButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
+        print("Exe", fbx.b2f, fbx_basic.fbx.b2f)
         exportFbxFile(context, "/home/myblends/fbx-stuff/test.fbx")
         return {'FINISHED'}
 

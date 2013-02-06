@@ -301,9 +301,9 @@ class CBone(CModel):
         self.datum = bone
 
         if parent.btype == 'OBJECT':
-            self.matrixLocal = b2fRot4(bone.matrix_local)
+            self.matrixLocal = fbx.b2fRot4(bone.matrix_local)
         elif parent.btype == 'BONE':
-            self.matrixLocal =  b2fRot4(bone.matrix_local)
+            self.matrixLocal =  fbx.b2fRot4(bone.matrix_local)
         else:
             halt
             
@@ -437,7 +437,7 @@ class BoneInfo:
         if parent:
             self.matrix = parent.matrix * self.restMat
         else:
-            self.restMat = f2bRot4(self.restMat)
+            self.restMat = fbx.f2bRot4(self.restMat)
             self.matrix = self.restMat
         self.head = Vector( self.matrix.col[3][:3] )
         
