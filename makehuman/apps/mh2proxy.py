@@ -28,9 +28,6 @@ import aljabr
 import export_config
 import log
 
-import mhx
-from mhx import the
-
 #
 #    class CProxy
 #
@@ -554,10 +551,6 @@ def deleteGroup(name, groups):
     return False
        
 
-#
-#
-#
-
 def copyObjFile(proxy):
     (folder, name) = proxy.obj_file
     objpath = os.path.join(folder, name)
@@ -586,18 +579,6 @@ def copyObjFile(proxy):
     tmpl.close()            
     return True            
     
-#
-#   getScale(words, verts, index):                
-#
-
-"""
-def getScale(words, verts, index):                
-    v1 = int(words[2])
-    v2 = int(words[3])
-    den = float(words[4])
-    num = abs(verts[v1].co[index] - verts[v2].co[index])
-    return num/den
-"""    
 
 def getScaleData(words):
     v1 = int(words[2])
@@ -613,9 +594,6 @@ def getScale(data, verts, index):
     num = abs(verts[v1].co[index] - verts[v2].co[index])
     return num/den
 
-#
-#    readMaterial(line, mat, proxy, multiTex):
-#
 
 def readMaterial(line, mat, proxy, multiTex):
     words= line.split()
@@ -653,9 +631,6 @@ def readMaterial(line, mat, proxy, multiTex):
         mat.alpha = float(words[1])
         mat.use_transparency = True
 
-#
-#   class CUvSet:
-#
 
 class CUvSet:
     def __init__(self, name):
@@ -726,9 +701,6 @@ class CUvSet:
             self.faceMaterials[fn] = mn
             fn += 1
 
-#
-#    getLoc(joint, obj):
-#
 
 def getJoint(joint, obj, locations):
     try:
@@ -738,9 +710,6 @@ def getJoint(joint, obj, locations):
         locations[joint] = loc
     return loc
     
-#
-#   calcJointPos(obj, joint):
-#
 
 def calcJointPos(obj, joint):
     g = obj.getFaceGroup("joint-"+joint)
@@ -750,120 +719,6 @@ def calcJointPos(obj, joint):
             verts.append(v.co)
     return aljabr.centroid(verts)
     
-
-#
-#    writeRigBones(fp, bones):
-#    writeRigPose(fp, name, bones):
-#    writeRigWeights(fp, weights):
-#
-
-def writeRigBones(fp, bones):
-    ox = the.Origin[0]
-    oy = the.Origin[1]
-    oz = the.Origin[2]
-    for (bone, head, tail, roll, parent, options) in bones:
-        fp.write("\n  Bone %s True\n" % bone)
-        (x, y, z) = head
-        fp.write("    head  %.4f %.4f %.4f  ;\n" % (x-ox,-z+oz,y-oy))
-        (x, y, z) = tail
-        fp.write("    tail %.4f %.4f %.4f  ;\n" % (x-ox,-z+oz,y-oy))
-        if parent and parent != '-':
-            fp.write("    parent Refer Bone %s ;\n" % parent)
-        fp.write(
-    "    roll %.4f ; \n" % (roll)+
-    "    use_connect False ; \n")
-        if ('-circ' in options.keys() or '-box' in options.keys()):
-            fp.write("    show_wire True ;\n")
-        try:
-            options['-nd']
-            fp.write("    use_deform False ; \n")
-        except:
-            fp.write("    use_deform True ; \n")
-        fp.write("  end Bone \n")
-    return
-
-def getRadius(key, options):
-    try:
-        val = options[key]
-        return int(val[0])
-    except:
-        return None
-
-def writeRigPose(fp, name, bones):
-    circles = []
-    cubes = []
-    for (bone, head, tail, roll, parent, options) in bones:
-        r = getRadius('-circ', options)
-        if r and not (r in circles):
-            mhx.mhx_rig.setupCircle(fp, "RigCircle%02d" % r, 0.1*r)
-            circles.append(r)
-        r = getRadius('-box', options)
-        if r and not (r in cubes):
-            mhx.mhx_rig.setupCube(fp, "RigCube%02d" % r, 0.1*r, 0)
-            cubes.append(r)
-
-    fp.write("\nPose %s\n" % name)
-    for (bone, head, tail, roll, parent, options) in bones:
-        fp.write("  Posebone %s True \n" % bone)
-
-        # IK constraint
-        try:
-            val = options['-ik']
-        except:
-            val = None
-        if val:
-            (subtar, chainlen, inf) = val
-            fp.write(
-"    Constraint IK IK True\n")
-            if subtar:
-                fp.write(
-"      target Refer Object %s ;\n" % name +
-"      subtarget '%s' ;\n" % subtar +
-"      use_tail True ;\n")
-            else:
-                fp.write(
-"      use_tail False ;\n")
-            fp.write(
-"      chain_count %s ;\n" % chainlen +
-"      influence %s ;\n" % inf +
-"    end Constraint\n")
-
-        # Not connected
-        try:
-            options['-nc']
-        except:
-            fp.write(
-"    lock_location Array 1 1 1 ;\n" +
-"    lock_scale Array 1 1 1  ; \n")
-
-        # Circle custom shape
-        r = getRadius('-circ', options)
-        if r:
-            fp.write(
-"    custom_shape Refer Object RigCircle%02d ; \n" % r)
-
-        # Box custom shape
-        r = getRadius('-box', options)
-        if r:
-            fp.write(
-"    custom_shape Refer Object RigCube%02d ; \n" % r)
-
-        fp.write("  end Posebone\n")
-    fp.write("end Pose\n\n")
-
-def writeRigWeights(fp, weights):
-    for grp in weights.keys():
-        fp.write("\n  VertexGroup %s\n" % grp)
-        for (v,w) in weights[grp]:
-            fp.write("    wv %d %.4f ;\n" % (v,w))
-        fp.write("  end VertexGroup\n")
-    return
-
-#
-#    newFace(first, words, group, proxy):
-#    newTexVert(first, words, proxy):
-#    addProxyVert(v, vn, w, proxy):
-#
 
 def newFace(first, words, group, proxy):
     face = []
@@ -905,9 +760,6 @@ def addProxyVert(v, vn, w, proxy):
         proxy.verts[v] = [(vn,w)]
     return
 
-#
-#    proxyCoord(barycentric):
-#
 
 def proxyCoord(barycentric):
     if type(barycentric) == tuple:
@@ -919,9 +771,6 @@ def proxyCoord(barycentric):
     else:
         return barycentric.co
 
-#
-#    getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
-#
 
 def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
     if proxy:
@@ -970,11 +819,6 @@ def oldStyleFaces(obj):
     return faces
     
 
-#
-#    getProxyWeights(rawWeights, proxy):
-#    fixProxyVGroup(fp, vgroup):
-#
-
 def getProxyWeights(rawWeights, proxy):
     if not rawWeights:
         return {}
@@ -1012,10 +856,6 @@ def fixProxyVGroup(vgroup):
         fixedVGroup.append((pv, wt))
     return fixedVGroup
 
-#
-#    getProxyShapes(rawShapes, proxy):
-#    fixProxyShape(fp, shape)
-#
 
 def getProxyShapes(rawShapes, proxy):
     if not rawShapes:
