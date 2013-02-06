@@ -86,6 +86,10 @@ class CArmature:
         self.config = config
         self.human = human
         self.modifier = None
+        self.locations = {}
+        self.rigHeads = {}
+        self.rigTails = {}
+        self.origin = [0,0,0]
         self.restPosition = False
         self.dirty = True
         self.frames = []
@@ -183,9 +187,9 @@ class CArmature:
     def rebuild(self, update=True):   
         log.message("Rebuild %s %s %s", self, update, self.config.rigtype)
         obj = self.human.meshData
-        proxyData = {}
-        mhx.mhx_rig.setupRig(obj, self.config, proxyData)
-        log.debug("RHT %s %s", the.RigHead["Root"], the.RigTail["Root"])
+        self.proxies = {}
+        mhx.mhx_rig.setupRig(self)
+        log.debug("RHT %s %s", self.rigHeads["Root"], self.rigTails["Root"])
         for bone in self.boneList:
             bone.rebuild()
             if bone.name in []:
@@ -478,8 +482,8 @@ class CBone:
         self.name = name
         self.dirty = False
         self.armature = amt
-        self.head = the.RigHead[name]
-        self.tail = the.RigTail[name]
+        self.head = amt.rigHeads[name]
+        self.tail = amt.rigTails[name]
         self.roll = roll
         self.length = 0
         self.yvector4 = None
@@ -535,8 +539,8 @@ class CBone:
         self.build0()
                 
     def rebuild(self):
-        self.head = the.RigHead[self.name]
-        self.tail = the.RigTail[self.name]
+        self.head = amt.rigHeads[self.name]
+        self.tail = amt.rigTails[self.name]
         self.build0()
 
     def build0(self):
@@ -907,14 +911,12 @@ def createRig(human, rigtype):
 
     fp = None
     config.mhx25 = True
-    obj = human.meshData
-    proxyData = {}
-    mhx.mhx_rig.setupRig(obj, config, proxyData)
-
     amt = CArmature(human, config)
+    mhx.mhx_rig.setupRig(amt)
+
     the.createdArmature = amt
     for (bname, roll, parent, flags, layers, bbone) in config.armatureBones:
-        if config.exporting or layers & ACTIVE_LAYERS:
+        if info.config.exporting or layers & ACTIVE_LAYERS:
             bone = CBone(amt, bname, roll, parent, flags, layers, bbone)
             amt.boneList.append(bone)        
             amt.bones[bname] = bone
@@ -929,13 +931,13 @@ def createRig(human, rigtype):
 
     #setupCircles(fp)
 
-    mhx.mhx_rig.writeControlPoses(fp, config)
+    mhx.mhx_rig.writeControlPoses(fp, info)
     amt.checkDirty()
     return amt
 
-    mhx.mhx_rig.writeAllActions(fp, config)
+    mhx.mhx_rig.writeAllActions(fp, info)
 
-    drivers = mhx.mhx_rig.writeAllDrivers(fp, config)
+    drivers = mhx.mhx_rig.writeAllDrivers(fp, info)
     amt.assignDrivers(drivers)
     
     #amt.display()

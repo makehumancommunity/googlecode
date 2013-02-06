@@ -121,11 +121,11 @@ neg = ('0', '-4.0')
 FMX = 0.7
 
 def PanelControlPoses(fp, config):
-    if config.exporting:
-        addPoseBone(fp, config, 'PFace', 'MHCube05', None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0, [])
+    if info.config.exporting:
+        addPoseBone(fp, info, 'PFace', 'MHCube05', None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0, [])
             #[('ChildOf', C_CHILDOF, 1, ['Body', 'Root', (1,1,1), (1,1,1), (1,1,1)]) ])
 
-        addPoseBone(fp, config, 'PFaceDisp', 'MHFace', None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0, [])
+        addPoseBone(fp, info, 'PFaceDisp', 'MHFace', None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0, [])
 
         addYSlider(fp, config, 'PBrow_L', MX)
         addYSlider(fp, config, 'PBrow_R', MX)

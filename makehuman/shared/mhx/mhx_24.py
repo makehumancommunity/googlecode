@@ -43,7 +43,7 @@ splitLeftRight = True
 
 def exportMhx(human, filename, options, config):    
     (name, ext) = os.path.splitext(filename)
-    the.Human = 'Human'
+    info.human = 'Human'
     time1 = time.clock()
     filename = name+"-24"+ext
     try:
@@ -142,7 +142,7 @@ def copyMeshFile249(obj, tmpl, config, fp):
             inZone = True
             mainMesh = True
             fp.write("#if useMesh\n")
-        elif words[0] == 'object' and words[1] == '%sMesh' % the.Human:
+        elif words[0] == 'object' and words[1] == '%sMesh' % info.human:
             mainMesh = True
             fp.write("#if useMesh\n")
         elif words[0] == 'vertgroup':
@@ -360,16 +360,16 @@ def oldExportArmature24(obj, config, fp):
     return 
 
 #
-#    newExportArmature4(obj, config, fp):
+#    newExportArmature4(obj, info, fp):
 #
-def newExportArmature24(obj, config, fp):
+def newExportArmature24(obj, info, fp):
     mhx_rig.newSetupJoints(obj, classic_bones.ClassicJoints)
     mhx_rig.setupHeadsTails(classic_bones.ClassicHeadsTails)
     
     fp.write(
 "\n#if useArmature\n" +
 "armature Human Human\n")
-    mhx_rig.writeArmature(fp, config, classic_bones.ClassicArmature + classic_bones.PanelArmature)
+    mhx_rig.writeArmature(fp, info, classic_bones.ClassicArmature + classic_bones.PanelArmature)
     fp.write(
 "\tlayerMask 0x515 ;\n" +
 "\tautoIK false ;\n" +
@@ -500,7 +500,7 @@ def writeIcu(fp, shape, expr):
     fp.write(
 "\ticu %s 0 1\n" % shape +
 "\t\tdriver 2 ;\n" +
-"\t\tdriverObject _object['%sMesh' % the.Human] ;\n" +
+"\t\tdriverObject _object['%sMesh' % info.human] ;\n" +
 "\t\tdriverChannel 1 ;\n" +
 "\t\tdriverExpression '%s' ;\n" % expr +
 "\tend icu\n")
@@ -633,8 +633,8 @@ def setShapeScale(words):
     if not scales:
         raise NameError("No scale for %s" % key)
     (p1, p2, length0) = scales
-    x1 = the.Locations[p1]
-    x2 = the.Locations[p2]
+    x1 = info.locations[p1]
+    x2 = info.locations[p2]
     dist = aljabr.vsub(x1, x2)
     length = aljabr.vlen(dist)
     scale = length/length0

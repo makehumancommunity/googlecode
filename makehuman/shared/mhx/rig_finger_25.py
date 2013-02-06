@@ -205,13 +205,13 @@ def defineFingerConstraints():
 fconstraints = defineFingerConstraints()    
 
 #
-#   FingerControlPoses(fp, config):
+#   FingerControlPoses(fp, info):
 #
 
 customShape = 'MHCircle05'
 customShape = None
         
-def FingerControlPoses(fp, config):
+def FingerControlPoses(fp, info):
     for suffix in ['_L', '_R']:
         for fnum in range(1,6):
             fing = '%s%s' % (FingerName[fnum], suffix)
@@ -219,7 +219,7 @@ def FingerControlPoses(fp, config):
                 lim = limitRotThumb
             else:
                 lim = limitRotFingers
-            addPoseBone(fp, config, fing, 'MHKnuckle', None, (1,1,1), (0,1,0), (1,0,1), (1,1,1), 0, [lim])
+            addPoseBone(fp, info, fing, 'MHKnuckle', None, (1,1,1), (0,1,0), (1,0,1), (1,1,1), 0, [lim])
             
             for lnum in range(1,4):
                 if (fnum == 1 and lnum <= 2) or (fnum >= 2 and lnum == 1):
@@ -229,14 +229,14 @@ def FingerControlPoses(fp, config):
                     rot = (0,1,1)
                     ik = (0,0,1)                
                 fing = '%s-%d%s' % (FingerName[fnum], lnum, suffix)
-                addPoseBone(fp, config, fing, customShape, None, (1,1,1), rot, (1,1,1), ik, 0, 
+                addPoseBone(fp, info, fing, customShape, None, (1,1,1), rot, (1,1,1), ik, 0, 
                     fconstraints["%d-%d%s" % (fnum, lnum, suffix)])             
 
             palm = 'Palm-%d%s' % (fnum, suffix)
-            addPoseBone(fp, config, palm, None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
+            addPoseBone(fp, info, palm, None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
 
-        addPoseBone(fp, config, 'Wrist-1%s' % suffix, None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
-        addPoseBone(fp, config, 'Wrist-2%s' % suffix, None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
+        addPoseBone(fp, info, 'Wrist-1%s' % suffix, None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
+        addPoseBone(fp, info, 'Wrist-2%s' % suffix, None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
     return  
 
 #

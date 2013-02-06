@@ -27,69 +27,26 @@ from .the import *
 
 import armature
 
-"""
-def addIkHandle(fp, config, bone, customShape, limit):
-    if limit:
-        cns = [('LimitDist', 0, 1, ['LimitDist', limit])]
-    else:
-        cns = []
-    addPoseBone(fp, config, bone, customShape, None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, cns)
 
-def addSingleIk(fp, config, bone, lockRot, target, limit):
-    cns = [('IK', 0, 1, ['IK', target, 1, None, (True, False, True), 1.0])]
-    if limit:
-        cns.append( ('LimitRot', C_OW_LOCAL, 1, ['LimitRot', limit, (True, True, True)]) )
-    addPoseBone(fp, config, bone, None, None, (1,1,1), lockRot, (1,1,1), (1,1,1), 0, cns)
-
-def addDeformYBone(fp, config, bone, ikBone, fkBone, cflags, pflags):
-    space = cflags & (C_OW_MASK + C_TG_MASK)
-    constraints = [
-        ('CopyRot', space, 0, ['RotIKXZ', ikBone, (1,0,1), (0,0,0), False]),
-        ('CopyRot', space, 0, ['RotIKY', ikBone, (0,1,0), (0,0,0), False]),
-        ('CopyRot', space, 1, ['RotFKXZ', fkBone, (1,0,1), (0,0,0), False]),
-        ('CopyRot', space, 1, ['RotFKY', fkBone, (0,1,0), (0,0,0), False])
-        ]
-    addPoseBone(fp, config, bone, None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), pflags, constraints)
-    return
-
-def addDeformLimb(fp, config, bone, ikBone, ikRot, fkBone, fkRot, cflags, pflags, constraints):
-    space = cflags & (C_OW_MASK + C_TG_MASK)
-    constraints += [
-        ('CopyRot', space, 0, ['RotIK', ikBone, ikRot, (0,0,0), False]),
-        ('CopyRot', space, 1, ['RotFK', fkBone, fkRot, (0,0,0), False])
-        ]
-    (fX,fY,fZ) = fkRot
-    addPoseBone(fp, config, bone, None, None, (1,1,1), (1-fX,1-fY,1-fZ), (0,0,0), (1,1,1), pflags, constraints)
-    return
-
-def addStretchBone(fp, config, bone, target, parent):
-    addPoseBone(fp, config, bone, None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0,
-        [('StretchTo', 0, 1, ['Stretch', target, 0, 1]),
-          ('LimitScale', C_OW_LOCAL, 0, ['LimitScale', (0,0, 0,0, 0,0), (0,1,0)])])
-    #addPoseBone(fp, config, target, None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0,
-     #    [('LimitRot', C_OW_LOCAL, 1, ['LimitRot', (-deg90,deg90, 0,0, -deg90,deg90), (1,1,1)])])
-    return
-"""
-
-def addCSlider(fp, config, bone, mx):
+def addCSlider(fp, info, bone, mx):
     mn = "-"+mx
-    addPoseBone(fp, config, bone, 'MHCube025', None, (0,1,0), (1,1,1), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, info, bone, 'MHCube025', None, (0,1,0), (1,1,1), (1,1,1), (1,1,1), 0,
         [('LimitLoc', C_OW_LOCAL+C_LTRA, 1, ['Const', (mn,mx, '0','0', mn,mx), (1,1,1,1,1,1)])])
     
-def addYSlider(fp, config, bone, mx):
+def addYSlider(fp, info, bone, mx):
     mn = "-"+mx
-    addPoseBone(fp, config, bone, 'MHCube025', None, (1,1,0), (1,1,1), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, info, bone, 'MHCube025', None, (1,1,0), (1,1,1), (1,1,1), (1,1,1), 0,
         [('LimitLoc', C_OW_LOCAL+C_LTRA, 1, ['Const', ('0','0', '0','0', mn,mx), (1,1,1,1,1,1)])])
     
-def addXSlider(fp, config, bone, mn, mx, dflt):
-    addPoseBone(fp, config, bone, 'MHCube025', None, ((0,1,1), (dflt,0,0)), (1,1,1), (1,1,1), (1,1,1), 0,
+def addXSlider(fp, info, bone, mn, mx, dflt):
+    addPoseBone(fp, info, bone, 'MHCube025', None, ((0,1,1), (dflt,0,0)), (1,1,1), (1,1,1), (1,1,1), 0,
         [('LimitLoc', C_OW_LOCAL+C_LTRA, 1, ['Const', (mn,mx, '0','0', mn,mx), (1,1,1,1,1,1)])])
 
 #
-#    addPoseBone(fp, config, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, flags, constraints):
+#    addPoseBone(fp, info, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, flags, constraints):
 #
 
-def addPoseBone(fp, config, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, flags, constraints):
+def addPoseBone(fp, info, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, flags, constraints):
     try:
         (lockLoc, location) = locArg
     except:
@@ -108,10 +65,10 @@ def addPoseBone(fp, config, bone, customShape, boneGroup, locArg, lockRot, lockS
     hide = (flags & P_HID != 0)
 
     if not fp:
-        the.createdArmature.bones[bone].constraints = armature.constraints.getConstraints(bone, constraints, lockLoc, lockRot)
+        info.createdArmature.bones[bone].constraints = armature.constraints.getConstraints(bone, constraints, lockLoc, lockRot)
         return
     
-    if config.mhx25:
+    if info.config.mhx25:
         fp.write("\n  Posebone %s %s \n" % (bone, True))
     else:
         # limitX = flags & 1
@@ -126,12 +83,12 @@ def addPoseBone(fp, config, bone, customShape, boneGroup, locArg, lockRot, lockS
             fp.write("\t\tdisplayObject _object['%s'] ;\n" % customShape)
         
     if boneGroup:
-        index = boneGroupIndex(boneGroup, config)
+        index = boneGroupIndex(boneGroup, info)
         fp.write("    bone_group Refer BoneGroup %s ;\n" % boneGroup)
 
-    (uses, mins, maxs) = armature.constraints.writeConstraints(fp, config, bone, constraints, lockLoc, lockRot)
+    (uses, mins, maxs) = armature.constraints.writeConstraints(fp, info, bone, constraints, lockLoc, lockRot)
 
-    if not config.mhx25:
+    if not info.config.mhx25:
         fp.write("\tend posebone\n")
         return
     
@@ -199,9 +156,9 @@ def rotationMode(flags):
     return modes[(flags&P_ROTMODE) >> 8]
         
 
-def boneGroupIndex(grp, config):
+def boneGroupIndex(grp, info):
     index = 1
-    for (name, the.me) in config.boneGroups:
+    for (name, color) in info.config.boneGroups:
         if name == grp:
             return index
         index += 1
