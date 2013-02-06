@@ -232,6 +232,26 @@ class SliderStyle(QtGui.QCommonStyle):
     def sizeFromContents(self, ct, opt, contentsSize, widget = None):
         return self.__parent.sizeFromContents(ct, opt, contentsSize, widget)
 
+class NarrowLineEdit(QtGui.QLineEdit):
+    def __init__(self, width=4, *args, **kwargs):
+        super(NarrowLineEdit, self).__init__(*args, **kwargs)
+        self.__cols = width
+
+    def sizeHint(self):
+        self.ensurePolished()
+        fm = QtGui.QFontMetrics(self.font())
+        leftMargin, topMargin, rightMargin, bottomMargin = self.getContentsMargins()
+        textMargins = self.textMargins()
+        h = max(fm.height(), 14) + 2 + textMargins.top() + textMargins.bottom() + topMargin + bottomMargin
+        w = fm.width('0') * self.__cols + 4 + textMargins.left() + textMargins.right() + leftMargin + rightMargin
+
+        opt = QtGui.QStyleOptionFrameV2()
+        self.initStyleOption(opt)
+        return self.style().sizeFromContents(
+            QtGui.QStyle.CT_LineEdit, opt,
+            QtCore.QSize(w, h).expandedTo(QtGui.QApplication.globalStrut()),
+            self)
+
 class Slider(QtGui.QWidget, Widget):
     _imageCache = {}
     _show_images = False
@@ -248,6 +268,7 @@ class Slider(QtGui.QWidget, Widget):
         super(Slider, self).__init__()
         Widget.__init__(self)
         self.text = getLanguageString(label) or ''
+        self.valueConverter = valueConverter
 
         orient = (QtCore.Qt.Vertical if vertical else QtCore.Qt.Horizontal)
         self.slider = QtGui.QSlider(orient)
@@ -265,30 +286,62 @@ class Slider(QtGui.QWidget, Widget):
         self.connect(self.slider, QtCore.SIGNAL('valueChanged(int)'), self._changed)
         self.slider.installEventFilter(self)
 
-        label = (self.text % value) if '%' in self.text else self.text
-        self.label = QtGui.QLabel(label)
+        self.label = QtGui.QLabel(self.text)
         # Decrease vertical gap between label and slider
         #self.label.setContentsMargins(0, 0, 0, -1)
         self.layout = QtGui.QGridLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.label, 1, 0)
-        self.layout.addWidget(self.slider, 2, 0)
+        self.layout.setColumnMinimumWidth(1, 1)
+        self.layout.setColumnStretch(0, 1)
+        self.layout.setColumnStretch(1, 0)
+        self.layout.addWidget(self.label, 1, 0, 1, 1)
+        self.layout.addWidget(self.slider, 2, 0, 1, 2)
         if not self.text:
             self.label.hide()
 
         if image is not None:
             self.image = QtGui.QLabel()
             self.image.setPixmap(self._getImage(image))
-            self.layout.addWidget(self.image, 0, 0)
+            self.layout.addWidget(self.image, 0, 0, 1, 2)
         else:
             self.image = None
 
+        if self.valueConverter:
+            self.edit = NarrowLineEdit(5)
+            self.connect(self.edit, QtCore.SIGNAL('returnPressed()'), self._enter)
+            self.layout.addWidget(self.edit, 1, 1, 1, 1)
+        else:
+            self.edit = None
+
+        self._sync(value)
         self._update_image()
 
         type(self)._instances.add(self)
 
     def __del__(self):
         type(self)._instances.remove(self)
+
+    def _enter(self):
+        text = str(self.edit.text())
+        if not text:
+            return
+        oldValue = self.getValue()
+        newValue = self.fromDisplay(float(text))
+        self.setValue(newValue)
+        if abs(oldValue - newValue) > 1e-3:
+            self.callEvent('onChange', newValue)
+
+    def toDisplay(self, value):
+        if self.valueConverter is None:
+            return value
+        else:
+            return self.valueConverter.dataToDisplay(value)
+
+    def fromDisplay(self, value):
+        if self.valueConverter is None:
+            return value
+        else:
+            return self.valueConverter.displayToData(value)
 
     def eventFilter(self, object, event):
         if object != self.slider:
@@ -319,15 +372,19 @@ class Slider(QtGui.QWidget, Widget):
 
     def _changing(self, value):
         value = self._i2f(value)
-        if '%' in self.text:
-            self.label.setText(self.text % value)
+        self._sync(value)
         self.callEvent('onChanging', value)
 
     def _changed(self, value):
         value = self._i2f(value)
-        if '%' in self.text:
-            self.label.setText(self.text % value)
+        self._sync(value)
         self.callEvent('onChange', value)
+
+    def _sync(self, value):
+        if '%' in self.text:
+            self.label.setText(self.text % self.toDisplay(value))
+        if self.edit is not None:
+            self.edit.setText('%.2f' % self.toDisplay(value))
 
     def _f2i(self, x):
         return int(round(1000 * (x - self.min) / (self.max - self.min)))
@@ -338,6 +395,7 @@ class Slider(QtGui.QWidget, Widget):
     def setValue(self, value):
         if self._f2i(value) == self.slider.value():
             return
+        self._sync(value)
         self.slider.blockSignals(True)
         self.slider.setValue(self._f2i(value))
         self.slider.blockSignals(False)
