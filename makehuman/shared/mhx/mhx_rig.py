@@ -34,8 +34,8 @@ import armature
 import read_shapekeys
 import log
 
-from . import the
-from .the import *
+
+from .mhx_globals import *
 from . import mhxbones
 from . import posebone
 from . import mhx_custom

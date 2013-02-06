@@ -41,8 +41,6 @@ import mhx
 from mhx import the
 from mhx.the import *
 
-from . import dual_quaternions
-
 D = pi/180
 
 #
@@ -916,7 +914,6 @@ def createRig(human, rigtype):
     config.mhx25 = True
     amt = CArmature(human, config)
 
-    the.createdArmature = amt
     for (bname, roll, parent, flags, layers, bbone) in config.armatureBones:
         if config.exporting or layers & ACTIVE_LAYERS:
             bone = CBone(amt, bname, roll, parent, flags, layers, bbone)

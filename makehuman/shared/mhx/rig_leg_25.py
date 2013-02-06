@@ -22,8 +22,8 @@ Abstract
 Leg bone definitions 
 """
 
-from . import the
-from .the import *
+
+from .mhx_globals import *
 from . import posebone
 from posebone import addPoseBone
 

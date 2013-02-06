@@ -22,8 +22,8 @@ Abstract
 Arm bone definitions 
 """
 
-from . import the
-from .the import *
+
+from .mhx_globals import *
 from .posebone import addPoseBone
 
 prcUpArmVec    = 0.15

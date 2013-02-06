@@ -25,7 +25,7 @@ TODO
 import sys
 import os
 import mh
-from . import the
+
 import log
 
 

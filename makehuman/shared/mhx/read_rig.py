@@ -29,8 +29,8 @@ import os
 import mh2proxy
 import log
 
-from . import the
-from .the import *
+
+from .mhx_globals import *
 
 #
 #   setupRigJoint (words, obj, verts, locations):

@@ -33,7 +33,7 @@ import time
 import log
 
 import mh2proxy
-from . import the, mhxbones
+from . import mhxbones
 
 splitLeftRight = True
 

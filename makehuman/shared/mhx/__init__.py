@@ -22,7 +22,7 @@ Abstract
 TODO
 """
 
-from . import the
+
 from . import mhx_main
 from . import mhx_rig
 from . import mhx_24

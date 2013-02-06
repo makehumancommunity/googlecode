@@ -22,8 +22,8 @@ Abstract
 TODO
 """
 
-from . import the
-from .the import *
+
+from .mhx_globals import *
 
 import armature
 

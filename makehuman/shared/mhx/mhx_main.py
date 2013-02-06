@@ -43,7 +43,7 @@ import warpmodifier
 import posemode
 import read_shapekeys
 
-from . import the
+
 from . import mhx_rig
 from . import mhx_custom
 from . import mhx_24
