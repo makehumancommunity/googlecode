@@ -25,6 +25,19 @@ TODO
 import gui
 from export import Exporter
 
+
+class Options:
+    def __init__(self, rig, exporter):
+        self.daerig = rig,
+        self.rotate90X = exporter.colladaRot90X.selected
+        self.rotate90Z = exporter.colladaRot90Z.selected
+        self.eyebrows =  exporter.colladaEyebrows.selected
+        self.lashes =    exporter.colladaLashes.selected
+        self.helpers =   exporter.colladaHelpers.selected
+        self.hidden =    exporter.colladaHidden.selected
+        self.scale, self.unit = exporter.getScale(exporter.daeScales)
+
+
 class ExporterCollada(Exporter):
     def __init__(self):
         Exporter.__init__(self)
@@ -52,17 +65,7 @@ class ExporterCollada(Exporter):
             if button.selected:
                 break                
 
-        options = {
-            "daerig": rig,
-            "rotate90X": self.colladaRot90X.selected,
-            "rotate90Z": self.colladaRot90Z.selected,
-            "eyebrows":  self.colladaEyebrows.selected,
-            "lashes":    self.colladaLashes.selected,
-            "helpers":   self.colladaHelpers.selected,
-            "hidden":    self.colladaHidden.selected,
-            "scale":     self.getScale(self.daeScales),
-        }
-
+        options = Options(rig, self)
         mh2collada.exportCollada(human, filename("dae"), options)
 
 def load(app):

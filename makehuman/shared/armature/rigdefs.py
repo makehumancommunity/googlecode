@@ -39,7 +39,7 @@ import export_config
     
 import mhx
 from mhx import the
-from the import *
+from mhx.the import *
 
 from . import dual_quaternions
 

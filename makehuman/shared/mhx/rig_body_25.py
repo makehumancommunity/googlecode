@@ -23,7 +23,7 @@ Body bone definitions
 """
 
 from . import the
-from the import *
+from .the import *
 from . import posebone
 from posebone import addPoseBone
 
@@ -87,7 +87,7 @@ BodyHeadsTails = [
     ('Neck',           'neck', 'neck2'),
     ('Head',           'neck2', 'head-end'),
 
-    ('SpinePT',        'spine-pt', ('spine-pt', the.yunit)),
+    ('SpinePT',        'spine-pt', ('spine-pt', yunit)),
     ('SpineLinkPT',    'spine2', 'spine-pt'),
 
     # Down spine    
@@ -129,17 +129,17 @@ if MuscleBones:
     BodyHeadsTails += [
     # Deform torso
     ('DfmStomach1',    'rib-bot', 'stomach-mid'),
-    ('Stomach',        'stomach-mid', ('stomach-mid', the.ysmall)),
+    ('Stomach',        'stomach-mid', ('stomach-mid', ysmall)),
     ('DfmStomach2',    'stomach-mid', 'stomach-bot'),
     ('StomachStretch', 'rib-bot', 'stomach-bot'),
 
     ('DfmWaist_L',     'r-waist-up', 'r-waist-down'),
     ('DfmWaist_R',     'l-waist-up', 'l-waist-down'),
-    ('WaistTrg_L',     'r-waist-down', ('r-waist-down', the.yunit)),
-    ('WaistTrg_R',     'l-waist-down', ('l-waist-down', the.yunit)),
+    ('WaistTrg_L',     'r-waist-down', ('r-waist-down', yunit)),
+    ('WaistTrg_R',     'l-waist-down', ('l-waist-down', yunit)),
 
-    ('Pubis',          'pubis', ('pubis', the.ysmall)),
-    ('Pubis_L',        'r-pubis', ('r-pubis', the.yunit)),
+    ('Pubis',          'pubis', ('pubis', ysmall)),
+    ('Pubis_L',        'r-pubis', ('r-pubis', yunit)),
     ('Pubis_R',        'l-pubis', 'r-pubis'),
 
 ]

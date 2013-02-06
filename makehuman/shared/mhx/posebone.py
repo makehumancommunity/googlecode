@@ -23,7 +23,7 @@ TODO
 """
 
 from . import the
-from the import *
+from .the import *
 
 import armature
 

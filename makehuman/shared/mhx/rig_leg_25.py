@@ -23,7 +23,7 @@ Leg bone definitions
 """
 
 from . import the
-from the import *
+from .the import *
 from . import posebone
 from posebone import addPoseBone
 
@@ -105,8 +105,8 @@ if MuscleBones:
 
 LegHeadsTails = [
     # Hip = leg location
-    ('Hip_L',           'r-upper-leg', ('r-upper-leg', the.ysmall)),
-    ('Hip_R',           'l-upper-leg', ('l-upper-leg', the.ysmall)),
+    ('Hip_L',           'r-upper-leg', ('r-upper-leg', ysmall)),
+    ('Hip_R',           'l-upper-leg', ('l-upper-leg', ysmall)),
 
     # Leg
     ('UpLeg_L',         'r-upper-leg', 'r-knee'),

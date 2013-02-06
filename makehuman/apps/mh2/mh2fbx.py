@@ -30,7 +30,7 @@ import export_config
 import object_collection
 import read_shapekeys
 import posemode
-from mhx import the, mhx_custom
+from mhx import mhx_custom
 import log
 
 #fbxpath = "tools/blender26x"
@@ -46,10 +46,9 @@ def exportFbx(human, filepath, options):
     posemode.exitPoseMode()        
     posemode.enterPoseMode()
     
-    the.Human = human        
-    the.Config = export_config.exportConfig(human, True, [])
-    the.Config.separatefolder = True
-    outfile = export_config.getOutFileFolder(filepath, the.Config)        
+    cfg = export_config.exportConfig(human, True, [])
+    cfg.separatefolder = True
+    outfile = export_config.getOutFileFolder(filepath, cfg)        
     (outpath, ext) = os.path.splitext(outfile)
 
     log.message("Write FBX file %s" % outfile)
@@ -60,11 +59,11 @@ def exportFbx(human, filepath, options):
         rawTargets += shapeList
 
     if options["customshapes"]:
-        the.Config.customshapes = True
-        mhx_custom.listCustomFiles(the.Config)                            
+        cfg.customshapes = True
+        mhx_custom.listCustomFiles(cfg)                            
 
         log.message("Custom shapes:")    
-        for path,name in the.Config.customShapeFiles:
+        for path,name in cfg.customShapeFiles:
             log.message("    %s", path)
             shape = mhx_custom.readCustomTarget(path)
             target = (name,shape)
@@ -83,7 +82,7 @@ def exportFbx(human, filepath, options):
 
     (scale, unit) = options["scale"]   
 
-    bpy.initialize()
+    bpy.initialize(human, cfg)
     name = os.path.splitext(os.path.basename(filepath))[0]
     boneInfo = stuffs[0].boneInfo
     rig = bpy.addRig(name, boneInfo)

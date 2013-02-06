@@ -27,37 +27,34 @@ TODO
 
 import os.path
 import time
+import log
 
 import aljabr
 import export_config
 import object_collection
-from mhx import the
-import log
 
 #
 #    Size of end bones = 1 mm
 # 
 Delta = [0,0.01,0]
 
+
 #
 # exportCollada(human, filename, options):
 #
 
-def exportCollada(human, filename, options):
+def exportCollada(human, filename, options):    
     time1 = time.clock()
-    the.Config = export_config.exportConfig(human, True, [])
-    the.Config.separatefolder = True
-    the.Rotate90X = options["rotate90X"]
-    the.Rotate90Z = options["rotate90Z"]
-    the.Options = options
-    outfile = export_config.getOutFileFolder(filename, the.Config)        
+    cfg = export_config.exportConfig(human, True)
+    cfg.separatefolder = True
+    outfile = export_config.getOutFileFolder(filename, cfg)        
     try:
         fp = open(outfile, 'w')
         log.message("Writing Collada file %s" % outfile)
     except:
         log.error("Unable to open file for writing %s" % outfile)
     (name,ext) = os.path.splitext(os.path.basename(outfile))
-    exportDae(human, name, fp)
+    exportDae(human, name, fp, options, cfg)
     fp.close()
     time2 = time.clock()
     log.message("Wrote Collada file in %g s: %s" % (time2-time1, outfile))
@@ -67,13 +64,13 @@ def exportCollada(human, filename, options):
 #
 #
 
-def rotateLoc(loc, scale):    
-    (x,y,z) = (scale*loc[0], scale*loc[1], scale*loc[2])
-    if the.Rotate90X:
+def rotateLoc(loc, options):    
+    (x,y,z) = (options.scale*loc[0], options.scale*loc[1], options.scale*loc[2])
+    if options.rotate90X:
         yy = -z
         z = y
         y = yy
-    if the.Rotate90Z:
+    if options.rotate90Z:
         yy = x
         x = -y
         y = yy        
@@ -163,23 +160,20 @@ def fixTwistWeights(fp, weights):
         fp.write("\n%s\n%s\n%s\n" % (twist, weights[twist], weights[bone]))
     return
 """                
-#
-#    writeBone(fp, bone, orig, extra, pad, stuff):
-#
 
-def writeBone(fp, bone, orig, extra, pad, stuff):
+
+def writeBone(fp, bone, orig, extra, pad, stuff, options):
     (name, children) = bone
     head = stuff.boneInfo.heads[name]
     vec = aljabr.vsub(head, orig)
-    printNode(fp, name, vec, extra, pad)
+    printNode(fp, name, vec, extra, pad, options)
     for child in children:
-        writeBone(fp, child, head, '', pad+'  ', stuff)    
+        writeBone(fp, child, head, '', pad+'  ', stuff, options)    
     fp.write('\n%s      </node>' % pad)
     return
     
     
-def printNode(fp, name, vec, extra, pad):
-    # print(name, vec)
+def printNode(fp, name, vec, extra, pad, options):
     if name:
         nameStr = 'sid="%s"' % name
         idStr = 'id="%s" name="%s"' % (name, name)
@@ -189,8 +183,8 @@ def printNode(fp, name, vec, extra, pad):
     fp.write('\n'+
 '%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr) +
 '%s        <translate sid="translate"> ' % pad)
-    (scale, name) = the.Options["scale"]
-    (x,y,z) = rotateLoc(vec, scale)
+    #(scale, name) = options["scale"]
+    (x,y,z) = rotateLoc(vec, options)
     fp.write("%.4f %.4f %.4f " % (x,y,z))
     fp.write('</translate>\n' +
 '%s        <rotate sid="rotateZ">0 0 1 0.0</rotate>\n' % pad +
@@ -199,31 +193,25 @@ def printNode(fp, name, vec, extra, pad):
 '%s        <scale sid="scale">1.0 1.0 1.0</scale>' % pad)
     
 
-#
-#    exportDae(human, name, fp):
-#
-
-def exportDae(human, name, fp):
-    cfg = export_config.exportConfig(human, True)
+def exportDae(human, name, fp, options, cfg):
     obj = human.meshData
-    rigfile = "data/rigs/%s.rig" % the.Options["daerig"]
+    rigfile = "data/rigs/%s.rig" % options.daerig
 
     stuffs = object_collection.setupObjects(
         name, 
         human, 
         rigfile=rigfile, 
-        helpers=the.Options["helpers"], 
-        hidden=the.Options["hidden"], 
-        eyebrows=the.Options["eyebrows"], 
-        lashes=the.Options["lashes"])
+        helpers=options.helpers, 
+        hidden=options.hidden, 
+        eyebrows=options.eyebrows, 
+        lashes=options.lashes)
     mainStuff = stuffs[0]        
 
     date = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime())
-    if the.Rotate90X:
+    if options.rotate90X:
         upaxis = 'Z_UP'
     else:
         upaxis = 'Y_UP'
-    (scale, unit) = the.Options["scale"]        
         
     fp.write('<?xml version="1.0" encoding="utf-8"?>\n' +
 '<COLLADA version="1.4.0" xmlns="http://www.collada.org/2005/11/COLLADASchema">\n' +
@@ -233,13 +221,13 @@ def exportDae(human, name, fp):
 '    </contributor>\n' +
 '    <created>%s</created>\n' % date +
 '    <modified>%s</modified>\n' % date +
-'    <unit meter="%.4f" name="%s"/>\n' % (0.1/scale, unit) +
+'    <unit meter="%.4f" name="%s"/>\n' % (0.1/options.scale, options.unit) +
 '    <up_axis>%s</up_axis>\n' % upaxis+
 '  </asset>\n' +
 '  <library_images>\n')
 
     for stuff in stuffs:
-        writeImages(obj, fp, stuff, human)
+        writeImages(obj, fp, stuff, human, cfg)
 
     fp.write(
 '  </library_images>\n' +
@@ -260,14 +248,14 @@ def exportDae(human, name, fp):
 '  <library_controllers>\n')
 
     for stuff in stuffs:
-        writeController(obj, fp, stuff)
+        writeController(obj, fp, stuff, options)
 
     fp.write(
 '  </library_controllers>\n'+
 '  <library_geometries>\n')
 
     for stuff in stuffs:
-        writeGeometry(obj, fp, stuff)
+        writeGeometry(obj, fp, stuff, options)
 
     fp.write(
 '  </library_geometries>\n\n' +
@@ -275,9 +263,9 @@ def exportDae(human, name, fp):
 '    <visual_scene id="Scene" name="Scene">\n' +
 '      <node id="Scene_root">\n')
     for root in mainStuff.boneInfo.hier:
-        writeBone(fp, root, [0,0,0], 'layer="L1"', '  ', mainStuff)
+        writeBone(fp, root, [0,0,0], 'layer="L1"', '  ', mainStuff, options)
     for stuff in stuffs:
-        writeNode(obj, fp, "        ", stuff)
+        writeNode(obj, fp, "        ", stuff, options)
 
     fp.write(
 '      </node>\n' +    
@@ -290,21 +278,21 @@ def exportDae(human, name, fp):
     return
 
 #
-#    writeImages(obj, fp, stuff, human):
+#    writeImages(obj, fp, stuff, human, cfg):
 #
 
-def writeImages(obj, fp, stuff, human):
+def writeImages(obj, fp, stuff, human, cfg):
     if stuff.texture:
         textures = [stuff.texture]
     else:
         textures = []
 
     for (folder, texname) in textures: 
-        path = export_config.getOutFileName(texname, folder, True, human, the.Config)        
+        path = export_config.getOutFileName(texname, folder, True, human, cfg)        
         texfile = os.path.basename(path)
         (fname, ext) = os.path.splitext(texname)  
         name = "%s_%s" % (fname, ext[1:])
-        if the.Config.separatefolder:
+        if cfg.separatefolder:
             texpath = "textures/"+texfile
         else:
             texpath = path
@@ -474,10 +462,10 @@ def writeMaterials(obj, fp, stuff):
     return
 
 #
-#    writeController(obj, fp, stuff):
+#    writeController(obj, fp, stuff, options):
 #
 
-def writeController(obj, fp, stuff):
+def writeController(obj, fp, stuff, options):
     object_collection.setStuffSkinWeights(stuff)
     nVerts = len(stuff.meshInfo.verts)
     nUvVerts = len(stuff.meshInfo.uvValues)
@@ -486,7 +474,6 @@ def writeController(obj, fp, stuff):
     nWeights = len(stuff.skinWeights)
     nBones = len(stuff.boneInfo.bones)
     nTargets = len(stuff.meshInfo.targets)
-    (scale, unit) = the.Options["scale"]
 
     fp.write('\n' +
 '    <controller id="%s-skin">\n' % stuff.name +
@@ -534,7 +521,7 @@ def writeController(obj, fp, stuff):
     mat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
     for b in stuff.boneInfo.bones:
         vec = stuff.boneInfo.heads[b]
-        (x,y,z) = rotateLoc(vec, scale)
+        (x,y,z) = rotateLoc(vec, options)
         mat[0][3] = -x
         mat[1][3] = -y
         mat[2][3] = -z
@@ -629,17 +616,16 @@ def writeController(obj, fp, stuff):
     return
 
 #
-#    writeGeometry(obj, fp, stuff):
+#    writeGeometry(obj, fp, stuff, options):
 #
         
-def writeGeometry(obj, fp, stuff):
+def writeGeometry(obj, fp, stuff, options):
     nVerts = len(stuff.meshInfo.verts)
     nUvVerts = len(stuff.meshInfo.uvValues)
     nNormals = nVerts
     nWeights = len(stuff.skinWeights)
     nBones = len(stuff.boneInfo.bones)
     nTargets = len(stuff.meshInfo.targets)
-    (scale, unit) = the.Options["scale"]
 
     fp.write('\n' +
 '    <geometry id="%sMesh" name="%s">\n' % (stuff.name,stuff.name) +
@@ -650,7 +636,7 @@ def writeGeometry(obj, fp, stuff):
 
 
     for v in stuff.meshInfo.verts:
-        (x,y,z) = rotateLoc(v, scale)
+        (x,y,z) = rotateLoc(v, options)
         fp.write("%.4f %.4f %.4f " % (x,y,z))
 
     fp.write('\n' +
@@ -668,7 +654,7 @@ def writeGeometry(obj, fp, stuff):
 '          ')
 
     for no in stuff.meshInfo.vnormals:
-        (x,y,z) = rotateLoc(no, scale)
+        (x,y,z) = rotateLoc(no, options)
         fp.write("%.4f %.4f %.4f " % (x,y,z))
 
     fp.write('\n' +
@@ -726,7 +712,7 @@ def writeGeometry(obj, fp, stuff):
                 loc = vadd(v, offs)
             except:
                 loc = v
-            (x,y,z) = rotateLoc(v, scale)
+            (x,y,z) = rotateLoc(v, options)
             fp.write("%.4f %.4f %.4f " % (x,y,z))
 
         fp.write('\n'+
@@ -810,10 +796,10 @@ def checkFaces(stuff, nVerts, nUvVerts):
     return 
     
 #
-#    writeNode(obj, fp, pad, stuff):
+#    writeNode(obj, fp, pad, stuff, options):
 #
 
-def writeNode(obj, fp, pad, stuff):    
+def writeNode(obj, fp, pad, stuff, options):    
     fp.write('\n' +
 '%s<node id="%sObject" name="%s">\n' % (pad, stuff.name,stuff.name) +
 '%s  <translate sid="translate">0 0 0</translate>\n' % pad +

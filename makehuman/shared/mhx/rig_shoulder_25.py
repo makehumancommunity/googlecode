@@ -23,7 +23,7 @@ Arm bone definitions
 """
 
 from . import the
-from the import *
+from .the import *
 from . import posebone
 from posebone import addPoseBone
 
@@ -121,13 +121,13 @@ ShoulderHeadsTails = [
 
     # Elbow lock
 
-    ('Elbow_L',              'r-elbow', ('r-elbow',the.yunit)),
+    ('Elbow_L',              'r-elbow', ('r-elbow',yunit)),
     ('ELClavicle_L',         'r-clavicle', 'r-clav-tail'),
     ('ELUpArm_L',            'r-uparm0', 'r-elbow'),
     ('ELClavPT_L',           ('r-clav-tail', [0,2,0]), ('r-clav-tail', [0,3,0])),
     ('ELClavLinkPT_L',       'r-clav-tail', ('r-clav-tail', [0,2,0])),
     
-    ('Elbow_R',              'l-elbow', ('l-elbow',the.yunit)),
+    ('Elbow_R',              'l-elbow', ('l-elbow',yunit)),
     ('ELClavicle_R',         'l-clavicle', 'l-clav-tail'),
     ('ELUpArm_R',            'l-uparm0', 'l-elbow'),
     ('ELClavPT_R',           ('l-clav-tail', [0,2,0]), ('l-clav-tail', [0,3,0])),
@@ -153,11 +153,11 @@ if MuscleBones:
     
     # Clavicle
     ('ShoulderPivot_L',     'r-clavicle', 'r-clav-tail'),
-    ('ShoulderUp_L',        ('r-clav-tail', the.yunit), ('r-clav-tail', the.ybis)),
+    ('ShoulderUp_L',        ('r-clav-tail', yunit), ('r-clav-tail', ybis)),
     ('ShoulderAim_L',       'r-clav-tail', 'r-clav-aim'),
 
     ('ShoulderPivot_R',     'l-clavicle', 'l-clav-tail'),
-    ('ShoulderUp_R',        ('l-clav-tail', the.yunit), ('l-clav-tail', the.ybis)),
+    ('ShoulderUp_R',        ('l-clav-tail', yunit), ('l-clav-tail', ybis)),
     ('ShoulderAim_R',       'l-clav-tail', 'l-clav-aim'),
 
     # Scapula

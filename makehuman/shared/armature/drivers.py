@@ -23,7 +23,7 @@ TODO
 """
 
 from mhx import the
-from the import *
+from mhx.the import *
 import log
 
 class CTarget:

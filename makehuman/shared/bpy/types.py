@@ -30,7 +30,6 @@ import log
 from fastmath import *
 import object_collection
 import export_config
-from mhx import the
 
 
 #------------------------------------------------------------------
@@ -49,8 +48,10 @@ class Operator:
 #   Init
 #------------------------------------------------------------------
 
-def initialize():
-    global RnaNames
+def initialize(human, cfg):
+    global RnaNames, Human, Config
+    Human = human
+    Config = cfg
     RnaNames = {}
     for rnaType in ['OBJECT', 'MESH', 'ARMATURE', 'MATERIAL', 'TEXTURE', 'IMAGE', 'SCENE', 'BONE', 'POSE']:
         RnaNames[rnaType] = {}
@@ -161,8 +162,8 @@ class Armature(Rna):
 
 class Bone(Rna):
     ex = Vector((1,0,0))
-    #ey = Vector((0,1,0))
-    #ez = Vector((0,0,1))
+    ey = Vector((0,1,0))
+    ez = Vector((0,0,1))
 
     def __init__(self, name):
         Rna.__init__(self, name, 'BONE')
@@ -196,22 +197,22 @@ class Bone(Rna):
             return
         u = u.div(length)
 
-        xu = Bone.ex.dot(u)        
-        if abs(xu) > 0.99999:
-            axis = Bone.ex
-            if xu > 0:
+        yu = Bone.ey.dot(u)        
+        if abs(yu) > 0.99999:
+            axis = Bone.ey
+            if yu > 0:
                 angle = 0
             else:
                 angle = pi
         else:        
-            axis = Bone.ex.cross(u)
+            axis = Bone.ey.cross(u)
             length = sqrt(axis.dot(axis))
             axis = axis.div(length)
-            angle = acos(xu)
+            angle = acos(yu)
 
         mat = tm.rotation_matrix(angle,axis)
         if self.roll:
-            roll = tm.rotation_matrix(self.roll, Bone.ex)
+            roll = tm.rotation_matrix(self.roll, Bone.ey)
             mat = dot(mat, roll)
         self.matrix_local = Matrix(mat)
         self.matrix_local.matrix[:3,3] = self.head.vector
@@ -462,8 +463,9 @@ class Texture(Rna):
 
 class Image(Rna):
     def __init__(self, filename, folder):     
+    	global Human, Config
         Rna.__init__(self, filename, 'IMAGE')
-        self.filepath = export_config.getOutFileName(filename, folder, True, the.Human, the.Config)        
+        self.filepath = export_config.getOutFileName(filename, folder, True, Human, Config)        
 
         
 #------------------------------------------------------------------

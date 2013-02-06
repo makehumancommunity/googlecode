@@ -23,7 +23,7 @@ Arm bone definitions
 """
 
 from . import the
-from the import *
+from .the import *
 from .posebone import addPoseBone
 
 prcUpArmVec    = 0.15
@@ -156,18 +156,18 @@ ArmHeadsTails = [
     
    # Pole Targets
 
-    ('UpArmDir_L',         'r-uparm1', ('r-uparm1', the.yunit)),
-    ('UpArmDir_R',         'l-uparm1', ('l-uparm1', the.yunit)),
+    ('UpArmDir_L',         'r-uparm1', ('r-uparm1', yunit)),
+    ('UpArmDir_R',         'l-uparm1', ('l-uparm1', yunit)),
 
-    ('UpArm2PT_L',         ('r-uparm1', the.yunit), ('r-uparm1', ybis)),
-    ('UpArm3PT_L',         ('r-uparm2', the.yunit), ('r-uparm2', ybis)),
-    ('UpArm2PT_R',         ('l-uparm1', the.yunit), ('l-uparm1', ybis)),
-    ('UpArm3PT_R',         ('l-uparm2', the.yunit), ('l-uparm2', ybis)),
+    ('UpArm2PT_L',         ('r-uparm1', yunit), ('r-uparm1', ybis)),
+    ('UpArm3PT_L',         ('r-uparm2', yunit), ('r-uparm2', ybis)),
+    ('UpArm2PT_R',         ('l-uparm1', yunit), ('l-uparm1', ybis)),
+    ('UpArm3PT_R',         ('l-uparm2', yunit), ('l-uparm2', ybis)),
 
-    ('LoArm2PT_L',         ('r-loarm1', the.yunit), ('r-loarm1', ybis)),
-    ('LoArm3PT_L',         ('r-loarm2', the.yunit), ('r-loarm2', ybis)),
-    ('LoArm2PT_R',         ('l-loarm1', the.yunit), ('l-loarm1', ybis)),
-    ('LoArm3PT_R',         ('l-loarm2', the.yunit), ('l-loarm2', ybis)),
+    ('LoArm2PT_L',         ('r-loarm1', yunit), ('r-loarm1', ybis)),
+    ('LoArm3PT_L',         ('r-loarm2', yunit), ('r-loarm2', ybis)),
+    ('LoArm2PT_R',         ('l-loarm1', yunit), ('l-loarm1', ybis)),
+    ('LoArm3PT_R',         ('l-loarm2', yunit), ('l-loarm2', ybis)),
 
     ('ElbowPT_L',         'r-elbow-pt', ('r-elbow-pt', offs)),
     ('ElbowPT_R',         'l-elbow-pt', ('l-elbow-pt', offs)),
@@ -195,14 +195,14 @@ if MuscleBones:
     ArmHeadsTails = [
      # Elbow bend
     ('DfmElbowBend_L',     'r-elbow-head', 'r-elbow-tail'),
-    ('ElbowBendTrg_L',     'r-elbow-tail', ('r-elbow-tail', the.yunit)),
+    ('ElbowBendTrg_L',     'r-elbow-tail', ('r-elbow-tail', yunit)),
     ('DfmElbowBend_R',     'l-elbow-head', 'l-elbow-tail'),
-    ('ElbowBendTrg_R',     'l-elbow-tail', ('l-elbow-tail', the.yunit)),
+    ('ElbowBendTrg_R',     'l-elbow-tail', ('l-elbow-tail', yunit)),
 
     #('DfmElbowCompress_L', 'r-elbow-compress1', 'r-elbow-compress2'),
-    #('ElbowCompressTrg_L', 'r-elbow-compress2', ('r-elbow-compress2', the.yunit)),
+    #('ElbowCompressTrg_L', 'r-elbow-compress2', ('r-elbow-compress2', yunit)),
     #('DfmElbowCompress_R', 'l-elbow-compress1', 'l-elbow-compress2'),
-    #('ElbowCompressTrg_R', 'l-elbow-compress2', ('l-elbow-compress2', the.yunit)),
+    #('ElbowCompressTrg_R', 'l-elbow-compress2', ('l-elbow-compress2', yunit)),
 ]
 
 ArmArmature = [

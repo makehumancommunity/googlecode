@@ -61,9 +61,9 @@ class Data:
 #   Data
 #------------------------------------------------------------------
 
-def initialize():
+def initialize(human, cfg):
     global context, data
-    types.initialize()
+    types.initialize(human, cfg)
     data = Data()
     scn = types.Scene()
     data.scenes.append(scn)
@@ -94,5 +94,5 @@ def addRig(name, boneInfo):
     return rig
     
 
-initialize()
+initialize(None, None)
 usingMakeHuman = True

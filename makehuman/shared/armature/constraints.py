@@ -31,7 +31,7 @@ import log
 
 import mhx
 from mhx import the
-from the import *
+from mhx.the import *
 
 #
 #   Master class

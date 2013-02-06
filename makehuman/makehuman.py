@@ -135,7 +135,7 @@ def recursiveDirNames(root):
     return(pathlist)
 
 def set_sys_path():
-    syspath = ["./", "./lib", "./apps", "./shared", "./shared/mhx/templates", "./shared/mhx"]
+    syspath = ["./", "./lib", "./apps", "./shared"]
     syspath = syspath + recursiveDirNames("./apps")
     syspath.append("./core")
     syspath = syspath + recursiveDirNames("./core")

@@ -30,7 +30,7 @@ import mh2proxy
 import log
 
 from . import the
-from the import *
+from .the import *
 
 #
 #   setupRigJoint (words, obj, verts, locations):
