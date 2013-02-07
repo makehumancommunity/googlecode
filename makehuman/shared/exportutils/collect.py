@@ -35,6 +35,7 @@ import numpy
 import shutil
 import mh2proxy
 import log
+import catmull_clark_subdivision as cks
 
 from . import config
 from . import rig as rigfile
@@ -221,7 +222,13 @@ def setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden
             pass
         else:
             progressCallback (base+prog)
-    
+
+    def getSubdivision(obj,progressCallback=None):
+        if obj.isSubdivided():
+            return obj.mesh
+        else:
+            return cks.createSubdivisionObject(obj.mesh, progressCallback)
+        
     cfg = config.exportConfig(human, True)
     obj = human.meshData
     theTextures = {}
@@ -251,8 +258,8 @@ def setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden
         # If we subdivide here, helpers will not be removed.
         if subdivide:
             stuff.meshInfo = meshInfo
-            stuff.setObject3dMesh(human.getSubdivisionMesh(False,progressCallback = lambda p: progress(0,p*0.5)),
-                                  stuff.meshInfo.weights, rawTargets)
+            subMesh = getSubdivision(human,lambda p: progress(0,p*0.5))
+            stuff.setObject3dMesh(subMesh, stuff.meshInfo.weights, rawTargets)
         else:
             if helpers:     # helpers override everything
                 stuff.meshInfo = meshInfo
@@ -294,16 +301,16 @@ def setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden
                     if uuid and uuid in clothKeys:
                         # Subdivide clothes
                         clo = human.clothesObjs[uuid]
-                        subMesh = clo.getSubdivisionMesh(False)
+                        subMesh = getSubdivision(clo)
                         stuff.setObject3dMesh(subMesh, stuff.meshInfo.weights, rawTargets)
                     elif uuid and uuid == human.hairProxy.getUuid():
                         # Subdivide hair
                         hair = human.hairObj
-                        subMesh = hair.getSubdivisionMesh(False)
+                        subMesh = getSubdivision(hair)
                         stuff.setObject3dMesh(subMesh, stuff.meshInfo.weights, rawTargets)
                 elif proxy.type == 'Proxy':
                     # Subdivide proxy
-                    subMesh = human.getSubdivisionMesh(False)
+                    subMesh = getSubdivision(human)
                     stuff.setObject3dMesh(subMesh, stuff.meshInfo.weights, rawTargets)
 
     progress(1,0)
