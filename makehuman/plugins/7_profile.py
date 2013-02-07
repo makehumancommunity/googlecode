@@ -125,6 +125,7 @@ class ProfilingTaskView(gui3d.TaskView):
 
     def __init__(self, category):
         super(ProfilingTaskView, self).__init__(category, 'Profile')
+        self.profile = None
 
         self.sortKey = 'prim'
         self.sortDir = 0
@@ -141,9 +142,18 @@ class ProfilingTaskView(gui3d.TaskView):
         for name, dir in [('Descending', 0), ('Ascending', 1)]:
             radio = self.sortDirBox.addWidget(DirRadioButton(group, name, dir))
 
+        self.saveBox = self.addLeftWidget(gui.GroupBox('Save'))
+        self.save = gui.BrowseButton('save')
+        self.saveBox.addWidget(self.save)
+        self.save.setEnabled(False)
+
         self.table.setColumnCount(len(self._columns))
         self.table.setHorizontalHeaderLabels(self._columns)
         self.table.setColumnWidth(len(self._columns) - 1, 300)
+
+        @self.save.mhEvent
+        def onClicked(path):
+            self.saveStats(path)
 
     def setData(self, stats):
         self.data = [Stat(func, data) for func, data in stats.stats.iteritems()]
@@ -168,8 +178,14 @@ class ProfilingTaskView(gui3d.TaskView):
                 self.table.setItem(row, col, value)
 
     def setProfile(self, profile):
+        self.profile = profile
         stats = pstats.Stats(profile).strip_dirs()
         self.setData(stats)
+        self.save.setEnabled(True)
+
+    def saveStats(self, path):
+        with open(path, 'w') as f:
+            pstats.Stats(self.profile, stream=f).strip_dirs().sort_stats(-1).print_stats()
 
 def load(app):
     global taskview
