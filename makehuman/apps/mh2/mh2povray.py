@@ -946,7 +946,7 @@ def povrayWriteHairs(outputDirectory, mesh):
 
 import gui3d
 import mh2proxy
-import object_collection
+import exportutils
 
 def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallback = None):
     """
@@ -1063,7 +1063,7 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
 
     povraySizeData(obj, outputFileDescriptor)
 
-    stuffs = object_collection.setupObjects("MakeHuman", gui3d.app.selectedHuman, helpers=False, hidden=False,
+    stuffs = exportutils.collect.setupObjects("MakeHuman", gui3d.app.selectedHuman, helpers=False, hidden=False,
                                             eyebrows=False, lashes=False, subdivide = settings['subdivide'],
                                             progressCallback = lambda p: progress(progbase,p*(0.75-progbase),"Preparing Objects"))
     progbase = 0.75

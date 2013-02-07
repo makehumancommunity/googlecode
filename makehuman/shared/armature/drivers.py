@@ -22,8 +22,8 @@ Abstract
 TODO
 """
 
-from mhx import the
-from mhx.the import *
+import mhx
+from mhx.mhx_globals import *
 import log
 
 class CTarget:

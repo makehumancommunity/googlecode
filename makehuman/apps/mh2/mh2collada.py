@@ -30,8 +30,8 @@ import time
 import log
 
 import aljabr
-import export_config
-import object_collection
+import exportutils
+import exportutils
 
 #
 #    Size of end bones = 1 mm
@@ -45,9 +45,9 @@ Delta = [0,0.01,0]
 
 def exportCollada(human, filename, options):    
     time1 = time.clock()
-    cfg = export_config.exportConfig(human, True)
+    cfg = exportutils.config.exportConfig(human, True)
     cfg.separatefolder = True
-    outfile = export_config.getOutFileFolder(filename, cfg)        
+    outfile = exportutils.config.getOutFileFolder(filename, cfg)        
     try:
         fp = open(outfile, 'w')
         log.message("Writing Collada file %s" % outfile)
@@ -197,7 +197,7 @@ def exportDae(human, name, fp, options, cfg):
     obj = human.meshData
     rigfile = "data/rigs/%s.rig" % options.daerig
 
-    stuffs = object_collection.setupObjects(
+    stuffs = exportutils.collect.setupObjects(
         name, 
         human, 
         rigfile=rigfile, 
@@ -288,7 +288,7 @@ def writeImages(obj, fp, stuff, human, cfg):
         textures = []
 
     for (folder, texname) in textures: 
-        path = export_config.getOutFileName(texname, folder, True, human, cfg)        
+        path = exportutils.config.getOutFileName(texname, folder, True, human, cfg)        
         texfile = os.path.basename(path)
         (fname, ext) = os.path.splitext(texname)  
         name = "%s_%s" % (fname, ext[1:])
@@ -348,7 +348,7 @@ DefaultMaterialSettings = {
 }
 
 def writeEffects(obj, fp, stuff):
-    (texname, texfile, matname) = object_collection.getTextureNames(stuff)
+    (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)
     if not stuff.type:
         tex = "texture_png"
         writeEffectStart(fp, "SkinShader")
@@ -452,7 +452,7 @@ def writeSurfaceSampler(fp, tex):
 #
 
 def writeMaterials(obj, fp, stuff):
-    (texname, texfile, matname) = object_collection.getTextureNames(stuff)
+    (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)
     if matname:
         matname = matname.replace(" ", "_")
         fp.write(
@@ -466,7 +466,7 @@ def writeMaterials(obj, fp, stuff):
 #
 
 def writeController(obj, fp, stuff, options):
-    object_collection.setStuffSkinWeights(stuff)
+    exportutils.collect.setStuffSkinWeights(stuff)
     nVerts = len(stuff.meshInfo.verts)
     nUvVerts = len(stuff.meshInfo.uvValues)
     nNormals = nVerts
@@ -810,7 +810,7 @@ def writeNode(obj, fp, pad, stuff, options):
 '%s  <instance_controller url="#%s-skin">\n' % (pad, stuff.name) +
 '%s    <skeleton>#%s</skeleton>\n' % (pad, stuff.boneInfo.root))
 
-    (texname, texfile, matname) = object_collection.getTextureNames(stuff)    
+    (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)    
     if matname:
         matname = matname.replace(" ", "_")    
         fp.write(

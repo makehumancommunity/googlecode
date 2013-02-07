@@ -28,8 +28,8 @@ import os
 import log
 
 from fastmath import *
-import object_collection
-import export_config
+import exportutils
+import exportutils
 
 
 #------------------------------------------------------------------
@@ -243,7 +243,7 @@ class Mesh(Rna):
 
     def fromStuff(self, stuff): 
         stuff.bones = []
-        object_collection.setStuffSkinWeights(stuff)
+        exportutils.collect.setStuffSkinWeights(stuff)
         nVerts = len(stuff.meshInfo.verts)
         nUvVerts = len(stuff.meshInfo.uvValues)
         nNormals = nVerts
@@ -465,7 +465,7 @@ class Image(Rna):
     def __init__(self, filename, folder):     
     	global Human, Config
         Rna.__init__(self, filename, 'IMAGE')
-        self.filepath = export_config.getOutFileName(filename, folder, True, Human, Config)        
+        self.filepath = exportutils.config.getOutFileName(filename, folder, True, Human, Config)        
 
         
 #------------------------------------------------------------------

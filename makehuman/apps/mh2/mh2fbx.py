@@ -26,11 +26,8 @@ import os.path
 import sys
 
 import gui3d
-import export_config
-import object_collection
-import read_shapekeys
+import exportutils
 import posemode
-from mhx import mhx_custom
 import log
 
 #fbxpath = "tools/blender26x"
@@ -46,31 +43,31 @@ def exportFbx(human, filepath, options):
     posemode.exitPoseMode()        
     posemode.enterPoseMode()
     
-    cfg = export_config.exportConfig(human, True, [])
+    cfg = exportutils.config.exportConfig(human, True, [])
     cfg.separatefolder = True
-    outfile = export_config.getOutFileFolder(filepath, cfg)        
+    outfile = exportutils.config.getOutFileFolder(filepath, cfg)        
     (outpath, ext) = os.path.splitext(outfile)
 
     log.message("Write FBX file %s" % outfile)
 
     rawTargets = []
     if options["expressions"]:
-        shapeList = read_shapekeys.readExpressionUnits(human, 0, 1)
+        shapeList = exportutils.shapekeys.readExpressionUnits(human, 0, 1)
         rawTargets += shapeList
 
     if options["customshapes"]:
         cfg.customshapes = True
-        mhx_custom.listCustomFiles(cfg)                            
+        exportutils.custom.listCustomFiles(cfg)                            
 
         log.message("Custom shapes:")    
         for path,name in cfg.customShapeFiles:
             log.message("    %s", path)
-            shape = mhx_custom.readCustomTarget(path)
+            shape = exportutils.custom.readCustomTarget(path)
             target = (name,shape)
             rawTargets.append(target)
 
     rigfile = "data/rigs/%s.rig" % options["fbxrig"]
-    stuffs = object_collection.setupObjects(
+    stuffs = exportutils.collect.setupObjects(
         os.path.splitext(outfile)[0], 
         human, 
         rigfile, 

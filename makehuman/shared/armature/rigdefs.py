@@ -35,11 +35,10 @@ from numpy import dot
 from numpy.linalg import inv
 import transformations as tm
 
-import export_config
+import exportutils
     
 import mhx
-from mhx import the
-from mhx.the import *
+from mhx.mhx_globals import *
 
 D = pi/180
 
@@ -905,7 +904,7 @@ def checkPoints(vec1, vec2):
     
 
 def createRig(human, rigtype):
-    config = export_config.exportConfig(human, True)
+    config = exportutils.config.exportConfig(human, True)
     config.exporting = False
     config.feetonground = False
     config.rigtype = rigtype

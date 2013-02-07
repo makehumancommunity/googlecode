@@ -30,8 +30,7 @@ import transformations as tm
 import log
 
 import mhx
-from mhx import the
-from mhx.the import *
+from mhx.mhx_globals import *
 
 #
 #   Master class

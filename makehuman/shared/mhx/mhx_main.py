@@ -37,15 +37,14 @@ import log
 #import cProfile
 
 import mh2proxy
-import export_config
+import exportutils
 import armature
 import warpmodifier
 import posemode
-import read_shapekeys
+import exportutils
 
 
 from . import mhx_rig
-from . import mhx_custom
 from . import mhx_24
 from . import rig_panel_25
 from . import rig_shoulder_25
@@ -84,7 +83,7 @@ class CInfo:
 def exportMhx(human, filename, options):  
     posemode.exitPoseMode()        
     posemode.enterPoseMode()
-    cfg = export_config.exportConfig(human, True, options)
+    cfg = exportutils.config.exportConfig(human, True, options)
     (fpath, ext) = os.path.splitext(filename)
 
     if '24' in cfg.mhxversion:
@@ -94,7 +93,7 @@ def exportMhx(human, filename, options):
         time1 = time.clock()
         fname = os.path.basename(fpath)
         name = fname.capitalize().replace(' ','_')
-        outfile = export_config.getOutFileFolder(filename, cfg)        
+        outfile = exportutils.config.getOutFileFolder(filename, cfg)        
         try:
             fp = open(outfile, 'w')
             log.message("Writing MHX 2.5x file %s", outfile )
@@ -448,7 +447,7 @@ def copyFile25(tmplName, fp, proxy, info):
                 for proxy in info.proxies.values():
                     writeHideProp(fp, proxy.name)
                 if info.config.customshapes: 
-                    mhx_custom.listCustomFiles(info.config)                            
+                    exportutils.custom.listCustomFiles(info.config)                            
                 for path,name in info.config.customShapeFiles:
                     fp.write("  DefProp Float %s 0 %s  min=-1.0,max=2.0 ;\n" % (name, name[3:]))
 
@@ -465,7 +464,7 @@ def copyFile25(tmplName, fp, proxy, info):
                 fp.write("  end AnimationData\n")
 
             elif key == 'Filename':
-                file = export_config.getOutFileName(words[2], words[3], True, info.human, info.config)
+                file = exportutils.config.getOutFileName(words[2], words[3], True, info.human, info.config)
                 fp.write("  Filename %s ;\n" % file)
 
             else:
@@ -576,7 +575,7 @@ def writeBaseMaterials(fp, info):
     
 def addMaskImage(fp, info, mask):            
     (folder, file) = mask
-    path = export_config.getOutFileName(file, folder, True, None, info.human, info.config)
+    path = exportutils.config.getOutFileName(file, folder, True, None, info.human, info.config)
     fp.write(
 "Image %s\n" % file +
 "  Filename %s ;\n" % path +
@@ -817,7 +816,7 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, info):
                 fp.write("%s " % word)
             fp.write("\n")                
         elif words[0] == 'Filename':
-            file = export_config.getOutFileName(words[1], folder, True, None, info.human, info.config)
+            file = exportutils.config.getOutFileName(words[1], folder, True, None, info.human, info.config)
             fp.write("  Filename %s ;\n" % file)
         else:
             fp.write(line)
@@ -832,7 +831,7 @@ def writeProxyTexture(fp, texture, mat, extra, info):
     log.debug("Tex %s", tex)
     texname = info.name + os.path.basename(tex)
     fromDir = os.path.dirname(tex)
-    texfile = export_config.getOutFileName(tex, fromDir, True, None, info.config)
+    texfile = exportutils.config.getOutFileName(tex, fromDir, True, None, info.config)
     fp.write(
         "Image %s\n" % texname +
         "  Filename %s ;\n" % texfile +
@@ -1070,7 +1069,7 @@ def printProxyVGroup(fp, vgroups):
 
 
 def writeCorrectives(fp, info, drivers, folder, landmarks, proxy, t0, t1):    
-    shapeList = read_shapekeys.readCorrectives(drivers, info.human, folder, landmarks, t0, t1)
+    shapeList = exportutils.shapekeys.readCorrectives(drivers, info.human, folder, landmarks, t0, t1)
     for (shape, pose, lr) in shapeList:
         writeShape(fp, pose, lr, shape, 0, 1, proxy)
     
@@ -1101,14 +1100,14 @@ def writeShapeKeys(fp, info, name, proxy):
     """
     if (not proxy or proxy.type == 'Proxy'):        
         if info.config.faceshapes:
-            shapeList = read_shapekeys.readFaceShapes(human, rig_panel_25.BodyLanguageShapeDrivers, 0.6, 0.7)
+            shapeList = exportutils.shapekeys.readFaceShapes(human, rig_panel_25.BodyLanguageShapeDrivers, 0.6, 0.7)
             for (pose, shape, lr, min, max) in shapeList:
                 writeShape(fp, pose, lr, shape, min, max, proxy)
     """
     
     if not proxy:
         if info.config.expressionunits:
-            shapeList = read_shapekeys.readExpressionUnits(info.human, 0.7, 0.9)
+            shapeList = exportutils.shapekeys.readExpressionUnits(info.human, 0.7, 0.9)
             for (pose, shape) in shapeList:
                 writeShape(fp, pose, "Sym", shape, -1, 2, proxy)
         
@@ -1121,7 +1120,7 @@ def writeShapeKeys(fp, info, name, proxy):
     if not proxy:
         for path,name in info.config.customShapeFiles:
             log.message("    %s", path)
-            shape = mhx_custom.readCustomTarget(path)
+            shape = exportutils.custom.readCustomTarget(path)
             writeShape(fp, name, "Sym", shape, -1, 2, proxy)                        
 
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
@@ -1144,7 +1143,7 @@ def writeShapeKeys(fp, info, name, proxy):
 
     if not proxy:
         if info.config.expressionunits:
-            armature.drivers.writeShapePropDrivers(fp, info, read_shapekeys.ExpressionUnits, proxy, "Mhs")
+            armature.drivers.writeShapePropDrivers(fp, info, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
             
         skeys = []
         for (skey, val, string, min, max) in  info.config.customProps:
@@ -1155,9 +1154,9 @@ def writeShapeKeys(fp, info, name, proxy):
     fp.write("  end AnimationData\n\n")
 
     if info.config.expressionunits and not proxy:
-        exprList = read_shapekeys.readExpressionMhm("data/expressions")
+        exprList = exportutils.shapekeys.readExpressionMhm("data/expressions")
         writeExpressions(fp, exprList, "Expression")        
-        visemeList = read_shapekeys.readExpressionMhm("data/visemes")
+        visemeList = exportutils.shapekeys.readExpressionMhm("data/visemes")
         writeExpressions(fp, visemeList, "Viseme")        
 
     fp.write(
@@ -1204,8 +1203,8 @@ def writeMultiMaterials(uvset, info, fp):
         for tex in mat.textures:
             name = os.path.basename(tex.file)
             fp.write("Image %s\n" % name)
-            #file = export_config.getOutFileName(tex, "data/textures", True, info.human, info.config)
-            file = export_config.getOutFileName(name, folder, True, info.human, info.config)
+            #file = exportutils.config.getOutFileName(tex, "data/textures", True, info.human, info.config)
+            file = exportutils.config.getOutFileName(name, folder, True, info.human, info.config)
             fp.write(
                 "  Filename %s ;\n" % file +
 #                "  alpha_mode 'PREMUL' ;\n" +

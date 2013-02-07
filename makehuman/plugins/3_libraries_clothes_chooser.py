@@ -28,7 +28,7 @@ import mh
 import download
 import files3d
 import mh2proxy
-import export_config
+import exportutils
 import gui
 import filechooser as fc
 import log
@@ -125,7 +125,7 @@ class ClothesTaskView(gui3d.TaskView):
             for (pieceName, uuid) in proxy.clothings:
                 gui3d.app.progress(t, text="Loading %s" % pieceName)
                 t += dt
-                mhclo = export_config.getExistingProxyFile(pieceName+".mhclo", uuid, "clothes")
+                mhclo = exportutils.config.getExistingProxyFile(pieceName+".mhclo", uuid, "clothes")
                 if mhclo:
                     self.setClothes(human, mhclo)
                 else:
@@ -284,9 +284,9 @@ class ClothesTaskView(gui3d.TaskView):
     def loadHandler(self, human, values):
 
         if len(values) >= 3:
-            mhclo = export_config.getExistingProxyFile(values[1], values[2], "clothes")
+            mhclo = exportutils.config.getExistingProxyFile(values[1], values[2], "clothes")
         else:
-            mhclo = export_config.getExistingProxyFile(values[1], None, "clothes")
+            mhclo = exportutils.config.getExistingProxyFile(values[1], None, "clothes")
         if not mhclo:
             log.notice("%s does not exist. Skipping.", values[1])
         else:            

@@ -31,15 +31,13 @@ import os
 import sys
 import mh2proxy
 import armature
-import read_shapekeys
+import exportutils
 import log
 
 
 from .mhx_globals import *
 from . import mhxbones
 from . import posebone
-from . import mhx_custom
-from . import read_rig
 
 from . import rig_joints_25
 from . import rig_body_25
@@ -554,7 +552,7 @@ def setupRig(info):
 
     else:
         rigfile = "data/rigs/%s.rig" % config.rigtype
-        (locations, boneList, config.vertexWeights) = read_rig.readRigFile(rigfile, info.mesh)        
+        (locations, boneList, config.vertexWeights) = exportutils.rig.readRigFile(rigfile, info.mesh)        
         joints = (
             rig_joints_25.DeformJoints +
             rig_body_25.FloorJoints +
@@ -600,7 +598,7 @@ def setupRig(info):
         if config.malerig:
             config.armatureBones += rig_body_25.MaleArmature        
 
-    (custJoints, custHeadsTails, custArmature, config.customProps) = mhx_custom.setupCustomRig(config)
+    (custJoints, custHeadsTails, custArmature, config.customProps) = exportutils.custom.setupCustomRig(config)
     joints += custJoints
     headsTails += custHeadsTails
     config.armatureBones += custArmature
@@ -625,7 +623,7 @@ def setupRig(info):
             verts = []
             for bary in proxy.realVerts:
                 verts.append(mh2proxy.proxyCoord(bary))
-            (locations, boneList, weights) = read_rig.readRigFile(proxy.rig, info.mesh, verts=verts) 
+            (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, info.mesh, verts=verts) 
             proxy.weights = prefixWeights(weights, proxy.name, body)
             appendRigBones(boneList, info.mesh, proxy.name, L_CLO, body, info)
     return
@@ -828,7 +826,7 @@ def writeAllProperties(fp, typ, info):
     
     if config.expressionunits:
         fp.write("#if toggle&T_Shapekeys\n")
-        for skey in read_shapekeys.ExpressionUnits:
+        for skey in exportutils.shapekeys.ExpressionUnits:
             fp.write("  DefProp Float Mhs%s 0.0 %s min=-1.0,max=2.0 ;\n" % (skey, skey))
         fp.write("#endif\n")
     return

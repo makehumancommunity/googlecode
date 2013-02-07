@@ -25,7 +25,7 @@ TODO
 import os
 import numpy as np
 import aljabr
-import export_config
+import exportutils
 import log
 
 #
@@ -233,7 +233,7 @@ def readProxyFile(obj, file, evalOnLoad):
     if not file:
         return CProxy(None, 'Proxy', 2)
     elif type(file) == str or type(file) == unicode:
-        pfile = export_config.CProxyFile()
+        pfile = exportutils.config.CProxyFile()
         pfile.file = file
     else:
         pfile = file

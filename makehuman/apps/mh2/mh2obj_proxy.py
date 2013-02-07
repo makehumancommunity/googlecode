@@ -23,9 +23,9 @@ Exports proxy mesh to obj
 """
 
 import os
-import export_config
+import exportutils
 import mh2proxy
-import object_collection
+import exportutils
 
 #
 #    exportProxyObj(human, name, options):    
@@ -33,10 +33,10 @@ import object_collection
 
 def exportProxyObj(human, name, options):
     obj = human.meshData
-    cfg = export_config.exportConfig(human, True)
+    cfg = exportutils.config.exportConfig(human, True)
     cfg.separatefolder = True
 
-    stuffs = object_collection.setupObjects(os.path.splitext(name)[0], human,
+    stuffs = exportutils.collect.setupObjects(os.path.splitext(name)[0], human,
         helpers=options["helpers"], 
         hidden=options["hidden"], 
         eyebrows=options["eyebrows"], 
@@ -44,8 +44,8 @@ def exportProxyObj(human, name, options):
         subdivide=options["subdivide"])
     
     (scale, unit) = options["scale"]   
-    #name = export_config.goodName(name)
-    outfile = export_config.getOutFileFolder(name, cfg)   
+    #name = exportutils.config.goodName(name)
+    outfile = exportutils.config.getOutFileFolder(name, cfg)   
     (path, ext) = os.path.splitext(outfile)
 
     filename = "%s_clothed.obj" % path
@@ -135,7 +135,7 @@ def writeTexture(fp, key, texture, human, cfg):
     if not texture:
         return
     (folder, texfile) = texture
-    path = export_config.getOutFileName(texfile, folder, True, human, cfg)        
+    path = exportutils.config.getOutFileName(texfile, folder, True, human, cfg)        
     (fname, ext) = os.path.splitext(texfile)  
     name = "%s_%s" % (fname, ext[1:])
     if cfg.separatefolder:
