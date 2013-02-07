@@ -447,13 +447,11 @@ class GenderTaskView(ModifierTaskView):
             (None, 'genitals', 'feminine', 'masculine', 'noSetCamera'),
             ]),
         ('Breast', 'breast', [
+            ('Breast size', None, 'breastSize', -1.0, 1.0, 'noSetCamera'),
+            ('Breast firmness', None, 'breastFirmness', 0.0, 1.0, 'noSetCamera'),
             (None, 'breast', 'down', 'up', 'noSetCamera'),
             (None, 'breast-dist', 'min', 'max', 'noSetCamera'),
             (None, 'breast-point', 'min', 'max', 'noSetCamera'),
-            ]),
-        ('Macro', 'breast', [
-            ('Breast size', None, 'breastSize', -1.0, 1.0, 'noSetCamera'),
-            ('Breast firmness', None, 'breastFirmness', 0.0, 1.0, 'noSetCamera'),
             ]),
         ]
 
