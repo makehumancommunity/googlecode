@@ -165,9 +165,18 @@ class ModifierSlider(gui.Slider):
         self.modifier = modifier
         self.value = None
         self.warpResetNeeded = warpResetNeeded
+        self.changing = None
         
     def onChanging(self, value):
+        if self.changing is not None:
+            self.changing = value
+            return
+        self.changing = value
+        gui3d.app.callAsync(self._onChanging)
         
+    def _onChanging(self):
+        value = self.changing
+        self.changing = None
         if gui3d.app.settings.get('realtimeUpdates', True):
             human = gui3d.app.selectedHuman
             if self.value is None:
