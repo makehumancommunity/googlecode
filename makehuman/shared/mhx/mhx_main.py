@@ -867,7 +867,7 @@ def writeProxyMaterial(fp, mat, proxy, info):
     if proxy.normal:
         (normal,normalname) = writeProxyTexture(fp, proxy.normal, mat, 
             ("    use_normal_map True ;\n"),
-            info.config)
+            info)
     if proxy.displacement:
         (displacement,dispname) = writeProxyTexture(fp, proxy.displacement, mat, "", info)
     if proxy.transparency:
