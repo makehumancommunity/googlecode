@@ -31,26 +31,20 @@ import gui
 import filechooser as fc
 import log
 
-class Action(object):
-
-    def __init__(self, name, human, library, before, after, postAction=None):
-        self.name = name
+class HairAction(gui3d.Action):
+    def __init__(self, name, human, library, before, after):
+        super(HairAction, self).__init__(name)
         self.human = human
         self.library = library
         self.before = before
         self.after = after
-        self.postAction = postAction
 
     def do(self):
         self.library.setHair(self.human, self.after)
-        if self.postAction:
-            self.postAction()
         return True
 
     def undo(self):
         self.library.setHair(self.human, self.before)
-        if self.postAction:
-            self.postAction()
         return True
 
 
@@ -75,7 +69,7 @@ class HairTaskView(gui3d.TaskView):
                 oldFile = human.hairProxy.file
             else:
                 oldFile = 'clear.mhclo'
-            gui3d.app.do(Action("Change hair",
+            gui3d.app.do(HairAction("Change hair",
                 human,
                 self,
                 oldFile,

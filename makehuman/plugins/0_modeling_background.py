@@ -37,28 +37,21 @@ import filechooser as fc
 import log
 from language import language
 
-class Action(object):
-
-    def __init__(self, name, library, side, before, after, postAction=None):
-        self.name = name
-        self. side = side
+class BackgroundAction(gui3d.Action):
+    def __init__(self, name, library, side, before, after):
+        super(BackgroundAction, self).__init__(name)
+        self.side = side
         self.library = library
         self.before = before
         self.after = after
-        self.postAction = postAction
 
     def do(self):
         self.library.changeBackgroundImage(self.side, self.after)
-        if self.postAction:
-            self.postAction()
         return True
 
     def undo(self):
         self.library.changeBackgroundImage(self.side, self.before)
-        if self.postAction:
-            self.postAction()
         return True
-
 
 def pointInRect(point, rect):
 
@@ -136,7 +129,7 @@ class BackgroundTaskView(gui3d.TaskView):
                 oldBg = self.filenames[side][0]
             else:
                 oldBg = None
-            gui3d.app.do(Action("Change background",
+            gui3d.app.do(BackgroundAction("Change background",
                 self,
                 side,
                 oldBg,

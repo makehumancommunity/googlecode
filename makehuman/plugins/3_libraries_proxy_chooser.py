@@ -29,26 +29,20 @@ import mh2proxy
 import filechooser as fc
 import log
 
-class Action(object):
-
-    def __init__(self, name, human, library, before, after, postAction=None):
-        self.name = name
+class ProxyAction(gui3d.Action):
+    def __init__(self, name, human, library, before, after):
+        super(ProxyAction, self).__init__(name)
         self.human = human
         self.library = library
         self.before = before
         self.after = after
-        self.postAction = postAction
 
     def do(self):
         self.library.setProxy(self.human, self.after)
-        if self.postAction:
-            self.postAction()
         return True
 
     def undo(self):
         self.library.setProxy(self.human, self.before)
-        if self.postAction:
-            self.postAction()
         return True
 
 
@@ -118,7 +112,7 @@ class ProxyTaskView(gui3d.TaskView):
                 oldFile = human.proxy.file
             else:
                 oldFile = "clear.proxy"
-            gui3d.app.do(Action("Change proxy",
+            gui3d.app.do(ProxyAction("Change proxy",
                 human,
                 self,
                 oldFile,

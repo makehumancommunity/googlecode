@@ -840,3 +840,13 @@ class Application(events3d.EventHandler):
             category.callEvent('onResized', event)
             for task in category.tasks:
                 task.callEvent('onResized', event)
+
+class Action(object):
+    def __init__(self, name):
+        self.name = name
+
+    def do(self):
+        return True
+
+    def undo(self):
+        return True

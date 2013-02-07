@@ -33,63 +33,50 @@ import gui
 import filechooser as fc
 import log
 
-class Action(object):
-
-    def __init__(self, name, human, postAction=None):
-        self.name = name
+class Action(gui3d.Action):
+    def __init__(self, name, human):
+        super(Action, self).__init__(name)
         self.human = human
-        self.postAction = postAction
-
-    def do(self):
-        if self.postAction:
-            self.postAction()
-        return True
-
-    def undo(self):
-        if self.postAction:
-            self.postAction()
-        return True
-
 
 class SkinAction(Action):
 
-    def __init__(self, human, before, after, postAction=None):
-        super(SkinAction, self).__init__('Change skin texture', human, postAction)
+    def __init__(self, human, before, after):
+        super(SkinAction, self).__init__('Change skin texture', human)
         self.before = before
         self.after = after
 
     def do(self):
         self.human.setTexture(self.after)
         self.human.mesh.setShadeless(False)
-        return super(SkinAction, self).do()
+        return True
 
     def undo(self):
         self.human.setTexture(self.before)
-        return super(SkinAction, self).undo()
+        return True
 
 
 class HairAction(Action):
 
-    def __init__(self, human, before, after, postAction=None):
-        super(HairAction, self).__init__('Change hair texture', human, postAction)
+    def __init__(self, human, before, after):
+        super(HairAction, self).__init__('Change hair texture', human)
         self.before = before
         self.after = after
 
     def do(self):
         if self.human.hairObj:
             self.human.hairObj.mesh.setTexture(self.after)
-        return super(HairAction, self).do()
+        return True
 
     def undo(self):
         if self.human.hairObj:
             self.human.hairObj.mesh.setTexture(self.before)
-        return super(HairAction, self).undo()
+        return True
 
 
 class ClothesAction(Action):
 
-    def __init__(self, human, library, clothesUuid, before, after, postAction=None):
-        super(ClothesAction, self).__init__('Change clothes texture', human, postAction)
+    def __init__(self, human, library, clothesUuid, before, after):
+        super(ClothesAction, self).__init__('Change clothes texture', human)
         self.before = before
         self.after = after
         self.uuid = clothesUuid
@@ -97,12 +84,12 @@ class ClothesAction(Action):
 
     def do(self):
         self.library.applyClothesTexture(self.uuid, self.after)
-        return super(ClothesAction, self).do()
+        return True
 
     def undo(self):
         if self.before:
             self.library.applyClothesTexture(self.uuid, self.before)
-        return super(ClothesAction, self).undo()
+        return True
 
 
 class TextureTaskView(gui3d.TaskView):

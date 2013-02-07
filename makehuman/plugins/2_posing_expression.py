@@ -174,15 +174,13 @@ class ExpressionTaskView(gui3d.TaskView):
                         modifier.setValue(human, value)
                         modifier.updateValue(human, value)  # Force recompilation
 
-class Action:
-
-    def __init__(self, human, filename, taskView, include, postAction=None):
-        self.name = 'Load expression'
+class ExpressionAction(gui3d.Action):
+    def __init__(self, human, filename, taskView, include):
+        super(ExpressionAction, self).__init__('Load expression')
         self.human = human
         self.filename = filename
         self.taskView = taskView
         self.include = include
-        self.postAction = postAction
         self.before = {}
 
         for name, modifier in self.taskView.modifiers.iteritems():
@@ -195,8 +193,6 @@ class Action:
             self.human.armature.adapt()
         for slider in self.taskView.sliders:
             slider.update()
-        if self.postAction:
-            self.postAction()
         return True
 
     def undo(self):
@@ -207,8 +203,6 @@ class Action:
             self.human.armature.update()
         for slider in self.taskView.sliders:
             slider.update()
-        if self.postAction:
-            self.postAction()
         return True
 
 class MhmLoadTaskView(gui3d.TaskView):
@@ -232,7 +226,7 @@ class MhmLoadTaskView(gui3d.TaskView):
         @self.filechooser.mhEvent
         def onFileSelected(filename):
 
-            gui3d.app.do(Action(gui3d.app.selectedHuman, filename, self.mhmTaskView, self.include))
+            gui3d.app.do(ExpressionAction(gui3d.app.selectedHuman, filename, self.mhmTaskView, self.include))
             
             mh.changeCategory('Modelling')
 

@@ -109,36 +109,29 @@ import targets
 # cup1 : -min(0, breastSize)
 # cup2 :  max(0, breastSize)
 
-class DetailAction:
-
-    def __init__(self, human, before, after, postAction=None,update=True):
-        self.name = 'Change detail'
+class DetailAction(gui3d.Action):
+    def __init__(self, human, before, after, update=True):
+        super(DetailAction, self).__init__('Change detail')
         self.human = human
         self.before = before
         self.after = after
-        self.postAction = postAction
-        self.update=update
+        self.update = update
 
     def do(self):
         for (target, value) in self.after.iteritems():
             self.human.setDetail(target, value)
         self.human.applyAllTargets(gui3d.app.progress, update=self.update)
-        if self.postAction:
-            self.postAction()
         return True
 
     def undo(self):
         for (target, value) in self.before.iteritems():
             self.human.setDetail(target, value)
         self.human.applyAllTargets()
-        if self.postAction:
-            self.postAction()
         return True
 
-class ModifierAction:
-
+class ModifierAction(gui3d.Action):
     def __init__(self, human, modifier, before, after, postAction):
-        self.name = 'Change modifier'
+        super(ModifierAction, self).__init__('Change modifier')
         self.human = human
         self.modifier = modifier
         self.before = before

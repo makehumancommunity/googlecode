@@ -35,27 +35,20 @@ import armature
 import warpmodifier
 import posemode
 
-class Action(object):
-
-    def __init__(self, name, library, before, after, postAction=None):
-        self.name = name
+class PoseAction(gui3d.Action):
+    def __init__(self, name, library, before, after):
+        super(PoseAction, self).__init__(name)
         self.library = library
         self.before = before
         self.after = after
-        self.postAction = postAction
 
     def do(self):
         self.library.loadMhpFile(self.after)
-        if self.postAction:
-            self.postAction()
         return True
 
     def undo(self):
         self.library.loadMhpFile(self.before)
-        if self.postAction:
-            self.postAction()
         return True
-
 
 #
 #   Pose library
@@ -93,7 +86,7 @@ class PoseLoadTaskView(gui3d.TaskView):
             else:
                 oldFile = "clear.mhp"
 
-            gui3d.app.do(Action("Change pose",
+            gui3d.app.do(PoseAction("Change pose",
                 self,
                 oldFile,
                 filepath))
