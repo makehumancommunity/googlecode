@@ -241,6 +241,7 @@ class Canvas(QtOpenGL.QGLWidget):
         gl.OnInit()
 
     def paintGL(self):
+        self.app.logger_redraw.debug('paintGL')
         gl.draw()
 
     def resizeGL(self, w, h):
@@ -507,6 +508,7 @@ class Application(QtGui.QApplication, events3d.EventHandler):
         self.messages = None
         self.g_timers = {}
         self.logger_async = log.getLogger('mh.callAsync')
+        self.logger_redraw = log.getLogger('mh.redraw')
 
     def OnInit(self):
         self.messages = queue.Manager(self._postAsync)
@@ -531,6 +533,7 @@ class Application(QtGui.QApplication, events3d.EventHandler):
         sys.exit()
         
     def redraw(self):
+        self.logger_redraw.debug('Application.redraw')
         if self.mainwin and self.mainwin.canvas:
             self.mainwin.canvas.update()
 
