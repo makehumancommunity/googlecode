@@ -148,6 +148,7 @@ def init():
 
     logging.getLogger('mh.callAsync').setLevel(logging.WARNING)
     logging.getLogger('mh.callEvent').setLevel(logging.WARNING)
+    logging.getLogger('mh.redraw').setLevel(logging.WARNING)
 
     config()
 
