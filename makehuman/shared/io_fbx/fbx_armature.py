@@ -33,6 +33,13 @@ from .fbx_constraint import *
 #   Armature
 #------------------------------------------------------------------
 
+def getBones(rig):
+    if fbx.usingMakeHuman:
+        return rig.data.boneList
+    else:
+        return rig.data.bones
+
+
 class CArmature(FbxObject):
 
     def __init__(self, subtype=''):
@@ -45,10 +52,11 @@ class CArmature(FbxObject):
         self.object = None
         self.owner = None
 
+
     def make(self, rig):
         FbxObject.make(self, rig)
         self.object = self.owner = fbx.nodes.objects[rig.name]
-        for bone in oneOf(rig.data.boneList, rig.data.bones):
+        for bone in getBones(rig):
             if bone.parent == None:
                 self.roots.append(bone)                
         for root in self.roots:
@@ -177,7 +185,7 @@ class FbxPose(FbxObject):
                         pose = CPoseNode().make(node, ob.matrix_world)
                         self.poses.append(pose)
 
-        for bone in oneOf(rig.data.boneList, rig.data.bones):
+        for bone in getBones(rig):
             node = bones[bone.name]
             pose = CPoseNode().make(node, bone.matrix_local)
             self.poses.append(pose)
@@ -340,12 +348,8 @@ class CBone(CModel):
                 mat = pmat * self.matrixLocal
 
         (trans,rot,scale) = mat.decompose()
-    
-        if fbx.usingMakeHuman:
-            euler = Vector(rot.to_euler()).mult(D)
-        else:
-            euler = Vector(rot.to_euler())*D
-    
+        trans = fbx.settings.scale*trans
+        euler = Vector(rot.to_euler())*D    
         scale = Vector((1,1,1))
         return trans,euler,scale
 
@@ -375,8 +379,8 @@ class CBone(CModel):
         nodes = [self]
         eb = amt.edit_bones.new(self.name)
         info = infos[self.name]
-        eb.head = info.head
-        eb.tail = info.tail
+        eb.head = fbx.settings.scale*info.head
+        eb.tail = fbx.settings.scale*info.tail
         if info.parent:
             eb.parent = amt.edit_bones[info.parent.name]
         eb.roll = info.roll

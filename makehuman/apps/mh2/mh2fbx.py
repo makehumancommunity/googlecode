@@ -91,7 +91,7 @@ def exportFbx(human, filepath, options):
     
     filename = "%s.fbx" % outpath
     gui3d.app.progress(0, text="Exporting %s" % filename)
-    io_fbx.fbx_export.exportFbxFile(bpy.context, filename)
+    io_fbx.fbx_export.exportFbxFile(bpy.context, filename, scale)
     gui3d.app.progress(1)
     posemode.exitPoseMode()        
     return

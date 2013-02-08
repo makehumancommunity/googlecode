@@ -191,13 +191,13 @@ class Bone(Rna):
 
     def matrixLocalFromBone(self):        
     
-        u = self.tail.sub(self.head)
+        u = self.tail - self.head
         length = sqrt(u.dot(u))
         if length < 1e-3:
             log.message("Zero-length bone %s. Removed" % self.name)
             self.matrix_local.matrix[:3,3] = self.head.vector
             return
-        u = u.div(length)
+        u = u/length
 
         yu = Bone.ey.dot(u)        
         if abs(yu) > 0.99999:
@@ -209,7 +209,7 @@ class Bone(Rna):
         else:        
             axis = Bone.ey.cross(u)
             length = sqrt(axis.dot(axis))
-            axis = axis.div(length)
+            axis = axis/length
             angle = acos(yu)
 
         mat = tm.rotation_matrix(angle,axis)

@@ -63,19 +63,22 @@ class Vector:
     def __setitem__(self, n, value):
         self.vector[n] = value
         
-    def add(self, vec):
+    def __add__(self, vec):
         return Vector(self.vector + vec.vector)
         
-    def sub(self, vec):
+    def __sub__(self, vec):
         return Vector(self.vector - vec.vector)
         
     def dot(self, vec):
         return dot(self.vector, vec.vector)
         
-    def mult(self, factor):
+    def __rmul__(self, factor):
         return Vector(factor*self.vector)
 
-    def div(self, denom):
+    def __mul__(self, factor):
+        return Vector(factor*self.vector)
+
+    def __div__(self, denom):
         return Vector(self.vector/denom)
         
     def cross(self, vec):

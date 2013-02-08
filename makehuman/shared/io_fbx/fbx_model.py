@@ -46,7 +46,7 @@ class FbxStuff(FbxPlug):
             return self.struct[key]
         except KeyError:
             fbx.debug("Unrecognized key %s" % key)
-        return self.getProp(key)
+        return self.properties.getProp(key, self.template)
         
     def set(self, key, value):
         self.struct[key] = value
@@ -64,7 +64,11 @@ class FbxStuff(FbxPlug):
         self.properties.setPropLong(name, ftype, supertype, anim, value)
         
     def getProp(self, key):
-        return self.properties.getProp(key, self.template)
+        try: 
+            return self.properties.getProp(key, self.template)
+        except KeyError:
+            pass
+        return self.struct[key]
         
     def getProp2(self, key):
         return self.properties.getProp2(key, self.template)

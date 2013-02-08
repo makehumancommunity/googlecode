@@ -178,7 +178,8 @@ Definitions:  {
 #   Export
 #------------------------------------------------------------------
     
-def exportFbxFile(context, filepath):    
+def exportFbxFile(context, filepath, scale):    
+    fbx.settings.scale = scale
     filepath = filepath.replace('\\','/')
     fbx.message('Export "%s"' % filepath)
     print("Exp", fbx.b2f)
@@ -254,6 +255,6 @@ class VIEW3D_OT_TestExportButton(bpy.types.Operator):
 
     def execute(self, context):
         print("Exe", fbx.b2f, fbx_basic.fbx.b2f)
-        exportFbxFile(context, "/home/myblends/fbx-stuff/test.fbx")
+        exportFbxFile(context, "/home/myblends/fbx-stuff/test.fbx", 1.0)
         return {'FINISHED'}
 

@@ -116,7 +116,8 @@ class ImportFBX(bpy.types.Operator, ImportHelper):
         default = 'X',
     )
     minBoneLength = FloatProperty(name="Minimal Bone Length", min=0.01, max=100.0, default=1.0)
-    mirrorFix = BoolProperty(name="Bone Mirror Fix", description="Try to fix problem with mirrored bones", default=True)        
+    mirrorFix = BoolProperty(name="Bone Mirror Fix", description="Try to fix problem with mirrored bones", default=True)  
+    scale = FloatProperty(name="Scale", min=0.01, max = 100.0, default=1.0)
     
     def execute(self, context):
         fbx.settings.createNewScene = self.createNewScene
@@ -130,15 +131,16 @@ class ImportFBX(bpy.types.Operator, ImportHelper):
             fbx.settings.boneAxis = 2
         fbx.settings.minBoneLength = self.minBoneLength
         fbx.settings.mirrorFix = self.mirrorFix
-        fbx_import.importFbxFile(context, self.filepath)
+        fbx_import.importFbxFile(context, self.filepath, self.scale)
         return {'FINISHED'}
         
     def draw(self, context):
-        self.layout.prop(self, "createNewScene")
+        #self.layout.prop(self, "createNewScene")
         self.layout.prop(self, "zUp")
         self.layout.prop(self, "boneAxis", expand=True)
         self.layout.prop(self, "minBoneLength")
         self.layout.prop(self, "mirrorFix")
+        self.layout.prop(self, "scale")
 
  
 class ExportFBX(bpy.types.Operator, ExportHelper):
@@ -154,6 +156,7 @@ class ExportFBX(bpy.types.Operator, ExportHelper):
     includePropertyTemplates = BoolProperty(name="Include Property Templates", description="Include property templates in exported file", default=True)
     makeSceneNode = BoolProperty(name="Make Scene Node", default=False)
     selectedOnly = BoolProperty(name="Selected Objects Only", default=True)
+    scale = FloatProperty(name="Scale", min=0.01, max = 100.0, default=1.0)
 
     def execute(self, context):
         fbx.settings.zUp = self.zUp
@@ -161,16 +164,17 @@ class ExportFBX(bpy.types.Operator, ExportHelper):
         fbx.settings.includePropertyTemplates = self.includePropertyTemplates
         fbx.settings.makeSceneNode = self.makeSceneNode
         fbx.settings.selectedOnly = self.selectedOnly
-        fbx_export.exportFbxFile(context, self.filepath)
+        fbx_export.exportFbxFile(context, self.filepath, self.scale)
         return {'FINISHED'}
  
     def draw(self, context):
         self.layout.prop(self, "includePropertyTemplates")
-        self.layout.prop(self, "makeSceneNode")
+        #self.layout.prop(self, "makeSceneNode")
         self.layout.prop(self, "selectedOnly")
         self.layout.prop(self, "zUp")
         self.layout.prop(self, "minBoneLength")
         self.layout.prop(self, "mirrorFix")
+        self.layout.prop(self, "scale")
 
   
 class VIEW3D_OT_PresetButton(bpy.types.Operator):

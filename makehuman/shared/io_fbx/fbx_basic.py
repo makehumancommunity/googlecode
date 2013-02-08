@@ -39,12 +39,6 @@ def resetFbx():
 resetFbx()    
 
 
-def oneOf(mhCase, blenderCase):
-    if fbx.usingMakeHuman:
-        return mhCase
-    else:
-        return blenderCase
-
 class CNoName:
     def __init__(self):
         self.name = ""

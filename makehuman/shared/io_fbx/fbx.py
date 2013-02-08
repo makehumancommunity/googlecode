@@ -58,10 +58,12 @@ templates = {}
 
 
 def b2fZup(vec):
-    return Vector((vec[0], vec[2], -vec[1]))
+    global settings
+    return settings.scale * Vector((vec[0], vec[2], -vec[1]))
 
 def f2bZup(vec):
-    return Vector((vec[0], -vec[2], vec[1]))
+    global settings
+    return settings.scale * Vector((vec[0], -vec[2], vec[1]))
     
 def b2fEulerZup(eu):
     return Vector((eu[0], eu[2], -eu[1]))
@@ -77,10 +79,12 @@ def f2bRot4Zup(mat):
     
   
 def b2fYup(vec):
-    return vec
+    global settings
+    return settings.scale * Vector(vec)
 
 def f2bYup(vec):
-    return vec
+    global settings
+    return settings.scale * Vector(vec)
 
 def b2fEulerYup(eu):
     return eu
@@ -200,6 +204,7 @@ class Settings:
         self.lockChildren = True
         self.zUp = False
         self.normals = False    
+        self.scale = 1.0
     
     def maya(self):
         self.zUp = False

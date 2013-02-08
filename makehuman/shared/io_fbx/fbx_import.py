@@ -30,7 +30,8 @@ from . import fbx_object
 from . import fbx_scene
           
 
-def importFbxFile(context, filepath):
+def importFbxFile(context, filepath, scale):
+    fbx.settings.scale = scale
     fbx.activeFolder = os.path.dirname(filepath)
     fbx.message('Import "%s"' % filepath)
     proot = fbx_token.tokenizeFbxFile(filepath)
@@ -48,6 +49,6 @@ class VIEW3D_OT_TestImportButton(bpy.types.Operator):
     filepath = bpy.props.StringProperty()
 
     def execute(self, context):
-        importFbxFile(context, self.filepath)
+        importFbxFile(context, self.filepath, 1.0)
         return {'FINISHED'}
 
