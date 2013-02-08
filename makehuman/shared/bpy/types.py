@@ -138,6 +138,7 @@ class Armature(Rna):
     def __init__(self, name, boneInfo):
         Rna.__init__(self, name, 'ARMATURE')
         self.bones = {}
+        self.boneList = []
         self.edit_bones = self.bones
         self.boneInfo = boneInfo
         self.addHierarchy(boneInfo.hier[0], None)
@@ -147,6 +148,7 @@ class Armature(Rna):
         (bname, children) = hier
         bone = Bone(bname)
         self.bones[bname] = bone
+        self.boneList.append(bone)
         bone.head = Vector(self.boneInfo.heads[bname])
         bone.tail = Vector(self.boneInfo.tails[bname])
         bone.roll = self.boneInfo.rolls[bname]
@@ -344,6 +346,7 @@ class KeyBlock:
         
     def __repr__(self):
         return ("<KeyBlock %s>" % self.name)
+
         
 #------------------------------------------------------------------
 #   Material and Texture
@@ -463,7 +466,7 @@ class Texture(Rna):
 
 class Image(Rna):
     def __init__(self, filename, folder):     
-    	global Human, Config
+        global Human, Config
         Rna.__init__(self, filename, 'IMAGE')
         self.filepath = exportutils.config.getOutFileName(filename, folder, True, Human, Config)        
 
@@ -485,6 +488,7 @@ class Object(Rna):
         self.location = Vector((0,0,0))
         self.rotation_euler = Vector((0,0,0))
         self.scale = Vector((1,1,1))
+        self.modifiers = []
         
         if self.data.rnaType == 'MESH':
             self.vertex_groups = []
@@ -503,6 +507,11 @@ class Object(Rna):
         return ("<%s: %s type=%s data=%s parent=%s>" % (self.rnaType, self.name, self.type, self.data, self.parent))        
 
 
+class Modifier:
+    def __init__(self, type, ob):
+        self.type = type
+        self.object = ob
+        
 #------------------------------------------------------------------
 #   Scene and Action
 #------------------------------------------------------------------

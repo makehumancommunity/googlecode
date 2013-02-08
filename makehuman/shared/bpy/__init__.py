@@ -70,17 +70,20 @@ def initialize(human, cfg):
     context = Context(scn)
     
     
-def addMesh(name, stuff, isStuff=True):
+def addMesh(name, stuff, rig, isStuff=True):
     global data
-    me = types.Mesh(name)
+    me = types.Mesh(name+"Mesh")
     data.meshes.append(me)
     if isStuff:
         me.fromStuff(stuff)
     else:
         me.fromMesh(stuff)
-    ob = types.Object(name, me, stuff)    
+    ob = types.Object(name+"Mesh", me, stuff)    
     data.objects.append(ob)
     context.scene.objects.append(ob)
+    ob.parent = rig
+    rig.children.append(ob)
+    ob.modifiers.append(types.Modifier('ARMATURE', rig))
     return ob
     
 

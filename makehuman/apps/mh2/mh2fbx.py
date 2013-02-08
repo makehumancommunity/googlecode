@@ -84,8 +84,7 @@ def exportFbx(human, filepath, options):
     boneInfo = stuffs[0].boneInfo
     rig = bpy.addRig(name, boneInfo)
     for stuff in stuffs:
-        ob = bpy.addMesh(stuff.name, stuff, True)
-        ob.parent = rig
+        ob = bpy.addMesh(stuff.name, stuff, rig, True)
         
     #name = os.path.splitext(os.path.basename(filepath))[0]
     #bpy.addMesh(name, human.meshData, False)

@@ -48,7 +48,7 @@ class CArmature(FbxObject):
     def make(self, rig):
         FbxObject.make(self, rig)
         self.object = self.owner = fbx.nodes.objects[rig.name]
-        for bone in oneOf(rig.data.bones.values(), rig.data.bones):
+        for bone in oneOf(rig.data.boneList, rig.data.bones):
             if bone.parent == None:
                 self.roots.append(bone)                
         for root in self.roots:
@@ -177,7 +177,7 @@ class FbxPose(FbxObject):
                         pose = CPoseNode().make(node, ob.matrix_world)
                         self.poses.append(pose)
 
-        for bone in oneOf(rig.data.bones.values(), rig.data.bones):
+        for bone in oneOf(rig.data.boneList, rig.data.bones):
             node = bones[bone.name]
             pose = CPoseNode().make(node, bone.matrix_local)
             self.poses.append(pose)
