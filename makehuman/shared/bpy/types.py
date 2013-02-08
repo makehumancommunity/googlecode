@@ -252,7 +252,7 @@ class Mesh(Rna):
         nFaces = len(stuff.meshInfo.faces)
         nWeights = len(stuff.skinWeights)
         nBones = len(stuff.bones)
-        nTargets = len(stuff.meshInfo.targets)
+        nShapes = len(stuff.meshInfo.shapes)
 
         self.vertices = [MeshVertex(n, v) for (n,v) in enumerate(stuff.meshInfo.verts)]
         self.polygons = [MeshPolygon(n, [v[0] for v in f], stuff.meshInfo.verts) for (n,f) in enumerate(stuff.meshInfo.faces)]
@@ -265,11 +265,11 @@ class Mesh(Rna):
         else:
             self.materials = []
 
-        if stuff.meshInfo.targets:
+        if stuff.meshInfo.shapes:
             self.shape_keys = ShapeKeys()
             keyblock = KeyBlock("Basis", {})
             self.shape_keys.key_blocks.append(keyblock)
-            for (name,shape) in stuff.meshInfo.targets:
+            for (name,shape) in stuff.meshInfo.shapes:
                 keyblock = KeyBlock(name, shape)
                 self.shape_keys.key_blocks.append(keyblock)
                 

@@ -91,15 +91,6 @@ class CStuff:
             self.bump != None or
             self.displacement != None)
     
-    """
-    def copyBones(self, rig):
-        self.rigHead = rig.rigHead
-        self.rigTail = rig.rigTail
-        self.rigHier = rig.rigHier
-        self.bones = rig.bones
-        self.rawWeights = rig.rawWeights
-    """
-
 
 class CBoneInfo:
     def __init__(self, root, heads, tails, rolls, hier, bones, weights):
@@ -198,15 +189,15 @@ def filterMesh(meshInfo, obj, deleteGroups, deleteVerts, eyebrows, lashes):
             weights[b] = wts2
         meshInfo.weights = weights            
 
-    if meshInfo.targets:
-        targets = []
-        for (name, morphs1) in meshInfo.targets:
+    if meshInfo.shapes:
+        shapes = []
+        for (name, morphs1) in meshInfo.shapes:
             morphs2 = {}
             for (v1,dx) in morphs1.items():
                 if not killVerts[v1]:
                     morphs2[nv[v1]] = dx
-            targets.append((name, morphs2))
-        meshInfo.targets = targets
+            shapes.append((name, morphs2))
+        meshInfo.shapes = shapes
 
     return meshInfo
 
@@ -345,7 +336,7 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, proxyList, deleteGroups,
                     else:
                         stuffname = None
 
-                    stuff.meshInfo = mh2proxy.getMeshInfo(obj, proxy, meshInfo.weights, meshInfo.targets, stuffname)
+                    stuff.meshInfo = mh2proxy.getMeshInfo(obj, proxy, meshInfo.weights, meshInfo.shapes, stuffname)
 
                     stuffs.append(stuff)
     return foundProxy, deleteVerts

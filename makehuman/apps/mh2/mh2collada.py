@@ -473,7 +473,7 @@ def writeController(obj, fp, stuff, options):
     nFaces = len(stuff.meshInfo.faces)
     nWeights = len(stuff.skinWeights)
     nBones = len(stuff.boneInfo.bones)
-    nTargets = len(stuff.meshInfo.targets)
+    nShapes = len(stuff.meshInfo.shapes)
 
     fp.write('\n' +
 '    <controller id="%s-skin">\n' % stuff.name +
@@ -578,7 +578,7 @@ def writeController(obj, fp, stuff, options):
 '   <controller id="%sMorphs" name="%sMorphs">\n' % (stuff.name,stuff.name) +
 '     <morph method="NORMALIZED" source="#%sMesh">\n' % stuff.name +
 '       <source id="%s-targets">\n' % stuff.name +
-'         <IDREF_array id="%s-targets-array" count="%d">\n'  % (stuff.name, nTargets))
+'         <IDREF_array id="%s-targets-array" count="%d">\n'  % (stuff.name, nShapes))
 
     for (name, morphs) in targets:
         fp.write(' %s' % name)
@@ -586,13 +586,13 @@ def writeController(obj, fp, stuff, options):
     fp.write('\n' +
 '         </IDREF_array>\n' +
 '         <technique_common>\n' +
-'           <accessor source="%s-targets-array" count="%d" stride="1">\n' % (stuff.name,nTargets) +
+'           <accessor source="%s-targets-array" count="%d" stride="1">\n' % (stuff.name,nShapes) +
 '             <param name="MORPH_TARGET" type="IDREF"/>\n' +
 '           </accessor>\n' +
 '         </technique_common>\n' +
 '       </source>\n' +
 '       <source id="%s-morph_weights">\n' % name +
-'         <float_array id="%s-morph_weights-array" count="%d">\n' % (stuff.name,nTargets))
+'         <float_array id="%s-morph_weights-array" count="%d">\n' % (stuff.name,nShapes))
 
     for target in targets:
         fp.write("0.0 ")
@@ -600,7 +600,7 @@ def writeController(obj, fp, stuff, options):
     fp.write('\n' +
 '         </float_array>\n' +
 '         <technique_common>\n' +
-'           <accessor source="#%s-morph_weights-array" count="%d" stride="1">\n' % (stuff.name,nTargets) +
+'           <accessor source="#%s-morph_weights-array" count="%d" stride="1">\n' % (stuff.name,nShapes) +
 
 '             <param name="MORPH_WEIGHT" type="float"/>\n' +
 '           </accessor>\n' +
@@ -625,7 +625,7 @@ def writeGeometry(obj, fp, stuff, options):
     nNormals = nVerts
     nWeights = len(stuff.skinWeights)
     nBones = len(stuff.boneInfo.bones)
-    nTargets = len(stuff.meshInfo.targets)
+    nShapes = len(stuff.meshInfo.shapes)
 
     fp.write('\n' +
 '    <geometry id="%sMesh" name="%s">\n' % (stuff.name,stuff.name) +

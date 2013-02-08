@@ -169,13 +169,13 @@ class CTexture:
 
 class CMeshInfo:
 
-    def __init__(self, verts, vnormals, uvValues, faces, weights, targets):
+    def __init__(self, verts, vnormals, uvValues, faces, weights, shapes):
         self.verts = verts
         self.vnormals = vnormals
         self.uvValues = uvValues
         self.faces = faces
         self.weights = weights
-        self.targets = targets
+        self.shapes = shapes
 
     def setObject3dMesh(self, object3d, weights, shapes):
         self.verts = [tuple(v) for v in object3d.coord]
@@ -183,18 +183,18 @@ class CMeshInfo:
         self.uvValues = [tuple(t) for t in object3d.texco]
         self.faces = oldStyleFaces(object3d)
         self.weights = weights
-        self.targets = shapes
+        self.shapes = shapes
         
     def __repr__(self):
-        nVerts = nNormals = nUvs = nFaces = nWeights = nTargets = -1
+        nVerts = nNormals = nUvs = nFaces = nWeights = nShapes = -1
         if self.verts: nVerts = len(self.verts)
         if self.vnormals: nNormals = len(self.vnormals)
         if self.uvValues: nUvs = len(self.uvValues)
         if self.faces: nFaces = len(self.faces)
         if self.weights: nWeights = len(self.weights)
-        if self.targets: nTargets = len(self.targets)
+        if self.shapes: nShapes = len(self.shapes)
         
-        return ("<CMeshInfo v %d n %d u %d f %d w %d t %d>" % (nVerts, nNormals, nUvs, nFaces, nWeights, nTargets))
+        return ("<CMeshInfo v %d n %d u %d f %d w %d t %d>" % (nVerts, nNormals, nUvs, nFaces, nWeights, nShapes))
 
 #
 #
@@ -736,6 +736,7 @@ def newFace(first, words, group, proxy):
             raise NameError("texface %s %s", face, texface)
     return
 
+
 def newTexFace(words, proxy):
     texface = []
     nCoords = len(words)
@@ -743,6 +744,7 @@ def newTexFace(words, proxy):
         texface.append(int(words[n]))
     proxy.texFaces.append(texface)
     return
+
 
 def newTexVert(first, words, proxy):
     vt = []
@@ -752,6 +754,7 @@ def newTexVert(first, words, proxy):
         vt.append(uv)
     proxy.texVerts.append(vt)
     return
+
 
 def addProxyVert(v, vn, w, proxy):
     try:
@@ -797,7 +800,8 @@ def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
             faces = proxy.faces
 
         weights = getProxyWeights(rawWeights, proxy)
-        shapes = getProxyShapes(rawShapes, proxy.verts)
+        shapes = getProxyShapes(rawShapes, proxy)
+        print("sh", shapes)
         return CMeshInfo(verts, vnormals, proxy.texVerts, faces, weights, shapes)
     else:
         verts = [tuple(v) for v in obj.coord]
@@ -867,33 +871,43 @@ def getProxyShapes(rawShapes, proxy):
             (dx,dy,dz) = dr
             try:
                 vlist = proxy.verts[v]
-            except:
+            except KeyError:
                 vlist = []
             for (pv, w) in vlist:
                 shape.append((pv, w*dx, w*dy, w*dz))
+
+        if key == "mouth-open":
+            shape.sort()
+            for s in shape:
+                print s
+
         fixedShape = fixProxyShape(shape)
 
-        shape = {}
-        for (v,dx,dy,dz) in fixedShape:
-            shape[v] = (dx,dy,dz)
-        shapes.append(shape)
+        if key == "mouth-open":
+            print("FS")
+            for s in fixedShape.items():
+                print(s)
+
+        shapes.append((key,fixedShape))
     return shapes
 
+
 def fixProxyShape(shape):
-    fixedShape = []
+    fixedShape = {}
     shape.sort()
     pv = -1
-    while shape:
-        (pv0, dx0, dy0, dz0) = shape.pop()
+    #while shape:
+    #    (pv0, dx0, dy0, dz0) = shape.pop()
+    for (pv0, dx0, dy0, dz0) in shape:
         if pv0 == pv:
             dx += dx0
             dy += dy0
             dz += dz0
         else:
-            if pv >= 0 and (dx > 1e-4 or dy > 1e-4 or dz > 1e-4):
-                fixedShape.append((pv, dx, dy, dz))
+            if pv >= 0 and (dx*dx + dy*dy + dz*dz) > 1e-8:
+                fixedShape[pv] = (dx, dy, dz)
             (pv, dx, dy, dz) = (pv0, dx0, dy0, dz0)        
-    if pv >= 0 and (dx > 1e-4 or dy > 1e-4 or dz > 1e-4):
-        fixedShape.append((pv, dx, dy, dz))
+    if pv >= 0 and (dx*dx + dy*dy + dz*dz) > 1e-8:
+        fixedShape[pv] = (dx, dy, dz)
     return fixedShape
     
