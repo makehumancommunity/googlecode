@@ -216,9 +216,9 @@ def setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden
 
     def getSubdivision(obj,progressCallback=None):
         if obj.isSubdivided():
-            return obj.getSubdivisionMesh(False)
+            return obj.mesh
         else:
-            return cks.createSubdivisionObject(obj._seedMesh, progressCallback)
+            return cks.createSubdivisionObject(obj.mesh, progressCallback)
         
     cfg = config.exportConfig(human, True)
     obj = human.meshData
