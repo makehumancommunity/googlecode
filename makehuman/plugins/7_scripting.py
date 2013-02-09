@@ -124,8 +124,6 @@ class ScriptingView(gui3d.TaskView):
         def onClicked(event):
             item = self.listView.getSelectedItem()
 
-            print item
-
             if(item == 'applyTarget()'):
                 text = "# applyTarget(<target file name>, <power (from 0.0 to 1.0)>)\n"
                 text = text + "#\n"
@@ -418,10 +416,6 @@ class ScriptingExecuteTab(gui3d.TaskView):
         self.heightEdit = box2.addWidget(gui.TextEdit(text='0'))
         self.getButton = box2.addWidget(gui.Button('Get'))
         self.setButton = box2.addWidget(gui.Button('Set'))
-
-        self.infoLabel = box2.addWidget(gui.DocumentEdit())
-        self.infoLabel.setText('Note that once you set a fixed canvas size, it will remain fixed until you restart the application. This might look strange in other parts of the application.')
-        self.infoLabel.setEnabled(False)
 
         @self.getButton.mhEvent
         def onClicked(event):
