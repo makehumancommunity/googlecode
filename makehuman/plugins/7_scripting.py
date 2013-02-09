@@ -84,11 +84,35 @@ class ScriptingView(gui3d.TaskView):
         testlist = [ 
             'applyTarget()', 
             'incrementingFilename()',
+            'getPositionX()',
+            'getPositionY()',
+            'getPositionZ()',
+            'getRotationX()',
+            'getRotationY()',
+            'getRotationZ()',
+            'getZoom()',
             'loadModel()',
+            'modifyPositionX()',
+            'modifyPositionY()',
+            'modifyPositionZ()',
+            'modifyRotationX()',
+            'modifyRotationY()',
+            'modifyRotationZ()',
+            'modifyZoom()',
+            'printCameraInfo()',
+            'printDetailStack()',
+            'printPositionInfo()',
+            'printRotationInfo()',
             'saveModel()',
             'screenShot()',
             'setAge()',
-            'printDetailStack()',
+            'setPositionX()',
+            'setPositionY()',
+            'setPositionZ()',
+            'setRotationX()',
+            'setRotationY()',
+            'setRotationZ()',
+            'setZoom()',
             'setWeight()'
         ]
 
@@ -99,6 +123,8 @@ class ScriptingView(gui3d.TaskView):
         @self.insertButton.mhEvent
         def onClicked(event):
             item = self.listView.getSelectedItem()
+
+            print item
 
             if(item == 'applyTarget()'):
                 text = "# applyTarget(<target file name>, <power (from 0.0 to 1.0)>)\n"
@@ -135,11 +161,32 @@ class ScriptingView(gui3d.TaskView):
                 text = text + "filename = MHScript.incrementingFilename('test')\n\n"
                 self.scriptText.addText(text)
 
+            if(item == 'printCameraInfo()'):
+                text = "# printCameraInfo()\n"
+                text = text + "#\n"
+                text = text + "# This will print info about how the camera is targeted and focused .\n\n"
+                text = text + "MHScript.printCameraInfo()\n\n"
+                self.scriptText.addText(text)
+
             if(item == 'printDetailStack()'):
                 text = "# printDetailStack()\n"
                 text = text + "#\n"
                 text = text + "# This will print a list of all applied targets (and their weights) to standard output.\n\n"
                 text = text + "MHScript.printDetailStack()\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'printPositionInfo()'):
+                text = "# printPositionInfo()\n"
+                text = text + "#\n"
+                text = text + "# This will print info about where the human object is currently located.\n\n"
+                text = text + "MHScript.printPositionInfo()\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'printRotationInfo()'):
+                text = "# printRotationInfo()\n"
+                text = text + "#\n"
+                text = text + "# This will print info about how the human object is currently rotated.\n\n"
+                text = text + "MHScript.printRotationInfo()\n\n"
                 self.scriptText.addText(text)
 
             if(item == 'saveModel()'):
@@ -173,9 +220,171 @@ class ScriptingView(gui3d.TaskView):
                 text = text + "MHScript.setWeight(0.5)\n\n"
                 self.scriptText.addText(text)
 
-        # human = gui3d.app.selectedHuman
-        # human.applyAllTargets()
-        
+            if(item == 'setPositionX()'):
+                text = "# setPositionX(xpos)\n"
+                text = text + "#\n"
+                text = text + "# Sets the X position of the model of the model in 3d space, where 0.0 is centered.\n\n"
+                text = text + "MHScript.setPositionX(2.0)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'getPositionX()'):
+                text = "# getPositionX()\n"
+                text = text + "#\n"
+                text = text + "# Returns the current X position of the model of the model in 3d space.\n\n"
+                text = text + "MHScript.getPositionX()\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'modifyPositionX()'):
+                text = "# modifyPositionX(xmod)\n"
+                text = text + "#\n"
+                text = text + "# Modifies X position of the model of the model in 3d space.\n\n"
+                text = text + "MHScript.modifyPositionX(-0.1)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'setPositionZ()'):
+                text = "# setPositionZ(zpos)\n"
+                text = text + "#\n"
+                text = text + "# Sets the Z position of the model of the model in 3d space, where 0.0 is centered.\n\n"
+                text = text + "MHScript.setPositionZ(2.0)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'getPositionZ()'):
+                text = "# getPositionZ()\n"
+                text = text + "#\n"
+                text = text + "# Returns the current Z position of the model of the model in 3d space.\n\n"
+                text = text + "MHScript.getPositionZ()\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'modifyPositionZ()'):
+                text = "# modifyPositionZ(zmod)\n"
+                text = text + "#\n"
+                text = text + "# Modifies Z position of the model of the model in 3d space.\n\n"
+                text = text + "MHScript.modifyPositionZ(-0.1)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'setPositionY()'):
+                text = "# setPositionY(ypos)\n"
+                text = text + "#\n"
+                text = text + "# Sets the Y position of the model of the model in 3d space, where 0.0 is centered.\n"
+                text = text + "# Note that the depth of the scene is clipped, so if you move the model too far back\n"
+                text = text + "# it will disappear. You will most likely want to use zoom instead of Y position.\n\n";
+                text = text + "MHScript.setPositionY(2.0)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'getPositionY()'):
+                text = "# getPositionY()\n"
+                text = text + "#\n"
+                text = text + "# Returns the current Y position of the model of the model in 3d space.\n\n"
+                text = text + "MHScript.getPositionY()\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'modifyPositionY()'):
+                text = "# modifyPositionY(ymod)\n"
+                text = text + "#\n"
+                text = text + "# Modifies Y position of the model of the model in 3d space.\n"
+                text = text + "# Note that the depth of the scene is clipped, so if you move the model too far back\n"
+                text = text + "# it will disappear. You will most likely want to use zoom instead of Y position.\n\n";
+                text = text + "MHScript.modifyPositionY(-0.1)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'setRotationX()'):
+                text = "# setRotationX(xrot)\n"
+                text = text + "#\n"
+                text = text + "# Sets the rotation around the X axis for the model, where 0.0 is frontal projection.\n"
+                text = text + "# Rotation is set in degrees from -180.0 to +180.0 (these two extremes are equal)\n\n"
+                text = text + "MHScript.setRotationX(90.0)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'getRotationX()'):
+                text = "# getRotationX()\n"
+                text = text + "#\n"
+                text = text + "# Returns the current rotatation around the X axis of the model.\n\n"
+                text = text + "MHScript.getRotationX()\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'modifyRotationX()'):
+                text = "# modifyRotationX(xmod)\n"
+                text = text + "#\n"
+                text = text + "# Modifies the rotation around the X axis for the model, where 0.0 is frontal projection.\n"
+                text = text + "# Rotation is set in degrees from -180.0 to +180.0 (these two extremes are equal)\n\n"
+                text = text + "MHScript.modifyRotationX(-5.0)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'setRotationZ()'):
+                text = "# setRotationZ(zrot)\n"
+                text = text + "#\n"
+                text = text + "# Sets the rotation around the Z axis for the model, where 0.0 is frontal projection.\n"
+                text = text + "# Rotation is set in degrees from -180.0 to +180.0 (these two extremes are equal)\n\n"
+                text = text + "MHScript.setRotationZ(90.0)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'getRotationZ()'):
+                text = "# getRotationZ()\n"
+                text = text + "#\n"
+                text = text + "# Returns the current rotatation around the Z axis of the model.\n\n"
+                text = text + "MHScript.getRotationZ()\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'modifyRotationZ()'):
+                text = "# modifyRotationZ(zmod)\n"
+                text = text + "#\n"
+                text = text + "# Modifies the rotation around the Z axis for the model, where 0.0 is frontal projection.\n"
+                text = text + "# Rotation is set in degrees from -180.0 to +180.0 (these two extremes are equal)\n\n"
+                text = text + "MHScript.modifyRotationZ(-5.0)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'setRotationY()'):
+                text = "# setRotationY(yrot)\n"
+                text = text + "#\n"
+                text = text + "# Sets the rotation around the Y axis for the model, where 0.0 is upright projection.\n"
+                text = text + "# Rotation is set in degrees from -180.0 to +180.0 (these two extremes are equal)\n\n"
+                text = text + "MHScript.setRotationY(90.0)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'getRotationY()'):
+                text = "# getRotationY()\n"
+                text = text + "#\n"
+                text = text + "# Returns the current rotatation around the Y axis of the model.\n\n"
+                text = text + "MHScript.getRotationY()\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'modifyRotationY()'):
+                text = "# modifyRotationY(ymod)\n"
+                text = text + "#\n"
+                text = text + "# Modifies the rotation around the Y axis for the model, where 0.0 is upright projection.\n"
+                text = text + "# Rotation is set in degrees from -180.0 to +180.0 (these two extremes are equal)\n\n"
+                text = text + "MHScript.modifyRotationY(-5.0)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'setZoom()'):
+                text = "# setZoom(zoom)\n"
+                text = text + "#\n"
+                text = text + "# Sets current camera zoom. In practise this moves the camera closer or further from the.\n"
+                text = text + "# the model. The zoom factor is reversed ans goes from 100.0 which is far away from the\n"
+                text = text + "# the model as possible (if you move further away, the model will be clipped and disappear)\n"
+                text = text + "# and 0.0 is inside the model. A zoom factor of 10.0 is what is used for the face\n"
+                text = text + "# projection, and is in most cases as zoomed in as is functional.\n\n"
+                text = text + "MHScript.setZoom(70.0)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'modifyZoom()'):
+                text = "# modifyZoom(zmod)\n"
+                text = text + "#\n"
+                text = text + "# Modifies current camera zoom. In practise this moves the camera closer or further from the.\n"
+                text = text + "# the model. The zoom factor is reversed ans goes from 100.0 which is far away from the\n"
+                text = text + "# the model as possible (if you move further away, the model will be clipped and disappear)\n"
+                text = text + "# and 0.0 is inside the model. A zoom factor of 10.0 is what is used for the face\n"
+                text = text + "# projection, and is in most cases as zoomed in as is functional.\n\n"
+                text = text + "MHScript.modifyZoom(1.0)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'getZoom()'):
+                text = "# getZoom()\n"
+                text = text + "#\n"
+                text = text + "# Returns the current camera zoom factor.\n\n"
+                text = text + "MHScript.getZoom()\n\n"
+                self.scriptText.addText(text)
+             
     def onShow(self, event):
         gui3d.app.statusPersist('This is a rough scripting module')
 
@@ -194,7 +403,6 @@ class ScriptingExecuteTab(gui3d.TaskView):
         def onClicked(event):
             width = G.windowWidth;
             height = G.windowHeight;
-            print "width=" + str(width) + " height=" + str(height) + "\n";
 
             global MHScript
             global scriptingView
@@ -202,11 +410,73 @@ class ScriptingExecuteTab(gui3d.TaskView):
             MHScript = Scripting()
             executeScript(str(scriptingView.scriptText.toPlainText()))
 
+        box2 = self.addLeftWidget(gui.GroupBox('Fixed canvas size'))
+
+        self.widthLabel = box2.addWidget(gui.TextView('Width'))
+        self.widthEdit = box2.addWidget(gui.TextEdit(text='0'))
+        self.heightLabel = box2.addWidget(gui.TextView('Height'))
+        self.heightEdit = box2.addWidget(gui.TextEdit(text='0'))
+        self.getButton = box2.addWidget(gui.Button('Get'))
+        self.setButton = box2.addWidget(gui.Button('Set'))
+
+        self.infoLabel = box2.addWidget(gui.DocumentEdit())
+        self.infoLabel.setText('Note that once you set a fixed canvas size, it will remain fixed until you restart the application. This might look strange in other parts of the application.')
+        self.infoLabel.setEnabled(False)
+
+        @self.getButton.mhEvent
+        def onClicked(event):
+            width = G.windowWidth;
+            height = G.windowHeight;
+            self.widthEdit.setText(str(width))
+            self.heightEdit.setText(str(height))
+
+        @self.setButton.mhEvent
+        def onClicked(event):
+            dlg = gui.Dialog()
+
+            desiredWidth = self.widthEdit.getText()
+            if(desiredWidth == None or not desiredWidth.isdigit()):
+            	dlg.prompt("Input error","Width and height must be valid integers","OK")
+                return
+
+            desiredHeight = self.heightEdit.getText()
+            if(desiredHeight == None or not desiredHeight.isdigit()):
+            	dlg.prompt("Input error","Width and height must be valid integers","OK")
+                return
+
+            desiredWidth = int(desiredWidth)
+            desiredHeight = int(desiredHeight)
+
+            if(desiredHeight < 100 or desiredWidth < 100):
+            	dlg.prompt("Input error","Width and height must be at least 100 pixels each","OK")
+                return
+
+            # This is because we're excluding a passepartout when doing screenshots.
+            desiredWidth = desiredWidth + 3
+            desiredHeight = desiredHeight + 3
+
+            qmainwin = G.app.mainwin
+            central = qmainwin.centralWidget() 
+            cWidth = central.frameSize().width()
+            cHeight = central.frameSize().height()
+            width = G.windowWidth;
+            height = G.windowHeight;
+
+            xdiff = desiredWidth - width;
+            ydiff = desiredHeight - height;
+
+            cWidth = cWidth + xdiff
+            cHeight = cHeight + ydiff
+
+            central.setFixedSize(cWidth,cHeight)
+            qmainwin.adjustSize()
+
 class Scripting():
     def __init__(self):
         self.human = gui3d.app.selectedHuman
         self.fileIncrement = 0;
         self.modelPath = mh.getPath('models')
+        self.cam = G.app.modelCamera
         if(not os.path.exists(self.modelPath)):
             os.makedirs(self.modelPath)
 
@@ -263,6 +533,165 @@ class Scripting():
         self.human.setWeight(weight)
         humanmodifier.MacroModifier('macrodetails', 'universal', 'Weight', 0.0, 1.0).setValue(gui3d.app.selectedHuman, weight)
         self.human.applyAllTargets()
+        glmodule.draw()
+
+    def setPositionX(self,xpos):
+        log.message("SCRIPT: setPositionX(" + str(xpos) + ")")
+        pos = self.human.getPosition()
+        pos[0] = xpos
+        self.human.setPosition(pos)
+        glmodule.draw()
+
+    def getPositionX(self):
+        log.message("SCRIPT: getPositionX()")
+        pos = self.human.getPosition()
+        return pos[0]
+
+    def modifyPositionX(self,xmod):
+        log.message("SCRIPT: modifyPositionX(" + str(xmod) + ")")
+        pos = self.human.getPosition()
+        pos[0] = pos[0] + xmod
+        self.human.setPosition(pos)
+        glmodule.draw()
+
+    def setPositionZ(self,zpos):
+        log.message("SCRIPT: setPositionZ(" + str(zpos) + ")")
+        pos = self.human.getPosition()
+        pos[1] = zpos
+        self.human.setPosition(pos)
+        glmodule.draw()
+
+    def getPositionZ(self):
+        log.message("SCRIPT: getPositionZ()")
+        pos = self.human.getPosition()
+        return pos[1]
+
+    def modifyPositionZ(self,zmod):
+        log.message("SCRIPT: modifyPositionZ(" + str(zmod) + ")")
+        pos = self.human.getPosition()
+        pos[1] = pos[1] + zmod
+        self.human.setPosition(pos)
+        glmodule.draw()
+
+    def setPositionY(self,ypos):
+        log.message("SCRIPT: setPositionY(" + str(ypos) + ")")
+        pos = self.human.getPosition()
+        pos[2] = ypos
+        self.human.setPosition(pos)
+        glmodule.draw()
+
+    def getPositionY(self):
+        log.message("SCRIPT: getPositionY()")
+        pos = self.human.getPosition()
+        return pos[2]
+
+    def modifyPositionY(self,ymod):
+        log.message("SCRIPT: modifyPositionY(" + str(ymod) + ")")
+        pos = self.human.getPosition()
+        pos[2] = pos[2] + ymod
+        self.human.setPosition(pos)
+        glmodule.draw()
+
+    def setRotationX(self,xrot):
+        log.message("SCRIPT: setRotationX(" + str(xrot) + ")")
+        rot = self.human.getRotation()
+        rot[0] = xrot
+        self.human.setRotation(rot)
+        glmodule.draw()
+
+    def getRotationX(self):
+        log.message("SCRIPT: getRotationX()")
+        rot = self.human.getRotation()
+        return rot[0]
+
+    def modifyRotationX(self,xmod):
+        log.message("SCRIPT: modifyRotationX(" + str(xmod) + ")")
+        rot = self.human.getRotation()
+        rot[0] = rot[0] + xmod
+        self.human.setRotation(rot)
+        glmodule.draw()
+
+    def setRotationZ(self,zrot):
+        log.message("SCRIPT: setRotationZ(" + str(zrot) + ")")
+        rot = self.human.getRotation()
+        rot[1] = zrot
+        self.human.setRotation(rot)
+        glmodule.draw()
+
+    def getRotationZ(self):
+        log.message("SCRIPT: getRotationZ()")
+        rot = self.human.getRotation()
+        return rot[1]
+
+    def modifyRotationZ(self,zmod):
+        log.message("SCRIPT: modifyRotationZ(" + str(zmod) + ")")
+        rot = self.human.getRotation()
+        rot[1] = rot[1] + zmod
+        self.human.setRotation(rot)
+        glmodule.draw()
+
+    def setRotationY(self,yrot):
+        log.message("SCRIPT: setRotationY(" + str(yrot) + ")")
+        rot = self.human.getRotation()
+        rot[2] = yrot
+        self.human.setRotation(rot)
+        glmodule.draw()
+
+    def getRotationY(self):
+        log.message("SCRIPT: getRotationY()")
+        rot = self.human.getRotation()
+        return rot[2]
+
+    def modifyRotationY(self,ymod):
+        log.message("SCRIPT: modifyRotationY(" + str(ymod) + ")")
+        rot = self.human.getRotation()
+        rot[2] = rot[2] + ymod
+        self.human.setRotation(rot)
+        glmodule.draw()
+
+    def printCameraInfo(self):
+        log.message("SCRIPT: printCameraInfo()")
+
+        print "eyeX:\t" + str(self.cam.eyeX)
+        print "eyeY:\t" + str(self.cam.eyeY)
+        print "eyeZ:\t" + str(self.cam.eyeZ)
+        print "focusX:\t" + str(self.cam.focusX)
+        print "focusY:\t" + str(self.cam.focusY)
+        print "focusZ:\t" + str(self.cam.focusZ)
+        print "upX:\t" + str(self.cam.upX)
+        print "upY:\t" + str(self.cam.upY)
+        print "upZ:\t" + str(self.cam.upZ)
+
+    def printPositionInfo(self):
+        log.message("SCRIPT: printPositionInfo()")
+
+        pos = self.human.getPosition();
+
+        print "posX:\t" + str(pos[0])
+        print "posY:\t" + str(pos[2])
+        print "posZ:\t" + str(pos[1])
+
+    def printRotationInfo(self):
+        log.message("SCRIPT: printRotationInfo()")
+
+        rot = self.human.getRotation();
+
+        print "rotX:\t" + str(rot[0])
+        print "rotY:\t" + str(rot[2])
+        print "rotZ:\t" + str(rot[1])
+
+    def getZoom(self):
+        log.message("SCRIPT: getZoom()")
+        return self.cam.eyeZ
+
+    def setZoom(self, zoom):
+        log.message("SCRIPT: setZoom(" + str(zoom) + ")")
+        self.cam.eyeZ = zoom
+        glmodule.draw()
+
+    def modifyZoom(self, zmod):
+        log.message("SCRIPT: modifyZoom(" + str(zmod) + ")")
+        self.cam.eyeZ = self.cam.eyeZ + zmod
         glmodule.draw()
 
 MHScript = None
