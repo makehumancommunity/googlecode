@@ -69,7 +69,7 @@ class PoseLoadTaskView(gui3d.TaskView):
 
         self.dirty = False
         
-        gui3d.TaskView.__init__(self, category, 'Poses')
+        gui3d.TaskView.__init__(self, category, 'Gestures')
         if not os.path.exists(self.userPoses):
             os.makedirs(self.userPoses)
         self.filechooser = self.addTopWidget(fc.FileChooser([self.systemPoses, self.userPoses], 'mhp', 'thumb', 'data/clothes/notfound.thumb'))

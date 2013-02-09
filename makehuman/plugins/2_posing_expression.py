@@ -50,7 +50,7 @@ class ExpressionSlider(posemode.PoseModifierSlider):
 class ExpressionTaskView(gui3d.TaskView):
 
     def __init__(self, category):
-        gui3d.TaskView.__init__(self, category, 'Expression')
+        gui3d.TaskView.__init__(self, category, 'Expression tuning')
         
         self.expressions = [
             ('eyebrows-left', ['down', 'extern-up', 'inner-up', 'up']),
