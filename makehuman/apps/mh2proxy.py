@@ -311,12 +311,12 @@ def readProxyFile(obj, file, evalOnLoad):
                     layer = 0
                 proxy.texFaces = []
                 proxy.texFacesLayers[layer] = proxy.texFaces
-            elif key == 'obj_data':
-                status = doObjData
-                proxy.texVerts = []
-                proxy.texFaces = []
-                proxy.texVertsLayers[0] = proxy.texVerts
-                proxy.texFacesLayers[0] = proxy.texFaces     
+            #elif key == 'obj_data':
+            #    status = doObjData
+            #    proxy.texVerts = []
+            #    proxy.texFaces = []
+            #    proxy.texVertsLayers[0] = proxy.texVerts
+            #    proxy.texFacesLayers[0] = proxy.texFaces     
             elif key == 'name':
                 proxy.name = stringFromWords(words[2:])
             elif key == 'uuid':
@@ -789,7 +789,8 @@ def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
             texVerts = proxy.texVertsLayers[proxy.objFileLayer]
             texFaces = proxy.texFacesLayers[proxy.objFileLayer]        
             fn = 0
-            for (f,g) in proxy.faces:
+            fnmax = len(texFaces)
+            for (f,g) in proxy.faces[:fnmax]:
                 texFace = texFaces[fn]
                 face = []
                 for (vn,v) in enumerate(f):
@@ -801,7 +802,6 @@ def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
 
         weights = getProxyWeights(rawWeights, proxy)
         shapes = getProxyShapes(rawShapes, proxy)
-        print("sh", shapes)
         return CMeshInfo(verts, vnormals, proxy.texVerts, faces, weights, shapes)
     else:
         verts = [tuple(v) for v in obj.coord]
