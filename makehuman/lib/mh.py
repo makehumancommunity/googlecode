@@ -49,9 +49,6 @@ def setClearColor(r, g, b, a):
 def setCaption(caption):
     G.app.mainwin.setWindowTitle(caption)
 
-def removeWidget(edge, widget):
-    return G.app.mainwin.removeWidget(edge, widget)
-
 def changeCategory(category):
     G.app.mainwin.tabs.changeTab(category)
 
