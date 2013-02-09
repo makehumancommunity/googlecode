@@ -31,7 +31,6 @@ import log
 import os
 from cStringIO import StringIO
 from core import G
-import glmodule
 
 class ScriptingView(gui3d.TaskView):
 
@@ -478,7 +477,7 @@ class Scripting():
         log.message("SCRIPT: applyTarget(" + targetName + ", " + str(power) + ")")
         self.human.setDetail("data/targets/" + targetName + ".target",power)
         self.human.applyAllTargets()
-        glmodule.draw()
+        mh.redraw()
 
     def saveModel(self,name,path = mh.getPath('models')):
         log.message("SCRIPT: saveModel(" + name + "," + path + ")")
@@ -520,21 +519,21 @@ class Scripting():
         self.human.setAge(age)
         humanmodifier.MacroModifier('macrodetails', None, 'Age', 0.0, 1.0).setValue(gui3d.app.selectedHuman, age)
         self.human.applyAllTargets()
-        glmodule.draw()
+        mh.redraw()
 
     def setWeight(self,weight):
         log.message("SCRIPT: setWeight(" + str(weight) + ")")
         self.human.setWeight(weight)
         humanmodifier.MacroModifier('macrodetails', 'universal', 'Weight', 0.0, 1.0).setValue(gui3d.app.selectedHuman, weight)
         self.human.applyAllTargets()
-        glmodule.draw()
+        mh.redraw()
 
     def setPositionX(self,xpos):
         log.message("SCRIPT: setPositionX(" + str(xpos) + ")")
         pos = self.human.getPosition()
         pos[0] = xpos
         self.human.setPosition(pos)
-        glmodule.draw()
+        mh.redraw()
 
     def getPositionX(self):
         log.message("SCRIPT: getPositionX()")
@@ -546,14 +545,14 @@ class Scripting():
         pos = self.human.getPosition()
         pos[0] = pos[0] + xmod
         self.human.setPosition(pos)
-        glmodule.draw()
+        mh.redraw()
 
     def setPositionZ(self,zpos):
         log.message("SCRIPT: setPositionZ(" + str(zpos) + ")")
         pos = self.human.getPosition()
         pos[1] = zpos
         self.human.setPosition(pos)
-        glmodule.draw()
+        mh.redraw()
 
     def getPositionZ(self):
         log.message("SCRIPT: getPositionZ()")
@@ -565,14 +564,14 @@ class Scripting():
         pos = self.human.getPosition()
         pos[1] = pos[1] + zmod
         self.human.setPosition(pos)
-        glmodule.draw()
+        mh.redraw()
 
     def setPositionY(self,ypos):
         log.message("SCRIPT: setPositionY(" + str(ypos) + ")")
         pos = self.human.getPosition()
         pos[2] = ypos
         self.human.setPosition(pos)
-        glmodule.draw()
+        mh.redraw()
 
     def getPositionY(self):
         log.message("SCRIPT: getPositionY()")
@@ -584,14 +583,14 @@ class Scripting():
         pos = self.human.getPosition()
         pos[2] = pos[2] + ymod
         self.human.setPosition(pos)
-        glmodule.draw()
+        mh.redraw()
 
     def setRotationX(self,xrot):
         log.message("SCRIPT: setRotationX(" + str(xrot) + ")")
         rot = self.human.getRotation()
         rot[0] = xrot
         self.human.setRotation(rot)
-        glmodule.draw()
+        mh.redraw()
 
     def getRotationX(self):
         log.message("SCRIPT: getRotationX()")
@@ -603,14 +602,14 @@ class Scripting():
         rot = self.human.getRotation()
         rot[0] = rot[0] + xmod
         self.human.setRotation(rot)
-        glmodule.draw()
+        mh.redraw()
 
     def setRotationZ(self,zrot):
         log.message("SCRIPT: setRotationZ(" + str(zrot) + ")")
         rot = self.human.getRotation()
         rot[1] = zrot
         self.human.setRotation(rot)
-        glmodule.draw()
+        mh.redraw()
 
     def getRotationZ(self):
         log.message("SCRIPT: getRotationZ()")
@@ -622,14 +621,14 @@ class Scripting():
         rot = self.human.getRotation()
         rot[1] = rot[1] + zmod
         self.human.setRotation(rot)
-        glmodule.draw()
+        mh.redraw()
 
     def setRotationY(self,yrot):
         log.message("SCRIPT: setRotationY(" + str(yrot) + ")")
         rot = self.human.getRotation()
         rot[2] = yrot
         self.human.setRotation(rot)
-        glmodule.draw()
+        mh.redraw()
 
     def getRotationY(self):
         log.message("SCRIPT: getRotationY()")
@@ -641,7 +640,7 @@ class Scripting():
         rot = self.human.getRotation()
         rot[2] = rot[2] + ymod
         self.human.setRotation(rot)
-        glmodule.draw()
+        mh.redraw()
 
     def printCameraInfo(self):
         log.message("SCRIPT: printCameraInfo()")
@@ -681,12 +680,12 @@ class Scripting():
     def setZoom(self, zoom):
         log.message("SCRIPT: setZoom(" + str(zoom) + ")")
         self.cam.eyeZ = zoom
-        glmodule.draw()
+        mh.redraw()
 
     def modifyZoom(self, zmod):
         log.message("SCRIPT: modifyZoom(" + str(zmod) + ")")
         self.cam.eyeZ = self.cam.eyeZ + zmod
-        glmodule.draw()
+        mh.redraw()
 
 MHScript = None
 
