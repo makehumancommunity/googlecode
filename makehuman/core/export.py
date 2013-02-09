@@ -39,7 +39,7 @@ class Exporter(object):
     _scales = {
         "decimeter": 1.0,
         "meter": 0.1,
-        "inch": 0.254,
+        "inch": 1.0/0.254,
         "centimeter": 10.0
         }
 

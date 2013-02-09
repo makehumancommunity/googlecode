@@ -179,7 +179,8 @@ Definitions:  {
 #------------------------------------------------------------------
     
 def exportFbxFile(context, filepath, scale):    
-    fbx.settings.scale = scale
+    fbx.settings.scale= scale
+    fbx.setCsysChangers()
     filepath = filepath.replace('\\','/')
     fbx.message('Export "%s"' % filepath)
     print("Exp", fbx.b2f)
@@ -247,14 +248,4 @@ Takes:  {
     fp.close()
     fbx.message('File "%s" exported' % filepath)
 
-
-class VIEW3D_OT_TestExportButton(bpy.types.Operator):
-    bl_idname = "fbx.test_export"
-    bl_label = "Test Export"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        print("Exe", fbx.b2f, fbx_basic.fbx.b2f)
-        exportFbxFile(context, "/home/myblends/fbx-stuff/test.fbx", 1.0)
-        return {'FINISHED'}
 

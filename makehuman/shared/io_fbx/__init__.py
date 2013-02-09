@@ -122,13 +122,7 @@ class ImportFBX(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         fbx.settings.createNewScene = self.createNewScene
         fbx.settings.zUp = self.zUp
-        fbx.setCsysChangers()
-        if self.boneAxis == 'X':
-            fbx.settings.boneAxis = 0
-        elif self.boneAxis == 'Y':
-            fbx.settings.boneAxis = 1
-        elif self.boneAxis == 'Z':
-            fbx.settings.boneAxis = 2
+        fbx.settings.boneAxis = AxisNumber[self.boneAxis]
         fbx.settings.minBoneLength = self.minBoneLength
         fbx.settings.mirrorFix = self.mirrorFix
         fbx_import.importFbxFile(context, self.filepath, self.scale)
@@ -142,7 +136,10 @@ class ImportFBX(bpy.types.Operator, ImportHelper):
         self.layout.prop(self, "mirrorFix")
         self.layout.prop(self, "scale")
 
- 
+
+AxisNumber = { 'X' : 0, 'Y' : 1, 'Z' : 2 }
+
+
 class ExportFBX(bpy.types.Operator, ExportHelper):
     """Export a Filmbox FBX File"""
     bl_idname = "export_scene.fbx_io"
@@ -160,7 +157,6 @@ class ExportFBX(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
         fbx.settings.zUp = self.zUp
-        fbx.setCsysChangers()
         fbx.settings.includePropertyTemplates = self.includePropertyTemplates
         fbx.settings.makeSceneNode = self.makeSceneNode
         fbx.settings.selectedOnly = self.selectedOnly
@@ -176,23 +172,39 @@ class ExportFBX(bpy.types.Operator, ExportHelper):
         self.layout.prop(self, "mirrorFix")
         self.layout.prop(self, "scale")
 
-  
-class VIEW3D_OT_PresetButton(bpy.types.Operator):
-    bl_idname = "fbx.preset"
-    bl_label = "Preset"
-    bl_options = {'UNDO'}
-    preset = StringProperty()
 
+#------------------------------------------------------------------
+#   Testing
+#------------------------------------------------------------------
+
+class VIEW3D_OT_TestImportButton(bpy.types.Operator):
+    bl_idname = "fbx.test_import"
+    bl_label = "Test Import"
+    bl_options = {'UNDO'}    
+    filepath = StringProperty()
+    
     def execute(self, context):
-        if self.preset == "Blender":
-            fbx.settings.blender()
-        elif self.preset == "Maya":
-            fbx.settings.maya()
-        elif self.preset == "Maya2Blender":
-            fbx.settings.maya2Blender()
+        scn = context.scene
+        fbx.settings.zUp = scn.FbxZUp
+        fbx.settings.boneAxis = AxisNumber[scn.FbxBoneAxis]
+        fbx_import.importFbxFile(context, self.filepath, scn.FbxScale)
         return {'FINISHED'}
 
-  
+
+class VIEW3D_OT_TestExportButton(bpy.types.Operator):
+    bl_idname = "fbx.test_export"
+    bl_label = "Test Export"
+    bl_options = {'UNDO'}
+    filepath = StringProperty()
+    
+    def execute(self, context):
+        scn = context.scene
+        fbx.settings.Zup = scn.FbxZUp
+        fbx.settings.boneAxis = AxisNumber[scn.FbxBoneAxis]
+        fbx_export.exportFbxFile(context, self.filepath, 1.0)
+        return {'FINISHED'}
+
+ 
 class FbxTestPanel(bpy.types.Panel):
     bl_label = "FBX Test"
     bl_space_type = "VIEW_3D"
@@ -200,18 +212,20 @@ class FbxTestPanel(bpy.types.Panel):
     
     def draw(self, context):    
         scn = context.scene
-        self.layout.operator("fbx.preset", text="Maya Presets").preset="Maya"
-        self.layout.operator("fbx.preset", text="Maya->Blender Presets").preset="Maya2Blender"
-        self.layout.operator("fbx.preset", text="Blender Presets").preset="Blender"
+        #self.layout.operator("fbx.preset", text="Maya Presets").preset="Maya"
+        #self.layout.operator("fbx.preset", text="Blender Presets").preset="Blender"
         self.layout.prop(scn, "FbxFile")
-        self.layout.operator("fbx.test_export")
+        self.layout.prop(scn, "FbxZUp")
+        self.layout.prop(scn, "FbxBoneAxis", expand=True)
+        self.layout.prop(scn, "FbxScale")
+        self.layout.operator("fbx.test_export").filepath="/home/myblends/fbx-stuff/test.fbx"
         self.layout.operator("fbx.test_import").filepath=("/home/myblends/fbx-stuff/%s.fbx" % scn.FbxFile)
         self.layout.operator("fbx.test_import", text="Test Import foo").filepath="/Users/Thomas/Documents/makehuman/exports/foo/foo.fbx"
         self.layout.operator("fbx.test_build")
 
-#
-#    Init and register
-#
+#------------------------------------------------------------------
+#   Init and register
+#------------------------------------------------------------------
 
 def menu_func_import(self, context):
     self.layout.operator(ImportFBX.bl_idname, text="AutoDesk FilmBox (.fbx)")
@@ -225,6 +239,17 @@ def register():
     bpy.utils.register_module(__name__)
     
     bpy.types.Scene.FbxFile = StringProperty(name="File", default="test")    
+    bpy.types.Scene.FbxZUp = BoolProperty(
+        name="Z up", 
+        description="Use Z as global up axis (always Y up in FBX file)", 
+        default=True)        
+    bpy.types.Scene.FbxBoneAxis = EnumProperty(
+        name="Bone Axis", 
+        description="Axis pointing along bone (always X in FBX file)",
+        items=(('X','X','X',0),('Y','Y','Y',1),('Z','Z','Z',2)), 
+        default = 'X',
+    )
+    bpy.types.Scene.FbxScale = FloatProperty(name="Scale", min=0.01, max = 100.0, default=1.0)
 
     bpy.types.INFO_MT_file_import.append(menu_func_import)
     bpy.types.INFO_MT_file_export.append(menu_func_export)

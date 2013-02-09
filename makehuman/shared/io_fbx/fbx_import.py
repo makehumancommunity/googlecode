@@ -32,6 +32,7 @@ from . import fbx_scene
 
 def importFbxFile(context, filepath, scale):
     fbx.settings.scale = scale
+    fbx.setCsysChangers()
     fbx.activeFolder = os.path.dirname(filepath)
     fbx.message('Import "%s"' % filepath)
     proot = fbx_token.tokenizeFbxFile(filepath)
@@ -41,14 +42,4 @@ def importFbxFile(context, filepath, scale):
     fbx_data.buildObjects(context)          
     fbx.message('File "%s" imported' % filepath)
     
-
-class VIEW3D_OT_TestImportButton(bpy.types.Operator):
-    bl_idname = "fbx.test_import"
-    bl_label = "Test Import"
-    bl_options = {'UNDO'}
-    filepath = bpy.props.StringProperty()
-
-    def execute(self, context):
-        importFbxFile(context, self.filepath, 1.0)
-        return {'FINISHED'}
 

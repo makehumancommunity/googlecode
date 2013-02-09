@@ -76,6 +76,7 @@ def b2fRot4Zup(mat):
     
 def f2bRot4Zup(mat):
     return f2bGlobRot * mat
+    return mat
     
   
 def b2fYup(vec):

@@ -164,8 +164,6 @@ class Armature(Rna):
 
 class Bone(Rna):
     ex = Vector((1,0,0))
-    ey = Vector((0,1,0))
-    ez = Vector((0,0,1))
 
     def __init__(self, name):
         Rna.__init__(self, name, 'BONE')
@@ -199,22 +197,22 @@ class Bone(Rna):
             return
         u = u/length
 
-        yu = Bone.ey.dot(u)        
-        if abs(yu) > 0.99999:
-            axis = Bone.ey
-            if yu > 0:
+        xu = Bone.ex.dot(u)        
+        if abs(xu) > 0.99999:
+            axis = Bone.ex
+            if xu > 0:
                 angle = 0
             else:
                 angle = pi
         else:        
-            axis = Bone.ey.cross(u)
+            axis = Bone.ex.cross(u)
             length = sqrt(axis.dot(axis))
             axis = axis/length
-            angle = acos(yu)
+            angle = acos(xu)
 
         mat = tm.rotation_matrix(angle,axis)
         if self.roll:
-            roll = tm.rotation_matrix(self.roll, Bone.ey)
+            roll = tm.rotation_matrix(self.roll, Bone.ex)
             mat = dot(mat, roll)
         self.matrix_local = Matrix(mat)
         self.matrix_local.matrix[:3,3] = self.head.vector
