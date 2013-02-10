@@ -728,6 +728,7 @@ class MouseActionEdit(QtGui.QLabel, Widget):
         modifiers, button = shortcut
         text = self.shortcutToLabel(modifiers, button)
         super(MouseActionEdit, self).__init__(text)
+        self.setFrameStyle(QtGui.QFrame.Panel | QtGui.QFrame.Raised)
 
     def setShortcut(self, shortcut):
         modifiers, button = shortcut
