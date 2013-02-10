@@ -69,6 +69,9 @@ class BackgroundChooser(gui3d.TaskView):
         if not os.path.exists(self.backgroundsFolder):
             os.makedirs(self.backgroundsFolder)
 
+        self.backgroundsFolders = [ os.path.join('data', 'backgrounds'),
+                                    self.backgroundsFolder ]
+
         self.texture = mh.Texture()
 
         self.sides = { 'front': [0,0,0], 
@@ -76,9 +79,8 @@ class BackgroundChooser(gui3d.TaskView):
                        'left': [0,-90,0], 
                        'right': [0,90,0],
                        'top': [90,0,0],
-                       'bottom': [-90,0,0] }
-
-        self._defaultToFront = False
+                       'bottom': [-90,0,0],
+                       'other': None }
 
         self.filenames = {}
         for side in self.sides.keys():
@@ -96,36 +98,22 @@ class BackgroundChooser(gui3d.TaskView):
         self.backgroundImageToggle = gui.Action('background', 'Background', self.toggleBackground, toggle=True)
         gui3d.app.main_toolbar.addAction(self.backgroundImageToggle)
 
-        self.filechooser = self.addTopWidget(fc.FileChooser(self.backgroundsFolder, ['bmp', 'png', 'tif', 'tiff', 'jpg', 'jpeg'], None))
+        self.filechooser = self.addTopWidget(fc.FileChooser(self.backgroundsFolders, ['bmp', 'png', 'tif', 'tiff', 'jpg', 'jpeg', 'clear'], None))
         self.addLeftWidget(self.filechooser.sortBox)
 
         self.backgroundBox = self.addLeftWidget(gui.GroupBox('Background 2 settings'))
 
         self.radioButtonGroup = []
-        self.bgImageFrontRadioButton  = self.backgroundBox.addWidget(gui.RadioButton(self.radioButtonGroup, label='Front', selected=True))
-        self.bgImageBackRadioButton   = self.backgroundBox.addWidget(gui.RadioButton(self.radioButtonGroup, label='Back'))
-        self.bgImageLeftRadioButton   = self.backgroundBox.addWidget(gui.RadioButton(self.radioButtonGroup, label='Left'))
-        self.bgImageRightRadioButton  = self.backgroundBox.addWidget(gui.RadioButton(self.radioButtonGroup, label='Right'))
-        self.bgImageTopRadioButton    = self.backgroundBox.addWidget(gui.RadioButton(self.radioButtonGroup, label='Top'))
-        self.bgImageBottomRadioButton = self.backgroundBox.addWidget(gui.RadioButton(self.radioButtonGroup, label='Bottom'))
+        for side in ['front', 'back', 'left', 'right', 'top', 'bottom', 'other']: 
+            radioBtn = self.backgroundBox.addWidget(gui.RadioButton(self.radioButtonGroup, label=side.capitalize(), selected=len(self.radioButtonGroup)==0))
+            radioBtn.side = side
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
+            side = self.getSelectedSideCheckbox()
 
-            if self.bgImageFrontRadioButton.selected:
-                side = 'front'
-            elif self.bgImageBackRadioButton.selected:
-                side = 'back'
-            elif self.bgImageLeftRadioButton.selected:
-                side = 'left'
-            elif self.bgImageRightRadioButton.selected:
-                side = 'right'
-            elif self.bgImageTopRadioButton.selected:
-                side = 'top'
-            elif self.bgImageBottomRadioButton.selected:
-                side = 'bottom'
-
-            filePath = os.path.join(self.backgroundsFolder, filename)
+            if os.path.splitext(filename)[1] == ".clear":
+                filename = None
 
             if self.filenames[side]:
                 oldBg = self.filenames[side][0]
@@ -137,14 +125,22 @@ class BackgroundChooser(gui3d.TaskView):
                 oldBg,
                 filename))
 
-            gui3d.app.selectedHuman.setRotation(self.sides[side])
+            if self.sides[side]:
+                gui3d.app.selectedHuman.setRotation(self.sides[side])
             mh.changeTask('Modelling', 'Background')
             mh.redraw()
+
+    def getSelectedSideCheckbox(self):
+        for checkbox in self.radioButtonGroup:
+            if checkbox.selected:
+                return checkbox.side
+        return None
 
     def changeBackgroundImage(self, side, texturePath):
         if not side:
             return
 
+        print texturePath
         if texturePath:
             # Determine aspect ratio of texture
             self.texture.loadImage(mh.Image(texturePath))
@@ -165,12 +161,8 @@ class BackgroundChooser(gui3d.TaskView):
         for (side, rotation) in self.sides.items():
             if rot == rotation:
                 return side
-
-        if self.defaultToFront:
-            return 'front'
-        else:
-            # Indicates an arbitrary non-defined view
-            return None
+        # Indicates an arbitrary non-defined view
+        return 'other'
 
     def setBackgroundEnabled(self, enable):
         if enable:
@@ -249,15 +241,6 @@ class BackgroundChooser(gui3d.TaskView):
     def onHumanRotated(self, event):
         if self.isBackgroundEnabled():
             self.setBackgroundImage(self.getCurrentSide())
-
-    def setDefaultToFront(self, enabled):
-        self._defaultToFront = enabled
-        # Re-apply BG image for current angle
-        self.setBackgroundImage(self.getCurrentSide())
-
-    @property
-    def defaultToFront(self):
-        return self._defaultToFront
 
     def getCurrentBackground(self):
         if not self.isBackgroundShowing():
@@ -350,30 +333,22 @@ class BackgroundSettingsView(gui3d.TaskView) :
 
         displayBox = self.addRightWidget(gui.GroupBox('Display settings'))
         self.shadelessButton = displayBox.addWidget(gui.ToggleButton('Shadeless'))
-        self.defaultFrontButton = displayBox.addWidget(gui.ToggleButton('Keep Front BG'))
 
         @self.shadelessButton.mhEvent
         def onClicked(event):
             gui3d.app.selectedHuman.mesh.setShadeless(1 if self.shadelessButton.selected else 0)
-
-        @self.defaultFrontButton.mhEvent
-        def onClicked(event):
-            self.backgroundChooserView.setDefaultToFront(self.defaultFrontButton.selected)
 
     def onShow(self, event):
 
         gui3d.TaskView.onShow(self, event)
         self.backgroundImage.mesh.setPickable(self.dragButton.selected)
         gui3d.app.selectedHuman.mesh.setShadeless(1 if self.shadelessButton.selected else 0)
-        self.oldDefaultToFront = self.backgroundChooserView.defaultToFront
-        self.backgroundChooserView.setDefaultToFront(self.defaultFrontButton.selected)
 
     def onHide(self, event):
 
         gui3d.TaskView.onHide(self, event)
         self.backgroundImage.mesh.setPickable(0)
         gui3d.app.selectedHuman.mesh.setShadeless(0)
-        self.backgroundChooserView.setDefaultToFront(self.oldDefaultToFront)
 
     def onHumanChanging(self, event):
         
