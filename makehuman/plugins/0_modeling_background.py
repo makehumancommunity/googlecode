@@ -247,7 +247,8 @@ class BackgroundChooser(gui3d.TaskView):
             self.backgroundImage.hide()
 
     def onHumanRotated(self, event):
-        self.setBackgroundImage(self.getCurrentSide())
+        if self.isBackgroundEnabled():
+            self.setBackgroundImage(self.getCurrentSide())
 
     def setDefaultToFront(self, enabled):
         self._defaultToFront = enabled
