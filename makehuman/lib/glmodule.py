@@ -40,7 +40,7 @@ from OpenGL.GL.ARB.texture_multisample import *
 from core import G
 from image import Image
 import matrix
-from debugdump import DebugDump
+import debugdump
 import log
 from texture import Texture
 from shader import Shader
@@ -191,11 +191,10 @@ def OnInit():
     try:
         # Start with writing relevant info to the debug dump in case stuff goes
         # wrong at a later time
-        debugdump = DebugDump()
-        debugdump.appendGL()
-        debugdump.appendMessage("GL.VENDOR: " + glGetString(GL_VENDOR))
-        debugdump.appendMessage("GL.RENDERER: " + glGetString(GL_RENDERER))
-        debugdump.appendMessage("GL.VERSION: " + glGetString(GL_VERSION))
+        debugdump.dump.appendGL()
+        debugdump.dump.appendMessage("GL.VENDOR: " + glGetString(GL_VENDOR))
+        debugdump.dump.appendMessage("GL.RENDERER: " + glGetString(GL_RENDERER))
+        debugdump.dump.appendMessage("GL.VERSION: " + glGetString(GL_VERSION))
     except Exception as e:
         log.error("Failed to GL debug info to debug dump: %s", format(str(e)))
 

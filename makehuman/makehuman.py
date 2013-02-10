@@ -189,11 +189,10 @@ def init_logging():
     
 def debug_dump():
     try:
-        import log
-        from debugdump import DebugDump
-        debugdump = DebugDump()
-        debugdump.reset()
+        import debugdump
+        debugdump.dump.reset()
     except Exception as e:
+        import log
         log.error("Could not create debug dump", exc_info=True)
 
 def main():
