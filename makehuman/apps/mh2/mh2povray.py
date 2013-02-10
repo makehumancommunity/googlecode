@@ -1019,6 +1019,13 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
         lmap.resize(resred,resred)
         log.debug('SSS: Low-Res lightmap resolution: %s', lmap.width)
         lmap.save(os.path.join(outputDirectory, 'lightlo.png'))
+        # create masks for blurred channels, for erasing seams.
+        sssmask = mh.Image(pigmentMap)
+        sssmask = sssmask.alphaChannel()
+        sssmask.resize(resgreen,resgreen)
+        sssmask.save(os.path.join(outputDirectory, 'maskmid.png'))
+        sssmask.resize(resred,resred)
+        sssmask.save(os.path.join(outputDirectory, 'masklo.png'))
         progbase = 0.55
 
     # Open the output file in Write mode
@@ -1243,9 +1250,7 @@ Item types
 def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
     for stuff in stuffs[1:]:
         proxy = stuff.proxy
-        if (proxy.type == 'Hair'
-            and gui3d.app.selectedHuman.hairProxy is not None
-            and proxy.getUuid() == gui3d.app.selectedHuman.hairProxy.getUuid()):
+        if (proxy.type == 'Hair'):
             itemtype = 2 # Hair.
             texdata = getChannelData(stuff.texture)                        
             if settings['hairSpec'] == True:
