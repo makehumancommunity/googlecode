@@ -140,7 +140,6 @@ class BackgroundChooser(gui3d.TaskView):
         if not side:
             return
 
-        print texturePath
         if texturePath:
             # Determine aspect ratio of texture
             self.texture.loadImage(mh.Image(texturePath))
