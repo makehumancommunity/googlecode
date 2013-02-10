@@ -28,7 +28,7 @@ import log
 
 class Config:
 
-    def __init__(self, exporter):
+    def __init__(self, exporter=None):
         if exporter:
             self.separateFolder     = exporter.separateFolder.selected
             self.eyebrows           = exporter.eyebrows.selected

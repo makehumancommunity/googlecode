@@ -29,13 +29,15 @@ from export import Exporter, Config
 class MhxConfig(Config):
 
     def __init__(self, rigtype, exporter):
-        Config.__init__(self, exporter)
+        Config.__init__(self)
+        self.separateFolder =  exporter.separateFolder.selected
+        self.helpers =         True
+        self.hidden =          exporter.hidden.selected
         
         self.useMasks =        exporter.masks.selected
-        self.hidden =          exporter.hidden.selected
         self.expressions =     exporter.expressions.selected
         self.bodyShapes =      exporter.bodyShapes.selected
-        self.useCustomShapes =    exporter.useCustomShapes.selected
+        self.useCustomShapes =  exporter.useCustomShapes.selected
         self.cage =            exporter.cage.selected
         self.feetOnGround =    exporter.feetOnGround.selected
         self.advancedSpine =   exporter.advancedSpine.selected
@@ -66,7 +68,10 @@ class ExporterMHX(Exporter):
 
 
     def build(self, options):
-        Exporter.build(self, options)
+        #Exporter.build(self, options)
+        
+        self.separateFolder = options.addWidget(gui.CheckBox("Separate folder", False))
+        self.hidden         = options.addWidget(gui.CheckBox("Keep hidden faces", True))
         
         self.feetOnGround = options.addWidget(gui.CheckBox("Feet on ground", True))
         self.expressions = options.addWidget(gui.CheckBox("Expressions", False))
