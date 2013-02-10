@@ -30,56 +30,49 @@ import exportutils
 import posemode
 import log
 
-#fbxpath = "tools/blender26x"
-#if fbxpath not in sys.path:
-#    sys.path.append(fbxpath)
-    
 import io_fbx
 # bpy must be imported after io_fbx
 import bpy
 
 
-def exportFbx(human, filepath, options):
+def exportFbx(human, filepath, config):
     posemode.exitPoseMode()        
     posemode.enterPoseMode()
     
-    cfg = exportutils.config.exportConfig(human, True, [])
-    cfg.separatefolder = True
-    outfile = exportutils.config.getOutFileFolder(filepath, cfg)        
+    exportutils.config.exportConfig(human, config)
+    outfile = exportutils.config.getOutFileFolder(filepath, config)        
     (outpath, ext) = os.path.splitext(outfile)
 
     log.message("Write FBX file %s" % outfile)
+    print(config)
 
     rawTargets = []
-    if options["expressions"]:
+    if config.expressions:
         shapeList = exportutils.shapekeys.readExpressionUnits(human, 0, 1)
         rawTargets += shapeList
 
-    if options["customshapes"]:
-        cfg.customshapes = True
-        exportutils.custom.listCustomFiles(cfg)                            
+    if config.useCustomShapes:
+        exportutils.custom.listCustomFiles(config)                            
 
         log.message("Custom shapes:")    
-        for path,name in cfg.customShapeFiles:
+        for path,name in config.customShapeFiles:
             log.message("    %s", path)
             shape = exportutils.custom.readCustomTarget(path)
             target = (name,shape)
             rawTargets.append(target)
 
-    rigfile = "data/rigs/%s.rig" % options["fbxrig"]
+    rigfile = "data/rigs/%s.rig" % config.rigtype
     stuffs = exportutils.collect.setupObjects(
         os.path.splitext(outfile)[0], 
         human, 
         rigfile, 
         rawTargets=rawTargets,
-        helpers=options["helpers"], 
-        hidden=options["hidden"], 
-        eyebrows=options["eyebrows"], 
-        lashes=options["lashes"])
+        helpers=config.helpers, 
+        hidden=config.hidden, 
+        eyebrows=config.eyebrows, 
+        lashes=config.lashes)
 
-    (scale, unit) = options["scale"]   
-
-    bpy.initialize(human, cfg)
+    bpy.initialize(human, config)
     name = os.path.splitext(os.path.basename(filepath))[0]
     boneInfo = stuffs[0].boneInfo
     rig = bpy.addRig(name, boneInfo)
@@ -91,7 +84,7 @@ def exportFbx(human, filepath, options):
     
     filename = "%s.fbx" % outpath
     gui3d.app.progress(0, text="Exporting %s" % filename)
-    io_fbx.fbx_export.exportFbxFile(bpy.context, filename, scale)
+    io_fbx.fbx_export.exportFbxFile(bpy.context, filename, config.scale)
     gui3d.app.progress(1)
     posemode.exitPoseMode()        
     return

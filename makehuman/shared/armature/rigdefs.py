@@ -35,6 +35,7 @@ from numpy import dot
 from numpy.linalg import inv
 import transformations as tm
 
+import export
 import exportutils
     
 import mhx
@@ -904,13 +905,13 @@ def checkPoints(vec1, vec2):
     
 
 def createRig(human, rigtype):
-    config = exportutils.config.exportConfig(human, True)
+    config = export.Config(None)
     config.exporting = False
-    config.feetonground = False
+    config.feetOnGround = False
     config.rigtype = rigtype
+    exportutils.config.exportConfig(human, config)
 
     fp = None
-    config.mhx25 = True
     amt = CArmature(human, config)
 
     for (bname, roll, parent, flags, layers, bbone) in config.armatureBones:

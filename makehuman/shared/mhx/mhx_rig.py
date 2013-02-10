@@ -121,7 +121,7 @@ def newSetupJoints (info, joints):
 
 
 def moveOriginToFloor(info):
-    if info.config.feetonground:
+    if info.config.feetOnGround:
         info.origin = info.locations['floor']
         for key in info.locations.keys():
             info.locations[key] = aljabr.vsub(info.locations[key], info.origin)
@@ -136,7 +136,6 @@ def setupHeadsTails(info, headsTails):
     for (bone, head, tail) in headsTails:
         info.rigHeads[bone] = findLocation(info, head)
         info.rigTails[bone] = findLocation(info, tail)
-    return 
 
 
 def findLocation(info, joint):
@@ -151,13 +150,8 @@ def findLocation(info, joint):
 
 
 def writeArmature(fp, info, boneList):
-    if info.config.mhx25:
-        for (bone, roll, parent, flags, layers, bbone) in boneList:
-            addBone25(info, bone, True, roll, parent, flags, layers, bbone, fp)
-    else:
-        for (bone, roll, parent, flags, layers, bbone) in boneList:
-            addBone24(info, bone, True, roll, parent, flags, layers, bbone, fp)
-    return
+    for (bone, roll, parent, flags, layers, bbone) in boneList:
+        addBone25(info, bone, True, roll, parent, flags, layers, bbone, fp)
 
 
 def addBone25(info, bone, cond, roll, parent, flags, layers, bbone, fp):
@@ -466,12 +460,12 @@ def setupRig(info):
         config.preservevolume = False
         
         config.vertexGroupFiles = ["head", "bones", "palm", "tight"]
-        if config.skirtrig == "own":
+        if config.skirtRig == "own":
             config.vertexGroupFiles.append("skirt-rigged")    
-        elif config.skirtrig == "inh":
+        elif config.skirtRig == "inh":
             config.vertexGroupFiles.append("skirt")    
 
-        if config.malerig:
+        if config.maleRig:
             config.vertexGroupFiles.append( "male" )
                                                         
         joints = (
@@ -497,12 +491,12 @@ def setupRig(info):
         )
 
         config.armatureBones = list(rig_body_25.BodyArmature1)
-        if config.advancedspine:
+        if config.advancedSpine:
             config.armatureBones += rig_body_25.BodyArmature2Advanced
         else:
             config.armatureBones += rig_body_25.BodyArmature2Simple
         config.armatureBones += rig_body_25.BodyArmature3
-        if config.advancedspine:
+        if config.advancedSpine:
             config.armatureBones += rig_body_25.BodyArmature4Advanced
         else:
             config.armatureBones += rig_body_25.BodyArmature4Simple
@@ -591,11 +585,11 @@ def setupRig(info):
     """
     
     if config.rigtype == 'mhx':
-        if config.skirtrig == "own":
+        if config.skirtRig == "own":
             joints += rig_skirt_25.SkirtJoints
             headsTails += rig_skirt_25.SkirtHeadsTails
             config.armatureBones += rig_skirt_25.SkirtArmature        
-        if config.malerig:
+        if config.maleRig:
             config.armatureBones += rig_body_25.MaleArmature        
 
     (custJoints, custHeadsTails, custArmature, config.customProps) = exportutils.custom.setupCustomRig(config)
@@ -615,7 +609,7 @@ def setupRig(info):
     #print "H1", info.rigHeads["UpLeg_L"]
     #print "T1", info.rigTails["UpLeg_L"]
 
-    if not config.clothesrig:
+    if not config.clothesRig:
         return
     body = info.rigHeads.keys()
     for proxy in info.proxies.values():
@@ -716,9 +710,9 @@ def writeControlPoses(fp, info):
         rig_leg_25.LegControlPoses(fp, info)
         #rig_toe_25.ToeControlPoses(fp, info)
         rig_face_25.FaceControlPoses(fp, info)
-        if config.malerig:
+        if config.maleRig:
             rig_body_25.MaleControlPoses(fp, info)
-        if config.skirtrig == "own":
+        if config.skirtRig == "own":
             rig_skirt_25.SkirtControlPoses(fp, info)
     elif config.rigtype == 'blenrig':
         blenrig_rig.BlenrigWritePoses(fp, info)
@@ -779,7 +773,7 @@ def writeAllDrivers(fp, info):
             armature.drivers.writePropDrivers(fp, info, rig_leg_25.SoftLegPropLRDrivers, "_R", "Mha") +
             armature.drivers.writePropDrivers(fp, info, rig_body_25.BodyPropDrivers, "", "Mha")
         )
-        if config.advancedspine:
+        if config.advancedSpine:
             driverList += armature.drivers.writePropDrivers(fp, info, rig_body_25.BodyPropDriversAdvanced, "", "Mha") 
         driverList += (
             armature.drivers.writePropDrivers(fp, info, rig_face_25.FacePropDrivers, "", "Mha") +
@@ -824,7 +818,7 @@ def writeAllProperties(fp, typ, info):
         fp.write("#endif\n")
     """
     
-    if config.expressionunits:
+    if config.expressions:
         fp.write("#if toggle&T_Shapekeys\n")
         for skey in exportutils.shapekeys.ExpressionUnits:
             fp.write("  DefProp Float Mhs%s 0.0 %s min=-1.0,max=2.0 ;\n" % (skey, skey))

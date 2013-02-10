@@ -67,7 +67,7 @@ end Armature
   # DefProp Float MhaBreathe 0.0 Breathe min=-0.5,max=2.0 ;
 #endif
   
-*** if-true (config.rigtype=='mhx')and(config.advancedspine)
+*** if-true (config.rigtype=='mhx')and(config.advancedSpine)
   DefProp Bool MhaSpineInvert False Spine_from_shoulders_to_pelvis ;    
   DefProp Bool MhaSpineIk False Spine_FK/IK ;    
   DefProp Float MhaSpineStretch 0.2 Spine_stretch_amount min=0.0,max=1.0 ;

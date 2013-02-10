@@ -23,7 +23,22 @@ TODO
 """
 
 import gui
-from export import Exporter
+from export import Exporter, Config
+
+
+class FbxConfig(Config):
+
+    def __init__(self, rigtype, exporter):
+        Config.__init__(self, exporter)
+        self.rigtype         = rigtype,
+        self.expressions     = exporter.expressions.selected
+        self.useCustomShapes = exporter.useCustomShapes.selected
+        
+        
+    def __repr__(self):
+        return("<FbxOptions %s s %s e %s h %s>" % (
+            self.rigtype, self.separateFolder, self.expressions, self.helpers))
+
 
 class ExporterFBX(Exporter):
     def __init__(self):
@@ -32,37 +47,18 @@ class ExporterFBX(Exporter):
         self.filter = "Filmbox (*.fbx)"
 
     def build(self, options):
-        self.fbxEyebrows    = options.addWidget(gui.CheckBox("Eyebrows", True))
-        self.fbxLashes      = options.addWidget(gui.CheckBox("Eyelashes", True))
-        self.fbxHelpers     = options.addWidget(gui.CheckBox("Helper geometry", False))
-        self.fbxHidden      = options.addWidget(gui.CheckBox("Keep hidden faces", True))
-        self.fbxExpressions = options.addWidget(gui.CheckBox("Expressions", False))
-        self.fbxCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
-        self.fbxSkeleton    = options.addWidget(gui.CheckBox("Skeleton", True))
-        self.fbxSmooth      = options.addWidget(gui.CheckBox("Subdivide", False))
-        self.fbxScales      = self.addScales(options)
-        self.fbxRigs        = self.addRigs(options)
+        Exporter.build(self, options)
+        self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
+        self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
+        self.rigtypes        = self.addRigs(options)
 
     def export(self, human, filename):
         import mh2fbx
 
-        for (button, rig) in self.fbxRigs:
+        for (button, rigtype) in self.rigtypes:
             if button.selected:
                 break
-
-        options = {
-            "fbxrig":       rig,
-            "helpers":      self.fbxHelpers.selected,
-            "hidden":       self.fbxHidden.selected,
-            "eyebrows":     self.fbxEyebrows.selected,
-            "lashes":       self.fbxLashes.selected,
-            "expressions":  self.fbxExpressions.selected,
-            "customshapes": self.fbxCustomShapes.selected,
-            "scale":        self.getScale(self.fbxScales),
-            "subdivide":    self.fbxSmooth.selected
-        }
-
-        mh2fbx.exportFbx(human, filename("fbx"), options)
+        mh2fbx.exportFbx(human, filename("fbx"), FbxConfig(rigtype, self))
 
 def load(app):
     app.addExporter(ExporterFBX())

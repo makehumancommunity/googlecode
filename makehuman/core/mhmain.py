@@ -1032,8 +1032,8 @@ class MHApplication(gui3d.Application, mh.Application):
         mh2obj.exportObj(self.selectedHuman.meshData, exportPath + '/quick_export.obj')
         import mh2bvh
         mh2bvh.exportSkeleton(self.selectedHuman.meshData, exportPath + '/quick_export.bvh')
-        import mh2mhx
-        mh2mhx.exportMhx(self.selectedHuman.meshData, exportPath + '/quick_export.mhx')
+        import mhx
+        mhx.mhx_main.exportMhx(human, filename, config).exportMhx(self.selectedHuman.meshData, exportPath + '/quick_export.mhx')
 
     def grabScreen(self):
         grabPath = mh.getPath('grab')

@@ -40,21 +40,20 @@ Delta = [0,0.01,0]
 
 
 #
-# exportCollada(human, filename, options):
+# exportCollada(human, filename, config):
 #
 
-def exportCollada(human, filename, options):    
+def exportCollada(human, filename, config):    
     time1 = time.clock()
-    cfg = exportutils.config.exportConfig(human, True)
-    cfg.separatefolder = True
-    outfile = exportutils.config.getOutFileFolder(filename, cfg)        
+    exportutils.config.exportConfig(human, config)
+    outfile = exportutils.config.getOutFileFolder(filename, config)        
     try:
         fp = open(outfile, 'w')
         log.message("Writing Collada file %s" % outfile)
     except:
         log.error("Unable to open file for writing %s" % outfile)
     (name,ext) = os.path.splitext(os.path.basename(outfile))
-    exportDae(human, name, fp, options, cfg)
+    exportDae(human, name, fp, config)
     fp.close()
     time2 = time.clock()
     log.message("Wrote Collada file in %g s: %s" % (time2-time1, outfile))
@@ -64,13 +63,13 @@ def exportCollada(human, filename, options):
 #
 #
 
-def rotateLoc(loc, options):    
-    (x,y,z) = (options.scale*loc[0], options.scale*loc[1], options.scale*loc[2])
-    if options.rotate90X:
+def rotateLoc(loc, config):    
+    (x,y,z) = (config.scale*loc[0], config.scale*loc[1], config.scale*loc[2])
+    if config.rotate90X:
         yy = -z
         z = y
         y = yy
-    if options.rotate90Z:
+    if config.rotate90Z:
         yy = x
         x = -y
         y = yy        
@@ -162,18 +161,18 @@ def fixTwistWeights(fp, weights):
 """                
 
 
-def writeBone(fp, bone, orig, extra, pad, stuff, options):
+def writeBone(fp, bone, orig, extra, pad, stuff, config):
     (name, children) = bone
     head = stuff.boneInfo.heads[name]
     vec = aljabr.vsub(head, orig)
-    printNode(fp, name, vec, extra, pad, options)
+    printNode(fp, name, vec, extra, pad, config)
     for child in children:
-        writeBone(fp, child, head, '', pad+'  ', stuff, options)    
+        writeBone(fp, child, head, '', pad+'  ', stuff, config)    
     fp.write('\n%s      </node>' % pad)
     return
     
     
-def printNode(fp, name, vec, extra, pad, options):
+def printNode(fp, name, vec, extra, pad, config):
     if name:
         nameStr = 'sid="%s"' % name
         idStr = 'id="%s" name="%s"' % (name, name)
@@ -183,8 +182,8 @@ def printNode(fp, name, vec, extra, pad, options):
     fp.write('\n'+
 '%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr) +
 '%s        <translate sid="translate"> ' % pad)
-    #(scale, name) = options["scale"]
-    (x,y,z) = rotateLoc(vec, options)
+    #(scale, name) = config["scale"]
+    (x,y,z) = rotateLoc(vec, config)
     fp.write("%.4f %.4f %.4f " % (x,y,z))
     fp.write('</translate>\n' +
 '%s        <rotate sid="rotateZ">0 0 1 0.0</rotate>\n' % pad +
@@ -193,22 +192,22 @@ def printNode(fp, name, vec, extra, pad, options):
 '%s        <scale sid="scale">1.0 1.0 1.0</scale>' % pad)
     
 
-def exportDae(human, name, fp, options, cfg):
+def exportDae(human, name, fp, config):
     obj = human.meshData
-    rigfile = "data/rigs/%s.rig" % options.daerig
+    rigfile = "data/rigs/%s.rig" % config.rigtype
 
     stuffs = exportutils.collect.setupObjects(
         name, 
         human, 
         rigfile=rigfile, 
-        helpers=options.helpers, 
-        hidden=options.hidden, 
-        eyebrows=options.eyebrows, 
-        lashes=options.lashes)
+        helpers=config.helpers, 
+        hidden=config.hidden, 
+        eyebrows=config.eyebrows, 
+        lashes=config.lashes)
     mainStuff = stuffs[0]        
 
     date = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime())
-    if options.rotate90X:
+    if config.rotate90X:
         upaxis = 'Z_UP'
     else:
         upaxis = 'Y_UP'
@@ -221,13 +220,13 @@ def exportDae(human, name, fp, options, cfg):
 '    </contributor>\n' +
 '    <created>%s</created>\n' % date +
 '    <modified>%s</modified>\n' % date +
-'    <unit meter="%.4f" name="%s"/>\n' % (0.1/options.scale, options.unit) +
+'    <unit meter="%.4f" name="%s"/>\n' % (0.1/config.scale, config.unit) +
 '    <up_axis>%s</up_axis>\n' % upaxis+
 '  </asset>\n' +
 '  <library_images>\n')
 
     for stuff in stuffs:
-        writeImages(obj, fp, stuff, human, cfg)
+        writeImages(obj, fp, stuff, human, config)
 
     fp.write(
 '  </library_images>\n' +
@@ -248,14 +247,14 @@ def exportDae(human, name, fp, options, cfg):
 '  <library_controllers>\n')
 
     for stuff in stuffs:
-        writeController(obj, fp, stuff, options)
+        writeController(obj, fp, stuff, config)
 
     fp.write(
 '  </library_controllers>\n'+
 '  <library_geometries>\n')
 
     for stuff in stuffs:
-        writeGeometry(obj, fp, stuff, options)
+        writeGeometry(obj, fp, stuff, config)
 
     fp.write(
 '  </library_geometries>\n\n' +
@@ -263,9 +262,9 @@ def exportDae(human, name, fp, options, cfg):
 '    <visual_scene id="Scene" name="Scene">\n' +
 '      <node id="Scene_root">\n')
     for root in mainStuff.boneInfo.hier:
-        writeBone(fp, root, [0,0,0], 'layer="L1"', '  ', mainStuff, options)
+        writeBone(fp, root, [0,0,0], 'layer="L1"', '  ', mainStuff, config)
     for stuff in stuffs:
-        writeNode(obj, fp, "        ", stuff, options)
+        writeNode(obj, fp, "        ", stuff, config)
 
     fp.write(
 '      </node>\n' +    
@@ -278,21 +277,21 @@ def exportDae(human, name, fp, options, cfg):
     return
 
 #
-#    writeImages(obj, fp, stuff, human, cfg):
+#    writeImages(obj, fp, stuff, human, config):
 #
 
-def writeImages(obj, fp, stuff, human, cfg):
+def writeImages(obj, fp, stuff, human, config):
     if stuff.texture:
         textures = [stuff.texture]
     else:
         textures = []
 
     for (folder, texname) in textures: 
-        path = exportutils.config.getOutFileName(texname, folder, True, human, cfg)        
+        path = exportutils.config.getOutFileName(texname, folder, True, human, config)        
         texfile = os.path.basename(path)
         (fname, ext) = os.path.splitext(texname)  
         name = "%s_%s" % (fname, ext[1:])
-        if cfg.separatefolder:
+        if config.separateFolder:
             texpath = "textures/"+texfile
         else:
             texpath = path
@@ -462,10 +461,10 @@ def writeMaterials(obj, fp, stuff):
     return
 
 #
-#    writeController(obj, fp, stuff, options):
+#    writeController(obj, fp, stuff, config):
 #
 
-def writeController(obj, fp, stuff, options):
+def writeController(obj, fp, stuff, config):
     exportutils.collect.setStuffSkinWeights(stuff)
     nVerts = len(stuff.meshInfo.verts)
     nUvVerts = len(stuff.meshInfo.uvValues)
@@ -521,7 +520,7 @@ def writeController(obj, fp, stuff, options):
     mat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
     for b in stuff.boneInfo.bones:
         vec = stuff.boneInfo.heads[b]
-        (x,y,z) = rotateLoc(vec, options)
+        (x,y,z) = rotateLoc(vec, config)
         mat[0][3] = -x
         mat[1][3] = -y
         mat[2][3] = -z
@@ -616,10 +615,10 @@ def writeController(obj, fp, stuff, options):
     return
 
 #
-#    writeGeometry(obj, fp, stuff, options):
+#    writeGeometry(obj, fp, stuff, config):
 #
         
-def writeGeometry(obj, fp, stuff, options):
+def writeGeometry(obj, fp, stuff, config):
     nVerts = len(stuff.meshInfo.verts)
     nUvVerts = len(stuff.meshInfo.uvValues)
     nNormals = nVerts
@@ -636,7 +635,7 @@ def writeGeometry(obj, fp, stuff, options):
 
 
     for v in stuff.meshInfo.verts:
-        (x,y,z) = rotateLoc(v, options)
+        (x,y,z) = rotateLoc(v, config)
         fp.write("%.4f %.4f %.4f " % (x,y,z))
 
     fp.write('\n' +
@@ -654,7 +653,7 @@ def writeGeometry(obj, fp, stuff, options):
 '          ')
 
     for no in stuff.meshInfo.vnormals:
-        (x,y,z) = rotateLoc(no, options)
+        (x,y,z) = rotateLoc(no, config)
         fp.write("%.4f %.4f %.4f " % (x,y,z))
 
     fp.write('\n' +
@@ -712,7 +711,7 @@ def writeGeometry(obj, fp, stuff, options):
                 loc = vadd(v, offs)
             except:
                 loc = v
-            (x,y,z) = rotateLoc(v, options)
+            (x,y,z) = rotateLoc(v, config)
             fp.write("%.4f %.4f %.4f " % (x,y,z))
 
         fp.write('\n'+
@@ -796,10 +795,10 @@ def checkFaces(stuff, nVerts, nUvVerts):
     return 
     
 #
-#    writeNode(obj, fp, pad, stuff, options):
+#    writeNode(obj, fp, pad, stuff, config):
 #
 
-def writeNode(obj, fp, pad, stuff, options):    
+def writeNode(obj, fp, pad, stuff, config):    
     fp.write('\n' +
 '%s<node id="%sObject" name="%s">\n' % (pad, stuff.name,stuff.name) +
 '%s  <translate sid="translate">0 0 0</translate>\n' % pad +

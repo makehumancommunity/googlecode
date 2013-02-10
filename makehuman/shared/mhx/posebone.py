@@ -68,19 +68,7 @@ def addPoseBone(fp, info, bone, customShape, boneGroup, locArg, lockRot, lockSca
         info.createdArmature.bones[bone].constraints = armature.constraints.getConstraints(bone, constraints, lockLoc, lockRot)
         return
     
-    if info.config.mhx25:
-        fp.write("\n  Posebone %s %s \n" % (bone, True))
-    else:
-        # limitX = flags & 1
-        # limitY = (flags >> 1) & 1
-        # limitZ = (flags >> 2) & 1
-        # lockXRot = (flags >> 3) & 1
-        # lockYRot = (flags >> 4) & 1
-        # lockZRot = (flags >> 5) & 1
-        ikFlags = 8*lockRotX + 16*lockRotY + 32*lockRotZ
-        fp.write("\tposebone %s %x \n" % (bone, ikFlags))
-        if customShape:
-            fp.write("\t\tdisplayObject _object['%s'] ;\n" % customShape)
+    fp.write("\n  Posebone %s %s \n" % (bone, True))
         
     if boneGroup:
         index = boneGroupIndex(boneGroup, info)
@@ -88,10 +76,6 @@ def addPoseBone(fp, info, bone, customShape, boneGroup, locArg, lockRot, lockSca
 
     (uses, mins, maxs) = armature.constraints.writeConstraints(fp, info, bone, constraints, lockLoc, lockRot)
 
-    if not info.config.mhx25:
-        fp.write("\tend posebone\n")
-        return
-    
     ik_stretch = None
     ik_stiff = None
     ik_lim = None

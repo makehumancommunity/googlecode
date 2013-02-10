@@ -294,7 +294,7 @@ def BodyControlPoses(fp, info):
          [('LimitRot', C_OW_LOCAL, 1, ['LimitRot', limNeck, (1,1,1)])])
          
 
-    if info.config.exporting and info.config.advancedspine:
+    if info.config.exporting and info.config.advancedSpine:
         # Spine IK
         addPoseBone(fp, info, 'SpinePT', 'MHCube025', 'Spine', (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, [])
 

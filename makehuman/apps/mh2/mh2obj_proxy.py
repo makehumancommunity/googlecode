@@ -25,46 +25,43 @@ Exports proxy mesh to obj
 import os
 import exportutils
 import mh2proxy
-import exportutils
 
 #
-#    exportProxyObj(human, name, options):    
+#    exportProxyObj(human, name, config):    
 #
 
-def exportProxyObj(human, name, options):
+def exportProxyObj(human, name, config):
     obj = human.meshData
-    cfg = exportutils.config.exportConfig(human, True)
-    cfg.separatefolder = True
+    exportutils.config.exportConfig(human, config)
 
     stuffs = exportutils.collect.setupObjects(os.path.splitext(name)[0], human,
-        helpers=options["helpers"], 
-        hidden=options["hidden"], 
-        eyebrows=options["eyebrows"], 
-        lashes=options["lashes"],
-        subdivide=options["subdivide"])
+        helpers=config.helpers, 
+        hidden=config.hidden, 
+        eyebrows=config.eyebrows, 
+        lashes=config.lashes,
+        subdivide=config.subdivide)
     
-    (scale, unit) = options["scale"]   
     #name = exportutils.config.goodName(name)
-    outfile = exportutils.config.getOutFileFolder(name, cfg)   
+    outfile = exportutils.config.getOutFileFolder(name, config)   
     (path, ext) = os.path.splitext(outfile)
 
-    filename = "%s_clothed.obj" % path
+    filename = "%s.obj" % path
     fp = open(filename, 'w')
     fp.write(
-"# MakeHuman exported OBJ with clothes\n" +
+"# MakeHuman exported OBJ\n" +
 "# www.makehuman.org\n\n" +
-"mtllib %s_clothed.obj.mtl\n" % os.path.basename(path))
+"mtllib %s.obj.mtl\n" % os.path.basename(path))
     for stuff in stuffs:
-        writeGeometry(obj, fp, stuff, scale)
+        writeGeometry(obj, fp, stuff, config.scale)
     fp.close()
     
-    filename = "%s_clothed.obj.mtl" % path
+    filename = "%s.obj.mtl" % path
     fp = open(filename, 'w')
     fp.write(
-'# MakeHuman exported MTL with clothes\n' +
+'# MakeHuman exported MTL\n' +
 '# www.makehuman.org\n\n')
     for stuff in stuffs:
-        writeMaterial(fp, stuff, human, cfg)
+        writeMaterial(fp, stuff, human, config)
     fp.close()
     return
 
@@ -93,10 +90,10 @@ def writeGeometry(obj, fp, stuff, scale):
     return        
 
 #
-#   writeMaterial(fp, stuff, human, cfg):
+#   writeMaterial(fp, stuff, human, config):
 #
 
-def writeMaterial(fp, stuff, human, cfg):
+def writeMaterial(fp, stuff, human, config):
     fp.write("\nnewmtl %s\n" % stuff.name)
     diffuse = (1, 1, 1)
     spec = (1, 1, 1)
@@ -123,22 +120,22 @@ def writeMaterial(fp, stuff, human, cfg):
     )
     
     if stuff.proxy:
-        writeTexture(fp, "map_Kd", stuff.texture, human, cfg)
-        #writeTexture(fp, "map_Tr", stuff.proxy.translucency, human, cfg)
-        writeTexture(fp, "map_Disp", stuff.proxy.normal, human, cfg)
-        writeTexture(fp, "map_Disp", stuff.proxy.displacement, human, cfg)
+        writeTexture(fp, "map_Kd", stuff.texture, human, config)
+        #writeTexture(fp, "map_Tr", stuff.proxy.translucency, human, config)
+        writeTexture(fp, "map_Disp", stuff.proxy.normal, human, config)
+        writeTexture(fp, "map_Disp", stuff.proxy.displacement, human, config)
     else:        
-        writeTexture(fp, "map_Kd", ("data/textures", "texture.png"), human, cfg)
+        writeTexture(fp, "map_Kd", ("data/textures", "texture.png"), human, config)
 
 
-def writeTexture(fp, key, texture, human, cfg):
+def writeTexture(fp, key, texture, human, config):
     if not texture:
         return
     (folder, texfile) = texture
-    path = exportutils.config.getOutFileName(texfile, folder, True, human, cfg)        
+    path = exportutils.config.getOutFileName(texfile, folder, True, human, config)        
     (fname, ext) = os.path.splitext(texfile)  
     name = "%s_%s" % (fname, ext[1:])
-    if cfg.separatefolder:
+    if config.separateFolder:
         texpath = "textures/"+texfile
     else:
         texpath = texfile

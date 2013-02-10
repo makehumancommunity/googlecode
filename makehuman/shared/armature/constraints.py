@@ -666,7 +666,6 @@ class CFloorConstraint(CConstraint):
 #
 
 def writeConstraints(fp, info, bname, constraints, lockLoc, lockRot):
-    mhx25 = info.config.mhx25
     uses = (0,0,0)
     mins = (-pi, -pi, -pi)
     maxs = (pi, pi, pi)
@@ -679,40 +678,16 @@ def writeConstraints(fp, info, bname, constraints, lockLoc, lockRot):
 
         if typ == 'IK':
             cns = CIkConstraint(flags, inf, data, lockLoc, lockRot)
-            if mhx25:
-                cns.write25(info, fp)
-            else:
-                fp.write(
-                    "\t\tconstraint IKSOLVER %s 1.0 \n" % self.name +
-                    "\t\t\tCHAINLEN    int %d ; \n" % cns.chainlen +
-                    "\t\t\tTARGET    obj info.name ; \n" +
-                    "\t\t\tBONE    str %s ; \n" % cns.subtar +
-                    "\t\tend constraint\n")
+            cns.write25(info, fp)
         elif typ == 'Action':
             cns = CActionConstraint(flags, inf, data)
             cns.write25(info, fp)
         elif typ == 'CopyRot':
             cns = CCopyRotConstraint(flags, inf, data)
-            if mhx25:
-                cns.write25(info, fp)
-            else:
-                copy = cns.usex + 2*cns.usey + 4*cns.usez
-                fp.write(
-                    "\t\tconstraint COPYROT %s 1.0 \n" % cns.name +
-                    "\t\t\tTARGET    obj info.name ;\n" +
-                    "\t\t\tBONE    str %s ; \n" % cns.subtar +
-                    "\t\t\tCOPY    hex %x ;\n" %  copy +
-                    "\t\tend constraint\n")
+            cns.write25(info, fp)
         elif typ == 'CopyLoc':
             cns = CCopyLocConstraint(flags, inf, data)
-            if mhx25:
-                cns.write25(info, fp)
-            else:
-                fp.write(
-                    "\t\tconstraint COPYLOC %s 1.0 \n" % self.name +
-                    "\t\t\tTARGET    obj info.name ;\n" +
-                    "\t\t\tBONE    str %s ; \n" % self.subtar +
-                    "\t\tend constraint\n")
+            cns.write25(info, fp)
         elif typ == 'CopyScale':
             cns = CCopyScaleConstraint(flags, inf, data)
             cns.write25(info, fp)
@@ -721,40 +696,12 @@ def writeConstraints(fp, info, bname, constraints, lockLoc, lockRot):
             cns.write25(info, fp)
         elif typ == 'LimitRot':
             cns = CLimitRotConstraint(flags, inf, data)
-            if mhx25:
-                cns.write25(info, fp)
-            else:
-                limit = usex + 2*usey + 4*usez
-                fp.write(
-                    "\t\tconstraint LIMITROT Const 1.0 \n" +
-                    "\t\t\tLIMIT    hex %x ;\n" % limit +
-                    "\t\t\tOWNERSPACE       hex 1 ;\n" +
-                    "\t\t\tXMIN       float %g ; \n" % xmin +
-                    "\t\t\tXMAX       float %g ; \n" % xmax +
-                    "\t\t\tYMIN       float %g ; \n" % ymin +
-                    "\t\t\tYMAX       float %g ; \n" % ymax +
-                    "\t\t\tZMIN       float %g ; \n" % zmin +
-                    "\t\t\tZMAX       float %g ; \n" % zmax +
-                    "\t\tend constraint\n")
+            cns.write25(info, fp)
             mins = (cns.xmin, cns.ymin, cns.zmin)
             maxs = (cns.xmax, cns.ymax, cns.zmax)
         elif typ == 'LimitLoc':
             cns = CLimitLocConstraint(flags, inf, data)
-            if mhx25:
-                cns.write25(info, fp)
-            else:
-                limit = cns.useminx + 2*cns.useminy + 4*cns.useminz + 8*cns.usemaxx + 16*cns.usemaxy + 32*cns.usemaxz
-                fp.write("\t\tconstraint LIMITLOC Const 1.0 \n")
-                fp.write(
-                    "\t\t\tLIMIT    hex %x ;\n" % limit +
-                    "\t\t\tOWNERSPACE       hex 1 ;\n" +
-                    "\t\t\tXMIN       float %g ; \n" % cns.xmin +
-                    "\t\t\tXMAX       float %g ; \n" % cns.xmax +
-                    "\t\t\tYMIN       float %g ; \n" % cns.ymin +
-                    "\t\t\tYMAX       float %g ; \n" % cns.ymax +
-                    "\t\t\tZMIN       float %g ; \n" % cns.zmin +
-                    "\t\t\tZMAX       float %g ; \n" % cns.zmax +
-                    "\t\tend constraint\n")
+            cns.write25(info, fp)
         elif typ == 'LimitScale':
             cns = CLimitScaleConstraint(flags, inf, data)
             cns.write25(info, fp)
@@ -769,28 +716,13 @@ def writeConstraints(fp, info, bname, constraints, lockLoc, lockRot):
             cns.write25(info, fp)
         elif typ == 'StretchTo':
             cns = CStretchToConstraint(flags, inf, data)
-            if mhx25:
-                cns.write25(info, fp)
-            else:
-                fp.write(
-                    "\t\tconstraint STRETCHTO %s 1.0 \n" % self.name +
-                    "\t\t\tTARGET    obj info.name ;\n" +
-                    "\t\t\tBONE    str %s ;\n" % subtar +
-                    "\t\t\tPLANE    hex 2 ;\n" +
-                    "\t\tend constraint\n")
+            cns.write25(info, fp)
         elif typ == 'TrackTo':
             cns = CTrackToConstraint(flags, inf, data)
             cns.write25(info, fp)
         elif typ == 'LimitDist':
             cns = CLimitDistConstraint(flags, inf, data)
-            if mhx25:
-                cns.write25(info, fp)
-            else:
-                fp.write(
-                    "\t\tconstraint LIMITDIST %s 1.0 \n" % self.name +
-                    "\t\t\tTARGET    obj info.name ;\n" +
-                    "\t\t\tBONE    str %s ;\n" % subtar +
-                    "\t\tend constraint\n")
+            cns.write25(info, fp)
         elif typ == 'ChildOf':
             cns = CChildOfConstraint(flags, inf, data)
             cns.write25(info, fp)

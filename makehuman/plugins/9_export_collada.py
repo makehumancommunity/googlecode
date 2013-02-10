@@ -23,19 +23,15 @@ TODO
 """
 
 import gui
-from export import Exporter
+from export import Exporter, Config
 
 
-class Options:
-    def __init__(self, rig, exporter):
-        self.daerig = rig,
-        self.rotate90X = exporter.colladaRot90X.selected
-        self.rotate90Z = exporter.colladaRot90Z.selected
-        self.eyebrows =  exporter.colladaEyebrows.selected
-        self.lashes =    exporter.colladaLashes.selected
-        self.helpers =   exporter.colladaHelpers.selected
-        self.hidden =    exporter.colladaHidden.selected
-        self.scale, self.unit = exporter.getScale(exporter.daeScales)
+class DaeConfig(Config):
+    def __init__(self, rigtype, exporter):
+        Config.__init__(self, exporter)
+        self.rigtype =   rigtype
+        self.rotate90X = exporter.rotate90X.selected
+        self.rotate90Z = exporter.rotate90Z.selected
 
 
 class ExporterCollada(Exporter):
@@ -44,29 +40,23 @@ class ExporterCollada(Exporter):
         self.name = "Collada (dae)"
         self.filter = "Collada (*.dae)"
 
-    def build(self, options):
-        # Collada options
-        self.colladaRot90X = options.addWidget(gui.CheckBox("Rotate 90 X", False))
-        self.colladaRot90Z = options.addWidget(gui.CheckBox("Rotate 90 Z", False))
-        self.colladaEyebrows = options.addWidget(gui.CheckBox("Eyebrows", True))
-        self.colladaLashes = options.addWidget(gui.CheckBox("Eyelashes", True))
-        self.colladaHelpers = options.addWidget(gui.CheckBox("Helper geometry", False))
-        self.colladaHidden = options.addWidget(gui.CheckBox("Keep hidden faces", True))
-        # self.colladaSeparateFolder = options.addWidget(gui.CheckBox("Separate folder", False))
-        # self.colladaPngTexture = options.addWidget(gui.CheckBox("PNG texture", selected=True))
 
-        self.daeScales = self.addScales(options)
-        self.daeRigs = self.addRigs(options)
+    def build(self, options):
+        Exporter.build(self, options)
+        self.rotate90X = options.addWidget(gui.CheckBox("Rotate 90 X", False))
+        self.rotate90Z = options.addWidget(gui.CheckBox("Rotate 90 Z", False))
+        self.rigtypes = self.addRigs(options)
+
 
     def export(self, human, filename):
         import mh2collada
 
-        for (button, rig) in self.daeRigs:
+        for (button, rigtype) in self.rigtypes:
             if button.selected:
                 break                
 
-        options = Options(rig, self)
-        mh2collada.exportCollada(human, filename("dae"), options)
+        mh2collada.exportCollada(human, filename("dae"), DaeConfig(rigtype, self))
+
 
 def load(app):
     app.addExporter(ExporterCollada())

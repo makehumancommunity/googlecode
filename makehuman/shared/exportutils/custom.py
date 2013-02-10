@@ -31,7 +31,7 @@ import log
 
 def listCustomFiles(config):                    
     config.customShapeFiles = []
-    if config.customshapes: 
+    if config.useCustomShapes: 
         folder = os.path.join(mh.getPath(''), 'custom')
         readCustomFolder(folder, config)
         

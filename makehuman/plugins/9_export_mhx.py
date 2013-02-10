@@ -23,7 +23,40 @@ TODO
 """
 
 import gui
-from export import Exporter
+from export import Exporter, Config
+
+
+class MhxConfig(Config):
+
+    def __init__(self, rigtype, exporter):
+        Config.__init__(self, exporter)
+        
+        self.useMasks =        exporter.masks.selected
+        self.hidden =          exporter.hidden.selected
+        self.expressions =     exporter.expressions.selected
+        self.bodyShapes =      exporter.bodyShapes.selected
+        self.useCustomShapes =    exporter.useCustomShapes.selected
+        self.cage =            exporter.cage.selected
+        self.feetOnGround =    exporter.feetOnGround.selected
+        self.advancedSpine =   exporter.advancedSpine.selected
+        self.maleRig =         exporter.maleRig.selected
+        self.clothesRig =      exporter.clothesRig.selected
+        self.rigtype =         rigtype
+        
+        # Used by mhx exporter
+        self.vertexWeights = []
+        self.customShapes = {}
+        self.poseInfo = {}
+        self.boneGroups = []
+        self.recalcRoll = []              
+        self.vertexGroupFiles = []
+        self.gizmoFiles = []
+        self.headName = "Head"
+        self.objectProps = []
+        self.armatureProps = []
+        self.customProps = []
+        self.customShapeFiles = []
+        
 
 class ExporterMHX(Exporter):
     def __init__(self):
@@ -31,63 +64,36 @@ class ExporterMHX(Exporter):
         self.name = "Blender exchange (mhx)"
         self.filter = "Blender Exchange (*.mhx)"
 
-    def build(self, options):
-        #self.version24 = options.addWidget(gui.CheckBox("Version 2.4", False))
-        #self.version25 = options.addWidget(gui.CheckBox("Version 2.5", True))
-        self.mhxSeparateFolder = options.addWidget(gui.CheckBox("Separate folder", False))
-        self.mhxFeetOnGround = options.addWidget(gui.CheckBox("Feet on ground", True))
-        self.mhxExpressionUnits = options.addWidget(gui.CheckBox("Expressions", False))
-        #self.mhxFaceShapes = options.addWidget(gui.CheckBox("Face shapes", True))
-        self.mhxBodyShapes = options.addWidget(gui.CheckBox("Body shapes", True))
-        self.mhxCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
-        #self.mhxFacePanel = options.addWidget(gui.CheckBox("Face panel", True))
-        self.mhxClothes = options.addWidget(gui.CheckBox("Clothes", True))
-        self.mhxMasks = options.addWidget(gui.CheckBox("Clothes masks", False))
-        self.mhxHidden = options.addWidget(gui.CheckBox("Keep hidden faces", True))
-        self.mhxClothesRig = options.addWidget(gui.CheckBox("Clothes rig", True))
-        self.mhxCage = options.addWidget(gui.CheckBox("Cage", False))
-        self.mhxAdvancedSpine = options.addWidget(gui.CheckBox("Advanced spine", False))
-        self.mhxMaleRig = options.addWidget(gui.CheckBox("Male rig", False))
-        #self.mhxSkirtRig = options.addWidget(gui.CheckBox("Skirt rig", False))
 
-        rigs = []
-        self.mhxMhx = options.addWidget(gui.RadioButton(rigs, "Use mhx rig", True))
-        self.rigifyMhx = options.addWidget(gui.RadioButton(rigs, "Use rigify rig", False))
-        addedRigs = self.addRigs(options, rigs)
-        self.mhxRigs = [(self.mhxMhx, "mhx"), (self.rigifyMhx, "rigify")] + addedRigs
+    def build(self, options):
+        Exporter.build(self, options)
+        
+        self.feetOnGround = options.addWidget(gui.CheckBox("Feet on ground", True))
+        self.expressions = options.addWidget(gui.CheckBox("Expressions", False))
+        self.bodyShapes = options.addWidget(gui.CheckBox("Body shapes", True))
+        self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
+        self.masks = options.addWidget(gui.CheckBox("Clothes masks", False))
+        self.clothesRig = options.addWidget(gui.CheckBox("Clothes rig", True))
+        self.cage = options.addWidget(gui.CheckBox("Cage", False))
+        self.advancedSpine = options.addWidget(gui.CheckBox("Advanced spine", False))
+        self.maleRig = options.addWidget(gui.CheckBox("Male rig", False))
+
+        rigtypes = []
+        self.mhx = options.addWidget(gui.RadioButton(rigtypes, "Use mhx rig", True))
+        self.rigify = options.addWidget(gui.RadioButton(rigtypes, "Use rigify rig", False))
+        addedRigs = self.addRigs(options, rigtypes)
+        self.rigtypes = [(self.mhx, "mhx"), (self.rigify, "rigify")] + addedRigs
+
 
     def export(self, human, filename):
-        import mh2mhx
-        #mhxversion = []
-        #if self.version24.selected: mhxversion.append('24')
-        #if self.version25.selected: mhxversion.append('25')
+        import mhx
 
-        for (button, rig) in self.mhxRigs:
+        for (button, rigtype) in self.rigtypes:
             if button.selected:
                 break
 
-        options = {
-            'mhxversion': ["25"],  #mhxversion,
-            'usemasks':        self.mhxMasks.selected,
-            'hidden':          self.mhxHidden.selected,
-            #'expressions':     False,    #self.mhxExpressions.selected,
-            'expressionunits': self.mhxExpressionUnits.selected,
-            #'faceshapes':      self.mhxFaceShapes.selected,
-            'bodyshapes':      self.mhxBodyShapes.selected,
-            'customshapes':    self.mhxCustomShapes.selected,
-            #'facepanel':       self.mhxFacePanel.selected,
-            'clothes':         self.mhxClothes.selected,
-            'cage':            self.mhxCage.selected,
-            'separatefolder':  self.mhxSeparateFolder.selected,
-            'feetonground':    self.mhxFeetOnGround.selected,
-            'advancedspine':   self.mhxAdvancedSpine.selected,
-            'malerig':         self.mhxMaleRig.selected,
-            'skirtrig':        False, #self.mhxSkirtRig.selected,
-            'clothesrig':      self.mhxClothesRig.selected,
-            'mhxrig':          rig,
-        }
+        mhx.mhx_main.exportMhx(human, filename("mhx"), MhxConfig(rigtype, self))
 
-        mh2mhx.exportMhx(human, filename("mhx"), options)
 
 def load(app):
     app.addExporter(ExporterMHX())

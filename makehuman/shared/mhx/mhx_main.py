@@ -55,11 +55,11 @@ from . import rig_body_25
 
 
 class CInfo:
-    def __init__(self, name, human, cfg):
+    def __init__(self, name, human, config):
         self.name = name
         self.human = human
         self.mesh = human.meshData
-        self.config = cfg
+        self.config = config
         self.proxies = {}
         self.locations = {}
         self.rigHeads = {}
@@ -71,7 +71,7 @@ class CInfo:
     def scanProxies(self):
         self.proxies = {}
         for pfile in self.config.proxyList:
-            if pfile.useMhx and pfile.file:
+            if pfile.file:
                 print("Scan", pfile, pfile.type)
                 proxy = mh2proxy.readProxyFile(self.mesh, pfile, True)
                 if proxy:
@@ -79,37 +79,31 @@ class CInfo:
 
 
 #
-#    exportMhx(human, filename, options):
+#    exportMhx(human, filename, config):
 #
 
-def exportMhx(human, filename, options):  
+def exportMhx(human, filename, config):  
     posemode.exitPoseMode()        
     posemode.enterPoseMode()
-    cfg = exportutils.config.exportConfig(human, True, options)
+    exportutils.config.exportConfig(human, config)
     (fpath, ext) = os.path.splitext(filename)
 
-    if '24' in cfg.mhxversion:
-        raise NameError("MHX export to Blender 2.49 has been removed")
-   
-    if '25' in cfg.mhxversion:
-        time1 = time.clock()
-        fname = os.path.basename(fpath)
-        name = fname.capitalize().replace(' ','_')
-        outfile = exportutils.config.getOutFileFolder(filename, cfg)        
-        try:
-            fp = open(outfile, 'w')
-            log.message("Writing MHX 2.5x file %s", outfile )
-        except:
-            log.message("Unable to open file for writing %s", outfile)
-            fp = 0
-        if fp:
-            #cProfile.runctx( 'exportMhx_25(info.config, fp)', globals(), locals())
-            cfg.mhx25 = True
-            info = CInfo(name, human, cfg)
-            exportMhx_25(info, fp)
-            fp.close()
-            time2 = time.clock()
-            log.message("Wrote MHX 2.5x file in %g s: %s", time2-time1, outfile)
+    time1 = time.clock()
+    fname = os.path.basename(fpath)
+    name = fname.capitalize().replace(' ','_')
+    outfile = exportutils.config.getOutFileFolder(filename, config)        
+    try:
+        fp = open(outfile, 'w')
+        log.message("Writing MHX file %s", outfile )
+    except:
+        log.message("Unable to open file for writing %s", outfile)
+        fp = 0
+    if fp:
+        info = CInfo(name, human, config)
+        exportMhx_25(info, fp)
+        fp.close()
+        time2 = time.clock()
+        log.message("Wrote MHX file in %g s: %s", time2-time1, outfile)
 
     posemode.exitPoseMode()        
     return        
@@ -176,10 +170,9 @@ def exportMhx_25(info, fp):
         proxyCopy('Cage', 'T_Cage', info, fp, 0.2, 0.25)
     
     gui3d.app.progress(0.25, text="Exporting main mesh")    
-    if info.config.mainmesh:
-        fp.write("#if toggle&T_Mesh\n")
-        copyFile25("shared/mhx/templates/meshes25.mhx", fp, None, info)    
-        fp.write("#endif\n")
+    fp.write("#if toggle&T_Mesh\n")
+    copyFile25("shared/mhx/templates/meshes25.mhx", fp, None, info)    
+    fp.write("#endif\n")
 
     proxyCopy('Proxy', 'T_Proxy', info, fp, 0.35, 0.4)
     proxyCopy('Clothes', 'T_Clothes', info, fp, 0.4, 0.55)
@@ -446,7 +439,7 @@ def copyFile25(tmplName, fp, proxy, info):
                 writeHideProp(fp, info.name)
                 for proxy in info.proxies.values():
                     writeHideProp(fp, proxy.name)
-                if info.config.customshapes: 
+                if info.config.useCustomShapes: 
                     exportutils.custom.listCustomFiles(info.config)                            
                 for path,name in info.config.customShapeFiles:
                     fp.write("  DefProp Float %s 0 %s  min=-1.0,max=2.0 ;\n" % (name, name[3:]))
@@ -612,7 +605,7 @@ def addMaskMTex(fp, mask, proxy, blendtype, n):
 
 
 def writeSkinStart(fp, proxy, info):
-    if not info.config.usemasks:
+    if not info.config.useMasks:
         fp.write("Material %sSkin\n" % info.name)
         return 0
         
@@ -641,7 +634,7 @@ def writeSkinStart(fp, proxy, info):
                
 
 def writeMaskDrivers(fp, info):
-    if not info.config.usemasks:
+    if not info.config.useMasks:
         return
     fp.write("#if toggle&T_Clothes\n")
     n = 0
@@ -981,7 +974,7 @@ def addProxyMaskMTexs(fp, mat, proxy, prxList, tex):
     return   
     
 def sortedMasks(info):
-    if not info.config.usemasks:
+    if not info.config.useMasks:
         return []
     prxList = []
     for prx in info.proxies.values():
@@ -1118,7 +1111,7 @@ def writeShapeKeys(fp, info, name, proxy):
                 writeShape(fp, pose, lr, shape, min, max, proxy)
     """
     
-    if isHuman and info.config.expressionunits:
+    if isHuman and info.config.expressions:
         try:
             shapeList = info.loadedShapes["expressions"]
         except KeyError:
@@ -1129,7 +1122,7 @@ def writeShapeKeys(fp, info, name, proxy):
         for (pose, shape) in shapeList:
             writeShape(fp, pose, "Sym", shape, -1, 2, proxy)
         
-    if info.config.bodyshapes and info.config.rigtype == "mhx" and not isHair:
+    if info.config.bodyShapes and info.config.rigtype == "mhx" and not isHair:
         writeCorrectives(fp, info, rig_shoulder_25.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)                
         writeCorrectives(fp, info, rig_leg_25.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)                
         writeCorrectives(fp, info, rig_arm_25.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)                
@@ -1150,7 +1143,7 @@ def writeShapeKeys(fp, info, name, proxy):
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
         
     print("BSS", name, proxy, isHair)
-    if info.config.bodyshapes and info.config.rigtype == "mhx" and not isHair:
+    if info.config.bodyShapes and info.config.rigtype == "mhx" and not isHair:
         armature.drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, info.name)
         armature.drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, info.name)
         armature.drivers.writeTargetDrivers(fp, rig_arm_25.ElbowTargetDrivers, info.name)
@@ -1158,7 +1151,7 @@ def writeShapeKeys(fp, info, name, proxy):
 
         armature.drivers.writeRotDiffDrivers(fp, rig_arm_25.ArmShapeDrivers, proxy)
         armature.drivers.writeRotDiffDrivers(fp, rig_leg_25.LegShapeDrivers, proxy)
-        #armature.drivers.writeShapePropDrivers(fp, info, rig_body_25.BodyShapes, proxy, "Mha")
+        #armature.drivers.writeShapePropDrivers(fp, info, rig_body_25.bodyShapes, proxy, "Mha")
 
     fp.write("#if toggle&T_ShapeDrivers\n")
 
@@ -1166,7 +1159,7 @@ def writeShapeKeys(fp, info, name, proxy):
         for path,name in info.config.customShapeFiles:
             armature.drivers.writeShapePropDrivers(fp, info, [name], proxy, "")    
 
-        if info.config.expressionunits:
+        if info.config.expressions:
             armature.drivers.writeShapePropDrivers(fp, info, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
             
         skeys = []
@@ -1177,7 +1170,7 @@ def writeShapeKeys(fp, info, name, proxy):
         
     fp.write("  end AnimationData\n\n")
 
-    if info.config.expressionunits and not proxy:
+    if info.config.expressions and not proxy:
         exprList = exportutils.shapekeys.readExpressionMhm("data/expressions")
         writeExpressions(fp, exprList, "Expression")        
         visemeList = exportutils.shapekeys.readExpressionMhm("data/visemes")
