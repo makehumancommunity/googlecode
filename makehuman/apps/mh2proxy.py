@@ -92,6 +92,9 @@ class CProxy:
         self.textures = []
         return
         
+    def __repr__(self):
+        return ("<CProxy %s %s %s %s>" % (self.name, self.type, self.file, self.uuid))
+        
     def update(self, obj, parent):
         rlen = len(self.refVerts)
         mlen = len(obj.verts)
@@ -248,7 +251,7 @@ def readProxyFile(obj, file, evalOnLoad):
     if tmpl == None:
         log.error("*** Cannot open %s", pfile.file)
         return None
-        return CProxy(None, pfile.type, pfile.layer)
+        return CProxy(None, proxy.type, pfile.layer)
 
     verts = obj.verts
     locations = {}
@@ -875,19 +878,7 @@ def getProxyShapes(rawShapes, proxy):
                 vlist = []
             for (pv, w) in vlist:
                 shape.append((pv, w*dx, w*dy, w*dz))
-
-        if key == "mouth-open":
-            shape.sort()
-            for s in shape:
-                print s
-
         fixedShape = fixProxyShape(shape)
-
-        if key == "mouth-open":
-            print("FS")
-            for s in fixedShape.items():
-                print(s)
-
         shapes.append((key,fixedShape))
     return shapes
 

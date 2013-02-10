@@ -225,7 +225,7 @@ def exportConfig(human, useHair, options=None):
     if useHair and human.hairProxy:
         words = human.hairObj.mesh.name.split('.')
         pfile = CProxyFile()
-        pfile.set('Clothes', 2, useMhx, useObj, useDae)
+        pfile.set('Hair', 2, useMhx, useObj, useDae)
         name = goodName(words[0])
         #pfile.file = findExistingProxyFile("hairstyles", None, "%s.mhclo" % name)
         pfile.file = human.hairProxy.file

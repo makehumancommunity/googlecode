@@ -261,6 +261,8 @@ def setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden
     clothKeys = human.clothesObjs.keys()
 
     # Apply custom textures if applicable
+    # TL: Clothes and Hair are now different proxy types.
+    # Can probably simplify this code. Need uuid?
     for stuff in stuffs:
         proxy = stuff.proxy
         if proxy:
@@ -273,10 +275,12 @@ def setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden
                         if clothesObj:
                             texture = clothesObj.mesh.texture
                             stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
-                    elif uuid == human.hairProxy.getUuid():
-                        # Hair
-                        texture = human.hairObj.mesh.texture
-                        stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
+            elif proxy.type == 'Hair':
+                uuid = proxy.getUuid()
+                if uuid == human.hairProxy.getUuid():
+                    # Hair
+                    texture = human.hairObj.mesh.texture
+                    stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
             elif proxy.type == 'Proxy':
                 # Proxy
                 texture = human.mesh.texture
@@ -294,7 +298,9 @@ def setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden
                         clo = human.clothesObjs[uuid]
                         subMesh = getSubdivision(clo)
                         stuff.setObject3dMesh(subMesh, stuff.meshInfo.weights, rawTargets)
-                    elif uuid and uuid == human.hairProxy.getUuid():
+                if proxy.type == 'Hair':
+                    uuid = proxy.getUuid()
+                    if uuid == human.hairProxy.getUuid():
                         # Subdivide hair
                         hair = human.hairObj
                         subMesh = getSubdivision(hair)

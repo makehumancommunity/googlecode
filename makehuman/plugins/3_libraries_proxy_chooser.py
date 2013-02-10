@@ -127,6 +127,7 @@ class ProxyTaskView(gui3d.TaskView):
             return
 
         proxy = mh2proxy.readProxyFile(human.getSeedMesh(), filename, False)        
+        proxy.type = 'Proxy'
         human.setProxy(proxy)
         human.updateProxyMesh()
 

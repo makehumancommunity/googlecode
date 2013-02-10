@@ -65,12 +65,14 @@ class CInfo:
         self.rigHeads = {}
         self.rigTails = {}
         self.origin = [0,0,0]
+        self.loadedShapes = {}
         
         
     def scanProxies(self):
         self.proxies = {}
         for pfile in self.config.proxyList:
             if pfile.useMhx and pfile.file:
+                print("Scan", pfile, pfile.type)
                 proxy = mh2proxy.readProxyFile(self.mesh, pfile, True)
                 if proxy:
                     self.proxies[proxy.name] = proxy        
@@ -171,7 +173,7 @@ def exportMhx_25(info, fp):
         copyFile25("shared/mhx/templates/materials25.mhx", fp, None, info)    
 
     if info.config.cage:
-        proxyCopy('Cage', info, fp, 0.2, 0.25)
+        proxyCopy('Cage', 'T_Cage', info, fp, 0.2, 0.25)
     
     gui3d.app.progress(0.25, text="Exporting main mesh")    
     if info.config.mainmesh:
@@ -179,8 +181,9 @@ def exportMhx_25(info, fp):
         copyFile25("shared/mhx/templates/meshes25.mhx", fp, None, info)    
         fp.write("#endif\n")
 
-    proxyCopy('Proxy', info, fp, 0.35, 0.4)
-    proxyCopy('Clothes', info, fp, 0.4, 0.6)
+    proxyCopy('Proxy', 'T_Proxy', info, fp, 0.35, 0.4)
+    proxyCopy('Clothes', 'T_Clothes', info, fp, 0.4, 0.55)
+    proxyCopy('Hair', 'T_Clothes', info, fp, 0.55, 0.6)
 
     copyFile25("shared/mhx/templates/rig-poses25.mhx", fp, None, info) 
 
@@ -191,7 +194,7 @@ def exportMhx_25(info, fp):
     return
     
 
-def proxyCopy(type, info, fp, t0, t1):
+def proxyCopy(type, test, info, fp, t0, t1):
     n = 0
     for proxy in info.proxies.values():
         if proxy.type == type:
@@ -204,7 +207,7 @@ def proxyCopy(type, info, fp, t0, t1):
     for proxy in info.proxies.values():
         if proxy.type == type:
             gui3d.app.progress(t, text="Exporting %s" % proxy.name)
-            fp.write("#if toggle&T_%s\n" % proxy.type)
+            fp.write("#if toggle&%s\n" % test)
             copyFile25("shared/mhx/templates/proxy25.mhx", fp, proxy, info)    
             fp.write("#endif\n")
             t += dt
@@ -420,13 +423,10 @@ def copyFile25(tmplName, fp, proxy, info):
                 writeShapeKeys(fp, info, "%sMesh" % info.name, None)
 
             elif key == 'proxy-shapeKey':
-                fp.write("#if toggle&T_Cage\n")
-                proxyShapes('Cage', info, fp)
-                fp.write("#endif\n#if toggle&T_Proxy\n")
-                proxyShapes('Proxy', info, fp)
-                fp.write("#endif\n#if toggle&T_Clothes\n")
-                proxyShapes('Clothes', info, fp)
-                fp.write("#endif\n")
+                proxyShapes('Cage', 'T_Cage', info, fp)
+                proxyShapes('Proxy', 'T_Proxy', info, fp)
+                proxyShapes('Clothes', 'T_Clothes', info, fp)
+                proxyShapes('Hair', 'T_Clothes', info, fp)
 
             elif key == 'ProxyModifiers':
                 writeProxyModifiers(fp, info, proxy)
@@ -575,7 +575,7 @@ def writeBaseMaterials(fp, info):
     
 def addMaskImage(fp, info, mask):            
     (folder, file) = mask
-    path = exportutils.config.getOutFileName(file, folder, True, None, info.human, info.config)
+    path = exportutils.config.getOutFileName(file, folder, True, info.human, info.config)
     fp.write(
 "Image %s\n" % file +
 "  Filename %s ;\n" % path +
@@ -625,7 +625,7 @@ def writeSkinStart(fp, proxy, info):
     
     for prx in prxList:
         if prx.mask:
-            addMaskImage(fp, info.config, prx.mask)
+            addMaskImage(fp, info, prx.mask)
             nMasks += 1
     fp.write("Material %sSkin\n" % info.name)
              #"  MTex 0 diffuse UV COLOR\n" +
@@ -702,9 +702,10 @@ def writeGroups(fp, info):
         "#if toggle&T_Mesh\n" +
         "    ob %sMesh ;\n" % info.name +
         "#endif\n")
-    groupProxy('Cage', fp, info)
-    groupProxy('Proxy', fp, info)
-    groupProxy('Clothes', fp, info)
+    groupProxy('Cage', 'T_Cage', fp, info)
+    groupProxy('Proxy', 'T_Proxy', fp, info)
+    groupProxy('Clothes', 'T_Clothes', fp, info)
+    groupProxy('Hair', 'T_Clothes', fp, info)
     fp.write(
         "    ob CustomShapes ;\n" + 
         "  end Objects\n" +
@@ -712,8 +713,8 @@ def writeGroups(fp, info):
         "end Group\n")
     return
     
-def groupProxy(typ, fp, info):
-    fp.write("#if toggle&T_%s\n" % typ)
+def groupProxy(typ, test, fp, info):
+    fp.write("#if toggle&%s\n" % test)
     for proxy in info.proxies.values():
         if proxy.type == typ:
             name = info.name + proxy.name
@@ -816,7 +817,7 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, info):
                 fp.write("%s " % word)
             fp.write("\n")                
         elif words[0] == 'Filename':
-            file = exportutils.config.getOutFileName(words[1], folder, True, None, info.human, info.config)
+            file = exportutils.config.getOutFileName(words[1], folder, True, info.human, info.config)
             fp.write("  Filename %s ;\n" % file)
         else:
             fp.write(line)
@@ -1068,8 +1069,14 @@ def printProxyVGroup(fp, vgroups):
 
 
 
-def writeCorrectives(fp, info, drivers, folder, landmarks, proxy, t0, t1):    
-    shapeList = exportutils.shapekeys.readCorrectives(drivers, info.human, folder, landmarks, t0, t1)
+def writeCorrectives(fp, info, drivers, folder, landmarks, proxy, t0, t1):  
+    try:
+        shapeList = info.loadedShapes[folder]
+    except KeyError:
+        shapeList = None
+    if shapeList is None:
+        shapeList = exportutils.shapekeys.readCorrectives(drivers, info.human, folder, landmarks, t0, t1)
+        info.loadedShapes[folder] = shapeList
     for (shape, pose, lr) in shapeList:
         writeShape(fp, pose, lr, shape, 0, 1, proxy)
     
@@ -1080,8 +1087,10 @@ def writeShape(fp, pose, lr, shape, min, max, proxy):
         "  slider_min %.3g ;\n" % min +
         "  slider_max %.3g ;\n" % max)
     if proxy:
-        pshape = mh2proxy.getProxyShapes([("shape",shape)], proxy)
-        for (pv, dr) in pshape[0].items():
+        pshapes = mh2proxy.getProxyShapes([("shape",shape)], proxy)
+        name,pshape = pshapes[0]
+        print pshape
+        for (pv, dr) in pshape.items():
             (dx, dy, dz) = dr
             fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (pv, dx, -dz, dy))
     else:
@@ -1091,6 +1100,10 @@ def writeShape(fp, pose, lr, shape, min, max, proxy):
 
 
 def writeShapeKeys(fp, info, name, proxy):
+
+    isHuman = ((not proxy) or proxy.type == 'Proxy')
+    isHair = (proxy and proxy.type == 'Hair')
+    
     fp.write(
 "#if toggle&T_Shapekeys\n" +
 "ShapeKeys %s\n" % name +
@@ -1098,34 +1111,46 @@ def writeShapeKeys(fp, info, name, proxy):
 "  end ShapeKey\n")
 
     """
-    if (not proxy or proxy.type == 'Proxy'):        
+    if isHuman:        
         if info.config.faceshapes:
             shapeList = exportutils.shapekeys.readFaceShapes(human, rig_panel_25.BodyLanguageShapeDrivers, 0.6, 0.7)
             for (pose, shape, lr, min, max) in shapeList:
                 writeShape(fp, pose, lr, shape, min, max, proxy)
     """
     
-    if not proxy:
-        if info.config.expressionunits:
+    if isHuman and info.config.expressionunits:
+        try:
+            shapeList = info.loadedShapes["expressions"]
+        except KeyError:
+            shapeList = None
+        if shapeList is None:
             shapeList = exportutils.shapekeys.readExpressionUnits(info.human, 0.7, 0.9)
-            for (pose, shape) in shapeList:
-                writeShape(fp, pose, "Sym", shape, -1, 2, proxy)
+            info.loadedShapes["expressions"] = shapeList
+        for (pose, shape) in shapeList:
+            writeShape(fp, pose, "Sym", shape, -1, 2, proxy)
         
-    if info.config.bodyshapes and info.config.rigtype == "mhx":
+    if info.config.bodyshapes and info.config.rigtype == "mhx" and not isHair:
         writeCorrectives(fp, info, rig_shoulder_25.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)                
         writeCorrectives(fp, info, rig_leg_25.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)                
         writeCorrectives(fp, info, rig_arm_25.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)                
         writeCorrectives(fp, info, rig_leg_25.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)                
 
-    if not proxy:
+    if isHuman:
         for path,name in info.config.customShapeFiles:
-            log.message("    %s", path)
-            shape = exportutils.custom.readCustomTarget(path)
+            try:
+                shape = info.loadedShapes[path]
+            except KeyError:
+                shape = None
+            if shape is None:
+                log.message("    %s", path)
+                shape = exportutils.custom.readCustomTarget(path)
+                info.loadedShapes[path] = shapeList
             writeShape(fp, name, "Sym", shape, -1, 2, proxy)                        
 
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
         
-    if info.config.bodyshapes and info.config.rigtype == "mhx":
+    print("BSS", name, proxy, isHair)
+    if info.config.bodyshapes and info.config.rigtype == "mhx" and not isHair:
         armature.drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, info.name)
         armature.drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, info.name)
         armature.drivers.writeTargetDrivers(fp, rig_arm_25.ElbowTargetDrivers, info.name)
@@ -1137,11 +1162,10 @@ def writeShapeKeys(fp, info, name, proxy):
 
     fp.write("#if toggle&T_ShapeDrivers\n")
 
-    if not proxy:
+    if isHuman:
         for path,name in info.config.customShapeFiles:
             armature.drivers.writeShapePropDrivers(fp, info, [name], proxy, "")    
 
-    if not proxy:
         if info.config.expressionunits:
             armature.drivers.writeShapePropDrivers(fp, info, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
             
@@ -1173,8 +1197,8 @@ def writeExpressions(fp, exprList, label):
         fp.write("  end\n")
             
 
-def proxyShapes(typ, info, fp):
-    fp.write("#if toggle&T_%s\n" % typ)
+def proxyShapes(typ, test, info, fp):
+    fp.write("#if toggle&%s\n" % test)
     for proxy in info.proxies.values():
         if proxy.name and proxy.type == typ:
             writeShapeKeys(fp, info, info.name+proxy.name+"Mesh", proxy)

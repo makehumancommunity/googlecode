@@ -103,6 +103,7 @@ class ClothesTaskView(gui3d.TaskView):
             return
 
         proxy = mh2proxy.readProxyFile(human.meshData, filepath, False)
+        proxy.type = 'Clothes'
         
         if not proxy:
             return
