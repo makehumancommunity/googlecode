@@ -268,7 +268,7 @@ class VisemeLoadTaskView(MhmLoadTaskView):
 
 
 def load(app):
-    category = app.getCategory('Posing')
+    category = app.getCategory('Gestures')
     taskview = category.addTask(ExpressionTaskView(category))
     
     app.addLoadHandler('expression', taskview.loadHandler)

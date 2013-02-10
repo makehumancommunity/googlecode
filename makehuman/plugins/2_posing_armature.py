@@ -88,7 +88,7 @@ class LayerCheckBox(gui.CheckBox):
 class PoseArmatureTaskView(gui3d.TaskView):
 
     def __init__(self, category):
-        gui3d.TaskView.__init__(self, category, 'Posing')            
+        gui3d.TaskView.__init__(self, category, 'Pose tuning')            
 
         self.zone = ""
         self.rigtype = None
@@ -809,7 +809,7 @@ taskview = None
 def load(app):
     return
     
-    category = app.getCategory('Posing')
+    category = app.getCategory('Gestures')
     taskview = category.addTask(PoseArmatureTaskView(category))
 
     app.addLoadHandler('poses', taskview.loadHandler)
