@@ -212,7 +212,9 @@ class SamplerUniform(Uniform):
     def set(self, data):
         cls = type(self)
         glActiveTexture(GL_TEXTURE0 + cls.currentSampler)
-        glBindTexture(self.target, texture.getTexture(data).textureId)
+        tex = texture.getTexture(data)
+        if tex not in (False, None):
+            glBindTexture(self.target, tex.textureId)
         glUniform1i(self.index, cls.currentSampler)
         cls.currentSampler += 1
 

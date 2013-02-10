@@ -33,10 +33,13 @@ class ShaderTaskView(gui3d.TaskView):
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Shaders')
 
-        self.shaderList = []
         shaderBox = self.addLeftWidget(gui.GroupBox('Shader'))
         self.shaderList = shaderBox.addWidget(gui.ListView())
         self.shaderList.setSizePolicy(gui.SizePolicy.Ignored, gui.SizePolicy.Preferred)
+
+        if not shader.Shader.supported():
+            log.notice('Shaders not supported')
+            self.shaderList.setEnabled(False)
 
         self.paramBox = self.addRightWidget(gui.GroupBox('Parameters'))
 
@@ -78,8 +81,15 @@ class ShaderTaskView(gui3d.TaskView):
                 continue
             self.paramBox.addWidget(UniformValue(uniform), index)
 
-    def onShow(self, path):
+    def onShow(self, arg):
+        super(ShaderTaskView, self).onShow(arg)
         self.listShaders()
+        if not shader.Shader.supported():
+            gui3d.app.statusPersist('Shaders not supported by OpenGL')
+
+    def onHide(self, arg):
+        gui3d.app.statusPersist('')
+        super(ShaderTaskView, self).onHide(arg)
 
 class UniformValue(gui.GroupBox):
     def __init__(self, uniform):
@@ -120,6 +130,8 @@ class UniformValue(gui.GroupBox):
             values = values[0]
             if self.uniform.dims == (1,) and self.uniform.pytype == str:
                 values = values[0]
+                if not os.path.isfile(values):
+                    return
         gui3d.app.selectedHuman.mesh.setShaderParameter(self.uniform.name, values)
 
 class NumberValue(gui.TextEdit):

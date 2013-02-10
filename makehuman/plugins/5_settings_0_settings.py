@@ -85,7 +85,12 @@ class SettingsTaskView(gui3d.TaskView):
         self.shaderPhong = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Phong shader"))
         self.shaderToon = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Toon shader"))
         #self.shaderSkin = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Skin shader"))
-        
+
+        from shader import Shader
+        if not Shader.supported():
+            for radio in shaderBox.children:
+                radio.setEnabled(False)
+
         sliderBox = self.addLeftWidget(gui.GroupBox('Slider behavior'))
         self.realtimeUpdates = sliderBox.addWidget(gui.CheckBox("Update real-time",
             gui3d.app.settings.get('realtimeUpdates', True)))
