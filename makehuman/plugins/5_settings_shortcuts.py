@@ -89,9 +89,11 @@ class ShortcutsTaskView(gui3d.TaskView):
         self.cameraBox.children[1].setFocus()
         gui3d.app.prompt('Info', 'Click on a shortcut box and press the keys of the shortcut which you would like to assign to the given action.',
             'OK', helpId='shortcutHelp')
+        gui3d.app.statusPersist('Click on a shortcut box and press the keys of the shortcut which you would like to assign to the given action.')
     
     def onHide(self, event):
 
+        gui3d.app.statusPersist('')
         gui3d.TaskView.onHide(self, event)
         gui3d.app.saveSettings()
 

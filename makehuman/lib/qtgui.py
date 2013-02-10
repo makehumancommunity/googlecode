@@ -689,7 +689,17 @@ class ShortcutEdit(QtGui.QLabel, Widget):
         else:
             text = ''
         super(ShortcutEdit, self).__init__(text)
+        self.setAutoFillBackground(True)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.setFrameStyle(QtGui.QFrame.Panel | QtGui.QFrame.Raised)
+
+    def onFocus(self, arg):
+        self.setBackgroundRole(QtGui.QPalette.Highlight)
+        self.setForegroundRole(QtGui.QPalette.HighlightedText)
+
+    def onBlur(self, arg):
+        self.setBackgroundRole(QtGui.QPalette.Window)
+        self.setForegroundRole(QtGui.QPalette.WindowText)
 
     def setShortcut(self, shortcut):
         modifiers, key = shortcut
@@ -705,8 +715,10 @@ class ShortcutEdit(QtGui.QLabel, Widget):
         event.accept()
 
     def shortcutToLabel(self, mod, key):
+        mod &= ~0x20000000 # Qt Bug #4022
         seq = QtGui.QKeySequence(key + mod)
-        return seq.toString()
+        s = unicode(seq.toString(QtGui.QKeySequence.NativeText))
+        return s
 
     def onChanged(self, shortcut):
         pass
