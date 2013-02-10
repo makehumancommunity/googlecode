@@ -31,10 +31,13 @@ class AppShortcutEdit(gui.ShortcutEdit):
         super(AppShortcutEdit, self).__init__(gui3d.app.getShortcut(action))
         self.action = action
 
+    def updateShortcut(self):
+        self.setShortcut(gui3d.app.getShortcut(self.action))
+
     def onChanged(self, shortcut):
         modifiers, key = shortcut
         if not gui3d.app.setShortcut(modifiers, key, self.action):
-            self.setShortcut(gui3d.app.getShortcut(self.action))
+            self.updateShortcut()
 
 class ShortcutsTaskView(gui3d.TaskView):
 
@@ -42,11 +45,13 @@ class ShortcutsTaskView(gui3d.TaskView):
         gui3d.TaskView.__init__(self, category, 'Shortcuts')
 
         box = None
+        self.widgets = []
 
         row = [0]
         def add(action):
             box.addWidget(gui.TextView(action.text), row[0], 0)
-            box.addWidget(AppShortcutEdit(action), row[0], 1)
+            w = box.addWidget(AppShortcutEdit(action), row[0], 1)
+            self.widgets.append(w)
             row[0] += 1
 
         actions = gui3d.app.actions
@@ -83,6 +88,10 @@ class ShortcutsTaskView(gui3d.TaskView):
         add(actions.help)
         add(actions.exit)
 
+    def updateShortcuts(self):
+        for w in self.widgets:
+            w.updateShortcut()
+
     def onShow(self, event):
         
         gui3d.TaskView.onShow(self, event)
@@ -90,6 +99,7 @@ class ShortcutsTaskView(gui3d.TaskView):
         gui3d.app.prompt('Info', 'Click on a shortcut box and press the keys of the shortcut which you would like to assign to the given action.',
             'OK', helpId='shortcutHelp')
         gui3d.app.statusPersist('Click on a shortcut box and press the keys of the shortcut which you would like to assign to the given action.')
+        self.updateShortcuts()
     
     def onHide(self, event):
 

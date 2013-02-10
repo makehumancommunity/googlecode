@@ -509,6 +509,8 @@ class Application(QtGui.QApplication, events3d.EventHandler):
         self.g_timers = {}
         self.logger_async = log.getLogger('mh.callAsync')
         self.logger_redraw = log.getLogger('mh.redraw')
+        self.logger_event = log.getLogger('mh.event')
+        # self.installEventFilter(self)
 
     def OnInit(self):
         self.messages = queue.Manager(self._postAsync)
@@ -545,10 +547,19 @@ class Application(QtGui.QApplication, events3d.EventHandler):
         super(Application, self).processEvents(flags)
 
     def event(self, event):
+        self.logger_event.debug('event(%s)', event)
         if event.type() == QtCore.QEvent.User:
             event.callback(*event.args, **event.kwargs)
             return True
         return super(Application, self).event(event)
+
+    def notify(self, object, event):
+        self.logger_event.debug('notify(%s, %s(%s))', object, event, event.type())
+        return super(Application, self).notify(object, event)
+
+    def eventFilter(self, object, event):
+        self.logger_event.debug('eventFilter(%s, %s(%s))', object, event, event.type())
+        return False
 
     def addTimer(self, milliseconds, callback):
         timer_id = self.startTimer(milliseconds)

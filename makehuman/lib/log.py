@@ -146,10 +146,6 @@ def init():
 
     logging.setLoggerClass(Logger)
 
-    logging.getLogger('mh.callAsync').setLevel(logging.WARNING)
-    logging.getLogger('mh.callEvent').setLevel(logging.WARNING)
-    logging.getLogger('mh.redraw').setLevel(logging.WARNING)
-
     config()
 
     # Compatibility test for Python 2.6 logging module

@@ -592,14 +592,7 @@ class TextEdit(QtGui.QLineEdit, Widget):
         self.setValidator(validator)
         self.connect(self, QtCore.SIGNAL('textEdited(QString)'), self._textChanged)
         self.connect(self, QtCore.SIGNAL('returnPressed()'), self._enter)
-        key_up = QtGui.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.Key_Up), self,
-            context = QtCore.Qt.WidgetShortcut)
-        key_down = QtGui.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.Key_Down), self,
-            context = QtCore.Qt.WidgetShortcut)
-        self.connect(key_up, QtCore.SIGNAL("activated()"), self._key_up)
-        self.connect(key_down, QtCore.SIGNAL("activated()"), self._key_down)
+        self.installEventFilter(self)
 
     @property
     def text(self):
@@ -638,6 +631,28 @@ class TextEdit(QtGui.QLineEdit, Widget):
 
     def onChange(self, event):
         pass
+
+    def eventFilter(self, object, event):
+        if (object is self
+            and event.type() == QtCore.QEvent.ShortcutOverride
+            and event.key() in (QtCore.Qt.Key_Up, QtCore.Qt.Key_Down)):
+            event.accept()
+            return True
+        return False
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        mod = int(event.modifiers()) & ~QtCore.Qt.ShiftModifier
+        if mod:
+            return
+        if key == QtCore.Qt.Key_Up:
+            self._key_up()
+            event.accept()
+        elif key == QtCore.Qt.Key_Down:
+            self._key_down()
+            event.accept()
+        else:
+            super(TextEdit, self).keyPressEvent(event)
 
     def _key_up(self):
         self.callEvent('onUpArrow', None)
@@ -692,6 +707,7 @@ class ShortcutEdit(QtGui.QLabel, Widget):
         self.setAutoFillBackground(True)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setFrameStyle(QtGui.QFrame.Panel | QtGui.QFrame.Raised)
+        self.installEventFilter(self)
 
     def onFocus(self, arg):
         self.setBackgroundRole(QtGui.QPalette.Highlight)
@@ -704,6 +720,12 @@ class ShortcutEdit(QtGui.QLabel, Widget):
     def setShortcut(self, shortcut):
         modifiers, key = shortcut
         self.setText(self.shortcutToLabel(modifiers, key))
+
+    def eventFilter(self, object, event):
+        if object is self and event.type() == QtCore.QEvent.ShortcutOverride:
+            event.accept()
+            return True
+        return False
 
     def keyPressEvent(self, event):
         key = event.key()
