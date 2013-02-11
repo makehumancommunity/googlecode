@@ -392,7 +392,7 @@ class TextureProjectionView(gui3d.TaskView) :
 
     def projectBackground(self):
         if not self.backgroundChooserView.isBackgroundShowing():
-            gui3d.app.prompt("Warning", "You need to load a background before you can project it.", "OK")
+            gui3d.app.prompt("Warning", "You need to load a background for the current view before you can project it.", "OK")
             return
 
         mesh = gui3d.app.selectedHuman.getSeedMesh()
