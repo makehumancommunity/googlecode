@@ -403,7 +403,7 @@ class TextureProjectionView(gui3d.TaskView) :
         
         human = event.human
         if event.change == 'reset':
-            pass
+            texture.reloadTexture(os.path.join('data/textures/texture.png'))
 
     def projectBackground(self):
         if not self.backgroundChooserView.isBackgroundShowing():
