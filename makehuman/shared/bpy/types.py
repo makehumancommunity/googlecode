@@ -467,6 +467,8 @@ class Image(Rna):
         global theHuman, theConfig
         Rna.__init__(self, filename, 'IMAGE')
         self.filepath = theConfig.getTexturePath(filename, folder, True, theHuman)        
+        if theConfig.useTexFolder:
+            self.filepath = os.path.join(theConfig.outFolder, "textures", filename)
 
         
 #------------------------------------------------------------------

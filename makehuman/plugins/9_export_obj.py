@@ -31,6 +31,7 @@ class ObjConfig(Config):
     def __init__(self, exporter):
         Config.__init__(self)
         self.selectedOptions(exporter)
+        self.useRelPath =  True
     
     
 class ExporterOBJ(Exporter):

@@ -133,13 +133,10 @@ def writeTexture(fp, key, texture, human, config):
     if not texture:
         return
     (folder, texfile) = texture
-    path = config.getTexturePath(texfile, folder, True, human)        
+    texpath = config.getTexturePath(texfile, folder, True, human)        
     (fname, ext) = os.path.splitext(texfile)  
     name = "%s_%s" % (fname, ext[1:])
-    if config.useTexFolder:
-        texpath = "textures/"+texfile
-    else:
-        texpath = texfile
+    print(texpath)
     fp.write("%s %s\n" % (key, texpath))
     
 

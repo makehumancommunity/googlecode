@@ -35,7 +35,6 @@ class Config:
 
     def __init__(self):
         self.useTexFolder       = False
-        self.useRelPaths           = True
         self.eyebrows           = True
         self.lashes             = True
         self.helpers            = False
@@ -44,6 +43,7 @@ class Config:
         self.subdivide          = False
 
         self.exporting          = True
+        self.useRelPaths        = True
         self.feetOnGround       = False
         self.skirtRig           = None
         self.rigtype            = None

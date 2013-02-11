@@ -33,7 +33,8 @@ class FbxConfig(Config):
         Config.__init__(self)
         self.selectedOptions(exporter)
         
-        self.rigtype         = rigtype,
+        self.useRelPath      = False
+        self.rigtype         = rigtype
         self.expressions     = exporter.expressions.selected
         self.useCustomShapes = exporter.useCustomShapes.selected
         
