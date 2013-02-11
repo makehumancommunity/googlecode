@@ -31,7 +31,8 @@ class MhxConfig(Config):
 
     def __init__(self, rigtype, exporter):
         Config.__init__(self)
-        self.useTexFolder =   exporter.useTexFolder.selected
+        self.useTexFolder =     exporter.useTexFolder.selected
+        self.useRelPath =       False
         self.helpers =          True
         self.hidden =           exporter.hidden.selected
         
@@ -72,7 +73,6 @@ class ExporterMHX(Exporter):
         #Exporter.build(self, options)
         
         self.useTexFolder   = options.addWidget(gui.CheckBox("Separate folder", False))
-        self.useRelPaths    = options.addWidget(gui.CheckBox("Relative texture paths", True))
         self.hidden         = options.addWidget(gui.CheckBox("Keep hidden faces", True))
         
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))

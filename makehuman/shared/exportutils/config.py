@@ -35,7 +35,7 @@ class Config:
 
     def __init__(self):
         self.useTexFolder       = False
-        self.relPaths           = True
+        self.useRelPaths           = True
         self.eyebrows           = True
         self.lashes             = True
         self.helpers            = False
@@ -54,7 +54,6 @@ class Config:
 
     def selectedOptions(self, exporter):
         self.useTexFolder       = exporter.useTexFolder.selected
-        self.relPaths           = exporter.useRelPaths.selected
         self.eyebrows           = exporter.eyebrows.selected
         self.lashes             = exporter.lashes.selected
         self.helpers            = exporter.helpers.selected
@@ -163,7 +162,7 @@ class Config:
         else:
             texPath = os.path.abspath(fromPath)
             
-        if not self.relPaths:
+        if not self.useRelPaths:
             return texPath
         else:
             return str(os.path.normpath(os.path.relpath(texPath, self.outFolder)))
