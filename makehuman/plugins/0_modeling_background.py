@@ -87,7 +87,7 @@ class BackgroundChooser(gui3d.TaskView):
             self.filenames[side] = None
 
         mesh = geometry3d.RectangleMesh(1, 1)
-        self.backgroundImage = gui3d.app.categories['Modelling'].addObject(gui3d.Object([0, 0, 1], mesh, visible=False))
+        self.backgroundImage = gui3d.app.addObject(gui3d.Object([0, 0, 1], mesh, visible=False))
         self.opacity = 100
         mesh.setColor([255, 255, 255, self.opacity])
         mesh.setPickable(False)
