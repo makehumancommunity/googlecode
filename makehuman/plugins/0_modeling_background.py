@@ -101,7 +101,7 @@ class BackgroundChooser(gui3d.TaskView):
         self.filechooser = self.addTopWidget(fc.FileChooser(self.backgroundsFolders, ['bmp', 'png', 'tif', 'tiff', 'jpg', 'jpeg', 'clear'], None))
         self.addLeftWidget(self.filechooser.sortBox)
 
-        self.backgroundBox = self.addLeftWidget(gui.GroupBox('Background 2 settings'))
+        self.backgroundBox = self.addRightWidget(gui.GroupBox('Side'))
 
         self.radioButtonGroup = []
         for side in ['front', 'back', 'left', 'right', 'top', 'bottom', 'other']: 
@@ -115,6 +115,7 @@ class BackgroundChooser(gui3d.TaskView):
             if os.path.splitext(filename)[1] == ".clear":
                 filename = None
 
+            print filename
             if self.filenames[side]:
                 oldBg = self.filenames[side][0]
             else:
@@ -127,7 +128,7 @@ class BackgroundChooser(gui3d.TaskView):
 
             if self.sides[side]:
                 gui3d.app.selectedHuman.setRotation(self.sides[side])
-            mh.changeTask('Modelling', 'Background')
+            mh.changeTask('Texturing', 'Projection')
             mh.redraw()
 
     def getSelectedSideCheckbox(self):
@@ -249,7 +250,7 @@ class BackgroundChooser(gui3d.TaskView):
         return self.filenames[self.getCurrentSide()]
 
 
-class BackgroundSettingsView(gui3d.TaskView) :
+class TextureProjectionView(gui3d.TaskView) :
 
     def __init__(self, category, backgroundChooserView):
 
@@ -258,11 +259,13 @@ class BackgroundSettingsView(gui3d.TaskView) :
 
         self.backgroundChooserView = backgroundChooserView
 
-        gui3d.TaskView.__init__(self, category, 'Background')
+        gui3d.TaskView.__init__(self, category, 'Projection')
 
         y = 80
 
         self.lastPos = [0, 0]
+
+        self.projectionBox = self.addLeftWidget(gui.GroupBox('Projection'))
 
         self.backgroundBox = self.addLeftWidget(gui.GroupBox('Background settings'))
 
@@ -314,19 +317,25 @@ class BackgroundSettingsView(gui3d.TaskView) :
             self.backgroundImage.mesh.setPickable(self.dragButton.selected)
             mh.updatePickingBuffer()
 
-        self.projectBackgroundButton = self.backgroundBox.addWidget(gui.Button('Project background'))
+        self.chooseBGButton = self.backgroundBox.addWidget(gui.Button('Choose background'))
+
+        @self.chooseBGButton.mhEvent
+        def onClicked(event):
+            mh.changeTask('Library', 'Background')
+
+        self.projectBackgroundButton = self.projectionBox.addWidget(gui.Button('Project background'))
 
         @self.projectBackgroundButton.mhEvent
         def onClicked(event):
             self.projectBackground()
 
-        self.projectLightingButton = self.backgroundBox.addWidget(gui.Button('Project lighting'))
+        self.projectLightingButton = self.projectionBox.addWidget(gui.Button('Project lighting'))
 
         @self.projectLightingButton.mhEvent
         def onClicked(event):
             self.projectLighting()
 
-        self.projectUVButton = self.backgroundBox.addWidget(gui.Button('Project UV topology'))
+        self.projectUVButton = self.projectionBox.addWidget(gui.Button('Project UV topology'))
 
         @self.projectUVButton.mhEvent
         def onClicked(event):
@@ -410,8 +419,8 @@ class BackgroundSettingsView(gui3d.TaskView) :
 def load(app):
     category = app.getCategory('Library')
     bgChooser = category.addTask(BackgroundChooser(category))
-    category = app.getCategory('Modelling')
-    bgSettings = category.addTask(BackgroundSettingsView(category, bgChooser))
+    category = app.getCategory('Texturing')
+    bgSettings = category.addTask(TextureProjectionView(category, bgChooser))
 
 # This method is called when the plugin is unloaded from makehuman
 # At the moment this is not used, but in the future it will remove the added GUI elements
