@@ -37,7 +37,10 @@ def exportProxyObj(human, filepath, config):
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
 
-    stuffs = exportutils.collect.setupObjects(name, human,
+    stuffs = exportutils.collect.setupObjects(
+        name, 
+        human,
+        config=config,
         helpers=config.helpers, 
         hidden=config.hidden, 
         eyebrows=config.eyebrows, 

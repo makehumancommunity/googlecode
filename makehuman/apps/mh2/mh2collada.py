@@ -199,6 +199,7 @@ def exportDae(human, name, fp, config):
     stuffs = exportutils.collect.setupObjects(
         name, 
         human, 
+        config=config,
         rigfile=rigfile, 
         helpers=config.helpers, 
         hidden=config.hidden, 

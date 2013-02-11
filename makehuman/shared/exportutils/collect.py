@@ -204,10 +204,10 @@ def filterMesh(meshInfo, obj, deleteGroups, deleteVerts, eyebrows, lashes):
     return meshInfo
 
 #
-#   setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden=True, eyebrows=True, lashes=True, subdivide = False, progressCallback=None):
+#   setupObjects
 #
 
-def setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden=True, eyebrows=True, lashes=True, subdivide = False, progressCallback=None):
+def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=False, hidden=True, eyebrows=True, lashes=True, subdivide = False, progressCallback=None):
     global theStuff, theTextures, theTexFiles, theMaterials
 
     def progress(base,prog):
@@ -222,8 +222,10 @@ def setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden
         else:
             return cks.createSubdivisionObject(obj.getSeedMesh(), progressCallback)
     
-    cfg = Config()
-    cfg.addObjects(human)
+    if not config:
+        config = Config()
+        config.addObjects(human)
+        
     obj = human.meshData
     theTextures = {}
     theTexFiles = {}
@@ -246,8 +248,9 @@ def setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden
         deleteVerts = None
     else:
         deleteVerts = numpy.zeros(len(obj.verts), bool)
-    _,deleteVerts = setupProxies('Clothes', None, obj, stuffs, meshInfo, cfg.proxyList, deleteGroups, deleteVerts)
-    foundProxy,deleteVerts = setupProxies('Proxy', name, obj, stuffs, meshInfo, cfg.proxyList, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Clothes', None, obj, stuffs, meshInfo, config.proxyList, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Hair', None, obj, stuffs, meshInfo, config.proxyList, deleteGroups, deleteVerts)
+    foundProxy,deleteVerts = setupProxies('Proxy', name, obj, stuffs, meshInfo, config.proxyList, deleteGroups, deleteVerts)
     if not foundProxy:
         # If we subdivide here, helpers will not be removed.
         if subdivide:

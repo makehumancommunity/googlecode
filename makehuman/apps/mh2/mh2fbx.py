@@ -64,7 +64,8 @@ def exportFbx(human, filepath, config):
     stuffs = exportutils.collect.setupObjects(
         os.path.splitext(filepath)[0], 
         human, 
-        rigfile, 
+        config=config,
+        rigfile=rigfile, 
         rawTargets=rawTargets,
         helpers=config.helpers, 
         hidden=config.hidden, 

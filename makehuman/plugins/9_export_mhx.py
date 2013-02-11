@@ -77,10 +77,10 @@ class ExporterMHX(Exporter):
         
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
         self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))
-        self.bodyShapes     = options.addWidget(gui.CheckBox("Body shapes", True))
+        self.bodyShapes     = options.addWidget(gui.CheckBox("Body shapes", False))
         self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
         self.masks          = options.addWidget(gui.CheckBox("Clothes masks", False))
-        self.clothesRig     = options.addWidget(gui.CheckBox("Clothes rig", True))
+        self.clothesRig     = options.addWidget(gui.CheckBox("Clothes rig", False))
         self.cage           = options.addWidget(gui.CheckBox("Cage", False))
         self.advancedSpine  = options.addWidget(gui.CheckBox("Advanced spine", False))
         self.maleRig        = options.addWidget(gui.CheckBox("Male rig", False))
