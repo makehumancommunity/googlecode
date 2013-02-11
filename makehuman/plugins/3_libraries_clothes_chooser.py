@@ -251,9 +251,8 @@ class ClothesTaskView(gui3d.TaskView):
         vertsToHide.resize(len(human.meshData.getFaceMask()))
 
         # Convert list of booleans to list of vertex indexes to hide
-        vertsToShow = np.logical_and(np.array(~vertsToHide, dtype=bool), np.array(human.meshData.getFaceMask(), dtype=bool))
+        vertsToShow = np.logical_and(~vertsToHide, human.meshData.getFaceMask())
         verts = np.argwhere(vertsToShow)[...,0]
-
 
         ## Debug ##
         faces = human.meshData.getFacesForVertices(verts)
@@ -263,26 +262,6 @@ class ClothesTaskView(gui3d.TaskView):
         faceMask = human.meshData.getFaceMaskForVertices(verts)
         human.meshData.setFaceMask(faceMask)
         human.meshData.updateIndexBuffer()
-
-        '''
-        coords = human.meshData.coord
-        uvs = human.meshData.texco
-        fGroups = [fg for fg in human.meshData.faceGroups]
-        fverts = np.array(human.meshData.fvert)[np.array(faces)]
-        fuvs   = np.array(human.meshData.fuvs)[np.array(faces)]
-        groups = np.array(human.meshData.group)[np.array(faces)]
-        mats   = np.array(human.meshData.fmtls)[np.array(faces)]
-
-        human.meshData.clear()
-        human.meshData.setCoords(coords)
-        human.meshData.setUVs(uvs)
-        for fg in fGroups:
-            human.meshData.createFaceGroup(fg.name)
-        human.meshData.setFaces(fverts, fuvs, groups, mats)
-        human.meshData.update()
-        human.meshData.updateIndexBuffer()
-        human.meshData.calcNormals()
-        '''
 
     def unhideVerts(self, vertsToUnhide):
         human = gui3d.app.selectedHuman
