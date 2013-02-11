@@ -263,6 +263,7 @@ class Object3D(object):
         del self.fnorm
         del self.fuvs
         del self.group
+        del self.face_mask
 
         del self.coord
         del self.vnorm
@@ -388,6 +389,7 @@ class Object3D(object):
         self.fuvs = np.zeros(self.fvert.shape, dtype=np.uint32)
         self.group = np.zeros(nfaces, dtype=np.uint16)
         self.fmtls = np.zeros(nfaces, dtype=np.uint16)
+        self.face_mask = np.ones(nfaces, dtype=bool)
 
         if nfaces != 0:
             self.fvert[...] = verts
@@ -402,6 +404,12 @@ class Object3D(object):
 
         if not skipUpdate:
             self._update_faces()
+
+    def setFaceMask(self, mask):
+        self.face_mask = mask
+
+    def getFaceMask(self):
+        return self.face_mask
 
     def hasUVs(self):
         return self.has_uv
@@ -443,6 +451,8 @@ class Object3D(object):
         index = [[] for g in self._faceGroups]
 
         for i in xrange(len(self.fvert)):
+            if not self.face_mask[i]:
+                continue
             g = self.group[i]
             if not group_mask[g]:
                 continue

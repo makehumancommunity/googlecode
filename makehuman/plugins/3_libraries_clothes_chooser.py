@@ -32,6 +32,7 @@ import exportutils
 import gui
 import filechooser as fc
 import log
+import numpy as np
 
 KnownTags = [
     "shoes",
@@ -99,6 +100,10 @@ class ClothesTaskView(gui3d.TaskView):
             for name,clo in human.clothesObjs.items():
                 gui3d.app.removeObject(clo)
                 del human.clothesObjs[name]
+            for proxy in human.clothesProxies:
+                if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
+                    self.unhideVerts(proxy.deleteVerts)
+            human.clothesProxies = []
             self.clothesList = []
             human.activeClothing = None
             return
@@ -164,6 +169,10 @@ class ClothesTaskView(gui3d.TaskView):
             self.clothesList.remove(uuid)
             if human.activeClothing == uuid:
                 human.activeClothing = None
+            proxy = human.clothesProxies[uuid]
+            if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
+                self.unhideVerts(proxy.deleteVerts)
+            del human.clothesProxies[uuid]
             log.message("Removed clothing %s %s", proxy.name, uuid)
             return
 
@@ -197,7 +206,9 @@ class ClothesTaskView(gui3d.TaskView):
         human.clothesProxies[uuid] = proxy
         human.activeClothing = uuid
         self.clothesList.append(uuid)
-
+        if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
+            self.hideVerts(proxy.deleteVerts)
+        
         for tag in proxy.tags:
             tag = tag.lower()
             # Allow only one piece of clothing per known tag
@@ -232,6 +243,61 @@ class ClothesTaskView(gui3d.TaskView):
         
         #self.clothesButton.setTexture(obj.replace('.obj', '.png'))
 
+    def hideVerts(self, vertsToHide):
+        # TODO also propagate to other clothes
+        human = gui3d.app.selectedHuman
+
+        vertsToHide = np.copy(vertsToHide)
+        vertsToHide.resize(len(human.meshData.getFaceMask()))
+
+        # Convert list of booleans to list of vertex indexes to hide
+        vertsToShow = np.logical_and(np.array(~vertsToHide, dtype=bool), np.array(human.meshData.getFaceMask(), dtype=bool))
+        verts = np.argwhere(vertsToShow)[...,0]
+
+
+        ## Debug ##
+        faces = human.meshData.getFacesForVertices(verts)
+        log.debug("Hiding %s faces", (len(gui3d.app.selectedHuman.meshData.fuvs) - len(faces)))
+        ###########
+
+        faceMask = human.meshData.getFaceMaskForVertices(verts)
+        human.meshData.setFaceMask(faceMask)
+        human.meshData.updateIndexBuffer()
+
+        '''
+        coords = human.meshData.coord
+        uvs = human.meshData.texco
+        fGroups = [fg for fg in human.meshData.faceGroups]
+        fverts = np.array(human.meshData.fvert)[np.array(faces)]
+        fuvs   = np.array(human.meshData.fuvs)[np.array(faces)]
+        groups = np.array(human.meshData.group)[np.array(faces)]
+        mats   = np.array(human.meshData.fmtls)[np.array(faces)]
+
+        human.meshData.clear()
+        human.meshData.setCoords(coords)
+        human.meshData.setUVs(uvs)
+        for fg in fGroups:
+            human.meshData.createFaceGroup(fg.name)
+        human.meshData.setFaces(fverts, fuvs, groups, mats)
+        human.meshData.update()
+        human.meshData.updateIndexBuffer()
+        human.meshData.calcNormals()
+        '''
+
+    def unhideVerts(self, vertsToUnhide):
+        human = gui3d.app.selectedHuman
+
+        vertsToUnhide = np.copy(vertsToUnhide)
+        vertsToUnhide.resize(len(human.meshData.getFaceMask()))
+
+        vertsToShow = np.logical_or(vertsToUnhide, human.meshData.getFaceMask())
+        verts = np.argwhere(vertsToShow)[...,0]
+
+        human = gui3d.app.selectedHuman
+        faceMask = human.meshData.getFaceMaskForVertices(verts)
+        human.meshData.setFaceMask(faceMask)
+        human.meshData.updateIndexBuffer()
+    
     def adaptClothesToHuman(self, human):
 
         for (uuid,clo) in human.clothesObjs.items():            
