@@ -191,7 +191,8 @@ class BackgroundChooser(gui3d.TaskView):
     def setBackgroundEnabled(self, enable):
         if enable:
             if self.isBackgroundSet():
-                self.backgroundImage.show()
+                self.setBackgroundImage(self.getCurrentSide())
+
                 # Switch to orthogonal view
                 gui3d.app.modelCamera.switchToOrtho()
                 self.backgroundImageToggle.setChecked(True)
