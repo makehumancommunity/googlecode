@@ -42,6 +42,7 @@ KnownTags = [
     "shirt",
     "underwearbottom",
     "underweartop",
+    "hat"
 ]
 
 class ClothesAction(gui3d.Action):
@@ -196,9 +197,10 @@ class ClothesTaskView(gui3d.TaskView):
         human.clothesProxies[uuid] = proxy
         human.activeClothing = uuid
         self.clothesList.append(uuid)
-        
+
         for tag in proxy.tags:
             tag = tag.lower()
+            # Allow only one piece of clothing per known tag
             if tag in KnownTags:
                 try:
                     oldUuids = self.taggedClothes[tag]
@@ -208,19 +210,19 @@ class ClothesTaskView(gui3d.TaskView):
                 for oldUuid in oldUuids:
                     if oldUuid == uuid:
                         pass
-                    elif True:
+                    elif True:  # TODO use parameter here
                         try:
                             oldClo = human.clothesObjs[oldUuid]
                         except KeyError:
                             continue
-                        log.message("Removed clothing %s", oldUuid)
                         gui3d.app.removeObject(oldClo)
                         del human.clothesObjs[oldUuid]
                         self.clothesList.remove(oldUuid)
                         if human.activeClothing == oldUuid:
                             human.activeClothing = None
+                        log.message("Removed clothing %s with known tag %s", oldUuid, tag)
                     else:
-                        log.message("Kept clothing %s", oldUuid)
+                        log.message("Kept clothing %s with known tag %s", oldUuid, tag)
                         newUuids.append(oldUuid)
                 newUuids.append(uuid)
                 self.taggedClothes[tag] = newUuids
@@ -230,7 +232,6 @@ class ClothesTaskView(gui3d.TaskView):
         
         #self.clothesButton.setTexture(obj.replace('.obj', '.png'))
 
-    
     def adaptClothesToHuman(self, human):
 
         for (uuid,clo) in human.clothesObjs.items():            
