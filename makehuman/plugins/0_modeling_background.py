@@ -8,7 +8,7 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Marc Flerackers
+**Authors:**           Marc Flerackers, Jonas Hauquier, Glynn Clements
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
@@ -126,11 +126,22 @@ class BackgroundChooser(gui3d.TaskView):
         self.addLeftWidget(self.filechooser.sortBox)
 
         self.backgroundBox = self.addRightWidget(gui.GroupBox('Side'))
+        self.bgSettingsBox = self.addRightWidget(gui.GroupBox('Background settings'))
 
         self.radioButtonGroup = []
         for side in ['front', 'back', 'left', 'right', 'top', 'bottom', 'other']: 
             radioBtn = self.backgroundBox.addWidget(gui.RadioButton(self.radioButtonGroup, label=side.capitalize(), selected=len(self.radioButtonGroup)==0))
             radioBtn.side = side
+
+        self.opacitySlider = self.bgSettingsBox.addWidget(gui.Slider(value=self.opacity, min=0,max=255, label = "Opacity: %d"))
+
+        @self.opacitySlider.mhEvent
+        def onChanging(value):
+            self.backgroundImage.mesh.setColor([255, 255, 255, value])
+        @self.opacitySlider.mhEvent
+        def onChange(value):
+            self.opacity = value
+            self.backgroundImage.mesh.setColor([255, 255, 255, value])
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
@@ -152,7 +163,8 @@ class BackgroundChooser(gui3d.TaskView):
 
             if self.sides[side]:
                 gui3d.app.selectedHuman.setRotation(self.sides[side])
-            mh.changeTask('Texturing', 'Projection')
+            #mh.changeTask('Texturing', 'Projection')
+            mh.changeCategory('Modelling')
             mh.redraw()
 
     def getSelectedSideCheckbox(self):
@@ -228,6 +240,7 @@ class BackgroundChooser(gui3d.TaskView):
         text = language.getLanguageString(u'Images which are placed in %s will show up here.') % self.backgroundsFolder
         gui3d.app.prompt('Info', text, 'OK', helpId='backgroundHelp')
         gui3d.app.statusPersist(text)
+        self.opacitySlider.setValue(self.opacity)
         self.filechooser.setFocus()
 
     def onHide(self, event):
@@ -378,6 +391,7 @@ class TextureProjectionView(gui3d.TaskView) :
         gui3d.TaskView.onShow(self, event)
         self.backgroundImage.mesh.setPickable(self.dragButton.selected)
         gui3d.app.selectedHuman.mesh.setShadeless(1 if self.shadelessButton.selected else 0)
+        self.opacitySlider.setValue(self.backgroundChooserView.opacity)
 
     def onHide(self, event):
 
