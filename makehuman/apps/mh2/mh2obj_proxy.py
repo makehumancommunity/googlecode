@@ -32,7 +32,7 @@ import mh2proxy
 
 def exportProxyObj(human, name, config):
     obj = human.meshData
-    exportutils.config.exportConfig(human, config)
+    config.addObjects(human)
 
     stuffs = exportutils.collect.setupObjects(os.path.splitext(name)[0], human,
         helpers=config.helpers, 

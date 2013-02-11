@@ -23,13 +23,16 @@ TODO
 """
 
 import gui
-from export import Exporter, Config
+from export import Exporter
+from exportutils.config import Config
 
 
 class FbxConfig(Config):
 
     def __init__(self, rigtype, exporter):
-        Config.__init__(self, exporter)
+        Config.__init__(self)
+        self.selectedOptions(exporter)
+        
         self.rigtype         = rigtype,
         self.expressions     = exporter.expressions.selected
         self.useCustomShapes = exporter.useCustomShapes.selected

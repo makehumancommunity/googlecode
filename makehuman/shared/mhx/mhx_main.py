@@ -85,7 +85,7 @@ class CInfo:
 def exportMhx(human, filename, config):  
     posemode.exitPoseMode()        
     posemode.enterPoseMode()
-    exportutils.config.exportConfig(human, config)
+    config.addObjects(human)
     (fpath, ext) = os.path.splitext(filename)
 
     time1 = time.clock()

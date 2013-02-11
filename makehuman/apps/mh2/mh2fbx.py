@@ -39,7 +39,7 @@ def exportFbx(human, filepath, config):
     posemode.exitPoseMode()        
     posemode.enterPoseMode()
     
-    exportutils.config.exportConfig(human, config)
+    config.addObjects(human)
     outfile = exportutils.config.getOutFileFolder(filepath, config)        
     (outpath, ext) = os.path.splitext(outfile)
 

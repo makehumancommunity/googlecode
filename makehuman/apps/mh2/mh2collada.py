@@ -45,7 +45,7 @@ Delta = [0,0.01,0]
 
 def exportCollada(human, filename, config):    
     time1 = time.clock()
-    exportutils.config.exportConfig(human, config)
+    config.addObjects(human)
     outfile = exportutils.config.getOutFileFolder(filename, config)        
     try:
         fp = open(outfile, 'w')

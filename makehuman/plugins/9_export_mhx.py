@@ -23,27 +23,28 @@ TODO
 """
 
 import gui
-from export import Exporter, Config
+from export import Exporter
+from exportutils.config import Config
 
 
 class MhxConfig(Config):
 
     def __init__(self, rigtype, exporter):
         Config.__init__(self)
-        self.separateFolder =  exporter.separateFolder.selected
-        self.helpers =         True
-        self.hidden =          exporter.hidden.selected
+        self.separateFolder =   exporter.separateFolder.selected
+        self.helpers =          True
+        self.hidden =           exporter.hidden.selected
         
-        self.useMasks =        exporter.masks.selected
-        self.expressions =     exporter.expressions.selected
-        self.bodyShapes =      exporter.bodyShapes.selected
+        self.useMasks =         exporter.masks.selected
+        self.expressions =      exporter.expressions.selected
+        self.bodyShapes =       exporter.bodyShapes.selected
         self.useCustomShapes =  exporter.useCustomShapes.selected
-        self.cage =            exporter.cage.selected
-        self.feetOnGround =    exporter.feetOnGround.selected
-        self.advancedSpine =   exporter.advancedSpine.selected
-        self.maleRig =         exporter.maleRig.selected
-        self.clothesRig =      exporter.clothesRig.selected
-        self.rigtype =         rigtype
+        self.cage =             exporter.cage.selected
+        self.feetOnGround =     exporter.feetOnGround.selected
+        self.advancedSpine =    exporter.advancedSpine.selected
+        self.maleRig =          exporter.maleRig.selected
+        self.clothesRig =       exporter.clothesRig.selected
+        self.rigtype =          rigtype
         
         # Used by mhx exporter
         self.vertexWeights = []

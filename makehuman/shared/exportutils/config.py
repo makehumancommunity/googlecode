@@ -25,31 +25,79 @@ TODO
 import os
 import mh
 import shutil
-
 import log
 
-
-def truthValue(word):
-    if word.lower() in ["false", "no", "0"]:
-        return False
-    return True
-
 #
-#    proxyFilePtr(name):
+#   class Config
 #
 
-def proxyFilePtr(name):
-    head = os.path.normpath(mh.getPath(''))
-    for path in [head, './']:
-        filename = os.path.realpath( os.path.join(path, name) )
-        try:
-            fp = open(filename, "r")
-            log.message("    Using config file %s", filename)
-            return fp
-        except:
-            log.error("Cannot open %s", filename, exc_info=True)
-    return None
+class Config:
+
+    def __init__(self):
+        self.separateFolder     = False
+        self.eyebrows           = True
+        self.lashes             = True
+        self.helpers            = False
+        self.hidden             = True
+        self.scale,self.unit    = 1.0, "decimeter"
+        self.subdivide          = False
+
+        self.exporting          = True
+        self.feetOnGround       = False
+        self.skirtRig       = None
+        self.rigtype            = None
+        self.cage               = False
+        self.texFolder          = None
+        self.proxyList          = []
+
+
+    def selectedOptions(self, exporter):
+        self.separateFolder     = exporter.separateFolder.selected
+        self.eyebrows           = exporter.eyebrows.selected
+        self.lashes             = exporter.lashes.selected
+        self.helpers            = exporter.helpers.selected
+        self.hidden             = exporter.hidden.selected
+        self.scale,self.unit    = exporter.getScale(exporter.scales)
+        self.subdivide          = exporter.smooth.selected
+        
+        return self
     
+    
+    def addObjects(self, human):
+    
+        if human.hairProxy:
+            words = human.hairObj.mesh.name.split('.')
+            pfile = CProxyFile()
+            pfile.set('Hair', 2)
+            name = goodName(words[0])
+            pfile.file = human.hairProxy.file
+            self.proxyList.append(pfile)
+    
+        for (key,clo) in human.clothesObjs.items():
+            if clo:
+                name = goodName(key)
+                pfile = CProxyFile()
+                pfile.set('Clothes', 3)            
+                proxy = human.clothesProxies[key]
+                pfile.file = proxy.file
+                self.proxyList.append(pfile)
+                
+        if human.proxy:
+            name = goodName(human.proxy.name)
+            pfile = CProxyFile()
+            pfile.set('Proxy', 4)
+            pfile.file = human.proxy.file
+            self.proxyList.append(pfile)    
+    
+        if self.cage:
+            pfile = CProxyFile()
+            pfile.set('Cage', 4)
+            pfile.file = os.path.realpath("./data/cages/cage/cage.mhclo")
+            self.proxyList.append(pfile)  
+            
+        return self
+
+
 #
 #   class CProxyFile:
 #
@@ -125,47 +173,8 @@ def scanFileForUuid(path):
             break
     fp.close()
     return None
-            
-
-def exportConfig(human, config):
-
-    if human.hairProxy:
-        words = human.hairObj.mesh.name.split('.')
-        pfile = CProxyFile()
-        pfile.set('Hair', 2)
-        name = goodName(words[0])
-        pfile.file = human.hairProxy.file
-        config.proxyList.append(pfile)
-
-    for (key,clo) in human.clothesObjs.items():
-        if clo:
-            name = goodName(key)
-            pfile = CProxyFile()
-            pfile.set('Clothes', 3)            
-            proxy = human.clothesProxies[key]
-            pfile.file = proxy.file
-            config.proxyList.append(pfile)
-            
-    if human.proxy:
-        name = goodName(human.proxy.name)
-        pfile = CProxyFile()
-        pfile.set('Proxy', 4)
-        pfile.file = human.proxy.file
-        config.proxyList.append(pfile)    
-
-    if config.cage:
-        pfile = getCageFile("./data/cages/cage/cage.mhclo", 4)
-        config.proxyList.append(pfile)    
-            
+                       
     
-def getCageFile(name, layer):
-    pfile = CProxyFile()
-    pfile.set('Cage', layer)
-    name = goodName(name)
-    pfile.file = os.path.realpath(os.path.expanduser(name))
-    return pfile
-
-
 def getOutFileFolder(filename, config):
     (fname, ext) = os.path.splitext(filename)
     fname = goodName(os.path.basename(fname))

@@ -26,34 +26,6 @@ import os
 import gui
 import log
 
-class Config:
-
-    def __init__(self, exporter=None):
-        if exporter:
-            self.separateFolder     = exporter.separateFolder.selected
-            self.eyebrows           = exporter.eyebrows.selected
-            self.lashes             = exporter.lashes.selected
-            self.helpers            = exporter.helpers.selected
-            self.hidden             = exporter.hidden.selected
-            self.scale,self.unit    = exporter.getScale(exporter.scales)
-            self.subdivide          = exporter.smooth.selected
-        else:
-            self.separateFolder     = False
-            self.eyebrows           = True
-            self.lashes             = True
-            self.helpers            = False
-            self.hidden             = True
-            self.scale,self.unit    = 1.0, "decimeter"
-            self.subdivide          = False
-
-        self.exporting          = True
-        self.feetOnGround       = False
-        self.skirtRig		= None
-        self.rigtype            = None
-        self.cage               = False
-        self.texFolder          = None
-        self.proxyList          = []
-
 
 class Exporter(object):
     def __init__(self):

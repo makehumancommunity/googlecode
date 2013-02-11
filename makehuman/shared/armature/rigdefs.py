@@ -905,11 +905,11 @@ def checkPoints(vec1, vec2):
     
 
 def createRig(human, rigtype):
-    config = export.Config(None)
+    config = export.Config()
     config.exporting = False
     config.feetOnGround = False
     config.rigtype = rigtype
-    exportutils.config.exportConfig(human, config)
+    config.addObjects(human)
 
     fp = None
     amt = CArmature(human, config)

@@ -23,12 +23,15 @@ TODO
 """
 
 import gui
-from export import Exporter, Config
+from export import Exporter
+from exportutils.config import Config
 
 
 class DaeConfig(Config):
     def __init__(self, rigtype, exporter):
-        Config.__init__(self, exporter)
+        Config.__init__(self)
+        self.selectedOptions(exporter)
+        
         self.rigtype =   rigtype
         self.rotate90X = exporter.rotate90X.selected
         self.rotate90Z = exporter.rotate90Z.selected

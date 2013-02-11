@@ -39,7 +39,7 @@ import mh2proxy
 import log
 import catmull_clark_subdivision as cks
 
-from . import config
+from .config import Config
 from . import rig as rigfile
 
 #
@@ -222,8 +222,8 @@ def setupObjects(name, human, rigfile=None, rawTargets=[], helpers=False, hidden
         else:
             return cks.createSubdivisionObject(obj.getSeedMesh(), progressCallback)
     
-    cfg = export.Config(None)
-    config.exportConfig(human, cfg)
+    cfg = Config()
+    cfg.addObjects(human)
     obj = human.meshData
     theTextures = {}
     theTexFiles = {}

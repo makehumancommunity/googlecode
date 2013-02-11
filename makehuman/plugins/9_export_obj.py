@@ -23,12 +23,14 @@ TODO
 """
 
 import gui
-from export import Exporter, Config
+from export import Exporter
+from exportutils.config import Config
 
 class ObjConfig(Config):
 
     def __init__(self, exporter):
-        Config.__init__(self, exporter)
+        Config.__init__(self)
+        self.selectedOptions(exporter)
     
     
 class ExporterOBJ(Exporter):
