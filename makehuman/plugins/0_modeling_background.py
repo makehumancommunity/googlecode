@@ -100,8 +100,8 @@ class BackgroundChooser(gui3d.TaskView):
 
         self.sides = { 'front': [0,0,0], 
                        'back': [0,180,0], 
-                       'left': [0,-90,0], 
-                       'right': [0,90,0],
+                       'left': [0,90,0], 
+                       'right': [0,-90,0],
                        'top': [90,0,0],
                        'bottom': [-90,0,0],
                        'other': None }
