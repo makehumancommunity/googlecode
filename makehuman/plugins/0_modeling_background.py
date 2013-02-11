@@ -36,6 +36,7 @@ import gui
 import filechooser as fc
 import log
 from language import language
+import texture
 
 class BackgroundAction(gui3d.Action):
     def __init__(self, name, library, side, before, after):
@@ -63,12 +64,16 @@ class ProjectionAction(gui3d.Action):
 
     def do(self):
         self.newPixmap.save(self.after)
+        if os.path.join(self.before) == os.path.join(self.after):
+            texture.reloadTexture(self.after)
         gui3d.app.selectedHuman.setTexture(self.after)
         return True
 
     def undo(self):
         if self.oldPixmap:
             self.oldPixmap.save(self.after)
+        if os.path.join(self.before) == os.path.join(self.after):
+            texture.reloadTexture(self.before)
         gui3d.app.selectedHuman.setTexture(self.before)
         return True
 
