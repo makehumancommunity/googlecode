@@ -77,7 +77,7 @@ class LanguageRadioButton(gui.RadioButton):
 class SettingsTaskView(gui3d.TaskView):
 
     def __init__(self, category):
-        gui3d.TaskView.__init__(self, category, 'Settings')
+        gui3d.TaskView.__init__(self, category, 'General')
 
         self.shaderGroup = []
         shaderBox = self.addLeftWidget(gui.GroupBox('Shader'))
