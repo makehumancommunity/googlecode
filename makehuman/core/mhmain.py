@@ -385,24 +385,6 @@ class MHApplication(gui3d.Application, mh.Application):
         category = self.getCategory('Settings')
         category.addTask(PluginsTaskView(category))
 
-        # Exit button
-        category = self.getCategory("Exit")
-        @category.tab.mhEvent
-        def onClicked(event):
-            self.promptAndExit()
-
-        """
-        self.poseModeBox = self.buttonBox.addWidget(gui.CheckBox("Pose mode", False))
-
-        @self.poseModeBox.mhEvent
-        def onClicked(event):
-          print dir(event)
-          if self.poseModeBox.selected:
-            posemode.exitPoseMode()
-          else:
-            posemode.enterPoseMode()
-        """
-
         mh.refreshLayout()
 
         self.switchCategory("Modelling")
