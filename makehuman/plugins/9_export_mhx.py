@@ -32,7 +32,7 @@ class MhxConfig(Config):
     def __init__(self, rigtype, exporter):
         Config.__init__(self)
         self.useTexFolder =     exporter.useTexFolder.selected
-        self.useRelPath =       False
+        self.useRelPaths =      False
         self.helpers =          True
         self.hidden =           exporter.hidden.selected
         

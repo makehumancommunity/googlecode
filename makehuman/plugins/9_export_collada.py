@@ -32,7 +32,7 @@ class DaeConfig(Config):
         Config.__init__(self)
         self.selectedOptions(exporter)
         
-        self.useRelPath = True
+        self.useRelPaths = True
         self.rigtype =   rigtype
         self.rotate90X = exporter.rotate90X.selected
         self.rotate90Z = exporter.rotate90Z.selected
