@@ -40,23 +40,23 @@ Delta = [0,0.01,0]
 
 
 #
-# exportCollada(human, filename, config):
+# exportCollada(human, filepath, config):
 #
 
-def exportCollada(human, filename, config):    
+def exportCollada(human, filepath, config):    
     time1 = time.clock()
     config.addObjects(human)
-    outfile = exportutils.config.getOutFileFolder(filename, config)        
+    config.setupTexFolder(filepath)        
     try:
-        fp = open(outfile, 'w')
-        log.message("Writing Collada file %s" % outfile)
+        fp = open(filepath, 'w')
+        log.message("Writing Collada file %s" % filepath)
     except:
-        log.error("Unable to open file for writing %s" % outfile)
-    (name,ext) = os.path.splitext(os.path.basename(outfile))
+        log.error("Unable to open file for writing %s" % filepath)
+    (name,ext) = os.path.splitext(os.path.basename(filepath))
     exportDae(human, name, fp, config)
     fp.close()
     time2 = time.clock()
-    log.message("Wrote Collada file in %g s: %s" % (time2-time1, outfile))
+    log.message("Wrote Collada file in %g s: %s" % (time2-time1, filepath))
     return
 
 #
@@ -287,11 +287,11 @@ def writeImages(obj, fp, stuff, human, config):
         textures = []
 
     for (folder, texname) in textures: 
-        path = exportutils.config.getOutFileName(texname, folder, True, human, config)        
+        path = config.getTexturePath(texname, folder, True, human)        
         texfile = os.path.basename(path)
         (fname, ext) = os.path.splitext(texname)  
         name = "%s_%s" % (fname, ext[1:])
-        if config.separateFolder:
+        if config.useTexFolder:
             texpath = "textures/"+texfile
         else:
             texpath = path

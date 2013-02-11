@@ -32,7 +32,8 @@ class Exporter(object):
         self.group = "mesh"
 
     def build(self, options):
-        self.separateFolder = options.addWidget(gui.CheckBox("Separate folder", False))
+        self.useTexFolder   = options.addWidget(gui.CheckBox("Separate texture folder", False))
+        self.useRelPaths    = options.addWidget(gui.CheckBox("Relative texture paths", True))
         self.eyebrows       = options.addWidget(gui.CheckBox("Eyebrows", True))
         self.lashes         = options.addWidget(gui.CheckBox("Eyelashes", True))
         self.helpers        = options.addWidget(gui.CheckBox("Helper geometry", False))

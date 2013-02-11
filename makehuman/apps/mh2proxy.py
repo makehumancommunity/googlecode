@@ -517,9 +517,6 @@ def readProxyFile(obj, file, evalOnLoad):
     if evalOnLoad and proxy.obj_file:
         if not copyObjFile(proxy):
             return None
-
-    if pfile.name:
-        proxy.name = pfile.name
     return proxy
 
 #

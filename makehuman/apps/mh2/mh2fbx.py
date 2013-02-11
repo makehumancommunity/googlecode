@@ -40,10 +40,9 @@ def exportFbx(human, filepath, config):
     posemode.enterPoseMode()
     
     config.addObjects(human)
-    outfile = exportutils.config.getOutFileFolder(filepath, config)        
-    (outpath, ext) = os.path.splitext(outfile)
+    config.setupTexFolder(filepath)        
 
-    log.message("Write FBX file %s" % outfile)
+    log.message("Write FBX file %s" % filepath)
     print(config)
 
     rawTargets = []
@@ -63,7 +62,7 @@ def exportFbx(human, filepath, config):
 
     rigfile = "data/rigs/%s.rig" % config.rigtype
     stuffs = exportutils.collect.setupObjects(
-        os.path.splitext(outfile)[0], 
+        os.path.splitext(filepath)[0], 
         human, 
         rigfile, 
         rawTargets=rawTargets,
@@ -82,9 +81,8 @@ def exportFbx(human, filepath, config):
     #name = os.path.splitext(os.path.basename(filepath))[0]
     #bpy.addMesh(name, human.meshData, False)
     
-    filename = "%s.fbx" % outpath
-    gui3d.app.progress(0, text="Exporting %s" % filename)
-    io_fbx.fbx_export.exportFbxFile(bpy.context, filename, config.scale)
+    gui3d.app.progress(0, text="Exporting %s" % filepath)
+    io_fbx.fbx_export.exportFbxFile(bpy.context, filepath, config.scale)
     gui3d.app.progress(1)
     posemode.exitPoseMode()        
     return

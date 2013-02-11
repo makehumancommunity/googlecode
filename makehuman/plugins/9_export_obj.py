@@ -44,10 +44,10 @@ class ExporterOBJ(Exporter):
         self.skeleton       = options.addWidget(gui.CheckBox("Skeleton", True))
 
     def export(self, human, filename):
-        import mh2obj_proxy
+        import mh2obj
         import mh2bvh
 
-        mh2obj_proxy.exportProxyObj(human, filename("obj"), ObjConfig(self))
+        mh2obj.exportProxyObj(human, filename("obj"), ObjConfig(self))
 
         if self.skeleton.selected:
             mh2bvh.exportSkeleton(human.meshData, filename("bvh", True))

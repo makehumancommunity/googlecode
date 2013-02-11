@@ -79,31 +79,31 @@ class CInfo:
 
 
 #
-#    exportMhx(human, filename, config):
+#    exportMhx(human, filepath, config):
 #
 
-def exportMhx(human, filename, config):  
+def exportMhx(human, filepath, config):  
+    time1 = time.clock()
     posemode.exitPoseMode()        
     posemode.enterPoseMode()
+    
     config.addObjects(human)
-    (fpath, ext) = os.path.splitext(filename)
+    config.setupTexFolder(filepath)    
 
-    time1 = time.clock()
-    fname = os.path.basename(fpath)
+    fname = os.path.basename(os.path.splitext(filepath)[0])
     name = fname.capitalize().replace(' ','_')
-    outfile = exportutils.config.getOutFileFolder(filename, config)        
     try:
-        fp = open(outfile, 'w')
-        log.message("Writing MHX file %s", outfile )
+        fp = open(filepath, 'w')
+        log.message("Writing MHX file %s", filepath)
     except:
-        log.message("Unable to open file for writing %s", outfile)
+        log.message("Unable to open file for writing %s", filepath)
         fp = 0
     if fp:
         info = CInfo(name, human, config)
         exportMhx_25(info, fp)
         fp.close()
         time2 = time.clock()
-        log.message("Wrote MHX file in %g s: %s", time2-time1, outfile)
+        log.message("Wrote MHX file in %g s: %s", time2-time1, filepath)
 
     posemode.exitPoseMode()        
     return        
@@ -457,7 +457,7 @@ def copyFile25(tmplName, fp, proxy, info):
                 fp.write("  end AnimationData\n")
 
             elif key == 'Filename':
-                file = exportutils.config.getOutFileName(words[2], words[3], True, info.human, info.config)
+                file = info.config.getTexturePath(words[2], words[3], True, info.human)
                 fp.write("  Filename %s ;\n" % file)
 
             else:
@@ -568,7 +568,7 @@ def writeBaseMaterials(fp, info):
     
 def addMaskImage(fp, info, mask):            
     (folder, file) = mask
-    path = exportutils.config.getOutFileName(file, folder, True, info.human, info.config)
+    path = info.config.getTexturePath(file, folder, True, info.human)
     fp.write(
 "Image %s\n" % file +
 "  Filename %s ;\n" % path +
@@ -810,7 +810,7 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, info):
                 fp.write("%s " % word)
             fp.write("\n")                
         elif words[0] == 'Filename':
-            file = exportutils.config.getOutFileName(words[1], folder, True, info.human, info.config)
+            file = info.config.getTexturePath(words[1], folder, True, info.human)
             fp.write("  Filename %s ;\n" % file)
         else:
             fp.write(line)
@@ -825,7 +825,7 @@ def writeProxyTexture(fp, texture, mat, extra, info):
     log.debug("Tex %s", tex)
     texname = info.name + os.path.basename(tex)
     fromDir = os.path.dirname(tex)
-    texfile = exportutils.config.getOutFileName(tex, fromDir, True, None, info.config)
+    texfile = info.config.getTexturePath(tex, fromDir, True, None)
     fp.write(
         "Image %s\n" % texname +
         "  Filename %s ;\n" % texfile +
@@ -1220,8 +1220,8 @@ def writeMultiMaterials(uvset, info, fp):
         for tex in mat.textures:
             name = os.path.basename(tex.file)
             fp.write("Image %s\n" % name)
-            #file = exportutils.config.getOutFileName(tex, "data/textures", True, info.human, info.config)
-            file = exportutils.config.getOutFileName(name, folder, True, info.human, info.config)
+            #file = info.config.getTexturePath(tex, "data/textures", True, info.human)
+            file = info.config.getTexturePath(name, folder, True, info.human)
             fp.write(
                 "  Filename %s ;\n" % file +
 #                "  alpha_mode 'PREMUL' ;\n" +

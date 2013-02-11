@@ -1006,6 +1006,7 @@ class MHApplication(gui3d.Application, mh.Application):
         algos3d.saveTranslationTarget(human.meshData, "full_target.target")
         log.message("Full target exported")
 
+    # TL: This will not work, because need configs defined in 9_export plugins
     def quickExport(self):
         exportPath = mh.getPath('exports')
         if not os.path.exists(exportPath):

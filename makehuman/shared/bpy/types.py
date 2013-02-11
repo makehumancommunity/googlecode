@@ -49,9 +49,9 @@ class Operator:
 #------------------------------------------------------------------
 
 def initialize(human, cfg):
-    global RnaNames, Human, Config
-    Human = human
-    Config = cfg
+    global RnaNames, theHuman, theConfig
+    theHuman = human
+    theConfig = cfg
     RnaNames = {}
     for rnaType in ['OBJECT', 'MESH', 'ARMATURE', 'MATERIAL', 'TEXTURE', 'IMAGE', 'SCENE', 'BONE', 'POSE']:
         RnaNames[rnaType] = {}
@@ -464,9 +464,9 @@ class Texture(Rna):
 
 class Image(Rna):
     def __init__(self, filename, folder):     
-        global Human, Config
+        global theHuman, theConfig
         Rna.__init__(self, filename, 'IMAGE')
-        self.filepath = exportutils.config.getOutFileName(filename, folder, True, Human, Config)        
+        self.filepath = theConfig.getTexturePath(filename, folder, True, theHuman)        
 
         
 #------------------------------------------------------------------
