@@ -53,6 +53,25 @@ class BackgroundAction(gui3d.Action):
         self.library.changeBackgroundImage(self.side, self.before)
         return True
 
+class ProjectionAction(gui3d.Action):
+    def __init__(self, name, before, after, oldPixmap, newPixmap):
+        super(ProjectionAction, self).__init__(name)
+        self.before = before
+        self.after = after
+        self.oldPixmap = oldPixmap
+        self.newPixmap = newPixmap
+
+    def do(self):
+        self.newPixmap.save(self.after)
+        gui3d.app.selectedHuman.setTexture(self.after)
+        return True
+
+    def undo(self):
+        if self.oldPixmap:
+            self.oldPixmap.save(self.after)
+        gui3d.app.selectedHuman.setTexture(self.before)
+        return True
+
 def pointInRect(point, rect):
 
     if point[0] < rect[0] or point[0] > rect[2] or point[1] < rect[1] or point[1] > rect[3]:
@@ -384,9 +403,17 @@ class TextureProjectionView(gui3d.TaskView) :
         rightBottom = (x1, y0)
 
         dstImg = projection.mapImage(self.backgroundImage, mesh, leftTop, rightBottom)
+        texPath = os.path.join(mh.getPath(''), 'data', 'skins', 'projection.png')
+        if os.path.isfile(texPath):
+            oldImg = mh.Image(texPath)
+        else:
+            oldImg = None
 
-        dstImg.save(os.path.join(mh.getPath(''), 'data', 'skins', 'projection.png'))
-        gui3d.app.selectedHuman.setTexture(os.path.join(mh.getPath(''), 'data', 'skins', 'projection.png'))
+        gui3d.app.do(ProjectionAction("Change projected background texture",
+                gui3d.app.selectedHuman.getTexture(),
+                texPath,
+                oldImg,
+                dstImg))
         log.debug("Enabling shadeless rendering on body")
         self.shadelessButton.setChecked(True)
         gui3d.app.selectedHuman.mesh.setShadeless(1)
@@ -394,9 +421,17 @@ class TextureProjectionView(gui3d.TaskView) :
     def projectLighting(self):
         dstImg = projection.mapLighting()
         #dstImg.resize(128, 128)
-        dstImg.save(os.path.join(mh.getPath(''), 'data', 'skins', 'lighting.png'))
+        texPath = os.path.join(mh.getPath(''), 'data', 'skins', 'lighting.png')
+        if os.path.isfile(texPath):
+            oldImg = mh.Image(texPath)
+        else:
+            oldImg = None
 
-        gui3d.app.selectedHuman.setTexture(os.path.join(mh.getPath(''), 'data', 'skins', 'lighting.png'))
+        gui3d.app.do(ProjectionAction("Change projected lighting texture",
+                gui3d.app.selectedHuman.getTexture(),
+                texPath,
+                oldImg,
+                dstImg))
         log.debug("Enabling shadeless rendering on body")
         self.shadelessButton.setChecked(True)
         gui3d.app.selectedHuman.mesh.setShadeless(1)
@@ -404,9 +439,17 @@ class TextureProjectionView(gui3d.TaskView) :
     def projectUV(self):
         dstImg = projection.mapUV()
         #dstImg.resize(128, 128)
-        dstImg.save(os.path.join(mh.getPath(''), 'data', 'skins', 'uvtopo.png'))
+        texPath = os.path.join(mh.getPath(''), 'data', 'skins', 'uvtopo.png')
+        if os.path.isfile(texPath):
+            oldImg = mh.Image(texPath)
+        else:
+            oldImg = None
 
-        gui3d.app.selectedHuman.setTexture(os.path.join(mh.getPath(''), 'data', 'skins', 'uvtopo.png'))
+        gui3d.app.do(ProjectionAction("Change projected UV map texture",
+                gui3d.app.selectedHuman.getTexture(),
+                texPath,
+                oldImg,
+                dstImg))
         log.debug("Enabling shadeless rendering on body")
         self.shadelessButton.setChecked(True)
         gui3d.app.selectedHuman.mesh.setShadeless(1)
