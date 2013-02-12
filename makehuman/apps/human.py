@@ -46,7 +46,9 @@ class Human(gui3d.Object):
         self.mesh.setShadeless(0)
         self.mesh.setCull(1)
         self.meshData = self.mesh
-        
+
+        self.maskFaces()
+
         self.hairModelling = False #temporary variable for easier integration of makehair, will be cleaned later.
         self.hairObj = hairObj
         self.hairProxy = None
@@ -85,6 +87,18 @@ class Human(gui3d.Object):
         
         self.setTexture("data/textures/texture.png")        
 
+    def getFaceMask(self):
+        mesh = self.meshData
+        group_mask = np.ones(len(mesh._faceGroups), dtype=bool)
+        for g in mesh._faceGroups:
+            if g.name.startswith('joint-') or g.name.startswith('helper-'):
+                group_mask[g.idx] = False
+        face_mask = group_mask[mesh.group]
+        return face_mask
+
+    def maskFaces(self):
+        self.meshData.changeFaceMask(self.getFaceMask())
+        self.meshData.updateIndexBufferFaces()
 
     # Overriding hide and show to account for both human base and the hairs!
 

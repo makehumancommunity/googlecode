@@ -260,8 +260,8 @@ class ClothesTaskView(gui3d.TaskView):
         ###########
 
         faceMask = human.meshData.getFaceMaskForVertices(verts)
-        human.meshData.setFaceMask(faceMask)
-        human.meshData.updateIndexBuffer()
+        human.meshData.changeFaceMask(faceMask)
+        human.meshData.updateIndexBufferFaces()
 
     def unhideVerts(self, vertsToUnhide):
         human = gui3d.app.selectedHuman
@@ -274,8 +274,8 @@ class ClothesTaskView(gui3d.TaskView):
 
         human = gui3d.app.selectedHuman
         faceMask = human.meshData.getFaceMaskForVertices(verts)
-        human.meshData.setFaceMask(faceMask)
-        human.meshData.updateIndexBuffer()
+        human.meshData.changeFaceMask(faceMask)
+        human.meshData.updateIndexBufferFaces()
     
     def adaptClothesToHuman(self, human):
 

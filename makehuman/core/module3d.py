@@ -405,11 +405,15 @@ class Object3D(object):
         if not skipUpdate:
             self._update_faces()
 
-    def setFaceMask(self, mask):
-        self.face_mask = mask
+    def changeFaceMask(self, mask, indices = None):
+        if indices is None:
+            indices = np.s_[...]
+        self.face_mask[indices] = mask
 
-    def getFaceMask(self):
-        return self.face_mask
+    def getFaceMask(self, indices = None):
+        if indices is None:
+            indices = np.s_[...]
+        return self.face_mask[indices]
 
     def hasUVs(self):
         return self.has_uv
@@ -436,26 +440,18 @@ class Object3D(object):
                 self.nfaces[v] += 1
 
     def updateIndexBuffer(self):
-        ngroup = len(self._faceGroups)
+        self.updateIndexBufferVerts()
+        self.updateIndexBufferFaces()
 
-        group_mask = np.ones(len(self._faceGroups), dtype=bool)
-        for g in self._faceGroups:
-            if 'joint' in g.name or 'helper' in g.name:
-                group_mask[g.idx] = False
+    def updateIndexBufferVerts(self):
+        ngroup = len(self._faceGroups)
 
         unwelded = []
         unwelded_map = {}
 
-        coord = []
-        texco = []
-        index = [[] for g in self._faceGroups]
+        iverts = []
 
         for i in xrange(len(self.fvert)):
-            if not self.face_mask[i]:
-                continue
-            g = self.group[i]
-            if not group_mask[g]:
-                continue
             verts = []
             for v, t in zip(self.fvert[i], self.fuvs[i]):
                 p = v, t
@@ -463,45 +459,48 @@ class Object3D(object):
                     idx = len(unwelded)
                     unwelded_map[p] = idx
                     unwelded.append(p)
-                    coord.append(self.coord[v])
-                    texco.append(self.texco[t])
                 else:
                     idx = unwelded_map[p]
                 verts.append(idx)
 
-            index[g].append(verts)
+            iverts.append(verts)
 
         del unwelded_map
 
-        unwelded2 = np.empty((len(unwelded),2), dtype=np.uint32)
+        nverts = len(unwelded)
+        unwelded2 = np.empty((nverts,2), dtype=np.uint32)
         if unwelded:
             unwelded2[...] = unwelded
         self.vmap = unwelded2[:,0]
         self.tmap = unwelded2[:,1]
-        del unwelded2
+        del unwelded, unwelded2
 
-        nverts = len(coord)
         self.r_coord = np.empty((nverts, 3), dtype=np.float32)
         self.r_texco = np.empty((nverts, 2), dtype=np.float32)
         self.r_vnorm = np.zeros((nverts, 3), dtype=np.float32)
         self.r_color = np.zeros((nverts, 4), dtype=np.uint8) + 255
 
-        grpix = []
-        allix = []
-        for g, ix in enumerate(index):
-            grpix.append((len(allix), len(ix)))
-            allix.extend(ix)
-        index = allix
+        self.r_faces = np.array(iverts, dtype=np.uint32)
 
-        _index = np.empty((len(index), self.vertsPerPrimitive), dtype=np.uint32)
-        if len(index):
-            _index[...] = index
-        self.index = _index
+    def updateIndexBufferFaces(self):
+        index = self.r_faces[self.face_mask]
+        group = self.group[self.face_mask]
 
-        _grpix = np.empty((len(grpix),2), dtype=np.uint32)
-        if len(grpix):
-            _grpix[...] = grpix
-        self.grpix = _grpix
+        order = np.argsort(group)
+        group = group[order]
+        index = index[order]
+
+        group, start = np.unique(group, return_index=True)
+        count = np.empty(len(start), dtype=np.uint32)
+        count[:-1] = start[1:] - start[:-1]
+        count[-1] = len(index) - start[-1]
+
+        grpix = np.zeros((max(self.group)+1,2), dtype=np.uint32)
+        grpix[group,0] = start
+        grpix[group,1] = count
+
+        self.index = index
+        self.grpix = grpix
 
         self.ucoor = True
         self.unorm = True
@@ -808,7 +807,7 @@ class Object3D(object):
         mask = np.zeros(len(self.fvert), dtype = bool)
         valid = np.arange(self.MAX_FACES)[None,:] < self.nfaces[verts][:,None]
         vface = self.vface[verts]
-        faces = np.where(valid, vface, vface[:,:1])
+        faces = vface[valid]
         mask[faces] = True
         return mask
 
