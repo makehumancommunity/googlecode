@@ -486,9 +486,10 @@ class Object3D(object):
         index = self.r_faces[self.face_mask]
         group = self.group[self.face_mask]
 
-        order = np.argsort(group)
-        group = group[order]
-        index = index[order]
+        if len(group) > 0:
+            order = np.argsort(group)
+            group = group[order]
+            index = index[order]
 
         group, start = np.unique(group, return_index=True)
         count = np.empty(len(start), dtype=np.uint32)
