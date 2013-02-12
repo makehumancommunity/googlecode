@@ -66,12 +66,12 @@ class ModifierTaskView(gui3d.TaskView):
 
             # Create sliders
             for index, template in enumerate(templates):
-                macro = len(template) >= 6
+                macro = len(template) == 4
                 if macro:
-                    tlabel, tname, tvar, tmin, tmax, tview = template
-                    modifier = humanmodifier.MacroModifier(base, tname, tvar, tmin, tmax)
-                    self.modifiers[tlabel] = modifier
-                    slider = humanmodifier.GenericSlider(tmin, tmax, modifier, tlabel, None, tview)
+                    tlabel, tname, tvar, tview = template
+                    modifier = humanmodifier.MacroModifier(base, tname, tvar)
+                    self.modifiers[tvar] = modifier
+                    slider = humanmodifier.MacroSlider(modifier, tlabel, None, tview)
                 else:
                     paired = len(template) == 5
                     if paired:
@@ -157,7 +157,7 @@ class ModifierTaskView(gui3d.TaskView):
             if name is None:
                 continue
             value = modifier.getValue(human)
-            if value:
+            if value or isinstance(modifier, humanmodifier.MacroModifier):
                 file.write('%s %s %f\n' % (self._group, name, value))
 
     def setCamera(self):
@@ -447,8 +447,8 @@ class GenderTaskView(ModifierTaskView):
             (None, 'genitals', 'feminine', 'masculine', 'noSetCamera'),
             ]),
         ('Breast', 'breast', [
-            ('Breast size', None, 'breastSize', -1.0, 1.0, 'noSetCamera'),
-            ('Breast firmness', None, 'breastFirmness', 0.0, 1.0, 'noSetCamera'),
+            ('Breast size', None, 'BreastSize', 'noSetCamera'),
+            ('Breast firmness', None, 'BreastFirmness', 'noSetCamera'),
             (None, 'breast', 'down', 'up', 'noSetCamera'),
             (None, 'breast-dist', 'min', 'max', 'noSetCamera'),
             (None, 'breast-point', 'min', 'max', 'noSetCamera'),
@@ -514,18 +514,19 @@ class AsymmTaskView(ModifierTaskView):
 
 class MacroTaskView(ModifierTaskView):
     _name = 'Macro modelling'
+    _group = 'macro'
     _label = 'Macro'
 
     _features = [
         ('Macro', 'macrodetails', [
-            ('Gender', None, 'Gender', 0.0, 1.0, 'noSetCamera'),
-            ('Age', None, 'Age', 0.0, 1.0, 'noSetCamera'),
-            ('Tone', 'universal', 'Muscle', 0.0, 1.0, 'noSetCamera'),
-            ('Weight', 'universal', 'Weight', 0.0, 1.0, 'noSetCamera'),
-            ('Height', 'universal-stature', 'Height', -1.0, 1.0, 'noSetCamera'),
-            ('African', None, 'African', 0.0, 1.0, 'noSetCamera'),
-            ('Asian', None, 'Asian', 0.0, 1.0, 'noSetCamera'),
-            ('Caucasian', None, 'Caucasian', 0.0, 1.0, 'noSetCamera'),
+            ('Gender', None, 'Gender', 'noSetCamera'),
+            ('Age', None, 'Age', 'noSetCamera'),
+            ('Tone', 'universal', 'Muscle', 'noSetCamera'),
+            ('Weight', 'universal', 'Weight', 'noSetCamera'),
+            ('Height', 'universal-stature', 'Height', 'noSetCamera'),
+            ('African', None, 'African', 'noSetCamera'),
+            ('Asian', None, 'Asian', 'noSetCamera'),
+            ('Caucasian', None, 'Caucasian', 'noSetCamera'),
             ]),
         ]
 

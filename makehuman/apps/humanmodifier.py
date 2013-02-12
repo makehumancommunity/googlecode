@@ -35,79 +35,49 @@ import gui
 import log
 import targets
 
-# Gender[0..1]
+# Gender
 # -
-# maleVal = Gender
-# femaleVal = 1 - Gender
-# -
-# male : maleVal
-# female : femaleVal
+# female	1.0	0.5	1.0
+# male		0.0	0.5	1.0
 
-# Age [0..1]
+# Age
 # -
-# childVal = max(0, 1 - 2 * Age)
-# youngVal = 1 - abs(2 * Age - 1)
-# oldVal = max(0, 2 * Age - 1)
-# -
-# child : childVal
-# young : youngVal
-# old : oldVal
+# child		1.0	0.0	0.0
+# young		0.0	1.0	0.0
+# old		0.0	0.0	1.0
 
-# Weight [0..1]
+# Weight
 # -
-# underweightVal = max(0, 1 - 2 * Weight)
-# overweightVal = max(0, 2 * Weight - 1)
-# -
-# heavy : overweightVal
-# [averageWeight] : 1 - underweightVal - overweightVal
-# light : underweightVal
+# light		1.0	0.0	0.0
+# averageWeight	0.0	1.0	0.0
+# heavy		0.0	0.0	1.0
 
-# Muscle [0..1]
+# Muscle
 # -
-# muscleVal = max(0, 2 * Muscle - 1)
-# flaccidVal = max(0, 1 - 2 * weight)
-# -
-# flaccid : flaccidVal
-# [averageTone] : 1 - flaccidVal - muscleVal
-# muscle : muscleVal
+# flaccid	1.0	0.0	0.0
+# averageTone	0.0	1.0	0.0
+# muscle	0.0	0.0	1.0
 
-# African [0..1]
+# Height
 # -
-# africanVal = african
-# -
-# african : africanVal
+# dwarf		1.0	0.0	0.0
+# giant		0.0	0.0	1.0
 
-# Asian [0..1]
+# BreastFirmness
 # -
-# asianVal = asian
-# -
-# asian : asianVal
+# firmness0	1.0	0.5	1.0
+# firmness1	0.0	0.5	1.0
 
-# Caucasian [0..1]
+# BreastSize
 # -
-# caucasianVal = caucasian
-# -
-# caucasian : caucasianVal
+# cup1		1.0	0.0	0.0
+# cup2		0.0	0.0	1.0
 
-# Height [-1..1]
-# ...
-# -
-# dwarf : -min(0, height)
-# giant :  max(0, height)
+# African
 
-# ... [0..1]
-# -
-# breastFirmness
-# -
-# firmness0 : 1 - breastFirmness
-# firmness1 : breastFirmness
+# Asian
 
-# ... [-1..1]
-# -
-# breastSize
-# -
-# cup1 : -min(0, breastSize)
-# cup2 :  max(0, breastSize)
+# Caucasian
 
 class DetailAction(gui3d.Action):
     def __init__(self, human, before, after, update=True):
@@ -215,13 +185,17 @@ class GenericSlider(ModifierSlider):
 
     def __init__(self, min, max, modifier, label, image, view):
         image = self.findImage(image)
-        super(GenericSlider, self).__init__(min=min, max=1.0, label=label, modifier=modifier, image=image)
+        super(GenericSlider, self).__init__(min=min, max=max, label=label, modifier=modifier, image=image)
         self.view = getattr(gui3d.app, view)
 
     def onFocus(self, event):
         super(GenericSlider, self).onFocus(event)
         if gui3d.app.settings.get('cameraAutoZoom', True):
             self.view()
+
+class MacroSlider(GenericSlider):
+    def __init__(self, modifier, label, image, view):
+        super(MacroSlider, self).__init__(min=0.0, max=1.0, modifier=modifier, label=label, image=image, view=view)
 
 class UniversalSlider(GenericSlider):
     def __init__(self, modifier, label, image, view):
@@ -382,31 +356,20 @@ class GenericModifier(BaseModifier):
         else:
             return -sum([human.getDetail(target[0]) for target in self.l_targets])
 
-    def getFactors(self, human, value):
-        factors = {
-            'female': human.femaleVal,
-            'male': human.maleVal,
-            'child': human.childVal,
-            'young': human.youngVal,
-            'old': human.oldVal,
-            'african': human.africanVal,
-            'asian': human.asianVal,
-            'caucasian': human.caucasianVal,
-            'flaccid': human.flaccidVal,
-            'muscle': human.muscleVal,
-            'averageTone': 1.0 - (human.flaccidVal + human.muscleVal),
-            'light': human.underweightVal,
-            'heavy': human.overweightVal,
-            'averageWeight': 1.0 - (human.underweightVal + human.overweightVal),
-            'dwarf': human.dwarfVal,
-            'giant': human.giantVal,
-            'firmness0': 1.0 - human.breastFirmness,
-            'firmness1': human.breastFirmness,
-            'cup1': -min(human.breastSize, 0.0),
-            'cup2': max(0.0, human.breastSize)
-            }
+    _variables = [
+        'female', 'male',
+        'child', 'young', 'old',
+        'flaccid', 'averageTone', 'muscle',
+        'light', 'averageWeight', 'heavy',
+        'dwarf', 'giant',
+        'cup1', 'cup2',
+        'firmness0', 'firmness1',
+        'caucasian', 'african', 'asian'
+        ]
 
-        return factors
+    def getFactors(self, human, value):
+        return dict((name, getattr(human, name + 'Val'))
+                    for name in self._variables)
 
 class UniversalModifier(GenericModifier):
     def __init__(self, left, right, center=None):
@@ -434,37 +397,29 @@ class UniversalModifier(GenericModifier):
         return factors
 
 class MacroModifier(GenericModifier):
-    def __init__(self, base, name, variable, min, max):
+    def __init__(self, base, name, variable):
         super(MacroModifier, self).__init__()
 
         self.name = '-'.join(atom
                              for atom in (base, name)
                              if atom is not None)
         self.variable = variable
-        self.min = min
-        self.max = max
+        self.setter = 'set' + self.variable
+        self.getter = 'get' + self.variable
 
         self.targets = self.findTargets(self.name)
         # log.debug('macro modifier %s.%s(%s): %s', base, name, variable, self.targets)
 
     def getValue(self, human):
-        getter = 'get' + self.variable
-        if hasattr(human, getter):
-            return getattr(human, getter)()
-        else:
-            return getattr(human, self.variable)
+        return getattr(human, self.getter)()
 
     def setValue(self, human, value):
         value = self.clampValue(value)
-        setter = 'set' + self.variable
-        if hasattr(human, setter):
-            getattr(human, setter)(value)
-        else:
-            setattr(human, self.variable, value)
+        getattr(human, self.setter)(value)
         super(MacroModifier, self).setValue(human, value)
 
     def clampValue(self, value):
-        return max(self.min, min(self.max, value))
+        return max(0.0, min(1.0, value))
 
     def getFactors(self, human, value):
         factors = super(MacroModifier, self).getFactors(human, value)

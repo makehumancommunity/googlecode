@@ -89,21 +89,21 @@ def saveWarpedTarget(shape, path):
 
 theModifierTypes = {
     "GenderAge" : [
-        ('macrodetails', None, 'Gender', 0.0, 1.0),
-        ('macrodetails', None, 'Age', 0.0, 1.0),
+        ('macrodetails', None, 'Gender'),
+        ('macrodetails', None, 'Age'),
     ],
     "GenderAgeEthnic" : [
-        ('macrodetails', None, 'Gender', 0.0, 1.0),
-        ('macrodetails', None, 'Age', 0.0, 1.0),
-        ('macrodetails', None, 'African', 0.0, 1.0),
-        ('macrodetails', None, 'Asian', 0.0, 1.0),
+        ('macrodetails', None, 'Gender'),
+        ('macrodetails', None, 'Age'),
+        ('macrodetails', None, 'African'),
+        ('macrodetails', None, 'Asian'),
     ],
     "GenderAgeToneWeight" : [
-        ('macrodetails', None, 'Gender', 0.0, 1.0),
-        ('macrodetails', None, 'Age', 0.0, 1.0),
-        ('macrodetails', 'universal', 'Tone', 0.0, 1.0),
-        ('macrodetails', 'universal', 'Weight', 0.0, 1.0),
-        #('macrodetails', 'universal-stature', 'Height', -1.0, 1.0),
+        ('macrodetails', None, 'Gender'),
+        ('macrodetails', None, 'Age'),
+        ('macrodetails', 'universal', 'Tone'),
+        ('macrodetails', 'universal', 'Weight'),
+        #('macrodetails', 'universal-stature', 'Height'),
     ],
 }
 
@@ -152,8 +152,8 @@ class WarpModifier (humanmodifier.SimpleModifier):
         self.modtype = modtype
         
         self.fallback = None
-        for (tlabel, tname, tvar, tmin, tmax) in theModifierTypes[modtype]:
-            self.fallback = humanmodifier.MacroModifier(tlabel, tname, tvar, tmin, tmax)
+        for (tlabel, tname, tvar) in theModifierTypes[modtype]:
+            self.fallback = humanmodifier.MacroModifier(tlabel, tname, tvar)
             break
             
         self.bases = {}

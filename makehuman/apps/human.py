@@ -66,22 +66,8 @@ class Human(gui3d.Object):
         self.meshStored = []
         self.meshStoredNormals = []
 
-        self.childVal = 0.0  # child
-        self.oldVal = 0.0  # old
-        self.youngVal = 1.0
-        self.femaleVal = 0.5  # female
-        self.maleVal = 0.5  # male
-        self.flaccidVal = 0.0
-        self.muscleVal = 0.0
-        self.overweightVal = 0.0
-        self.underweightVal = 0.0
-        self.caucasianVal = 1.0/3
-        self.asianVal = 1.0/3
-        self.africanVal = 1.0/3
-        self.dwarfVal = 0.0
-        self.giantVal = 0.0
-        self.breastSize = 0.0
-        self.breastFirmness = 0.5
+        self.setDefaultValues()
+
         self.bodyZones = ['l-eye','r-eye', 'jaw', 'nose', 'mouth', 'head', 'neck', 'torso', 'hip', 'pelvis', 'r-upperarm', 'l-upperarm', 'r-lowerarm', 'l-lowerarm', 'l-hand',
                           'r-hand', 'r-upperleg', 'l-upperleg', 'r-lowerleg', 'l-lowerleg', 'l-foot', 'r-foot', 'ear']
         
@@ -175,17 +161,18 @@ class Human(gui3d.Object):
         """
 
         gender = min(max(gender, 0.0), 1.0)
-        self._setGenderVals(gender)
+        if self.gender == gender:
+            return
+        self.gender = gender
+        self._setGenderVals()
         self.callEvent('onChanging', events3d.HumanEvent(self, 'gender'))
 
     def getGender(self):
-        return self.maleVal
+        return self.gender
 
-    def _setGenderVals(self, amount):
-        if self.maleVal == amount:
-            return
-        self.maleVal = amount
-        self.femaleVal = 1 - amount
+    def _setGenderVals(self):
+        self.maleVal = self.gender
+        self.femaleVal = 1 - self.gender
 
     def setAge(self, age):
         """
@@ -201,33 +188,23 @@ class Human(gui3d.Object):
         """
 
         age = min(max(age, 0.0), 1.0)
-        self._setAgeVals(-1 + 2 * age)
+        if self.age == age:
+            return
+        self.age = age
+        self._setAgeVals()
         self.callEvent('onChanging', events3d.HumanEvent(self, 'age'))
 
     def getAge(self):
-        if self.oldVal:
-            return 0.5 + self.oldVal / 2.0
-        elif self.childVal:
-            return 0.5 - self.childVal / 2.0
-        else:
-            return 0.5
+        return self.age
 
-    def _setAgeVals(self, amount):
-        if amount >= 0:
-            if self.oldVal == amount and self.childVal == 0:
-                return
-            self.oldVal = amount
-            self.childVal = 0
-        else:
-            if self.childVal == -amount and self.oldVal == 0:
-                return
-            self.childVal = -amount
-            self.oldVal = 0
+    def _setAgeVals(self):
+        self.oldVal = max(0.0, self.age * 2 - 1)
+        self.childVal = max(0.0, 1 - self.age * 2)
         self.youngVal = 1 - (self.oldVal + self.childVal)
 
     def setWeight(self, weight):
         """
-        Sets the amount of weight of the model. 0 for underweight, 1 for overweight.
+        Sets the amount of weight of the model. 0 for underweight, 1 for heavy.
 
         Parameters
         ----------
@@ -238,28 +215,19 @@ class Human(gui3d.Object):
         """
 
         weight = min(max(weight, 0.0), 1.0)
-        self._setWeightVals(-1 + 2 * weight)
+        if self.weight == weight:
+            return
+        self.weight = weight
+        self._setWeightVals()
         self.callEvent('onChanging', events3d.HumanEvent(self, 'weight'))
 
     def getWeight(self):
-        if self.overweightVal:
-            return 0.5 + self.overweightVal / 2.0
-        elif self.underweightVal:
-            return 0.5 - self.underweightVal / 2.0
-        else:
-            return 0.5
+        return self.weight
 
-    def _setWeightVals(self, amount):
-        if amount >= 0:
-            if self.overweightVal == amount and self.underweightVal == 0:
-                return
-            self.overweightVal = amount
-            self.underweightVal = 0
-        else:
-            if self.underweightVal == -amount and self.overweightVal == 0:
-                return
-            self.underweightVal = -amount
-            self.overweightVal = 0
+    def _setWeightVals(self):
+        self.heavyVal = max(0.0, self.weight * 2 - 1)
+        self.lightVal = max(0.0, 1 - self.weight * 2)
+        self.averageWeightVal = 1 - (self.heavyVal + self.lightVal)
 
     def setMuscle(self, muscle):
         """
@@ -274,28 +242,64 @@ class Human(gui3d.Object):
         """
 
         muscle = min(max(muscle, 0.0), 1.0)
-        self._setMuscleVals(-1 + 2 * muscle)
+        if self.muscle == muscle:
+            return
+        self.muscle = muscle
+        self._setMuscleVals()
         self.callEvent('onChanging', events3d.HumanEvent(self, 'muscle'))
 
     def getMuscle(self):
-        if self.muscleVal:
-            return 0.5 + self.muscleVal / 2.0
-        elif self.flaccidVal:
-            return 0.5 - self.flaccidVal / 2.0
-        else:
-            return 0.5
+        return self.muscle
 
-    def _setMuscleVals(self, amount):
-        if amount >= 0:
-            if self.muscleVal == amount and self.flaccidVal == 0:
-                return
-            self.muscleVal = amount
-            self.flaccidVal = 0
-        else:
-            if self.flaccidVal == -amount and self.muscleVal == 0:
-                return
-            self.flaccidVal = -amount
-            self.muscleVal = 0
+    def _setMuscleVals(self):
+        self.muscleVal = max(0.0, self.muscle * 2 - 1)
+        self.flaccidVal = max(0.0, 1 - self.muscle * 2)
+        self.averageToneVal = 1 - (self.muscleVal + self.flaccidVal)
+
+    def setHeight(self, height):
+        height = min(max(height, 0.0), 1.0)
+        if self.height == height:
+            return
+        self.height = height
+        self._setHeightVals()
+        self.callEvent('onChanging', events3d.HumanEvent(self, 'height'))
+
+    def getHeight(self):
+        return self.height
+
+    def _setHeightVals(self):
+        self.dwarfVal = max(0.0, 1 - self.height * 2)
+        self.giantVal = max(0.0, self.height * 2 - 1)
+
+    def setBreastSize(self, size):
+        size = min(max(size, 0.0), 1.0)
+        if self.breastSize == size:
+            return
+        self.breastSize = size
+        self._setBreastSizeVals()
+        self.callEvent('onChanging', events3d.HumanEvent(self, 'breastSize'))
+
+    def getBreastSize(self):
+        return self.breastSize
+
+    def _setBreastSizeVals(self):
+        self.cup2Val = max(0.0, self.breastSize * 2 - 1)
+        self.cup1Val = max(0.0, 1 - self.breastSize * 2)
+
+    def setBreastFirmness(self, firmness):
+        firmness = min(max(firmness, 0.0), 1.0)
+        if self.breastFirmness == firmness:
+            return
+        self.breastFirmness = firmness
+        self._setBreastFirmnessVals()
+        self.callEvent('onChanging', events3d.HumanEvent(self, 'breastFirmness'))
+
+    def getBreastFirmness(self):
+        return self.breastFirmness
+
+    def _setBreastFirmnessVals(self):
+        self.firmness1Val = self.breastFirmness
+        self.firmness0Val = 1 - self.breastFirmness
 
     def setCaucasian(self, caucasian, sync=True):
         caucasian = min(max(caucasian, 0.0), 1.0)
@@ -360,31 +364,6 @@ class Human(gui3d.Object):
             self.caucasianVal *= scale
             self.asianVal *= scale
             self.africanVal *= scale
-
-    def setHeight(self, height):
-        height = min(max(height, -1.0), 1.0)
-        self._setHeightVals(height)
-        self.callEvent('onChanging', events3d.HumanEvent(self, 'height'))
-
-    def getHeight(self):
-        if self.giantVal:
-            return self.giantVal
-        elif self.dwarfVal:
-            return -self.dwarfVal
-        else:
-            return 0.0
-
-    def _setHeightVals(self, amount):
-        if amount >= 0:
-            if self.giantVal == amount and self.dwarfVal == 0:
-                return
-            self.giantVal = amount
-            self.dwarfVal = 0
-        else:
-            if self.dwarfVal == -amount and self.giantVal == 0:
-                return
-            self.dwarfVal = -amount
-            self.giantVal = 0
             
     def setDetail(self, name, value):
         if value:
@@ -550,23 +529,30 @@ class Human(gui3d.Object):
         self.meshData.vnorm[...] = self.meshStoredNormals
         self.meshData.markCoords(coor=True, norm=True)
 
-    def resetMeshValues(self):
-        self.childVal = 0.0
-        self.youngVal = 1.0
-        self.oldVal = 0.0
-        self.femaleVal = 0.5
-        self.maleVal = 0.5
-        self.flaccidVal = 0.0
-        self.muscleVal = 0.0
-        self.overweightVal = 0.0
-        self.underweightVal = 0.0
+    def setDefaultValues(self):
+        self.age = 0.5
+        self.gender = 0.5
+        self.weight = 0.5
+        self.muscle = 0.5
+        self.height = 0.5
+        self.breastSize = 0.5
+        self.breastFirmness = 0.5
+
+        self._setGenderVals()
+        self._setAgeVals()
+        self._setWeightVals()
+        self._setMuscleVals()
+        self._setHeightVals()
+        self._setBreastSizeVals()
+        self._setBreastFirmnessVals()
+
         self.caucasianVal = 1.0/3
         self.asianVal = 1.0/3
         self.africanVal = 1.0/3
-        self.dwarfVal = 0.0
-        self.giantVal = 0.0
-        self.breastSize = 0.0
-        self.breastFirmness = 0.5
+
+    def resetMeshValues(self):
+        self.setDefaultValues()
+
         self.targetsDetailStack = {}
         
         self.setTexture("data/textures/texture.png")
@@ -589,24 +575,6 @@ class Human(gui3d.Object):
                 elif lineData[0] == 'tags':
                     for tag in lineData:
                         log.message('Tag %s', tag)
-                elif lineData[0] == 'gender':
-                    self.setGender(float(lineData[1]))
-                elif lineData[0] == 'age':
-                    self.setAge(float(lineData[1]))
-                elif lineData[0] == 'muscle':
-                    self.setMuscle(float(lineData[1]))
-                elif lineData[0] == 'weight':
-                    self.setWeight(float(lineData[1]))
-                elif lineData[0] == 'caucasian':
-                    self.setCaucasian(float(lineData[1]), False)
-                elif lineData[0] == 'african':
-                    self.setAfrican(float(lineData[1]), False)
-                elif lineData[0] == 'asian':
-                    self.setAsian(float(lineData[1]), False)
-                elif lineData[0] == 'height':
-                    self.setHeight(float(lineData[1]))
-                elif lineData[0] == 'asymmetry':
-                    self.targetsDetailStack['data/targets/asym/' + lineData[1] + '.target'] = float(lineData[2])
                 elif lineData[0] in gui3d.app.loadHandlers:
                     gui3d.app.loadHandlers[lineData[0]](self, lineData)
                 else:
@@ -627,18 +595,6 @@ class Human(gui3d.Object):
         f.write('# Written by makehuman 1.0.0 alpha 8\n')
         f.write('version 1.0.0\n')
         f.write('tags %s\n' % tags)
-        f.write('gender %f\n' % self.getGender())
-        f.write('age %f\n' % self.getAge())
-        f.write('muscle %f\n' % self.getMuscle())
-        f.write('weight %f\n' % self.getWeight())
-        f.write('african %f\n' % self.getAfrican())
-        f.write('asian %f\n' % self.getAsian())
-        f.write('caucasian %f\n' % self.getCaucasian())
-        f.write('height %f\n' % self.getHeight())
-
-        for t in self.targetsDetailStack.keys():
-            if '/asym' in t:
-               f.write('asymmetry %s %f\n' % (os.path.basename(t).replace('.target', ''), self.targetsDetailStack[t]))
                
         for handler in gui3d.app.saveHandlers:
             handler(self, f)
