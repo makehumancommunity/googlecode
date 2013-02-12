@@ -70,8 +70,8 @@ class ExporterMHX(Exporter):
         self.filter = "Blender Exchange (*.mhx)"
 
 
-    def build(self, options):
-        #Exporter.build(self, options)
+    def build(self, options, taskview):
+        #Exporter.build(self, options, taskview)
         
         self.useTexFolder   = options.addWidget(gui.CheckBox("Separate folder", False))
         self.hidden         = options.addWidget(gui.CheckBox("Keep hidden faces", True))

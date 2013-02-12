@@ -32,7 +32,7 @@ class ExporterUV(Exporter):
         self.name = "UV map"
         self.filter = "PNG (*.png)"
 
-    def build(self, options):
+    def build(self, options, taskview):
         self.uvmapDisplay = options.addWidget(gui.CheckBox("Display on human", False))
 
     def export(self, human, filename):

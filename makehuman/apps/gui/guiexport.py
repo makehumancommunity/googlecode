@@ -54,10 +54,15 @@ class ExportTaskView(gui3d.TaskView):
         # Map formats
         self.mapsBox = self.addLeftWidget(gui.GroupBox('Maps'))
 
+        # Scales
+        self.scaleBox = self.addLeftWidget(gui.GroupBox('Scale'))
+        self.scaleButtons = self.addScales(self.scaleBox)
+
         self.boxes = {
             'mesh': self.formatBox,
             'rig': self.rigBox,
-            'map': self.mapsBox
+            'map': self.mapsBox,
+            'scale': self.scaleBox
             }
 
         self.empty = True
@@ -95,10 +100,34 @@ class ExportTaskView(gui3d.TaskView):
 
             mh.changeCategory('Modelling')
             
+
+    _scales = {
+        "decimeter": 1.0,
+        "meter": 0.1,
+        "inch": 1.0/0.254,
+        "centimeter": 10.0
+        }
+
+    def addScales(self, scaleBox):
+        check = True
+        buttons = []
+        scales = []
+        for name in ["decimeter", "meter", "inch", "centimeter"]:
+            button = scaleBox.addWidget(gui.RadioButton(scales, name, check))
+            check = False
+            buttons.append((button,name))
+        return buttons
+
+    def getScale(self):
+        for (button, name) in self.scaleButtons:
+            if button.selected and name in self._scales:
+                return (self._scales[name], name)
+        return (1, "decimeter")
+
     def addExporter(self, exporter):
         radio = self.boxes[exporter.group].addWidget(gui.RadioButton(self.exportBodyGroup, exporter.name, self.empty))
         options = self.optionsBox.addWidget(gui.GroupBox('Options'))
-        exporter.build(options)
+        exporter.build(options, self)
         self.empty = False
         self.formats.append((exporter, radio, options))
 

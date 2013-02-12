@@ -58,7 +58,7 @@ class Config:
         self.lashes             = exporter.lashes.selected
         self.helpers            = exporter.helpers.selected
         self.hidden             = exporter.hidden.selected
-        self.scale,self.unit    = exporter.getScale(exporter.scales)
+        self.scale,self.unit    = exporter.taskview.getScale()
         self.subdivide          = exporter.smooth.selected
         
         return self

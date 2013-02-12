@@ -32,7 +32,7 @@ class ExporterLight(Exporter):
         self.name = "Lightmap"
         self.filter = "PNG (*.png)"
 
-    def build(self, options):
+    def build(self, options, taskview):
         self.lightmapDisplay = options.addWidget(gui.CheckBox("Display on human", False))
 
     def export(self, human, filename):

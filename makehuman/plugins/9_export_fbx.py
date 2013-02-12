@@ -50,8 +50,8 @@ class ExporterFBX(Exporter):
         self.name = "Filmbox (fbx)"
         self.filter = "Filmbox (*.fbx)"
 
-    def build(self, options):
-        Exporter.build(self, options)
+    def build(self, options, taskview):
+        Exporter.build(self, options, taskview)
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
         self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
         self.rigtypes        = self.addRigs(options)

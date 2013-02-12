@@ -32,7 +32,7 @@ class ExporterSkel(Exporter):
         self.name = "Skeleton (skel)"
         self.filter = "Skeleton (*.skel)"
 
-    def build(self, options):
+    def build(self, options, taskview):
         self.exportSmooth = options.addWidget(gui.CheckBox("Subdivide", False))
 
     def export(self, human, filename):

@@ -31,7 +31,7 @@ class ExporterSTL(Exporter):
         self.name = "Stereolithography (stl)"
         self.filter = "Stereolithography (*.stl)"
 
-    def build(self, options):
+    def build(self, options, taskview):
         stlOptions = []
         self.stlAscii = options.addWidget(gui.RadioButton(stlOptions,  "Ascii", selected=True))
         self.stlBinary = options.addWidget(gui.RadioButton(stlOptions, "Binary"))

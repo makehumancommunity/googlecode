@@ -40,8 +40,8 @@ class ExporterOBJ(Exporter):
         self.name = "Wavefront obj"
         self.filter = "Wavefront (*.obj)"
 
-    def build(self, options):
-        Exporter.build(self, options)
+    def build(self, options, taskview):
+        Exporter.build(self, options, taskview)
         self.skeleton       = options.addWidget(gui.CheckBox("Skeleton", True))
 
     def export(self, human, filename):

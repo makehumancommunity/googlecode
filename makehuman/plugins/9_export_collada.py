@@ -45,8 +45,8 @@ class ExporterCollada(Exporter):
         self.filter = "Collada (*.dae)"
 
 
-    def build(self, options):
-        Exporter.build(self, options)
+    def build(self, options, taskview):
+        Exporter.build(self, options, taskview)
         self.rotate90X = options.addWidget(gui.CheckBox("Rotate 90 X", False))
         self.rotate90Z = options.addWidget(gui.CheckBox("Rotate 90 Z", False))
         self.rigtypes = self.addRigs(options)
