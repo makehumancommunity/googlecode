@@ -491,14 +491,16 @@ class Object3D(object):
             group = group[order]
             index = index[order]
 
-        group, start = np.unique(group, return_index=True)
-        count = np.empty(len(start), dtype=np.uint32)
-        count[:-1] = start[1:] - start[:-1]
-        count[-1] = len(index) - start[-1]
+            group, start = np.unique(group, return_index=True)
+            count = np.empty(len(start), dtype=np.uint32)
+            count[:-1] = start[1:] - start[:-1]
+            count[-1] = len(index) - start[-1]
 
-        grpix = np.zeros((max(self.group)+1,2), dtype=np.uint32)
-        grpix[group,0] = start
-        grpix[group,1] = count
+            grpix = np.zeros((max(self.group)+1,2), dtype=np.uint32)
+            grpix[group,0] = start
+            grpix[group,1] = count
+        else:
+            grpix = np.zeros((0,2), dtype=np.uint32)
 
         self.index = index
         self.grpix = grpix
