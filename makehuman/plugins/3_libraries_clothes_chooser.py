@@ -81,6 +81,8 @@ class ClothesTaskView(gui3d.TaskView):
         self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
         self.mediaSync = None
 
+        self.originalHumanMask = gui3d.app.selectedHuman.meshData.getFaceMask().copy()
+
         @self.filechooser.mhEvent
         def onFileSelected(filename):
             gui3d.app.do(ClothesAction("Change clothing piece",
@@ -100,12 +102,13 @@ class ClothesTaskView(gui3d.TaskView):
             for name,clo in human.clothesObjs.items():
                 gui3d.app.removeObject(clo)
                 del human.clothesObjs[name]
-            for proxy in human.clothesProxies:
-                if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
-                    self.unhideVerts(proxy.deleteVerts)
+            #for proxy in human.clothesProxies:
+            #    if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
+            #        self.unhideVerts(proxy.deleteVerts)
             human.clothesProxies = []
             self.clothesList = []
             human.activeClothing = None
+            self.updateFaceMasks()
             return
 
         proxy = mh2proxy.readProxyFile(human.meshData, filepath, False)
@@ -170,9 +173,10 @@ class ClothesTaskView(gui3d.TaskView):
             if human.activeClothing == uuid:
                 human.activeClothing = None
             proxy = human.clothesProxies[uuid]
-            if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
-                self.unhideVerts(proxy.deleteVerts)
+            #if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
+            #    self.unhideVerts(proxy.deleteVerts)
             del human.clothesProxies[uuid]
+            self.updateFaceMasks()
             log.message("Removed clothing %s %s", proxy.name, uuid)
             return
 
@@ -206,8 +210,8 @@ class ClothesTaskView(gui3d.TaskView):
         human.clothesProxies[uuid] = proxy
         human.activeClothing = uuid
         self.clothesList.append(uuid)
-        if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
-            self.hideVerts(proxy.deleteVerts)
+        #if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
+        #    self.hideVerts(proxy.deleteVerts)
         
         for tag in proxy.tags:
             tag = tag.lower()
@@ -242,6 +246,61 @@ class ClothesTaskView(gui3d.TaskView):
         clo.setSubdivided(human.isSubdivided())
         
         #self.clothesButton.setTexture(obj.replace('.obj', '.png'))
+        self.updateFaceMasks()
+
+    def updateFaceMasks(self):
+        """
+        Apply facemask (deleteVerts) defined on clothes to body and lower layers
+        of clothing.
+        """
+        human = gui3d.app.selectedHuman
+        higherMask = np.ones(human.meshData.getFaceCount(), dtype=bool)
+        for uuid in reversed(self.clothesList):
+            proxy = human.clothesProxies[uuid]
+            obj = human.clothesObjs[uuid]
+
+            if not hasattr(proxy, 'faceMask'):
+                if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
+                    #print "%s | %s" % (len(proxy.deleteVerts), len(human.meshData.coord))
+                    verts = np.argwhere(proxy.deleteVerts)[...,0]
+                    proxy.faceMask = ~human.meshData.getFaceMaskForVertices(verts)
+
+                    # Create mapping from clothes faces to body faces
+                    proxy.basemeshFacesMapping = []
+                    for f in obj.mesh.fvert:
+                        vs = []
+                        bvs = set() # ~12 body verts total
+                        for v in f: # 4 clothes verts
+                            vs.append(v)
+                            [ bvs.add(bv) for bv in proxy.refVerts[v][:3] ] # 3 body verts per clothes vert
+                        #print "Body verts: %s" % len(bvs)
+                        bfs = human.meshData.getFacesForVertices(list(bvs))  # ~15-33 body faces
+                        #print "Body faces: %s" % len(bfs)
+                        ##proxy.basemeshFacesMapping.append(bfs[0])
+                        proxy.basemeshFacesMapping.append(bfs)  # One clothes face mapped to multiple body faces
+
+                    proxy.basemeshFacesMapping = np.array(proxy.basemeshFacesMapping)
+                else:
+                    proxy.faceMask = np.ones(human.meshData.getFaceCount(), dtype=bool)
+
+            #faceMask = np.logical_and(~faceMask, human.meshData.getFaceMask())
+            #print "%s and %s" % (len(proxy.faceMask), len(higherMask))
+            #print len (proxy.basemeshFacesMapping)
+            mask = []
+            for m in proxy.basemeshFacesMapping:
+                result = np.count_nonzero(higherMask[m]) == len(m)
+                #result = np.count_nonzero(higherMask[m]) > len(m)/2
+                mask.append(result)
+            ##obj.mesh.changeFaceMask(higherMask[proxy.basemeshFacesMapping])
+            log.debug("%s faces masked for %s" % (np.count_nonzero(~np.array(mask, dtype=bool)), proxy.name))
+            obj.mesh.changeFaceMask(mask)
+            obj.mesh.updateIndexBufferFaces()
+
+            higherMask = np.logical_and(proxy.faceMask, higherMask)
+
+        human.meshData.changeFaceMask(np.logical_and(higherMask, self.originalHumanMask))
+        human.meshData.updateIndexBufferFaces()
+        log.debug("%s faces masked for basemesh" % np.count_nonzero(~higherMask))
 
     def hideVerts(self, vertsToHide):
         # TODO also propagate to other clothes
