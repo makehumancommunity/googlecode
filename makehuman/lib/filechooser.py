@@ -303,7 +303,7 @@ class FileChooser(QtGui.QWidget, gui.Widget):
         preview = filename
         
         if self.previewExtensions:
-            log.debug('%s, %s', self.extension, self.previewExtensions)
+            #log.debug('%s, %s', self.extension, self.previewExtensions)
             preview = filename.replace('.' + self.extension, '.' + self.previewExtensions[0])
             i = 1
             while not os.path.exists(preview) and i < len(self.previewExtensions):
