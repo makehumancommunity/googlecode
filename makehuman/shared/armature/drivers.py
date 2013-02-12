@@ -215,7 +215,7 @@ def writePropDriver(fp, info, props, expr, dataPath, index):
     return writeDriver(fp, True, ('SCRIPTED', expr), "", dataPath, index, (0,1), drvVars)
     
 
-def writeTextureDrivers(fp, drivers):
+def writeTextureDrivers(fp, info, drivers):
     driverList = []
     for (tex, vlist) in drivers.items():
         drvVars = []
@@ -226,7 +226,7 @@ def writeTextureDrivers(fp, drivers):
     return driverList
 
 
-def writeShapeDrivers(fp, drivers, proxy):
+def writeShapeDrivers(fp, info, drivers, proxy):
     driverList = []
     dlist = list(drivers.items())
     dlist.sort()

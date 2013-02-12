@@ -554,10 +554,12 @@ def setupRig(info):
         )
         headsTails = []
         config.armatureBones = []
-        #if config.facepanel:            
-        #    joints += rig_panel_25.PanelJoints
-        #    headsTails += rig_panel_25.PanelHeadsTails
-        #    config.armatureBones += rig_panel_25.PanelArmature
+
+        if config.facepanel:            
+            joints += rig_panel_25.PanelJoints
+            headsTails += rig_panel_25.PanelHeadsTails
+            config.armatureBones += rig_panel_25.PanelArmature
+
         newSetupJoints(info, joints)        
         moveOriginToFloor(info)
         for (bone, head, tail) in headsTails:
@@ -577,12 +579,10 @@ def setupRig(info):
         log.message("Default rig %s", config.rigtype)
         return
 
-    """        
     if config.facepanel:            
         joints += rig_panel_25.PanelJoints
         headsTails += rig_panel_25.PanelHeadsTails
         config.armatureBones += rig_panel_25.PanelArmature
-    """
     
     if config.rigtype == 'mhx':
         if config.skirtRig == "own":
@@ -714,14 +714,12 @@ def writeControlPoses(fp, info):
             rig_body_25.MaleControlPoses(fp, info)
         if config.skirtRig == "own":
             rig_skirt_25.SkirtControlPoses(fp, info)
-    elif config.rigtype == 'blenrig':
-        blenrig_rig.BlenrigWritePoses(fp, info)
     elif config.rigtype == 'rigify':
         rigify_rig.RigifyWritePoses(fp, info)
         rig_face_25.FaceControlPoses(fp, info)
         
-    #if config.facepanel:
-    #    rig_panel_25.PanelControlPoses(fp, info)
+    if config.facepanel:
+        rig_panel_25.PanelControlPoses(fp, info)
         
     for (bone, cinfo) in info.config.poseInfo.items():
         cs = None
@@ -791,9 +789,6 @@ def writeAllDrivers(fp, info):
         faceDrivers = rig_face_25.FaceDeformDrivers(fp, info)
         driverList += armature.drivers.writeDrivers(fp, True, faceDrivers)
         return driverList
-    elif config.rigtype == 'blenrig':            
-        drivers = blenrig_rig.getBlenrigDrivers()
-        armature.drivers.writeDrivers(fp, True, drivers)
     elif rigtype == 'rigify':            
         rig_face_25.FaceDeformDrivers(fp, info)        
         armature.drivers.writePropDrivers(fp, info, rig_face_25.FacePropDrivers, "", "Mha")

@@ -38,6 +38,7 @@ class MhxConfig(Config):
         
         self.useMasks =         exporter.masks.selected
         self.expressions =      exporter.expressions.selected
+        self.facepanel =        exporter.facepanel.selected
         self.bodyShapes =       exporter.bodyShapes.selected
         self.useCustomShapes =  exporter.useCustomShapes.selected
         self.cage =             exporter.cage.selected
@@ -77,6 +78,7 @@ class ExporterMHX(Exporter):
         
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
         self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))
+        self.facepanel      = options.addWidget(gui.CheckBox("Face rig", False))
         self.bodyShapes     = options.addWidget(gui.CheckBox("Body shapes", False))
         self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
         self.masks          = options.addWidget(gui.CheckBox("Clothes masks", False))

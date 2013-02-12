@@ -167,7 +167,7 @@ def readShape(filename):
 #----------------------------------------------------------
 #   
 #----------------------------------------------------------
-"""
+
 def readFaceShapes(human, drivers, t0, t1):
     shapeList = []
     shapes = {}
@@ -178,9 +178,11 @@ def readFaceShapes(human, drivers, t0, t1):
         if (name[-2:] in ["_L", "_R"]):
             lr = "LR"
             sname = name[:-2]
+            t += 2*dt
         else:
             lr = "Sym"
             sname = name
+            t += dt
 
         try:
             shape = shapes[fname]
@@ -192,17 +194,16 @@ def readFaceShapes(human, drivers, t0, t1):
                 
             shape = warpmodifier.compileWarpTarget(
                     'shared/mhx/targets/body_language/${gender}-${age}/%s.target' % fname, 
-                    "GenderAgeEthnicModifier",
+                    "GenderAge",
                     human, 
                     "face")
 
             shapes[fname] = shape                
             shapeList.append((sname, shape, lr, min, max))
-            t += dt
     shapeList.sort()
     return shapeList
         
-
+"""
 def readExpressions(human, t0, t1):
     shapeList = []
     t,dt = initTimes(Expressions, 0.0, 1.0)

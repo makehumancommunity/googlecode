@@ -88,6 +88,10 @@ def saveWarpedTarget(shape, path):
 #----------------------------------------------------------
 
 theModifierTypes = {
+    "GenderAge" : [
+        ('macrodetails', None, 'Gender', 0.0, 1.0),
+        ('macrodetails', None, 'Age', 0.0, 1.0),
+    ],
     "GenderAgeEthnic" : [
         ('macrodetails', None, 'Gender', 0.0, 1.0),
         ('macrodetails', None, 'Age', 0.0, 1.0),
@@ -154,7 +158,9 @@ class WarpModifier (humanmodifier.SimpleModifier):
             
         self.bases = {}
         self.targetSpecs = {}
-        if modtype == "GenderAgeEthnic":            
+        if modtype == "GenderAge":            
+            self.setupBaseCharacters("Gender", "Age", "NoEthnic", "NoUniv", "NoUniv")
+        elif modtype == "GenderAgeEthnic":            
             self.setupBaseCharacters("Gender", "Age", "Ethnic", "NoUniv", "NoUniv")
         elif modtype == "GenderAgeToneWeight":
             self.setupBaseCharacters("Gender", "Age", "NoEthnic", "Tone", "Weight")

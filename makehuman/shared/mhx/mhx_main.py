@@ -136,7 +136,7 @@ def exportMhx_25(info, fp):
 "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
 "end Object\n\n")
 
-    if info.config.rigtype in ['mhx', 'rigify', 'blenrig']:
+    if info.config.rigtype in ['mhx', 'rigify']:
         for fname in info.config.gizmoFiles:
             copyFile25(fname, fp, None, info)    
         mhx_rig.setupCircles(fp)
@@ -149,12 +149,11 @@ def exportMhx_25(info, fp):
                 mhx_rig.setupCube(fp, name, 0.1*r, (0,0,0))
             else:
                 halt
-        """                
+
         if info.config.facepanel:
             mhx_rig.setupCube(fp, "MHCube025", 0.25, 0)
             mhx_rig.setupCube(fp, "MHCube05", 0.5, 0)
             copyFile25("shared/mhx/templates/panel_gizmo25.mhx", fp, None, info)    
-        """            
         
     gui3d.app.progress(0.1, text="Exporting armature")
     copyFile25("shared/mhx/templates/rig-armature25.mhx", fp, None, info)    
@@ -1103,13 +1102,10 @@ def writeShapeKeys(fp, info, name, proxy):
 "  ShapeKey Basis Sym True\n" +
 "  end ShapeKey\n")
 
-    """
-    if isHuman:        
-        if info.config.faceshapes:
-            shapeList = exportutils.shapekeys.readFaceShapes(human, rig_panel_25.BodyLanguageShapeDrivers, 0.6, 0.7)
-            for (pose, shape, lr, min, max) in shapeList:
-                writeShape(fp, pose, lr, shape, min, max, proxy)
-    """
+    if isHuman and info.config.facepanel:
+        shapeList = exportutils.shapekeys.readFaceShapes(info.human, rig_panel_25.BodyLanguageShapeDrivers, 0.6, 0.7)
+        for (pose, shape, lr, min, max) in shapeList:
+            writeShape(fp, pose, lr, shape, min, max, proxy)
     
     if isHuman and info.config.expressions:
         try:
@@ -1142,7 +1138,6 @@ def writeShapeKeys(fp, info, name, proxy):
 
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
         
-    print("BSS", name, proxy, isHair)
     if info.config.bodyShapes and info.config.rigtype == "mhx" and not isHair:
         armature.drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, info.name)
         armature.drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, info.name)
@@ -1162,6 +1157,9 @@ def writeShapeKeys(fp, info, name, proxy):
         if info.config.expressions:
             armature.drivers.writeShapePropDrivers(fp, info, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
             
+        if info.config.facepanel:
+            armature.drivers.writeShapeDrivers(fp, info, rig_panel_25.BodyLanguageShapeDrivers, proxy)
+        
         skeys = []
         for (skey, val, string, min, max) in  info.config.customProps:
             skeys.append(skey)
