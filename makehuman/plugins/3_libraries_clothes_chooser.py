@@ -247,19 +247,19 @@ class ClothesTaskView(gui3d.TaskView):
         # TODO also propagate to other clothes
         human = gui3d.app.selectedHuman
 
+        # Convert list of booleans to list of vertex indexes to hide
         vertsToHide = np.copy(vertsToHide)
         vertsToHide.resize(len(human.meshData.getFaceMask()))
+        verts = np.argwhere(vertsToHide)[...,0]
 
-        # Convert list of booleans to list of vertex indexes to hide
-        vertsToShow = np.logical_and(~vertsToHide, human.meshData.getFaceMask())
-        verts = np.argwhere(vertsToShow)[...,0]
+        faceMask = human.meshData.getFaceMaskForVertices(verts)
+        faceMask = np.logical_and(~faceMask, human.meshData.getFaceMask())
 
         ## Debug ##
         faces = human.meshData.getFacesForVertices(verts)
         log.debug("Hiding %s faces", (len(gui3d.app.selectedHuman.meshData.fuvs) - len(faces)))
         ###########
 
-        faceMask = human.meshData.getFaceMaskForVertices(verts)
         human.meshData.changeFaceMask(faceMask)
         human.meshData.updateIndexBufferFaces()
 
@@ -268,12 +268,12 @@ class ClothesTaskView(gui3d.TaskView):
 
         vertsToUnhide = np.copy(vertsToUnhide)
         vertsToUnhide.resize(len(human.meshData.getFaceMask()))
+        verts = np.argwhere(vertsToUnhide)[...,0]
 
-        vertsToShow = np.logical_or(vertsToUnhide, human.meshData.getFaceMask())
-        verts = np.argwhere(vertsToShow)[...,0]
+        faceMask = human.meshData.getFaceMaskForVertices(verts)
+        faceMask = np.logical_or(faceMask, human.meshData.getFaceMask())
 
         human = gui3d.app.selectedHuman
-        faceMask = human.meshData.getFaceMaskForVertices(verts)
         human.meshData.changeFaceMask(faceMask)
         human.meshData.updateIndexBufferFaces()
     
