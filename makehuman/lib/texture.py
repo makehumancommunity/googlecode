@@ -108,7 +108,7 @@ class Texture(object):
             if not use_mipmaps:
                 glTexImage2D(GL_PROXY_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, pixels)
                 if not glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH):
-                    log.notice('texture size (%d x %d) too large, building mipmaps', wdith, height)
+                    log.notice('texture size (%d x %d) too large, building mipmaps', width, height)
                     use_mipmaps = True
 
             if use_mipmaps:
