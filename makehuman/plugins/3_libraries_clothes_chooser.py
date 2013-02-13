@@ -185,8 +185,6 @@ class ClothesTaskView(gui3d.TaskView):
             if not os.path.exists(tex):
                 tex = os.path.join(self.systemClothes, "textures", name)
             mesh.setTexture(tex)
-        else:
-            pass
         
         clo = gui3d.app.addObject(gui3d.Object(human.getPosition(), mesh))
         clo.setRotation(human.getRotation())
@@ -239,12 +237,32 @@ class ClothesTaskView(gui3d.TaskView):
         clo.setSubdivided(human.isSubdivided())
         
         #self.clothesButton.setTexture(obj.replace('.obj', '.png'))
+        self.orderRenderQueue()
         self.updateFaceMasks()
+
+    def orderRenderQueue(self):
+        """
+        Sort clothes on proxy.z_depth parameter, both in self.clothesList and
+        in the render component.
+        """
+        human = gui3d.app.selectedHuman
+        decoratedClothesList = [(human.clothesProxies[uuid].z_depth, uuid) for uuid in self.clothesList]
+        decoratedClothesList.sort()
+        self.clothesList = [uuid for (_, uuid) in decoratedClothesList]
+
+        # Remove and re-add clothes in z_depth order to renderer
+        for uuid in self.clothesList:
+            try:
+                gui3d.app.removeObject(human.clothesObjs[uuid])
+            except:
+                pass
+        for uuid in self.clothesList:
+            gui3d.app.addObject(human.clothesObjs[uuid])
 
     def updateFaceMasks(self):
         """
         Apply facemask (deleteVerts) defined on clothes to body and lower layers
-        of clothing.
+        of clothing. Uses order as defined in self.clothesList.
         """
         human = gui3d.app.selectedHuman
         vertsMask = np.ones(human.meshData.getVertexCount(), dtype=bool)
