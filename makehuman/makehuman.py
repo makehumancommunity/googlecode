@@ -31,7 +31,7 @@ import string
 import re
 import subprocess
 
-# print os.getcwd()
+# print >> sys.stderr,  os.getcwd()
 
 def find_mydocuments():
     os.environ['MYDOCUMENTS'] = os.path.expanduser('~')
@@ -47,7 +47,7 @@ def find_mydocuments():
             if type == 1:
                 os.environ['MYDOCUMENTS'] = name
         except Exception as e:
-            print "error: " + format(str(e))
+            print >> sys.stderr,  "error: " + format(str(e))
 
 def get_revision_svn_info():
     # Try getting svn revision by calling svn info (will only work in linux
@@ -97,23 +97,23 @@ def get_svn_revision_1():
         os.environ['SVNREVISION_SOURCE'] = "svn info command"
         return svnrev
     except Exception as e:
-        print "NOTICE: Failed to get svn version number from command line: " + format(str(e)) + " (This is just a head's up, not a critical error)"
+        print >> sys.stderr,  "NOTICE: Failed to get svn version number from command line: " + format(str(e)) + " (This is just a head's up, not a critical error)"
 
     try:
         svnrev = get_revision_entries()
         os.environ['SVNREVISION_SOURCE'] = "entries file"
         return svnrev
     except Exception as e:
-        print "NOTICE: Failed to get svn version from file: " + format(str(e)) + " (This is just a head's up, not a critical error)"
+        print >> sys.stderr,  "NOTICE: Failed to get svn version from file: " + format(str(e)) + " (This is just a head's up, not a critical error)"
 
     try:
         svnrev = get_revision_pysvn()
         os.environ['SVNREVISION_SOURCE'] = "pysvn"
         return svnrev
     except Exception as e:
-        print "NOTICE: Failed to get svn version number using pysvn: " + format(str(e)) + " (This is just a head's up, not a critical error)"
+        print >> sys.stderr,  "NOTICE: Failed to get svn version number using pysvn: " + format(str(e)) + " (This is just a head's up, not a critical error)"
 
-    print "NOTICE: Using SVN rev from file stamp. This is likely outdated, so the number in the title bar might be off by a few commits."
+    print >> sys.stderr,  "NOTICE: Using SVN rev from file stamp. This is likely outdated, so the number in the title bar might be off by a few commits."
     svnrev = get_revision_file()
     os.environ['SVNREVISION_SOURCE'] = "approximated from file stamp"
     return svnrev
@@ -121,7 +121,7 @@ def get_svn_revision_1():
 def get_svn_revision():
     # Set SVN rev in environment so it can be used elsewhere
     svnrev = get_svn_revision_1()
-    print "Detected SVN revision: " + svnrev
+    print >> sys.stderr,  "Detected SVN revision: " + svnrev
     os.environ['SVNREVISION'] = svnrev
 
 def recursiveDirNames(root):
