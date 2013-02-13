@@ -318,10 +318,10 @@ def findClothes(context, bob, pob, log):
             selectVerts([pv], pob)
             raise error.MhcloError(msg)
 
-        if gname[0:3] != "Mid":
+        if gname[0:3] != "Mid" and gname[-2:] != "_M":
             bindex = -1
         bestVerts.append((pv, bindex, exact, mverts, []))
-
+    
     print("Setting up face table")
     vfaces = {}
     for v in base.vertices:
@@ -585,9 +585,14 @@ def printClothes(context, bob, pob, data):
     fp.write("# name %s\n" % pob.name.replace(" ","_"))
     fp.write("# obj_file %s.obj\n" % goodName(pob.name))
     vnums = BodyPartVerts[scn.MCBodyPart]
-    printScale(fp, bob, scn, 'x_scale', 0, vnums[0])
-    printScale(fp, bob, scn, 'z_scale', 1, vnums[1])
-    printScale(fp, bob, scn, 'y_scale', 2, vnums[2])
+    if scn.MCScaleUniform:
+        printScale(fp, bob, scn, 'x_scale', 0, vnums[0])
+        printScale(fp, bob, scn, 'z_scale', 1, vnums[0])
+        printScale(fp, bob, scn, 'y_scale', 2, vnums[0])
+    else:
+        printScale(fp, bob, scn, 'x_scale', 0, vnums[0])
+        printScale(fp, bob, scn, 'z_scale', 1, vnums[1])
+        printScale(fp, bob, scn, 'y_scale', 2, vnums[2])
 
     if not isSelfClothed(context):
         printStuff(fp, pob, context)
@@ -2073,6 +2078,7 @@ BodyPartVerts = {
     "Hand" : ((14058, 15248), (3214, 3264), (4629, 5836)),
     "Leg" : ((3936, 3972), (3840, 3957), (14165, 14175)), 
     "Foot" : ((4909, 4943), (5728, 12226), (4684, 5732)), 
+    "Eye" : ((142, 197), (76, 141), (169, 225)), 
     }
 
 def examineBoundary(ob, scn):
@@ -2563,13 +2569,20 @@ def initInterface():
         description="Last clothing to keep vertices for",
         default=LastClothing)
 
+    bpy.types.Scene.MCScaleUniform = BoolProperty(
+        name="Uniform Scaling", 
+        description="Scale offset uniformly in the XYZ directions",
+        default=False)
+
     bpy.types.Scene.MCBodyPart = EnumProperty(
         items = [('Head', 'Head', 'Head'),
                  ('Torso', 'Torso', 'Torso'),
                  ('Arm', 'Arm', 'Arm'),
                  ('Hand', 'Hand', 'Hand'),
                  ('Leg', 'Leg', 'Leg'),
-                 ('Foot', 'Foot', 'Foot')],
+                 ('Foot', 'Foot', 'Foot'),
+                 ('Eye', 'Eye', 'Eye'),
+                 ],
         default='Head')                 
 
     setZDepthItems()
