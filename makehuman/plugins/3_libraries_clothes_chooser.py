@@ -253,6 +253,26 @@ class ClothesTaskView(gui3d.TaskView):
             proxy = human.clothesProxies[uuid]
             obj = human.clothesObjs[uuid]
 
+            # Convert basemesh vertex mask to local mask for proxy vertices
+            proxyVertMask = np.ones(len(proxy.refVerts), dtype=bool)
+            for idx,vs in enumerate(proxy.refVerts):
+                # Body verts to which proxy vertex with idx is mapped
+                (v1,v2,v3) = vs[:3]
+                # Hide proxy vert if any of its referenced body verts are hidden (most agressive)
+                #proxyVertMask[idx] = vertsMask[v1] and vertsMask[v2] and vertsMask[v3]
+                # Alternative1: only hide if at least two referenced body verts are hidden (best result)
+                proxyVertMask[idx] = np.count_nonzero(vertsMask[[v1, v2, v3]]) > 1
+                # Alternative2: Only hide proxy vert if all of its referenced body verts are hidden (least agressive)
+                #proxyVertMask[idx] = vertsMask[v1] or vertsMask[v2] or vertsMask[v3]
+                
+            proxyKeepVerts = np.argwhere(proxyVertMask)[...,0]
+            proxyFaceMask = obj.mesh.getFaceMaskForVertices(proxyKeepVerts)
+
+            # Apply accumulated mask from previous clothes layers on this clothing piece
+            obj.mesh.changeFaceMask(proxyFaceMask)
+            obj.mesh.updateIndexBufferFaces()
+            log.debug("%s faces masked for %s", np.count_nonzero(~proxyFaceMask), proxy.name)
+
             if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
                 log.debug("Loaded %s deleted verts (%s faces) from %s", np.count_nonzero(proxy.deleteVerts), len(human.meshData.getFacesForVertices(np.argwhere(proxy.deleteVerts)[...,0])),proxy.name)
 
@@ -261,23 +281,6 @@ class ClothesTaskView(gui3d.TaskView):
                 print "hidden verts: %s" % verts
                 vertsMask[verts] = False
             log.debug("masked verts %s", np.count_nonzero(~vertsMask))
-
-            # Convert basemesh vertex mask to local mask for proxy vertices
-            proxyVertMask = np.ones(len(proxy.refVerts), dtype=bool)
-            for idx,vs in enumerate(proxy.refVerts):
-                # Body verts to which proxy vertex with idx is mapped
-                (v1,v2,v3) = vs[:3]
-                # Only show proxy vert if none of its referenced body verts are hidden
-                proxyVertMask[idx] = vertsMask[v1] and vertsMask[v2] and vertsMask[v3]
-                # Alternative: only hide if at least two referenced body verts are hidden
-                #proxyVertMask[idx] = np.count_nonzero(vertsMask[[v1, v2, v3]]) > 1
-                
-            proxyKeepVerts = np.argwhere(proxyVertMask)[...,0]
-            proxyFaceMask = obj.mesh.getFaceMaskForVertices(proxyKeepVerts)
-
-            obj.mesh.changeFaceMask(proxyFaceMask)
-            obj.mesh.updateIndexBufferFaces()
-            log.debug("%s faces masked for %s", np.count_nonzero(~proxyFaceMask), proxy.name)
 
         basemeshMask = human.meshData.getFaceMaskForVertices(np.argwhere(vertsMask)[...,0])
         human.meshData.changeFaceMask(np.logical_and(basemeshMask, self.originalHumanMask))
