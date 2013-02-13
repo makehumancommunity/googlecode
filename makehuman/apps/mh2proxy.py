@@ -46,7 +46,7 @@ class CProxy:
         self.zScaleData = None
         self.z_depth = 50
         self.cull = False
-        self.transparent = True
+        self.transparent = False
         self.layer = layer
         self.material = CMaterial()
         self.verts = {}

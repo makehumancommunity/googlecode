@@ -20,6 +20,7 @@ use_map_alpha 1
 use_alpha 1
 diffuse_color_factor 1.0
 alpha_factor 1.0
+# transparent yes
 # obj_file curly2.obj
 # x_scale 4302 8697 1.4986
 # z_scale 8208 8220 1.9328
