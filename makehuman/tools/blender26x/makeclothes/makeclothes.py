@@ -758,7 +758,7 @@ def printDeleteVerts(fp, bob):
             sequence = True
         vn0 = vn
     if sequence:
-        fp.write(" - %d" % vn)
+        fp.write("- %d" % vn)
     fp.write("\n")
                 
 #
