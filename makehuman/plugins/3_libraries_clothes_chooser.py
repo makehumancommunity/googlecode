@@ -322,6 +322,7 @@ class ClothesTaskView(gui3d.TaskView):
                 del human.clothesProxies[uuid]
             self.clothesList = []
             human.activeClothing = None
+            self.updateFaceMasks()
             # self.clothesButton.setTexture('data/clothes/clear.png')
 
     def onHumanChanged(self, event):
