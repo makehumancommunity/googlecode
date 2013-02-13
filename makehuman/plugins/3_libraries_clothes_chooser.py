@@ -102,9 +102,6 @@ class ClothesTaskView(gui3d.TaskView):
             for name,clo in human.clothesObjs.items():
                 gui3d.app.removeObject(clo)
                 del human.clothesObjs[name]
-            #for proxy in human.clothesProxies:
-            #    if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
-            #        self.unhideVerts(proxy.deleteVerts)
             human.clothesProxies = []
             self.clothesList = []
             human.activeClothing = None
@@ -173,8 +170,6 @@ class ClothesTaskView(gui3d.TaskView):
             if human.activeClothing == uuid:
                 human.activeClothing = None
             proxy = human.clothesProxies[uuid]
-            #if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
-            #    self.unhideVerts(proxy.deleteVerts)
             del human.clothesProxies[uuid]
             self.updateFaceMasks()
             log.message("Removed clothing %s %s", proxy.name, uuid)
@@ -210,8 +205,6 @@ class ClothesTaskView(gui3d.TaskView):
         human.clothesProxies[uuid] = proxy
         human.activeClothing = uuid
         self.clothesList.append(uuid)
-        #if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
-        #    self.hideVerts(proxy.deleteVerts)
         
         for tag in proxy.tags:
             tag = tag.lower()
@@ -254,88 +247,43 @@ class ClothesTaskView(gui3d.TaskView):
         of clothing.
         """
         human = gui3d.app.selectedHuman
-        higherMask = np.ones(human.meshData.getFaceCount(), dtype=bool)
+        vertsMask = np.ones(human.meshData.getVertexCount(), dtype=bool)
+        log.debug("masked verts %s", np.count_nonzero(~vertsMask))
         for uuid in reversed(self.clothesList):
             proxy = human.clothesProxies[uuid]
             obj = human.clothesObjs[uuid]
 
-            if not hasattr(proxy, 'faceMask'):
-                if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
-                    #print "%s | %s" % (len(proxy.deleteVerts), len(human.meshData.coord))
-                    verts = np.argwhere(proxy.deleteVerts)[...,0]
-                    proxy.faceMask = ~human.meshData.getFaceMaskForVertices(verts)
+            if proxy.deleteVerts != None and len(proxy.deleteVerts > 0):
+                log.debug("Loaded %s deleted verts (%s faces) from %s", np.count_nonzero(proxy.deleteVerts), len(human.meshData.getFacesForVertices(np.argwhere(proxy.deleteVerts)[...,0])),proxy.name)
 
-                    # Create mapping from clothes faces to body faces
-                    proxy.basemeshFacesMapping = []
-                    for f in obj.mesh.fvert:
-                        vs = []
-                        bvs = set() # ~12 body verts total
-                        for v in f: # 4 clothes verts
-                            vs.append(v)
-                            [ bvs.add(bv) for bv in proxy.refVerts[v][:3] ] # 3 body verts per clothes vert
-                        #print "Body verts: %s" % len(bvs)
-                        bfs = human.meshData.getFacesForVertices(list(bvs))  # ~15-33 body faces
-                        #print "Body faces: %s" % len(bfs)
-                        ##proxy.basemeshFacesMapping.append(bfs[0])
-                        proxy.basemeshFacesMapping.append(bfs)  # One clothes face mapped to multiple body faces
+                # Modify accumulated (basemesh) verts mask
+                verts = np.argwhere(proxy.deleteVerts)[...,0]
+                print "hidden verts: %s" % verts
+                vertsMask[verts] = False
+            log.debug("masked verts %s", np.count_nonzero(~vertsMask))
 
-                    proxy.basemeshFacesMapping = np.array(proxy.basemeshFacesMapping)
-                else:
-                    proxy.faceMask = np.ones(human.meshData.getFaceCount(), dtype=bool)
+            # Convert basemesh vertex mask to local mask for proxy vertices
+            proxyVertMask = np.ones(len(proxy.refVerts), dtype=bool)
+            for idx,vs in enumerate(proxy.refVerts):
+                # Body verts to which proxy vertex with idx is mapped
+                (v1,v2,v3) = vs[:3]
+                # Only show proxy vert if none of its referenced body verts are hidden
+                proxyVertMask[idx] = vertsMask[v1] and vertsMask[v2] and vertsMask[v3]
+                # Alternative: only hide if at least two referenced body verts are hidden
+                #proxyVertMask[idx] = np.count_nonzero(vertsMask[[v1, v2, v3]]) > 1
+                
+            proxyKeepVerts = np.argwhere(proxyVertMask)[...,0]
+            proxyFaceMask = obj.mesh.getFaceMaskForVertices(proxyKeepVerts)
 
-            #faceMask = np.logical_and(~faceMask, human.meshData.getFaceMask())
-            #print "%s and %s" % (len(proxy.faceMask), len(higherMask))
-            #print len (proxy.basemeshFacesMapping)
-            mask = []
-            for m in proxy.basemeshFacesMapping:
-                result = np.count_nonzero(higherMask[m]) == len(m)
-                #result = np.count_nonzero(higherMask[m]) > len(m)/2
-                mask.append(result)
-            ##obj.mesh.changeFaceMask(higherMask[proxy.basemeshFacesMapping])
-            log.debug("%s faces masked for %s" % (np.count_nonzero(~np.array(mask, dtype=bool)), proxy.name))
-            obj.mesh.changeFaceMask(mask)
+            obj.mesh.changeFaceMask(proxyFaceMask)
             obj.mesh.updateIndexBufferFaces()
+            log.debug("%s faces masked for %s", np.count_nonzero(~proxyFaceMask), proxy.name)
 
-            higherMask = np.logical_and(proxy.faceMask, higherMask)
-
-        human.meshData.changeFaceMask(np.logical_and(higherMask, self.originalHumanMask))
+        basemeshMask = human.meshData.getFaceMaskForVertices(np.argwhere(vertsMask)[...,0])
+        human.meshData.changeFaceMask(np.logical_and(basemeshMask, self.originalHumanMask))
         human.meshData.updateIndexBufferFaces()
-        log.debug("%s faces masked for basemesh" % np.count_nonzero(~higherMask))
+        log.debug("%s faces masked for basemesh", np.count_nonzero(~basemeshMask))
 
-    def hideVerts(self, vertsToHide):
-        # TODO also propagate to other clothes
-        human = gui3d.app.selectedHuman
-
-        # Convert list of booleans to list of vertex indexes to hide
-        vertsToHide = np.copy(vertsToHide)
-        vertsToHide.resize(len(human.meshData.getFaceMask()))
-        verts = np.argwhere(vertsToHide)[...,0]
-
-        faceMask = human.meshData.getFaceMaskForVertices(verts)
-        faceMask = np.logical_and(~faceMask, human.meshData.getFaceMask())
-
-        ## Debug ##
-        faces = human.meshData.getFacesForVertices(verts)
-        log.debug("Hiding %s faces", (len(gui3d.app.selectedHuman.meshData.fuvs) - len(faces)))
-        ###########
-
-        human.meshData.changeFaceMask(faceMask)
-        human.meshData.updateIndexBufferFaces()
-
-    def unhideVerts(self, vertsToUnhide):
-        human = gui3d.app.selectedHuman
-
-        vertsToUnhide = np.copy(vertsToUnhide)
-        vertsToUnhide.resize(len(human.meshData.getFaceMask()))
-        verts = np.argwhere(vertsToUnhide)[...,0]
-
-        faceMask = human.meshData.getFaceMaskForVertices(verts)
-        faceMask = np.logical_or(faceMask, human.meshData.getFaceMask())
-
-        human = gui3d.app.selectedHuman
-        human.meshData.changeFaceMask(faceMask)
-        human.meshData.updateIndexBufferFaces()
-    
     def adaptClothesToHuman(self, human):
 
         for (uuid,clo) in human.clothesObjs.items():            
