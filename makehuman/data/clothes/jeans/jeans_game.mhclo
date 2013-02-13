@@ -11,6 +11,8 @@
 # z_scale 3840 3957 1.6373
 # y_scale 14165 14175 8.8847
 # z_depth 40
+# backface_culling no
+# transparent no
 # uvtex_layer 0 Texture
 # uvtex_layer 1 Mask
 # objfile_layer 0

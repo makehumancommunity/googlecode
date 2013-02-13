@@ -10,6 +10,8 @@
 # z_depth 40
 # uvtex_layer 0 Texture
 # uvtex_layer 1 Mask
+# backface_culling no
+# transparent no
 # objfile_layer 0
 # texture jeans_texture.png 0
 # mask jeans_mask.png 1
