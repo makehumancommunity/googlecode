@@ -203,6 +203,8 @@ class Object3D(object):
         camera = G.cameras[0]
 
         indices = self.primitives[self.nPrimitives - self.nTransparentPrimitives:]
+        if len(indices) == 0:
+            return
 
         m = matrix.translate(-self.translation)
         m = matrix.rotx(-self.rx) * m
@@ -212,7 +214,7 @@ class Object3D(object):
         cxyz = matrix.transform3(m, camera.eye)
 
         # Prepare sorting data
-        verts = self.verts[self.primitives] - cxyz
+        verts = self.verts[indices] - cxyz
         distances = np.sum(verts ** 2, axis = -1)
         distances = np.amin(distances, axis = -1)
         distances = -distances
