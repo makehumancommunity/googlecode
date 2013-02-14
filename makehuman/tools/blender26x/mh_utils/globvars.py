@@ -44,4 +44,20 @@ BMeshAware = False
 Confirm = None
 ConfirmString = "" 
 ConfirmString2 = ""
+
+
+VertexNumbers = {}
+
+VertexNumbers["alpha8"] = {
+    "Tongue" : (0,226),
+    "Body" : (226,13606),
+    "Hair" : (13606, 14034),
+    "Skirt" : (14034, 14754),
+    "Tights" : (14754, 17428),
+    "Joints" : (17428, 17628),
+    "EyeLids" : (17628, 17878),
+    "Eyes" : (17878, 18022),
+    "LoTeeth" : (18022, 18090),
+    "UpTeeth" : (18090, 18158),
+}
         

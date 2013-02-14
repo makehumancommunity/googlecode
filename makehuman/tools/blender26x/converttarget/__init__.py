@@ -64,13 +64,21 @@ class ConvertTargetPanel(bpy.types.Panel):
         layout = self.layout
         scn = context.scene
         
-        layout.prop(scn, "CTBase")
-        layout.prop(scn, "CTSourceTarget")
-        layout.prop(scn, "CTTargetDir")
+        layout.operator("mh.set_base_obj")
+        layout.prop(scn, "CTBaseObj", text="")
 
-        layout.operator("mh.set_base_mhclo")
-        layout.operator("mh.set_source_target")
+        layout.separator()
+        layout.operator("mh.set_convert_mhclo")
+        layout.prop(scn, "CTConvertMhclo", text="")
+
+        layout.separator()
         layout.operator("mh.set_target_dir")
+        layout.prop(scn, "CTTargetDir", text="")
+
+        layout.separator()
+        layout.operator("mh.set_source_target")
+        layout.prop(scn, "CTSourceTarget", text="")
+
         layout.separator()
         layout.operator("mh.convert_target")
 

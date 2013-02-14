@@ -18,7 +18,7 @@
 
 # Project Name:        MakeHuman
 # Product Home Page:   http://www.makehuman.org/
-# Code Home Page:      http://code.google.com/p/makehuman/
+# Code Home Page:      http://code.googlem/p/makehuman/
 # Authors:             Thomas Larsson
 # Script copyright (C) MakeHuman Team 2001-2013
 # Coding Standards:    See http://www.makehuman.org/node/165
@@ -32,13 +32,11 @@ Convert targets
 
 import bpy
 import os
+import math
 from bpy.props import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
-from mh_utils import globvars as the
-from mh_utils import utils
 from mh_utils import proxy
-from mh_utils import import_obj
 
 
 #----------------------------------------------------------
@@ -63,21 +61,44 @@ Epsilon = 1e-3
 #   
 #----------------------------------------------------------
 
-class VIEW3D_OT_SetBaseButton(bpy.types.Operator):
-    bl_idname = "mh.set_base_mhclo"
-    bl_label = "Set Base File"
+class VIEW3D_OT_SetBaseObjButton(bpy.types.Operator):
+    bl_idname = "mh.set_base_obj"
+    bl_label = "Set New Base Obj File"
+    bl_options = {'UNDO'}
+
+    filename_ext = ".obj"
+    filter_glob = StringProperty(default="*.obj", options={'HIDDEN'})
+    filepath = bpy.props.StringProperty(
+        name="File Path", 
+        description="File path used for base obj", 
+        maxlen= 1024, default= "")
+
+    def execute(self, context):
+        global theProxy
+        context.scene.CTBaseObj = self.filepath
+        theProxy = None
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
+class VIEW3D_OT_SetConvertMhcloButton(bpy.types.Operator):
+    bl_idname = "mh.set_convert_mhclo"
+    bl_label = "Set Convert Mhclo File"
     bl_options = {'UNDO'}
 
     filename_ext = ".mhclo"
     filter_glob = StringProperty(default="*.mhclo", options={'HIDDEN'})
     filepath = bpy.props.StringProperty(
         name="File Path", 
-        description="File path used for base mhclo", 
+        description="File path used for convert mhclo", 
         maxlen= 1024, default= "")
 
     def execute(self, context):
         global theProxy
-        context.scene.CTBase = self.filepath
+        context.scene.CTConvertMhclo = self.filepath
         theProxy = None
         return {'FINISHED'}
 
@@ -145,25 +166,47 @@ def convertTargetFile(context):
     global theProxy
     scn = context.scene
 
-    if not theProxy:
-        if scn.CTBase:
-            print("Reading %s" % scn.CTBase)
-            theProxy = proxy.CProxy()
-            theProxy.read(scn.CTBase)
+    if not theBaseObj:
+        if scn.CTBaseObj:
+            print("Reading %s" % scn.CTBaseObj)
+            theBaseVerts = readBaseObj(scn.CTBaseObj)
         else:
-            raise NameError("No mhclo path selected")
+            raise NameError("No base obj path selected")
+            
+    if not theProxy:
+        if scn.CTConvertMhclo:
+            print("Reading %s" % scn.CTConvertMhclo)
+            theProxy = proxy.CProxy()
+            theProxy.read(scn.CTConvertMhclo)
+        else:
+            raise NameError("No convert mhclo path selected")
             
     srcFile = scn.CTSourceTarget
     trgFile = os.path.join(scn.CTTargetDir, os.path.basename(srcFile))
     
+    print("Base verts", len(theBaseVerts))
     print("Proxy", theProxy)
     print("Source", srcFile)
     print("Target", trgFile)
     
     srcVerts = readTarget(srcFile)
-    trgVerts = makeVerts(len(theProxy.verts))    
+    trgVerts = copyVerts(theBaseVerts)   
     theProxy.update(srcVerts, trgVerts)
-    writeTarget(trgFile, trgVerts)
+    saveTarget(trgVerts, theBaseVerts, trgFile)
+
+
+def readBaseObj(filepath):
+    fp = open(filepath, "rU")
+    verts = {}
+    vn = 0
+    for line in fp:
+        words = line.split()
+        if len(words) == 4 and words[0] == 'v':
+            x,y,z = float(words[1]), float(words[2]), float(words[3])
+            verts[vn] = CVertex(x,y,z)
+            vn += 1
+    fp.close()            
+    return verts            
 
 
 def readTarget(filepath):
@@ -178,22 +221,63 @@ def readTarget(filepath):
     return verts            
 
 
-def makeVerts(nVerts):
+def copyVerts(verts):
+    newverts = {}
+    for n,v in verts.items():
+        newverts[n] = v.copy()
+    return newverts
+
+
+def saveTarget(trgVerts, baseVerts, filepath):
+    fp = open(filepath, "w")
+    for vn,trgVert in trgVerts.items():
+        baseVert = baseVerts[vn]
+        #print(trgVert, baseVert)
+        #trgVert.sub(baseVert)
+        if trgVert.length() > Epsilon:
+            co = trgVert.co
+            fp.write("%d %s %s %s\n" % (vn, round(co[0]), round(co[1]), round(co[2])))
+    fp.close()
+    print("Target %s saved" % (filepath))
     
-    for n in range(nVerts)    
 
+#----------------------------------------------------------
+#   class CVertex:
+#----------------------------------------------------------
 
+class CVertex:
 
-theProxy = None
+    def __init__(self, x, y, z):
+        self.co = [x,y,z]
+    
+    def __repr__(self):
+        return ("<CVertex %s %s %s>" % (round(self.co[0]), round(self.co[1]), round(self.co[2])))
+        
+    def copy(self):
+        return CVertex(self.co[0], self.co[1], self.co[2])
+                
+    def sub(self, v):
+        self.co[0] -= v.co[0]
+        self.co[1] -= v.co[1]
+        self.co[2] -= v.co[2]
 
+    def length(self):
+        co = self.co
+        return math.sqrt(co[0]*co[0] + co[1]*co[1] + co[2]*co[2])
+        
 #----------------------------------------------------------
 #   Init
 #----------------------------------------------------------
 
+theBaseObj = None
+theProxy = None
+
 def init():
     global theProxy
+    theBaseObj = None
     theProxy = None
 
-    bpy.types.Scene.CTBase = StringProperty()
+    bpy.types.Scene.CTBaseObj = StringProperty()
+    bpy.types.Scene.CTConvertMhclo = StringProperty()
     bpy.types.Scene.CTSourceTarget = StringProperty()
     bpy.types.Scene.CTTargetDir = StringProperty()

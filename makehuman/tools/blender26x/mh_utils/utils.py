@@ -200,10 +200,20 @@ def setupVertexPairs(context, insist):
             the.Mid[vn] = vmir
     if notfound:            
         print("Did not find mirror image for vertices:")
-        for msg in notfound:
-            print(msg)
+        for v,x,y,z in notfound:
+            print("  %d at (%.4f %.4f %.4f)" % (v, x, y, z))
+        selectVerts(notfound, ob)
     print("the.Left-right-mid", len(the.Left.keys()), len(the.Right.keys()), len(the.Mid.keys()))
     return
+    
+    
+def selectVerts(notfound, ob):
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='DESELECT')
+    bpy.ops.object.mode_set(mode='OBJECT')
+    for vn,x,y,z in notfound:
+        ob.data.vertices[vn].select = True
+    return    
     
 
 def findVert(verts, v, x, y, z, notfound):
@@ -215,7 +225,7 @@ def findVert(verts, v, x, y, z, notfound):
         if dist < the.Epsilon:
             return v1
     if abs(x) > the.Epsilon:            
-        notfound.append("  %d at (%.4f %.4f %.4f)" % (v, x, y, z))
+        notfound.append((v,x,y,z))
     return -1            
 
 #----------------------------------------------------------

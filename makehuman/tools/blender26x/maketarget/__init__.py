@@ -102,13 +102,15 @@ class MakeTargetPanel(bpy.types.Panel):
         layout.prop(scn, "MhLoadMaterial", expand=True)
         layout.separator()
         if utils.isBaseOrTarget(ob):
-            layout.operator("mh.import_base_mhclo", text="Reimport Base Mhclo").delete = True
+            layout.operator("mh.quick_import_base_mhclo", text="Quick Reimport Base Mhclo").delete = True
+            layout.operator("mh.quick_import_base_obj", text="Quick Reimport Base Obj").delete = True
             layout.operator("mh.import_base_obj", text="Reimport Base Obj").delete = True
             #layout.operator("mh.delete_clothes")
             #layout.operator("mh.tights_only")
             layout.separator()
         else:
-            layout.operator("mh.import_base_mhclo", text="Import Base Mhclo").delete = False
+            layout.operator("mh.quick_import_base_mhclo", text="Quick Import Base Mhclo").delete = False
+            layout.operator("mh.quick_import_base_obj", text="Quick Import Base Obj").delete = False
             layout.operator("mh.import_base_obj", text="Import Base Obj").delete = False
             if rig and rig.type == 'ARMATURE':
                 layout.operator("mh.make_base_obj")

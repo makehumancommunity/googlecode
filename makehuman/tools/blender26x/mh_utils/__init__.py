@@ -58,6 +58,14 @@ else:
     from . import character
 
 
+class VIEW3D_OT_DummyButton(bpy.types.Operator):
+    bl_idname = "mh.dummy"
+    bl_label = "Dummy"
+    
+    def execute(self, context):
+        return {'FINISHED'}
+
+
 def init():
     the.Confirm = None
     the.ConfirmString = "?"
@@ -65,4 +73,14 @@ def init():
     settings.init()
     import_obj.init()
     character.init()
-    
+  
+  
+def register():
+    bpy.utils.register_module(__name__)
+  
+def unregister():
+    bpy.utils.unregister_module(__name__)
+
+if __name__ == "__main__":
+    register()
+  

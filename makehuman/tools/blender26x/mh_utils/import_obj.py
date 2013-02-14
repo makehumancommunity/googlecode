@@ -42,9 +42,10 @@ from . import proxy
 #   Simple obj importer which reads only verts, faces, and texture verts
 #----------------------------------------------------------
 
-def importBaseObj(context):
+def importBaseObj(context, filepath=None):
     the.Proxy = None
-    filepath = os.path.join(context.scene.MhProgramPath, "data/3dobjs/base.obj")
+    if not filepath:
+        filepath = os.path.join(context.scene.MhProgramPath, "data/3dobjs/base.obj")
     ob = importObj(filepath, context)
     ob["NTargets"] = 0
     ob["ProxyFile"] = 0
@@ -55,9 +56,10 @@ def importBaseObj(context):
     return ob
 
 
-def importBaseMhclo(context):
+def importBaseMhclo(context, filepath=None):
     the.Proxy = proxy.CProxy()
-    filepath = os.path.join(context.scene.MhProgramPath, "data/3dobjs/base.mhclo")
+    if not filepath:
+        filepath = os.path.join(context.scene.MhProgramPath, "data/3dobjs/base.mhclo")
     the.Proxy.read(filepath)
     ob = importObj(the.Proxy.obj_file, context)
     ob["NTargets"] = 0

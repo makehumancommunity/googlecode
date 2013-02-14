@@ -77,8 +77,8 @@ Epsilon = 1e-3
 #   
 #----------------------------------------------------------
 
-class VIEW3D_OT_ImportBaseMhcloButton(bpy.types.Operator):
-    bl_idname = "mh.import_base_mhclo"
+class VIEW3D_OT_QuickImportBaseMhcloButton(bpy.types.Operator):
+    bl_idname = "mh.quick_import_base_mhclo"
     bl_label = "Mhclo"
     bl_options = {'UNDO'}
     delete = BoolProperty()
@@ -90,8 +90,8 @@ class VIEW3D_OT_ImportBaseMhcloButton(bpy.types.Operator):
         return{'FINISHED'}    
 
 
-class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
-    bl_idname = "mh.import_base_obj"
+class VIEW3D_OT_QuickImportBaseObjButton(bpy.types.Operator):
+    bl_idname = "mh.quick_import_base_obj"
     bl_label = "Obj"
     bl_options = {'UNDO'}
     delete = BoolProperty()
@@ -101,6 +101,30 @@ class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
             utils.deleteAll(context)
         import_obj.importBaseObj(context)
         return{'FINISHED'}    
+
+
+class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
+    bl_idname = "mh.import_base_obj"
+    bl_label = "Import Base Obj File"
+    bl_options = {'UNDO'}
+    delete = BoolProperty()
+
+    filename_ext = ".obj"
+    filter_glob = StringProperty(default="*.obj", options={'HIDDEN'})
+    filepath = bpy.props.StringProperty(
+        name="File Path", 
+        description="File path used for base obj", 
+        maxlen= 1024, default= "")
+
+    def execute(self, context):
+        if self.delete:
+            utils.deleteAll(context)
+        import_obj.importBaseObj(context, filepath=self.filepath)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 
 class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):

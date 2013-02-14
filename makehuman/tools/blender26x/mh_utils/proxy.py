@@ -141,6 +141,8 @@ def scaleInfo(words):
 
 
 def getScale(info, verts, index):
+    if info is None:
+        return 1.0
     (v1, v2, den) = info
     num = abs(verts[v1].co[index] - verts[v2].co[index])
     return num/den
