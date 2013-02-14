@@ -163,10 +163,10 @@ class VIEW3D_OT_ConvertTargetButton(bpy.types.Operator):
 
 
 def convertTargetFile(context):
-    global theProxy
+    global theProxy, theBaseVerts, theDiffVerts
     scn = context.scene
 
-    if not theBaseObj:
+    if not theBaseVerts:
         if scn.CTBaseObj:
             print("Reading %s" % scn.CTBaseObj)
             theBaseVerts = readBaseObj(scn.CTBaseObj)
@@ -180,19 +180,24 @@ def convertTargetFile(context):
             theProxy.read(scn.CTConvertMhclo)
         else:
             raise NameError("No convert mhclo path selected")
-            
+
+    if not theDiffVerts:
+        srcVerts = zeroVerts(len(theBaseVerts))
+        theDiffVerts = copyVerts(theBaseVerts) 
+        theProxy.update(srcVerts, theDiffVerts)
+        #subVerts(theDiffVerts, theBaseVerts)
+    
     srcFile = scn.CTSourceTarget
     trgFile = os.path.join(scn.CTTargetDir, os.path.basename(srcFile))
     
-    print("Base verts", len(theBaseVerts))
-    print("Proxy", theProxy)
-    print("Source", srcFile)
-    print("Target", trgFile)
-    
-    srcVerts = readTarget(srcFile, theBaseVerts)
+    srcVerts = zeroVerts(len(theBaseVerts))
+    readTarget(srcFile, srcVerts)    
+
     trgVerts = copyVerts(theBaseVerts)   
-    theProxy.update(srcVerts, trgVerts)
-    saveTarget(trgVerts, theBaseVerts, trgFile)
+    theProxy.update(srcVerts, trgVerts)    
+
+    subVerts(trgVerts, theDiffVerts)    
+    saveTarget(trgVerts, trgFile)
 
 
 def readBaseObj(filepath):
@@ -209,12 +214,7 @@ def readBaseObj(filepath):
     return verts            
 
 
-def readTarget(filepath, theBaseVerts):
-    verts = {}
-    zero = CVertex(0,0,0)
-    for n in range(len(theBaseVerts)):
-        verts[n] = zero
-
+def readTarget(filepath, verts):
     fp = open(filepath, "rU")
     for line in fp:
         words = line.split()
@@ -232,12 +232,22 @@ def copyVerts(verts):
     return newverts
 
 
-def saveTarget(trgVerts, baseVerts, filepath):
-    fp = open(filepath, "w")
+def zeroVerts(nVerts):
+    zero = CVertex(0,0,0)
+    verts = {}
+    for n in range(nVerts):
+        verts[n] = zero
+    return verts
+
+
+def subVerts(verts1, verts2):
+    for n in range(len(verts1)):
+        verts1[n].sub(verts2[n])
+
+
+def saveTarget(trgVerts, filepath):
+    fp = open(filepath, "w", encoding="utf-8", newline="\n")
     for vn,trgVert in trgVerts.items():
-        baseVert = baseVerts[vn]
-        #print(trgVert, baseVert)
-        #trgVert.sub(baseVert)
         if trgVert.length() > Epsilon:
             co = trgVert.co
             fp.write("%d %s %s %s\n" % (vn, round(co[0]), round(co[1]), round(co[2])))
@@ -273,12 +283,13 @@ class CVertex:
 #   Init
 #----------------------------------------------------------
 
-theBaseObj = None
+theBaseVerts = None
 theProxy = None
+theDiffVerts = None
 
 def init():
     global theProxy
-    theBaseObj = None
+    theBaseVerts = None
     theProxy = None
 
     bpy.types.Scene.CTBaseObj = StringProperty()
