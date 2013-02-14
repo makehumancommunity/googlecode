@@ -183,16 +183,19 @@ class MakeClothesPanel(bpy.types.Panel):
 
         layout.separator()
         layout.label("Boundary")
-        layout.prop(scn, "MCScaleUniform")
-        layout.prop(scn, "MCBodyPart")   
-        vnums = makeclothes.BodyPartVerts[scn.MCBodyPart]
-        if scn.MCScaleUniform:
-            self.drawXYZ(vnums[0], "XYZ", layout)
-        else:
-            self.drawXYZ(vnums[0], "X", layout)
-            self.drawXYZ(vnums[1], "Y", layout)
-            self.drawXYZ(vnums[2], "Z", layout)
-        layout.operator("mhclo.examine_boundary")        
+        row = layout.row()
+        row.prop(scn, "MCUseBoundary")
+        if scn.MCUseBoundary:
+            row.prop(scn, "MCScaleUniform")
+            layout.prop(scn, "MCBodyPart")   
+            vnums = makeclothes.BodyPartVerts[scn.MCBodyPart]
+            if scn.MCScaleUniform:
+                self.drawXYZ(vnums[0], "XYZ", layout)
+            else:
+                self.drawXYZ(vnums[0], "X", layout)
+                self.drawXYZ(vnums[1], "Y", layout)
+                self.drawXYZ(vnums[2], "Z", layout)
+            layout.operator("mhclo.examine_boundary")        
 
         layout.separator()
         drawLicenseInfo(layout, scn)

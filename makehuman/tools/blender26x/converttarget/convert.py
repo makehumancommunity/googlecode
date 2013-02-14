@@ -189,7 +189,7 @@ def convertTargetFile(context):
     print("Source", srcFile)
     print("Target", trgFile)
     
-    srcVerts = readTarget(srcFile)
+    srcVerts = readTarget(srcFile, theBaseVerts)
     trgVerts = copyVerts(theBaseVerts)   
     theProxy.update(srcVerts, trgVerts)
     saveTarget(trgVerts, theBaseVerts, trgFile)
@@ -209,9 +209,13 @@ def readBaseObj(filepath):
     return verts            
 
 
-def readTarget(filepath):
-    fp = open(filepath, "rU")
+def readTarget(filepath, theBaseVerts):
     verts = {}
+    zero = CVertex(0,0,0)
+    for n in range(len(theBaseVerts)):
+        verts[n] = zero
+
+    fp = open(filepath, "rU")
     for line in fp:
         words = line.split()
         if len(words) == 4:

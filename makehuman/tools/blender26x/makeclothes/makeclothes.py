@@ -41,7 +41,7 @@ from . import error
 #   Global variables
 #
 
-theThreshold = -0.2
+theThreshold = -0.01	# -0.2
 theListLength = 3
 Epsilon = 1e-4
 
@@ -941,7 +941,7 @@ def writeColor(fp, string1, string2, color, intensity):
         "%s %.4g\n" % (string2, intensity))
 
 def printScale(fp, bob, scn, name, index, vnums):
-    if not scn.MCIsMHMesh:
+    if not scn.MCUseBoundary:
         return
     verts = bob.data.vertices
     n1,n2 = vnums
@@ -2568,6 +2568,10 @@ def initInterface():
         name="Keep verts untils", 
         description="Last clothing to keep vertices for",
         default=LastClothing)
+
+    bpy.types.Scene.MCUseBoundary = BoolProperty(
+        name="Scale Offsets", 
+        default=True)
 
     bpy.types.Scene.MCScaleUniform = BoolProperty(
         name="Uniform Scaling", 
