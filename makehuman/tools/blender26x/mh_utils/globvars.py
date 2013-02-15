@@ -48,16 +48,31 @@ ConfirmString2 = ""
 
 VertexNumbers = {}
 
-VertexNumbers["alpha8"] = {
-    "Tongue" : (0,226),
-    "Body" : (226,13606),
-    "Hair" : (13606, 14034),
-    "Skirt" : (14034, 14754),
-    "Tights" : (14754, 17428),
-    "Joints" : (17428, 17628),
-    "EyeLids" : (17628, 17878),
-    "Eyes" : (17878, 18022),
-    "LoTeeth" : (18022, 18090),
-    "UpTeeth" : (18090, 18158),
+VertexNumbers["alpha8a"] = {
+    "Tongue"    : (0,226),
+    "Body"      : (226, 13606),
+    "Hair"      : (13606, 14034),
+    "Skirt"     : (14034, 14754),
+    "Tights"    : (14754, 17428),
+    "Penis"     : (17428, 17628),
+    "EyeLashes" : (17628, 17878),
+    "Eyes"      : (17878, 18022),
+    "LoTeeth"   : (18022, 18090),
+    "UpTeeth"   : (18090, 18158),
+    "Joints"     : (18158, 19166)
+}        
+
+VertexNumbers["alpha8b"] = {
+    "Body"      : (0, 13380),
+    "Tongue"    : (13380, 13606),
+    "Joints"    : (13606, 14614),
+    "Eyes"      : (14614, 14758),
+    "EyeLashes" : (14758, 15008),
+    "LoTeeth"   : (15008, 15076),
+    "UpTeeth"   : (15076, 15144),
+    "Penis"     : (15144, 15344),
+    "Tights"    : (15344, 18018),
+    "Skirt"     : (18018, 18738),
+    "Hair"      : (18738, 19166),
 }
         

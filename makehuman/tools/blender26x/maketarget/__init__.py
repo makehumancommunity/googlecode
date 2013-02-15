@@ -112,7 +112,8 @@ class MakeTargetPanel(bpy.types.Panel):
             layout.operator("mh.quick_import_base_mhclo", text="Quick Import Base Mhclo").delete = False
             layout.operator("mh.quick_import_base_obj", text="Quick Import Base Obj").delete = False
             layout.operator("mh.import_base_obj", text="Import Base Obj").delete = False
-            if rig and rig.type == 'ARMATURE':
+            #if rig and rig.type == 'ARMATURE':
+            if True:
                 layout.operator("mh.make_base_obj")
 
         if utils.isBase(ob):

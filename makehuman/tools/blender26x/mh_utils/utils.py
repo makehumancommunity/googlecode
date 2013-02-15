@@ -177,7 +177,8 @@ def setupVertexPairs(context, insist):
         y = v.co[1]
         z = v.co[2]
         verts.append((z,y,x,v.index))
-    verts.sort()        
+    verts.sort()     
+    
     the.Left = {}
     the.Right = {}
     the.Mid = {}
@@ -185,28 +186,38 @@ def setupVertexPairs(context, insist):
     notfound = []
     for n,data in enumerate(verts):
         (z,y,x,vn) = data
-        n1 = n - 20
-        n2 = n + 20
-        if n1 < 0: n1 = 0
-        if n2 >= nmax: n2 = nmax
-        vmir = findVert(verts[n1:n2], vn, -x, y, z, notfound)
-        if vmir < 0:
-            the.Mid[vn] = vn
-        elif x > the.Epsilon:
-            the.Left[vn] = vmir
-        elif x < -the.Epsilon:
-            the.Right[vn] = vmir
-        else:
-            the.Mid[vn] = vmir
+        findMirrorVert(n, nmax, verts, vn, x, y, z, the.Epsilon, notfound)
+    
+    remainder = notfound
+    notfound = []
+    for n,vn,x,y,z in remainder:
+        findMirrorVert(n, nmax, verts, vn, x, y, z, 10*the.Epsilon, notfound)
+    
     if notfound:            
         print("Did not find mirror image for vertices:")
-        for v,x,y,z in notfound:
-            print("  %d at (%.4f %.4f %.4f)" % (v, x, y, z))
+        for n,vn,x,y,z in notfound:
+            print("  %d at (%.4f %.4f %.4f)" % (vn, x, y, z))
         selectVerts(notfound, ob)
-    print("the.Left-right-mid", len(the.Left.keys()), len(the.Right.keys()), len(the.Mid.keys()))
+    print("left-right-mid", len(the.Left.keys()), len(the.Right.keys()), len(the.Mid.keys()))
     return
     
     
+def findMirrorVert(n, nmax, verts, vn, x, y, z, epsilon, notfound):        
+    n1 = n - 20
+    n2 = n + 20
+    if n1 < 0: n1 = 0
+    if n2 >= nmax: n2 = nmax
+    vmir = findVert(n, verts[n1:n2], vn, -x, y, z, notfound)
+    if vmir < 0:
+        the.Mid[vn] = vn
+    elif x > epsilon:
+        the.Left[vn] = vmir
+    elif x < -epsilon:
+        the.Right[vn] = vmir
+    else:
+        the.Mid[vn] = vmir
+
+
 def selectVerts(notfound, ob):
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='DESELECT')
@@ -216,7 +227,7 @@ def selectVerts(notfound, ob):
     return    
     
 
-def findVert(verts, v, x, y, z, notfound):
+def findVert(n, verts, v, x, y, z, notfound):
     for (z1,y1,x1,v1) in verts:
         dx = x-x1
         dy = y-y1
@@ -225,7 +236,7 @@ def findVert(verts, v, x, y, z, notfound):
         if dist < the.Epsilon:
             return v1
     if abs(x) > the.Epsilon:            
-        notfound.append((v,x,y,z))
+        notfound.append((n,v,x,y,z))
     return -1            
 
 #----------------------------------------------------------

@@ -29,6 +29,7 @@
 
 import bpy
 import os
+import math
 import random
 import uuid
 import ast
@@ -41,8 +42,6 @@ from . import error
 #   Global variables
 #
 
-theThreshold = -0.01	# -0.2
-theListLength = 3
 Epsilon = 1e-4
 
 BaseMeshVersion = "alpha_7"
@@ -193,16 +192,6 @@ def snapSelectedVerts(context):
     return
 
 #
-#    printMverts(stuff, mverts):
-#
-
-def printMverts(stuff, mverts):
-    for n in range(theListLength):
-        (v,dist) = mverts[n]
-        if v:
-            print(stuff, v.index, dist)
-
-#
 #    selectVerts(verts, ob):
 #
 
@@ -268,7 +257,7 @@ def findClothes(context, bob, pob, log):
             raise error.MhcloError("Did not find vertex group %s in base mesh" % gname)            
 
         mverts = []
-        for n in range(theListLength):
+        for n in range(scn.MCListLength):
             mverts.append((None, 1e6))
 
         exact = False
@@ -285,12 +274,10 @@ def findClothes(context, bob, pob, log):
                             exact = True
                             break
                         if vec.length < mdist:
-                            for k in range(n+1, theListLength):
-                                j = theListLength-k+n
+                            for k in range(n+1, scn.MCListLength):
+                                j = scn.MCListLength-k+n
                                 mverts[j] = mverts[j-1]
                             mverts[n] = (bv, vec.length)
-                            #print(bv.index)
-                            #printMverts(bv.index, mverts)
                             break
                         n += 1
 
@@ -300,7 +287,6 @@ def findClothes(context, bob, pob, log):
                 print(pv.index, mv.index, mindist, gname, pindex, bindex)
             if log:
                 log.write("%d %d %.5f %s %d %d\n" % (pv.index, mv.index, mindist, gname, pindex, bindex))
-            #printMverts("  ", mverts)
         else:
             msg = (
             "Failed to find vert %d in group %s.\n" % (pv.index, gname) +
@@ -383,7 +369,7 @@ def findClothes(context, bob, pob, log):
                 minmax = w
                 bWts = wts
                 bVerts = fverts
-        if minmax < theThreshold:
+        if minmax < scn.MCThreshold:
             badVerts.append(pv.index)
             pv.select = True
             """
@@ -587,8 +573,8 @@ def printClothes(context, bob, pob, data):
     vnums = BodyPartVerts[scn.MCBodyPart]
     if scn.MCScaleUniform:
         printScale(fp, bob, scn, 'x_scale', 0, vnums[0])
-        printScale(fp, bob, scn, 'z_scale', 1, vnums[0])
-        printScale(fp, bob, scn, 'y_scale', 2, vnums[0])
+        printScale(fp, bob, scn, 'z_scale', 0, vnums[0])
+        printScale(fp, bob, scn, 'y_scale', 0, vnums[0])
     else:
         printScale(fp, bob, scn, 'x_scale', 0, vnums[0])
         printScale(fp, bob, scn, 'z_scale', 1, vnums[1])
@@ -945,10 +931,20 @@ def printScale(fp, bob, scn, name, index, vnums):
         return
     verts = bob.data.vertices
     n1,n2 = vnums
-    if n1 >=0 and n2 >= 0:
-        x1 = verts[n1].co[index]     
-        x2 = verts[n2].co[index]
-        fp.write("# %s %d %d %.4f\n" % (name, n1, n2, abs(x1-x2)))
+    if scn.MCScaleUniform:
+        if n1 >=0 and n2 >= 0:
+            v1 = verts[n1].co
+            v2 = verts[n2].co
+            dx = v1[0]-v2[0]
+            dy = v1[1]-v2[1]
+            dz = v1[2]-v2[2]
+            dr = math.sqrt(dx*dx + dy*dy + dz*dz)
+            fp.write("# r_scale %d %d %.4f\n" % (n1, n2, dr/scn.MCScaleCorrect))            
+    else:
+        if n1 >=0 and n2 >= 0:
+            x1 = verts[n1].co[index]     
+            x2 = verts[n2].co[index]
+            fp.write("# %s %d %d %.4f\n" % (name, n1, n2, abs(x1-x2)/scn.MCScaleCorrect))
     return
 
 #
@@ -1680,6 +1676,10 @@ def checkSingleVGroups(pob):
             n += 1
         if n != 1:
             v.select = True
+            for g in v.groups:
+                for vg in pob.vertex_groups:
+                    if vg.index == g.group:
+                        print("  ", vg.name)
             raise error.MhcloError("Vertex %d in %s belongs to %d groups. Must be exactly one" % (v.index, pob.name, n))
     return            
         
@@ -2519,18 +2519,18 @@ def initInterface():
         description="Save vertex groups but not texverts",
         default=True)
 
-    """
     bpy.types.Scene.MCThreshold = FloatProperty(
         name="Threshold", 
         description="Minimal allowed value of normal-vector dot product",
         min=-1.0, max=0.0,
-        default=theThreshold)
+        default=-0.2)
 
     bpy.types.Scene.MCListLength = IntProperty(
         name="List length", 
         description="Max number of verts considered",
-        default=theListLength)
+        default=4)
 
+    """
     bpy.types.Scene.MCForbidFailures = BoolProperty(
         name="Forbid failures", 
         description="Raise error if not found optimal triangle")
@@ -2577,6 +2577,11 @@ def initInterface():
         name="Uniform Scaling", 
         description="Scale offset uniformly in the XYZ directions",
         default=False)
+
+    bpy.types.Scene.MCScaleCorrect = FloatProperty(
+        name="Scale Correction", 
+        default=0.85,
+        min=0.5, max=1.5)
 
     bpy.types.Scene.MCBodyPart = EnumProperty(
         items = [('Head', 'Head', 'Head'),

@@ -30,8 +30,8 @@
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.6",
-    "blender": (2, 6, 1),
+    "version": "0.7",
+    "blender": (2, 6, 5),
     "api": 40000,
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -152,9 +152,13 @@ class MakeClothesPanel(bpy.types.Panel):
         row = layout.row()
         row.operator("mhclo.make_human", text="Human").isHuman = True
         row.operator("mhclo.make_human", text="Clothing").isHuman = False
-
+        row = layout.row()
+        row.prop(scn, "MCThreshold")
+        row.prop(scn, "MCListLength")
+    
         layout.separator()
         layout.label("Make clothes")
+        
         layout.operator("mhclo.make_clothes")
         layout.operator("mhclo.print_clothes")
         layout.separator()
@@ -187,6 +191,7 @@ class MakeClothesPanel(bpy.types.Panel):
         row.prop(scn, "MCUseBoundary")
         if scn.MCUseBoundary:
             row.prop(scn, "MCScaleUniform")
+            layout.prop(scn, "MCScaleCorrect")   
             layout.prop(scn, "MCBodyPart")   
             vnums = makeclothes.BodyPartVerts[scn.MCBodyPart]
             if scn.MCScaleUniform:

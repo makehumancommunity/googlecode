@@ -25,6 +25,7 @@
 
 import bpy
 import os
+import math
 
 from . import globvars as the
 
@@ -38,25 +39,34 @@ class CProxy:
         self.obj_file = None
         self.refVerts = []
         self.firstVert = 0
+        self.rScale = None
         self.xScale = None
         self.yScale = None
         self.zScale = None
+        self.nVerts = the.NTotalVerts
         return
         
     def __repr__(self):
-        return ("<CProxy %s %d\n  %s\n  x %s\n  y %s\n  z %s>" % 
-            (self.name, self.firstVert, self.obj_file, self.xScale, self.yScale, self.zScale))
+        return ("<CProxy %s %d\n  %s\n  w %s\n x %s\n  y %s\n  z %s>" % 
+            (self.name, self.firstVert, self.obj_file, self.rScale, self.xScale, self.yScale, self.zScale))
         
-    def update(self, srcVerts, trgVerts, skipBefore=0, skipAfter=100000):
+    def update(self, srcVerts, trgVerts, useManualScale=False, manualScale=1.0, skipBefore=0, skipAfter=100000):
         rlen = len(self.refVerts)
         mlen = len(trgVerts)
         first = self.firstVert
         if (first+rlen) != mlen:
             raise NameError( "Bug: %d refVerts != %d meshVerts" % (first+rlen, mlen) )
-        s0 = getScale(self.xScale, srcVerts, 0)
-        s1 = getScale(self.yScale, srcVerts, 2)
-        s2 = getScale(self.zScale, srcVerts, 1)
-        #print("Scales", s0, s1, s2)
+
+        if useManualScale:
+            s0 = s1 = s2 = manualScale
+        elif self.rScale:
+            s0 = s1 = s2 = getScale(self.rScale, srcVerts, -1)
+        else:
+            s0 = getScale(self.xScale, srcVerts, 0)
+            s1 = getScale(self.yScale, srcVerts, 2)
+            s2 = getScale(self.zScale, srcVerts, 1)
+        print("Scales", s0, s1, s2)
+
         for n in range(rlen):
             if n < skipBefore or n >= skipAfter:
                 continue
@@ -71,11 +81,21 @@ class CProxy:
                 trgVert.co[1] = w0*v0.co[1] + w1*v1.co[1] + w2*v2.co[1] - d2*s2
                 trgVert.co[2] = w0*v0.co[2] + w1*v1.co[2] + w2*v2.co[2] + d1*s1
                 #bverts[n+first].select = (bverts[rv0].select or bverts[rv1].select or bverts[rv2].select)
+                """
+                if n == 940:
+                    print("V0", v0.co)
+                    print("V1", v1.co)
+                    print("V2", v2.co)
+                    print("w", w0,w1,w2)
+                    print("s", s0,s1,s2)
+                    print("d", d0,d1,d2)
+                    print("t", trgVert.co)
+                """
             else:
                 v0 = srcVerts[refVert]
                 trgVert.co = v0.co
                 #bvert[n+first].select = bverts[rv0].select
-        return
+        return s0
 
     def read(self, filepath):
         realpath = os.path.realpath(os.path.expanduser(filepath))
@@ -105,6 +125,8 @@ class CProxy:
                     status = doVerts
                 elif words[1] == 'name':
                     self.name = words[2]
+                elif words[1] == 'r_scale':
+                    self.rScale = scaleInfo(words)
                 elif words[1] == 'x_scale':
                     self.xScale = scaleInfo(words)
                 elif words[1] == 'y_scale':
@@ -143,7 +165,15 @@ def scaleInfo(words):
 def getScale(info, verts, index):
     if info is None:
         return 1.0
-    (v1, v2, den) = info
-    num = abs(verts[v1].co[index] - verts[v2].co[index])
+    (vn1, vn2, den) = info
+    if index > 0:
+        num = abs(verts[vn1].co[index] - verts[vn2].co[index])
+    else:
+        v1 = verts[vn1].co
+        v2 = verts[vn2].co
+        dx = v1[0]-v2[0]
+        dy = v1[1]-v2[1]
+        dz = v1[2]-v2[2]
+        num = math.sqrt(dx*dx + dy*dy + dz*dz)
     return num/den
     

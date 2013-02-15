@@ -80,6 +80,10 @@ class ConvertTargetPanel(bpy.types.Panel):
         layout.prop(scn, "CTSourceTarget", text="")
 
         layout.separator()
+        layout.prop(scn, "CTUseManualScale")
+        layout.prop(scn, "CTManualScale")
+
+        layout.separator()
         layout.operator("mh.convert_target")
 
 

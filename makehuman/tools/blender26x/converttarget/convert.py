@@ -36,7 +36,7 @@ import math
 from bpy.props import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
-from mh_utils import proxy
+from mh_utils import proxy as proxyfile
 
 
 #----------------------------------------------------------
@@ -74,9 +74,7 @@ class VIEW3D_OT_SetBaseObjButton(bpy.types.Operator):
         maxlen= 1024, default= "")
 
     def execute(self, context):
-        global theProxy
         context.scene.CTBaseObj = self.filepath
-        theProxy = None
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -97,9 +95,7 @@ class VIEW3D_OT_SetConvertMhcloButton(bpy.types.Operator):
         maxlen= 1024, default= "")
 
     def execute(self, context):
-        global theProxy
         context.scene.CTConvertMhclo = self.filepath
-        theProxy = None
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -163,40 +159,35 @@ class VIEW3D_OT_ConvertTargetButton(bpy.types.Operator):
 
 
 def convertTargetFile(context):
-    global theProxy, theBaseVerts, theDiffVerts
     scn = context.scene
 
-    if not theBaseVerts:
-        if scn.CTBaseObj:
-            print("Reading %s" % scn.CTBaseObj)
-            theBaseVerts = readBaseObj(scn.CTBaseObj)
-        else:
-            raise NameError("No base obj path selected")
+    if scn.CTBaseObj:
+        print("Reading %s" % scn.CTBaseObj)
+        baseVerts = readBaseObj(scn.CTBaseObj)
+    else:
+        raise NameError("No base obj path selected")
             
-    if not theProxy:
-        if scn.CTConvertMhclo:
-            print("Reading %s" % scn.CTConvertMhclo)
-            theProxy = proxy.CProxy()
-            theProxy.read(scn.CTConvertMhclo)
-        else:
-            raise NameError("No convert mhclo path selected")
+    if scn.CTConvertMhclo:
+        print("Reading %s" % scn.CTConvertMhclo)
+        proxy = proxyfile.CProxy()
+        proxy.read(scn.CTConvertMhclo)
+    else:
+        raise NameError("No convert mhclo path selected")
 
-    if not theDiffVerts:
-        srcVerts = zeroVerts(len(theBaseVerts))
-        theDiffVerts = copyVerts(theBaseVerts) 
-        theProxy.update(srcVerts, theDiffVerts)
-        #subVerts(theDiffVerts, theBaseVerts)
+    srcVerts = zeroVerts(proxy.nVerts)
+    diffVerts = copyVerts(baseVerts) 
+    proxy.update(srcVerts, diffVerts, useManualScale=scn.CTUseManualScale, manualScale=scn.CTManualScale)
     
     srcFile = scn.CTSourceTarget
     trgFile = os.path.join(scn.CTTargetDir, os.path.basename(srcFile))
     
-    srcVerts = zeroVerts(len(theBaseVerts))
+    srcVerts = zeroVerts(proxy.nVerts)
     readTarget(srcFile, srcVerts)    
 
-    trgVerts = copyVerts(theBaseVerts)   
-    theProxy.update(srcVerts, trgVerts)    
+    trgVerts = copyVerts(baseVerts)   
+    scn.CTManualScale = proxy.update(srcVerts, trgVerts, useManualScale=scn.CTUseManualScale, manualScale=scn.CTManualScale)
 
-    subVerts(trgVerts, theDiffVerts)    
+    subVerts(trgVerts, diffVerts)    
     saveTarget(trgVerts, trgFile)
 
 
@@ -283,16 +274,23 @@ class CVertex:
 #   Init
 #----------------------------------------------------------
 
-theBaseVerts = None
-theProxy = None
-theDiffVerts = None
+baseVerts = None
+proxy = None
+diffVerts = None
 
 def init():
-    global theProxy
-    theBaseVerts = None
-    theProxy = None
+    global proxy
+    baseVerts = None
+    proxy = None
 
     bpy.types.Scene.CTBaseObj = StringProperty()
     bpy.types.Scene.CTConvertMhclo = StringProperty()
     bpy.types.Scene.CTSourceTarget = StringProperty()
     bpy.types.Scene.CTTargetDir = StringProperty()
+    
+    bpy.types.Scene.CTUseManualScale = BoolProperty(name="Use Manual Scale")
+
+    bpy.types.Scene.CTManualScale = FloatProperty(
+        name="Manual Scale", 
+        min=-1.0, max=2.0,
+        default=1.0)
