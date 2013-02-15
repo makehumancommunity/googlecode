@@ -6,7 +6,7 @@
 
     <xsl:text>
 ===========================
-MakeHuman
+</xsl:text><xsl:value-of select="$volume" /><xsl:text>
 ===========================
 
 </xsl:text>
@@ -15,6 +15,8 @@ MakeHuman
       <xsl:sort data-type="number" select="sectionweight"/>
     
       <xsl:variable name="sectnum" select="position()" />
+
+<xsl:if test="Volume=$volume">
       <xsl:text>
 
 .. raw:: pdf
@@ -48,6 +50,8 @@ ________________________________________________________________________________
       <xsl:apply-templates select="Body" />
 
     </xsl:for-each>
+</xsl:if>
+
     </xsl:for-each>
   </xsl:template>
 

@@ -26,10 +26,28 @@ while($inlin = <FIL>)
 close(UT);
 close(FIL);
 
-system 'xsltproc stylesheet.xsl unescaped.xml > rst/documentation.rst';
-system "sed -i -e 's/^[ ]\\*/\\*/g' rst/documentation.rst";
+@volumes = (
+"User guide",
+"Scripting manual",
+"Reference manual",
+"Contributors manual",
+"Developer manual",
+"Writers manual",
+"MakeHuman and Blender guide",
+"Makehuman history and evolution and beyond..."
+);
 
-chdir "rst";
+foreach $volume (@volumes)
+{
+  $fn = $volume;
+  $fn =~ s/ //g;
+  $fn =~ s/&//g;
 
-system "rst2pdf documentation.rst";
+  system "xsltproc --stringparam volume '$volume' stylesheet.xsl unescaped.xml > rst/$fn.rst";
+  system "sed -i -e 's/^[ ]\\*/\\*/g' rst/documentation.rst";
+
+  chdir "rst";
+  system "rst2pdf $fn.rst";
+  chdir "..";
+}
 
