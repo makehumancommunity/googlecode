@@ -7,11 +7,11 @@
 
 **Authors:**           Thomas Larsson
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2011
 
-**Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
+**Licensing:**         GPL3 (see also http://sites.google.com/site/makehumandocs/licensing)
 
-**Coding Standards:**  See http://www.makehuman.org/node/165
+**Coding Standards:**  See http://sites.google.com/site/makehumandocs/developers-guide
 
 Abstract
 Bone weighting utility
@@ -640,14 +640,6 @@ def symmetrizeWeights(context, left2right):
             nameStripped = vgrp.name[:-2]
             right[nameStripped] = vgrp
             rightIndex[vgrp.index] = nameStripped
-        elif vgrp.name[:4].lower() == 'left':
-            nameStripped = vgrp.name[4:]
-            left[nameStripped] = vgrp
-            leftIndex[vgrp.index] = nameStripped
-        elif vgrp.name[:5].lower() == 'right':
-            nameStripped = vgrp.name[5:]
-            right[nameStripped] = vgrp
-            rightIndex[vgrp.index] = nameStripped
         elif vgrp.name[-4:].lower() == 'left':
             nameStripped = vgrp.name[:-4]
             left[nameStripped] = vgrp
@@ -723,7 +715,7 @@ def symmetrizeWeights(context, left2right):
                 rgrp.add([rv.index], grp.weight, 'REPLACE')
             else:                
                 gn = grp.group
-                print("*** No rgrp for v %s g %s %s" % (vn, gn, ob.vertex_groups[gn].name))
+                print("*** No rgrp for %s %s %s" % (grp, gn, ob.vertex_groups[gn]))
     return len(rverts)
 
 def printGroups(name, groups, indices, vgroups):
@@ -1794,6 +1786,119 @@ class VIEW3D_OT_StatisticsButton(bpy.types.Operator):
         return{'FINISHED'}    
 
 #
+#
+#
+
+VertexNumbers = {}
+
+VertexNumbers["alpha8a"] = {
+    "Tongue"    : (0,226),
+    "Body"      : (226, 13606),
+    "Hair"      : (13606, 14034),
+    "Skirt"     : (14034, 14754),
+    "Tights"    : (14754, 17428),
+    "Penis"     : (17428, 17628),
+    "EyeLashes" : (17628, 17878),
+    "Eyes"      : (17878, 18022),
+    "LoTeeth"   : (18022, 18090),
+    "UpTeeth"   : (18090, 18158),
+    "Joints"     : (18158, 19166)
+}        
+
+VertexNumbers["alpha8b"] = {
+    "Body"      : (0, 13380),
+    "Tongue"    : (13380, 13606),
+    "Joints"    : (13606, 14614),
+    "Eyes"      : (14614, 14758),
+    "EyeLashes" : (14758, 15008),
+    "LoTeeth"   : (15008, 15076),
+    "UpTeeth"   : (15076, 15144),
+    "Penis"     : (15144, 15344),
+    "Tights"    : (15344, 18018),
+    "Skirt"     : (18018, 18738),
+    "Hair"      : (18738, 19166),
+}
+
+
+def transferVgroups(ob1, ob2):
+    if len(ob1.vertex_groups) == 0:
+        tmp = ob1
+        ob1 = ob2
+        ob2 = tmp
+    print(ob1, ob1.vertex_groups)        
+    print(ob2, ob2.vertex_groups)        
+    if len(ob1.vertex_groups) == 0:
+        raise NameError("%s has no vertex groups" % ob1)
+    if len(ob2.vertex_groups) > 0:
+        raise NameError("%s has vertex groups" % ob2)
+    
+    vgroups = {}
+    for vg1 in ob1.vertex_groups:
+        vg2 = ob2.vertex_groups.new(vg1.name)
+        vgroups[vg1.index] = vg2
+        if vg2.index != vg1.index:
+            raise NameError("Oops %s %d %d" % (vg1.name, vg1.index, vg2.index))
+    
+    for v1 in ob1.data.vertices:
+        vn2 = getVertex(v1.index)
+        for g1 in v1.groups:
+            vg2 = vgroups[g1.group]
+            vg2.add([vn2], g1.weight, 'REPLACE')
+
+
+def getVertex(vn1):
+    vstruct1 = VertexNumbers["alpha8a"]
+    for key in vstruct1:
+        first1,last1 = vstruct1[key]
+        if vn1 >= first1 and vn1 < last1:
+            break
+
+    vstruct2 = VertexNumbers["alpha8b"]
+    first2,last2 = vstruct2[key]
+    vn2 = vn1 - first1 + first2
+    return vn2
+    
+
+def checkVgroupSanity():
+    vstruct1 = VertexNumbers["alpha8a"]
+    vstruct2 = VertexNumbers["alpha8b"]
+    for key in vstruct1:
+        first1,last1 = vstruct1[key]
+        first2,last2 = vstruct2[key]
+        nverts1 = last1-first1
+        nverts2 = last2-first2
+        if nverts1 == nverts2:
+            print("    ", key)
+        else:
+            print("*** %s %d %d" % (key, nverts1, nverts2))
+            
+   
+    
+class VIEW3D_OT_TransferVgroupsButton(bpy.types.Operator):
+    bl_idname = "mhw.transfer_vgroups"
+    bl_label = "Transfer Vertex Groups"
+
+    def execute(self, context):
+        checkVgroupSanity()
+        ob1 = context.object
+        scn = context.scene
+        for ob in scn.objects:
+            if ob.type == 'MESH' and ob != ob1 and ob.select:
+                ob2 = ob
+                break
+        transferVgroups(ob1, ob2)
+        return{'FINISHED'}    
+
+
+class VIEW3D_OT_CheckVgroupsSanityButton(bpy.types.Operator):
+    bl_idname = "mhw.check_vgroups_sanity"
+    bl_label = "Check Vertex Group Sanity"
+
+    def execute(self, context):
+        checkVgroupSanity()
+        return{'FINISHED'}    
+    
+#
 #    class MhxWeightToolsPanel(bpy.types.Panel):
 #
 
@@ -1871,6 +1976,11 @@ class MhxWeightToolsPanel(bpy.types.Panel):
 
         layout.separator()
         layout.operator("mhw.localize_files")
+        layout.operator("mhw.transfer_vgroups")
+        layout.operator("mhw.check_vgroups_sanity")
+        
+        
+        
 
 class MhxWeightExtraPanel(bpy.types.Panel):
     bl_label = "Weight tools extra"
