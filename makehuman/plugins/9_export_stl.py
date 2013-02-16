@@ -24,6 +24,15 @@ TODO
 
 import gui
 from export import Exporter
+from exportutils.config import Config
+
+class STLConfig(Config):
+
+    def __init__(self, exporter):
+        Config.__init__(self)
+        self.selectedOptions(exporter)
+        self.useRelPaths = True
+    
 
 class ExporterSTL(Exporter):
     def __init__(self):
@@ -32,6 +41,7 @@ class ExporterSTL(Exporter):
         self.filter = "Stereolithography (*.stl)"
 
     def build(self, options, taskview):
+        Exporter.build(self, options, taskview)
         stlOptions = []
         self.stlAscii = options.addWidget(gui.RadioButton(stlOptions,  "Ascii", selected=True))
         self.stlBinary = options.addWidget(gui.RadioButton(stlOptions, "Binary"))
@@ -40,12 +50,13 @@ class ExporterSTL(Exporter):
     def export(self, human, filename):
         import mh2stl
 
-        mesh = human.getSubdivisionMesh() if self.stlSmooth.selected else human.meshData
+        # TL: subdivision is taken care of in exportutils
+        #mesh = human.getSubdivisionMesh() if self.stlSmooth.selected else human.meshData
 
         if self.stlAscii.selected:
-            mh2stl.exportStlAscii(mesh, filename("stl"))
+            mh2stl.exportStlAscii(human, filename("stl"), STLConfig(self))
         else:
-            mh2stl.exportStlBinary(mesh, filename("stl"))
+            mh2stl.exportStlBinary(human, filename("stl"), STLConfig(self))
 
 def load(app):
     app.addExporter(ExporterSTL())

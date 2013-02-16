@@ -32,7 +32,8 @@ Requires:
 
 __docformat__ = 'restructuredtext'
 
-from os.path import basename
+import os
+import exportutils
 from skeleton import Skeleton
 
 groupWeights = (
@@ -303,55 +304,90 @@ groupWeights = (
     ('r-eye-lower-lash', 'joint-head', 1.0),
     ('r-eye-upper-lash', 'joint-head', 1.0))
 
-def exportMd5(obj, filename):
+def exportMd5(human, filepath, config):
     """
     This function exports MakeHuman mesh and skeleton data to id Software's MD5 format. 
     
     Parameters
     ----------
    
-    obj:     
-      *Object3D*.  The object whose information is to be used for the export.
-    filename:     
-      *string*.  The filename of the file to export the object to.
+    human:     
+      *Human*.  The object whose information is to be used for the export.
+    filepath:     
+      *string*.  The filepath of the file to export the object to.
+    config:
+      *Config*.  Export configuration.
     """
+
+    obj = human.meshData
+    config.addObjects(human)
+    config.setupTexFolder(filepath)
+    filename = os.path.basename(filepath)
+    name = config.goodName(os.path.splitext(filename)[0])
+
+    stuffs = exportutils.collect.setupObjects(
+        name, 
+        human,
+        config=config,
+        helpers=config.helpers, 
+        hidden=config.hidden, 
+        eyebrows=config.eyebrows, 
+        lashes=config.lashes,
+        subdivide=config.subdivide)
 
     skeleton = Skeleton()
     skeleton.update(obj)
 
-    f = open(filename, 'w')
+    f = open(filepath, 'w')
     f.write('MD5Version 10\n')
     f.write('commandline ""\n\n')
     f.write('numJoints %d\n' % (skeleton.joints+1)) # Amount of joints + the hardcoded origin below
-    f.write('numMeshes %d\n\n' % (1)) # TODO: 2 in case of hair
+    f.write('numMeshes %d\n\n' % (len(stuffs)))
+    
     f.write('joints {\n')
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % ('origin', -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
     writeJoint(f, skeleton.root)
     f.write('}\n\n')
-    f.write('mesh {\n')
-    f.write('\tshader "%s"\n' % (basename(obj.texture))) # TODO: create the shader file
-    f.write('\n\tnumverts %d\n' % (len(obj.verts)))
-    for vert in obj.verts:
-        if obj.has_uv:
-            face = vert.sharedFaces[0]
-            u, v = obj.texco[face.uv[face.verts.index(vert)]]
-        else:
-            u, v = 0, 0
-        # vert [vertIndex] ( [texU] [texV] ) [weightIndex] [weightElem]
-        f.write('\tvert %d ( %f %f ) %d %d\n' % (vert.idx, u, 1.0-v, vert.idx, 1))
-    f.write('\n\tnumtris %d\n' % (len(obj.faces) * 2))
-    for face in obj.faces:
-        # tri [triIndex] [vertIndex1] [vertIndex2] [vertIndex3]
-        f.write('\ttri %d %d %d %d\n' % (face.idx*2, face.verts[2].idx, face.verts[1].idx, face.verts[0].idx))
-        f.write('\ttri %d %d %d %d\n' % (face.idx*2+1, face.verts[0].idx, face.verts[3].idx, face.verts[2].idx))
-    f.write('\n\tnumweights %d\n' % (len(obj.verts)))
-    for vert in obj.verts:
-        # TODO: We attach all vertices to the root with weight 1.0, this should become
-        # real weights to the correct bones
-        # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
-        f.write('\tweight %d %d %f ( %f %f %f )\n' % (vert.idx, 0, 1.0, vert.co[0], -vert.co[2], vert.co[1]))
-    f.write('}\n\n')
+
+    for stuff in stuffs:
+        obj = stuff.meshInfo.object
+        
+        f.write('mesh {\n')
+        if stuff.texture:
+            texfolder,texname = stuff.texture
+            f.write('\tshader "%s"\n' % (texname)) # TODO: create the shader file
+
+        f.write('\n\tnumverts %d\n' % (len(obj.verts)))
+        for vert in obj.verts:
+            if obj.has_uv:
+                face = vert.sharedFaces[0]
+                # TL: Not sure how this should work, but it doesn't.
+                # Changed to something unelegant but working
+                #u, v = obj.texco[face.uv[face.verts.index(vert)]]
+                for n,v in enumerate(face.verts):
+                    if v == vert:
+                        break
+                u, v = obj.texco[face.uv[n]]
+            else:
+                u, v = 0, 0
+            # vert [vertIndex] ( [texU] [texV] ) [weightIndex] [weightElem]
+            f.write('\tvert %d ( %f %f ) %d %d\n' % (vert.idx, u, 1.0-v, vert.idx, 1))
+
+        f.write('\n\tnumtris %d\n' % (len(obj.faces) * 2))
+        for face in obj.faces:
+            # tri [triIndex] [vertIndex1] [vertIndex2] [vertIndex3]
+            f.write('\ttri %d %d %d %d\n' % (face.idx*2, face.verts[2].idx, face.verts[1].idx, face.verts[0].idx))
+            f.write('\ttri %d %d %d %d\n' % (face.idx*2+1, face.verts[0].idx, face.verts[3].idx, face.verts[2].idx))
+
+        f.write('\n\tnumweights %d\n' % (len(obj.verts)))
+        for vert in obj.verts:
+            # TODO: We attach all vertices to the root with weight 1.0, this should become
+            # real weights to the correct bones
+            # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
+            f.write('\tweight %d %d %f ( %f %f %f )\n' % (vert.idx, 0, 1.0, vert.co[0], -vert.co[2], vert.co[1]))
+        f.write('}\n\n')
     f.close()
+    
 
 def writeJoint(f, joint):
     """

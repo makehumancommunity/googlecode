@@ -53,7 +53,7 @@ def exportProxyObj(human, filepath, config):
 "# www.makehuman.org\n\n" +
 "mtllib %s.mtl\n" % os.path.basename(filepath))
     for stuff in stuffs:
-        writeGeometry(obj, fp, stuff, config.scale)
+        writeGeometry(fp, stuff, config.scale)
     fp.close()
     
     mtlfile = "%s.mtl" % filepath
@@ -67,27 +67,34 @@ def exportProxyObj(human, filepath, config):
     return
 
 #
-#    writeGeometry(obj, fp, stuff, scale):
+#    writeGeometry(fp, stuff, scale):
 #
         
-def writeGeometry(obj, fp, stuff, scale):
-    nVerts = len(stuff.meshInfo.verts)
-    nUvVerts = len(stuff.meshInfo.uvValues)
+def writeGeometry(fp, stuff, scale):
+    obj = stuff.meshInfo.object
+    nVerts = len(obj.verts)
+    nUvVerts = len(obj.texco)
     fp.write("usemtl %s\n" % stuff.name)
     fp.write("g %s\n" % stuff.name)    
-    for v in stuff.meshInfo.verts:
-        fp.write("v %.4g %.4g %.4g\n" % (scale*v[0], scale*v[1], scale*v[2]))
-    #for no in stuff.vnormals:
-    #    fp.write("vn %.4g %.4g %.4g\n" % (no[0], no[1], no[2]))
-    for uv in stuff.meshInfo.uvValues:
-        fp.write("vt %.4g %.4g\n" %(uv[0], uv[1]))
-    for fc in stuff.meshInfo.faces:
-        fp.write('f ')
-        for vs in fc:
-            v = vs[0]
-            uv = vs[1]
-            fp.write("%d/%d " % (v-nVerts, uv-nUvVerts))
-        fp.write('\n')
+    for v in obj.verts:
+        fp.write("v %.4g %.4g %.4g\n" % (scale*v.co[0], scale*v.co[1], scale*v.co[2]))
+    for v in obj.verts:
+        fp.write("vn %.4g %.4g %.4g\n" % (v.no[0], v.no[1], v.no[2]))
+    if 0 and obj.has_uv:
+        for uv in obj.texco:
+            fp.write("vt %.4g %.4g\n" % (uv[0], uv[1]))
+        for f in obj.faces:
+            fp.write('f ')
+            for n,v in enumerate(f.verts):
+                uv = f.uv[n]
+                fp.write("%d/%d " % (v.idx-nVerts, uv-nUvVerts))
+            fp.write('\n')
+    else:            
+        for f in obj.faces:
+            fp.write('f ')
+            for v in f.verts:
+                fp.write("%d " % (v.idx-nVerts))
+            fp.write('\n')
     return        
 
 #

@@ -23,8 +23,9 @@ TODO
 """
 
 import os
-import numpy as np
+import numpy
 import aljabr
+import module3d
 import exportutils
 import log
 
@@ -172,33 +173,129 @@ class CTexture:
 
 class CMeshInfo:
 
-    def __init__(self, verts, vnormals, uvValues, faces, weights, shapes):
-        self.verts = verts
-        self.vnormals = vnormals
-        self.uvValues = uvValues
-        self.faces = faces
-        self.weights = weights
-        self.shapes = shapes
+    def __init__(self, name):
+        self.name = name
+        self.object = None
+        self.weights = {}
+        self.shapes = []
 
-    def setObject3dMesh(self, object3d, weights, shapes):
-        self.verts = [tuple(v) for v in object3d.coord]
-        self.vnormals = [tuple(n) for n in object3d.vnorm]
-        self.uvValues = [tuple(t) for t in object3d.texco]
-        self.faces = oldStyleFaces(object3d)
+
+    def fromProxy(self, coords, vnormals, texVerts, faceVerts, faceUvs, weights, shapes):
+        obj = self.object = module3d.Object3D(self.name)
+        obj.setCoords(coords)
+        #obj.setNormals(vnormals)
+        obj.setUVs(texVerts)
+
+        for n,f in enumerate(faceVerts):
+            if len(f) == 3:
+                f.append(f[0])
+                tf = faceUvs[n]
+                tf.append(tf[0])
+
+        obj.setFaces(faceVerts, faceUvs)
         self.weights = weights
         self.shapes = shapes
+        return self
+
+
+    def fromObject(self, object3d, weights, shapes):
+        self.object = object3d
+        self.name = object3d.name
+        self.weights = weights
+        self.shapes = shapes
+        return self
+        
         
     def __repr__(self):
-        nVerts = nNormals = nUvs = nFaces = nWeights = nShapes = -1
-        if self.verts: nVerts = len(self.verts)
-        if self.vnormals: nNormals = len(self.vnormals)
-        if self.uvValues: nUvs = len(self.uvValues)
-        if self.faces: nFaces = len(self.faces)
-        if self.weights: nWeights = len(self.weights)
-        if self.shapes: nShapes = len(self.shapes)
-        
-        return ("<CMeshInfo v %d n %d u %d f %d w %d t %d>" % (nVerts, nNormals, nUvs, nFaces, nWeights, nShapes))
+        return ("<CMeshInfo %s w %d t %d>" % (self.object, len(self.weights), len(self.shapes)))
 
+
+    def filter(self, deleteGroups, deleteVerts, eyebrows, lashes):
+        obj = self.object
+
+        killUvs = numpy.zeros(len(obj.texco), bool)
+        killFaces = numpy.zeros(len(obj.faces), bool)
+        
+        if deleteVerts != None:
+            killVerts = deleteVerts
+            for f in obj.faces:
+                for v in f.verts:
+                    if killVerts[v.idx]:
+                        killFaces[f.idx] = True             
+        else:
+            killVerts = numpy.zeros(len(obj.verts), bool)
+        
+        for fg in obj.faceGroups:
+            if (("joint" in fg.name) or 
+                ("helper" in fg.name) or
+                ((not eyebrows) and 
+                 (("eyebrown" in fg.name) or ("cornea" in fg.name))) or
+                ((not lashes) and 
+                 ("lash" in fg.name)) or
+                 deleteGroup(fg.name, deleteGroups)):
+    
+                for f in fg.faces:            
+                    killFaces[f.idx] = True
+                    for v in f.verts:
+                        killVerts[v.idx] = True
+                    for vt in f.uv:                    
+                        killUvs[vt] = True
+        
+        n = 0
+        newVerts = {}
+        coords = []
+        vnormals = []
+        for v in obj.verts:
+            if not killVerts[v.idx]:
+                coords.append(v.co)
+                vnormals.append(v.no)
+                newVerts[v.idx] = n
+                n += 1
+    
+        n = 0
+        texVerts = []
+        newUvs = {}
+        for m,uv in enumerate(obj.texco):
+            if not killUvs[m]:
+                texVerts.append(uv)
+                newUvs[m] = n
+                n += 1   
+    
+        faceVerts = []
+        faceUvs = []
+        for f in obj.faces:
+            if not killFaces[f.idx]:
+                fverts2 = []
+                fuvs2 = []
+                for v in f.verts:
+                    fverts2.append(newVerts[v.idx])
+                for uv in f.uv:
+                    fuvs2.append(newUvs[uv])
+                faceVerts.append(fverts2)
+                faceUvs.append(fuvs2)
+    
+        weights = {}
+        if self.weights:
+            for (b, wts1) in self.weights.items():
+                wts2 = []
+                for (v1,w) in wts1:
+                    if not killVerts[v1]:
+                        wts2.append((newVerts[v1],w))
+                weights[b] = wts2
+    
+        shapes = []
+        if self.shapes:
+            for (name, morphs1) in self.shapes:
+                morphs2 = {}
+                for (v1,dx) in morphs1.items():
+                    if not killVerts[v1]:
+                        morphs2[newVerts[v1]] = dx
+                shapes.append((name, morphs2))
+
+        self.fromProxy(coords, vnormals, texVerts, faceVerts, faceUvs, weights, shapes)
+        return self
+       
+        
 #
 #
 #
@@ -257,7 +354,7 @@ def readProxyFile(obj, file, evalOnLoad):
     locations = {}
     tails = {}
     proxy = CProxy(pfile.file, pfile.type, pfile.layer)
-    proxy.deleteVerts = np.zeros(len(verts), bool)
+    proxy.deleteVerts = numpy.zeros(len(verts), bool)
     proxy.name = "MyProxy"
 
     useProjection = True
@@ -681,7 +778,7 @@ class CUvSet:
         self.filename = filename
             
         nFaces = len(human.meshData.faces)                
-        self.faceMaterials = np.zeros(nFaces, int)
+        self.faceMaterials = numpy.zeros(nFaces, int)
         fn = 0
         for line in self.faceNumbers:
             words = line.split()
@@ -784,31 +881,24 @@ def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
             verts.append(v)
             vnormals.append(v)
 
-        faces = []
+        faceVerts = [[v for v in f] for (f,g) in proxy.faces]
+        
         if proxy.texVerts:
             texVerts = proxy.texVertsLayers[proxy.objFileLayer]
             texFaces = proxy.texFacesLayers[proxy.objFileLayer]        
-            fn = 0
             fnmax = len(texFaces)
-            for (f,g) in proxy.faces[:fnmax]:
-                texFace = texFaces[fn]
-                face = []
-                for (vn,v) in enumerate(f):
-                    face.append((v, texFace[vn]))
-                faces.append(face)
-                fn += 1
+            faceVerts = faceVerts[:fnmax]
         else:
-            faces = proxy.faces
+            texVerts = []
+            texFaces = []
 
         weights = getProxyWeights(rawWeights, proxy)
         shapes = getProxyShapes(rawShapes, proxy)
-        return CMeshInfo(verts, vnormals, proxy.texVerts, faces, weights, shapes)
+        meshInfo = CMeshInfo(proxy.name).fromProxy(verts, vnormals, texVerts, faceVerts, texFaces, weights, shapes)
+
     else:
-        verts = [tuple(v) for v in obj.coord]
-        vnormals = [tuple(n) for n in obj.vnorm]
-        texcoords = [tuple(t) for t in obj.texco]
-        faces = oldStyleFaces(obj)
-        return CMeshInfo(verts, vnormals, texcoords, faces, rawWeights, rawShapes)
+        meshInfo = CMeshInfo(obj.name).fromObject(obj, rawWeights, rawShapes)
+    return meshInfo
         
         
 def oldStyleFaces(obj):

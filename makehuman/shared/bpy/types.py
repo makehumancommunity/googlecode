@@ -242,21 +242,22 @@ class Mesh(Rna):
         self.faces = [[v.idx for v in f.verts] for f in mesh.faces]
 
     def fromStuff(self, stuff): 
+        obj = stuff.meshInfo.object
         stuff.bones = []
         exportutils.collect.setStuffSkinWeights(stuff)
-        nVerts = len(stuff.meshInfo.verts)
-        nUvVerts = len(stuff.meshInfo.uvValues)
+        nVerts = len(obj.verts)
+        nUvVerts = len(obj.fuvs)
         nNormals = nVerts
-        nFaces = len(stuff.meshInfo.faces)
+        nFaces = len(obj.faces)
         nWeights = len(stuff.skinWeights)
         nBones = len(stuff.bones)
         nShapes = len(stuff.meshInfo.shapes)
 
-        self.vertices = [MeshVertex(n, v) for (n,v) in enumerate(stuff.meshInfo.verts)]
-        self.polygons = [MeshPolygon(n, [v[0] for v in f], stuff.meshInfo.verts) for (n,f) in enumerate(stuff.meshInfo.faces)]
+        self.vertices = [MeshVertex(v) for v in obj.verts]
+        self.polygons = [MeshPolygon(f, obj.verts) for f in obj.faces]
 
-        if stuff.meshInfo.uvValues:
-            self.uv_layers.append(UvLayer(stuff.meshInfo.uvValues, stuff.meshInfo.faces))
+        if obj.has_uv:
+            self.uv_layers.append(UvLayer(obj))
 
         if stuff.hasMaterial():
             self.materials = [Material(stuff)]
@@ -274,9 +275,9 @@ class Mesh(Rna):
             
 
 class MeshVertex:
-    def __init__(self, idx, co):
-        self.index = idx
-        self.co = co
+    def __init__(self, v):
+        self.index = v.idx
+        self.co = v.co
         self.normal = []
         self.groups = []
         
@@ -298,10 +299,12 @@ class MeshGroup:
 
         
 class MeshPolygon:
-    def __init__(self, idx, fverts, meverts):
-        self.index = idx
-        self.vertices = fverts
+    def __init__(self, face, meverts):
+        self.index = face.idx
+        self.vertices = [v.idx for v in face.verts]
         self.material_index = 0
+        self.normal = face.no
+        return
         co0 = meverts[fverts[0]]
         co1 = meverts[fverts[1]]
         co2 = meverts[fverts[2]]
@@ -311,14 +314,12 @@ class MeshPolygon:
         
         
 class UvLayer:
-    def __init__(self, uvValues, faces):
-        self.uvloop = UvLoop("UVset0", uvValues)
-        self.uvfaces = flattenIntList( [[v[1] for v in f] for f in faces] )
-
-
-def flattenIntList(list):
-    string = str(list).replace('[', '').replace(']', '')
-    return [int(x) for x in string.split(',') if x.strip()]
+    def __init__(self, obj):
+        self.uvloop = UvLoop("UVset0", obj.texco)
+        uvlist = []
+        for f in obj.faces:
+            uvlist.extend(list(f.uv))
+        self.uvfaces = uvlist
 
         
 class UvLoop:

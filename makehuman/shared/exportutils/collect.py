@@ -49,6 +49,7 @@ from . import rig as rigfile
 class CStuff:
     def __init__(self, name, proxy):
         self.name = os.path.basename(name)
+        self.object = None
         self.meshInfo = None
         self.boneInfo = None
         self.vertexWeights = None
@@ -76,8 +77,8 @@ class CStuff:
             self.displacement = None
 
             
-    def setObject3dMesh(self, object3d, weights, shapes):
-        self.meshInfo.setObject3dMesh(object3d, weights, shapes)
+    #def setObject3dMesh(self, object3d, weights, shapes):
+    #    self.meshInfo.setObject3dMesh(object3d, weights, shapes)
         
 
     def __repr__(self):
@@ -109,100 +110,6 @@ class CBoneInfo:
             (self.root, len(self.heads), len(self.tails), len(self.rolls), 
              self.hier, self.bones, self.weights))
        
-#
-#    filterMesh(meshInfo, obj, groups, deleteVerts, eyebrows, lashes):
-#
-
-def filterMesh(meshInfo, obj, deleteGroups, deleteVerts, eyebrows, lashes):
-    #(verts1, vnormals1, uvValues1, faces1, weights1, targets1) = mesh1
-    
-    killUvs = numpy.zeros(len(obj.texco), bool)
-    killFaces = numpy.zeros(len(obj.faces), bool)
-    
-    if deleteVerts != None:
-        killVerts = deleteVerts
-        for f in obj.faces:
-            for v in f.verts:
-                if killVerts[v.idx]:
-                    killFaces[f.idx] = True             
-    else:
-        killVerts = numpy.zeros(len(obj.verts), bool)
-    
-    for fg in obj.faceGroups:
-        if (("joint" in fg.name) or 
-            ("helper" in fg.name) or
-            ((not eyebrows) and 
-             (("eyebrown" in fg.name) or ("cornea" in fg.name))) or
-            ((not lashes) and 
-             ("lash" in fg.name)) or
-             mh2proxy.deleteGroup(fg.name, deleteGroups)):
-
-            for f in fg.faces:            
-                killFaces[f.idx] = True
-                for v in f.verts:
-                    killVerts[v.idx] = True
-                for vt in f.uv:                    
-                    killUvs[vt] = True
-    
-    n = 0
-    nv = {}
-    verts = []
-    for m,v in enumerate(meshInfo.verts):
-        if not killVerts[m]:
-            verts.append(v)
-            nv[m] = n
-            n += 1
-    meshInfo.verts = verts
-
-    vnormals = []
-    for m,vn in enumerate(meshInfo.vnormals):
-        if not killVerts[m]:
-            vnormals.append(vn)
-    meshInfo.vnormals = vnormals
-
-    n = 0
-    uvValues = []
-    nuv = {}
-    for m,uv in enumerate(meshInfo.uvValues):
-        if not killUvs[m]:
-            uvValues.append(uv)
-            nuv[m] = n
-            n += 1   
-    meshInfo.uvValues = uvValues            
-
-    faces = []
-    for fn,f in enumerate(meshInfo.faces):
-        if not killFaces[fn]:
-            f2 = []
-            for c in f:
-                v2 = nv[c[0]]
-                uv2 = nuv[c[1]]
-                f2.append([v2, uv2])
-            faces.append(f2)
-    meshInfo.faces = faces            
-
-    if meshInfo.weights:
-        weights = {}
-        for (b, wts1) in meshInfo.weights.items():
-            wts2 = []
-            for (v1,w) in wts1:
-                if not killVerts[v1]:
-                    wts2.append((nv[v1],w))
-            weights[b] = wts2
-        meshInfo.weights = weights            
-
-    if meshInfo.shapes:
-        shapes = []
-        for (name, morphs1) in meshInfo.shapes:
-            morphs2 = {}
-            for (v1,dx) in morphs1.items():
-                if not killVerts[v1]:
-                    morphs2[nv[v1]] = dx
-            shapes.append((name, morphs2))
-        meshInfo.shapes = shapes
-
-    return meshInfo
-
 #
 #   setupObjects
 #
@@ -254,14 +161,13 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     if not foundProxy:
         # If we subdivide here, helpers will not be removed.
         if subdivide:
-            stuff.meshInfo = meshInfo
             subMesh = getSubdivision(human,lambda p: progress(0,p*0.5))
-            stuff.setObject3dMesh(subMesh, stuff.meshInfo.weights, rawTargets)
+            stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
         else:
             if helpers:     # helpers override everything
                 stuff.meshInfo = meshInfo
             else:
-                stuff.meshInfo =  filterMesh(meshInfo, obj, deleteGroups, deleteVerts, eyebrows, lashes)
+                stuff.meshInfo = meshInfo.filter(deleteGroups, deleteVerts, eyebrows, lashes)
         stuffs = [stuff] + stuffs
 
     clothKeys = human.clothesObjs.keys()
@@ -303,18 +209,18 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
                         # Subdivide clothes
                         clo = human.clothesObjs[uuid]
                         subMesh = getSubdivision(clo)
-                        stuff.setObject3dMesh(subMesh, stuff.meshInfo.weights, rawTargets)
+                        stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
                 if proxy.type == 'Hair':
                     uuid = proxy.getUuid()
                     if uuid == human.hairProxy.getUuid():
                         # Subdivide hair
                         hair = human.hairObj
                         subMesh = getSubdivision(hair)
-                        stuff.setObject3dMesh(subMesh, stuff.meshInfo.weights, rawTargets)
+                        stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
                 elif proxy.type == 'Proxy':
                     # Subdivide proxy
                     subMesh = getSubdivision(human)
-                    stuff.setObject3dMesh(subMesh, stuff.meshInfo.weights, rawTargets)
+                    stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
 
     progress(1,0)
     return stuffs
@@ -481,9 +387,11 @@ def flatten(hier, bones):
 #
 
 def setStuffSkinWeights(stuff):
+    obj = stuff.meshInfo.object
+    
     stuff.vertexWeights = {}
-    for (vn,v) in enumerate(stuff.meshInfo.verts):
-        stuff.vertexWeights[vn] = []
+    for v in obj.verts:
+        stuff.vertexWeights[v.idx] = []
 
     stuff.skinWeights = []
     wn = 0    

@@ -1078,16 +1078,17 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
     # Mesh2 Object - Write the initial part of the mesh2 object declaration
     progress(progbase,0,"Writing objects")
     for stuff in stuffs:
+        obj = stuff.meshInfo.object
 
         outputFileDescriptor.write('// Humanoid mesh2 definition\n')
         outputFileDescriptor.write('#declare %s_Mesh2Object = mesh2 {\n' % stuff.name)
 
         # Vertices - Write a POV-Ray array to the output stream
         outputFileDescriptor.write('  vertex_vectors {\n  ')
-        outputFileDescriptor.write('    %s\n  ' % len(stuff.meshInfo.verts))
+        outputFileDescriptor.write('    %s\n  ' % len(obj.verts))
 
-        for v in stuff.meshInfo.verts:
-            outputFileDescriptor.write('<%s,%s,%s>' % (-v[0],v[1],v[2]))
+        for v in obj.verts:
+            outputFileDescriptor.write('<%s,%s,%s>' % (-v.co[0],v.co[1],v.co[2]))
         outputFileDescriptor.write('''
   }
 
@@ -1095,9 +1096,9 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
 
         # Normals - Write a POV-Ray array to the output stream
         outputFileDescriptor.write('  normal_vectors {\n  ')
-        outputFileDescriptor.write('    %s\n  ' % len(stuff.meshInfo.verts))
-        for vno in stuff.meshInfo.vnormals:
-            outputFileDescriptor.write('<%s,%s,%s>' % (-vno[0],vno[1],vno[2]))
+        outputFileDescriptor.write('    %s\n  ' % len(obj.verts))
+        for v in obj.verts:
+            outputFileDescriptor.write('<%s,%s,%s>' % (-v.no[0],v.no[1],v.no[2]))
 
         outputFileDescriptor.write('''
   }
@@ -1106,8 +1107,8 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
     
         # UV Vectors - Write a POV-Ray array to the output stream
         outputFileDescriptor.write('  uv_vectors {\n  ')
-        outputFileDescriptor.write('    %s\n  ' % len(stuff.meshInfo.uvValues))
-        for uv in stuff.meshInfo.uvValues:
+        outputFileDescriptor.write('    %s\n  ' % len(obj.texco))
+        for uv in obj.texco:
             outputFileDescriptor.write('<%s,%s>' % tuple(uv))        
 
         outputFileDescriptor.write('''
@@ -1117,19 +1118,16 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
 
         # Faces - Write a POV-Ray array of arrays to the output stream
         nTriangles = 0
-        for f in stuff.meshInfo.faces:
-            nTriangles += len(f)-2
+        for f in obj.faces:
+            nTriangles += len(f.verts)-2
 
         outputFileDescriptor.write('  face_indices {\n  ')
         outputFileDescriptor.write('    %s\n  ' % nTriangles)
 
-        for f in stuff.meshInfo.faces:
-            verts = []
-            for v,vt in f:
-                verts.append(v)
-            outputFileDescriptor.write('<%s,%s,%s>' % (verts[0], verts[1], verts[2]))
-            if len(verts) == 4:
-                outputFileDescriptor.write('<%s,%s,%s>' % (verts[2], verts[3], verts[0]))
+        for f in obj.faces:
+            outputFileDescriptor.write('<%s,%s,%s>' % (f.verts[0].idx, f.verts[1].idx, f.verts[2].idx))
+            if len(f.verts) == 4:
+                outputFileDescriptor.write('<%s,%s,%s>' % (f.verts[2].idx, f.verts[3].idx, f.verts[0].idx))
 
         outputFileDescriptor.write('''
   }
@@ -1141,13 +1139,10 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
         outputFileDescriptor.write('  uv_indices {\n  ')
         outputFileDescriptor.write('    %s\n  ' % nTriangles)
 
-        for f in stuff.meshInfo.faces:
-            vts = []
-            for v,vt in f:
-                vts.append(vt)        
-            outputFileDescriptor.write('<%s,%s,%s>' % (vts[0], vts[1], vts[2]))
-            if len(vts) == 4:
-                outputFileDescriptor.write('<%s,%s,%s>' % (vts[2], vts[3], vts[0]))
+        for f in obj.faces:
+            outputFileDescriptor.write('<%s,%s,%s>' % (f.uv[0], f.uv[1], f.uv[2]))
+            if len(f.uv) == 4:
+                outputFileDescriptor.write('<%s,%s,%s>' % (f.uv[2], f.uv[3], f.uv[0]))
 
         outputFileDescriptor.write('''
   }

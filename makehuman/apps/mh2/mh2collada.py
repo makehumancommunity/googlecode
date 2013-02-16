@@ -193,7 +193,6 @@ def printNode(fp, name, vec, extra, pad, config):
     
 
 def exportDae(human, name, fp, config):
-    obj = human.meshData
     rigfile = "data/rigs/%s.rig" % config.rigtype
 
     stuffs = exportutils.collect.setupObjects(
@@ -227,35 +226,35 @@ def exportDae(human, name, fp, config):
 '  <library_images>\n')
 
     for stuff in stuffs:
-        writeImages(obj, fp, stuff, human, config)
+        writeImages(fp, stuff, human, config)
 
     fp.write(
 '  </library_images>\n' +
 '  <library_effects>\n')
 
     for stuff in stuffs:
-        writeEffects(obj, fp, stuff)
+        writeEffects(fp, stuff)
 
     fp.write(
 '  </library_effects>\n' +
 '  <library_materials>\n')
 
     for stuff in stuffs:
-        writeMaterials(obj, fp, stuff)
+        writeMaterials(fp, stuff)
 
     fp.write(
 '  </library_materials>\n'+
 '  <library_controllers>\n')
 
     for stuff in stuffs:
-        writeController(obj, fp, stuff, config)
+        writeController(fp, stuff, config)
 
     fp.write(
 '  </library_controllers>\n'+
 '  <library_geometries>\n')
 
     for stuff in stuffs:
-        writeGeometry(obj, fp, stuff, config)
+        writeGeometry(fp, stuff, config)
 
     fp.write(
 '  </library_geometries>\n\n' +
@@ -265,7 +264,7 @@ def exportDae(human, name, fp, config):
     for root in mainStuff.boneInfo.hier:
         writeBone(fp, root, [0,0,0], 'layer="L1"', '  ', mainStuff, config)
     for stuff in stuffs:
-        writeNode(obj, fp, "        ", stuff, config)
+        writeNode(fp, "        ", stuff, config)
 
     fp.write(
 '      </node>\n' +    
@@ -278,10 +277,10 @@ def exportDae(human, name, fp, config):
     return
 
 #
-#    writeImages(obj, fp, stuff, human, config):
+#    writeImages(fp, stuff, human, config):
 #
 
-def writeImages(obj, fp, stuff, human, config):
+def writeImages(fp, stuff, human, config):
     if stuff.texture:
         textures = [stuff.texture]
     else:
@@ -304,7 +303,7 @@ def writeImages(obj, fp, stuff, human, config):
     return
 
 #
-#    writeEffects(obj, fp, stuff):
+#    writeEffects(fp, stuff):
 #
 
 def writeColor(fp, tech, tex, color, s):
@@ -347,7 +346,7 @@ DefaultMaterialSettings = {
     'shininess' : 10,
 }
 
-def writeEffects(obj, fp, stuff):
+def writeEffects(fp, stuff):
     (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)
     if not stuff.type:
         tex = "texture_png"
@@ -448,10 +447,10 @@ def writeSurfaceSampler(fp, tex):
 '        </newparam>\n')
 
 #
-#    writeMaterials(obj, fp, stuff):
+#    writeMaterials(fp, stuff):
 #
 
-def writeMaterials(obj, fp, stuff):
+def writeMaterials(fp, stuff):
     (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)
     if matname:
         matname = matname.replace(" ", "_")
@@ -462,15 +461,16 @@ def writeMaterials(obj, fp, stuff):
     return
 
 #
-#    writeController(obj, fp, stuff, config):
+#    writeController(fp, stuff, config):
 #
 
-def writeController(obj, fp, stuff, config):
+def writeController(fp, stuff, config):
+    obj = stuff.meshInfo.object
     exportutils.collect.setStuffSkinWeights(stuff)
-    nVerts = len(stuff.meshInfo.verts)
-    nUvVerts = len(stuff.meshInfo.uvValues)
+    nVerts = len(obj.verts)
+    nUvVerts = len(obj.texco)
     nNormals = nVerts
-    nFaces = len(stuff.meshInfo.faces)
+    nFaces = len(obj.faces)
     nWeights = len(stuff.skinWeights)
     nBones = len(stuff.boneInfo.bones)
     nShapes = len(stuff.meshInfo.shapes)
@@ -616,12 +616,13 @@ def writeController(obj, fp, stuff, config):
     return
 
 #
-#    writeGeometry(obj, fp, stuff, config):
+#    writeGeometry(fp, stuff, config):
 #
         
-def writeGeometry(obj, fp, stuff, config):
-    nVerts = len(stuff.meshInfo.verts)
-    nUvVerts = len(stuff.meshInfo.uvValues)
+def writeGeometry(fp, stuff, config):
+    obj = stuff.meshInfo.object
+    nVerts = len(obj.verts)
+    nUvVerts = len(obj.texco)
     nNormals = nVerts
     nWeights = len(stuff.skinWeights)
     nBones = len(stuff.boneInfo.bones)
@@ -635,8 +636,8 @@ def writeGeometry(obj, fp, stuff, config):
 '          ')
 
 
-    for v in stuff.meshInfo.verts:
-        (x,y,z) = rotateLoc(v, config)
+    for v in obj.verts:
+        (x,y,z) = rotateLoc(v.co, config)
         fp.write("%.4f %.4f %.4f " % (x,y,z))
 
     fp.write('\n' +
@@ -653,8 +654,8 @@ def writeGeometry(obj, fp, stuff, config):
 '          <float_array count="%d" id="%s-Normals-array">\n' % (3*nNormals,stuff.name) +
 '          ')
 
-    for no in stuff.meshInfo.vnormals:
-        (x,y,z) = rotateLoc(no, config)
+    for v in obj.verts:
+        (x,y,z) = rotateLoc(v.no, config)
         fp.write("%.4f %.4f %.4f " % (x,y,z))
 
     fp.write('\n' +
@@ -673,7 +674,7 @@ def writeGeometry(obj, fp, stuff, config):
 '           ')
 
 
-    for uv in stuff.meshInfo.uvValues:
+    for uv in obj.texco:
         fp.write(" %.4f %.4f" %(uv[0], uv[1]))
 
     fp.write('\n' +
@@ -736,18 +737,18 @@ def writeGeometry(obj, fp, stuff, config):
 #
 
 def writePolygons(fp, stuff):
+    obj = stuff.meshInfo.object
     fp.write(        
-'        <polygons count="%d">\n' % len(stuff.meshInfo.faces) +
+'        <polygons count="%d">\n' % len(obj.faces) +
 '          <input offset="0" semantic="VERTEX" source="#%s-Vertex"/>\n' % stuff.name +
 '          <input offset="1" semantic="NORMAL" source="#%s-Normals"/>\n' % stuff.name +
 '          <input offset="2" semantic="TEXCOORD" source="#%s-UV"/>\n' % stuff.name)
 
-    for fc in stuff.meshInfo.faces:
+    for f in obj.faces:
         fp.write('          <p>')
-        for vs in fc:
-            v = vs[0]
-            uv = vs[1]
-            fp.write("%d %d %d " % (v, v, uv))
+        for n,v in enumerate(f.verts):
+            uv = f.uv[n]
+            fp.write("%d %d %d " % (v.idx, v.idx, uv))
         fp.write('</p>\n')
     
     fp.write('\n' +
@@ -755,25 +756,25 @@ def writePolygons(fp, stuff):
     return
 
 def writePolylist(fp, stuff):
+    obj = stuff.meshInfo.object
     fp.write(        
-'        <polylist count="%d">\n' % len(stuff.meshInfo.faces) +
+'        <polylist count="%d">\n' % len(obj.faces) +
 '          <input offset="0" semantic="VERTEX" source="#%s-Vertex"/>\n' % stuff.name +
 '          <input offset="1" semantic="NORMAL" source="#%s-Normals"/>\n' % stuff.name +
 '          <input offset="2" semantic="TEXCOORD" source="#%s-UV"/>\n' % stuff.name +
 '          <vcount>')
 
-    for fc in stuff.meshInfo.faces:
-        fp.write('%d ' % len(fc))
+    for f in obj.faces:
+        fp.write('%d ' % len(f.verts))
 
     fp.write('\n' +
 '          </vcount>\n'
 '          <p>')
 
-    for fc in stuff.meshInfo.faces:
-        for vs in fc:
-            v = vs[0]
-            uv = vs[1]
-            fp.write("%d %d %d " % (v, v, uv))
+    for f in obj.faces:
+        for n,v in enumerate(f.verts):
+            uv = f.uv[n]
+            fp.write("%d %d %d " % (v.idx, v.idx, uv))
 
     fp.write(
 '          </p>\n' +
@@ -785,21 +786,21 @@ def writePolylist(fp, stuff):
 #
 
 def checkFaces(stuff, nVerts, nUvVerts):
-    for fc in stuff.meshInfo.faces:
-        for vs in fc:
-            v = vs[0]
-            uv = vs[1]
-            if v > nVerts:
-                raise NameError("v %d > %d" % (v, nVerts))
+    obj = stuff.meshInfo.object
+    for f in obj.faces:
+        for n,v in enumerate(f.verts):
+            uv = f.uv[n]
+            if v.idx > nVerts:
+                raise NameError("v %d > %d" % (v.idx, nVerts))
             if uv > nUvVerts:
                 raise NameError("uv %d > %d" % (uv, nUvVerts))            
     return 
     
 #
-#    writeNode(obj, fp, pad, stuff, config):
+#    writeNode(fp, pad, stuff, config):
 #
 
-def writeNode(obj, fp, pad, stuff, config):    
+def writeNode(fp, pad, stuff, config):    
     fp.write('\n' +
 '%s<node id="%sObject" name="%s">\n' % (pad, stuff.name,stuff.name) +
 '%s  <translate sid="translate">0 0 0</translate>\n' % pad +
