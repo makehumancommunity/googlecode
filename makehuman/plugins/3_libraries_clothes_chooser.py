@@ -260,7 +260,6 @@ class ClothesTaskView(gui3d.TaskView):
             gui3d.app.addObject(human.clothesObjs[uuid])
 
     def updateFaceMasks(self):
-        return
         """
         Apply facemask (deleteVerts) defined on clothes to body and lower layers
         of clothing. Uses order as defined in self.clothesList.
@@ -276,7 +275,7 @@ class ClothesTaskView(gui3d.TaskView):
             proxyVertMask = np.ones(len(proxy.refVerts), dtype=bool)
             for idx,vs in enumerate(proxy.refVerts):
                 # Body verts to which proxy vertex with idx is mapped
-                (v1,v2,v3) = vs[:3]
+                (v1,v2,v3) = vs.getHumanVerts()
                 # Hide proxy vert if any of its referenced body verts are hidden (most agressive)
                 #proxyVertMask[idx] = vertsMask[v1] and vertsMask[v2] and vertsMask[v3]
                 # Alternative1: only hide if at least two referenced body verts are hidden (best result)

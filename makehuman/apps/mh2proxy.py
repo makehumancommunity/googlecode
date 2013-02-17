@@ -33,12 +33,12 @@ import log
 class CProxyRefVert:
 
     def fromSingle(self, words):
-        self.exact = True
-        self.data = int(words[0])
+        self._exact = True
+        self._data = int(words[0])
         return self
         
     def fromTriple(self, words):
-        self.exact = False
+        self._exact = False
         v0 = int(words[0])
         v1 = int(words[1])
         v2 = int(words[2])
@@ -51,14 +51,33 @@ class CProxyRefVert:
             d2 = float(words[8])
         else:
             (d0,d1,d2) = (0,0,0)
-        self.data = (v0,v1,v2,w0,w1,w2,d0,d1,d2)
+        self._data = (v0,v1,v2,w0,w1,w2,d0,d1,d2)
         return self
 
-    def getCoord(self, parent, scales):
-        if self.exact:
-            return parent.verts[self.data].co
+    def getHumanVerts(self):
+        if self._exact:
+            v = self._data
+            return [v,v,v]
         else:
-            (rv0, rv1, rv2, w0, w1, w2, d0, d1, d2) = self.data
+            return self._data[0:3]
+            
+    def getWeights(self):
+        if self._exact:
+            return [1,0,0]
+        else:
+            return self._data[3:6]
+            
+    def getOffsets(self):
+        if self._exact:
+            return [0,0,0]
+        else:
+            return self._data[6:9]
+            
+    def getCoord(self, parent, scales):
+        if self._exact:
+            return parent.verts[self._data].co
+        else:
+            (rv0, rv1, rv2, w0, w1, w2, d0, d1, d2) = self._data
             v0 = parent.verts[rv0]
             v1 = parent.verts[rv1]
             v2 = parent.verts[rv2]
@@ -76,7 +95,7 @@ class CProxyRealVert(CProxyRefVert):
         self.vnum = vnum
         self.parent = obj
         self.scales = scales
-        self.addProxyVertWeight(proxy, self.data, vnum, 1)
+        self.addProxyVertWeight(proxy, self._data, vnum, 1)
         return self
       
     def fromTriple(self, words, vnum, proxy, obj, scales):
@@ -84,9 +103,9 @@ class CProxyRealVert(CProxyRefVert):
         self.vnum = vnum
         self.parent = obj
         self.scales = scales
-        self.addProxyVertWeight(proxy, self.data[0], vnum, self.data[3])
-        self.addProxyVertWeight(proxy, self.data[1], vnum, self.data[4])
-        self.addProxyVertWeight(proxy, self.data[2], vnum, self.data[5])
+        self.addProxyVertWeight(proxy, self._data[0], vnum, self._data[3])
+        self.addProxyVertWeight(proxy, self._data[1], vnum, self._data[4])
+        self.addProxyVertWeight(proxy, self._data[2], vnum, self._data[5])
         return self
 
     def addProxyVertWeight(self, proxy, v, pv, w):
@@ -181,12 +200,11 @@ class CProxy:
         zScale = getScale(self.zScaleData, parent.verts, 2)
         scales = (xScale, yScale, zScale)
         
-        verts = []
+        coords = []
         for refVert in self.refVerts:
-            verts.append( refVert.getCoord(parent, scales) )
-                
-        obj.changeCoords(verts)      
-        log.debug("clo %s", str((xScale, yScale, zScale)) )
+            coords.append( refVert.getCoord(parent, scales) )
+        obj.changeCoords(coords)      
+        #log.debug("clo %s", str(scales) )
         
 
     def getUuid(self):
