@@ -45,7 +45,6 @@ import exportutils
 
 
 from . import mhx_rig
-from . import mhx_24
 from . import rig_panel_25
 from . import rig_shoulder_25
 from . import rig_arm_25

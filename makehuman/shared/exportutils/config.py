@@ -47,6 +47,7 @@ class Config:
         self.feetOnGround       = False
         self.skirtRig           = "inh"
         self.rigtype            = None
+        self.facepanel          = False
         self.cage               = False
         self.texFolder          = None
         self.proxyList          = []

@@ -25,7 +25,6 @@ TODO
 
 from . import mhx_main
 from . import mhx_rig
-from . import mhx_24
 from . import mhxbones
 from . import rigify_rig
 

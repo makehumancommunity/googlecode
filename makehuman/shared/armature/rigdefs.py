@@ -35,8 +35,7 @@ from numpy import dot
 from numpy.linalg import inv
 import transformations as tm
 
-import export
-import exportutils
+from exportutils.config import Config
     
 import mhx
 from mhx.mhx_globals import *
@@ -905,7 +904,7 @@ def checkPoints(vec1, vec2):
     
 
 def createRig(human, rigtype):
-    config = export.Config()
+    config = Config()
     config.exporting = False
     config.feetOnGround = False
     config.rigtype = rigtype
