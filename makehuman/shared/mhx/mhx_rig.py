@@ -24,9 +24,8 @@ Functions shared by all rigs
 Limit angles from http://hippydrome.com/
 """
 
-import aljabr
-from aljabr import *
 import math
+import numpy
 import os
 import sys
 import mh2proxy
@@ -62,59 +61,54 @@ def newSetupJoints (info, joints):
             info.locations[data] = loc
         elif typ == 'v':
             v = int(data)
-            info.locations[key] = info.mesh.verts[v].co
+            info.locations[key] = info.mesh.coord[v]
         elif typ == 'x':
-            info.locations[key] = [float(data[0]), float(data[2]), -float(data[1])]
+            info.locations[key] = numpy.array((float(data[0]), float(data[2]), -float(data[1])))
         elif typ == 'vo':
             v = int(data[0])
-            loc = info.mesh.verts[v].co
-            info.locations[key] = [loc[0]+float(data[1]), loc[1]+float(data[3]), loc[2]-float(data[2])]
+            offset = numpy.array((float(data[1]), float(data[3]), -float(data[2])))
+            info.locations[key] = info.mesh.coord[v] + offset
         elif typ == 'vl':
             ((k1, v1), (k2, v2)) = data
-            loc1 = info.mesh.verts[int(v1)].co
-            loc2 = info.mesh.verts[int(v2)].co
-            info.locations[key] = vadd(vmul(loc1, k1), vmul(loc2, k2))
+            loc1 = info.mesh.coord[int(v1)]
+            loc2 = info.mesh.coord[int(v2)]
+            info.locations[key] = k1*loc1 + k2*loc2
         elif typ == 'f':
             (raw, head, tail, offs) = data
             rloc = info.locations[raw]
             hloc = info.locations[head]
             tloc = info.locations[tail]
-            #print(raw, rloc)
-            vec = aljabr.vsub(tloc, hloc)
-            vec2 = aljabr.vdot(vec, vec)
-            vraw = aljabr.vsub(rloc, hloc)
-            x = aljabr.vdot(vec, vraw) / vec2
-            rvec = aljabr.vmul(vec, x)
-            nloc = aljabr.vadd(hloc, rvec, offs)
-            #print(key, nloc)
-            info.locations[key] = nloc
+            vec = tloc - hloc
+            vraw = rloc - hloc
+            x = dot(vec, vraw)/dot(vec,vec)
+            info.locations[key] = hloc + x*vec + numpy.array(offs)
         elif typ == 'b':
             info.locations[key] = info.locations[data]
         elif typ == 'p':
             x = info.locations[data[0]]
             y = info.locations[data[1]]
             z = info.locations[data[2]]
-            info.locations[key] = [x[0],y[1],z[2]]
+            info.locations[key] = numpy.array((x[0],y[1],z[2]))
         elif typ == 'vz':
             v = int(data[0])
-            z = info.mesh.verts[v].co[2]
+            z = info.mesh.coord[v][2]
             loc = info.locations[data[1]]
-            info.locations[key] = [loc[0],loc[1],z]
+            info.locations[key] = numpy.array((loc[0],loc[1],z))
         elif typ == 'X':
             r = info.locations[data[0]]
             (x,y,z) = data[1]
-            r1 = [float(x), float(y), float(z)]
-            info.locations[key] = aljabr.vcross(r, r1)
+            r1 = numpy.array([float(x), float(y), float(z)])
+            info.locations[key] = numpy.cross(r, r1)
         elif typ == 'l':
             ((k1, joint1), (k2, joint2)) = data
-            info.locations[key] = vadd(vmul(info.locations[joint1], k1), vmul(info.locations[joint2], k2))
+            info.locations[key] = k1*info.locations[joint1] + k2*info.locations[joint2]
         elif typ == 'o':
             (joint, offsSym) = data
             if type(offsSym) == str:
                 offs = info.locations[offsSym]
             else:
-                offs = offsSym
-            info.locations[key] = vadd(info.locations[joint], offs)
+                offs = numpy.array(offsSym)
+            info.locations[key] = info.locations[joint] + offs
         else:
             raise NameError("Unknown %s" % typ)
     return
@@ -124,15 +118,16 @@ def moveOriginToFloor(info):
     if info.config.feetOnGround:
         info.origin = info.locations['floor']
         for key in info.locations.keys():
-            info.locations[key] = aljabr.vsub(info.locations[key], info.origin)
+            info.locations[key] = info.locations[key] - info.origin
     else:
-        info.origin = [0,0,0]
+        info.origin = numpy.array([0,0,0], float)
     return
 
 
 def setupHeadsTails(info, headsTails):
     info.rigHeads = {}
     info.rigTails = {}
+    scale = info.config.scale
     for (bone, head, tail) in headsTails:
         info.rigHeads[bone] = findLocation(info, head)
         info.rigTails[bone] = findLocation(info, tail)
@@ -141,11 +136,8 @@ def setupHeadsTails(info, headsTails):
 def findLocation(info, joint):
     try:
         (bone, offs) = joint
+        return info.locations[bone] + offs
     except:
-        offs = 0
-    if offs:
-        return vadd(info.locations[bone], offs)
-    else:
         return info.locations[joint]
 
 
@@ -162,11 +154,13 @@ def addBone25(info, bone, cond, roll, parent, flags, layers, bbone, fp):
     lloc = (flags & F_NOLOC == 0)
     lock = (flags & F_LOCK != 0)
     cyc = (flags & F_NOCYC == 0)
+    
+    scale = info.config.scale
 
     fp.write("\n  Bone %s %s\n" % (bone, cond))
-    (x, y, z) = info.rigHeads[bone]
+    (x, y, z) = scale*info.rigHeads[bone]
     fp.write("    head  %.6g %.6g %.6g  ;\n" % (x,-z,y))
-    (x, y, z) = info.rigTails[bone]
+    (x, y, z) = scale*info.rigTails[bone]
     fp.write("    tail %.6g %.6g %.6g  ;\n" % (x,-z,y))
     if type(parent) == tuple:
         (soft, hard) = parent
@@ -222,6 +216,8 @@ def addBone25(info, bone, cond, roll, parent, flags, layers, bbone, fp):
 "    hide_select %s ; \n" % (restr) +
 "  end Bone \n")
 
+
+"""
 def addBone24(bone, cond, roll, parent, flags, layers, bbone, fp):
     flags24 = 0
     if flags & F_CON:
@@ -239,7 +235,7 @@ def addBone24(bone, cond, roll, parent, flags, layers, bbone, fp):
     fp.write("    roll %.6g %.6g ; \n" % (roll, roll))
     fp.write("\tend bone\n")
     return
-
+"""
 
 def writeBoneGroups(fp, info):
     log.message("BG %s", info.config.boneGroups)
@@ -675,8 +671,8 @@ def appendRigBones(boneList, obj, prefix, layer, body, info):
             elif key == "-ik":
                 pass
         config.armatureBones.append((bone, roll, parent, flags, layer, NoBB))
-        info.rigHeads[bone] = aljabr.vsub(head, info.origin)
-        info.rigTails[bone] = aljabr.vsub(tail, info.origin)
+        info.rigHeads[bone] = head - info.origin
+        info.rigTails[bone] = tail - info.origin
         
         
 def addPoseInfo(bone, info, config):

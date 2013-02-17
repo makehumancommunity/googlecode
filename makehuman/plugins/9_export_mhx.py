@@ -32,6 +32,7 @@ class MhxConfig(Config):
     def __init__(self, rigtype, exporter):
         Config.__init__(self)
         self.useTexFolder =     exporter.useTexFolder.selected
+        self.scale,self.unit =  exporter.taskview.getScale()
         self.useRelPaths =      False
         self.helpers =          True
         self.hidden =           exporter.hidden.selected
@@ -72,7 +73,7 @@ class ExporterMHX(Exporter):
 
     def build(self, options, taskview):
         #Exporter.build(self, options, taskview)
-        
+        self.taskview       = taskview        
         self.useTexFolder   = options.addWidget(gui.CheckBox("Separate folder", False))
         self.hidden         = options.addWidget(gui.CheckBox("Keep hidden faces", True))
         

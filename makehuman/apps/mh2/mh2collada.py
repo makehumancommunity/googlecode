@@ -64,7 +64,7 @@ def exportCollada(human, filepath, config):
 #
 
 def rotateLoc(loc, config):    
-    (x,y,z) = (config.scale*loc[0], config.scale*loc[1], config.scale*loc[2])
+    (x,y,z) = loc
     if config.rotate90X:
         yy = -z
         z = y

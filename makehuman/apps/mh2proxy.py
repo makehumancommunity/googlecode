@@ -34,7 +34,7 @@ class CProxyRefVert:
 
     def __init__(self, parent, scale):
         self._parent = parent        
-        self._scale = numpy.array(scale, float)
+        self._scale = scale
     
 
     def fromSingle(self, words, vnum, proxy):
@@ -267,7 +267,7 @@ def getFileName(folder, file, suffix):
         return (folder, file+suffix)
 
 #
-#    readProxyFile(obj, file, evalOnLoad):
+#    readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
 #
 
 doFaces = 2
@@ -280,7 +280,7 @@ doFaceNumbers = 8
 doTexFaces = 9    
 doDeleteVerts = 10
 
-def readProxyFile(obj, file, evalOnLoad):
+def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
     if not file:
         return CProxy(None, 'Proxy', 2)
     elif type(file) == str or type(file) == unicode:
@@ -704,19 +704,18 @@ class CUvSet:
 def getJoint(joint, obj, locations):
     try:
         loc = locations[joint]
-    except:
-        loc = calcJointPos(obj, joint)
-        locations[joint] = loc
+    except KeyError:
+        loc = locations[joint] = calcJointPos(obj, joint)
     return loc
     
 
 def calcJointPos(obj, joint):
     g = obj.getFaceGroup("joint-"+joint)
-    verts = []
+    coords = []
     for f in g.faces:
         for v in f.verts:
-            verts.append(v.co)
-    return aljabr.centroid(verts)
+            coords.append(v.co)
+    return numpy.array(coords).mean(axis=0)
     
 
 def newFace(first, words, group, proxy):
@@ -746,9 +745,9 @@ def newTexVert(first, words, proxy):
     proxy.texVerts.append(vt)
 
 
-def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
+def getMeshInfo(obj, proxy, config, rawWeights, rawShapes, rigname):
     if proxy:
-        coords = [refVert.getCoord() for refVert in proxy.refVerts]
+        coords = [config.scale*refVert.getCoord() for refVert in proxy.refVerts]
         faceVerts = [[v for v in f] for (f,g) in proxy.faces]
         
         if proxy.texVerts:
@@ -761,7 +760,7 @@ def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
             texFaces = []
 
         weights = getProxyWeights(rawWeights, proxy)
-        shapes = getProxyShapes(rawShapes, proxy)
+        shapes = getProxyShapes(rawShapes, proxy, config.scale)
         meshInfo = CMeshInfo(proxy.name).fromProxy(coords, texVerts, faceVerts, texFaces, weights, shapes)
 
     else:
@@ -808,7 +807,7 @@ def fixProxyVGroup(vgroup):
     return fixedVGroup
 
 
-def getProxyShapes(rawShapes, proxy):
+def getProxyShapes(rawShapes, proxy, scale):
     if not rawShapes:
         return []
     shapes = []
@@ -821,7 +820,7 @@ def getProxyShapes(rawShapes, proxy):
             except KeyError:
                 vlist = []
             for (pv, w) in vlist:
-                shape.append((pv, w*dx, w*dy, w*dz))
+                shape.append((pv, scale*w*dx, scale*w*dy, scale*w*dz))
         fixedShape = fixProxyShape(shape)
         shapes.append((key,fixedShape))
     return shapes

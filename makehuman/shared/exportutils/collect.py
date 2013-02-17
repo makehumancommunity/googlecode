@@ -142,10 +142,10 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     stuff = CStuff(name, None)
 
     if rigfile:
-        stuff.boneInfo = getArmatureFromRigFile(rigfile, obj)
+        stuff.boneInfo = getArmatureFromRigFile(rigfile, obj, config.scale)
         log.message("Using rig file %s" % rigfile)
             
-    meshInfo = mh2proxy.getMeshInfo(obj, None, None, rawTargets, None)
+    meshInfo = mh2proxy.getMeshInfo(obj, None, config, None, rawTargets, None)
     if stuff.boneInfo:
         meshInfo.weights = stuff.boneInfo.weights
 
@@ -155,16 +155,19 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
         deleteVerts = None
     else:
         deleteVerts = numpy.zeros(len(obj.verts), bool)
-    _,deleteVerts = setupProxies('Clothes', None, obj, stuffs, meshInfo, config.proxyList, deleteGroups, deleteVerts)
-    _,deleteVerts = setupProxies('Hair', None, obj, stuffs, meshInfo, config.proxyList, deleteGroups, deleteVerts)
-    foundProxy,deleteVerts = setupProxies('Proxy', name, obj, stuffs, meshInfo, config.proxyList, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Clothes', None, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Hair', None, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
+    foundProxy,deleteVerts = setupProxies('Proxy', name, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
     if not foundProxy:
         # If we subdivide here, helpers will not be removed.
         # Subdiv of main mesh moved below
         if helpers:     # helpers override everything
-            stuff.meshInfo = meshInfo
+            if config.scale == 1.0:
+                stuff.meshInfo = meshInfo
+            else:
+                stuff.meshInfo = meshInfo.fromProxy(config.scale*obj.coord, obj.texco, obj.faces, obj.fuvs, meshInfo.weights, meshInfo.shapes)
         else:
-            stuff.meshInfo = filterMesh(meshInfo, deleteGroups, deleteVerts, eyebrows, lashes)
+            stuff.meshInfo = filterMesh(meshInfo, config.scale, deleteGroups, deleteVerts, eyebrows, lashes)
         stuffs = [stuff] + stuffs
 
     clothKeys = human.clothesObjs.keys()
@@ -231,16 +234,16 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     return stuffs
 
 #
-#    setupProxies(typename, name, obj, stuffs, meshInfo, proxyList, deleteGroups, deleteVerts):
+#    setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts):
 #
 
-def setupProxies(typename, name, obj, stuffs, meshInfo, proxyList, deleteGroups, deleteVerts):
+def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts):
     global theStuff
     
     foundProxy = False    
-    for pfile in proxyList:
+    for pfile in config.proxyList:
         if pfile.type == typename and pfile.file:
-            proxy = mh2proxy.readProxyFile(obj, pfile, True)
+            proxy = mh2proxy.readProxyFile(obj, pfile, evalOnLoad=True, scale=config.scale)
             if proxy and proxy.name and proxy.texVerts:
                 foundProxy = True
                 deleteGroups += proxy.deleteGroups
@@ -259,7 +262,7 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, proxyList, deleteGroups,
                     else:
                         stuffname = None
 
-                    stuff.meshInfo = mh2proxy.getMeshInfo(obj, proxy, meshInfo.weights, meshInfo.shapes, stuffname)
+                    stuff.meshInfo = mh2proxy.getMeshInfo(obj, proxy, config, meshInfo.weights, meshInfo.shapes, stuffname)
 
                     stuffs.append(stuff)
     return foundProxy, deleteVerts
@@ -268,13 +271,13 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, proxyList, deleteGroups,
 #
 #
 
-def filterMesh(meshInfo, deleteGroups, deleteVerts, eyebrows, lashes):
+def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes):
     obj = meshInfo.object
 
     killUvs = numpy.zeros(len(obj.texco), bool)
     killFaces = numpy.zeros(len(obj.faces), bool)
         
-    if deleteVerts != None:
+    if deleteVerts:
         killVerts = deleteVerts
         for f in obj.faces:
             for v in f.verts:
@@ -302,10 +305,10 @@ def filterMesh(meshInfo, deleteGroups, deleteVerts, eyebrows, lashes):
     n = 0
     newVerts = {}
     coords = []
-    for v in obj.verts:
-        if not killVerts[v.idx]:
-            coords.append(v.co)
-            newVerts[v.idx] = n
+    for m,co in enumerate(obj.coord):
+        if not killVerts[m]:
+            coords.append(scale*co)
+            newVerts[m] = n
             n += 1
     
     n = 0
@@ -345,12 +348,12 @@ def filterMesh(meshInfo, deleteGroups, deleteVerts, eyebrows, lashes):
             morphs2 = {}
             for (v1,dx) in morphs1.items():
                 if not killVerts[v1]:
-                    morphs2[newVerts[v1]] = dx
+                    morphs2[newVerts[v1]] = scale*dx
             shapes.append((name, morphs2))
 
     meshInfo.fromProxy(coords, texVerts, faceVerts, faceUvs, weights, shapes)
     return meshInfo
-
+ 
 #
 #   getTextureNames(stuff):
 #
@@ -399,10 +402,10 @@ def nextName(string):
         return string + "_001"
         
 #
-#    getArmatureFromRigFile(fileName, obj):    
+#    getArmatureFromRigFile(fileName, obj, scale):    
 #
 
-def getArmatureFromRigFile(fileName, obj):
+def getArmatureFromRigFile(fileName, obj, scale):
     (locations, armature, weights) = rigfile.readRigFile(fileName, obj)
     
     hier = []
@@ -411,8 +414,8 @@ def getArmatureFromRigFile(fileName, obj):
     rolls = {}
     root = None
     for (bone, head, tail, roll, parent, options) in armature:
-        heads[bone] = head
-        tails[bone] = tail
+        heads[bone] = head*scale
+        tails[bone] = tail*scale
         rolls[bone] = roll
         if parent == '-':
             hier.append((bone, []))

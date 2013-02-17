@@ -53,7 +53,7 @@ def exportProxyObj(human, filepath, config):
 "# www.makehuman.org\n\n" +
 "mtllib %s.mtl\n" % os.path.basename(filepath))
     for stuff in stuffs:
-        writeGeometry(fp, stuff, config.scale)
+        writeGeometry(fp, stuff)
     fp.close()
     
     mtlfile = "%s.mtl" % filepath
@@ -67,22 +67,22 @@ def exportProxyObj(human, filepath, config):
     return
 
 #
-#    writeGeometry(fp, stuff, scale):
+#    writeGeometry(fp, stuff):
 #
         
-def writeGeometry(fp, stuff, scale):
+def writeGeometry(fp, stuff):
     obj = stuff.meshInfo.object
     nVerts = len(obj.verts)
     nUvVerts = len(obj.texco)
     fp.write("usemtl %s\n" % stuff.name)
     fp.write("g %s\n" % stuff.name)    
+    for co in obj.coord:
+        fp.write("v %.4g %.4g %.4g\n" % tuple(co))
     for v in obj.verts:
-        fp.write("v %.4g %.4g %.4g\n" % (scale*v.co[0], scale*v.co[1], scale*v.co[2]))
-    for v in obj.verts:
-        fp.write("vn %.4g %.4g %.4g\n" % (v.no[0], v.no[1], v.no[2]))
+        fp.write("vn %.4g %.4g %.4g\n" % tuple(v.no))
     if 0 and obj.has_uv:
         for uv in obj.texco:
-            fp.write("vt %.4g %.4g\n" % (uv[0], uv[1]))
+            fp.write("vt %.4g %.4g\n" % tuple(uv))
         for f in obj.faces:
             fp.write('f ')
             for n,v in enumerate(f.verts):

@@ -83,7 +83,7 @@ def exportFbx(human, filepath, config):
     #bpy.addMesh(name, human.meshData, False)
     
     gui3d.app.progress(0, text="Exporting %s" % filepath)
-    io_fbx.fbx_export.exportFbxFile(bpy.context, filepath, config.scale)
+    io_fbx.fbx_export.exportFbxFile(bpy.context, filepath, 1.0)
     gui3d.app.progress(1)
     posemode.exitPoseMode()        
     return

@@ -309,9 +309,10 @@ def copyFile25(tmplName, fp, proxy, info):
                 ox = info.origin[0]
                 oy = info.origin[1]
                 oz = info.origin[2]
+                scale = info.config.scale
                 for refVert in proxy.refVerts:
                     (x,y,z) = refVert.getCoord()
-                    fp.write("  v %.4f %.4f %.4f ;\n" % (x-ox, -z+oz, y-oy))
+                    fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(x-ox), scale*(-z+oz), scale*(y-oy)))
 
             elif key == 'Verts':
                 proxy = None
@@ -319,8 +320,9 @@ def copyFile25(tmplName, fp, proxy, info):
                 ox = info.origin[0]
                 oy = info.origin[1]
                 oz = info.origin[2]
+                scale = info.config.scale
                 for v in info.mesh.verts:
-                    fp.write("  v %.4f %.4f %.4f ;\n" % (v.co[0]-ox, -v.co[2]+oz, v.co[1]-oy))
+                    fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(v.co[0]-ox), scale*(-v.co[2]+oz), scale*(v.co[1]-oy)))
 
             elif key == 'ProxyFaces':
                 for (f,g) in proxy.faces:
@@ -1069,16 +1071,16 @@ def writeCorrectives(fp, info, drivers, folder, landmarks, proxy, t0, t1):
         shapeList = exportutils.shapekeys.readCorrectives(drivers, info.human, folder, landmarks, t0, t1)
         info.loadedShapes[folder] = shapeList
     for (shape, pose, lr) in shapeList:
-        writeShape(fp, pose, lr, shape, 0, 1, proxy)
+        writeShape(fp, pose, lr, shape, 0, 1, proxy, info.config.scale)
     
 
-def writeShape(fp, pose, lr, shape, min, max, proxy):
+def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
     fp.write(
         "ShapeKey %s %s True\n" % (pose, lr) +
         "  slider_min %.3g ;\n" % min +
         "  slider_max %.3g ;\n" % max)
     if proxy:
-        pshapes = mh2proxy.getProxyShapes([("shape",shape)], proxy)
+        pshapes = mh2proxy.getProxyShapes([("shape",shape)], proxy, scale)
         name,pshape = pshapes[0]
         print pshape
         for (pv, dr) in pshape.items():
@@ -1086,7 +1088,7 @@ def writeShape(fp, pose, lr, shape, min, max, proxy):
             fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (pv, dx, -dz, dy))
     else:
         for (vn, dr) in shape.items():
-           fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (vn, dr[0], -dr[2], dr[1]))
+           fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (vn, scale*dr[0], -scale*dr[2], scale*dr[1]))
     fp.write("end ShapeKey\n")
 
 
@@ -1094,6 +1096,7 @@ def writeShapeKeys(fp, info, name, proxy):
 
     isHuman = ((not proxy) or proxy.type == 'Proxy')
     isHair = (proxy and proxy.type == 'Hair')
+    scale = info.config.scale
     
     fp.write(
 "#if toggle&T_Shapekeys\n" +
@@ -1104,7 +1107,7 @@ def writeShapeKeys(fp, info, name, proxy):
     if isHuman and info.config.facepanel:
         shapeList = exportutils.shapekeys.readFaceShapes(info.human, rig_panel_25.BodyLanguageShapeDrivers, 0.6, 0.7)
         for (pose, shape, lr, min, max) in shapeList:
-            writeShape(fp, pose, lr, shape, min, max, proxy)
+            writeShape(fp, pose, lr, shape, min, max, proxy, scale)
     
     if isHuman and info.config.expressions:
         try:
@@ -1115,7 +1118,7 @@ def writeShapeKeys(fp, info, name, proxy):
             shapeList = exportutils.shapekeys.readExpressionUnits(info.human, 0.7, 0.9)
             info.loadedShapes["expressions"] = shapeList
         for (pose, shape) in shapeList:
-            writeShape(fp, pose, "Sym", shape, -1, 2, proxy)
+            writeShape(fp, pose, "Sym", shape, -1, 2, proxy, scale)
         
     if info.config.bodyShapes and info.config.rigtype == "mhx" and not isHair:
         writeCorrectives(fp, info, rig_shoulder_25.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)                
@@ -1133,7 +1136,7 @@ def writeShapeKeys(fp, info, name, proxy):
                 log.message("    %s", path)
                 shape = exportutils.custom.readCustomTarget(path)
                 info.loadedShapes[path] = shapeList
-            writeShape(fp, name, "Sym", shape, -1, 2, proxy)                        
+            writeShape(fp, name, "Sym", shape, -1, 2, proxy, scale)                        
 
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
         

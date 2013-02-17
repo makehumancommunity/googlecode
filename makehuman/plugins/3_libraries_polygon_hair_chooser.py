@@ -87,7 +87,7 @@ class HairTaskView(gui3d.TaskView):
         if os.path.basename(mhclo) == "clear.mhclo":
             return
             
-        human.hairProxy = mh2proxy.readProxyFile(human.meshData, mhclo, False)
+        human.hairProxy = mh2proxy.readProxyFile(human.meshData, mhclo)
         human.hairProxy.type = 'Hair'
         if not human.hairProxy:
             log.error("Failed to load %s", mhclo)

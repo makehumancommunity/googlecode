@@ -108,7 +108,7 @@ class ClothesTaskView(gui3d.TaskView):
             self.updateFaceMasks()
             return
 
-        proxy = mh2proxy.readProxyFile(human.meshData, filepath, False)
+        proxy = mh2proxy.readProxyFile(human.meshData, filepath)
         proxy.type = 'Clothes'
         
         if not proxy:

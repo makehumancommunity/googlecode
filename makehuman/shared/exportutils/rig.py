@@ -23,8 +23,10 @@ Read rig file
 TODO
 """
 
-import aljabr
-from aljabr import *
+#import aljabr
+#from aljabr import *
+import numpy
+from numpy import dot
 import os
 import mh2proxy
 import log
@@ -37,47 +39,47 @@ def setupRigJoint (words, obj, verts, locations):
     key = words[0]
     typ = words[1]
     if typ == 'joint':
-        loc = mh2proxy.calcJointPos(obj, words[2])
-        locations[key] = loc
+        locations[key] = mh2proxy.calcJointPos(obj, words[2])
     elif typ == 'vertex':
         v = int(words[2])
         locations[key] = verts[v].co
     elif typ == 'position':
-        x = locations[words[2]]
-        y = locations[words[3]]
-        z = locations[words[4]]
-        locations[key] = [x[0],y[1],z[2]]
+        x = locations[int(words[2])]
+        y = locations[int(words[3])]
+        z = locations[int(words[4])]
+        locations[key] = numpy.array((x[0],y[1],z[2]))
     elif typ == 'line':
         k1 = float(words[2])
+        v1 = int(words[3])
         k2 = float(words[4])
-        locations[key] = vadd(vmul(locations[words[3]], k1), vmul(locations[words[5]], k2))
+        v2 = int(words[5])
+        locations[key] = k1*locations[v1] + k2*locations[v2]
     elif typ == 'offset':
-        x = float(words[3])
-        y = float(words[4])
-        z = float(words[5])
-        locations[key] = vadd(locations[words[2]], [x,y,z])
+        v = int(words[2])
+    	x = float(words[3])
+    	y = float(words[4])
+    	z = float(words[5])
+        locations[key] = locations[v] + numpy.array((x,y,z))
     elif typ == 'voffset':
         v = int(words[2])
-        x = float(words[3])
-        y = float(words[4])
-        z = float(words[5])
+    	x = float(words[3])
+    	y = float(words[4])
+    	z = float(words[5])
         try:
             loc = verts[v].co
         except:
             loc = verts[v]         
-        locations[key] = vadd(loc, [x,y,z])
+        locations[key] = loc + numpy.array((x,y,z))
     elif typ == 'front':
-        raw = locations[words[2]]
-        head = locations[words[3]]
-        tail = locations[words[4]]
+        raw = locations[int(words[2])]
+        head = locations[int(words[3])]
+        tail = locations[int(words[4])]
         offs = map(float, words[5].strip().lstrip('[').rstrip(']').split(','))
-        vec = aljabr.vsub(tail, head)
-        vec2 = aljabr.vdot(vec, vec)
-        vraw = aljabr.vsub(raw, head)
-        x = aljabr.vdot(vec, vraw) / vec2
-        rvec = aljabr.vmul(vec, x)
-        nloc = aljabr.vadd(head, rvec, offs)
-        locations[key] = nloc
+        offs = numpy.array(offs)
+        vec =  tail - head
+        vraw = raw - head
+        x = dot(vec,vraw) / dot(vec, vec)
+        locations[key] = head + x*vec + offs
     else:
         raise NameError("Unknown %s" % typ)
 
