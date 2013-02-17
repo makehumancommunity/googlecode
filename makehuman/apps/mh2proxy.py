@@ -76,7 +76,7 @@ class CProxyRealVert(CProxyRefVert):
         self.vnum = vnum
         self.parent = obj
         self.scales = scales
-        self.addProxyVert(proxy, self.data, vnum, 1)
+        self.addProxyVertWeight(proxy, self.data, vnum, 1)
         return self
       
     def fromTriple(self, words, vnum, proxy, obj, scales):
@@ -84,12 +84,12 @@ class CProxyRealVert(CProxyRefVert):
         self.vnum = vnum
         self.parent = obj
         self.scales = scales
-        self.addProxyVert(proxy, self.data[0], vnum, self.data[3])
-        self.addProxyVert(proxy, self.data[1], vnum, self.data[4])
-        self.addProxyVert(proxy, self.data[2], vnum, self.data[5])
+        self.addProxyVertWeight(proxy, self.data[0], vnum, self.data[3])
+        self.addProxyVertWeight(proxy, self.data[1], vnum, self.data[4])
+        self.addProxyVertWeight(proxy, self.data[2], vnum, self.data[5])
         return self
 
-    def addProxyVert(self, proxy, v, pv, w):
+    def addProxyVertWeight(self, proxy, v, pv, w):
         try:
             proxy.vertWeights[v].append((pv, w))
         except KeyError:
@@ -182,8 +182,7 @@ class CProxy:
         scales = (xScale, yScale, zScale)
         
         verts = []
-        for n in range(mlen):
-            refVert = self.refVerts[n]
+        for refVert in self.refVerts:
             verts.append( refVert.getCoord(parent, scales) )
                 
         obj.changeCoords(verts)      
@@ -242,10 +241,9 @@ class CMeshInfo:
         self.shapes = []
 
 
-    def fromProxy(self, coords, vnormals, texVerts, faceVerts, faceUvs, weights, shapes):
+    def fromProxy(self, coords, texVerts, faceVerts, faceUvs, weights, shapes):
         obj = self.object = module3d.Object3D(self.name)
         obj.setCoords(coords)
-        #obj.setNormals(vnormals)
         obj.setUVs(texVerts)
 
         for n,f in enumerate(faceVerts):
@@ -269,94 +267,7 @@ class CMeshInfo:
         
         
     def __repr__(self):
-        return ("<CMeshInfo %s w %d t %d>" % (self.object, len(self.weights), len(self.shapes)))
-
-
-    def filter(self, deleteGroups, deleteVerts, eyebrows, lashes):
-        obj = self.object
-
-        killUvs = numpy.zeros(len(obj.texco), bool)
-        killFaces = numpy.zeros(len(obj.faces), bool)
-        
-        if deleteVerts != None:
-            killVerts = deleteVerts
-            for f in obj.faces:
-                for v in f.verts:
-                    if killVerts[v.idx]:
-                        killFaces[f.idx] = True             
-        else:
-            killVerts = numpy.zeros(len(obj.verts), bool)
-        
-        for fg in obj.faceGroups:
-            if (("joint" in fg.name) or 
-                ("helper" in fg.name) or
-                ((not eyebrows) and 
-                 (("eyebrown" in fg.name) or ("cornea" in fg.name))) or
-                ((not lashes) and 
-                 ("lash" in fg.name)) or
-                 deleteGroup(fg.name, deleteGroups)):
-    
-                for f in fg.faces:            
-                    killFaces[f.idx] = True
-                    for v in f.verts:
-                        killVerts[v.idx] = True
-                    for vt in f.uv:                    
-                        killUvs[vt] = True
-        
-        n = 0
-        newVerts = {}
-        coords = []
-        vnormals = []
-        for v in obj.verts:
-            if not killVerts[v.idx]:
-                coords.append(v.co)
-                vnormals.append(v.no)
-                newVerts[v.idx] = n
-                n += 1
-    
-        n = 0
-        texVerts = []
-        newUvs = {}
-        for m,uv in enumerate(obj.texco):
-            if not killUvs[m]:
-                texVerts.append(uv)
-                newUvs[m] = n
-                n += 1   
-    
-        faceVerts = []
-        faceUvs = []
-        for f in obj.faces:
-            if not killFaces[f.idx]:
-                fverts2 = []
-                fuvs2 = []
-                for v in f.verts:
-                    fverts2.append(newVerts[v.idx])
-                for uv in f.uv:
-                    fuvs2.append(newUvs[uv])
-                faceVerts.append(fverts2)
-                faceUvs.append(fuvs2)
-    
-        weights = {}
-        if self.weights:
-            for (b, wts1) in self.weights.items():
-                wts2 = []
-                for (v1,w) in wts1:
-                    if not killVerts[v1]:
-                        wts2.append((newVerts[v1],w))
-                weights[b] = wts2
-    
-        shapes = []
-        if self.shapes:
-            for (name, morphs1) in self.shapes:
-                morphs2 = {}
-                for (v1,dx) in morphs1.items():
-                    if not killVerts[v1]:
-                        morphs2[newVerts[v1]] = dx
-                shapes.append((name, morphs2))
-
-        self.fromProxy(coords, vnormals, texVerts, faceVerts, faceUvs, weights, shapes)
-        return self
-       
+        return ("<CMeshInfo %s w %d t %d>" % (self.object, len(self.weights), len(self.shapes)))       
         
 #
 #
@@ -892,26 +803,12 @@ def newTexVert(first, words, proxy):
     return
 
 
-"""
-def proxyCoord(barycentric):
-    if type(barycentric) == tuple:
-        (v0, v1, v2, w0, w1, w2, d0, d1, d2) = barycentric
-        x = w0*v0.co[0] + w1*v1.co[0] + w2*v2.co[0] + d0
-        y = w0*v0.co[1] + w1*v1.co[1] + w2*v2.co[1] + d1
-        z = w0*v0.co[2] + w1*v1.co[2] + w2*v2.co[2] + d2
-        return [x,y,z]
-    else:
-        return barycentric.co
-"""
-
 def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
     if proxy:
         verts = []
-        vnormals = []
         for bary in proxy.realVerts:
             v = bary.getCoord()
             verts.append(v)
-            vnormals.append(v)
 
         faceVerts = [[v for v in f] for (f,g) in proxy.faces]
         
@@ -926,25 +823,13 @@ def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
 
         weights = getProxyWeights(rawWeights, proxy)
         shapes = getProxyShapes(rawShapes, proxy)
-        meshInfo = CMeshInfo(proxy.name).fromProxy(verts, vnormals, texVerts, faceVerts, texFaces, weights, shapes)
+        meshInfo = CMeshInfo(proxy.name).fromProxy(verts, texVerts, faceVerts, texFaces, weights, shapes)
 
     else:
         meshInfo = CMeshInfo(obj.name).fromObject(obj, rawWeights, rawShapes)
     return meshInfo
         
         
-def oldStyleFaces(obj):
-    faces = []
-    for f in obj.faces:
-        if f.isTriangle():
-            n = 3
-        else:
-            n = 4
-        face = [tuple((f.verts[i].idx, f.uv[i])) for i in range(n)]
-        faces.append(face)
-    return faces
-    
-
 def getProxyWeights(rawWeights, proxy):
     if not rawWeights:
         return {}
@@ -965,6 +850,7 @@ def getProxyWeights(rawWeights, proxy):
         if not empty:
             weights[key] = fixProxyVGroup(vgroup)
     return weights
+
 
 def fixProxyVGroup(vgroup):
     fixedVGroup = []

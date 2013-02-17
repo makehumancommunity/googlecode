@@ -45,7 +45,7 @@ class Config:
         self.exporting          = True
         self.useRelPaths        = True
         self.feetOnGround       = False
-        self.skirtRig           = None
+        self.skirtRig           = "inh"
         self.rigtype            = None
         self.cage               = False
         self.texFolder          = None

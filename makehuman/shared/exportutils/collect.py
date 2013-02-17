@@ -160,14 +160,11 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     foundProxy,deleteVerts = setupProxies('Proxy', name, obj, stuffs, meshInfo, config.proxyList, deleteGroups, deleteVerts)
     if not foundProxy:
         # If we subdivide here, helpers will not be removed.
-        if subdivide:
-            subMesh = getSubdivision(human,lambda p: progress(0,p*0.5))
-            stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
+        # Subdiv of main mesh moved below
+        if helpers:     # helpers override everything
+            stuff.meshInfo = meshInfo
         else:
-            if helpers:     # helpers override everything
-                stuff.meshInfo = meshInfo
-            else:
-                stuff.meshInfo = meshInfo.filter(deleteGroups, deleteVerts, eyebrows, lashes)
+            stuff.meshInfo = filterMesh(meshInfo, deleteGroups, deleteVerts, eyebrows, lashes)
         stuffs = [stuff] + stuffs
 
     clothKeys = human.clothesObjs.keys()
@@ -198,7 +195,8 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
                 texture = human.mesh.texture
                 stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
 
-    # Subdivide proxy meshes if requested
+    # Subdivide meshes if requested
+    # TL: Subdivision of main mesh moved here
     if subdivide:
         for stuff in stuffs:
             proxy = stuff.proxy
@@ -221,6 +219,13 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
                     # Subdivide proxy
                     subMesh = getSubdivision(human)
                     stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
+                    
+            else:
+                # Get filtered mesh
+                obj = stuff.meshInfo.object
+                subMesh = getSubdivision(obj, lambda p: progress(0,p*0.5))
+                stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
+           
 
     progress(1,0)
     return stuffs
@@ -258,6 +263,93 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, proxyList, deleteGroups,
 
                     stuffs.append(stuff)
     return foundProxy, deleteVerts
+
+#
+#
+#
+
+def filterMesh(meshInfo, deleteGroups, deleteVerts, eyebrows, lashes):
+    obj = meshInfo.object
+
+    killUvs = numpy.zeros(len(obj.texco), bool)
+    killFaces = numpy.zeros(len(obj.faces), bool)
+        
+    if deleteVerts != None:
+        killVerts = deleteVerts
+        for f in obj.faces:
+            for v in f.verts:
+                if killVerts[v.idx]:
+                    killFaces[f.idx] = True             
+    else:
+        killVerts = numpy.zeros(len(obj.verts), bool)
+        
+    for fg in obj.faceGroups:
+        if (("joint" in fg.name) or 
+            ("helper" in fg.name) or
+            ((not eyebrows) and 
+             (("eyebrown" in fg.name) or ("cornea" in fg.name))) or
+             ((not lashes) and 
+              ("lash" in fg.name)) or
+             deleteGroup(fg.name, deleteGroups)):
+    
+            for f in fg.faces:            
+                killFaces[f.idx] = True
+                for v in f.verts:
+                    killVerts[v.idx] = True
+                for vt in f.uv:                    
+                    killUvs[vt] = True
+     
+    n = 0
+    newVerts = {}
+    coords = []
+    for v in obj.verts:
+        if not killVerts[v.idx]:
+            coords.append(v.co)
+            newVerts[v.idx] = n
+            n += 1
+    
+    n = 0
+    texVerts = []
+    newUvs = {}
+    for m,uv in enumerate(obj.texco):
+        if not killUvs[m]:
+            texVerts.append(uv)
+            newUvs[m] = n
+            n += 1   
+    
+    faceVerts = []
+    faceUvs = []
+    for f in obj.faces:
+        if not killFaces[f.idx]:
+            fverts2 = []
+            fuvs2 = []
+            for v in f.verts:
+                fverts2.append(newVerts[v.idx])
+            for uv in f.uv:
+                fuvs2.append(newUvs[uv])
+            faceVerts.append(fverts2)
+            faceUvs.append(fuvs2)
+    
+    weights = {}
+    if meshInfo.weights:
+        for (b, wts1) in meshInfo.weights.items():
+            wts2 = []
+            for (v1,w) in wts1:
+                if not killVerts[v1]:
+                   wts2.append((newVerts[v1],w))
+            weights[b] = wts2
+    
+    shapes = []
+    if meshInfo.shapes:
+        for (name, morphs1) in meshInfo.shapes:
+            morphs2 = {}
+            for (v1,dx) in morphs1.items():
+                if not killVerts[v1]:
+                    morphs2[newVerts[v1]] = dx
+            shapes.append((name, morphs2))
+
+    meshInfo.fromProxy(coords, texVerts, faceVerts, faceUvs, weights, shapes)
+    return meshInfo
 
 #
 #   getTextureNames(stuff):
