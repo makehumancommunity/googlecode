@@ -615,8 +615,8 @@ def setupRig(info):
     for proxy in info.proxies.values():
         if proxy.rig:
             verts = []
-            for bary in proxy.realVerts:
-                verts.append(bary.getCoord())
+            for refVert in proxy.refVerts:
+                verts.append(refVert.getCoord())
             (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, info.mesh, verts=verts) 
             proxy.weights = prefixWeights(weights, proxy.name, body)
             appendRigBones(boneList, info.mesh, proxy.name, L_CLO, body, info)

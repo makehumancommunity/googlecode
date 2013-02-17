@@ -32,12 +32,22 @@ import log
 
 class CProxyRefVert:
 
-    def fromSingle(self, words):
-        self._exact = True
-        self._data = int(words[0])
+    def __init__(self, parent, scale):
+        self._parent = parent        
+        self._scale = numpy.array(scale, float)
+    
+
+    def fromSingle(self, words, vnum, proxy):
+        self._exact = True        
+        v0 = int(words[0])
+        self._verts = (v0,v0,v0)
+        self._weights = (1,0,0)
+        self._offset = numpy.array((0,0,0), float)
+        self.addProxyVertWeight(proxy, v0, vnum, 1)
         return self
+
         
-    def fromTriple(self, words):
+    def fromTriple(self, words, vnum, proxy):
         self._exact = False
         v0 = int(words[0])
         v1 = int(words[1])
@@ -51,62 +61,16 @@ class CProxyRefVert:
             d2 = float(words[8])
         else:
             (d0,d1,d2) = (0,0,0)
-        self._data = (v0,v1,v2,w0,w1,w2,d0,d1,d2)
+        
+        self._verts = (v0,v1,v2)
+        self._weights = (w0,w1,w2)
+        self._offset = numpy.array((d0,d1,d2), float)
+
+        self.addProxyVertWeight(proxy, v0, vnum, w0)
+        self.addProxyVertWeight(proxy, v1, vnum, w1)
+        self.addProxyVertWeight(proxy, v2, vnum, w2)
         return self
 
-    def getHumanVerts(self):
-        if self._exact:
-            v = self._data
-            return [v,v,v]
-        else:
-            return self._data[0:3]
-            
-    def getWeights(self):
-        if self._exact:
-            return [1,0,0]
-        else:
-            return self._data[3:6]
-            
-    def getOffsets(self):
-        if self._exact:
-            return [0,0,0]
-        else:
-            return self._data[6:9]
-            
-    def getCoord(self, parent, scales):
-        if self._exact:
-            return parent.verts[self._data].co
-        else:
-            (rv0, rv1, rv2, w0, w1, w2, d0, d1, d2) = self._data
-            v0 = parent.verts[rv0]
-            v1 = parent.verts[rv1]
-            v2 = parent.verts[rv2]
-            s0,s1,s2 = scales
-            nv0 = w0*v0.co[0] + w1*v1.co[0] + w2*v2.co[0] + d0*s0
-            nv1 = w0*v0.co[1] + w1*v1.co[1] + w2*v2.co[1] + d1*s1
-            nv2 = w0*v0.co[2] + w1*v1.co[2] + w2*v2.co[2] + d2*s2
-            return (nv0, nv1, nv2)
-            
-            
-class CProxyRealVert(CProxyRefVert):
-
-    def fromSingle(self, words, vnum, proxy, obj, scales):
-        CProxyRefVert.fromSingle(self, words)
-        self.vnum = vnum
-        self.parent = obj
-        self.scales = scales
-        self.addProxyVertWeight(proxy, self._data, vnum, 1)
-        return self
-      
-    def fromTriple(self, words, vnum, proxy, obj, scales):
-        CProxyRefVert.fromTriple(self, words)
-        self.vnum = vnum
-        self.parent = obj
-        self.scales = scales
-        self.addProxyVertWeight(proxy, self._data[0], vnum, self._data[3])
-        self.addProxyVertWeight(proxy, self._data[1], vnum, self._data[4])
-        self.addProxyVertWeight(proxy, self._data[2], vnum, self._data[5])
-        return self
 
     def addProxyVertWeight(self, proxy, v, pv, w):
         try:
@@ -115,8 +79,23 @@ class CProxyRealVert(CProxyRefVert):
             proxy.vertWeights[v] = [(pv,w)]
         return
 
+    def getHumanVerts(self):
+        return self._verts    
+
+    def getWeights(self):
+        return self._weights            
+
+    def getOffset(self):
+        return self._offset            
+
     def getCoord(self):
-        return CProxyRefVert.getCoord(self, self.parent, self.scales)
+        rv0,rv1,rv2 = self._verts
+        v0 = self._parent.coord[rv0]
+        v1 = self._parent.coord[rv1]
+        v2 = self._parent.coord[rv2]
+        w0,w1,w2 = self._weights
+        return (w0*v0 + w1*v1 + w2*v2 + self._scale*self._offset)
+
 
 #
 #    class CProxy
@@ -132,8 +111,7 @@ class CProxy:
         self.tags = []
         
         self.vertWeights = {}       # (proxy-vert, weight) list for each parent vert
-        self.refVerts = []          # proxy vert without parent 
-        self.realVerts = []         # proxy vert with parent
+        self.refVerts = []          
                 
         self.xScaleData = None
         self.yScaleData = None
@@ -186,27 +164,10 @@ class CProxy:
     def __repr__(self):
         return ("<CProxy %s %s %s %s>" % (self.name, self.type, self.file, self.uuid))
         
-    def update(self, obj, parent):
-        rlen = len(self.refVerts)
-        mlen = len(obj.verts)
-        if rlen != mlen:
-            file = os.path.basename(self.file)
-            (fname, ext) = os.path.splitext(file)
-            raise NameError( 
-                "Inconsistent clothing files: %d verts in %s != %d verts in %s.obj" % (rlen, file, mlen, fname) )
-
-        xScale = getScale(self.xScaleData, parent.verts, 0)
-        yScale = getScale(self.yScaleData, parent.verts, 1)
-        zScale = getScale(self.zScaleData, parent.verts, 2)
-        scales = (xScale, yScale, zScale)
-        
-        coords = []
-        for refVert in self.refVerts:
-            coords.append( refVert.getCoord(parent, scales) )
+    def update(self, obj):
+        coords = [refVert.getCoord() for refVert in self.refVerts]
         obj.changeCoords(coords)      
-        #log.debug("clo %s", str(scales) )
         
-
     def getUuid(self):
         if self.uuid:
             return self.uuid
@@ -309,7 +270,6 @@ def getFileName(folder, file, suffix):
 #    readProxyFile(obj, file, evalOnLoad):
 #
 
-doVerts = 1
 doFaces = 2
 doMaterial = 3
 doTexVerts = 4
@@ -341,38 +301,29 @@ def readProxyFile(obj, file, evalOnLoad):
         return None
         return CProxy(None, proxy.type, pfile.layer)
 
-    verts = obj.verts
     locations = {}
     tails = {}
     proxy = CProxy(pfile.file, pfile.type, pfile.layer)
-    proxy.deleteVerts = numpy.zeros(len(verts), bool)
+    proxy.deleteVerts = numpy.zeros(len(obj.verts), bool)
     proxy.name = "MyProxy"
 
     useProjection = True
     ignoreOffset = False
-    xScale = 1.0
-    yScale = 1.0
-    zScale = 1.0
-    scales = (xScale, yScale, zScale)
-    
+    scales = numpy.array((1.0,1.0,1.0), float)
     status = 0
-
     vnum = 0
     for line in tmpl:
         words= line.split()
         if len(words) == 0:
             pass
 
-        elif words[0] == '#':
+        elif words[0] == '#':        
             theGroup = None
             if len(words) == 1:
                 continue
             key = words[1]
             if key == 'verts':
-                if evalOnLoad:
-                    status = doVerts
-                else:
-                    status = doRefVerts
+                status = doRefVerts
             elif key == 'faces':
                 status = doFaces
             elif key == 'weights':
@@ -404,12 +355,6 @@ def readProxyFile(obj, file, evalOnLoad):
                     layer = 0
                 proxy.texFaces = []
                 proxy.texFacesLayers[layer] = proxy.texFaces
-            #elif key == 'obj_data':
-            #    status = doObjData
-            #    proxy.texVerts = []
-            #    proxy.texFaces = []
-            #    proxy.texVertsLayers[0] = proxy.texVerts
-            #    proxy.texFacesLayers[0] = proxy.texFaces     
             elif key == 'name':
                 proxy.name = stringFromWords(words[2:])
             elif key == 'uuid':
@@ -424,16 +369,13 @@ def readProxyFile(obj, file, evalOnLoad):
                 proxy.cage = True
             elif key == 'x_scale':
                 proxy.xScaleData = getScaleData(words)
-                xScale = getScale(proxy.xScaleData, verts, 0)
-                scales = (xScale, yScale, zScale)
+                scales[0] = getScale(proxy.xScaleData, obj.verts, 0)
             elif key == 'y_scale':
                 proxy.yScaleData = getScaleData(words)
-                yScale = getScale(proxy.yScaleData, verts, 1)
-                scales = (xScale, yScale, zScale)
+                scales[1] = getScale(proxy.yScaleData, obj.verts, 1)
             elif key == 'z_scale':
                 proxy.zScaleData = getScaleData(words)
-                zScale = getScale(proxy.zScaleData, verts, 2)
-                scales = (xScale, yScale, zScale)
+                scales[2] = getScale(proxy.zScaleData, obj.verts, 2)
             elif key == 'use_projection':
                 useProjection = int(words[2])
             elif key == 'ignoreOffset':
@@ -530,20 +472,12 @@ def readProxyFile(obj, file, evalOnLoad):
             proxy.faceNumbers.append(line)
 
         elif status == doRefVerts:
-            refVert = CProxyRefVert()
+            refVert = CProxyRefVert(obj, scales)
             proxy.refVerts.append(refVert)
             if len(words) == 1:
-                refVert.fromSingle(words)
+                refVert.fromSingle(words, vnum, proxy)
             else:                
-                refVert.fromTriple(words)
-
-        elif status == doVerts:
-            realVert = CProxyRealVert()
-            proxy.realVerts.append(realVert)
-            if len(words) == 1:
-                realVert.fromSingle(words, vnum, proxy, obj, scales)
-            else:                
-                realVert.fromTriple(words, vnum, proxy, obj, scales)
+                refVert.fromTriple(words, vnum, proxy)
             vnum += 1
 
         elif status == doFaces:
@@ -803,31 +737,18 @@ def newFace(first, words, group, proxy):
 
 
 def newTexFace(words, proxy):
-    texface = []
-    nCoords = len(words)
-    for n in range(nCoords):
-        texface.append(int(words[n]))
+    texface = [int(word) for word in words]
     proxy.texFaces.append(texface)
-    return
 
 
 def newTexVert(first, words, proxy):
-    vt = []
-    nCoords = len(words)
-    for n in range(first, nCoords):
-        uv = float(words[n])
-        vt.append(uv)
+    vt = [float(word) for word in words[first:]]
     proxy.texVerts.append(vt)
-    return
 
 
 def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
     if proxy:
-        verts = []
-        for bary in proxy.realVerts:
-            v = bary.getCoord()
-            verts.append(v)
-
+        coords = [refVert.getCoord() for refVert in proxy.refVerts]
         faceVerts = [[v for v in f] for (f,g) in proxy.faces]
         
         if proxy.texVerts:
@@ -841,7 +762,7 @@ def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
 
         weights = getProxyWeights(rawWeights, proxy)
         shapes = getProxyShapes(rawShapes, proxy)
-        meshInfo = CMeshInfo(proxy.name).fromProxy(verts, texVerts, faceVerts, texFaces, weights, shapes)
+        meshInfo = CMeshInfo(proxy.name).fromProxy(coords, texVerts, faceVerts, texFaces, weights, shapes)
 
     else:
         meshInfo = CMeshInfo(obj.name).fromObject(obj, rawWeights, rawShapes)
@@ -858,7 +779,7 @@ def getProxyWeights(rawWeights, proxy):
         for (v,wt) in rawWeights[key]:
             try:
                 vlist = proxy.vertWeights[v]
-            except:
+            except KeyError:
                 vlist = []
             for (pv, w) in vlist:
                 pw = w*wt

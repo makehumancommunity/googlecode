@@ -290,7 +290,7 @@ def filterMesh(meshInfo, deleteGroups, deleteVerts, eyebrows, lashes):
              (("eyebrown" in fg.name) or ("cornea" in fg.name))) or
              ((not lashes) and 
               ("lash" in fg.name)) or
-             deleteGroup(fg.name, deleteGroups)):
+             mh2proxy.deleteGroup(fg.name, deleteGroups)):
     
             for f in fg.faces:            
                 killFaces[f.idx] = True

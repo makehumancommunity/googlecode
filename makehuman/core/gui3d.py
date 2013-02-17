@@ -177,7 +177,7 @@ class Object(events3d.EventHandler):
     def updateProxyMesh(self):
     
         if self.proxy and self.__proxyMesh:
-            self.proxy.update(self.__proxyMesh, self.__seedMesh)
+            self.proxy.update(self.__proxyMesh)
             self.__proxyMesh.update()
         
     def isProxied(self):
@@ -212,7 +212,7 @@ class Object(events3d.EventHandler):
             
             self.__proxyMesh.object = self.mesh.object
             
-            self.proxy.update(self.__proxyMesh, self.__seedMesh)
+            self.proxy.update(self.__proxyMesh)
             
             if self.__seedMesh.object3d:
                 self.attachMesh(self.__proxyMesh)

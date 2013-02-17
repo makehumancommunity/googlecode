@@ -128,7 +128,7 @@ class HairTaskView(gui3d.TaskView):
         if human.hairObj and human.hairProxy:
             
             mesh = human.hairObj.getSeedMesh()
-            human.hairProxy.update(mesh, human.meshData)
+            human.hairProxy.update(mesh)
             mesh.update()
             if human.hairObj.isSubdivided():
                 human.hairObj.getSubdivisionMesh()

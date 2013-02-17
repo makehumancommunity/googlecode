@@ -309,8 +309,8 @@ def copyFile25(tmplName, fp, proxy, info):
                 ox = info.origin[0]
                 oy = info.origin[1]
                 oz = info.origin[2]
-                for bary in proxy.realVerts:
-                    (x,y,z) = bary.getCoord()
+                for refVert in proxy.refVerts:
+                    (x,y,z) = refVert.getCoord()
                     fp.write("  v %.4f %.4f %.4f ;\n" % (x-ox, -z+oz, y-oy))
 
             elif key == 'Verts':

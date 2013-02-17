@@ -310,7 +310,7 @@ class ClothesTaskView(gui3d.TaskView):
         for (uuid,clo) in human.clothesObjs.items():            
             if clo:
                 mesh = clo.getSeedMesh()
-                human.clothesProxies[uuid].update(mesh, human.meshData)
+                human.clothesProxies[uuid].update(mesh)
                 mesh.update()
                 if clo.isSubdivided():
                     clo.getSubdivisionMesh()
