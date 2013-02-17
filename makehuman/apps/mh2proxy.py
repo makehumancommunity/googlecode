@@ -29,6 +29,76 @@ import module3d
 import exportutils
 import log
 
+
+class CProxyRefVert:
+
+    def fromSingle(self, words):
+        self.exact = True
+        self.data = int(words[0])
+        return self
+        
+    def fromTriple(self, words):
+        self.exact = False
+        v0 = int(words[0])
+        v1 = int(words[1])
+        v2 = int(words[2])
+        w0 = float(words[3])
+        w1 = float(words[4])
+        w2 = float(words[5])            
+        if len(words) > 6:
+            d0 = float(words[6])
+            d1 = float(words[7])
+            d2 = float(words[8])
+        else:
+            (d0,d1,d2) = (0,0,0)
+        self.data = (v0,v1,v2,w0,w1,w2,d0,d1,d2)
+        return self
+
+    def getCoord(self, parent, scales):
+        if self.exact:
+            return parent.verts[self.data].co
+        else:
+            (rv0, rv1, rv2, w0, w1, w2, d0, d1, d2) = self.data
+            v0 = parent.verts[rv0]
+            v1 = parent.verts[rv1]
+            v2 = parent.verts[rv2]
+            s0,s1,s2 = scales
+            nv0 = w0*v0.co[0] + w1*v1.co[0] + w2*v2.co[0] + d0*s0
+            nv1 = w0*v0.co[1] + w1*v1.co[1] + w2*v2.co[1] + d1*s1
+            nv2 = w0*v0.co[2] + w1*v1.co[2] + w2*v2.co[2] + d2*s2
+            return (nv0, nv1, nv2)
+            
+            
+class CProxyRealVert(CProxyRefVert):
+
+    def fromSingle(self, words, vnum, proxy, obj, scales):
+        CProxyRefVert.fromSingle(self, words)
+        self.vnum = vnum
+        self.parent = obj
+        self.scales = scales
+        self.addProxyVert(proxy, self.data, vnum, 1)
+        return self
+      
+    def fromTriple(self, words, vnum, proxy, obj, scales):
+        CProxyRefVert.fromTriple(self, words)
+        self.vnum = vnum
+        self.parent = obj
+        self.scales = scales
+        self.addProxyVert(proxy, self.data[0], vnum, self.data[3])
+        self.addProxyVert(proxy, self.data[1], vnum, self.data[4])
+        self.addProxyVert(proxy, self.data[2], vnum, self.data[5])
+        return self
+
+    def addProxyVert(self, proxy, v, pv, w):
+        try:
+            proxy.vertWeights[v].append((pv, w))
+        except KeyError:
+            proxy.vertWeights[v] = [(pv,w)]
+        return
+
+    def getCoord(self):
+        return CProxyRefVert.getCoord(self, self.parent, self.scales)
+
 #
 #    class CProxy
 #
@@ -42,6 +112,10 @@ class CProxy:
         self.basemesh = "alpha_7"
         self.tags = []
         
+        self.vertWeights = {}       # (proxy-vert, weight) list for each parent vert
+        self.refVerts = []          # proxy vert without parent 
+        self.realVerts = []         # proxy vert with parent
+                
         self.xScaleData = None
         self.yScaleData = None
         self.zScaleData = None
@@ -50,8 +124,6 @@ class CProxy:
         self.transparent = False
         self.layer = layer
         self.material = CMaterial()
-        self.verts = {}
-        self.realVerts = []
         self.faces = []
         self.texFaces = []
         self.texVerts = []
@@ -87,7 +159,6 @@ class CProxy:
         self.modifiers = []
         self.shapekeys = []
         self.weights = None
-        self.refVerts = []
         self.clothings = []
         self.transparencies = dict()
         self.textures = []
@@ -108,21 +179,12 @@ class CProxy:
         xScale = getScale(self.xScaleData, parent.verts, 0)
         yScale = getScale(self.yScaleData, parent.verts, 1)
         zScale = getScale(self.zScaleData, parent.verts, 2)
-
+        scales = (xScale, yScale, zScale)
+        
         verts = []
         for n in range(mlen):
             refVert = self.refVerts[n]
-            if type(refVert) == tuple:
-                (rv0, rv1, rv2, w0, w1, w2, d0, d1, d2) = refVert
-                v0 = parent.verts[rv0]
-                v1 = parent.verts[rv1]
-                v2 = parent.verts[rv2]
-                nv0 = w0*v0.co[0] + w1*v1.co[0] + w2*v2.co[0] + d0*xScale
-                nv1 = w0*v0.co[1] + w1*v1.co[1] + w2*v2.co[1] + d1*yScale
-                nv2 = w0*v0.co[2] + w1*v1.co[2] + w2*v2.co[2] + d2*zScale
-                verts.append( (nv0, nv1, nv2) )
-            else:
-                verts.append( parent.verts[refVert].co )
+            verts.append( refVert.getCoord(parent, scales) )
                 
         obj.changeCoords(verts)      
         log.debug("clo %s", str((xScale, yScale, zScale)) )
@@ -362,14 +424,16 @@ def readProxyFile(obj, file, evalOnLoad):
     xScale = 1.0
     yScale = 1.0
     zScale = 1.0
+    scales = (xScale, yScale, zScale)
     
     status = 0
 
-    vn = 0
+    vnum = 0
     for line in tmpl:
         words= line.split()
         if len(words) == 0:
             pass
+
         elif words[0] == '#':
             theGroup = None
             if len(words) == 1:
@@ -432,12 +496,15 @@ def readProxyFile(obj, file, evalOnLoad):
             elif key == 'x_scale':
                 proxy.xScaleData = getScaleData(words)
                 xScale = getScale(proxy.xScaleData, verts, 0)
+                scales = (xScale, yScale, zScale)
             elif key == 'y_scale':
                 proxy.yScaleData = getScaleData(words)
                 yScale = getScale(proxy.yScaleData, verts, 1)
+                scales = (xScale, yScale, zScale)
             elif key == 'z_scale':
                 proxy.zScaleData = getScaleData(words)
                 zScale = getScale(proxy.zScaleData, verts, 2)
+                scales = (xScale, yScale, zScale)
             elif key == 'use_projection':
                 useProjection = int(words[2])
             elif key == 'ignoreOffset':
@@ -521,6 +588,7 @@ def readProxyFile(obj, file, evalOnLoad):
             else:
                 pass
                 #print "Ignored proxy keyword", key
+
         elif status == doObjData:
             if words[0] == 'vt':
                 newTexVert(1, words, proxy)
@@ -528,73 +596,44 @@ def readProxyFile(obj, file, evalOnLoad):
                 newFace(1, words, theGroup, proxy)
             elif words[0] == 'g':
                 theGroup = words[1]
+
         elif status == doFaceNumbers:
             proxy.faceNumbers.append(line)
+
         elif status == doRefVerts:
+            refVert = CProxyRefVert()
+            proxy.refVerts.append(refVert)
             if len(words) == 1:
-                v = int(words[0])
-                proxy.refVerts.append(v)
+                refVert.fromSingle(words)
             else:                
-                v0 = int(words[0])
-                v1 = int(words[1])
-                v2 = int(words[2])
-                w0 = float(words[3])
-                w1 = float(words[4])
-                w2 = float(words[5])            
-                if len(words) > 6:
-                    d0 = float(words[6])
-                    d1 = float(words[7])
-                    d2 = float(words[8])
-                else:
-                    (d0,d1,d2) = (0,0,0)
-                proxy.refVerts.append( (v0,v1,v2,w0,w1,w2,d0,d1,d2) )
+                refVert.fromTriple(words)
+
         elif status == doVerts:
+            realVert = CProxyRealVert()
+            proxy.realVerts.append(realVert)
             if len(words) == 1:
-                v = int(words[0])
-                proxy.realVerts.append(verts[v])
-                addProxyVert(v, vn, 1, proxy)
+                realVert.fromSingle(words, vnum, proxy, obj, scales)
             else:                
-                v0 = int(words[0])
-                v1 = int(words[1])
-                v2 = int(words[2])
-                w0 = float(words[3])
-                w1 = float(words[4])
-                w2 = float(words[5])            
+                realVert.fromTriple(words, vnum, proxy, obj, scales)
+            vnum += 1
 
-                if len(words) < 7 or ignoreOffset:
-                    (d0, d1, d2) = (0, 0, 0)
-                elif useProjection:
-                    proj = float(words[6])
-                    n0 = aljabr.vmul(verts[v0].no, w0)
-                    n1 = aljabr.vmul(verts[v1].no, w1)
-                    n2 = aljabr.vmul(verts[v2].no, w2)
-                    norm = aljabr.vadd(n0, n1)
-                    norm = aljabr.vadd(norm, n2)
-                    d0 = proj * norm[0] * xScale
-                    d1 = proj * norm[1] * yScale
-                    d2 = proj * norm[2] * zScale
-                else:
-                    d0 = float(words[6]) * xScale
-                    d1 = float(words[7]) * yScale
-                    d2 = float(words[8]) * zScale
-
-                proxy.realVerts.append((verts[v0], verts[v1], verts[v2], w0, w1, w2, d0, d1, d2))
-                addProxyVert(v0, vn, w0, proxy)
-                addProxyVert(v1, vn, w1, proxy)
-                addProxyVert(v2, vn, w2, proxy)
-            vn += 1
         elif status == doFaces:
             newFace(0, words, theGroup, proxy)
+
         elif status == doTexVerts:
             newTexVert(0, words, proxy)
+
         elif status == doTexFaces:
             newTexFace(words, proxy)
+
         elif status == doMaterial:
             readMaterial(line, proxy.material, proxy, False)
+
         elif status == doWeights:
             v = int(words[0])
             w = float(words[1])
             weights.append((v,w))
+
         elif status == doDeleteVerts:
             sequence = False
             for v in words:            
@@ -853,14 +892,7 @@ def newTexVert(first, words, proxy):
     return
 
 
-def addProxyVert(v, vn, w, proxy):
-    try:
-        proxy.verts[v].append((vn, w))
-    except:
-        proxy.verts[v] = [(vn,w)]
-    return
-
-
+"""
 def proxyCoord(barycentric):
     if type(barycentric) == tuple:
         (v0, v1, v2, w0, w1, w2, d0, d1, d2) = barycentric
@@ -870,14 +902,14 @@ def proxyCoord(barycentric):
         return [x,y,z]
     else:
         return barycentric.co
-
+"""
 
 def getMeshInfo(obj, proxy, rawWeights, rawShapes, rigname):
     if proxy:
         verts = []
         vnormals = []
         for bary in proxy.realVerts:
-            v = proxyCoord(bary)
+            v = bary.getCoord()
             verts.append(v)
             vnormals.append(v)
 
@@ -922,7 +954,7 @@ def getProxyWeights(rawWeights, proxy):
         empty = True
         for (v,wt) in rawWeights[key]:
             try:
-                vlist = proxy.verts[v]
+                vlist = proxy.vertWeights[v]
             except:
                 vlist = []
             for (pv, w) in vlist:
@@ -960,7 +992,7 @@ def getProxyShapes(rawShapes, proxy):
         for (v,dr) in rawShape.items():
             (dx,dy,dz) = dr
             try:
-                vlist = proxy.verts[v]
+                vlist = proxy.vertWeights[v]
             except KeyError:
                 vlist = []
             for (pv, w) in vlist:

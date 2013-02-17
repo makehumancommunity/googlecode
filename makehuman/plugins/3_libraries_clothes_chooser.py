@@ -260,6 +260,7 @@ class ClothesTaskView(gui3d.TaskView):
             gui3d.app.addObject(human.clothesObjs[uuid])
 
     def updateFaceMasks(self):
+        return
         """
         Apply facemask (deleteVerts) defined on clothes to body and lower layers
         of clothing. Uses order as defined in self.clothesList.

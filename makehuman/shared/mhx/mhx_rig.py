@@ -616,7 +616,7 @@ def setupRig(info):
         if proxy.rig:
             verts = []
             for bary in proxy.realVerts:
-                verts.append(mh2proxy.proxyCoord(bary))
+                verts.append(bary.getCoord())
             (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, info.mesh, verts=verts) 
             proxy.weights = prefixWeights(weights, proxy.name, body)
             appendRigBones(boneList, info.mesh, proxy.name, L_CLO, body, info)

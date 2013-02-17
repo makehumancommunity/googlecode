@@ -311,7 +311,7 @@ def copyFile25(tmplName, fp, proxy, info):
                 oy = info.origin[1]
                 oz = info.origin[2]
                 for bary in proxy.realVerts:
-                    (x,y,z) = mh2proxy.proxyCoord(bary)
+                    (x,y,z) = bary.getCoord()
                     fp.write("  v %.4f %.4f %.4f ;\n" % (x-ox, -z+oz, y-oy))
 
             elif key == 'Verts':
@@ -1028,7 +1028,7 @@ def copyVertexGroups(name, fp, proxy):
             pgroup = []
             for (v,wt) in weights:
                 try:
-                    vlist = proxy.verts[v]
+                    vlist = proxy.vertWeights[v]
                 except:
                     vlist = []
                 for (pv, w) in vlist:
