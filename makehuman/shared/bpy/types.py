@@ -27,8 +27,6 @@ from math import *
 import os
 import log
 
-from fastmath import *
-import exportutils
 import exportutils
 
 
@@ -305,12 +303,6 @@ class MeshPolygon:
         self.material_index = 0
         self.normal = face.no
         return
-        co0 = meverts[fverts[0]]
-        co1 = meverts[fverts[1]]
-        co2 = meverts[fverts[2]]
-        e1 = vsub3d(co1,co0)
-        e2 = vsub3d(co2,co1)
-        self.normal = vnorm3d(vcross3d(e1,e2))
         
         
 class UvLayer:

@@ -23,7 +23,6 @@ TODO
 """
 
 import os
-import fastmath
 import math
 import gui3d
 import warp

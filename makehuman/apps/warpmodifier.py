@@ -24,12 +24,14 @@ TODO
 
 __docformat__ = 'restructuredtext'
 
-import algos3d
-import fastmath
 import math
+import numpy
 from operator import mul
 import mh
 import os
+
+import algos3d
+from algos3d import theHuman, NMHVerts
 import warp
 import humanmodifier
 import log
@@ -244,7 +246,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
 
     def updateValue(self, human, value, updateNormals=1):        
-        target = self.getWarpTarget(algos3d.theHuman)    
+        target = self.getWarpTarget(theHuman)    
         if not target:
             return
         target.reinit()
@@ -262,7 +264,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         landmarks = theLandMarks()[self.bodypart]
         objectChanged = self.getRefObject(human)
         self.getRefTarget(human, objectChanged)    
-        if self.refTargetVerts and theRefObjectVerts[self.modtype]:
+        if self.refTargetVerts and theRefObjectVerts[self.modtype] is not None:
             shape = warp.warp_target(self.refTargetVerts, theRefObjectVerts[self.modtype], shadowCoords, landmarks)
         else:
             shape = {}
@@ -298,7 +300,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         
 
     def makeRefTarget(self, human):
-        self.refTargetVerts = zeroVerts()
+        self.refTargetVerts = {}
         madeRefTarget = False
         factors = self.fallback.getFactors(human, 1.0)
         
@@ -309,7 +311,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 madeRefTarget = True
                 verts = self.getTargetInsist(target.path)
                 if verts is not None:
-                    self.refTargetVerts = addVerts(self.refTargetVerts, cval, verts)
+                    addVerts(self.refTargetVerts, cval, verts)
         return madeRefTarget                            
     
 
@@ -390,18 +392,18 @@ class WarpModifier (humanmodifier.SimpleModifier):
     def getRefObject(self, human):
         global theRefObjectVerts
     
-        if theRefObjectVerts[self.modtype]:
+        if theRefObjectVerts[self.modtype] is not None:
             return False
         else:
             log.message("Reset warps")
-            refverts = copyArray(G.app.selectedHuman.meshData.orig_coord)
+            refverts = numpy.array(G.app.selectedHuman.meshData.orig_coord)
             for char in theRefObjects().keys():
                 cval = human.getDetail(char)
                 if cval:
                     log.debug("  refobj %s %s", os.path.basename(char), cval)
                     verts = self.getRefObjectVerts(char)
                     if verts is not None:
-                        refverts = addVerts(refverts, cval, verts)
+                        addVerts(refverts, cval, verts)
             theRefObjectVerts[self.modtype] = refverts                
             return True
 
@@ -464,13 +466,13 @@ def readTarget(path):
     except:
         fp = None
     if fp:
-        target = zeroVerts()
+        target = {}
         for line in fp:
             words = line.split()
             if len(words) >= 4:
                 n = int(words[0])
-                if n < algos3d.NMHVerts:
-                    target[n] = [float(words[1]), float(words[2]), float(words[3])]
+                if n < NMHVerts:
+                    target[n] = numpy.array([float(words[1]), float(words[2]), float(words[3])])
         fp.close()
         return target
     else:
@@ -484,37 +486,18 @@ def readTarget(path):
 """    
 import numpy
  
-def zeroVerts():
-    return numpy.zeros((algos3d.NMHVerts,3), float)
-    
 def addVerts(targetVerts, cval, verts):     
     return targetVerts + cval*verts
     
-def makeArray(verts):
-    return numpy.array(verts, float)
-
-def copyArray(verts):
-    return numpy.array(verts, float)
-
 """ 
-def zeroVerts():
-    return {}
-    
 def addVerts(targetVerts, cval, verts):                    
     for n,v in verts.items():
-        dr = fastmath.vmul3d(v, cval)
+        dr = cval*v
         try:
-            targetVerts[n] = fastmath.vadd3d(targetVerts[n], dr)
+            targetVerts[n] += dr
         except KeyError:
             targetVerts[n] = dr
-    return targetVerts            
     
-def makeArray(verts):
-    return verts
-
-def copyArray(verts):
-    return [ list(v) for v in verts ] 
-                          
 #----------------------------------------------------------
 #   Init globals
 #----------------------------------------------------------
