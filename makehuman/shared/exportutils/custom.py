@@ -24,8 +24,8 @@ TODO
 
 import sys
 import os
+import numpy
 import mh
-
 import log
 
 
@@ -45,7 +45,7 @@ def readCustomFolder(folder, config):
             (fname, ext) = os.path.splitext(file)
             if ext == ".target":
                 path = os.path.join(folder, file)
-                name = "Mhc" + fname.capitalize().replace(" ","_").replace("-","_")
+                name = config.customPrefix + fname.capitalize().replace(" ","_").replace("-","_")
                 config.customShapeFiles.append((path, name))
 
 
@@ -58,7 +58,7 @@ def readCustomTarget(path):
     for line in fp:
         words = line.split()
         try:
-            shape[int(words[0])] = (float(words[1]), float(words[2]), float(words[3]))
+            shape[int(words[0])] = numpy.array((float(words[1]), float(words[2]), float(words[3])))
         except:
             return {}
     fp.close()

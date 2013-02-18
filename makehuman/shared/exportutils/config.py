@@ -51,6 +51,7 @@ class Config:
         self.cage               = False
         self.texFolder          = None
         self.proxyList          = []
+        self.customPrefix       = ""
 
 
     def selectedOptions(self, exporter):

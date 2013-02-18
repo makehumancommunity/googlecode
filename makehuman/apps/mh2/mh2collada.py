@@ -58,7 +58,9 @@ def exportCollada(human, filepath, config):
     except:
         log.error("Unable to open file for writing %s" % filepath)
     (name,ext) = os.path.splitext(os.path.basename(filepath))
+
     exportDae(human, name, fp, config)
+
     fp.close()
     time2 = time.clock()
     log.message("Wrote Collada file in %g s: %s" % (time2-time1, filepath))
@@ -66,53 +68,6 @@ def exportCollada(human, filepath, config):
     posemode.exitPoseMode()        
     return
 
-#
-#
-#
-
-def rotateLoc(loc, config):    
-    (x,y,z) = loc
-    if config.rotate90X:
-        yy = -z
-        z = y
-        y = yy
-    if config.rotate90Z:
-        yy = x
-        x = -y
-        y = yy        
-    return (x,y,z)        
-
-
-def writeBone(fp, bone, orig, extra, pad, stuff, config):
-    (name, children) = bone
-    head = stuff.boneInfo.heads[name]
-    vec = head - orig
-    printNode(fp, name, vec, extra, pad, config)
-    for child in children:
-        writeBone(fp, child, head, '', pad+'  ', stuff, config)    
-    fp.write('\n%s      </node>' % pad)
-    return
-    
-    
-def printNode(fp, name, vec, extra, pad, config):
-    if name:
-        nameStr = 'sid="%s"' % name
-        idStr = 'id="%s" name="%s"' % (name, name)
-    else:
-        nameStr = ''
-        idStr = ''
-    fp.write('\n'+
-'%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr) +
-'%s        <translate sid="translate"> ' % pad)
-    #(scale, name) = config["scale"]
-    (x,y,z) = rotateLoc(vec, config)
-    fp.write("%.4f %.4f %.4f " % (x,y,z))
-    fp.write('</translate>\n' +
-'%s        <rotate sid="rotateZ">0 0 1 0.0</rotate>\n' % pad +
-'%s        <rotate sid="rotateY">0 1 0 0.0</rotate>\n' % pad +
-'%s        <rotate sid="rotateX">1 0 0 0.0</rotate>\n' % pad +
-'%s        <scale sid="scale">1.0 1.0 1.0</scale>' % pad)
-    
 
 def exportDae(human, name, fp, config):
     rigfile = "data/rigs/%s.rig" % config.rigtype
@@ -496,47 +451,49 @@ def writeController(fp, stuff, config):
 '      </skin>\n' +
 '    </controller>\n')
 
-    """
-    fp.write('\n' +
-'   <controller id="%sMorphs" name="%sMorphs">\n' % (stuff.name,stuff.name) +
-'     <morph method="NORMALIZED" source="#%sMesh">\n' % stuff.name +
-'       <source id="%s-targets">\n' % stuff.name +
-'         <IDREF_array id="%s-targets-array" count="%d">\n'  % (stuff.name, nShapes))
+    # Morph controller
+    
+    if stuff.meshInfo.shapes:
+        nShapes = len(stuff.meshInfo.shapes)
+        
+        fp.write(        
+'    <controller id="%sMorph" name="%sMorph">\n' % (stuff.name, stuff.name)+
+'      <morph source="#%sMesh" method="NORMALIZED">\n' % (stuff.name) +
+'        <source id="%sTargets">\n' % (stuff.name) +
+'          <IDREF_array id="%sTargets-array" count="%d">' % (stuff.name, nShapes))
 
-    for (name, morphs) in targets:
-        fp.write(' %s' % name)
+        for key,_ in stuff.meshInfo.shapes:
+            fp.write(" %sMeshMorph_%s" % (stuff.name, key))
 
-    fp.write('\n' +
-'         </IDREF_array>\n' +
-'         <technique_common>\n' +
-'           <accessor source="%s-targets-array" count="%d" stride="1">\n' % (stuff.name,nShapes) +
-'             <param name="MORPH_TARGET" type="IDREF"/>\n' +
-'           </accessor>\n' +
-'         </technique_common>\n' +
-'       </source>\n' +
-'       <source id="%s-morph_weights">\n' % name +
-'         <float_array id="%s-morph_weights-array" count="%d">\n' % (stuff.name,nShapes))
+        fp.write(
+'        </IDREF_array>\n' +
+'          <technique_common>\n' +
+'            <accessor source="#%sTargets-array" count="%d" stride="1">\n' % (stuff.name, nShapes) +
+'              <param name="IDREF" type="IDREF"/>\n' +
+'            </accessor>\n' +
+'          </technique_common>\n' +
+'        </source>\n' +
+'        <source id="%sWeights">\n' % (stuff.name) +
+'          <float_array id="%sWeights-array" count="%d">' % (stuff.name, nShapes))
 
-    for target in targets:
-        fp.write("0.0 ")
+        fp.write(nShapes*" 0")
 
-    fp.write('\n' +
-'         </float_array>\n' +
-'         <technique_common>\n' +
-'           <accessor source="#%s-morph_weights-array" count="%d" stride="1">\n' % (stuff.name,nShapes) +
+        fp.write('\n' +
+'        </float_array>\n' +
+'          <technique_common>\n' +
+'            <accessor source="#%sWeights-array" count="%d" stride="1">\n' % (stuff.name, nShapes) +
+'              <param name="MORPH_WEIGHT" type="float"/>\n' +
+'            </accessor>\n' +
+'          </technique_common>\n' +
+'        </source>\n' +
+'        <targets>\n' +
+'          <input semantic="MORPH_TARGET" source="#%sTargets"/>\n' % (stuff.name) +
+'          <input semantic="MORPH_WEIGHT" source="#%sWeights"/>\n' % (stuff.name) +
+'        </targets>\n' +
+'      </morph>\n' +
+'    </controller>\n')
 
-'             <param name="MORPH_WEIGHT" type="float"/>\n' +
-'           </accessor>\n' +
-'         </technique_common>\n' +
-'       </source>\n' +
-'       <targets>\n' +
-'         <input semantic="MORPH_TARGET" source="#%s-targets"/>\n' % stuff.name +
-'         <input semantic="MORPH_WEIGHT" source="#%s-morph_weights"/>\n' % stuff.name +
-'       </targets>\n' +
-'     </morph>\n' +
-'   </controller>\n')
-    """
-    return
+
 
 #
 #    writeGeometry(fp, stuff, config):
@@ -572,7 +529,11 @@ def writeGeometry(fp, stuff, config):
 '              <param type="float" name="Z"></param>\n' +
 '            </accessor>\n' +
 '          </technique_common>\n' +
-'        </source>\n' +
+'        </source>\n')
+
+    # Normals
+    """
+    fp.write(
 '        <source id="%s-Normals">\n' % stuff.name +
 '          <float_array count="%d" id="%s-Normals-array">\n' % (3*nNormals,stuff.name) +
 '          ')
@@ -590,7 +551,12 @@ def writeGeometry(fp, stuff, config):
 '              <param type="float" name="Z"></param>\n' +
 '            </accessor>\n' +
 '          </technique_common>\n' +
-'        </source>\n' +
+'        </source>\n')
+    """
+    
+    # UV coordinates
+    
+    fp.write(
 '        <source id="%s-UV">\n' % stuff.name +
 
 '          <float_array count="%d" id="%s-UV-array">\n' % (2*nUvVerts,stuff.name) +
@@ -608,7 +574,11 @@ def writeGeometry(fp, stuff, config):
 '              <param type="float" name="T"></param>\n' +
 '            </accessor>\n' +
 '          </technique_common>\n' +
-'        </source>\n' +
+'        </source>\n')
+
+    # Faces
+    
+    fp.write(
 '        <vertices id="%s-Vertex">\n' % stuff.name +
 '          <input semantic="POSITION" source="#%s-Position"/>\n' % stuff.name +
 '        </vertices>\n')
@@ -633,22 +603,23 @@ def writeShapeKey(fp, name, shape, stuff, config):
     # Verts
     
     fp.write(
-'    <geometry id="%sMesh_morph_%s" name="%s">\n' % (stuff.name, name, name) +
+'    <geometry id="%sMeshMorph_%s" name="%s">\n' % (stuff.name, name, name) +
 '      <mesh>\n' +
-'        <source id="%sMesh_morph_%s-positions">\n' % (stuff.name, name) +
-'          <float_array id="%sMesh_morph_%s-positions-array" count="%d">\n' % (stuff.name, name, 3*nVerts) +
+'        <source id="%sMeshMorph_%s-positions">\n' % (stuff.name, name) +
+'          <float_array id="%sMeshMorph_%s-positions-array" count="%d">\n' % (stuff.name, name, 3*nVerts) +
 '           ')
 
     target = numpy.array(obj.coord)
     for n,dr in shape.items():
         target[n] += numpy.array(dr)
     for co in target:
-        fp.write(" %.4g %.4g %.4g" % tuple(co))
+        loc = rotateLoc(co, config)
+        fp.write(" %.4g %.4g %.4g" % tuple(loc))
 
     fp.write('\n' +
 '          </float_array>\n' +
 '          <technique_common>\n' +
-'            <accessor source="#%sMesh_morph_%s-positions-array" count="%d" stride="3">\n' % (stuff.name, name, nVerts) +
+'            <accessor source="#%sMeshMorph_%s-positions-array" count="%d" stride="3">\n' % (stuff.name, name, nVerts) +
 '              <param name="X" type="float"/>\n' +
 '              <param name="Y" type="float"/>\n' +
 '              <param name="Z" type="float"/>\n' +
@@ -659,13 +630,13 @@ def writeShapeKey(fp, name, shape, stuff, config):
     # Normals
     """
     fp.write(
-'        <source id="%sMesh_morph_%s-normals">\n' % (stuff.name, name) +
-'          <float_array id="%sMesh_morph_%s-normals-array" count="18">\n' % (stuff.name, name))
+'        <source id="%sMeshMorph_%s-normals">\n' % (stuff.name, name) +
+'          <float_array id="%sMeshMorph_%s-normals-array" count="18">\n' % (stuff.name, name))
 -0.9438583 0 0.3303504 0 0.9438583 0.3303504 0.9438583 0 0.3303504 0 -0.9438583 0.3303504 0 0 -1 0 0 1
     fp.write(
 '          </float_array>\n' +
 '          <technique_common>\n' +
-'            <accessor source="#%sMesh_morph_%s-normals-array" count="6" stride="3">\n' % (stuff.name, name) +
+'            <accessor source="#%sMeshMorph_%s-normals-array" count="6" stride="3">\n' % (stuff.name, name) +
 '              <param name="X" type="float"/>\n' +
 '              <param name="Y" type="float"/>\n' +
 '              <param name="Z" type="float"/>\n' +
@@ -677,12 +648,12 @@ def writeShapeKey(fp, name, shape, stuff, config):
     # Polylist
 
     fp.write(
-'        <vertices id="%sMesh_morph_%s-vertices">\n' % (stuff.name, name) +
-'          <input semantic="POSITION" source="#%sMesh_morph_%s-positions"/>\n' % (stuff.name, name) +
+'        <vertices id="%sMeshMorph_%s-vertices">\n' % (stuff.name, name) +
+'          <input semantic="POSITION" source="#%sMeshMorph_%s-positions"/>\n' % (stuff.name, name) +
 '        </vertices>\n' +
 '        <polylist count="%d">\n' % len(obj.faces) +
-'          <input semantic="VERTEX" source="#%sMesh_morph_%s-vertices" offset="0"/>\n' % (stuff.name, name) +
-#'          <input semantic="NORMAL" source="#%sMesh_morph_%s-normals" offset="1"/>\n' % (stuff.name, name) +
+'          <input semantic="VERTEX" source="#%sMeshMorph_%s-vertices" offset="0"/>\n' % (stuff.name, name) +
+#'          <input semantic="NORMAL" source="#%sMeshMorph_%s-normals" offset="1"/>\n' % (stuff.name, name) +
 '          <vcount>')
 
     for f in obj.faces:
@@ -698,7 +669,9 @@ def writeShapeKey(fp, name, shape, stuff, config):
 
     fp.write('\n' +
 '          </p>\n' +
-'        </polylist>\n')
+'        </polylist>\n' +
+'      </mesh>\n' +
+'    </geometry>\n')
 
     
 #
@@ -797,6 +770,54 @@ def writeNode(fp, pad, stuff, config):
 '%s  </instance_controller>\n' % pad +
 '%s</node>\n' % pad)
     return
+
+#
+#
+#
+
+def rotateLoc(loc, config):    
+    (x,y,z) = loc
+    if config.rotate90X:
+        yy = -z
+        z = y
+        y = yy
+    if config.rotate90Z:
+        yy = x
+        x = -y
+        y = yy        
+    return (x,y,z)        
+
+
+def writeBone(fp, bone, orig, extra, pad, stuff, config):
+    (name, children) = bone
+    head = stuff.boneInfo.heads[name]
+    vec = head - orig
+    printNode(fp, name, vec, extra, pad, config)
+    for child in children:
+        writeBone(fp, child, head, '', pad+'  ', stuff, config)    
+    fp.write('\n%s      </node>' % pad)
+    return
+    
+    
+def printNode(fp, name, vec, extra, pad, config):
+    if name:
+        nameStr = 'sid="%s"' % name
+        idStr = 'id="%s" name="%s"' % (name, name)
+    else:
+        nameStr = ''
+        idStr = ''
+    fp.write('\n'+
+'%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr) +
+'%s        <translate sid="translate"> ' % pad)
+    #(scale, name) = config["scale"]
+    (x,y,z) = rotateLoc(vec, config)
+    fp.write("%.4f %.4f %.4f " % (x,y,z))
+    fp.write('</translate>\n' +
+'%s        <rotate sid="rotateZ">0 0 1 0.0</rotate>\n' % pad +
+'%s        <rotate sid="rotateY">0 1 0 0.0</rotate>\n' % pad +
+'%s        <rotate sid="rotateX">1 0 0 0.0</rotate>\n' % pad +
+'%s        <scale sid="scale">1.0 1.0 1.0</scale>' % pad)
+    
 
 #
 #    loadShapeKeys(tmplName):    

@@ -1134,7 +1134,7 @@ def writeShapeKeys(fp, info, name, proxy):
             if shape is None:
                 log.message("    %s", path)
                 shape = exportutils.custom.readCustomTarget(path)
-                info.loadedShapes[path] = shapeList
+                info.loadedShapes[path] = shape
             writeShape(fp, name, "Sym", shape, -1, 2, proxy, scale)                        
 
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")

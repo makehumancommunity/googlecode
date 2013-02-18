@@ -62,6 +62,7 @@ class MhxConfig(Config):
         self.armatureProps = []
         self.customProps = []
         self.customShapeFiles = []
+        self.customPrefix = "Mhc"
         
 
 class ExporterMHX(Exporter):
