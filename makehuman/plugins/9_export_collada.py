@@ -36,6 +36,8 @@ class DaeConfig(Config):
         self.rigtype =   rigtype
         self.rotate90X = exporter.rotate90X.selected
         self.rotate90Z = exporter.rotate90Z.selected
+        self.expressions     = exporter.expressions.selected
+        self.useCustomShapes = exporter.useCustomShapes.selected
 
 
 class ExporterCollada(Exporter):
@@ -49,6 +51,8 @@ class ExporterCollada(Exporter):
         Exporter.build(self, options, taskview)
         self.rotate90X = options.addWidget(gui.CheckBox("Rotate 90 X", False))
         self.rotate90Z = options.addWidget(gui.CheckBox("Rotate 90 Z", False))
+        self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
+        self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
         self.rigtypes = self.addRigs(options)
 
 

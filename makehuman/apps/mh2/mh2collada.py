@@ -27,9 +27,12 @@ TODO
 
 import os.path
 import time
+import numpy
 import log
 
+import gui3d
 import exportutils
+import posemode
 
 #
 #    Size of end bones = 1 mm
@@ -42,6 +45,10 @@ Delta = [0,0.01,0]
 #
 
 def exportCollada(human, filepath, config):    
+    posemode.exitPoseMode()        
+    posemode.enterPoseMode()
+    gui3d.app.progress(0, text="Exporting %s" % filepath)
+
     time1 = time.clock()
     config.addObjects(human)
     config.setupTexFolder(filepath)        
@@ -55,6 +62,8 @@ def exportCollada(human, filepath, config):
     fp.close()
     time2 = time.clock()
     log.message("Wrote Collada file in %g s: %s" % (time2-time1, filepath))
+    gui3d.app.progress(1)
+    posemode.exitPoseMode()        
     return
 
 #
@@ -72,91 +81,6 @@ def rotateLoc(loc, config):
         x = -y
         y = yy        
     return (x,y,z)        
-
-#
-#    boneOK(flags, bone, parent):
-#
-"""
-Reparents = {
-    'UpArm_L'     : 'Clavicle_L',
-    'UpArm_R'     : 'Clavicle_R',
-    'UpLeg_L'     : 'Hip_L',
-    'UpLeg_R'     : 'Hip_R',
-    
-    'UpArmTwist_L'     : 'Clavicle_L',
-    'UpArmTwist_R'     : 'Clavicle_R',
-    'UpLegTwist_L'     : 'Hip_L',
-    'UpLegTwist_R'     : 'Hip_R',
-}
-
-TwistBones = {
-    'UpArmTwist_L'     : 'UpArm_L',
-    'UpArmTwist_R'     : 'UpArm_R',
-    'LoArmTwist_L'     : 'LoArm_L',
-    'LoArmTwist_R'     : 'LoArm_R',
-    'UpLegTwist_L'     : 'UpLeg_L',
-    'UpLegTwist_R'     : 'UpLeg_R',
-}
-
-SkipBones = [ 'Rib_L', 'Rib_R', 'Stomach_L', 'Stomach_R', 'Scapula_L', 'Scapula_R']
-
-def boneOK(flags, bone, parent, root):
-    if bone == root:
-        return 'None'
-    elif bone in TwistBones.keys():
-        return None
-    elif bone in SkipBones:
-        return None
-    elif bone in Reparents.keys():
-        return Reparents[bone]
-    elif flags & F_DEF:
-        return parent
-    elif bone in ['HipsInv']:
-        return parent
-    return None
-    
-#
-#    readSkinWeights(weights, tmplName):
-#
-#    VertexGroup Breathe
-#    wv 2543 0.148938 ;
-#
-
-def readSkinWeights(weights, tmplName):
-    tmpl = open(tmplName, "rU")
-    if tmpl == None:
-        log.warning("Cannot open template %s" % tmplName)
-        return
-    for line in tmpl:
-        lineSplit= line.split()
-        if len(lineSplit) == 0:
-            pass
-        elif lineSplit[0] == 'VertexGroup':
-            grp = []
-            weights[lineSplit[1]] = grp
-        elif lineSplit[0] == 'wv':
-            grp.append((lineSplit[1],lineSplit[2]))
-    return
-
-def fixTwistWeights(fp, weights):
-    for (twist, bone) in TwistBones.items():
-        wts = weights[twist] + weights[bone]
-        wts.sort()
-        nwts = []
-        n = 1
-        weights[bone] = nwts
-        while n < len(wts):
-            (v0, w0) = wts[n-1]
-            (v1, w1) = wts[n]
-            if v0 == v1:
-                nwts.append((v0, w0+w1))
-                n += 2
-            else:
-                nwts.append((v0, w0))
-                n += 1
-        fp.write("\n%s\n%s\n%s\n" % (twist, weights[twist], weights[bone]))
-    return
-"""                
 
 
 def writeBone(fp, bone, orig, extra, pad, stuff, config):
@@ -192,12 +116,13 @@ def printNode(fp, name, vec, extra, pad, config):
 
 def exportDae(human, name, fp, config):
     rigfile = "data/rigs/%s.rig" % config.rigtype
-
+    rawTargets = exportutils.collect.readTargets(human, config)
     stuffs = exportutils.collect.setupObjects(
         name, 
         human, 
         config=config,
         rigfile=rigfile, 
+        rawTargets = rawTargets,
         helpers=config.helpers, 
         hidden=config.hidden, 
         eyebrows=config.eyebrows, 
@@ -673,7 +598,7 @@ def writeGeometry(fp, stuff, config):
 
 
     for uv in obj.texco:
-        fp.write(" %.4f %.4f" %(uv[0], uv[1]))
+        fp.write(" %.4f %.4f" % tuple(uv))
 
     fp.write('\n' +
 '          </float_array>\n' +
@@ -696,38 +621,85 @@ def writeGeometry(fp, stuff, config):
 '      </mesh>\n' +
 '    </geometry>\n')
 
-    """
-    for target in targets:
-        (name, morphs) = target
-        fp.write('\n' +
-'   <geometry id="%s" name="%s">\n' % (name, name) +
-'     <mesh>\n' +
-'       <source id="%s-positions" name="%s-position">\n' % (name, name) +
-'         <float_array id="%s-positions-array" count="%d">\n' % (name, 3*nVerts) +
-'          ')
-        for (vn,v) in enumerate(verts):
-            try:
-                offs = morphs[vn]
-                loc = vadd(v, offs)
-            except:
-                loc = v
-            (x,y,z) = rotateLoc(v, config)
-            fp.write("%.4f %.4f %.4f " % (x,y,z))
-
-        fp.write('\n'+
-'         </float_array>\n' +
-'         <technique_common>\n' +
-'           <accessor source="#%s-positions-array" count="%d" stride="3">\n' % (stuff.name, nVerts) +
-'             <param name="X" type="float"/>\n' +
-'             <param name="Y" type="float"/>\n' +
-'             <param name="Z" type="float"/>\n' +
-'           </accessor>\n' +
-'         </technique_common>\n' +
-'       </source>\n' +
-'     </mesh>\n' +
-'   </geometry>\n')
-    """
+    for name,shape in stuff.meshInfo.shapes:
+        writeShapeKey(fp, name, shape, stuff, config)
     return
+    
+    
+def writeShapeKey(fp, name, shape, stuff, config):  
+    obj = stuff.meshInfo.object
+    nVerts = len(obj.verts)    
+    
+    # Verts
+    
+    fp.write(
+'    <geometry id="%sMesh_morph_%s" name="%s">\n' % (stuff.name, name, name) +
+'      <mesh>\n' +
+'        <source id="%sMesh_morph_%s-positions">\n' % (stuff.name, name) +
+'          <float_array id="%sMesh_morph_%s-positions-array" count="%d">\n' % (stuff.name, name, 3*nVerts) +
+'           ')
+
+    target = numpy.array(obj.coord)
+    for n,dr in shape.items():
+        target[n] += numpy.array(dr)
+    for co in target:
+        fp.write(" %.4g %.4g %.4g" % tuple(co))
+
+    fp.write('\n' +
+'          </float_array>\n' +
+'          <technique_common>\n' +
+'            <accessor source="#%sMesh_morph_%s-positions-array" count="%d" stride="3">\n' % (stuff.name, name, nVerts) +
+'              <param name="X" type="float"/>\n' +
+'              <param name="Y" type="float"/>\n' +
+'              <param name="Z" type="float"/>\n' +
+'            </accessor>\n' +
+'          </technique_common>\n' +
+'        </source>\n')
+
+    # Normals
+    """
+    fp.write(
+'        <source id="%sMesh_morph_%s-normals">\n' % (stuff.name, name) +
+'          <float_array id="%sMesh_morph_%s-normals-array" count="18">\n' % (stuff.name, name))
+-0.9438583 0 0.3303504 0 0.9438583 0.3303504 0.9438583 0 0.3303504 0 -0.9438583 0.3303504 0 0 -1 0 0 1
+    fp.write(
+'          </float_array>\n' +
+'          <technique_common>\n' +
+'            <accessor source="#%sMesh_morph_%s-normals-array" count="6" stride="3">\n' % (stuff.name, name) +
+'              <param name="X" type="float"/>\n' +
+'              <param name="Y" type="float"/>\n' +
+'              <param name="Z" type="float"/>\n' +
+'            </accessor>\n' +
+'          </technique_common>\n' +
+'        </source>\n')
+    """
+
+    # Polylist
+
+    fp.write(
+'        <vertices id="%sMesh_morph_%s-vertices">\n' % (stuff.name, name) +
+'          <input semantic="POSITION" source="#%sMesh_morph_%s-positions"/>\n' % (stuff.name, name) +
+'        </vertices>\n' +
+'        <polylist count="%d">\n' % len(obj.faces) +
+'          <input semantic="VERTEX" source="#%sMesh_morph_%s-vertices" offset="0"/>\n' % (stuff.name, name) +
+#'          <input semantic="NORMAL" source="#%sMesh_morph_%s-normals" offset="1"/>\n' % (stuff.name, name) +
+'          <vcount>')
+
+    for f in obj.faces:
+        fp.write('%d ' % len(f.verts))
+
+    fp.write('\n' +
+'          </vcount>\n' +
+'          <p>')
+
+    for f in obj.faces:
+        for n,v in enumerate(f.verts):
+            fp.write("%d " % (v.idx))
+
+    fp.write('\n' +
+'          </p>\n' +
+'        </polylist>\n')
+
     
 #
 #   writePolygons(fp, stuff):

@@ -109,6 +109,31 @@ class CBoneInfo:
             (self.root, len(self.heads), len(self.tails), len(self.rolls), 
              self.hier, self.bones, self.weights))
        
+
+#
+#   getTargets(config):
+#
+
+from .shapekeys import readExpressionUnits
+from .custom import listCustomFiles, readCustomTarget
+
+def readTargets(human, config):
+    targets = []
+    if config.expressions:
+        shapeList = readExpressionUnits(human, 0, 1)
+        targets += shapeList
+
+    if config.useCustomShapes:
+        listCustomFiles(config)                            
+
+        log.message("Custom shapes:")    
+        for path,name in config.customShapeFiles:
+            log.message("    %s", path)
+            shape = readCustomTarget(path)
+            targets.append((name,shape))
+
+    return targets            
+
 #
 #   setupObjects
 #

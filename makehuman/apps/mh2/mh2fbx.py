@@ -45,22 +45,8 @@ def exportFbx(human, filepath, config):
     log.message("Write FBX file %s" % filepath)
     print(config)
 
-    rawTargets = []
-    if config.expressions:
-        shapeList = exportutils.shapekeys.readExpressionUnits(human, 0, 1)
-        rawTargets += shapeList
-
-    if config.useCustomShapes:
-        exportutils.custom.listCustomFiles(config)                            
-
-        log.message("Custom shapes:")    
-        for path,name in config.customShapeFiles:
-            log.message("    %s", path)
-            shape = exportutils.custom.readCustomTarget(path)
-            target = (name,shape)
-            rawTargets.append(target)
-
     rigfile = "data/rigs/%s.rig" % config.rigtype
+    rawTargets = exportutils.collect.readTargets(human, config)
     stuffs = exportutils.collect.setupObjects(
         os.path.splitext(filepath)[0], 
         human, 
