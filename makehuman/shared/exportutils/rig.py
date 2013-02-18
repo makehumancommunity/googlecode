@@ -23,8 +23,6 @@ Read rig file
 TODO
 """
 
-#import aljabr
-#from aljabr import *
 import numpy
 from numpy import dot
 import os

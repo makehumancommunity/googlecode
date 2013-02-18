@@ -25,7 +25,6 @@ TODO
 """
 
 import module3d
-import aljabr
 import mh
 import files3d
 import mh2bvh
@@ -431,31 +430,9 @@ def getArmatureFromRigFile(fileName, obj, scale):
     
     if root is None:
         raise NameError("No root bone found in rig file %s" % fileName)
-    # newHier = addInvBones(hier, heads, tails)
-    newHier = hier
     bones = []
-    flatten(newHier, bones)
-    return CBoneInfo(root, heads, tails, rolls, newHier, bones, weights)
-
-
-def addInvBones(hier, heads, tails):
-    newHier = []
-    for (bone, children) in hier:
-        newChildren = addInvBones(children, heads, tails)
-        n = len(children)
-        if n == 1:
-            (child, subChildren) = children[0]
-            offs = vsub(tails[bone], heads[child])
-        if n > 1 or (n == 1 and vlen(offs) > 1e-4):
-            boneInv = bone+"Inv"
-            heads[boneInv] = tails[bone]
-            #tails[boneInv] = heads[bone]
-            tails[boneInv] = aljabr.vadd(tails[bone], Delta)
-            newHier.append( (bone, [(boneInv, newChildren)]) )
-        else:
-            newHier.append( (bone, newChildren) )
-
-    return newHier
+    flatten(hier, bones)
+    return CBoneInfo(root, heads, tails, rolls, hier, bones, weights)
 
 
 def findInHierarchy(bone, hier):

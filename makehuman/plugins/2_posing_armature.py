@@ -27,7 +27,6 @@ import numpy as np
 import gui3d
 import module3d
 import mh
-import aljabr
 import gui
 import log
 
@@ -491,7 +490,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
             self.armatureObject.setRotation(human.getRotation())        
         else:            
             self.armatureObject.update()
-            self.armatureObject.setPosition(aljabr.vadd(human.getPosition(), [0.0, 0.0, 0.0]))             
+            self.armatureObject.setPosition(human.getPosition())             
             self.armatureObject.setRotation(human.getRotation())        
         return self.armatureObject
         
@@ -546,8 +545,7 @@ class CArmatureObject:
             
         for layer in self.layers.values():
             if layer:
-                location = aljabr.vadd(human.getPosition(), [0.0, 0.0, 0.0])
-                ob = layer.finishBuild(location)            
+                ob = layer.finishBuild(human.getPosition())            
                     
                     
     def update(self):

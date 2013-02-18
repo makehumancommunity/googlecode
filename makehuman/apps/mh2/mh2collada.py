@@ -29,8 +29,6 @@ import os.path
 import time
 import log
 
-import aljabr
-import exportutils
 import exportutils
 
 #
@@ -164,7 +162,7 @@ def fixTwistWeights(fp, weights):
 def writeBone(fp, bone, orig, extra, pad, stuff, config):
     (name, children) = bone
     head = stuff.boneInfo.heads[name]
-    vec = aljabr.vsub(head, orig)
+    vec = head - orig
     printNode(fp, name, vec, extra, pad, config)
     for child in children:
         writeBone(fp, child, head, '', pad+'  ', stuff, config)    

@@ -35,7 +35,6 @@ import log
 
 
 from .mhx_globals import *
-from . import mhxbones
 from . import posebone
 
 from . import rig_joints_25

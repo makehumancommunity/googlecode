@@ -24,7 +24,6 @@ TODO
 
 import math
 from math import pi
-import aljabr
 import warp
 import numpy
 import gui3d

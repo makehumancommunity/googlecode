@@ -27,7 +27,6 @@ MINOR_VERSION = 14
 BODY_LANGUAGE = True
 
 import module3d
-import aljabr
 import gui3d
 import os
 import time

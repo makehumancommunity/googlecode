@@ -24,7 +24,6 @@ TODO
 
 import os
 import numpy
-import aljabr
 import module3d
 import exportutils
 import log
