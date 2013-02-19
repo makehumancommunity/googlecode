@@ -110,6 +110,7 @@ def exportDae(human, name, fp, config):
 '  </library_images>\n' +
 '  <library_effects>\n')
 
+    gui3d.app.progress(0.1, text="Exporting effects")
     for stuff in stuffs:
         writeEffects(fp, stuff)
 
@@ -117,6 +118,7 @@ def exportDae(human, name, fp, config):
 '  </library_effects>\n' +
 '  <library_materials>\n')
 
+    gui3d.app.progress(0.2, text="Exporting materials")
     for stuff in stuffs:
         writeMaterials(fp, stuff)
 
@@ -124,6 +126,7 @@ def exportDae(human, name, fp, config):
 '  </library_materials>\n'+
 '  <library_controllers>\n')
 
+    gui3d.app.progress(0.3, text="Exporting controllers")
     for stuff in stuffs:
         writeController(fp, stuff, config)
 
@@ -131,21 +134,31 @@ def exportDae(human, name, fp, config):
 '  </library_controllers>\n'+
 '  <library_geometries>\n')
 
+    dt = 0.4/len(stuffs)
+    t = 0.4
     for stuff in stuffs:
+        gui3d.app.progress(t, text="Exporting %s" % stuff.name)
+        t += dt
         writeGeometry(fp, stuff, config)
 
     fp.write(
 '  </library_geometries>\n\n' +
 '  <library_visual_scenes>\n' +
 '    <visual_scene id="Scene" name="Scene">\n' +
-'      <node id="Scene_root">\n')
+'      <node id="Armature">\n')
+
+    gui3d.app.progress(0.8, text="Exporting bones")
     for root in mainStuff.boneInfo.hier:
         writeBone(fp, root, [0,0,0], 'layer="L1"', '  ', mainStuff, config)
+
+    fp.write(
+'      </node>\n')
+
+    gui3d.app.progress(0.9, text="Exporting nodes")
     for stuff in stuffs:
         writeNode(fp, "        ", stuff, config)
 
     fp.write(
-'      </node>\n' +    
 '    </visual_scene>\n' +
 '  </library_visual_scenes>\n' +
 '  <scene>\n' +
