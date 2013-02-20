@@ -78,9 +78,9 @@ def writeGeometry(fp, stuff):
     fp.write("g %s\n" % stuff.name)    
     for co in obj.coord:
         fp.write("v %.4g %.4g %.4g\n" % tuple(co))
-    for v in obj.verts:
-        fp.write("vn %.4g %.4g %.4g\n" % tuple(v.no))
-    if 0 and obj.has_uv:
+    #for no in obj.vnorm:
+    #    fp.write("vn %.4g %.4g %.4g\n" % tuple(no))
+    if obj.has_uv:
         for uv in obj.texco:
             fp.write("vt %.4g %.4g\n" % tuple(uv))
         for f in obj.faces:
