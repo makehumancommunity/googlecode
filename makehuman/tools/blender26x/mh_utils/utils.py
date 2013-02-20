@@ -29,7 +29,7 @@ import os
 import math
 
 from . import globvars as the
-  
+
 #----------------------------------------------------------
 #   Common panel parts
 #----------------------------------------------------------
@@ -188,10 +188,12 @@ def setupVertexPairs(context, insist):
         (z,y,x,vn) = data
         findMirrorVert(n, nmax, verts, vn, x, y, z, the.Epsilon, notfound)
     
+    """
     remainder = notfound
     notfound = []
     for n,vn,x,y,z in remainder:
-        findMirrorVert(n, nmax, verts, vn, x, y, z, 10*the.Epsilon, notfound)
+        findMirrorVert(n, nmax, verts, vn, x, y, z, 12*the.Epsilon, notfound)
+    """
     
     if notfound:            
         print("Did not find mirror image for vertices:")
@@ -222,7 +224,7 @@ def selectVerts(notfound, ob):
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
-    for vn,x,y,z in notfound:
+    for n,vn,x,y,z in notfound:
         ob.data.vertices[vn].select = True
     return    
     
