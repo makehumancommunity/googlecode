@@ -297,9 +297,9 @@ def povrayExportArray(obj, camera, resolution, path):
 
   # Vertices - Write a POV-Ray array to the output stream
 
-    outputFileDescriptor.write('#declare MakeHuman_VertexArray = array[%s] {\n  ' % len(obj.verts))
-    for v in obj.verts:
-        outputFileDescriptor.write('<%s,%s,%s>' % (v.co[0], v.co[1], v.co[2]))
+    outputFileDescriptor.write('#declare MakeHuman_VertexArray = array[%s] {\n  ' % len(obj.coord))
+    for co in obj.coord:
+        outputFileDescriptor.write('<%s,%s,%s>' % (co[0], co[1], co[2]))
     outputFileDescriptor.write('''
 }
 
@@ -307,9 +307,9 @@ def povrayExportArray(obj, camera, resolution, path):
 
   # Normals - Write a POV-Ray array to the output stream
 
-    outputFileDescriptor.write('#declare MakeHuman_NormalArray = array[%s] {\n  ' % len(obj.verts))
-    for v in obj.verts:
-        outputFileDescriptor.write('<%s,%s,%s>' % (v.no[0], v.no[1], v.no[2]))
+    outputFileDescriptor.write('#declare MakeHuman_NormalArray = array[%s] {\n  ' % len(obj.vnorm))
+    for no in obj.vnorm:
+        outputFileDescriptor.write('<%s,%s,%s>' % (no[0], no[1], no[2]))
     outputFileDescriptor.write('''
 }
 
@@ -319,8 +319,8 @@ def povrayExportArray(obj, camera, resolution, path):
 
   # UV Vectors - Write a POV-Ray array to the output stream
 
-    outputFileDescriptor.write('#declare MakeHuman_UVArray = array[%s] {\n  ' % len(obj.uvValues))
-    for uv in obj.uvValues:
+    outputFileDescriptor.write('#declare MakeHuman_UVArray = array[%s] {\n  ' % len(obj.texco))
+    for uv in obj.texco:
         
         outputFileDescriptor.write('<%s,%s>' % (uv[0], uv[1]))
 
@@ -601,10 +601,10 @@ def povrayExportMesh2(obj, camera, resolution, path, settings):
   # Vertices - Write a POV-Ray array to the output stream
 
     outputFileGeometry.write('  vertex_vectors {\n  ' +
-                             '    %s\n  ' % len(obj.verts)
+                             '    %s\n  ' % len(obj.coord)
                              )
-    for v in obj.verts:
-        outputFileGeometry.write('<%s,%s,%s>' % (v.co[0], v.co[1], v.co[2]))
+    for co in obj.coord:
+        outputFileGeometry.write('<%s,%s,%s>' % (co[0], co[1], co[2]))
     outputFileGeometry.write('''
   }
 
@@ -613,10 +613,10 @@ def povrayExportMesh2(obj, camera, resolution, path, settings):
   # Normals - Write a POV-Ray array to the output stream
 
     outputFileGeometry.write('  normal_vectors {\n  ' +
-                             '    %s\n  ' % len(obj.verts)
+                             '    %s\n  ' % len(obj.vnorm)
                              )
-    for v in obj.verts:
-        outputFileGeometry.write('<%s,%s,%s>' % (v.no[0], v.no[1], v.no[2]))
+    for no in obj.vnorm:
+        outputFileGeometry.write('<%s,%s,%s>' % (no[0], no[1], no[2]))
     outputFileGeometry.write('''
   }
 
@@ -799,13 +799,13 @@ def povraySizeData(obj, outputFileDescriptor):
     minX = 0
     minY = 0
     minZ = 0
-    for v in obj.verts:
-        maxX = max(maxX, v.co[0])
-        maxY = max(maxY, v.co[1])
-        maxZ = max(maxZ, v.co[2])
-        minX = min(minX, v.co[0])
-        minY = min(minY, v.co[1])
-        minZ = min(minZ, v.co[2])
+    for co in obj.coord:
+        maxX = max(maxX, co[0])
+        maxY = max(maxY, co[1])
+        maxZ = max(maxZ, co[2])
+        minX = min(minX, co[0])
+        minY = min(minY, co[1])
+        minZ = min(minZ, co[2])
     outputFileDescriptor.write('// Figure Dimensions. \n')
     outputFileDescriptor.write('#declare MakeHuman_MaxExtent = < %s, %s, %s>;\n' % (maxX, maxY, maxZ))
     outputFileDescriptor.write('#declare MakeHuman_MinExtent = < %s, %s, %s>;\n' % (minX, minY, minZ))
@@ -1085,10 +1085,10 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
 
         # Vertices - Write a POV-Ray array to the output stream
         outputFileDescriptor.write('  vertex_vectors {\n  ')
-        outputFileDescriptor.write('    %s\n  ' % len(obj.verts))
+        outputFileDescriptor.write('    %s\n  ' % len(obj.coord))
 
-        for v in obj.verts:
-            outputFileDescriptor.write('<%s,%s,%s>' % (-v.co[0],v.co[1],v.co[2]))
+        for co in obj.coord:
+            outputFileDescriptor.write('<%s,%s,%s>' % (-co[0],co[1],co[2]))
         outputFileDescriptor.write('''
   }
 
@@ -1096,9 +1096,9 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
 
         # Normals - Write a POV-Ray array to the output stream
         outputFileDescriptor.write('  normal_vectors {\n  ')
-        outputFileDescriptor.write('    %s\n  ' % len(obj.verts))
-        for v in obj.verts:
-            outputFileDescriptor.write('<%s,%s,%s>' % (-v.no[0],v.no[1],v.no[2]))
+        outputFileDescriptor.write('    %s\n  ' % len(obj.vnorm))
+        for no in obj.vnorm:
+            outputFileDescriptor.write('<%s,%s,%s>' % (-no[0],no[1],no[2]))
 
         outputFileDescriptor.write('''
   }

@@ -178,7 +178,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     if hidden:
         deleteVerts = None
     else:
-        deleteVerts = numpy.zeros(len(obj.verts), bool)
+        deleteVerts = numpy.zeros(len(obj.coord), bool)
     _,deleteVerts = setupProxies('Clothes', None, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
     _,deleteVerts = setupProxies('Hair', None, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
     foundProxy,deleteVerts = setupProxies('Proxy', name, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
@@ -487,8 +487,8 @@ def setStuffSkinWeights(stuff):
     obj = stuff.meshInfo.object
     
     stuff.vertexWeights = {}
-    for v in obj.verts:
-        stuff.vertexWeights[v.idx] = []
+    for vn in range(len(obj.coord)):
+        stuff.vertexWeights[vn] = []
 
     stuff.skinWeights = []
     wn = 0    

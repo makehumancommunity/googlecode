@@ -77,7 +77,7 @@ def addMesh(name, stuff, rig, isStuff=True):
     if isStuff:
         me.fromStuff(stuff)
     else:
-        me.fromMesh(stuff)
+        me.fromObject(stuff)
     ob = types.Object(name+"Mesh", me, stuff)    
     data.objects.append(ob)
     context.scene.objects.append(ob)

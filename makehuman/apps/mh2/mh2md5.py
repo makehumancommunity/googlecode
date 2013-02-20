@@ -357,7 +357,7 @@ def exportMd5(human, filepath, config):
             texfolder,texname = stuff.texture
             f.write('\tshader "%s"\n' % (texname)) # TODO: create the shader file
 
-        f.write('\n\tnumverts %d\n' % (len(obj.verts)))
+        f.write('\n\tnumverts %d\n' % (len(obj.coord)))
         for vert in obj.verts:
             if obj.has_uv:
                 face = vert.sharedFaces[0]
@@ -380,11 +380,11 @@ def exportMd5(human, filepath, config):
             f.write('\ttri %d %d %d %d\n' % (face.idx*2+1, face.verts[0].idx, face.verts[3].idx, face.verts[2].idx))
 
         f.write('\n\tnumweights %d\n' % (len(obj.verts)))
-        for vert in obj.verts:
+        for idx,co in enumerate(obj.coord):
             # TODO: We attach all vertices to the root with weight 1.0, this should become
             # real weights to the correct bones
             # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
-            f.write('\tweight %d %d %f ( %f %f %f )\n' % (vert.idx, 0, 1.0, vert.co[0], -vert.co[2], vert.co[1]))
+            f.write('\tweight %d %d %f ( %f %f %f )\n' % (idx, 0, 1.0, co[0], -co[2], co[1]))
         f.write('}\n\n')
     f.close()
     

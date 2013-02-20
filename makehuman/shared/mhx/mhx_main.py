@@ -320,8 +320,8 @@ def copyFile25(tmplName, fp, proxy, info):
                 oy = info.origin[1]
                 oz = info.origin[2]
                 scale = info.config.scale
-                for v in info.mesh.verts:
-                    fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(v.co[0]-ox), scale*(-v.co[2]+oz), scale*(v.co[1]-oy)))
+                for co in info.mesh.coord:
+                    fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(co[0]-ox), scale*(-co[2]+oz), scale*(co[1]-oy)))
 
             elif key == 'ProxyFaces':
                 for (f,g) in proxy.faces:
@@ -504,7 +504,7 @@ def writeFaceNumbers(fp, info):
             deleteGroups = []
         else:
             deleteGroups = []
-            deleteVerts = numpy.zeros(len(info.mesh.verts), bool)
+            deleteVerts = numpy.zeros(len(info.mesh.coord), bool)
             for proxy in info.proxies.values():
                 deleteGroups += proxy.deleteGroups
                 deleteVerts = deleteVerts | proxy.deleteVerts

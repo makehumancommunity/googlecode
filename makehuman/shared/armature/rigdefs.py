@@ -130,9 +130,9 @@ class CArmature:
         for word in words:
             string += ("%s " % word)
         log.debug("%s", string)
-        verts = self.human.meshData.verts
+        coord = self.human.meshData.coord
         for vn in [3825]:
-            x = verts[vn].co
+            x = coord[vn]
             y = self.restCoords[vn]
             log.debug("   %d (%.4f %.4f %.4f) (%.4f %.4f %.4f)", vn, x[0], x[1], x[2], y[0], y[1], y[2])
 
@@ -254,7 +254,7 @@ class CArmature:
             
         if human.hairObj and human.hairProxy:            
             mesh = human.hairObj.getSeedMesh()
-            human.hairProxy.update(mesh, human.meshData)
+            human.hairProxy.update(mesh)
             mesh.update()
             if human.hairObj.isSubdivided():
                 human.hairObj.getSubdivisionMesh()
@@ -262,7 +262,7 @@ class CArmature:
         for (name,clo) in human.clothesObjs.items():            
             if clo:
                 mesh = clo.getSeedMesh()
-                human.clothesProxies[name].update(mesh, human.meshData)
+                human.clothesProxies[name].update(mesh)
                 mesh.update()
                 if clo.isSubdivided():
                     clo.getSubdivisionMesh()
@@ -270,7 +270,7 @@ class CArmature:
         
     def updateObj(self):
         obj = self.human.meshData
-        nVerts = len(obj.verts)
+        nVerts = len(obj.coord)
         coords = numpy.zeros((nVerts,4), float)
         for bname,data in self.boneWeights.items():
             bone = self.bones[bname]

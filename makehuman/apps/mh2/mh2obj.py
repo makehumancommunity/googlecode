@@ -72,7 +72,7 @@ def exportProxyObj(human, filepath, config):
         
 def writeGeometry(fp, stuff):
     obj = stuff.meshInfo.object
-    nVerts = len(obj.verts)
+    nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
     fp.write("usemtl %s\n" % stuff.name)
     fp.write("g %s\n" % stuff.name)    

@@ -39,8 +39,8 @@ def setupRigJoint (words, obj, verts, locations):
     if typ == 'joint':
         locations[key] = mh2proxy.calcJointPos(obj, words[2])
     elif typ == 'vertex':
-        v = int(words[2])
-        locations[key] = verts[v].co
+        vn = int(words[2])
+        locations[key] = obj.coord[vn]
     elif typ == 'position':
         x = locations[int(words[2])]
         y = locations[int(words[3])]
@@ -64,7 +64,7 @@ def setupRigJoint (words, obj, verts, locations):
     	y = float(words[4])
     	z = float(words[5])
         try:
-            loc = verts[v].co
+            loc = obj.coord[v]
         except:
             loc = verts[v]         
         locations[key] = loc + numpy.array((x,y,z))
@@ -82,7 +82,7 @@ def setupRigJoint (words, obj, verts, locations):
         raise NameError("Unknown %s" % typ)
 
 #
-#   readRigFile(filename, obj, verts=obj.verts):
+#   readRigFile(filename, obj, verts=None):
 #
 
 def readRigFile(filename, obj, verts=None):

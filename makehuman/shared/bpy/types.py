@@ -235,24 +235,26 @@ class Mesh(Rna):
         self.materials = []
         self.shape_keys = []
         
-    def fromMeshData(self, mesh):        
-        self.vertices = [MeshVertex(v.idx, v.co) for v in mesh.verts]
-        self.faces = [[v.idx for v in f.verts] for f in mesh.faces]
+    def fromObject(self, obj):        
+        nVerts = len(obj.coord)
+        nFaces = len(obj.fvert)
+        self.vertices = [MeshVertex(idx, obj) for idx in range(nVerts)]
+        self.polygons = [MeshPolygon(idx, obj) for idx in range(nFaces)]
 
     def fromStuff(self, stuff): 
         obj = stuff.meshInfo.object
         stuff.bones = []
         exportutils.collect.setStuffSkinWeights(stuff)
-        nVerts = len(obj.verts)
+        nVerts = len(obj.coord)
         nUvVerts = len(obj.fuvs)
         nNormals = nVerts
-        nFaces = len(obj.faces)
+        nFaces = len(obj.fvert)
         nWeights = len(stuff.skinWeights)
         nBones = len(stuff.bones)
         nShapes = len(stuff.meshInfo.shapes)
 
-        self.vertices = [MeshVertex(v) for v in obj.verts]
-        self.polygons = [MeshPolygon(f, obj.verts) for f in obj.faces]
+        self.vertices = [MeshVertex(idx, obj) for idx in range(nVerts)]
+        self.polygons = [MeshPolygon(idx, obj) for idx in range(nFaces)]
 
         if obj.has_uv:
             self.uv_layers.append(UvLayer(obj))
@@ -273,10 +275,10 @@ class Mesh(Rna):
             
 
 class MeshVertex:
-    def __init__(self, v):
-        self.index = v.idx
-        self.co = v.co
-        self.normal = []
+    def __init__(self, idx, obj):
+        self.index = idx
+        self.co = obj.coord[idx]
+        self.normal = obj.vnorm[idx]
         self.groups = []
         
     def addToGroup(self, index, weight):
@@ -297,11 +299,11 @@ class MeshGroup:
 
         
 class MeshPolygon:
-    def __init__(self, face, meverts):
-        self.index = face.idx
-        self.vertices = [v.idx for v in face.verts]
+    def __init__(self, idx, obj):
+        self.index = idx
+        self.vertices = obj.fvert[idx]
         self.material_index = 0
-        self.normal = face.no
+        self.normal = obj.fnorm[idx]
         return
         
         

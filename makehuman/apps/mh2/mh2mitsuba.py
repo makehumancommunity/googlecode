@@ -186,12 +186,12 @@ def exportPly(obj, filename, exportGroups = True, groupFilter=None):
     uvs =[u for u in obj.uvValues]
     log.debug(uvs[24])
     
-    for v in obj.verts:
+    for vn in range(len(obj.coord)):
         # vertex
-        f.write('%f %f %f' % tuple(v.co))
+        f.write('%f %f %f' % tuple(obj.coord[vn]))
         
         # normals
-        f.write(' %f %f %f' % tuple(v.no))
+        f.write(' %f %f %f' % tuple(obj.vnorm[vn]))
 
         f.write('\n')
     
@@ -229,15 +229,15 @@ def exportObj(obj, filename):
     f.write('# MakeHuman exported OBJ for Mitsuba\n')
     f.write('# www.makehuman.org\n')
     # 
-    for v in obj.verts:
-        f.write('v %f %f %f\n' % tuple(v.co))
+    for co in obj.coord:
+        f.write('v %f %f %f\n' % tuple(co))
 
     if not (obj.uvValues==None):
         for uv in obj.uvValues:
             f.write('vt %f %f\n' % tuple(uv))
 
-    for v in obj.verts:
-        f.write('vn %f %f %f\n' % tuple(v.no))
+    for no in obj.vnorm:
+        f.write('vn %f %f %f\n' % tuple(obj.))
 
     #
     groupFilter = None
@@ -515,8 +515,8 @@ def exportObj_TL(obj, filename):
 
     for stuff in stuffs:
     	obj = stuff.meshInfo.object
-        for v in obj.verts:
-            f.write("v %.4f %.4f %.4f\n" % tuple(v.co))
+        for co in obj.coord:
+            f.write("v %.4f %.4f %.4f\n" % tuple(co))
 
     for stuff in stuffs:
     	obj = stuff.meshInfo.object
@@ -533,7 +533,7 @@ def exportObj_TL(obj, filename):
             	uv = fc.uv[n]
                 f.write("%d/%d " % (v.idx+nVerts, uv+nTexCo))
             f.write('\n')
-        nVerts += len(obj.verts)
+        nVerts += len(obj.coord)
         nTexCo += len(obj.texco)
     
     f.close()

@@ -303,7 +303,7 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
     locations = {}
     tails = {}
     proxy = CProxy(pfile.file, pfile.type, pfile.layer)
-    proxy.deleteVerts = numpy.zeros(len(obj.verts), bool)
+    proxy.deleteVerts = numpy.zeros(len(obj.coord), bool)
     proxy.name = "MyProxy"
 
     useProjection = True
@@ -368,13 +368,13 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
                 proxy.cage = True
             elif key == 'x_scale':
                 proxy.xScaleData = getScaleData(words)
-                scales[0] = getScale(proxy.xScaleData, obj.verts, 0)
+                scales[0] = getScale(proxy.xScaleData, obj, 0)
             elif key == 'y_scale':
                 proxy.yScaleData = getScaleData(words)
-                scales[1] = getScale(proxy.yScaleData, obj.verts, 1)
+                scales[1] = getScale(proxy.yScaleData, obj, 1)
             elif key == 'z_scale':
                 proxy.zScaleData = getScaleData(words)
-                scales[2] = getScale(proxy.zScaleData, obj.verts, 2)
+                scales[2] = getScale(proxy.zScaleData, obj, 2)
             elif key == 'use_projection':
                 useProjection = int(words[2])
             elif key == 'ignoreOffset':
@@ -525,11 +525,17 @@ def selectConnected(proxy, obj, vn):
     if not proxy.neighbors:
         for n in range(nVerts):    
             proxy.neighbors[n] = []
-        for f in obj.faces:
-            for v1 in f.verts:            
-                for v2 in f.verts:
-                    if v1 != v2:
-                        proxy.neighbors[v1.idx].append(v2.idx)
+        for fv in obj.fvert:
+            for vn1 in fv:
+                for vn2 in fv:
+                    if vn1 != vn2:
+                        proxy.neighbors[vn1].append(vn2)
+                    
+        #for f in obj.faces:
+        #    for v1 in f.verts:            
+        #        for v2 in f.verts:
+        #            if v1 != v2:
+        #                proxy.neighbors[v1.idx].append(v2.idx)
     walkTree(proxy, vn)
     return
     
@@ -585,11 +591,11 @@ def getScaleData(words):
     return (v1, v2, den)
 
     
-def getScale(data, verts, index):
+def getScale(data, obj, index):
     if not data:
         return 1.0
-    (v1, v2, den) = data
-    num = abs(verts[v1].co[index] - verts[v2].co[index])
+    (vn1, vn2, den) = data
+    num = abs(obj.coord[vn1][index] - obj.coord[vn2][index])
     return num/den
 
 

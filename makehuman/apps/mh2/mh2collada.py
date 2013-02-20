@@ -358,10 +358,10 @@ def writeMaterials(fp, stuff):
 def writeController(fp, stuff, config):
     obj = stuff.meshInfo.object
     exportutils.collect.setStuffSkinWeights(stuff)
-    nVerts = len(obj.verts)
+    nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
     nNormals = nVerts
-    nFaces = len(obj.faces)
+    nFaces = len(obj.fvert)
     nWeights = len(stuff.skinWeights)
     nBones = len(stuff.boneInfo.bones)
     nShapes = len(stuff.meshInfo.shapes)
@@ -514,7 +514,7 @@ def writeController(fp, stuff, config):
         
 def writeGeometry(fp, stuff, config):
     obj = stuff.meshInfo.object
-    nVerts = len(obj.verts)
+    nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
     nNormals = nVerts
     nWeights = len(stuff.skinWeights)
@@ -529,8 +529,8 @@ def writeGeometry(fp, stuff, config):
 '          ')
 
 
-    for v in obj.verts:
-        (x,y,z) = rotateLoc(v.co, config)
+    for co in obj.coord:
+        (x,y,z) = rotateLoc(co, config)
         fp.write("%.4f %.4f %.4f " % (x,y,z))
 
     fp.write('\n' +
@@ -551,8 +551,8 @@ def writeGeometry(fp, stuff, config):
 '          <float_array count="%d" id="%s-Normals-array">\n' % (3*nNormals,stuff.name) +
 '          ')
 
-    for v in obj.verts:
-        (x,y,z) = rotateLoc(v.no, config)
+    for no in obj.vnorm:
+        (x,y,z) = rotateLoc(no, config)
         fp.write("%.4f %.4f %.4f " % (x,y,z))
 
     fp.write('\n' +
@@ -611,7 +611,7 @@ def writeGeometry(fp, stuff, config):
     
 def writeShapeKey(fp, name, shape, stuff, config):  
     obj = stuff.meshInfo.object
-    nVerts = len(obj.verts)    
+    nVerts = len(obj.coord)    
     
     # Verts
     
