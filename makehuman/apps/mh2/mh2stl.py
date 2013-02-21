@@ -74,22 +74,20 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
     for stuff in stuffs:
         obj = stuff.meshInfo.object
         
-        for face in obj.faces:
-            #if not exportJoints and 'joint' in face.group.name:
-            #    continue
-            f.write('facet normal %f %f %f\n' % (face.no[0], face.no[1], face.no[2]))
+        for fn,fverts in enumerate(obj.fvert):
+            f.write('facet normal %f %f %f\n' % tuple(obj.fnorm[fn]))
             f.write('\touter loop\n')
-            f.write('\t\tvertex %f %f %f\n' % (face.verts[0].co[0], face.verts[0].co[1], face.verts[0].co[2]))
-            f.write('\t\tvertex %f %f %f\n' % (face.verts[1].co[0], face.verts[1].co[1], face.verts[1].co[2]))
-            f.write('\t\tvertex %f %f %f\n' % (face.verts[2].co[0], face.verts[2].co[1], face.verts[2].co[2]))
+            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fverts[0]]))
+            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fverts[1]]))
+            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fverts[2]]))
             f.write('\tendloop\n')
             f.write('\tendfacet\n')
             
-            f.write('facet normal %f %f %f\n' % (face.no[0], face.no[1], face.no[2]))
+            f.write('facet normal %f %f %f\n' % tuple(obj.fnorm[fn]))
             f.write('\touter loop\n')
-            f.write('\t\tvertex %f %f %f\n' % (face.verts[2].co[0], face.verts[2].co[1], face.verts[2].co[2]))
-            f.write('\t\tvertex %f %f %f\n' % (face.verts[3].co[0], face.verts[3].co[1], face.verts[3].co[2]))
-            f.write('\t\tvertex %f %f %f\n' % (face.verts[0].co[0], face.verts[0].co[1], face.verts[0].co[2]))
+            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fverts[2]]))
+            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fverts[3]]))
+            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fverts[0]]))
             f.write('\tendloop\n')
             f.write('\tendfacet\n')
         
@@ -129,20 +127,20 @@ def exportStlBinary(human, filename, config, exportJoints = False):
     f.write('\x00' * 80)
     f.write(struct.pack('<I', 0))
     count = 0
-    for face in obj.faces:
-        if not exportJoints and 'joint' in face.group.name:
-            continue
-        f.write(struct.pack('<fff', face.no[0], face.no[1], face.no[2]))
-        f.write(struct.pack('<fff', face.verts[0].co[0], face.verts[0].co[1], face.verts[0].co[2]))
-        f.write(struct.pack('<fff', face.verts[1].co[0], face.verts[1].co[1], face.verts[1].co[2]))
-        f.write(struct.pack('<fff', face.verts[2].co[0], face.verts[2].co[1], face.verts[2].co[2]))
+    for fn,fverts in enumerate(obj.fvert):
+        fno = obj.fnorm[fn]
+
+        f.write(struct.pack('<fff', fno[0], fno[1], fno[2]))
+        f.write(struct.pack('<fff', fverts[0][0], fverts[0][1], fverts[0][2]))
+        f.write(struct.pack('<fff', fverts[1][0], fverts[1][1], fverts[1][2]))
+        f.write(struct.pack('<fff', fverts[2][0], fverts[2][1], fverts[2][2]))
         f.write(struct.pack('<H', 0))
         count += 1
         
-        f.write(struct.pack('<fff', face.no[0], face.no[1], face.no[2]))
-        f.write(struct.pack('<fff', face.verts[2].co[0], face.verts[2].co[1], face.verts[2].co[2]))
-        f.write(struct.pack('<fff', face.verts[3].co[0], face.verts[3].co[1], face.verts[3].co[2]))
-        f.write(struct.pack('<fff', face.verts[0].co[0], face.verts[0].co[1], face.verts[0].co[2]))
+        f.write(struct.pack('<fff', fno[0], fno[1], fno[2]))
+        f.write(struct.pack('<fff', fverts[2][0], fverts[2][1], fverts[2][2]))
+        f.write(struct.pack('<fff', fverts[3][0], fverts[3][1], fverts[3][2]))
+        f.write(struct.pack('<fff', fverts[0][0], fverts[0][1], fverts[0][2]))
         f.write(struct.pack('<H', 0))
         count += 1
     f.seek(80)

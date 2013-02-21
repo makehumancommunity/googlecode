@@ -85,17 +85,17 @@ def exportProxyObj(human, filepath, config):
         fp.write("g %s\n" % stuff.name)    
         obj = stuff.meshInfo.object
         if obj.has_uv:
-            for f in obj.faces:
+            for fn,fverts in enumerate(obj.fvert):
                 fp.write('f ')
-                for n,v in enumerate(f.verts):
-                    uv = f.uv[n]
-                    fp.write("%d/%d " % (v.idx+nVerts, uv+nTexVerts))
+                fuv = obj.fuvs[fn]                
+                for n,vn in enumerate(fverts):
+                    fp.write("%d/%d " % (vn+nVerts, fuv[n]+nTexVerts))
                 fp.write('\n')
         else:            
-            for f in obj.faces:
+            for fverts in obj.fvert:
                 fp.write('f ')
-                for v in f.verts:
-                    fp.write("%d " % (v.idx+nVerts))
+                for vn in fverts:
+                    fp.write("%d " % (vn+nVerts))
                 fp.write('\n')
         
         nVerts += len(obj.coord)

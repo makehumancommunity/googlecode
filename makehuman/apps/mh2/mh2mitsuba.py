@@ -237,7 +237,7 @@ def exportObj(obj, filename):
             f.write('vt %f %f\n' % tuple(uv))
 
     for no in obj.vnorm:
-        f.write('vn %f %f %f\n' % tuple(obj.))
+        f.write('vn %f %f %f\n' % tuple(no))
 
     #
     groupFilter = None

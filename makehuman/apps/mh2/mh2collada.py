@@ -664,21 +664,21 @@ def writeShapeKey(fp, name, shape, stuff, config):
 '        <vertices id="%sMeshMorph_%s-vertices">\n' % (stuff.name, name) +
 '          <input semantic="POSITION" source="#%sMeshMorph_%s-positions"/>\n' % (stuff.name, name) +
 '        </vertices>\n' +
-'        <polylist count="%d">\n' % len(obj.faces) +
+'        <polylist count="%d">\n' % len(obj.fvert) +
 '          <input semantic="VERTEX" source="#%sMeshMorph_%s-vertices" offset="0"/>\n' % (stuff.name, name) +
 #'          <input semantic="NORMAL" source="#%sMeshMorph_%s-normals" offset="1"/>\n' % (stuff.name, name) +
 '          <vcount>')
 
-    for f in obj.faces:
-        fp.write('%d ' % len(f.verts))
+    for fverts in obj.fvert:
+        fp.write('%d ' % len(fverts))
 
     fp.write('\n' +
 '          </vcount>\n' +
 '          <p>')
 
-    for f in obj.faces:
-        for n,v in enumerate(f.verts):
-            fp.write("%d " % (v.idx))
+    for fverts in obj.fvert:
+        for vn in fverts:
+            fp.write("%d " % (vn))
 
     fp.write('\n' +
 '          </p>\n' +
@@ -695,16 +695,16 @@ def writeShapeKey(fp, name, shape, stuff, config):
 def writePolygons(fp, stuff):
     obj = stuff.meshInfo.object
     fp.write(        
-'        <polygons count="%d">\n' % len(obj.faces) +
+'        <polygons count="%d">\n' % len(obj.fvert) +
 '          <input offset="0" semantic="VERTEX" source="#%s-Vertex"/>\n' % stuff.name +
 '          <input offset="1" semantic="NORMAL" source="#%s-Normals"/>\n' % stuff.name +
 '          <input offset="2" semantic="TEXCOORD" source="#%s-UV"/>\n' % stuff.name)
 
-    for f in obj.faces:
+    for fn,fverts in enumerate(obj.fvert):
+        fuv = obj.fuvs[fn]
         fp.write('          <p>')
-        for n,v in enumerate(f.verts):
-            uv = f.uv[n]
-            fp.write("%d %d %d " % (v.idx, v.idx, uv))
+        for n,vn in enumerate(fverts):
+            fp.write("%d %d %d " % (vn, vn, fuv[n]))
         fp.write('</p>\n')
     
     fp.write('\n' +
@@ -714,23 +714,23 @@ def writePolygons(fp, stuff):
 def writePolylist(fp, stuff):
     obj = stuff.meshInfo.object
     fp.write(        
-'        <polylist count="%d">\n' % len(obj.faces) +
+'        <polylist count="%d">\n' % len(obj.fvert) +
 '          <input offset="0" semantic="VERTEX" source="#%s-Vertex"/>\n' % stuff.name +
 '          <input offset="1" semantic="NORMAL" source="#%s-Normals"/>\n' % stuff.name +
 '          <input offset="2" semantic="TEXCOORD" source="#%s-UV"/>\n' % stuff.name +
 '          <vcount>')
 
-    for f in obj.faces:
-        fp.write('%d ' % len(f.verts))
+    for fverts in obj.fvert:
+        fp.write('%d ' % len(fverts))
 
     fp.write('\n' +
 '          </vcount>\n'
 '          <p>')
 
-    for f in obj.faces:
-        for n,v in enumerate(f.verts):
-            uv = f.uv[n]
-            fp.write("%d %d %d " % (v.idx, v.idx, uv))
+    for fn,fverts in enumerate(obj.fvert):
+        fuv = obj.fuvs[fn]
+        for n,vn in enumerate(fverts):
+            fp.write("%d %d %d " % (vn, vn, fuv[n]))
 
     fp.write(
 '          </p>\n' +
@@ -743,11 +743,11 @@ def writePolylist(fp, stuff):
 
 def checkFaces(stuff, nVerts, nUvVerts):
     obj = stuff.meshInfo.object
-    for f in obj.faces:
-        for n,v in enumerate(f.verts):
-            uv = f.uv[n]
-            if v.idx > nVerts:
-                raise NameError("v %d > %d" % (v.idx, nVerts))
+    for fn,fverts in enumerate(obj.fvert):
+        for n,vn in enumerate(fverts):
+            uv = obj.fuvs[fn][n]
+            if vn > nVerts:
+                raise NameError("v %d > %d" % (vn, nVerts))
             if uv > nUvVerts:
                 raise NameError("uv %d > %d" % (uv, nUvVerts))            
     return 
