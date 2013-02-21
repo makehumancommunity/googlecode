@@ -301,7 +301,7 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes):
     killUvs = numpy.zeros(len(obj.texco), bool)
     killFaces = numpy.zeros(len(obj.faces), bool)
         
-    if deleteVerts:
+    if deleteVerts is not None:
         killVerts = deleteVerts
         for f in obj.faces:
             for v in f.verts:
