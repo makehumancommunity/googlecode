@@ -49,53 +49,69 @@ def exportProxyObj(human, filepath, config):
     
     fp = open(filepath, 'w')
     fp.write(
-"# MakeHuman exported OBJ\n" +
-"# www.makehuman.org\n\n" +
-"mtllib %s.mtl\n" % os.path.basename(filepath))
+        "# MakeHuman exported OBJ\n" +
+        "# www.makehuman.org\n\n" +
+        "mtllib %s.mtl\n" % os.path.basename(filepath))
+
+    # Vertices
+    
     for stuff in stuffs:
-        writeGeometry(fp, stuff)
+        obj = stuff.meshInfo.object
+        for co in obj.coord:
+            fp.write("v %.4g %.4g %.4g\n" % tuple(co))
+
+    # Vertex normals
+    
+    for stuff in stuffs:
+        obj = stuff.meshInfo.object
+        #for no in obj.vnorm:
+        #    fp.write("vn %.4g %.4g %.4g\n" % tuple(no))
+
+
+    # UV vertices
+    
+    for stuff in stuffs:
+        obj = stuff.meshInfo.object
+        if obj.has_uv:
+            for uv in obj.texco:
+                fp.write("vt %.4g %.4g\n" % tuple(uv))
+
+    # Faces
+    
+    nVerts = 1
+    nTexVerts = 1
+    for stuff in stuffs:
+        fp.write("usemtl %s\n" % stuff.name)
+        fp.write("g %s\n" % stuff.name)    
+        obj = stuff.meshInfo.object
+        if obj.has_uv:
+            for f in obj.faces:
+                fp.write('f ')
+                for n,v in enumerate(f.verts):
+                    uv = f.uv[n]
+                    fp.write("%d/%d " % (v.idx+nVerts, uv+nTexVerts))
+                fp.write('\n')
+        else:            
+            for f in obj.faces:
+                fp.write('f ')
+                for v in f.verts:
+                    fp.write("%d " % (v.idx+nVerts))
+                fp.write('\n')
+        
+        nVerts += len(obj.coord)
+        nTexVerts += len(obj.texco)
+        
     fp.close()
     
     mtlfile = "%s.mtl" % filepath
     fp = open(mtlfile, 'w')
     fp.write(
-'# MakeHuman exported MTL\n' +
-'# www.makehuman.org\n\n')
+        '# MakeHuman exported MTL\n' +
+        '# www.makehuman.org\n\n')
     for stuff in stuffs:
         writeMaterial(fp, stuff, human, config)
     fp.close()
     return
-
-#
-#    writeGeometry(fp, stuff):
-#
-        
-def writeGeometry(fp, stuff):
-    obj = stuff.meshInfo.object
-    nVerts = len(obj.coord)
-    nUvVerts = len(obj.texco)
-    fp.write("usemtl %s\n" % stuff.name)
-    fp.write("g %s\n" % stuff.name)    
-    for co in obj.coord:
-        fp.write("v %.4g %.4g %.4g\n" % tuple(co))
-    #for no in obj.vnorm:
-    #    fp.write("vn %.4g %.4g %.4g\n" % tuple(no))
-    if obj.has_uv:
-        for uv in obj.texco:
-            fp.write("vt %.4g %.4g\n" % tuple(uv))
-        for f in obj.faces:
-            fp.write('f ')
-            for n,v in enumerate(f.verts):
-                uv = f.uv[n]
-                fp.write("%d/%d " % (v.idx-nVerts, uv-nUvVerts))
-            fp.write('\n')
-    else:            
-        for f in obj.faces:
-            fp.write('f ')
-            for v in f.verts:
-                fp.write("%d " % (v.idx-nVerts))
-            fp.write('\n')
-    return        
 
 #
 #   writeMaterial(fp, stuff, human, config):
@@ -122,9 +138,9 @@ def writeMaterial(fp, stuff, human, config):
                 alpha = value
                 
     fp.write(
-    "Kd %.4g %.4g %.4g\n" % (diffScale*diffuse[0], diffScale*diffuse[1], diffScale*diffuse[2]) +
-    "Ks %.4g %.4g %.4g\n" % (specScale*spec[0], specScale*spec[1], specScale*spec[2]) +
-    "d %.4g\n" % alpha
+        "Kd %.4g %.4g %.4g\n" % (diffScale*diffuse[0], diffScale*diffuse[1], diffScale*diffuse[2]) +
+        "Ks %.4g %.4g %.4g\n" % (specScale*spec[0], specScale*spec[1], specScale*spec[2]) +
+        "d %.4g\n" % alpha
     )
     
     if stuff.proxy:
