@@ -43,19 +43,18 @@ from mh_utils import proxy as proxyfile
 #   
 #----------------------------------------------------------
 
+Epsilon = 1e-4
+
 def round(x):
-    if abs(x) < 1e-3:
+    if abs(x) < Epsilon:
         return "0"
-    string = "%.3g" % x
+    string = "%.4g" % x
     if len(string) > 2:
         if string[:2] == "0.":
-            return string[1:5]
+            return string[1:6]
         elif string[:3] == "-0.":
-            return "-" + string[2:6]
+            return "-" + string[2:7]
     return string
-
-        
-Epsilon = 1e-3
 
 #----------------------------------------------------------
 #   
