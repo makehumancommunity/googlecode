@@ -58,7 +58,8 @@ class Config:
         self.useTexFolder       = exporter.useTexFolder.selected
         self.eyebrows           = exporter.eyebrows.selected
         self.lashes             = exporter.lashes.selected
-        self.helpers            = exporter.helpers.selected
+        #self.helpers            = exporter.helpers.selected
+        self.helpers            = False
         self.hidden             = exporter.hidden.selected
         self.scale,self.unit    = exporter.taskview.getScale()
         self.subdivide          = exporter.smooth.selected

@@ -55,7 +55,7 @@ class ExportTaskView(gui3d.TaskView):
         self.mapsBox = self.addLeftWidget(gui.GroupBox('Maps'))
 
         # Scales
-        self.scaleBox = self.addLeftWidget(gui.GroupBox('Scale'))
+        self.scaleBox = self.addLeftWidget(gui.GroupBox('Units'))
         self.scaleButtons = self.addScales(self.scaleBox)
 
         self.boxes = {
