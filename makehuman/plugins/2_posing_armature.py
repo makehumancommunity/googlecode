@@ -247,7 +247,6 @@ class PoseArmatureTaskView(gui3d.TaskView):
         def onClicked(event):
             self.zeroSliders()
             human = gui3d.app.selectedHuman
-            log.debug("PoseArmature: Reload: %s", human.meshData.verts[0])
             amt = self.getArmature()
             self.armatureObject = None
             if amt:
@@ -257,9 +256,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
                 self.armature.rebuild()
             else:
                 self.armature = armature.rigdefs.createRig(human, self.armature.rigtype)
-            log.debug("   %s", human.meshData.verts[0])
             self.updateAll()
-            log.debug("   %s", human.meshData.verts[1])
 
         @self.rotSlider.mhEvent
         def onChange(value):

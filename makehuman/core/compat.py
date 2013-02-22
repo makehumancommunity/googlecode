@@ -101,13 +101,13 @@ class VertProxy(object):
         self.idx = idx
         self.object = object
 
-    @property
-    def co(self):
-        return tuple(self.object.coord[self.idx])
+    #@property
+    #def co(self):
+    #    return tuple(self.object.coord[self.idx])
 
-    @property
-    def no(self):
-        return tuple(self.object.vnorm[self.idx])
+    #@property
+    #def no(self):
+    #    return tuple(self.object.vnorm[self.idx])
 
     @property
     def color(self):
@@ -177,22 +177,22 @@ class FaceProxy(object):
         self.idx = idx
         self.color = None
 
-    @property
-    def no(self):
-        return tuple(self.object.fnorm[self.idx])
+    #@property
+    #def no(self):
+    #    return tuple(self.object.fnorm[self.idx])
 
-    @property
-    def verts(self):
-        verts = self.object.fvert[self.idx]
-        return IndexedVertsProxy(self.object, verts)
+    #@property
+    #def verts(self):
+    #    verts = self.object.fvert[self.idx]
+    #    return IndexedVertsProxy(self.object, verts)
 
-    @property
-    def uv(self):
-        return self.object.fuvs[self.idx]
+    #@property
+    #def uv(self):
+    #    return self.object.fuvs[self.idx]
 
-    @property
-    def group(self):
-        return self.object._faceGroups[self.object.group[self.idx]]
+    #@property
+    #def group(self):
+    #    return self.object._faceGroups[self.object.group[self.idx]]
 
     def isTriangle(self):
         return (self.verts[0].idx == self.verts[3].idx)

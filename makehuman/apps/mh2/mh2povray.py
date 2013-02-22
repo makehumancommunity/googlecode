@@ -1117,17 +1117,21 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
 ''')
 
         # Faces - Write a POV-Ray array of arrays to the output stream
-        nTriangles = 0
-        for f in obj.faces:
-            nTriangles += len(f.verts)-2
+        #nTriangles = 0
+        #for f in obj.faces:
+        #    nTriangles += len(f.verts)-2
+        #
+        # TL: Converted to new API. All MH meshes will be quads only
+        #
+        
+        nTriangles = 2*len(obj.fvert)
 
         outputFileDescriptor.write('  face_indices {\n  ')
         outputFileDescriptor.write('    %s\n  ' % nTriangles)
 
-        for f in obj.faces:
-            outputFileDescriptor.write('<%s,%s,%s>' % (f.verts[0].idx, f.verts[1].idx, f.verts[2].idx))
-            if len(f.verts) == 4:
-                outputFileDescriptor.write('<%s,%s,%s>' % (f.verts[2].idx, f.verts[3].idx, f.verts[0].idx))
+        for fverts in obj.fvert:
+            outputFileDescriptor.write('<%s,%s,%s>' % (fverts[0], fverts[1], fverts[2]))
+            outputFileDescriptor.write('<%s,%s,%s>' % (fverts[2], fverts[3], fverts[0]))
 
         outputFileDescriptor.write('''
   }
@@ -1139,10 +1143,9 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
         outputFileDescriptor.write('  uv_indices {\n  ')
         outputFileDescriptor.write('    %s\n  ' % nTriangles)
 
-        for f in obj.faces:
-            outputFileDescriptor.write('<%s,%s,%s>' % (f.uv[0], f.uv[1], f.uv[2]))
-            if len(f.uv) == 4:
-                outputFileDescriptor.write('<%s,%s,%s>' % (f.uv[2], f.uv[3], f.uv[0]))
+        for fuv in obj.fuvs:
+            outputFileDescriptor.write('<%s,%s,%s>' % (fuv[0], fuv[1], fuv[2]))
+            outputFileDescriptor.write('<%s,%s,%s>' % (fuv[2], fuv[3], fuv[0]))
 
         outputFileDescriptor.write('''
   }

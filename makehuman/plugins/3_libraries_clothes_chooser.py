@@ -150,7 +150,7 @@ class ClothesTaskView(gui3d.TaskView):
                 clo = human.clothesObjs[uuid]
                 log.debug("Overriding transparency setting for clothpiece %s to %s", uuid, bool(proxy.transparencies[uuid]))
                 if proxy.transparencies[uuid]:
-                    clo.mesh.setTransparentPrimitives(len(clo.mesh.faces))
+                    clo.mesh.setTransparentPrimitives(len(clo.mesh.fvert))
                 else:
                     clo.mesh.setTransparentPrimitives(0)
             return
@@ -195,7 +195,7 @@ class ClothesTaskView(gui3d.TaskView):
         else:
             clo.mesh.setCull(None)
         if proxy.transparent:
-            clo.mesh.setTransparentPrimitives(len(clo.mesh.faces))
+            clo.mesh.setTransparentPrimitives(len(clo.mesh.fvert))
         else:
             clo.mesh.setTransparentPrimitives(0)
         clo.mesh.priority = 10

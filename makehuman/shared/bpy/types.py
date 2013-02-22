@@ -311,8 +311,8 @@ class UvLayer:
     def __init__(self, obj):
         self.uvloop = UvLoop("UVset0", obj.texco)
         uvlist = []
-        for f in obj.faces:
-            uvlist.extend(list(f.uv))
+        for fuv in obj.fuvs:
+            uvlist.extend(list(fuv))
         self.uvfaces = uvlist
 
         

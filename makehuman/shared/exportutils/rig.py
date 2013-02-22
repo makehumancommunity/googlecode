@@ -31,9 +31,9 @@ import log
 
 
 #
-#   setupRigJoint (words, obj, verts, locations):
+#   setupRigJoint (words, obj, coord, locations):
 #
-def setupRigJoint (words, obj, verts, locations):
+def setupRigJoint (words, obj, coord, locations):
     key = words[0]
     typ = words[1]
     if typ == 'joint':
@@ -48,25 +48,25 @@ def setupRigJoint (words, obj, verts, locations):
         locations[key] = numpy.array((x[0],y[1],z[2]))
     elif typ == 'line':
         k1 = float(words[2])
-        v1 = int(words[3])
+        vn1 = int(words[3])
         k2 = float(words[4])
-        v2 = int(words[5])
-        locations[key] = k1*locations[v1] + k2*locations[v2]
+        vn2 = int(words[5])
+        locations[key] = k1*locations[vn1] + k2*locations[vn2]
     elif typ == 'offset':
-        v = int(words[2])
+        vn = int(words[2])
     	x = float(words[3])
     	y = float(words[4])
     	z = float(words[5])
-        locations[key] = locations[v] + numpy.array((x,y,z))
+        locations[key] = locations[vn] + numpy.array((x,y,z))
     elif typ == 'voffset':
-        v = int(words[2])
+        vn = int(words[2])
     	x = float(words[3])
     	y = float(words[4])
     	z = float(words[5])
         try:
-            loc = obj.coord[v]
+            loc = obj.coord[vn]
         except:
-            loc = verts[v]         
+            loc = coord[vn]         
         locations[key] = loc + numpy.array((x,y,z))
     elif typ == 'front':
         raw = locations[int(words[2])]
@@ -82,10 +82,10 @@ def setupRigJoint (words, obj, verts, locations):
         raise NameError("Unknown %s" % typ)
 
 #
-#   readRigFile(filename, obj, verts=None):
+#   readRigFile(filename, obj, coord=None):
 #
 
-def readRigFile(filename, obj, verts=None):
+def readRigFile(filename, obj, coord=None):
     if type(filename) == tuple:
         (folder, fname) = filename
         filename = os.path.join(folder, fname)
@@ -105,8 +105,8 @@ def readRigFile(filename, obj, verts=None):
     armature = []
     weights = {}
 
-    if not verts:
-        verts = obj.verts
+    if not coord:
+        coord = obj.coord
     for line in fp: 
         words = line.split()
         if len(words) == 0:
@@ -123,7 +123,7 @@ def readRigFile(filename, obj, verts=None):
         elif status == doWeights:
             wts.append((int(words[0]), float(words[1])))
         elif status == doLocations:
-            setupRigJoint (words, obj, verts, locations)
+            setupRigJoint (words, obj, coord, locations)
         elif status == doBones:
             bone = words[0]
             head = locations[words[1]]

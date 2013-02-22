@@ -684,7 +684,7 @@ class CUvSet:
         fp.close()   
         self.filename = filename
             
-        nFaces = len(human.meshData.faces)                
+        nFaces = len(human.meshData.fvert)                
         self.faceMaterials = numpy.zeros(nFaces, int)
         fn = 0
         for line in self.faceNumbers:
@@ -715,12 +715,17 @@ def getJoint(joint, obj, locations):
     
 
 def calcJointPos(obj, joint):
-    g = obj.getFaceGroup("joint-"+joint)
-    coords = []
-    for f in g.faces:
-        for v in f.verts:
-            coords.append(v.co)
+    verts = obj.getVerticesForGroups(["joint-"+joint])
+    coords = obj.coord[verts]
+    return coords.mean(axis=0)
     return numpy.array(coords).mean(axis=0)
+    
+    #g = obj.getFaceGroup("joint-"+joint)
+    #coords = []
+    #for f in g.faces:
+    #    for v in f.verts:
+    #        coords.append(v.co)
+    #return numpy.array(coords).mean(axis=0)
     
 
 def newFace(first, words, group, proxy):

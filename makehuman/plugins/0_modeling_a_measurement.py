@@ -28,7 +28,6 @@ import numpy as np
 import gui3d
 import module3d
 import humanmodifier
-import aljabr
 import mh
 import gui
 import log
@@ -434,7 +433,8 @@ class Ruler:
         measure = 0
         vindex1 = self.Measures[measurementname][0]
         for vindex2 in self.Measures[measurementname]:
-            measure += aljabr.vdist(human.meshData.coord[vindex1], human.meshData.coord[vindex2])
+            vec = human.meshData.coord[vindex1] - human.meshData.coord[vindex2]
+            measure += math.sqrt(vec.dot(vec))
             vindex1 = vindex2
 
         if mode == 'metric':

@@ -601,18 +601,15 @@ def setupRig(info):
         info.rigHeads[bone] = findLocation(info, head)
         info.rigTails[bone] = findLocation(info, tail)
         
-    #print "H1", info.rigHeads["UpLeg_L"]
-    #print "T1", info.rigTails["UpLeg_L"]
-
     if not config.clothesRig:
         return
     body = info.rigHeads.keys()
     for proxy in info.proxies.values():
         if proxy.rig:
-            verts = []
+            coord = []
             for refVert in proxy.refVerts:
-                verts.append(refVert.getCoord())
-            (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, info.mesh, verts=verts) 
+                coord.append(refVert.getCoord())
+            (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, info.mesh, coord=coord) 
             proxy.weights = prefixWeights(weights, proxy.name, body)
             appendRigBones(boneList, info.mesh, proxy.name, L_CLO, body, info)
     return

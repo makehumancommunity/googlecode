@@ -189,7 +189,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
             if config.scale == 1.0:
                 stuff.meshInfo = meshInfo
             else:
-                stuff.meshInfo = meshInfo.fromProxy(config.scale*obj.coord, obj.texco, obj.faces, obj.fuvs, meshInfo.weights, meshInfo.shapes)
+                stuff.meshInfo = meshInfo.fromProxy(config.scale*obj.coord, obj.texco, obj.fvert, obj.fuvs, meshInfo.weights, meshInfo.shapes)
         else:
             stuff.meshInfo = filterMesh(meshInfo, config.scale, deleteGroups, deleteVerts, eyebrows, lashes)
         stuffs = [stuff] + stuffs
@@ -299,17 +299,18 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes):
     obj = meshInfo.object
 
     killUvs = numpy.zeros(len(obj.texco), bool)
-    killFaces = numpy.zeros(len(obj.faces), bool)
+    killFaces = numpy.zeros(len(obj.fvert), bool)
         
     if deleteVerts is not None:
         killVerts = deleteVerts
-        for f in obj.faces:
-            for v in f.verts:
-                if killVerts[v.idx]:
-                    killFaces[f.idx] = True             
+        for fn,fverts in enumerate(obj.fvert):
+            for vn in fverts:
+                if killVerts[vn]:
+                    killFaces[fn] = True             
     else:
-        killVerts = numpy.zeros(len(obj.verts), bool)
-        
+        killVerts = numpy.zeros(len(obj.coord), bool)
+
+    killGroups = []        
     for fg in obj.faceGroups:
         if (("joint" in fg.name) or 
             ("helper" in fg.name) or
@@ -318,14 +319,15 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes):
              ((not lashes) and 
               ("lash" in fg.name)) or
              mh2proxy.deleteGroup(fg.name, deleteGroups)):
+            killGroups.append(fg.name)
+
+    faceMask = obj.getFaceMaskForGroups(killGroups)
+    killFaces[faceMask] = True
+    verts = obj.fvert[faceMask]
+    killVerts[verts] = True
+    uvs = obj.fuvs[faceMask]
+    killUvs[uvs] = True    
     
-            for f in fg.faces:            
-                killFaces[f.idx] = True
-                for v in f.verts:
-                    killVerts[v.idx] = True
-                for vt in f.uv:                    
-                    killUvs[vt] = True
-     
     n = 0
     newVerts = {}
     coords = []
@@ -346,13 +348,13 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes):
     
     faceVerts = []
     faceUvs = []
-    for f in obj.faces:
-        if not killFaces[f.idx]:
+    for fn,fverts in enumerate(obj.fvert):
+        if not killFaces[fn]:
             fverts2 = []
             fuvs2 = []
-            for v in f.verts:
-                fverts2.append(newVerts[v.idx])
-            for uv in f.uv:
+            for vn in fverts:
+                fverts2.append(newVerts[vn])
+            for uv in obj.fuvs[fn]:
                 fuvs2.append(newUvs[uv])
             faceVerts.append(fverts2)
             faceUvs.append(fuvs2)

@@ -336,21 +336,21 @@ def copyFile25(tmplName, fp, proxy, info):
                     fp.write("    ftall 0 1 ;\n")
 
             elif key == 'Faces':
-                for f in info.mesh.faces:
-                    fv = f.verts
-                    if f.isTriangle():
-                        fp.write("    f %d %d %d ;\n" % (fv[0].idx, fv[1].idx, fv[2].idx))
+                for fverts in info.mesh.fvert:
+                    if fverts[0] == fverts[3]:
+                        fp.write("    f %d %d %d ;\n" % tuple(fverts[0:3]))
                     else:
-                        fp.write("    f %d %d %d %d ;\n" % (fv[0].idx, fv[1].idx, fv[2].idx, fv[3].idx))
+                        fp.write("    f %d %d %d %d ;\n" % tuple(fverts))
                 fp.write("#if False\n")
 
             elif key == 'EndFaces':
                 writeFaceNumbers(fp, info)
 
             elif key == 'FTTriangles':
-                for f in info.mesh.faces:
-                    if f.isTriangle():
-                        fp.write("    mn %d 1 ;\n" % f.idx)
+                pass
+                #for f in info.mesh.faces:
+                #    if f.isTriangle():
+                #        fp.write("    mn %d 1 ;\n" % f.idx)
 
             elif key == 'ProxyUVCoords':
                 layers = list(proxy.uvtexLayerName.keys())
@@ -383,14 +383,14 @@ def copyFile25(tmplName, fp, proxy, info):
                             fp.write(" %.4g %.4g" %(uv[0], uv[1]))
                         fp.write(" ;\n")
                 else:
-                    for f in info.mesh.faces:
-                        uv0 = info.mesh.texco[f.uv[0]]
-                        uv1 = info.mesh.texco[f.uv[1]]
-                        uv2 = info.mesh.texco[f.uv[2]]
-                        if f.isTriangle():
+                    for fuv in info.mesh.fuvs:
+                        uv0 = info.mesh.texco[fuv[0]]
+                        uv1 = info.mesh.texco[fuv[1]]
+                        uv2 = info.mesh.texco[fuv[2]]
+                        uv3 = info.mesh.texco[fuv[3]]
+                        if fuv[0] == fuv[3]:
                             fp.write("    vt %.4g %.4g %.4g %.4g %.4g %.4g ;\n" % (uv0[0], uv0[1], uv1[0], uv1[1], uv2[0], uv2[1]))
                         else:
-                            uv3 = info.mesh.texco[f.uv[3]]
                             fp.write("    vt %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g ;\n" % (uv0[0], uv0[1], uv1[0], uv1[1], uv2[0], uv2[1], uv3[0], uv3[1]))
 
             elif key == 'Material':
@@ -493,10 +493,9 @@ def writeFaceNumbers(fp, info):
         for ftn in info.human.uvset.faceNumbers:
             fp.write(ftn)
     else:            
-        info.mesh = info.human.meshData
-        fmats = {}
-        print(info.mesh.materials.items)
-        for fn,mtl in info.mesh.materials.items():
+        obj = info.mesh
+        fmats = numpy.zeros(len(obj.coord), int)
+        for fn,mtl in obj.materials.items():
             fmats[fn] = MaterialNumbers[mtl]
             
         if info.config.hidden:
@@ -504,41 +503,35 @@ def writeFaceNumbers(fp, info):
             deleteGroups = []
         else:
             deleteGroups = []
-            deleteVerts = numpy.zeros(len(info.mesh.coord), bool)
+            deleteVerts = numpy.zeros(len(obj.coord), bool)
             for proxy in info.proxies.values():
                 deleteGroups += proxy.deleteGroups
                 deleteVerts = deleteVerts | proxy.deleteVerts
                     
-        for fg in info.mesh.faceGroups: 
+        for fg in obj.faceGroups: 
+            fmask = obj.getFaceMaskForGroups([fg.name])
             if mh2proxy.deleteGroup(fg.name, deleteGroups):
-                for f in fg.faces:
-                    fmats[f.idx] = 6
+                fmats[fmask] = 6
             elif "joint" in fg.name:
-                for f in fg.faces:
-                    fmats[f.idx] = 4
+                fmats[fmask] = 4
             elif fg.name == "helper-tights":                    
-                for f in fg.faces:
-                    fmats[f.idx] = 5
+                fmats[fmask] = 5
             elif fg.name == "helper-skirt":                    
-                for f in fg.faces:
-                    fmats[f.idx] = 7
+                fmats[fmask] = 7
             elif ("tongue" in fg.name):
-                for f in fg.faces:
-                    fmats[f.idx] = 1
+                fmats[fmask] = 1
             elif ("eyebrown" in fg.name) or ("lash" in fg.name):
-                for f in fg.faces:
-                    fmats[f.idx] = 3   
+                fmats[fmask] = 3
                     
         if deleteVerts != None:
-            for f in info.mesh.faces:
-                v = f.verts[0]
-                if deleteVerts[v.idx]:
-                    fmats[f.idx] = 6                        
+            for fn,fverts in enumerate(obj.fvert):
+                if deleteVerts[fverts[0]]:
+                    fmats[fn] = 6                        
                 
         mn = -1
         fn = 0
         f0 = 0
-        for f in info.mesh.faces:
+        for fverts in obj.fvert:
             if fmats[fn] != mn:
                 if fn != f0:
                     fp.write("  ftn %d %d 1 ;\n" % (fn-f0, mn))
@@ -1197,7 +1190,7 @@ def proxyShapes(typ, test, info, fp):
     fp.write("#endif\n")
         
 #
-#   writeMultiMaterials(uvset, info.config, fp):
+#   writeMultiMaterials(uvset, info, fp):
 #
       
 TX_SCALE = 1
@@ -1212,8 +1205,9 @@ TexInfo = {
     "displacement": ("DISPLACEMENT", "use_map_displacement", "displacement_factor", TX_SCALE|TX_BW),
 }    
 
-def writeMultiMaterials(uvset, info, fp):
-    folder = os.path.dirname(info.human.uvset.filename)
+def writeMultiMaterials(info, fp):
+    uvset = info.human.uvset
+    folder = os.path.dirname(uvset.filename)
     log.debug("Folder %s", folder)
     for mat in uvset.materials:
         for tex in mat.textures:

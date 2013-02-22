@@ -514,24 +514,24 @@ def exportObj_TL(obj, filename):
     # 
 
     for stuff in stuffs:
-    	obj = stuff.meshInfo.object
+        obj = stuff.meshInfo.object
         for co in obj.coord:
             f.write("v %.4f %.4f %.4f\n" % tuple(co))
 
     for stuff in stuffs:
-    	obj = stuff.meshInfo.object
+        obj = stuff.meshInfo.object
         for uv in obj.texco:
             f.write("vt %.4f %.4f\n" % tuple(uv))
 
     nVerts = 1
     nTexCo = 1
     for stuff in stuffs:
-    	obj = stuff.meshInfo.object
-        for fc in obj.faces:
+        obj = stuff.meshInfo.object
+        for fn,fverts in enumerate(obj.fvert):
+            fuv = obj.fuvs[fn]
             f.write('f ')
-            for n,v in enumerate(fc.verts):
-            	uv = fc.uv[n]
-                f.write("%d/%d " % (v.idx+nVerts, uv+nTexCo))
+            for n in range(4):
+                f.write("%d/%d " % (fverts[n]+nVerts, fuv[n]+nTexCo))
             f.write('\n')
         nVerts += len(obj.coord)
         nTexCo += len(obj.texco)
