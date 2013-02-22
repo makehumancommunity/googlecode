@@ -561,7 +561,7 @@ def setupRig(info):
             info.rigHeads[bone] = findLocation(info, head)
             info.rigTails[bone] = findLocation(info, tail)
 
-        appendRigBones(boneList, info.mesh, "", L_MAIN, [], info)
+        appendRigBones(boneList, "", L_MAIN, [], info)
         log.debug("BL %s", str(boneList[0]))
         config.boneGroups = []
         config.recalcRoll = []              
@@ -611,7 +611,7 @@ def setupRig(info):
                 coord.append(refVert.getCoord())
             (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, info.mesh, coord=coord) 
             proxy.weights = prefixWeights(weights, proxy.name, body)
-            appendRigBones(boneList, info.mesh, proxy.name, L_CLO, body, info)
+            appendRigBones(boneList, proxy.name, L_CLO, body, info)
     return
 
 
@@ -625,7 +625,7 @@ def prefixWeights(weights, prefix, body):
     return pweights
 
 
-def appendRigBones(boneList, obj, prefix, layer, body, info):        
+def appendRigBones(boneList, prefix, layer, body, info):        
     config = info.config
     for data in boneList:
         (bone0, head, tail, roll, parent0, options) = data
