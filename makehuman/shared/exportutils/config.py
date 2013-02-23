@@ -68,9 +68,7 @@ class Config:
     
     def setHuman(self, human):
         """
-        Set the human object for this config. The proxylist
-        will be rebuilt and will contain all proxy objects currently attached
-        to the human.
+        Set the human object for this config.
         """
         self.human = human
     
