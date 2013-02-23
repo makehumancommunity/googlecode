@@ -85,7 +85,7 @@ def exportMhx(human, filepath, config):
     posemode.exitPoseMode()        
     posemode.enterPoseMode()
     
-    config.addObjects(human)
+    config.setHuman(human)
     config.setupTexFolder(filepath)    
 
     fname = os.path.basename(os.path.splitext(filepath)[0])

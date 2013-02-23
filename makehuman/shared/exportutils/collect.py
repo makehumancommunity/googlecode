@@ -155,7 +155,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     
     if not config:
         config = Config()
-        config.addObjects(human)
+        config.setHuman(human)
         
     obj = human.meshData
     theTextures = {}
