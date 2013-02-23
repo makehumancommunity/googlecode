@@ -516,7 +516,7 @@ class ListItem(QtGui.QListWidgetItem):
 
     @property
     def text(self):
-        return unicode(self.text())
+        return unicode(super(ListItem, self).text())
 
 class ListView(QtGui.QListWidget, Widget):
     def __init__(self):
@@ -550,14 +550,22 @@ class ListView(QtGui.QListWidget, Widget):
     def getSelectedItem(self):
         items = self.selectedItems()
         if len(items) > 0:
-            return str(items[0].text())
+            return str(items[0].text)
         return None
+
+    def getSelectedItems(self):
+        return [item.text for item in self.selectedItems()]
 
     def getItemData(self, row):
         return self.item(row).getUserData()
 
     def showItem(self, row, state):
         self.item(row).setHidden(not state)
+
+    def allowMultipleSelection(self, allow):
+        self.setSelectionMode(QtGui.QAbstractItemView.ContiguousSelection
+                              if allow else
+                              QtGui.QAbstractItemView.SingleSelection)
 
 class TextView(QtGui.QLabel, Widget):
     def __init__(self, label = ''):

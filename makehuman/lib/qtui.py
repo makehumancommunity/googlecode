@@ -474,6 +474,7 @@ class LogWindow(qtgui.ListView):
     def __init__(self):
         super(LogWindow, self).__init__()
         self.level = log.DEBUG
+        self.allowMultipleSelection(True)
 
     def setLevel(self, level):
         self.level = level

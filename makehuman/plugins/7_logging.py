@@ -46,6 +46,16 @@ class LoggingTaskView(gui3d.TaskView):
         group = []
         for level in [log.DEBUG, log.MESSAGE, log.NOTICE, log.WARNING, log.ERROR]:
             radio = self.groupBox.addWidget(LevelRadioButton(group, level))
+        self.copy = self.addLeftWidget(gui.Button('Copy to Clipboard'))
+
+        @self.copy.mhEvent
+        def onClicked(self, _dummy = None):
+            strings = G.app.log_window.getSelectedItems()
+            if not strings:
+                G.app.status('No log items selected')
+                return
+            text = ''.join(string + '\n' for string in strings)
+            G.app.clipboard().setText(text)
 
 def load(app):
     category = app.getCategory('Develop')
