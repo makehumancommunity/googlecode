@@ -33,6 +33,7 @@ Requires:
 __docformat__ = 'restructuredtext'
 
 import os
+import numpy as np
 import exportutils
 from skeleton import Skeleton
 
@@ -358,20 +359,18 @@ def exportMd5(human, filepath, config):
             f.write('\tshader "%s"\n' % (texname)) # TODO: create the shader file
 
         f.write('\n\tnumverts %d\n' % (len(obj.coord)))
-        for vert in obj.verts:
+        uvs = np.zeros(len(obj.coord), dtype=np.uint32)
+        uvs[obj.fvert] = obj.fuvs
+
+        for vert in xrange(len(obj.coord)):
             if obj.has_uv:
-                face = vert.sharedFaces[0]
-                # TL: Not sure how this should work, but it doesn't.
-                # Changed to something unelegant but working
-                #u, v = obj.texco[face.uv[face.verts.index(vert)]]
-                for n,v in enumerate(face.verts):
-                    if v == vert:
-                        break
-                u, v = obj.texco[face.uv[n]]
+                u, v = obj.texco[uvs[vert]]
             else:
                 u, v = 0, 0
             # vert [vertIndex] ( [texU] [texV] ) [weightIndex] [weightElem]
-            f.write('\tvert %d ( %f %f ) %d %d\n' % (vert.idx, u, 1.0-v, vert.idx, 1))
+            f.write('\tvert %d ( %f %f ) %d %d\n' % (vert, u, 1.0-v, vert, 1))
+
+        del uvs
 
         f.write('\n\tnumtris %d\n' % (len(obj.fvert) * 2))
         for fn,fverts in enumerate(obj.fvert):
@@ -379,7 +378,7 @@ def exportMd5(human, filepath, config):
             f.write('\ttri %d %d %d %d\n' % (2*fn, fverts[2], fverts[1], fverts[0]))
             f.write('\ttri %d %d %d %d\n' % (2*fn+1, fverts[0], fverts[3], fverts[2]))
 
-        f.write('\n\tnumweights %d\n' % (len(obj.verts)))
+        f.write('\n\tnumweights %d\n' % (len(obj.coord)))
         for idx,co in enumerate(obj.coord):
             # TODO: We attach all vertices to the root with weight 1.0, this should become
             # real weights to the correct bones
