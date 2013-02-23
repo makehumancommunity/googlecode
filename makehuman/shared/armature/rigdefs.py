@@ -907,7 +907,7 @@ def createRig(human, rigtype):
     config.exporting = False
     config.feetOnGround = False
     config.rigtype = rigtype
-    config.addObjects(human)
+    config.setHuman(human)
 
     fp = None
     amt = CArmature(human, config)
