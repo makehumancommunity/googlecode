@@ -446,34 +446,22 @@ class Object3D(object):
     def updateIndexBufferVerts(self):
         ngroup = len(self._faceGroups)
 
-        unwelded = []
-        unwelded_map = {}
+        packed = self.fvert.astype(np.uint64) << 32
+        packed |= self.fuvs
+        packed = packed.reshape(-1)
 
-        iverts = []
+        u, rev = np.unique(packed, return_inverse=True)
+        del packed
 
-        for i in xrange(len(self.fvert)):
-            verts = []
-            for v, t in zip(self.fvert[i], self.fuvs[i]):
-                p = v, t
-                if p not in unwelded_map:
-                    idx = len(unwelded)
-                    unwelded_map[p] = idx
-                    unwelded.append(p)
-                else:
-                    idx = unwelded_map[p]
-                verts.append(idx)
-
-            iverts.append(verts)
-
-        del unwelded_map
-
+        unwelded = u[:,None] >> np.array([[32,0]], dtype=np.uint64)
+        unwelded = unwelded.astype(np.uint32)
         nverts = len(unwelded)
-        unwelded2 = np.empty((nverts,2), dtype=np.uint32)
-        if unwelded:
-            unwelded2[...] = unwelded
-        self.vmap = unwelded2[:,0]
-        self.tmap = unwelded2[:,1]
-        del unwelded, unwelded2
+        iverts = rev.reshape(self.fvert.shape)
+        del rev, u
+
+        self.vmap = unwelded[:,0]
+        self.tmap = unwelded[:,1]
+        del unwelded
 
         self.r_coord = np.empty((nverts, 3), dtype=np.float32)
         self.r_texco = np.empty((nverts, 2), dtype=np.float32)
