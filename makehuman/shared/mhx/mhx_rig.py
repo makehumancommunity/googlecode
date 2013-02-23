@@ -50,102 +50,102 @@ from . import rig_skirt_25
 from . import rigify_rig
 
         
-def newSetupJoints (info, joints):
-    info.locations = {}
+def newSetupJoints (armature, joints):
+    armature.locations = {}
     for (key, typ, data) in joints:
         #print(key)
         if typ == 'j':
-            loc = mh2proxy.calcJointPos(info.mesh, data)
-            info.locations[key] = loc
-            info.locations[data] = loc
+            loc = mh2proxy.calcJointPos(armature.mesh, data)
+            armature.locations[key] = loc
+            armature.locations[data] = loc
         elif typ == 'v':
             v = int(data)
-            info.locations[key] = info.mesh.coord[v]
+            armature.locations[key] = armature.mesh.coord[v]
         elif typ == 'x':
-            info.locations[key] = numpy.array((float(data[0]), float(data[2]), -float(data[1])))
+            armature.locations[key] = numpy.array((float(data[0]), float(data[2]), -float(data[1])))
         elif typ == 'vo':
             v = int(data[0])
             offset = numpy.array((float(data[1]), float(data[3]), -float(data[2])))
-            info.locations[key] = info.mesh.coord[v] + offset
+            armature.locations[key] = armature.mesh.coord[v] + offset
         elif typ == 'vl':
             ((k1, v1), (k2, v2)) = data
-            loc1 = info.mesh.coord[int(v1)]
-            loc2 = info.mesh.coord[int(v2)]
-            info.locations[key] = k1*loc1 + k2*loc2
+            loc1 = armature.mesh.coord[int(v1)]
+            loc2 = armature.mesh.coord[int(v2)]
+            armature.locations[key] = k1*loc1 + k2*loc2
         elif typ == 'f':
             (raw, head, tail, offs) = data
-            rloc = info.locations[raw]
-            hloc = info.locations[head]
-            tloc = info.locations[tail]
+            rloc = armature.locations[raw]
+            hloc = armature.locations[head]
+            tloc = armature.locations[tail]
             vec = tloc - hloc
             vraw = rloc - hloc
             x = dot(vec, vraw)/dot(vec,vec)
-            info.locations[key] = hloc + x*vec + numpy.array(offs)
+            armature.locations[key] = hloc + x*vec + numpy.array(offs)
         elif typ == 'b':
-            info.locations[key] = info.locations[data]
+            armature.locations[key] = armature.locations[data]
         elif typ == 'p':
-            x = info.locations[data[0]]
-            y = info.locations[data[1]]
-            z = info.locations[data[2]]
-            info.locations[key] = numpy.array((x[0],y[1],z[2]))
+            x = armature.locations[data[0]]
+            y = armature.locations[data[1]]
+            z = armature.locations[data[2]]
+            armature.locations[key] = numpy.array((x[0],y[1],z[2]))
         elif typ == 'vz':
             v = int(data[0])
-            z = info.mesh.coord[v][2]
-            loc = info.locations[data[1]]
-            info.locations[key] = numpy.array((loc[0],loc[1],z))
+            z = armature.mesh.coord[v][2]
+            loc = armature.locations[data[1]]
+            armature.locations[key] = numpy.array((loc[0],loc[1],z))
         elif typ == 'X':
-            r = info.locations[data[0]]
+            r = armature.locations[data[0]]
             (x,y,z) = data[1]
             r1 = numpy.array([float(x), float(y), float(z)])
-            info.locations[key] = numpy.cross(r, r1)
+            armature.locations[key] = numpy.cross(r, r1)
         elif typ == 'l':
             ((k1, joint1), (k2, joint2)) = data
-            info.locations[key] = k1*info.locations[joint1] + k2*info.locations[joint2]
+            armature.locations[key] = k1*armature.locations[joint1] + k2*armature.locations[joint2]
         elif typ == 'o':
             (joint, offsSym) = data
             if type(offsSym) == str:
-                offs = info.locations[offsSym]
+                offs = armature.locations[offsSym]
             else:
                 offs = numpy.array(offsSym)
-            info.locations[key] = info.locations[joint] + offs
+            armature.locations[key] = armature.locations[joint] + offs
         else:
             raise NameError("Unknown %s" % typ)
     return
 
 
-def moveOriginToFloor(info):
-    if info.config.feetOnGround:
-        info.origin = info.locations['floor']
-        for key in info.locations.keys():
-            info.locations[key] = info.locations[key] - info.origin
+def moveOriginToFloor(armature):
+    if armature.config.feetOnGround:
+        armature.origin = armature.locations['floor']
+        for key in armature.locations.keys():
+            armature.locations[key] = armature.locations[key] - armature.origin
     else:
-        info.origin = numpy.array([0,0,0], float)
+        armature.origin = numpy.array([0,0,0], float)
     return
 
 
-def setupHeadsTails(info, headsTails):
-    info.rigHeads = {}
-    info.rigTails = {}
-    scale = info.config.scale
+def setupHeadsTails(armature, headsTails):
+    armature.rigHeads = {}
+    armature.rigTails = {}
+    scale = armature.config.scale
     for (bone, head, tail) in headsTails:
-        info.rigHeads[bone] = findLocation(info, head)
-        info.rigTails[bone] = findLocation(info, tail)
+        armature.rigHeads[bone] = findLocation(armature, head)
+        armature.rigTails[bone] = findLocation(armature, tail)
 
 
-def findLocation(info, joint):
+def findLocation(armature, joint):
     try:
         (bone, offs) = joint
-        return info.locations[bone] + offs
+        return armature.locations[bone] + offs
     except:
-        return info.locations[joint]
+        return armature.locations[joint]
 
 
-def writeArmature(fp, info, boneList):
+def writeArmature(fp, armature, boneList):
     for (bone, roll, parent, flags, layers, bbone) in boneList:
-        addBone25(info, bone, True, roll, parent, flags, layers, bbone, fp)
+        addBone25(armature, bone, True, roll, parent, flags, layers, bbone, fp)
 
 
-def addBone25(info, bone, cond, roll, parent, flags, layers, bbone, fp):
+def addBone25(armature, bone, cond, roll, parent, flags, layers, bbone, fp):
     conn = (flags & F_CON != 0)
     deform = (flags & F_DEF != 0)
     restr = (flags & F_RES != 0)
@@ -154,12 +154,12 @@ def addBone25(info, bone, cond, roll, parent, flags, layers, bbone, fp):
     lock = (flags & F_LOCK != 0)
     cyc = (flags & F_NOCYC == 0)
     
-    scale = info.config.scale
+    scale = armature.config.scale
 
     fp.write("\n  Bone %s %s\n" % (bone, cond))
-    (x, y, z) = scale*info.rigHeads[bone]
+    (x, y, z) = scale*armature.rigHeads[bone]
     fp.write("    head  %.6g %.6g %.6g  ;\n" % (x,-z,y))
-    (x, y, z) = scale*info.rigTails[bone]
+    (x, y, z) = scale*armature.rigTails[bone]
     fp.write("    tail %.6g %.6g %.6g  ;\n" % (x,-z,y))
     if type(parent) == tuple:
         (soft, hard) = parent
@@ -236,11 +236,11 @@ def addBone24(bone, cond, roll, parent, flags, layers, bbone, fp):
     return
 """
 
-def writeBoneGroups(fp, info):
-    log.message("BG %s", info.config.boneGroups)
+def writeBoneGroups(fp, armature):
+    log.message("BG %s", armature.config.boneGroups)
     if not fp:
         return
-    for (name, color) in info.config.boneGroups:
+    for (name, color) in armature.config.boneGroups:
         fp.write(
 "    BoneGroup %s\n" % name +
 "      name '%s' ;\n" % name +
@@ -286,9 +286,9 @@ def writeFCurves(fp, name, quats):
     return
 
 
-def writeFkIkSwitch(fp, drivers):
+def writeFkIkSwitch(fp, drivers, armature):
     for (bone, cond, cnsFK, cnsIK, targ, channel, mx) in drivers:
-        cnsData = ("ik", 'TRANSFORMS', [('OBJECT', info.name, targ, channel, C_LOC)])
+        cnsData = ("ik", 'TRANSFORMS', [('OBJECT', armature.name, targ, channel, C_LOC)])
         for cnsName in cnsFK:
             writeDriver(fp, cond, 'AVERAGE', "", "pose.bones[\"%s\"].constraints[\"%s\"].influence" % (bone, cnsName), -1, (mx,-mx), [cnsData])
         for cnsName in cnsIK:
@@ -425,10 +425,10 @@ def setupCircles(fp):
     return
 
 
-def setupRig(info):
-    info.rigHeads = {}
-    info.rigTails = {}
-    config = info.config
+def setupRig(armature):
+    armature.rigHeads = {}
+    armature.rigTails = {}
+    config = armature.config
     config.vertexWeights = []
     config.customShapes = {}
     config.poseInfo = {}
@@ -541,7 +541,7 @@ def setupRig(info):
 
     else:
         rigfile = "data/rigs/%s.rig" % config.rigtype
-        (locations, boneList, config.vertexWeights) = exportutils.rig.readRigFile(rigfile, info.mesh)        
+        (locations, boneList, config.vertexWeights) = exportutils.rig.readRigFile(rigfile, armature.mesh)        
         joints = (
             rig_joints_25.DeformJoints +
             rig_body_25.FloorJoints +
@@ -555,13 +555,13 @@ def setupRig(info):
             headsTails += rig_panel_25.PanelHeadsTails
             config.armatureBones += rig_panel_25.PanelArmature
 
-        newSetupJoints(info, joints)        
-        moveOriginToFloor(info)
+        newSetupJoints(armature, joints)        
+        moveOriginToFloor(armature)
         for (bone, head, tail) in headsTails:
-            info.rigHeads[bone] = findLocation(info, head)
-            info.rigTails[bone] = findLocation(info, tail)
+            armature.rigHeads[bone] = findLocation(armature, head)
+            armature.rigTails[bone] = findLocation(armature, tail)
 
-        appendRigBones(boneList, "", L_MAIN, [], info)
+        appendRigBones(boneList, "", L_MAIN, [], armature)
         log.debug("BL %s", str(boneList[0]))
         config.boneGroups = []
         config.recalcRoll = []              
@@ -592,26 +592,26 @@ def setupRig(info):
     headsTails += custHeadsTails
     config.armatureBones += custArmature
     
-    newSetupJoints(info, joints)
-    moveOriginToFloor(info)    
+    newSetupJoints(armature, joints)
+    moveOriginToFloor(armature)    
 
     if config.rigtype == 'mhx':
         rig_body_25.BodyDynamicLocations()
     for (bone, head, tail) in headsTails:
-        info.rigHeads[bone] = findLocation(info, head)
-        info.rigTails[bone] = findLocation(info, tail)
+        armature.rigHeads[bone] = findLocation(armature, head)
+        armature.rigTails[bone] = findLocation(armature, tail)
         
     if not config.clothesRig:
         return
-    body = info.rigHeads.keys()
-    for proxy in info.proxies.values():
+    body = armature.rigHeads.keys()
+    for proxy in armature.proxies.values():
         if proxy.rig:
             coord = []
             for refVert in proxy.refVerts:
                 coord.append(refVert.getCoord())
-            (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, info.mesh, coord=coord) 
+            (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, armature.mesh, coord=coord) 
             proxy.weights = prefixWeights(weights, proxy.name, body)
-            appendRigBones(boneList, proxy.name, L_CLO, body, info)
+            appendRigBones(boneList, proxy.name, L_CLO, body, armature)
     return
 
 
@@ -625,8 +625,8 @@ def prefixWeights(weights, prefix, body):
     return pweights
 
 
-def appendRigBones(boneList, prefix, layer, body, info):        
-    config = info.config
+def appendRigBones(boneList, prefix, layer, body, armature):        
+    config = armature.config
     for data in boneList:
         (bone0, head, tail, roll, parent0, options) = data
         if bone0 in body:
@@ -667,8 +667,8 @@ def appendRigBones(boneList, prefix, layer, body, info):
             elif key == "-ik":
                 pass
         config.armatureBones.append((bone, roll, parent, flags, layer, NoBB))
-        info.rigHeads[bone] = head - info.origin
-        info.rigTails[bone] = tail - info.origin
+        armature.rigHeads[bone] = head - armature.origin
+        armature.rigTails[bone] = tail - armature.origin
         
         
 def addPoseInfo(bone, info, config):
@@ -691,29 +691,29 @@ def swapParentNames(bones, changes):
     return nbones
 
 
-def writeControlPoses(fp, info):
-    config = info.config
-    writeBoneGroups(fp, info)
-    if info.config.rigtype == 'mhx':            
-        rig_body_25.BodyControlPoses(fp, info)
-        rig_shoulder_25.ShoulderControlPoses(fp, info)
-        rig_arm_25.ArmControlPoses(fp, info)
-        rig_finger_25.FingerControlPoses(fp, info)
-        rig_leg_25.LegControlPoses(fp, info)
-        #rig_toe_25.ToeControlPoses(fp, info)
-        rig_face_25.FaceControlPoses(fp, info)
+def writeControlPoses(fp, armature):
+    config = armature.config
+    writeBoneGroups(fp, armature)
+    if armature.config.rigtype == 'mhx':            
+        rig_body_25.BodyControlPoses(fp, armature)
+        rig_shoulder_25.ShoulderControlPoses(fp, armature)
+        rig_arm_25.ArmControlPoses(fp, armature)
+        rig_finger_25.FingerControlPoses(fp, armature)
+        rig_leg_25.LegControlPoses(fp, armature)
+        #rig_toe_25.ToeControlPoses(fp, armature)
+        rig_face_25.FaceControlPoses(fp, armature)
         if config.maleRig:
-            rig_body_25.MaleControlPoses(fp, info)
+            rig_body_25.MaleControlPoses(fp, armature)
         if config.skirtRig == "own":
-            rig_skirt_25.SkirtControlPoses(fp, info)
+            rig_skirt_25.SkirtControlPoses(fp, armature)
     elif config.rigtype == 'rigify':
-        rigify_rig.RigifyWritePoses(fp, info)
-        rig_face_25.FaceControlPoses(fp, info)
+        rigify_rig.RigifyWritePoses(fp, armature)
+        rig_face_25.FaceControlPoses(fp, armature)
         
     if config.facepanel:
-        rig_panel_25.PanelControlPoses(fp, info)
+        rig_panel_25.PanelControlPoses(fp, armature)
         
-    for (bone, cinfo) in info.config.poseInfo.items():
+    for (bone, cinfo) in armature.config.poseInfo.items():
         cs = None
         constraints = []
         for (key, value) in cinfo:
@@ -730,7 +730,7 @@ def writeControlPoses(fp, info):
                     poleAngle = float(pt[1])
                     pt = (poleAngle, subtar)
                 constraints =  [('IK', 0, inf, ['IK', goal, n, pt, (True,False,True)])]
-        posebone.addPoseBone(fp, info, bone, cs, None, (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0, constraints)       
+        posebone.addPoseBone(fp, armature, bone, cs, None, (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0, constraints)       
         
     #for (path, modname) in config.customRigs:
     #    mod = sys.modules[modname]                
@@ -739,57 +739,57 @@ def writeControlPoses(fp, info):
     return
 
 
-def writeAllActions(fp, info):
+def writeAllActions(fp, armature):
     #rig_arm_25.ArmWriteActions(fp)
     #rig_leg_25.LegWriteActions(fp)
     #rig_finger_25.FingerWriteActions(fp)
     return
 
 
-def writeAllDrivers(fp, info):
-    config = info.config
+def writeAllDrivers(fp, armature):
+    config = armature.config
     if config.rigtype == 'mhx':      
         driverList = (
-            armature.drivers.writePropDrivers(fp, info, rig_arm_25.ArmPropDrivers, "", "Mha") +
-            armature.drivers.writePropDrivers(fp, info, rig_arm_25.ArmPropLRDrivers, "_L", "Mha") +
-            armature.drivers.writePropDrivers(fp, info, rig_arm_25.ArmPropLRDrivers, "_R", "Mha") +
-            armature.drivers.writePropDrivers(fp, info, rig_arm_25.SoftArmPropLRDrivers, "_L", "Mha") +
-            armature.drivers.writePropDrivers(fp, info, rig_arm_25.SoftArmPropLRDrivers, "_R", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, rig_arm_25.ArmPropDrivers, "", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, rig_arm_25.ArmPropLRDrivers, "_L", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, rig_arm_25.ArmPropLRDrivers, "_R", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, rig_arm_25.SoftArmPropLRDrivers, "_L", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, rig_arm_25.SoftArmPropLRDrivers, "_R", "Mha") +
             #writeScriptedBoneDrivers(fp, rig_leg_25.LegBoneDrivers) +
-            armature.drivers.writePropDrivers(fp, info, rig_leg_25.LegPropDrivers, "", "Mha") +
-            armature.drivers.writePropDrivers(fp, info, rig_leg_25.LegPropLRDrivers, "_L", "Mha") +
-            armature.drivers.writePropDrivers(fp, info, rig_leg_25.LegPropLRDrivers, "_R", "Mha") +
-            armature.drivers.writePropDrivers(fp, info, rig_leg_25.SoftLegPropLRDrivers, "_L", "Mha") +
-            armature.drivers.writePropDrivers(fp, info, rig_leg_25.SoftLegPropLRDrivers, "_R", "Mha") +
-            armature.drivers.writePropDrivers(fp, info, rig_body_25.BodyPropDrivers, "", "Mha")
+            armature.drivers.writePropDrivers(fp, armature, rig_leg_25.LegPropDrivers, "", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, rig_leg_25.LegPropLRDrivers, "_L", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, rig_leg_25.LegPropLRDrivers, "_R", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, rig_leg_25.SoftLegPropLRDrivers, "_L", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, rig_leg_25.SoftLegPropLRDrivers, "_R", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, rig_body_25.BodyPropDrivers, "", "Mha")
         )
         if config.advancedSpine:
-            driverList += armature.drivers.writePropDrivers(fp, info, rig_body_25.BodyPropDriversAdvanced, "", "Mha") 
+            driverList += armature.drivers.writePropDrivers(fp, armature, rig_body_25.BodyPropDriversAdvanced, "", "Mha") 
         driverList += (
-            armature.drivers.writePropDrivers(fp, info, rig_face_25.FacePropDrivers, "", "Mha") +
-            armature.drivers.writePropDrivers(fp, info, rig_face_25.SoftFacePropDrivers, "", "Mha")
+            armature.drivers.writePropDrivers(fp, armature, rig_face_25.FacePropDrivers, "", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, rig_face_25.SoftFacePropDrivers, "", "Mha")
         )
         fingDrivers = rig_finger_25.getFingerPropDrivers()
         driverList += (
-            armature.drivers.writePropDrivers(fp, info, fingDrivers, "_L", "Mha") +
-            armature.drivers.writePropDrivers(fp, info, fingDrivers, "_R", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, fingDrivers, "_L", "Mha") +
+            armature.drivers.writePropDrivers(fp, armature, fingDrivers, "_R", "Mha") +
             #rig_panel_25.FingerControlDrivers(fp)
-            armature.drivers.writeMuscleDrivers(fp, rig_shoulder_25.ShoulderDeformDrivers, info.name) +
-            armature.drivers.writeMuscleDrivers(fp, rig_arm_25.ArmDeformDrivers, info.name) +
-            armature.drivers.writeMuscleDrivers(fp, rig_leg_25.LegDeformDrivers, info.name)
+            armature.drivers.writeMuscleDrivers(fp, rig_shoulder_25.ShoulderDeformDrivers, armature.name) +
+            armature.drivers.writeMuscleDrivers(fp, rig_arm_25.ArmDeformDrivers, armature.name) +
+            armature.drivers.writeMuscleDrivers(fp, rig_leg_25.LegDeformDrivers, armature.name)
         )
-        faceDrivers = rig_face_25.FaceDeformDrivers(fp, info)
+        faceDrivers = rig_face_25.FaceDeformDrivers(fp, armature)
         driverList += armature.drivers.writeDrivers(fp, True, faceDrivers)
         return driverList
     elif rigtype == 'rigify':            
-        rig_face_25.FaceDeformDrivers(fp, info)        
-        armature.drivers.writePropDrivers(fp, info, rig_face_25.FacePropDrivers, "", "Mha")
-        armature.drivers.writePropDrivers(fp, info, rig_face_25.SoftFacePropDrivers, "", "Mha")
+        rig_face_25.FaceDeformDrivers(fp, armature)        
+        armature.drivers.writePropDrivers(fp, armature, rig_face_25.FacePropDrivers, "", "Mha")
+        armature.drivers.writePropDrivers(fp, armature, rig_face_25.SoftFacePropDrivers, "", "Mha")
     return []
     
 
-def writeAllProperties(fp, typ, info):
-    config = info.config
+def writeAllProperties(fp, typ, armature):
+    config = armature.config
     if typ != 'Object':
         return
     for (key, val) in config.objectProps:

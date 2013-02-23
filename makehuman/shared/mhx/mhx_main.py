@@ -68,7 +68,7 @@ class CInfo:
         
     def scanProxies(self):
         self.proxies = {}
-        for pfile in self.config.proxyList:
+        for pfile in self.config.getProxyList():
             if pfile.file:
                 print("Scan", pfile, pfile.type)
                 proxy = mh2proxy.readProxyFile(self.mesh, pfile, True)

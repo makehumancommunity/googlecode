@@ -52,7 +52,7 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
     """    
 
     obj = human.meshData
-    config.addObjects(human)
+    config.setHuman(human)
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
@@ -106,7 +106,7 @@ def exportStlBinary(human, filename, config, exportJoints = False):
     """    
 
     obj = human.meshData
-    config.addObjects(human)
+    config.setHuman(human)
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])

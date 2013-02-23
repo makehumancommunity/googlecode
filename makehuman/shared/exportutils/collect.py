@@ -265,7 +265,7 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, de
     global theStuff
     
     foundProxy = False    
-    for pfile in config.proxyList:
+    for pfile in config.getProxyList():
         if pfile.type == typename and pfile.file:
             proxy = mh2proxy.readProxyFile(obj, pfile, evalOnLoad=True, scale=config.scale)
             if proxy and proxy.name and proxy.texVerts:

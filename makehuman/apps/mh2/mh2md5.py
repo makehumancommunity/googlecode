@@ -321,7 +321,7 @@ def exportMd5(human, filepath, config):
     """
 
     obj = human.meshData
-    config.addObjects(human)
+    config.setHuman(human)
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])

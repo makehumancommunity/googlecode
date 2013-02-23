@@ -39,7 +39,7 @@ def exportFbx(human, filepath, config):
     posemode.exitPoseMode()        
     posemode.enterPoseMode()
     
-    config.addObjects(human)
+    config.setHuman(human)
     config.setupTexFolder(filepath)        
 
     log.message("Write FBX file %s" % filepath)

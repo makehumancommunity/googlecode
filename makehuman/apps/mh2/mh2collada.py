@@ -50,7 +50,7 @@ def exportCollada(human, filepath, config):
     gui3d.app.progress(0, text="Exporting %s" % filepath)
 
     time1 = time.clock()
-    config.addObjects(human)
+    config.setHuman(human)
     config.setupTexFolder(filepath)        
     try:
         fp = open(filepath, 'w')
