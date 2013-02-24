@@ -40,6 +40,8 @@ from bpy_extras.io_utils import ExportHelper, ImportHelper
 from mh_utils import mh
 from mh_utils import proxy as proxyfile
 
+settings = mh.CSettings("alpha7")
+
 #----------------------------------------------------------
 #   
 #----------------------------------------------------------
@@ -257,12 +259,12 @@ def convertTargetFile(context):
     scn = context.scene
     proxy,baseVerts = readConverter(scn)  
     
-    srcVerts = zeroVerts(mh.NTotalVerts)
+    srcVerts = zeroVerts(settings.nTotalVerts)
     diffVerts = copyVerts(baseVerts) 
     proxy.update(srcVerts, diffVerts)    
     
     srcFile = scn.CTSourceTarget
-    srcVerts = zeroVerts(mh.NTotalVerts)
+    srcVerts = zeroVerts(settings.nTotalVerts)
     readTarget(srcFile, srcVerts)    
 
     trgFile = os.path.join(scn.CTTargetDir, os.path.basename(srcFile))    
@@ -330,7 +332,7 @@ def readVGroups(filepath):
         if len(words) > 0 and words[0]== '#':
             if len(words) == 3 and words[1] == "weights":
                 vgrp = {}
-                for n in range(mh.NTotalVerts):
+                for n in range(settings.nTotalVerts):
                     vgrp[n] = 0
                 vgroups.append((words[2], vgrp))
                 lines = after

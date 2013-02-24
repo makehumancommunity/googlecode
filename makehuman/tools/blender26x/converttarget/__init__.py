@@ -81,11 +81,11 @@ class ConvertTargetPanel(bpy.types.Panel):
         layout.prop(scn, "CTSourceTarget", text="")
         layout.operator("mh.convert_target")
 
-        layout.separator()
-        layout.label("Clothes Conversion")
-        layout.operator("mh.set_source_mhclo")
-        layout.prop(scn, "CTSourceMhclo", text="")
-        layout.operator("mh.convert_mhclo")
+        #layout.separator()
+        #layout.label("Clothes Conversion")
+        #layout.operator("mh.set_source_mhclo")
+        #layout.prop(scn, "CTSourceMhclo", text="")
+        #layout.operator("mh.convert_mhclo")
 
         layout.separator()
         layout.label("Vertex Group Conversion")

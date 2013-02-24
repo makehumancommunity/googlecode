@@ -108,7 +108,6 @@ class MakeTargetPanel(bpy.types.Panel):
             layout.operator("mh.import_base_obj", text="Reimport Base Obj").delete = True
             #layout.operator("mh.delete_clothes")
             #layout.operator("mh.tights_only")
-            layout.separator()
         else:
             layout.operator("mh.quick_import_base_mhclo", text="Quick Import Base Mhclo").delete = False
             layout.operator("mh.quick_import_base_obj", text="Quick Import Base Obj").delete = False
@@ -154,13 +153,7 @@ class MakeTargetPanel(bpy.types.Panel):
             layout.operator("mh.discard_all_targets")
             layout.operator("mh.apply_targets")
 
-            layout.separator()
-            if ob.MhIrrelevantDeleted:
-                layout.label("Only %s Affected" % ob.MhAffectOnly)
-            else:
-                layout.label("Affect Only:")
-                layout.prop(ob, "MhAffectOnly", expand=True)
-                layout.operator("mh.delete_irrelevant")  
+            layout.separator()            
             row = layout.row()
             row.prop(ob, "SelectedOnly")
             row.prop(ob, "MhZeroOtherTargets")
@@ -169,13 +162,21 @@ class MakeTargetPanel(bpy.types.Panel):
             layout.operator("mh.saveas_target")       
             
             layout.separator()
-            layout.label("Editing")
             layout.operator("mh.symmetrize_target", text="Symm Left->Right").action = "Left"
             layout.operator("mh.symmetrize_target", text="Symm Right->Left").action = "Right"
             layout.operator("mh.symmetrize_target", text="Mirror Target").action = "Mirror"
             if ob.MhAffectOnly == 'Skirt':
                 layout.operator("mh.snap_waist")
                 layout.operator("mh.straighten_skirt")
+
+            return
+            layout.separator()
+            if ob.MhIrrelevantDeleted:
+                layout.label("Only %s Affected" % ob.MhAffectOnly)
+            else:
+                layout.label("Affect Only:")
+                layout.prop(ob, "MhAffectOnly", expand=True)
+                layout.operator("mh.delete_irrelevant")  
                 
         if rig and rig.type == 'ARMATURE':
             layout.separator()
