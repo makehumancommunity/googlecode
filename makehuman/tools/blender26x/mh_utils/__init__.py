@@ -27,7 +27,7 @@ bl_info = {
     "name": "MakeHuman Utilities",
     "author": "Thomas Larsson",
     "version": "0.2",
-    "blender": (2, 6, 1),
+    "blender": (2, 6, 5),
     "api": 40000,
     "location": "None",
     "description": "Utility package for MakeHuman scripts. Don't enable this addon - it is visible only to kill some annoying error messages in the console.",

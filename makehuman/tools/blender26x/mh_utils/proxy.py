@@ -78,8 +78,8 @@ class CProxy:
         return
         
     def __repr__(self):
-        return ("<CProxy %s %d\n  %s\n  w %s\n x %s\n  y %s\n  z %s>" % 
-            (self.name, self.firstVert, self.obj_file, self.rScale, self.xScale, self.yScale, self.zScale))
+        return ("<CProxy %s %d\n  %s\n  x %s  y %s  z %s>" % 
+            (self.name, self.firstVert, self.obj_file, self.xScale, self.yScale, self.zScale))
 
         
     def checkSanity(self, trgVerts):

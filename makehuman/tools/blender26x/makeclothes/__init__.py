@@ -42,6 +42,7 @@ bl_info = {
 if "bpy" in locals():
     print("Reloading makeclothes")
     import imp
+    imp.reload(mh_utils)
     imp.reload(error)
     imp.reload(mc)
     imp.reload(makeclothes)
@@ -52,6 +53,7 @@ else:
     import bpy
     import os
     from bpy.props import *
+    import mh_utils
     from . import error
     from . import mc
     from . import makeclothes

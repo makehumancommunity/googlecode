@@ -55,6 +55,25 @@ from mh_utils import proxy
 from mh_utils import import_obj
 
 #----------------------------------------------------------
+#   Settings
+#----------------------------------------------------------
+
+from . import mt
+
+def setSettings(context):
+    global settings
+    ob = context.object
+    if len(ob.data.vertices) == mt.settings["alpha7"].nTotalVerts:
+        print("Alpha 7 mesh detected")
+        settings = mt.settings["alpha7"]
+    elif len(ob.data.vertices) == mt.settings["alpha8"].nTotalVerts:
+        print("Alpha 8 mesh detected")
+        settings = mt.settings["alpha8"]
+    else:
+        print("Unknown mesh version")
+        settings = None
+
+#----------------------------------------------------------
 #   
 #----------------------------------------------------------
 
@@ -86,6 +105,7 @@ class VIEW3D_OT_QuickImportBaseMhcloButton(bpy.types.Operator):
         if self.delete:
             utils.deleteAll(context)
         import_obj.importBaseMhclo(context)
+        setSettings(context)
         return{'FINISHED'}    
 
 
@@ -99,6 +119,7 @@ class VIEW3D_OT_QuickImportBaseObjButton(bpy.types.Operator):
         if self.delete:
             utils.deleteAll(context)
         import_obj.importBaseObj(context)
+        setSettings(context)
         return{'FINISHED'}    
 
 
@@ -119,6 +140,7 @@ class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
         if self.delete:
             utils.deleteAll(context)
         import_obj.importBaseObj(context, filepath=self.filepath)
+        setSettings(context)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -132,7 +154,7 @@ class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        mh.Proxy = None
+        mh.proxy = None
         ob = context.object
         for mod in ob.modifiers:
             if mod.type == 'ARMATURE':
@@ -172,14 +194,14 @@ class VIEW3D_OT_DeleteIrrelevantButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         ob = context.object
         if ob.MhIrrelevantDeleted:
             return
         if ob.MhAffectOnly != 'All':
-            first,last = IrrelevantVerts[ob.MhAffectOnly]
+            first,last = settings.irrelevantVerts[ob.MhAffectOnly]
             deleteBetween(ob, first, last)
             if ob.MhAffectOnly in ['Tights']:
                 ob.MhMeshVertsDeleted = True
@@ -201,13 +223,13 @@ class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         ob = context.object
         if ob.MhMeshVertsDeleted:
-            first,last = IrrelevantVerts[ob.MhAffectOnly]
-            offset = OffsetVerts[ob.MhAffectOnly]
+            first,last = settings.irrelevantVerts[ob.MhAffectOnly]
+            offset = settings.offsetVerts[ob.MhAffectOnly]
             utils.loadTarget(self.properties.filepath, context, firstIrrelevant=first, lastIrrelevant=last, offset=offset)
         else:
             utils.loadTarget(self.properties.filepath, context)
@@ -265,7 +287,7 @@ class VIEW3D_OT_LoadTargetFromMeshButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return (pollRelax(context) and not context.object.MhMeshVertsDeleted)
+        return (context.object and not context.object.MhMeshVertsDeleted)
 
     def execute(self, context):
         loadTargetFromMesh(context)
@@ -299,7 +321,7 @@ class VIEW3D_OT_NewTargetButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         newTarget(context)
@@ -327,13 +349,13 @@ def doSaveTarget(context, filepath):
     filepath = fname + ".target"
     print("Saving target %s to %s" % (ob, filepath))
     if ob.MhAffectOnly != 'All':
-        first,last = AffectedVerts[ob.MhAffectOnly]
+        first,last = settings.affectedVerts[ob.MhAffectOnly]
         before,after = readLines(filepath, first,last)
         fp = open(filepath, "w", encoding="utf-8", newline="\n")  
         for line in before:
             fp.write(line)
         if ob.MhMeshVertsDeleted:
-            offset = OffsetVerts[ob.MhAffectOnly]
+            offset = settings.offsetVerts[ob.MhAffectOnly]
         else:
             offset = 0
         saveVerts(fp, ob, verts, saveAll, first, last, offset)
@@ -399,12 +421,13 @@ class VIEW3D_OT_SaveTargetButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         ob = context.object
         path = ob["FilePath"]
-        if True or mh.confirm:
+        print("ST", mh.confirm, path)
+        if mh.confirm:
             mh.confirm = None
             doSaveTarget(context, path)
             print("Target saved")
@@ -429,7 +452,7 @@ class VIEW3D_OT_SaveasTargetButton(bpy.types.Operator, ExportHelper):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         doSaveTarget(context, self.properties.filepath)
@@ -485,7 +508,7 @@ class VIEW3D_OT_PruneTargetFileButton(bpy.types.Operator, ExportHelper):
 
     @classmethod
     def poll(self, context):
-        return (pollRelax(context) and context.object.MhPruneEnabled)
+        return (context.object and context.object.MhPruneEnabled)
 
     def execute(self, context):
         ob = context.object
@@ -590,7 +613,7 @@ class VIEW3D_OT_LoadMhpButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         loadMhpFile(context, self.properties.filepath)
@@ -615,7 +638,7 @@ class VIEW3D_OT_SaveasMhpFileButton(bpy.types.Operator, ExportHelper):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         saveMhpFile(context, self.properties.filepath)
@@ -730,7 +753,7 @@ class VIEW3D_OT_LoadBvhButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         loadBvhFile(context, self.properties.filepath)
@@ -755,7 +778,7 @@ class VIEW3D_OT_SaveasBvhFileButton(bpy.types.Operator, ExportHelper):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         saveBvhFile(context, self.properties.filepath)
@@ -788,17 +811,10 @@ class VIEW3D_OT_ApplyTargetsButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return (pollRelax(context) and not context.object.MhMeshVertsDeleted)
+        return (context.object and not context.object.MhMeshVertsDeleted)
 
     def execute(self, context):
-        if mh.confirm:
-            mh.confirm = None
-            applyTargets(context)
-            print("All targets applied")
-        else:
-            mh.confirm = "mh.apply_targets"
-            mh.confirmString = "Apply all targets to mesh?"
-            mh.confirmString2 = None
+        applyTargets(context)
         return{'FINISHED'}            
 
 #----------------------------------------------------------
@@ -828,7 +844,7 @@ class VIEW3D_OT_BatchFixButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         global TargetSubPaths
@@ -878,7 +894,7 @@ class VIEW3D_OT_BatchRenderButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         global TargetSubPaths
@@ -896,140 +912,6 @@ class VIEW3D_OT_BatchRenderButton(bpy.types.Operator):
         return {'FINISHED'}            
         
 #----------------------------------------------------------
-#   relaxTarget(context):
-#----------------------------------------------------------
-
-def pollRelax(context):
-     return (context.object and not context.object.MhRelaxing)
-
-theNeighbors = {}
-theOriginalMesh = {}
-theRelaxedMesh = {}
-        
-def buildNeighbors(ob):
-    global theNeighbors
-    theNeighbors = {}
-    for e in ob.data.edges:
-        v0 = e.vertices[0]
-        v1 = e.vertices[1]
-        try:
-            theNeighbors[v0].append(v1)
-        except KeyError:
-            theNeighbors[v0] = [v1]
-        try:
-            theNeighbors[v1].append(v0)
-        except KeyError:
-            theNeighbors[v1] = [v0]
-
-
-def relaxSelected(context):
-    global theNeighbors, theOriginalMesh, theRelaxedMesh
-    ob = context.object
-    if theNeighbors == {}:
-        buildNeighbors(ob)
-
-    theRelaxedMesh = {}  
-    theOriginalMesh = {}
-    verts = ob.active_shape_key.data
-    for v in ob.data.vertices:
-        if v.select:
-            vn = v.index
-            theRelaxedMesh[vn] = None   
-            theOriginalMesh[vn] = verts[vn].co.copy()
-
-    for vn in theRelaxedMesh.keys():
-        lsum = Vector((0,0,0))
-        for nn in theNeighbors[vn]:
-            lsum += verts[nn].co
-        theRelaxedMesh[vn] = lsum/len(theNeighbors[vn])
-        
-    updateRelaxedMesh(ob, ob.MhRelaxAmount)            
-
-    
-def updateRelaxedMesh(ob, value): 
-    global theOriginalMesh, theRelaxedMesh
-    bpy.ops.object.mode_set(mode='OBJECT')
-    verts = ob.active_shape_key.data
-    for vn in theRelaxedMesh.keys():
-        verts[vn].co = (1-value)*theOriginalMesh[vn] + value*theRelaxedMesh[vn]
-        if not ob.MhRelaxX:
-            verts[vn].co[0] = theOriginalMesh[vn][0]
-        if not ob.MhRelaxY:
-            verts[vn].co[1] = theOriginalMesh[vn][1]
-        if not ob.MhRelaxZ:
-            verts[vn].co[2] = theOriginalMesh[vn][2]
-        
-
-
-class VIEW3D_OT_RelaxSelectedButton(bpy.types.Operator):
-    bl_idname = "mh.relax_selected"
-    bl_label = "Relax Selected"
-    bl_options = {'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        return pollRelax(context)
-
-    def execute(self, context):
-        relaxSelected(context)
-        context.object.MhRelaxing = True
-        return{'FINISHED'}      
-        
-    
-class VIEW3D_OT_CommitAndRelaxMoreButton(bpy.types.Operator):
-    bl_idname = "mh.commit_and_relax_more"
-    bl_label = "Commit And Relax More"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        global theOriginalMesh, theRelaxedMesh
-        ob = context.object
-        updateRelaxedMesh(ob, ob.MhRelaxAmount)
-        relaxSelected(context)
-        ob.MhRelaxing = True
-        return{'FINISHED'}      
-        
-    
-class VIEW3D_OT_TestRelaxButton(bpy.types.Operator):
-    bl_idname = "mh.test_relax"
-    bl_label = "Test Relax"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        ob = context.object
-        updateRelaxedMesh(ob, ob.MhRelaxAmount)
-        ob.MhRelaxing = True
-        return{'FINISHED'}      
-        
-    
-class VIEW3D_OT_DiscardRelaxButton(bpy.types.Operator):
-    bl_idname = "mh.discard_relax"
-    bl_label = "Discard Relax"
-
-    def execute(self, context):
-        global theOriginalMesh, theRelaxedMesh
-        ob = context.object
-        updateRelaxedMesh(ob, 0.0)
-        theOriginalMesh = {}
-        theRelaxedMesh = {}        
-        ob.MhRelaxing = False
-        return{'FINISHED'}      
-        
-    
-class VIEW3D_OT_CommitRelaxButton(bpy.types.Operator):
-    bl_idname = "mh.commit_relax"
-    bl_label = "Commit Relax"
-
-    def execute(self, context):
-        global theOriginalMesh, theRelaxedMesh
-        ob = context.object
-        updateRelaxedMesh(ob, ob.MhRelaxAmount)
-        theOriginalMesh = {}
-        theRelaxedMesh = {}        
-        ob.MhRelaxing = False
-        return{'FINISHED'}              
-    
-#----------------------------------------------------------
 #   fitTarget(context):
 #----------------------------------------------------------
 
@@ -1042,21 +924,21 @@ def fitTarget(context):
     ob.active_shape_key_index = ob["NTargets"]
     if not checkValid(ob):
         return
-    if not mh.Proxy:
+    if not mh.proxy:
         path = ob["ProxyFile"]
         if path:
             print("Rereading %s" % path)
-            mh.Proxy = proxy.CProxy()
-            mh.Proxy.read(path)
+            mh.proxy = proxy.CProxy()
+            mh.proxy.read(path)
         else:
             raise NameError("Object %s has no associated mhclo file. Cannot fit" % ob.name)
             return
-    #print(mh.Proxy)
+    #print(mh.proxy)
     if ob.MhAffectOnly != 'All':
-        first,last = AffectedVerts[ob.MhAffectOnly]
-        mh.Proxy.update(ob.active_shape_key.data, ob.active_shape_key.data, skipBefore=first, skipAfter=last)
+        first,last = settings.affectedVerts[ob.MhAffectOnly]
+        mh.proxy.update(ob.active_shape_key.data, ob.active_shape_key.data, skipBefore=first, skipAfter=last)
     else:
-        mh.Proxy.update(ob.active_shape_key.data, ob.active_shape_key.data)
+        mh.proxy.update(ob.active_shape_key.data, ob.active_shape_key.data)
     return
 
 
@@ -1067,7 +949,7 @@ class VIEW3D_OT_FitTargetButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return (pollRelax(context) and not context.object.MhMeshVertsDeleted)
+        return (context.object and not context.object.MhMeshVertsDeleted)
 
     def execute(self, context):
         fitTarget(context)
@@ -1112,7 +994,7 @@ class VIEW3D_OT_DiscardTargetButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         discardTarget(context)
@@ -1126,7 +1008,7 @@ class VIEW3D_OT_DiscardAllTargetsButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         discardAllTargets(context)
@@ -1200,7 +1082,7 @@ class VIEW3D_OT_SymmetrizeTargetButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         
@@ -1218,18 +1100,18 @@ class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         ob = context.object
         bpy.ops.object.mode_set(mode='OBJECT')
-        nVerts = len(SkirtWaist)
-        if len(TightsWaist) != nVerts:
+        nVerts = len(settings.skirtWaist)
+        if len(settings.tightsWaist) != nVerts:
             halt
         skey = ob.data.shape_keys.key_blocks[-1]
         verts = skey.data
         for n in range(nVerts):
-            verts[SkirtWaist[n]].co = verts[TightsWaist[n]].co
+            verts[settings.skirtWaist[n]].co = verts[settings.tightsWaist[n]].co
         bpy.ops.object.mode_set(mode='EDIT')
         return{'FINISHED'}            
 
@@ -1241,7 +1123,7 @@ class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         ob = context.object
@@ -1428,7 +1310,7 @@ class VIEW3D_OT_ConvertRigButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         scn = context.scene
@@ -1448,18 +1330,6 @@ class VIEW3D_OT_ConvertRigButton(bpy.types.Operator):
         newShapeDiffs = subLocs(newRestLocs, restLocs, nVerts)
         saveNewTarget(os.path.join(scn.MhProgramPath, "data/poses", scn.MhPoseTargetDir, filename + ".target"), newShapeDiffs, nVerts)
 
-        for vn in [3815,3821,4378]: #,,13288]: #, , 13288]:
-            print("\nv", vn, ob.data.vertices[vn].co)
-            print("  os", oldShapeDiffs[vn])
-            print("  or", oldRestLocs[vn])
-            print("  gl", globalLocs[vn])
-            print("  nr", newRestLocs[vn])            
-            print("  ns", newShapeDiffs[vn])            
-            for bone,w in oldWeights[vn]:
-                print("   ", bone, w)
-            for bone,w in newWeights[vn]:
-                print("   ", bone, w)
-
         return{'FINISHED'}           
 
 #----------------------------------------------------------
@@ -1467,12 +1337,6 @@ class VIEW3D_OT_ConvertRigButton(bpy.types.Operator):
 #----------------------------------------------------------
 
 def init():
-    bpy.types.Object.MhRelaxAmount = FloatProperty(name="Relax amount", description="0 = original mesh, 1 = fully relaxed mesh", default = 0.5, min=0.0, max=2.0)
-    bpy.types.Object.MhRelaxing = BoolProperty(default = False)
-    bpy.types.Object.MhRelaxX = BoolProperty(name="Relax X", description="Relaxing affects X coordinate", default = True)
-    bpy.types.Object.MhRelaxY = BoolProperty(name="Relax Y", description="Relaxing affects Y coordinate", default = True)
-    bpy.types.Object.MhRelaxZ = BoolProperty(name="Relax Z", description="Relaxing affects Z coordinate", default = True)
-    
     bpy.types.Scene.MhUnlock = BoolProperty(default = False)
     
     bpy.types.Object.MhPruneWholeDir = BoolProperty(name="Prune Entire Directory", default = False)
@@ -1565,7 +1429,7 @@ class VIEW3D_OT_InitButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return pollRelax(context)
+        return context.object
 
     def execute(self, context):
         initScene(context.scene)

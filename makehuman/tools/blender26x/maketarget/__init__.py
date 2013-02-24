@@ -177,19 +177,6 @@ class MakeTargetPanel(bpy.types.Panel):
                 layout.operator("mh.snap_waist")
                 layout.operator("mh.straighten_skirt")
                 
-            layout.operator("mh.relax_selected")
-            if ob.MhRelaxing:
-                layout.prop(ob, "MhRelaxAmount")
-                row = layout.row()
-                row.prop(ob, "MhRelaxX")
-                row.prop(ob, "MhRelaxY")
-                row.prop(ob, "MhRelaxZ")
-                layout.operator("mh.test_relax")
-                layout.operator("mh.discard_relax")
-                layout.operator("mh.commit_relax")
-                layout.operator("mh.commit_and_relax_more")
-                return
-
         if rig and rig.type == 'ARMATURE':
             layout.separator()
             layout.label("Export/Import MHP")

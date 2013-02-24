@@ -30,6 +30,8 @@ import math
 
 from . import mh
 
+Epsilon = 1e-3
+
 #----------------------------------------------------------
 #   Common panel parts
 #----------------------------------------------------------
@@ -186,13 +188,13 @@ def setupVertexPairs(context, insist):
     notfound = []
     for n,data in enumerate(verts):
         (z,y,x,vn) = data
-        findMirrorVert(n, nmax, verts, vn, x, y, z, mh.Epsilon, notfound)
+        findMirrorVert(n, nmax, verts, vn, x, y, z, Epsilon, notfound)
     
     """
     remainder = notfound
     notfound = []
     for n,vn,x,y,z in remainder:
-        findMirrorVert(n, nmax, verts, vn, x, y, z, 12*mh.Epsilon, notfound)
+        findMirrorVert(n, nmax, verts, vn, x, y, z, 12*Epsilon, notfound)
     """
     
     if notfound:            
@@ -235,9 +237,9 @@ def findVert(n, verts, v, x, y, z, notfound):
         dy = y-y1
         dz = z-z1
         dist = math.sqrt(dx*dx + dy*dy + dz*dz)
-        if dist < mh.Epsilon:
+        if dist < Epsilon:
             return v1
-    if abs(x) > mh.Epsilon:            
+    if abs(x) > Epsilon:            
         notfound.append((n,v,x,y,z))
     return -1            
 
