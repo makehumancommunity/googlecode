@@ -46,7 +46,7 @@ import mathutils
 import math
 from bpy.props import *
 
-from . import globvars as the
+from . import mh
 from . import utils
 
 numpy = utils.getNumpy("Warping")

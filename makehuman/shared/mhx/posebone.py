@@ -25,7 +25,7 @@ TODO
 
 from .mhx_globals import *
 
-import armature
+import armature as amtpkg
 
 
 def addCSlider(fp, info, bone, mx):
@@ -65,7 +65,7 @@ def addPoseBone(fp, info, bone, customShape, boneGroup, locArg, lockRot, lockSca
     hide = (flags & P_HID != 0)
 
     if not fp:
-        info.createdArmature.bones[bone].constraints = armature.constraints.getConstraints(bone, constraints, lockLoc, lockRot)
+        info.createdArmature.bones[bone].constraints = amtpkg.constraints.getConstraints(bone, constraints, lockLoc, lockRot)
         return
     
     fp.write("\n  Posebone %s %s \n" % (bone, True))
@@ -74,7 +74,7 @@ def addPoseBone(fp, info, bone, customShape, boneGroup, locArg, lockRot, lockSca
         index = boneGroupIndex(boneGroup, info)
         fp.write("    bone_group Refer BoneGroup %s ;\n" % boneGroup)
 
-    (uses, mins, maxs) = armature.constraints.writeConstraints(fp, info, bone, constraints, lockLoc, lockRot)
+    (uses, mins, maxs) = amtpkg.constraints.writeConstraints(fp, info, bone, constraints, lockLoc, lockRot)
 
     ik_stretch = None
     ik_stiff = None

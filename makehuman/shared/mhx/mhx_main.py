@@ -37,7 +37,7 @@ import log
 
 import mh2proxy
 import exportutils
-import armature
+import armature as amtpkg
 import warpmodifier
 import posemode
 import exportutils
@@ -153,7 +153,7 @@ def exportMhx_25(info, fp):
             mhx_rig.setupCube(fp, "MHCube05", 0.5, 0)
             copyFile25("shared/mhx/templates/panel_gizmo25.mhx", fp, None, info)    
         
-    gui3d.app.progress(0.1, text="Exporting armature")
+    gui3d.app.progress(0.1, text="Exporting amtpkg")
     copyFile25("shared/mhx/templates/rig-armature25.mhx", fp, None, info)    
     
     gui3d.app.progress(0.15, text="Exporting materials")    
@@ -451,7 +451,7 @@ def copyFile25(tmplName, fp, proxy, info):
                     fp.write(" 1")
                 fp.write(" ;\n")
                 fp.write("  AnimationData %sMesh True\n" % info.name)
-                #armature.drivers.writeTextureDrivers(fp, rig_panel_25.BodyLanguageTextureDrivers)
+                #amtpkg.drivers.writeTextureDrivers(fp, rig_panel_25.BodyLanguageTextureDrivers)
                 writeMaskDrivers(fp, info)
                 fp.write("  end AnimationData\n")
 
@@ -633,7 +633,7 @@ def writeMaskDrivers(fp, info):
     for prx in info.proxies.values():
         if prx.type == 'Clothes' and prx.mask:
             (dir, file) = prx.mask
-            armature.drivers.writePropDriver(fp, info, ["Mhh%s" % prx.name], "1-x1", 'use_textures', n)
+            amtpkg.drivers.writePropDriver(fp, info, ["Mhh%s" % prx.name], "1-x1", 'use_textures', n)
             n += 1            
     fp.write("#endif\n")
     return
@@ -765,8 +765,8 @@ def writeHideProp(fp, name):
 
 def writeHideAnimationData(fp, info, prefix, name):
     fp.write("AnimationData %s%sMesh True\n" % (prefix, name))
-    armature.drivers.writePropDriver(fp, info, ["Mhh%s" % name], "x1", "hide", -1)
-    armature.drivers.writePropDriver(fp, info, ["Mhh%s" % name], "x1", "hide_render", -1)
+    amtpkg.drivers.writePropDriver(fp, info, ["Mhh%s" % name], "x1", "hide", -1)
+    amtpkg.drivers.writePropDriver(fp, info, ["Mhh%s" % name], "x1", "hide_render", -1)
     fp.write("end AnimationData\n")
     return    
        
@@ -1133,31 +1133,31 @@ def writeShapeKeys(fp, info, name, proxy):
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
         
     if info.config.bodyShapes and info.config.rigtype == "mhx" and not isHair:
-        armature.drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, info.name)
-        armature.drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, info.name)
-        armature.drivers.writeTargetDrivers(fp, rig_arm_25.ElbowTargetDrivers, info.name)
-        armature.drivers.writeTargetDrivers(fp, rig_leg_25.KneeTargetDrivers, info.name)
+        amtpkg.drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, info.name)
+        amtpkg.drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, info.name)
+        amtpkg.drivers.writeTargetDrivers(fp, rig_arm_25.ElbowTargetDrivers, info.name)
+        amtpkg.drivers.writeTargetDrivers(fp, rig_leg_25.KneeTargetDrivers, info.name)
 
-        armature.drivers.writeRotDiffDrivers(fp, rig_arm_25.ArmShapeDrivers, proxy)
-        armature.drivers.writeRotDiffDrivers(fp, rig_leg_25.LegShapeDrivers, proxy)
-        #armature.drivers.writeShapePropDrivers(fp, info, rig_body_25.bodyShapes, proxy, "Mha")
+        amtpkg.drivers.writeRotDiffDrivers(fp, rig_arm_25.ArmShapeDrivers, proxy)
+        amtpkg.drivers.writeRotDiffDrivers(fp, rig_leg_25.LegShapeDrivers, proxy)
+        #amtpkg.drivers.writeShapePropDrivers(fp, info, rig_body_25.bodyShapes, proxy, "Mha")
 
     fp.write("#if toggle&T_ShapeDrivers\n")
 
     if isHuman:
         for path,name in info.config.customShapeFiles:
-            armature.drivers.writeShapePropDrivers(fp, info, [name], proxy, "")    
+            amtpkg.drivers.writeShapePropDrivers(fp, info, [name], proxy, "")    
 
         if info.config.expressions:
-            armature.drivers.writeShapePropDrivers(fp, info, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
+            amtpkg.drivers.writeShapePropDrivers(fp, info, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
             
         if info.config.facepanel:
-            armature.drivers.writeShapeDrivers(fp, info, rig_panel_25.BodyLanguageShapeDrivers, proxy)
+            amtpkg.drivers.writeShapeDrivers(fp, info, rig_panel_25.BodyLanguageShapeDrivers, proxy)
         
         skeys = []
         for (skey, val, string, min, max) in  info.config.customProps:
             skeys.append(skey)
-        armature.drivers.writeShapePropDrivers(fp, info, skeys, proxy, "Mha")    
+        amtpkg.drivers.writeShapePropDrivers(fp, info, skeys, proxy, "Mha")    
     fp.write("#endif\n")
         
     fp.write("  end AnimationData\n\n")

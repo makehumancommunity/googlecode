@@ -33,7 +33,7 @@ from mathutils import Vector
 from bpy.props import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
-from . import globvars as the
+from . import mh
 from . import utils
 from . import proxy
 
@@ -43,7 +43,7 @@ from . import proxy
 #----------------------------------------------------------
 
 def importBaseObj(context, filepath=None):
-    the.Proxy = None
+    mh.proxy = None
     if not filepath:
         filepath = os.path.join(context.scene.MhProgramPath, "data/3dobjs/base.obj")
     ob = importObj(filepath, context)
@@ -57,18 +57,18 @@ def importBaseObj(context, filepath=None):
 
 
 def importBaseMhclo(context, filepath=None):
-    the.Proxy = proxy.CProxy()
+    mh.proxy = proxy.CProxy()
     if not filepath:
         filepath = os.path.join(context.scene.MhProgramPath, "data/3dobjs/base.mhclo")
-    the.Proxy.read(filepath)
-    ob = importObj(the.Proxy.obj_file, context)
+    mh.proxy.read(filepath)
+    ob = importObj(mh.proxy.obj_file, context)
     ob["NTargets"] = 0
     ob["ProxyFile"] = filepath
-    ob["ObjFile"] = the.Proxy.obj_file
+    ob["ObjFile"] = mh.proxy.obj_file
     ob["MhxMesh"] = True
     utils.setupVertexPairs(context, True)
     print("Base object imported")
-    print(the.Proxy)
+    print(mh.proxy)
     return ob
     
 
@@ -78,6 +78,7 @@ def importBaseMhclo(context, filepath=None):
 #----------------------------------------------------------
 
 def importObj(filepath, context):
+    global BMeshAware
     scn = context.scene
     obname = utils.nameFromPath(filepath)
     fp = open(filepath, "rU")  
@@ -135,14 +136,14 @@ def importObj(filepath, context):
     
     try:
         me.polygons
-        the.BMeshAware = True
+        BMeshAware = True
         print("Using BMesh")
     except:
-        the.BMeshAware = False
+        BMeshAware = False
         print("Not using BMesh")
 
     if texverts:
-        if the.BMeshAware:
+        if BMeshAware:
             addUvLayerBMesh(obname, me, texverts, texfaces)
         else:
             addUvLayerNoBMesh(obname, me, texverts, texfaces)
@@ -155,7 +156,7 @@ def importObj(filepath, context):
             vgrp = ob.vertex_groups.new(name=name)
             if vgrp.name != name:
                 print("WARNING: Group name %s => %s" % (name, vgrp.name))
-            if the.BMeshAware:
+            if BMeshAware:
                 for nf in group:
                     f = me.polygons[nf]
                     for v in f.vertices:
@@ -217,7 +218,8 @@ def addUvLayerNoBMesh(obname, me, texverts, texfaces):
                 data[n].uv4 = texverts[tf[3]]
 
 
-def addMaterials(groups, me, string):        
+def addMaterials(groups, me, string):  
+    global BMeshAware
     mn = 0
     for (name,group) in groups.items():
         try:
@@ -228,7 +230,7 @@ def addMaterials(groups, me, string):
             print("WARNING: %s name %s => %s" % (string, name, mat.name))
         mat.diffuse_color = (random.random(), random.random(), random.random())
         me.materials.append(mat)
-        if the.BMeshAware:
+        if BMeshAware:
             for nf in group:
                 f = me.polygons[nf]
                 f.material_index = mn

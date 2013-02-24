@@ -39,7 +39,7 @@ bl_info = {
 if "bpy" in locals():
     print("Reloading mh_utils")
     import imp
-    imp.reload(globvars)
+    imp.reload(mh)
     imp.reload(utils)
     imp.reload(settings)
     imp.reload(proxy)
@@ -49,7 +49,7 @@ if "bpy" in locals():
 else:
     print("Loading mh_utils")
     import bpy
-    from . import globvars as the
+    from . import mh
     from . import utils
     from . import settings
     from . import proxy
@@ -67,8 +67,8 @@ class VIEW3D_OT_DummyButton(bpy.types.Operator):
 
 
 def init():
-    the.Confirm = None
-    the.ConfirmString = "?"
+    mh.confirm = None
+    mh.confirmString = "?"
 
     settings.init()
     import_obj.init()

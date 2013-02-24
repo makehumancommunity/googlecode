@@ -49,17 +49,17 @@ from mathutils import Vector, Quaternion, Matrix
 from bpy.props import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
-from mh_utils import globvars as the
+from mh_utils import mh
 from mh_utils import utils
 from mh_utils import proxy
 from mh_utils import import_obj
-
 
 #----------------------------------------------------------
 #   
 #----------------------------------------------------------
 
 Epsilon = 1e-4
+NTotalVerts    = 18528
 
 def round(x):
     if abs(x) < Epsilon:
@@ -72,7 +72,6 @@ def round(x):
             return "-" + string[2:7]
     return string
 
-        
 #----------------------------------------------------------
 #   
 #----------------------------------------------------------
@@ -133,7 +132,7 @@ class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        the.Proxy = None
+        mh.Proxy = None
         ob = context.object
         for mod in ob.modifiers:
             if mod.type == 'ARMATURE':
@@ -165,24 +164,6 @@ def deleteBetween(ob, first, last):
         bpy.ops.mesh.delete(type='VERT')
         bpy.ops.object.mode_set(mode='OBJECT')
 
-
-IrrelevantVerts = {
-    'Body' : (the.FirstSkirtVert, the.NTotalVerts),
-    'Skirt' : (the.NTotalVerts, the.NTotalVerts),
-    'Tights' : (the.FirstSkirtVert, the.FirstTightsVert),
-}
-
-AffectedVerts = {
-    'Body' : (0, the.FirstSkirtVert),
-    'Skirt' : (the.FirstSkirtVert, the.FirstTightsVert),
-    'Tights' : (the.FirstTightsVert, the.NTotalVerts),
-}
-
-OffsetVerts = {
-    'Body' : 0,
-    'Skirt' : 0,
-    'Tights' : the.FirstTightsVert-the.FirstSkirtVert,
-}
 
 class VIEW3D_OT_DeleteIrrelevantButton(bpy.types.Operator):
     bl_idname = "mh.delete_irrelevant"
@@ -423,14 +404,14 @@ class VIEW3D_OT_SaveTargetButton(bpy.types.Operator):
     def execute(self, context):
         ob = context.object
         path = ob["FilePath"]
-        if True or the.Confirm:
-            the.Confirm = None
+        if True or mh.confirm:
+            mh.confirm = None
             doSaveTarget(context, path)
             print("Target saved")
         else:
-            the.Confirm = "mh.save_target"
-            the.ConfirmString = "Overwrite target file?"
-            the.ConfirmString2 = ' "%s?"' % os.path.basename(path)
+            mh.confirm = "mh.save_target"
+            mh.confirmString = "Overwrite target file?"
+            mh.confirmString2 = ' "%s?"' % os.path.basename(path)
         return{'FINISHED'}            
 
 
@@ -468,7 +449,7 @@ def pruneTarget(ob, filepath):
     lines = []
     before,after = readLines(filepath, -1,-1)
     for vn,string in after:
-        if vn < the.NTotalVerts and ob.data.vertices[vn].select:
+        if vn < NTotalVerts and ob.data.vertices[vn].select:
             lines.append((vn, string))
     print("Pruning", len(before), len(after), len(lines))
     fp = open(filepath, "w", encoding="utf-8", newline="\n")
@@ -810,14 +791,14 @@ class VIEW3D_OT_ApplyTargetsButton(bpy.types.Operator):
         return (pollRelax(context) and not context.object.MhMeshVertsDeleted)
 
     def execute(self, context):
-        if the.Confirm:
-            the.Confirm = None
+        if mh.confirm:
+            mh.confirm = None
             applyTargets(context)
             print("All targets applied")
         else:
-            the.Confirm = "mh.apply_targets"
-            the.ConfirmString = "Apply all targets to mesh?"
-            the.ConfirmString2 = None
+            mh.confirm = "mh.apply_targets"
+            mh.confirmString = "Apply all targets to mesh?"
+            mh.confirmString2 = None
         return{'FINISHED'}            
 
 #----------------------------------------------------------
@@ -852,12 +833,12 @@ class VIEW3D_OT_BatchFixButton(bpy.types.Operator):
     def execute(self, context):
         global TargetSubPaths
         scn = context.scene
-        if not the.Confirm:
-            the.ConfirmString = "Really batch fix targets?"
-            the.ConfirmString2 = None
-            the.Confirm = "mh.batch_fix"
+        if not mh.confirm:
+            mh.confirmString = "Really batch fix targets?"
+            mh.confirmString2 = None
+            mh.confirm = "mh.batch_fix"
             return {'FINISHED'} 
-        the.Confirm = None
+        mh.confirm = None
         folder = os.path.realpath(os.path.expanduser(scn.MhTargetPath))
         batchFixTargets(context, folder)
         #for subfolder in TargetSubPaths:
@@ -1061,21 +1042,21 @@ def fitTarget(context):
     ob.active_shape_key_index = ob["NTargets"]
     if not checkValid(ob):
         return
-    if not the.Proxy:
+    if not mh.Proxy:
         path = ob["ProxyFile"]
         if path:
             print("Rereading %s" % path)
-            the.Proxy = proxy.CProxy()
-            the.Proxy.read(path)
+            mh.Proxy = proxy.CProxy()
+            mh.Proxy.read(path)
         else:
             raise NameError("Object %s has no associated mhclo file. Cannot fit" % ob.name)
             return
-    #print(the.Proxy)
+    #print(mh.Proxy)
     if ob.MhAffectOnly != 'All':
         first,last = AffectedVerts[ob.MhAffectOnly]
-        the.Proxy.update(ob.active_shape_key.data, ob.active_shape_key.data, skipBefore=first, skipAfter=last)
+        mh.Proxy.update(ob.active_shape_key.data, ob.active_shape_key.data, skipBefore=first, skipAfter=last)
     else:
-        the.Proxy.update(ob.active_shape_key.data, ob.active_shape_key.data)
+        mh.Proxy.update(ob.active_shape_key.data, ob.active_shape_key.data)
     return
 
 
@@ -1135,15 +1116,6 @@ class VIEW3D_OT_DiscardTargetButton(bpy.types.Operator):
 
     def execute(self, context):
         discardTarget(context)
-        """
-        if the.Confirm:        
-            the.Confirm = None
-            discardTarget(context)
-        else:
-            the.Confirm = "mh.discard_target"
-            the.ConfirmString = "Really discard target?"
-            the.ConfirmString2 = None
-        """            
         return{'FINISHED'}                
 
 
@@ -1157,13 +1129,7 @@ class VIEW3D_OT_DiscardAllTargetsButton(bpy.types.Operator):
         return pollRelax(context)
 
     def execute(self, context):
-        if the.Confirm:        
-            the.Confirm = None
-            discardAllTargets(context)
-        else:
-            the.Confirm = "mh.discard_all_targets"
-            the.ConfirmString = "Really discard all targets?"
-            the.ConfirmString2 = None
+        discardAllTargets(context)
         return{'FINISHED'}                
 
 #----------------------------------------------------------
@@ -1179,11 +1145,11 @@ def symmetrizeTarget(context, left2right, mirror):
     bpy.ops.object.mode_set(mode='OBJECT')
     verts = ob.active_shape_key.data
     
-    for vn in the.Mid.keys():
+    for vn in mh.Mid.keys():
         v = verts[vn]
         v.co[0] = 0
         
-    for (lvn,rvn) in the.Left.items():
+    for (lvn,rvn) in mh.Left.items():
         lv = verts[lvn].co
         rv = verts[rvn].co
         if mirror:
@@ -1208,10 +1174,10 @@ def symmetrizeTarget(context, left2right, mirror):
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
         
-    for vn in the.Mid.keys():
+    for vn in mh.Mid.keys():
         bverts[vn].select = selected[vn]
 
-    for (lvn,rvn) in the.Left.items():
+    for (lvn,rvn) in mh.Left.items():
         if mirror:
             bverts[lvn].select = selected[rvn]
             bverts[rvn].select = selected[lvn]
@@ -1244,53 +1210,6 @@ class VIEW3D_OT_SymmetrizeTargetButton(bpy.types.Operator):
 #----------------------------------------------------------
 #   Snapping
 #----------------------------------------------------------
-
-SkirtWaist =   [15340, 15341, 15736, 15737, 15738, 15739, 15740, 15741, 15742, 15743, 15744, 15745, 15746, 15747, 15748, 15749, 15750, 15751, 15752, 15753, 15754, 15755, ]
-TightsWaist =  [16893, 16898, 17824, 17825, 17826, 17827, 17828, 17829, 17830, 17831, 17832, 17833, 17834, 17849, 17864, 17879, 17915, 17916, 17917, 18091, 18096, 18475, ]
-
-
-XYSkirtColumns = [
-  [15340, 15383, 15384, 15427, 15428, 15471, 15472, 15515, 15516, 15559, 15560, 15603, 15604, 15647, 15648, 15691, 15692, 15735, ],
-  [15754, 15757, 15794, 15797, 15834, 15837, 15874, 15877, 15914, 15917, 15954, 15957, 15994, 15997, 16034, 16037, 16074, 16077, ],
-  [15738, 15773, 15778, 15813, 15818, 15853, 15858, 15893, 15898, 15933, 15938, 15973, 15978, 16013, 16018, 16053, 16058, 16093, ],
-  [15737, 15774, 15777, 15814, 15817, 15854, 15857, 15894, 15897, 15934, 15937, 15974, 15977, 16014, 16017, 16054, 16057, 16094, ],
-  [15736, 15775, 15776, 15815, 15816, 15855, 15856, 15895, 15896, 15935, 15936, 15975, 15976, 16015, 16016, 16055, 16056, 16095, ],
-  [15746, 15765, 15786, 15805, 15826, 15845, 15866, 15885, 15906, 15925, 15946, 15965, 15986, 16005, 16026, 16045, 16066, 16085, ],
-  [15740, 15771, 15780, 15811, 15820, 15851, 15860, 15891, 15900, 15931, 15940, 15971, 15980, 16011, 16020, 16051, 16060, 16091, ],
-  [15745, 15766, 15785, 15806, 15825, 15846, 15865, 15886, 15905, 15926, 15945, 15966, 15985, 16006, 16025, 16046, 16065, 16086, ],
-  [15739, 15772, 15779, 15812, 15819, 15852, 15859, 15892, 15899, 15932, 15939, 15972, 15979, 16012, 16019, 16052, 16059, 16092, ],
-
-  [15741, 15770, 15781, 15810, 15821, 15850, 15861, 15890, 15901, 15930, 15941, 15970, 15981, 16010, 16021, 16050, 16061, 16090, ],
-  [15742, 15769, 15782, 15809, 15822, 15849, 15862, 15889, 15902, 15929, 15942, 15969, 15982, 16009, 16022, 16049, 16062, 16089, ],
-  [15748, 15763, 15788, 15803, 15828, 15843, 15868, 15883, 15908, 15923, 15948, 15963, 15988, 16003, 16028, 16043, 16068, 16083, ],
-  [15747, 15764, 15787, 15804, 15827, 15844, 15867, 15884, 15907, 15924, 15947, 15964, 15987, 16004, 16027, 16044, 16067, 16084, ],
-  [15743, 15768, 15783, 15808, 15823, 15848, 15863, 15888, 15903, 15928, 15943, 15968, 15983, 16008, 16023, 16048, 16063, 16088, ],
-  [15749, 15762, 15789, 15802, 15829, 15842, 15869, 15882, 15909, 15922, 15949, 15962, 15989, 16002, 16029, 16042, 16069, 16082, ],
-  [15744, 15767, 15784, 15807, 15824, 15847, 15864, 15887, 15904, 15927, 15944, 15967, 15984, 16007, 16024, 16047, 16064, 16087, ],
-  [15755, 15756, 15795, 15796, 15835, 15836, 15875, 15876, 15915, 15916, 15955, 15956, 15995, 15996, 16035, 16036, 16075, 16076, ],
-
-  [15750, 15761, 15790, 15801, 15830, 15841, 15870, 15881, 15910, 15921, 15950, 15961, 15990, 16001, 16030, 16041, 16070, 16081, ],
-  [15751, 15760, 15791, 15800, 15831, 15840, 15871, 15880, 15911, 15920, 15951, 15960, 15991, 16000, 16031, 16040, 16071, 16080, ],
-  [15752, 15759, 15792, 15799, 15832, 15839, 15872, 15879, 15912, 15919, 15952, 15959, 15992, 15999, 16032, 16039, 16072, 16079, ],
-  [15753, 15758, 15793, 15798, 15833, 15838, 15873, 15878, 15913, 15918, 15953, 15958, 15993, 15998, 16033, 16038, 16073, 16078, ],
-  [15341, 15382, 15385, 15426, 15429, 15470, 15473, 15514, 15517, 15558, 15561, 15602, 15605, 15646, 15649, 15690, 15693, 15734, ],
-]  
-
-ZSkirtRows = [
-  [15472, 15473, 15856, 15857, 15858, 15859, 15860, 15861, 15862, 15863, 15864, 15865, 15866, 15867, 15868, 15869, 15870, 15871, 15872, 15873, 15874, 15875, ],
-  [15514, 15515, 15876, 15877, 15878, 15879, 15880, 15881, 15882, 15883, 15884, 15885, 15886, 15887, 15888, 15889, 15890, 15891, 15892, 15893, 15894, 15895, ],
-  [15516, 15517, 15896, 15897, 15898, 15899, 15900, 15901, 15902, 15903, 15904, 15905, 15906, 15907, 15908, 15909, 15910, 15911, 15912, 15913, 15914, 15915, ],
-  [15558, 15559, 15916, 15917, 15918, 15919, 15920, 15921, 15922, 15923, 15924, 15925, 15926, 15927, 15928, 15929, 15930, 15931, 15932, 15933, 15934, 15935, ],
-  [15560, 15561, 15936, 15937, 15938, 15939, 15940, 15941, 15942, 15943, 15944, 15945, 15946, 15947, 15948, 15949, 15950, 15951, 15952, 15953, 15954, 15955, ],
-  [15602, 15603, 15956, 15957, 15958, 15959, 15960, 15961, 15962, 15963, 15964, 15965, 15966, 15967, 15968, 15969, 15970, 15971, 15972, 15973, 15974, 15975, ],
-  [15604, 15605, 15976, 15977, 15978, 15979, 15980, 15981, 15982, 15983, 15984, 15985, 15986, 15987, 15988, 15989, 15990, 15991, 15992, 15993, 15994, 15995, ],
-  [15646, 15647, 15996, 15997, 15998, 15999, 16000, 16001, 16002, 16003, 16004, 16005, 16006, 16007, 16008, 16009, 16010, 16011, 16012, 16013, 16014, 16015, ],
-  [15648, 15649, 16016, 16017, 16018, 16019, 16020, 16021, 16022, 16023, 16024, 16025, 16026, 16027, 16028, 16029, 16030, 16031, 16032, 16033, 16034, 16035, ],
-  [15690, 15691, 16036, 16037, 16038, 16039, 16040, 16041, 16042, 16043, 16044, 16045, 16046, 16047, 16048, 16049, 16050, 16051, 16052, 16053, 16054, 16055, ],
-  [15692, 15693, 16056, 16057, 16058, 16059, 16060, 16061, 16062, 16063, 16064, 16065, 16066, 16067, 16068, 16069, 16070, 16071, 16072, 16073, 16074, 16075, ],
-  [15734, 15735, 16076, 16077, 16078, 16079, 16080, 16081, 16082, 16083, 16084, 16085, 16086, 16087, 16088, 16089, 16090, 16091, 16092, 16093, 16094, 16095, ],
-]
-
 
 class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
     bl_idname = "mh.snap_waist"
@@ -1407,7 +1326,7 @@ def readWeights(filepath, nVerts):
                 bone = None
         elif bone:
             vn = int(words[0])
-            if vn < the.NBodyVerts:
+            if vn < mh.NBodyVerts:
                 weights[vn].append( (bone, float(words[1])) )
     fp.close()           
     

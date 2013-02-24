@@ -76,15 +76,22 @@ class ConvertTargetPanel(bpy.types.Panel):
         layout.prop(scn, "CTTargetDir", text="")
 
         layout.separator()
+        layout.label("Target Conversion")
         layout.operator("mh.set_source_target")
         layout.prop(scn, "CTSourceTarget", text="")
-
-        layout.separator()
-        layout.prop(scn, "CTUseManualScale")
-        layout.prop(scn, "CTManualScale")
-
-        layout.separator()
         layout.operator("mh.convert_target")
+
+        layout.separator()
+        layout.label("Clothes Conversion")
+        layout.operator("mh.set_source_mhclo")
+        layout.prop(scn, "CTSourceMhclo", text="")
+        layout.operator("mh.convert_mhclo")
+
+        layout.separator()
+        layout.label("Vertex Group Conversion")
+        layout.operator("mh.set_source_vgroup")
+        layout.prop(scn, "CTSourceVGroup", text="")
+        layout.operator("mh.convert_vgroup")
 
 
 #----------------------------------------------------------

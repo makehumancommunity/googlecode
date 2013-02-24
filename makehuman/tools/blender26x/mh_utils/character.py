@@ -28,7 +28,7 @@ import os
 from bpy.props import *
 import mathutils
 
-from . import globvars as the
+from . import mh
 from . import utils
 from . import import_obj
 

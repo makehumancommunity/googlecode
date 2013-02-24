@@ -38,6 +38,7 @@ if "bpy" in locals():
     print("Reloading maketarget")
     import imp    
     imp.reload(mh_utils)
+    imp.reload(mh)
     imp.reload(utils)
     imp.reload(settings)
     imp.reload(proxy)
@@ -45,8 +46,8 @@ if "bpy" in locals():
     imp.reload(import_obj)
     imp.reload(character)
     
+    imp.reload(mt)
     imp.reload(maketarget)
-    imp.reload(mhm)
     imp.reload(export_mh_obj)
 else:
     print("Loading maketarget")
@@ -56,7 +57,7 @@ else:
     from bpy_extras.io_utils import ImportHelper, ExportHelper
 
     import mh_utils
-    from mh_utils import globvars as the
+    from mh_utils import mh
     from mh_utils import utils
     from mh_utils import settings
     from mh_utils import proxy
@@ -64,8 +65,8 @@ else:
     from mh_utils import import_obj
     from mh_utils import character
     
+    from . import mt
     from . import maketarget
-    from . import mhm
     from . import export_mh_obj
             
 #----------------------------------------------------------
@@ -209,43 +210,6 @@ class MakeTargetPanel(bpy.types.Panel):
             layout.operator("mh.convert_rig")
 
 #----------------------------------------------------------
-#   class MhmPanel(bpy.types.Panel):
-#----------------------------------------------------------
-
-class MhmPanel(bpy.types.Panel):
-    bl_label = "MHM"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_options = {'DEFAULT_CLOSED'}
-    
-    @classmethod
-    def poll(self, context):
-        return False and maketarget.isInited(context.scene)
-
-    def draw(self, context):
-        layout = self.layout
-        ob = context.object
-        scn = context.scene
-        if not utils.drawConfirm(layout, scn):
-            return
-        settings.drawDirectories(layout, scn)
-
-        if utils.isBaseOrTarget(ob):
-            for (label, names) in mhm.MhmDisplay:
-                layout.label(label)
-                for name in names:
-                    prop = mhm.MhmNameProps[name]
-                    split = layout.split(0.8)
-                    split.prop(ob.data, prop)
-                    split.operator("mh.update_all_sliders")
-            layout.separator()                
-            layout.operator("mh.update_all_sliders")        
-            layout.operator("mh.reset_all_sliders")        
-            layout.operator("mh.load_mhm_file")                        
-            layout.operator("mh.discard_all_targets")
-
-
-#----------------------------------------------------------
 #   class MakeTargetBatchPanel(bpy.types.Panel):
 #----------------------------------------------------------
 
@@ -340,7 +304,6 @@ def register():
         maketarget.initBatch(bpy.context.scene)
     except:
         pass
-    mhm.init()        
     bpy.utils.register_module(__name__)
     bpy.types.INFO_MT_file_export.append(menu_func)
   

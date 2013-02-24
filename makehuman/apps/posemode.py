@@ -23,7 +23,7 @@ TODO
 """
 
 import gui3d
-import armature
+import armature as amtpkg
 import warpmodifier
 import humanmodifier
 import log
@@ -36,7 +36,7 @@ def resetPoseMode():
     if gui3d.app:
         human = gui3d.app.selectedHuman
         if human:
-            human.armature = None
+            human.amtpkg = None
     
 resetPoseMode()    
 
@@ -63,8 +63,8 @@ def enterPoseMode():
     warpmodifier.clearRefObject()
     human.warpsNeedReset = False
     if False and theShadowBones:
-        amt = armature.rigdefs.createRig(human, "Soft1", False)
-        human.armature = amt
+        amt = amtpkg.rigdefs.createRig(human, "Soft1", False)
+        human.amtpkg = amt
         amt.restore(theShadowBones)
         amt.update()
     log.message("Pose mode entered")
@@ -80,7 +80,7 @@ def exitPoseMode():
     human = gui3d.app.selectedHuman
     printVert(human)
     
-    amt = human.armature
+    amt = human.amtpkg
     obj = human.meshData
     if amt:
         theShadowBones = amt.store()
@@ -97,7 +97,7 @@ def exitPoseMode():
         amt.update()     
         amt.dirty = True
         #amt.removeModifier()
-        human.armature = None    
+        human.amtpkg = None    
     warpmodifier.shadowCoords = None    
     log.message("Pose mode exited")
     #gui3d.app.poseModeBox.selected = False

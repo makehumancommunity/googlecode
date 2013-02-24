@@ -28,7 +28,7 @@ import bpy
 import os
 import math
 
-from . import globvars as the
+from . import mh
 
 #----------------------------------------------------------
 #   Common panel parts
@@ -38,21 +38,21 @@ def drawConfirm(layout, scn):
     #if not maketarget.isInited(scn):
     #    layout.operator("mh.init")
     #    return False
-    if the.Confirm:
-        layout.label(the.ConfirmString)            
-        if the.ConfirmString2:
-           layout.label(the.ConfirmString2)            
-        layout.operator(the.Confirm, text="Yes") 
+    if mh.confirm:
+        layout.label(mh.confirmString)            
+        if mh.confirmString2:
+           layout.label(mh.confirmString2)            
+        layout.operator(mh.confirm, text="Yes") 
         layout.operator("mh.skip")
         return False
     return True
     
     
 def skipConfirm():            
-    print("Skipped:", the.ConfirmString)
-    the.Confirm = None
-    the.ConfirmString = "?"
-    the.ConfirmString2 = None
+    print("Skipped:", mh.confirmString)
+    mh.confirm = None
+    mh.confirmString = "?"
+    mh.confirmString2 = None
     
             
 #----------------------------------------------------------
@@ -60,7 +60,7 @@ def skipConfirm():
 #----------------------------------------------------------
             
 def checkForNumpy(layout, string):            
-    if not the.foundNumpy:        
+    if not mh.foundNumpy:        
         layout.label("numpy could not be loaded,")
         layout.label("either because it was not found")
         layout.label("or this is a 64-bit Blender.")
@@ -94,11 +94,11 @@ def getModule(modname):
 def getNumpy(string):    
     try:    
         numpy = getModule("numpy")  
-        the.foundNumpy = True
+        mh.foundNumpy = True
         print("Numpy successfully loaded")
     except:
         numpy = None
-        the.foundNumpy = False
+        mh.foundNumpy = False
         print("Failed to load numpy. %s will not work" % string)
     return numpy        
 
@@ -162,12 +162,12 @@ def printVec(string, vec):
 #   setupVertexPairs(ob, insist):
 #----------------------------------------------------------
 
-the.Left = {}
-the.Right = {}
-the.Mid = {}
+mh.Left = {}
+mh.Right = {}
+mh.Mid = {}
 
 def setupVertexPairs(context, insist):
-    if the.Left.keys() and not insist:
+    if mh.Left.keys() and not insist:
         print("Vertex pair already set up")
         return
     ob = context.object
@@ -179,20 +179,20 @@ def setupVertexPairs(context, insist):
         verts.append((z,y,x,v.index))
     verts.sort()     
     
-    the.Left = {}
-    the.Right = {}
-    the.Mid = {}
+    mh.Left = {}
+    mh.Right = {}
+    mh.Mid = {}
     nmax = len(verts)
     notfound = []
     for n,data in enumerate(verts):
         (z,y,x,vn) = data
-        findMirrorVert(n, nmax, verts, vn, x, y, z, the.Epsilon, notfound)
+        findMirrorVert(n, nmax, verts, vn, x, y, z, mh.Epsilon, notfound)
     
     """
     remainder = notfound
     notfound = []
     for n,vn,x,y,z in remainder:
-        findMirrorVert(n, nmax, verts, vn, x, y, z, 12*the.Epsilon, notfound)
+        findMirrorVert(n, nmax, verts, vn, x, y, z, 12*mh.Epsilon, notfound)
     """
     
     if notfound:            
@@ -200,7 +200,7 @@ def setupVertexPairs(context, insist):
         for n,vn,x,y,z in notfound:
             print("  %d at (%.4f %.4f %.4f)" % (vn, x, y, z))
         selectVerts(notfound, ob)
-    print("left-right-mid", len(the.Left.keys()), len(the.Right.keys()), len(the.Mid.keys()))
+    print("left-right-mid", len(mh.Left.keys()), len(mh.Right.keys()), len(mh.Mid.keys()))
     return
     
     
@@ -211,13 +211,13 @@ def findMirrorVert(n, nmax, verts, vn, x, y, z, epsilon, notfound):
     if n2 >= nmax: n2 = nmax
     vmir = findVert(n, verts[n1:n2], vn, -x, y, z, notfound)
     if vmir < 0:
-        the.Mid[vn] = vn
+        mh.Mid[vn] = vn
     elif x > epsilon:
-        the.Left[vn] = vmir
+        mh.Left[vn] = vmir
     elif x < -epsilon:
-        the.Right[vn] = vmir
+        mh.Right[vn] = vmir
     else:
-        the.Mid[vn] = vmir
+        mh.Mid[vn] = vmir
 
 
 def selectVerts(notfound, ob):
@@ -235,9 +235,9 @@ def findVert(n, verts, v, x, y, z, notfound):
         dy = y-y1
         dz = z-z1
         dist = math.sqrt(dx*dx + dy*dy + dz*dz)
-        if dist < the.Epsilon:
+        if dist < mh.Epsilon:
             return v1
-    if abs(x) > the.Epsilon:            
+    if abs(x) > mh.Epsilon:            
         notfound.append((n,v,x,y,z))
     return -1            
 

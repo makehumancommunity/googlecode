@@ -31,7 +31,7 @@ import log
 
 #import cProfile
 
-import armature
+import armature as amtpkg
 import warpmodifier
 import posemode
 
@@ -119,12 +119,12 @@ class PoseLoadTaskView(gui3d.TaskView):
         modifier = PoseModifier(modpath)
         modifier.updateValue(human, 1.0)
         
-        amt = human.armature
+        amt = human.amtpkg
         if amt:
             pass
             #amt.rebuild()
         else:
-            amt = human.armature = armature.rigdefs.createRig(human, "soft1")            
+            amt = human.amtpkg = amtpkg.rigdefs.createRig(human, "soft1")            
         amt.setModifier(modifier)
         amt.readMhpFile(filepath)
         #amt.listPose()

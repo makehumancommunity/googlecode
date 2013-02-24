@@ -35,6 +35,8 @@ import uuid
 import ast
 from bpy.props import *
 from mathutils import Vector
+
+from . import mc
 from . import base_uv
 from . import error
 
@@ -44,30 +46,13 @@ from . import error
 
 Epsilon = 1e-4
 
-BaseMeshVersion = "alpha_7"
+theSettings = mc.settings["alpha7"]
 
-LastClothing = "Tights"
 ClothingEnums = [
     ("Body", "Body", "Body"),
     ("Skirt", "Skirt", "Skirt"),
     ("Tights", "Tights", "Tights")
 ]
-
-NBodyVerts = 15340
-FirstSkirtVert = 15340
-FirstTightsVert = 16096
-NTotalVerts = 18528
-
-TopOfSkirt1 = range(16691,16707)
-
-if BaseMeshVersion == "alpha_7":
-    LastVertices = {
-        "Body" : NBodyVerts,
-        "Skirt" : FirstTightsVert,
-        "Tights" : NTotalVerts,
-    }
-    NBodyFaces = 14812
-
 
 #
 #   isHuman(ob):
@@ -77,13 +62,11 @@ if BaseMeshVersion == "alpha_7":
 #   getObjectPair(context):
 #
 
-def isSelfClothed(context):
-    if context.scene.MCUseInternal:
-        return (context.scene.MCSelfClothed != LastClothing)
-    else:
-        return False
+def setSettings(context):
+    global theSettings
+    theSettings = mc.settings[context.scene.MCMHVersion]
+    
 
-        
 def isHuman(ob):
     try:
         return ob["MhxMesh"]
@@ -127,16 +110,7 @@ def getObjectPair(context):
                     clothing = ob
     if not human:
         raise error.MhcloError("No human selected")
-    if isSelfClothed(context):
-        if clothing:
-            raise error.MhcloError("Clothing %s selected but human %s is self-clothed" % (clothing.name, human.name))
-        checkObjectOK(human, context)
-        nverts = len(human.data.vertices)
-        nOldVerts = LastVertices[scn.MCSelfClothed]
-        clothing = copyObject(human, nOldVerts, nverts, context, "Clothing")
-        base = copyObject(human, 0, nOldVerts, context, "Base")
-        return (base, clothing)
-    elif not clothing:
+    if not clothing:
         raise error.MhcloError("No clothing selected")
     return (human, clothing)  
 
@@ -225,7 +199,7 @@ def getFileName(pob, context, ext):
 #
 #
 
-ShapeKeys = [
+theShapeKeys = [
     'Breathe',
     ]
 
@@ -544,11 +518,12 @@ def midWeight(pv, r0, r1):
         
 def printClothesHeader(fp, scn):
     fp.write(
-"# author %s\n" % scn.MCAuthor +
-"# license %s\n" % scn.MCLicense +
-"# homepage %s\n" % scn.MCHomePage +
-"# uuid %s\n" % uuid.uuid4() +
-"# basemesh %s\n" % BaseMeshVersion)
+        "# author %s\n" % scn.MCAuthor +
+        "# license %s\n" % scn.MCLicense +
+        "# homepage %s\n" % scn.MCHomePage +
+        "# uuid %s\n" % uuid.uuid4())
+    if theSettings:
+        fp.write("# basemesh %s\n" % theSettings.version)
     for n in range(1,6):
         tag = getattr(scn, "MCTag%d" % n)
         if tag:
@@ -558,19 +533,14 @@ def printClothesHeader(fp, scn):
 
 def printClothes(context, bob, pob, data):
     scn = context.scene
-    if isSelfClothed(context):
-        firstVert = LastVertices[scn.MCSelfClothed]
-        folder = scn.MCMakeHumanDirectory
-        outfile = os.path.join(folder, "data/3dobjs/base.mhclo")
-    else:
-        firstVert = 0
-        (outpath, outfile) = getFileName(pob, context, "mhclo")
+    firstVert = 0
+    (outpath, outfile) = getFileName(pob, context, "mhclo")
     print("Creating clothes file %s" % outfile)
-    fp= open(outfile, "w", encoding="utf-8", newline="\n")
+    fp = open(outfile, "w", encoding="utf-8", newline="\n")
     printClothesHeader(fp, scn)
     fp.write("# name %s\n" % pob.name.replace(" ","_"))
     fp.write("# obj_file %s.obj\n" % goodName(pob.name))
-    vnums = BodyPartVerts[scn.MCBodyPart]
+    vnums = theSettings.bodyPartVerts[scn.MCBodyPart]
     if scn.MCScaleUniform:
         printScale(fp, bob, scn, 'x_scale', 0, vnums[0])
         printScale(fp, bob, scn, 'z_scale', 0, vnums[0])
@@ -580,8 +550,7 @@ def printClothes(context, bob, pob, data):
         printScale(fp, bob, scn, 'z_scale', 1, vnums[1])
         printScale(fp, bob, scn, 'y_scale', 2, vnums[2])
 
-    if not isSelfClothed(context):
-        printStuff(fp, pob, context)
+    printStuff(fp, pob, context)
 
     printFaceNumbers(fp, pob)
     fp.write("# verts %d\n" % (firstVert))
@@ -764,7 +733,7 @@ def printStuff(fp, pob, context):
         elif mod.type == 'SOLIDIFY':
             fp.write("# solidify %.3f %.3f\n" % (mod.thickness, mod.offset))
             
-    for skey in ShapeKeys:            
+    for skey in theShapeKeys:            
         if getattr(scn, "MC" + skey):
             fp.write("# shapekey %s\n" % skey)            
             
@@ -1049,8 +1018,8 @@ def exportBaseUvsPy(context):
     fname = os.path.join(folder, "utils/makeclothes/base_uv.py")
     print("Creating", fname)
     fp = open(fname, "w", encoding="utf-8", newline="\n")
-    fp.write("firstVert = %d\n" % NBodyVerts)
-    fp.write("firstFace = %d\n" % NBodyFaces)
+    fp.write("firstVert = %d\n" % theSettings.nBodyVerts)
+    fp.write("firstFace = %d\n" % theSettings.nBodyFaces)
     fp.write("texFaces = [\n")
     meFaces = getFaces(ob.data)
     for f in meFaces:
@@ -1181,7 +1150,7 @@ def projectUVs(bob, pob, context):
     table = {}
     bFaces = getFaces(bob.data)
     bTexFaces = getTexFaces(bob.data, 0)
-    if scn.MCIsMHMesh:
+    if scn.MCMHVersion != "None":
         modifyTexFaces(bFaces, bTexFaces)
     for (pv, exact, verts, wts, diff) in data:
         if exact:
@@ -1286,11 +1255,11 @@ def projectUVs(bob, pob, context):
 def modifyTexFaces(meFaces, texFaces):
     nFaces = len(meFaces)
     nModFaces = len(base_uv.texFaces)
-    if nFaces < NBodyFaces + nModFaces:
-        nModFaces = nFaces - NBodyFaces
+    if nFaces < theSettings.nBodyFaces + nModFaces:
+        nModFaces = nFaces - theSettings.nBodyFaces
     for n in range(nModFaces):
         tf = base_uv.texFaces[n]
-        texFaces[n+NBodyFaces].uvs = [Vector(tf[0]), Vector(tf[1]), Vector(tf[2]), Vector(tf[3])]
+        texFaces[n+theSettings.nBodyFaces].uvs = [Vector(tf[0]), Vector(tf[1]), Vector(tf[2]), Vector(tf[3])]
      
 
 def trySetUv(pvn, fn, uvf, rmd, n, uv, vertTexVerts, texVertUv, seamVertEdges):        
@@ -1576,7 +1545,7 @@ def getSeams(ob, texFaces, scn):
 
         
 def isOnEdge(v, faceTable, texFaces):  
-    if v.index >= NBodyVerts:
+    if v.index >= theSettings.nBodyVerts:
         return False
     uvloc = None
     for f in faceTable[v.index]:
@@ -1617,9 +1586,6 @@ def makeClothes(context, doFindClothes):
     printClothes(context, bob, pob, data)
     if log:
         log.close()
-    if isSelfClothed(context):
-        scn.objects.unlink(bob)
-        scn.objects.unlink(pob)
     return
     
 #
@@ -2071,22 +2037,12 @@ def exportDefault(typ, data, header, prio, exclude, arrays, pad, fp):
 #
 ###################################################################################    
 
-BodyPartVerts = {
-    "Head" : ((4302, 8697), (8208, 8220), (8223, 6827)), 
-    "Torso" : ((3464, 10305), (6930, 7245), (14022, 14040)),
-    "Arm" : ((14058, 14158), (4550, 4555), (4543, 4544)), 
-    "Hand" : ((14058, 15248), (3214, 3264), (4629, 5836)),
-    "Leg" : ((3936, 3972), (3840, 3957), (14165, 14175)), 
-    "Foot" : ((4909, 4943), (5728, 12226), (4684, 5732)), 
-    "Eye" : ((142, 197), (76, 141), (169, 225)), 
-    }
-
 def examineBoundary(ob, scn):
     verts = ob.data.vertices
     bpy.ops.object.mode_set(mode='OBJECT')
     for v in verts:
         v.select = False
-    vnums = BodyPartVerts[scn.MCBodyPart]
+    vnums = theSettings.bodyPartVerts[scn.MCBodyPart]
     for m,n in vnums:
         verts[m].select = True
         verts[n].select = True
@@ -2151,6 +2107,8 @@ def printVertNums(context):
 #
 
 def deleteHelpers(context):
+    if theSettings is None:
+        return
     ob = context.object
     scn = context.scene
     #if not isHuman(ob):
@@ -2158,7 +2116,7 @@ def deleteHelpers(context):
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
-    nmax = LastVertices[scn.MCKeepVertsUntil]
+    nmax = theSettings.vertices[scn.MCKeepVertsUntil][1]
     for v in ob.data.vertices:
         if v.index >= nmax:
             v.select = True
@@ -2198,10 +2156,6 @@ def autoVertexGroups(context):
     left = ob.vertex_groups.new("Left")
     right = ob.vertex_groups.new("Right")
     ob.vertex_groups.new("Delete")
-    if isSelfClothed(context):
-        nOldVerts = LastVertices[scn.MCSelfClothed]
-    else:
-        nOldVerts = LastVertices[LastClothing]
     if ishuman:
         verts = getHumanVerts(ob.data, scn)
     else:
@@ -2214,7 +2168,8 @@ def autoVertexGroups(context):
             right.add([vn], 1.0, 'REPLACE')
         else:
             mid.add([vn], 1.0, 'REPLACE')
-            if ishuman and (vn < nOldVerts):
+            if (ishuman and 
+                (theSettings is None or vn < theSettings.nTotalVerts)):
                 left.add([vn], 1.0, 'REPLACE')
                 right.add([vn], 1.0, 'REPLACE')
     print("Vertex groups auto assigned to %s" % scn.MCAutoGroupType.lower())
@@ -2267,7 +2222,7 @@ def addBodyVerts(me, verts):
         if len(f.vertices) < 4:
             continue
         for vn in f.vertices:
-            if vn < NBodyVerts:
+            if vn < theSettings.nBodyVerts:
                 verts[vn] = me.vertices[vn]
     return                
 
@@ -2282,14 +2237,25 @@ def checkAndVertexDiamonds(scn, ob):
     bpy.ops.object.mode_set(mode='OBJECT')
     me = ob.data
     nverts = len(me.vertices)
-    if scn.MCIsMHMesh and (nverts not in LastVertices.values()):
+    if theSettings and (nverts not in getLastVertices()):
+        vertlines = ""
+        for n in getLastVertices():
+            vertlines += ("\n  %d" % n)
         raise error.MhcloError(
-            "Base object %s has %d vertices. The number of verts in an MH human must be one of %s" % 
-            (ob, nverts, LastVertices.values()))
+            "Base object %s has %d vertices. \n" % (ob, nverts) +
+            "The number of verts in an %s MH human must be one of:" % theSettings.version +
+            vertlines)
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.object.vertex_group_remove_from(all=True)
     bpy.ops.object.mode_set(mode='OBJECT')
     return            
+
+
+def getLastVertices():
+    vlist = [ vs[1] for vs in theSettings.vertices.values()]
+    vlist.sort()
+    return vlist
+
 
 #
 #   readDefaultSettings(context):
@@ -2422,7 +2388,7 @@ def getTexFaces(me, ln):
 #
 
 def initInterface():
-    for skey in ShapeKeys:
+    for skey in theShapeKeys:
         expr = (
     'bpy.types.Scene.MC%s = BoolProperty(\n' % skey +
     '   name="%s", \n' % skey +
@@ -2547,10 +2513,11 @@ def initInterface():
         description="Write a log file for debugging",
         default=False)
 
-    bpy.types.Scene.MCIsMHMesh = BoolProperty(
-        name="MakeHuman mesh", 
+    bpy.types.Scene.MCMHVersion = EnumProperty(
+        items = [("alpha7", "alpha7", "alpha7"), ("alpha8", "alpha8", "alpha8"), ("None", "None", "None")],
+        name="MakeHuman mesh version", 
         description="The human is the MakeHuman base mesh",
-        default=True)
+        default="alpha7")
 
     bpy.types.Scene.MCMakeHumanDirectory = StringProperty(
         name="MakeHuman Directory", 
@@ -2561,13 +2528,13 @@ def initInterface():
         items = ClothingEnums,
         name="Self clothed", 
         description="Clothes included in body mesh",
-        default=LastClothing)
+        default="Tights")
 
     bpy.types.Scene.MCKeepVertsUntil = EnumProperty(
         items = ClothingEnums,
         name="Keep verts untils", 
         description="Last clothing to keep vertices for",
-        default=LastClothing)
+        default="Tights")
 
     bpy.types.Scene.MCUseBoundary = BoolProperty(
         name="Scale Offsets", 

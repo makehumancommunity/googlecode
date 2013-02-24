@@ -26,8 +26,41 @@
 import bpy
 import os
 import math
+from mathutils import Vector
 
-from . import globvars as the
+from . import mh
+
+#
+#    class CRefVert
+#
+
+class CRefVert:
+    
+    def __init__(self, index):
+        self.index = index
+        
+    def fromSingle(self, vn):
+        self.verts = (vn,vn,vn)
+        self.weights = (1,0,0)
+        self.offsets = Vector((0,0,0))
+        return self
+        
+    def fromTriple(self, verts, weights, offsets):
+        self.verts = verts
+        self.weights = weights
+        self.offsets = Vector(offsets)
+        return self
+        
+    def update(self, srcVerts, scales):
+        rv0,rv1,rv2 = self.verts
+        w0,w1,w2 = self.weights
+        offset = [ self.offsets[n]*scales[n] for n in range(3) ]
+        return w0*srcVerts[rv0].co + w1*srcVerts[rv1].co + w2*srcVerts[rv2].co + Vector(offset)
+
+    def updateWeight(self, srcWeights):
+        rv0,rv1,rv2 = self.verts
+        w0,w1,w2 = self.weights        
+        return w0*srcWeights[rv0] + w1*srcWeights[rv1] + w2*srcWeights[rv2]
 
 #
 #    class CProxy
@@ -37,65 +70,49 @@ class CProxy:
     def __init__(self):
         self.name = None
         self.obj_file = None
-        self.refVerts = []
-        self.firstVert = 0
-        self.rScale = None
+        self.refVerts = {}
         self.xScale = None
         self.yScale = None
         self.zScale = None
-        self.nVerts = the.NTotalVerts
+        self.firstVert = 0
         return
         
     def __repr__(self):
         return ("<CProxy %s %d\n  %s\n  w %s\n x %s\n  y %s\n  z %s>" % 
             (self.name, self.firstVert, self.obj_file, self.rScale, self.xScale, self.yScale, self.zScale))
+
         
-    def update(self, srcVerts, trgVerts, useManualScale=False, manualScale=1.0, skipBefore=0, skipAfter=100000):
+    def checkSanity(self, trgVerts):
         rlen = len(self.refVerts)
         mlen = len(trgVerts)
         first = self.firstVert
         if (first+rlen) != mlen:
             raise NameError( "Bug: %d refVerts != %d meshVerts" % (first+rlen, mlen) )
+        return rlen,first
 
-        if useManualScale:
-            s0 = s1 = s2 = manualScale
-        elif self.rScale:
-            s0 = s1 = s2 = getScale(self.rScale, srcVerts, -1)
-        else:
-            s0 = getScale(self.xScale, srcVerts, 0)
-            s1 = getScale(self.yScale, srcVerts, 2)
-            s2 = getScale(self.zScale, srcVerts, 1)
-        print("Scales", s0, s1, s2)
+
+    def update(self, srcVerts, trgVerts, skipBefore=0, skipAfter=100000):
+        rlen,first = self.checkSanity(trgVerts)
+
+        s0 = getScale(self.xScale, srcVerts, 0)
+        s1 = getScale(self.yScale, srcVerts, 1)
+        s2 = getScale(self.zScale, srcVerts, 2)
+        scales = Vector((s0,s2,s1))
 
         for n in range(rlen):
             if n < skipBefore or n >= skipAfter:
                 continue
-            trgVert = trgVerts[n+first]
-            refVert = self.refVerts[n]
-            if type(refVert) == tuple:
-                (rv0, rv1, rv2, w0, w1, w2, d0, d1, d2) = refVert
-                v0 = srcVerts[rv0]
-                v1 = srcVerts[rv1]
-                v2 = srcVerts[rv2]
-                trgVert.co[0] = w0*v0.co[0] + w1*v1.co[0] + w2*v2.co[0] + d0*s0
-                trgVert.co[1] = w0*v0.co[1] + w1*v1.co[1] + w2*v2.co[1] - d2*s2
-                trgVert.co[2] = w0*v0.co[2] + w1*v1.co[2] + w2*v2.co[2] + d1*s1
-                #bverts[n+first].select = (bverts[rv0].select or bverts[rv1].select or bverts[rv2].select)
-                """
-                if n == 940:
-                    print("V0", v0.co)
-                    print("V1", v1.co)
-                    print("V2", v2.co)
-                    print("w", w0,w1,w2)
-                    print("s", s0,s1,s2)
-                    print("d", d0,d1,d2)
-                    print("t", trgVert.co)
-                """
-            else:
-                v0 = srcVerts[refVert]
-                trgVert.co = v0.co
-                #bvert[n+first].select = bverts[rv0].select
+            trgVerts[n+first].co = self.refVerts[n].update(srcVerts, scales)
         return s0
+
+
+    def updateWeights(self, srcWeights):
+        rlen = len(self.refVerts)
+        trgWeights = {}
+        for n,refVert in self.refVerts.items():
+            trgWeights[n] = refVert.updateWeight(srcWeights)
+        return trgWeights
+        
 
     def read(self, filepath):
         realpath = os.path.realpath(os.path.expanduser(filepath))
@@ -111,6 +128,7 @@ class CProxy:
         status = 0
         doVerts = 1
         vn = 0
+        scales = Vector((1.0, 1.0, 1.0))
         for line in tmpl:
             words= line.split()
             if len(words) == 0:
@@ -126,7 +144,7 @@ class CProxy:
                 elif words[1] == 'name':
                     self.name = words[2]
                 elif words[1] == 'r_scale':
-                    self.rScale = scaleInfo(words)
+                    self.xScale = self.yScale = self.zScale = scaleInfo(words)
                 elif words[1] == 'x_scale':
                     self.xScale = scaleInfo(words)
                 elif words[1] == 'y_scale':
@@ -140,7 +158,7 @@ class CProxy:
             elif status == doVerts:
                 if len(words) == 1:
                     v = int(words[0])
-                    self.refVerts.append(v)
+                    self.refVerts[vn] = CRefVert(vn).fromSingle(v)
                 else:                
                     v0 = int(words[0])
                     v1 = int(words[1])
@@ -151,7 +169,8 @@ class CProxy:
                     d0 = float(words[6])
                     d1 = float(words[7])
                     d2 = float(words[8])
-                    self.refVerts.append( (v0,v1,v2,w0,w1,w2,d0,d1,d2) )
+                    self.refVerts[vn] = CRefVert(vn).fromTriple((v0,v1,v2), (w0,w1,w2), (d0,-d2,d1))
+                vn += 1
         return
 
 
