@@ -81,6 +81,8 @@ class EditingTaskView(gui3d.TaskView):
     def onMouseDown(self, event):
         if gui3d.app.getSelectedFaceGroupAndObject() is None:
             return
+        if event.button != mh.Buttons.LEFT:
+            return
 
         human = gui3d.app.selectedHuman
 
@@ -105,11 +107,13 @@ class EditingTaskView(gui3d.TaskView):
         return (2 * x - 3) * x ** 2 + 1
 
     def onMouseMoved(self, event):
+        self.updatePosition(event.x, event.y)
         human = gui3d.app.selectedHuman
         x, y, z = gui3d.app.modelCamera.convertToWorld2D(event.x, event.y, human.mesh)
-        self.updatePosition(event.x, event.y)
 
     def onMouseDragged(self, event):
+        self.updatePosition(event.x, event.y)
+
         if self.center is None or self.depth is None:
             return
 
@@ -118,8 +122,6 @@ class EditingTaskView(gui3d.TaskView):
         x, y, z = gui3d.app.modelCamera.convertToWorld3D(event.x, event.y, self.depth, human.mesh)
         pos = np.array([x, y, z])
         delta = pos - self.center
-
-        self.updatePosition(event.x, event.y)
 
         coord = self.original + delta[None,:] * self.weights[:,None]
         human.meshData.coord[self.verts] = coord
