@@ -244,15 +244,17 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
                         stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
                 elif proxy.type == 'Proxy':
                     # Subdivide proxy
-                    subMesh = getSubdivision(human)
+                    subMesh = getSubdivision(human, lambda p: progress(0,p*0.5))
                     stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
                     
             else:
                 # Get filtered mesh
-                obj = stuff.meshInfo.object
+                #TODO# obj = stuff.meshInfo.object.getObject() (which is None)
+                # temporarily assuming always human for now.
+                # maybe stuff should carry its object to make this universal (and get rid of uuids)
+                obj = human
                 subMesh = getSubdivision(obj, lambda p: progress(0,p*0.5))
                 stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
-           
 
     progress(1,0)
     return stuffs
