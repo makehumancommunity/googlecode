@@ -51,7 +51,6 @@ g_primitiveMap = [GL_POINTS, GL_LINES, GL_TRIANGLES, GL_QUADS]
 def queryDepth(sx, sy):
     sz = np.zeros((1,), dtype=np.float32)
     glReadPixels(sx, G.windowHeight - sy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, sz)
-    log.debug('queryDepth: %s', sz)
     return sz[0]
 
 def grabScreen(x, y, width, height, filename = None):

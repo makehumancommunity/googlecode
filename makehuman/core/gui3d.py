@@ -825,6 +825,8 @@ class Application(events3d.EventHandler):
                 self.enteredObject.callEvent('onMouseEntered', event)
             if object != self:
                 object.callEvent('onMouseMoved', event)
+            elif self.currentTask:
+                self.currentTask.callEvent('onMouseMoved', event)
 
     def onMouseWheelCallback(self, event):
         if self.currentTask:
