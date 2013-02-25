@@ -74,7 +74,8 @@ class EditingTaskView(gui3d.TaskView):
         self.circleMesh.changeCoords(coord)
         self.circleMesh.update()
 
-    def updatePosition(self, pos):
+    def updatePosition(self, x, y):
+        pos = gui3d.app.modelCamera.convertToWorld2D(x, y)
         self.circle.setPosition(pos)
 
     def onMouseDown(self, event):
@@ -106,7 +107,7 @@ class EditingTaskView(gui3d.TaskView):
     def onMouseMoved(self, event):
         human = gui3d.app.selectedHuman
         x, y, z = gui3d.app.modelCamera.convertToWorld2D(event.x, event.y, human.mesh)
-        self.updatePosition([x, y, z])
+        self.updatePosition(event.x, event.y)
 
     def onMouseDragged(self, event):
         if self.center is None or self.depth is None:
@@ -118,7 +119,7 @@ class EditingTaskView(gui3d.TaskView):
         pos = np.array([x, y, z])
         delta = pos - self.center
 
-        self.updatePosition(pos)
+        self.updatePosition(event.x, event.y)
 
         coord = self.original + delta[None,:] * self.weights[:,None]
         human.meshData.coord[self.verts] = coord
