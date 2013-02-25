@@ -19,10 +19,11 @@
 Abstract
 --------
 
-TODO
+MHX package __init__ file.
 """
 
 
+from . import mhx_info
 from . import mhx_main
 from . import mhx_rig
 from . import rigify_rig

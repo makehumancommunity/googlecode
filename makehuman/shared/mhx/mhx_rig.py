@@ -49,8 +49,22 @@ from . import rig_panel_25
 from . import rig_skirt_25
 from . import rigify_rig
 
-        
+#-------------------------------------------------------------------------------        
+#
+#-------------------------------------------------------------------------------        
+
 def newSetupJoints (info, joints):
+    """
+    Evaluate symbolic expressions for joint locations and store them in info.locations.
+    Joint locations are specified symbolically in the *Joints list in the beginning of the
+    rig_*.py files (e.g. ArmJoints in rig_arm.py). 
+    
+    info:
+        *CInfo subclass*: state variables.
+    joints:
+        *List of (joint name, type, data)*: from rig_*.py file.
+    """
+    
     info.locations = {}
     for (key, typ, data) in joints:
         #print(key)
@@ -114,6 +128,13 @@ def newSetupJoints (info, joints):
 
 
 def moveOriginToFloor(info):
+    """
+    Shift all locations to move the origin of the character to a point between the feet.
+    
+    info:
+        *CInfo subclass*: state variables.
+    """
+
     if info.config.feetOnGround:
         info.origin = info.locations['floor']
         for key in info.locations.keys():
@@ -124,6 +145,17 @@ def moveOriginToFloor(info):
 
 
 def setupHeadsTails(info, headsTails):
+    """
+    Evaluate symbolic expressions for head and tail locations and store them in info.
+    Head and tail locations are specified symbolically in the *HeadsTails list following the
+    *Joints* list in the rig_*.py files (e.g. ArmHeadsTails in rig_arm.py). 
+    
+    info:
+        *CInfo subclass*: state variables.
+    headsTails:
+        *List of (bone, head, tail)*: from rig_*.py file.
+    """
+
     info.rigHeads = {}
     info.rigTails = {}
     scale = info.config.scale
@@ -139,117 +171,124 @@ def findLocation(info, joint):
     except:
         return info.locations[joint]
 
+#-------------------------------------------------------------------------------        
+#
+#-------------------------------------------------------------------------------        
 
 def writeArmature(fp, info, boneList):
-    for (bone, roll, parent, flags, layers, bbone) in boneList:
-        addBone25(info, bone, True, roll, parent, flags, layers, bbone, fp)
-
-
-def addBone25(info, bone, cond, roll, parent, flags, layers, bbone, fp):
-    conn = (flags & F_CON != 0)
-    deform = (flags & F_DEF != 0)
-    restr = (flags & F_RES != 0)
-    wire = (flags & F_WIR != 0)
-    lloc = (flags & F_NOLOC == 0)
-    lock = (flags & F_LOCK != 0)
-    cyc = (flags & F_NOCYC == 0)
+    """
+    Write the armature bones to the MHX file. 
     
-    scale = info.config.scale
+    fp:
+        *File*: Output file pointer.
+    info:
+        *CInfo subclass*: state variables.
+    boneList:
+        *List of (bone, roll, parent, flags, layers, bbone)*.
+    """
+    
+    for (bone, roll, parent, flags, layers, bbone) in boneList:
+        conn = (flags & F_CON != 0)
+        deform = (flags & F_DEF != 0)
+        restr = (flags & F_RES != 0)
+        wire = (flags & F_WIR != 0)
+        lloc = (flags & F_NOLOC == 0)
+        lock = (flags & F_LOCK != 0)
+        cyc = (flags & F_NOCYC == 0)
+    
+        scale = info.config.scale
 
-    fp.write("\n  Bone %s %s\n" % (bone, cond))
-    (x, y, z) = scale*info.rigHeads[bone]
-    fp.write("    head  %.6g %.6g %.6g  ;\n" % (x,-z,y))
-    (x, y, z) = scale*info.rigTails[bone]
-    fp.write("    tail %.6g %.6g %.6g  ;\n" % (x,-z,y))
-    if type(parent) == tuple:
-        (soft, hard) = parent
-        if hard:
-            fp.write(
-"#if toggle&T_HardParents\n" +
-"    parent Refer Bone %s ;\n" % hard +
-"#endif\n")
-        if soft:
-            fp.write(
-"#if toggle&T_HardParents==0\n" +
-"    parent Refer Bone %s ;\n" % soft +
-"#endif\n")
-    elif parent:
-        fp.write("    parent Refer Bone %s ; \n" % (parent))
-    fp.write(
-"    roll %.6g ; \n" % (roll)+
-"    use_connect %s ; \n" % (conn) +
-"    use_deform %s ; \n" % (deform) +
-"    show_wire %s ; \n" % (wire))
-
-    if 1 and (flags & F_HID):
-        fp.write("    hide True ; \n")
-
-    if bbone:
-        (bin, bout, bseg) = bbone
+        fp.write("\n  Bone %s %s\n" % (bone, True))
+        (x, y, z) = scale*info.rigHeads[bone]
+        fp.write("    head  %.6g %.6g %.6g  ;\n" % (x,-z,y))
+        (x, y, z) = scale*info.rigTails[bone]
+        fp.write("    tail %.6g %.6g %.6g  ;\n" % (x,-z,y))
+        if type(parent) == tuple:
+            (soft, hard) = parent
+            if hard:
+                fp.write(
+                    "#if toggle&T_HardParents\n" +
+                    "    parent Refer Bone %s ;\n" % hard +
+                    "#endif\n")
+            if soft:
+                fp.write(
+                    "#if toggle&T_HardParents==0\n" +
+                    "    parent Refer Bone %s ;\n" % soft +
+                    "#endif\n")
+        elif parent:
+            fp.write("    parent Refer Bone %s ; \n" % (parent))
         fp.write(
-"    bbone_in %d ; \n" % (bin) +
-"    bbone_out %d ; \n" % (bout) +
-"    bbone_segments %d ; \n" % (bseg))
+            "    roll %.6g ; \n" % (roll)+
+            "    use_connect %s ; \n" % (conn) +
+            "    use_deform %s ; \n" % (deform) +
+            "    show_wire %s ; \n" % (wire))
 
-    if flags & F_NOROT:
-        fp.write("    use_inherit_rotation False ; \n")
-    if flags & F_SCALE:
-        fp.write("    use_inherit_scale True ; \n")
-    else:
-        fp.write("    use_inherit_scale False ; \n")
-    fp.write("    layers Array ")
+        if 1 and (flags & F_HID):
+            fp.write("    hide True ; \n")
 
-    bit = 1
-    for n in range(32):
-        if layers & bit:
-            fp.write("1 ")
+        if bbone:
+            (bin, bout, bseg) = bbone
+            fp.write(
+                "    bbone_in %d ; \n" % (bin) +
+                "    bbone_out %d ; \n" % (bout) +
+                "    bbone_segments %d ; \n" % (bseg))
+
+        if flags & F_NOROT:
+            fp.write("    use_inherit_rotation False ; \n")
+        if flags & F_SCALE:
+            fp.write("    use_inherit_scale True ; \n")
         else:
-            fp.write("0 ")
-        bit = bit << 1
+            fp.write("    use_inherit_scale False ; \n")
+        fp.write("    layers Array ")
 
-#"    use_cyclic_offset %s ; \n" % cyc +
-    fp.write(" ; \n" +
-"    use_local_location %s ; \n" % lloc +
-"    lock %s ; \n" % lock +
-"    use_envelope_multiply False ; \n"+
-"    hide_select %s ; \n" % (restr) +
-"  end Bone \n")
+        bit = 1
+        for n in range(32):
+            if layers & bit:
+                fp.write("1 ")
+            else:
+                fp.write("0 ")
+            bit = bit << 1
 
+        fp.write(" ; \n" +
+            "    use_local_location %s ; \n" % lloc +
+            "    lock %s ; \n" % lock +
+            "    use_envelope_multiply False ; \n"+
+            "    hide_select %s ; \n" % (restr) +
+            "  end Bone \n")
 
-"""
-def addBone24(bone, cond, roll, parent, flags, layers, bbone, fp):
-    flags24 = 0
-    if flags & F_CON:
-        flags24 += 0x001
-    if flags & F_DEF == 0:
-        flags24 += 0x004
-    if flags & F_NOSCALE:
-        flags24 += 0x0e0
-
-    fp.write("\n\tbone %s %s %x %x\n" % (bone, parent, flags24, layers))
-    (x, y, z) = info.rigHeads[bone]
-    fp.write("    head  %.6g %.6g %.6g  ;\n" % (x,y,z))
-    (x, y, z) = info.rigTails[bone]
-    fp.write("    tail %.6g %.6g %.6g  ;\n" % (x,y,z))
-    fp.write("    roll %.6g %.6g ; \n" % (roll, roll))
-    fp.write("\tend bone\n")
-    return
-"""
+#-------------------------------------------------------------------------------        
+#
+#-------------------------------------------------------------------------------        
 
 def writeBoneGroups(fp, info):
-    log.message("BG %s", info.config.boneGroups)
+    """
+    Write bone groups to the MHX file. 
+    
+    fp:
+        *File*: Output file pointer. None if armature info.
+    info:
+        *CInfo subclass*: state variables.
+    """
+
     if not fp:
         return
     for (name, color) in info.config.boneGroups:
         fp.write(
-"    BoneGroup %s\n" % name +
-"      name '%s' ;\n" % name +
-"      color_set '%s' ;\n" % color +
-"    end BoneGroup\n")
+            "    BoneGroup %s\n" % name +
+            "      name '%s' ;\n" % name +
+            "      color_set '%s' ;\n" % color +
+            "    end BoneGroup\n")
     return
 
+#-------------------------------------------------------------------------------        
+#
+#-------------------------------------------------------------------------------        
 
 def writeAction(fp, cond, name, action, lr, ikfk):
+    """
+    Write actions to the MHX file. This function is currently not in use, but may be
+    reintroduced later.
+    """
     fp.write("Action %s %s\n" % (name,cond))
     if ikfk:
         iklist = ["IK", "FK"]
@@ -272,53 +311,77 @@ def writeAction(fp, cond, name, action, lr, ikfk):
 
 
 def writeFCurves(fp, name, quats):
+    """
+    Write actions to the MHX file. This function is only used by writeAction, and thus
+    currently not in use, but may be reintroduced later.
+    """
     n = len(quats)
     for index in range(4):
         fp.write("\n" +
-"  FCurve pose.bones[\"%s\"].rotation_quaternion %d\n" % (name, index))
+            "  FCurve pose.bones[\"%s\"].rotation_quaternion %d\n" % (name, index))
         for m in range(n):
             t = quats[m][0]
             x = quats[m][index+1]
             fp.write("    kp %d %.4g ;\n" % (t,x))
         fp.write(
-"    extrapolation 'CONSTANT' ;\n" +
-"  end FCurve \n")
+            "    extrapolation 'CONSTANT' ;\n" +
+            "  end FCurve \n")
     return
-
-
-def writeFkIkSwitch(fp, drivers, info):
-    for (bone, cond, cnsFK, cnsIK, targ, channel, mx) in drivers:
-        cnsData = ("ik", 'TRANSFORMS', [('OBJECT', info.name, targ, channel, C_LOC)])
-        for cnsName in cnsFK:
-            writeDriver(fp, cond, 'AVERAGE', "", "pose.bones[\"%s\"].constraints[\"%s\"].influence" % (bone, cnsName), -1, (mx,-mx), [cnsData])
-        for cnsName in cnsIK:
-            writeDriver(fp, cond, 'AVERAGE', "", "pose.bones[\"%s\"].constraints[\"%s\"].influence" % (bone, cnsName), -1, (0,mx), [cnsData])
-
+    
+#-------------------------------------------------------------------------------        
+#
+#-------------------------------------------------------------------------------        
 
 def setupCircle(fp, name, r):
+    """
+    Write circle object to the MHX file. Circles are used as custom shapes.
+    
+    fp:
+        *File*: Output file pointer. 
+    name:
+        *string*: Object name.
+    r:
+        *float*: Radius.
+    """
+
     fp.write("\n"+
-"Mesh %s %s \n" % (name, name) +
-"  Verts\n")
+        "Mesh %s %s \n" % (name, name) +
+        "  Verts\n")
     for n in range(16):
         v = n*pi/8
         y = 0.5 + 0.02*sin(4*v)
         fp.write("    v %.3f %.3f %.3f ;\n" % (r*math.cos(v), y, r*math.sin(v)))
     fp.write(
-"  end Verts\n" +
-"  Edges\n")
+        "  end Verts\n" +
+        "  Edges\n")
     for n in range(15):
         fp.write("    e %d %d ;\n" % (n, n+1))
-    fp.write("    e 15 0 ;\n")
     fp.write(
-"  end Edges\n"+
-"end Mesh\n"+
-"Object %s MESH %s\n" % (name, name) +
-"  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n"+
-"  parent Refer Object CustomShapes ;\n"+
-"end Object\n")
-    return
+        "    e 15 0 ;\n" +
+        "  end Edges\n"+
+        "end Mesh\n")
+        
+    fp.write(
+        "Object %s MESH %s\n" % (name, name) +
+        "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n"+
+        "  parent Refer Object CustomShapes ;\n"+
+        "end Object\n")
 
-def setupCubeMesh(fp, name, r, offs):
+
+def setupCube(fp, name, r, offs):
+    """
+    Write cube object to the MHX file. Cubes are used as custom shapes.
+    
+    fp:
+        *File*: Output file pointer. 
+    name:
+        *string*: Object name.
+    r:
+        *float* or *float triple*: Side(s) of cube.
+    offs:
+        *float* or *float triple*: Y offset or offsets from origin.
+    """
+    
     try:
         (rx,ry,rz) = r
     except:
@@ -329,87 +392,40 @@ def setupCubeMesh(fp, name, r, offs):
         (dx,dy,dz) = (0,offs,0)
 
     fp.write("\n"+
-"Mesh %s %s \n" % (name, name) +
-"  Verts\n")
+        "Mesh %s %s \n" % (name, name) +
+        "  Verts\n")
     for x in [-rx,rx]:
         for y in [-ry,ry]:
             for z in [-rz,rz]:
                 fp.write("    v %.2f %.2f %.2f ;\n" % (x+dx,y+dy,z+dz))
     fp.write(
-"  end Verts\n" +
-"  Faces\n" +
-"    f 0 1 3 2 ;\n" +
-"    f 4 6 7 5 ;\n" +
-"    f 0 2 6 4 ;\n" +
-"    f 1 5 7 3 ;\n" +
-"    f 1 0 4 5 ;\n" +
-"    f 2 3 7 6 ;\n" +
-"  end Faces\n" +
-"end Mesh\n")
-    return
-
-
-def setupCube(fp, name, r, offs):
-    setupCubeMesh(fp, name, r, offs)
-    fp.write(
-"Object %s MESH %s\n" % (name, name) +
-"  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
-"  parent Refer Object CustomShapes ;\n" +
-"end Object\n")
-
-
-def setupCylinder(fp, name, r, h, offs, mat):
-    try:
-        (rx,ry) = r
-    except:
-        (rx,ry) = (r,r)
-    try:
-        (dx,dy,dz) = offs
-    except:
-        (dx,dy,dz) = (0,offs,0)
+        "  end Verts\n" +
+        "  Faces\n" +
+        "    f 0 1 3 2 ;\n" +
+        "    f 4 6 7 5 ;\n" +
+        "    f 0 2 6 4 ;\n" +
+        "    f 1 5 7 3 ;\n" +
+        "    f 1 0 4 5 ;\n" +
+        "    f 2 3 7 6 ;\n" +
+        "  end Faces\n" +
+        "end Mesh\n")
 
     fp.write(
-"Mesh %s %s \n" % (name, name) +
-"  Verts\n")
-    z = h + dz
-    for n in range(6):
-        a = n*pi/3
-        x = -rx*cos(a) + dx
-        y = ry*sin(a) + dy
-        fp.write("    v %.3f %.3f %.3f ;\n" % (x,z,y))
-    z = dz
-    for n in range(6):
-        a = n*pi/3
-        x = -rx*cos(a) + dx
-        y = ry*sin(a) + dy
-        fp.write("    v %.3f %.3f %.3f ;\n" % (x,z,y))
-    fp.write(
-"  end Verts\n" +
-"  Edges\n" +
-"    e 5 7 ;\n" +
-"    e 0 1 ;\n" +
-"    e 6 7 ;\n" +
-"    e 3 7 ;\n" +
-"    e 0 2 ;\n" +
-"    e 1 3 ;\n" +
-"    e 4 5 ;\n" +
-"    e 1 5 ;\n" +
-"    e 4 6 ;\n" +
-"    e 2 3 ;\n" +
-"    e 2 6 ;\n" +
-"    e 0 4 ;\n" +
-"  end Edges\n" +
-"  Material %s ;\n" % mat +
-"end Mesh\n" +
-"Object %s MESH %s\n" % (name, name) +
-"  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
-"  parent Refer Object CustomShapes ;\n" +
-#"  Modifier Subsurf SUBSURF\n" +
-#"  end Modifier\n" +
-"end Object\n")
+        "Object %s MESH %s\n" % (name, name) +
+        "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
+        "  parent Refer Object CustomShapes ;\n" +
+        "end Object\n")
 
 
-def setupCircles(fp):
+def setupCustomShapes(fp):
+    """
+    Write simple custom shapes to the MHX file. Additional custom shapes are defined in 
+    mhx files in mhx/templates.
+    
+    fp:
+        *File*: Output file pointer. 
+    """
+    
     setupCircle(fp, "MHCircle01", 0.1)
     setupCircle(fp, "MHCircle025", 0.25)
     setupCircle(fp, "MHCircle05", 0.5)
@@ -690,6 +706,9 @@ def swapParentNames(bones, changes):
             nbones.append(bone)
     return nbones
 
+#-------------------------------------------------------------------------------        
+#
+#-------------------------------------------------------------------------------        
 
 def writeControlPoses(fp, info):
     config = info.config

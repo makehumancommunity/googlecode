@@ -19,7 +19,7 @@
 Abstract
 --------
 
-TODO
+Global variables used by MHX package
 """
 
 import math
@@ -75,18 +75,14 @@ LayerNames = [
     (L_MSCL, "Muscles"),
     (L_DEF, "Deform")
 ]
-        
-class CArmature:
+       
+       
+class CArmatureInfo(mhx.mhx_info.CInfo):
+
     def __init__(self, human, config):
-        self.name = "Armature"
-        self.config = config
-        self.human = human
-        self.mesh = human.meshData
+    	mhx.mhx_info.CInfo.__init__(self, "Armature", human, config)
+
         self.modifier = None
-        self.locations = {}
-        self.rigHeads = {}
-        self.rigTails = {}
-        self.origin = [0,0,0]
         self.restPosition = False
         self.dirty = True
         self.frames = []
@@ -115,10 +111,10 @@ class CArmature:
                 mhx.mhx_main.getVertexGroups(name, self.vertexgroups)                    
 
     def __repr__(self):
-        return ("  <CArmature %s>" % self.name)
+        return ("  <CArmatureInfo %s>" % self.name)
         
     def display(self):
-        log.debug("<CArmature %s", self.name)
+        log.debug("<CArmatureInfo %s", self.name)
         for bone in self.boneList:
             bone.display()
         log.debug(">")
@@ -480,7 +476,7 @@ class CBone:
     def __init__(self, amt, name, roll, parent, flags, layers, bbone):
         self.name = name
         self.dirty = False
-        self.armature = amt
+        self.amtInfo = amt
         self.head = amt.rigHeads[name]
         self.tail = amt.rigTails[name]
         self.roll = roll
@@ -734,7 +730,7 @@ class CBone:
 
     def updateConstraints(self):
         for cns in self.constraints:
-            cns.update(self.armature, self)
+            cns.update(self.amtInfo, self)
         self.matrixVerts = dot(self.matrixGlobal, numpy.linalg.inv(self.matrixRest))
             
 
@@ -796,7 +792,7 @@ class CBone:
     HeadVec = numpy.array((0,0,0,1))
          
     def prismPoints(self, type):
-        if self.armature.restPosition:
+        if self.amtInfo.restPosition:
             mat = self.matrixRest
             length = self.length
             self.matrixGlobal = mat
@@ -910,7 +906,7 @@ def createRig(human, rigtype):
     config.setHuman(human)
 
     fp = None
-    amt = CArmature(human, config)
+    amt = CArmatureInfo(human, config)
 
     for (bname, roll, parent, flags, layers, bbone) in config.armatureBones:
         if config.exporting or layers & ACTIVE_LAYERS:
@@ -926,7 +922,7 @@ def createRig(human, rigtype):
     if rigtype != "mhx":
         return amt
 
-    #setupCircles(fp)
+    #setupCustomShapes(fp)
 
     mhx.mhx_rig.writeControlPoses(fp, amt)
     amt.checkDirty()

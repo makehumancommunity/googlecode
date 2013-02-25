@@ -42,7 +42,7 @@ import warpmodifier
 import posemode
 import exportutils
 
-
+from . import mhx_info
 from . import mhx_rig
 from . import rig_panel_25
 from . import rig_shoulder_25
@@ -51,20 +51,10 @@ from . import rig_leg_25
 from . import rig_body_25
 
 
+class MhxInfo(mhx_info.CInfo):
 
-class CInfo:
     def __init__(self, name, human, config):
-        self.name = name
-        self.human = human
-        self.mesh = human.meshData
-        self.config = config
-        self.proxies = {}
-        self.locations = {}
-        self.rigHeads = {}
-        self.rigTails = {}
-        self.origin = [0,0,0]
-        self.loadedShapes = {}
-        
+        mhx_info.CInfo.__init__(self, name, human, config)
         
     def scanProxies(self):
         self.proxies = {}
@@ -74,7 +64,6 @@ class CInfo:
                 proxy = mh2proxy.readProxyFile(self.mesh, pfile, True)
                 if proxy:
                     self.proxies[proxy.name] = proxy        
-
 
 #
 #    exportMhx(human, filepath, config):
@@ -97,7 +86,7 @@ def exportMhx(human, filepath, config):
         log.message("Unable to open file for writing %s", filepath)
         fp = 0
     if fp:
-        info = CInfo(name, human, config)
+        info = MhxInfo(name, human, config)
         exportMhx_25(info, fp)
         fp.close()
         time2 = time.clock()
@@ -137,7 +126,7 @@ def exportMhx_25(info, fp):
     if info.config.rigtype in ['mhx', 'rigify']:
         for fname in info.config.gizmoFiles:
             copyFile25(fname, fp, None, info)    
-        mhx_rig.setupCircles(fp)
+        mhx_rig.setupCustomShapes(fp)
     else:
         for (name, data) in info.config.customShapes.items():
             (typ, r) = data

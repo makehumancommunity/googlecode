@@ -19,7 +19,7 @@
 Abstract
 --------
 
-TODO
+Armature package __init__ file
 """
 
 import warp
