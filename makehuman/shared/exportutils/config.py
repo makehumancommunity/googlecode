@@ -51,6 +51,7 @@ class Config:
         self.cage               = False
         self.texFolder          = None
         self.customPrefix       = ""
+        self.human              = None
 
 
     def selectedOptions(self, exporter):
@@ -79,6 +80,8 @@ class Config:
         hair and cages.
         """
         proxyList = []
+        if not self.human:
+            return proxyList
 
         if self.human.hairProxy:
             words = self.human.hairObj.mesh.name.split('.')
