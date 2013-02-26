@@ -25,14 +25,12 @@ MHX package __init__ file.
 
 from . import mhx_info
 from . import mhx_main
-from . import mhx_rig
 from . import rigify_rig
 
 from . import rig_body_25
 from . import rig_arm_25
 from . import rig_face_25
 from . import rig_finger_25
-from . import rig_joints_25
 from . import rig_leg_25
 from . import rig_panel_25
 from . import rig_shoulder_25

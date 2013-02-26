@@ -31,6 +31,7 @@ import gui3d
 import os
 import time
 import numpy
+import math
 import log
 
 #import cProfile
@@ -42,28 +43,22 @@ import warpmodifier
 import posemode
 import exportutils
 
-from . import mhx_info
-from . import mhx_rig
-from . import rig_panel_25
+
+import armature as amtpkg
+from armature.flags import *
+from armature.rigdefs import CArmature
+
+from . import posebone
+from . import rig_body_25
 from . import rig_shoulder_25
 from . import rig_arm_25
+from . import rig_finger_25
 from . import rig_leg_25
-from . import rig_body_25
-
-
-class MhxInfo(mhx_info.CInfo):
-
-    def __init__(self, name, human, config):
-        mhx_info.CInfo.__init__(self, name, human, config)
-        
-    def scanProxies(self):
-        self.proxies = {}
-        for pfile in self.config.getProxyList():
-            if pfile.file:
-                print("Scan", pfile, pfile.type)
-                proxy = mh2proxy.readProxyFile(self.mesh, pfile, True)
-                if proxy:
-                    self.proxies[proxy.name] = proxy        
+from . import rig_toe_25
+from . import rig_face_25
+from . import rig_panel_25
+from . import rig_skirt_25
+from . import rigify_rig
 
 #
 #    exportMhx(human, filepath, config):
@@ -86,8 +81,14 @@ def exportMhx(human, filepath, config):
         log.message("Unable to open file for writing %s", filepath)
         fp = 0
     if fp:
-        info = MhxInfo(name, human, config)
-        exportMhx_25(info, fp)
+        if config.rigtype == 'mhx':
+            amt = MhxArmature(name, human, config)
+        elif config.rigtype == 'rigify':
+            amt = RigifyArmature(name, human, config)
+        else:
+            amt = ExportArmature(name, human, config)
+
+        exportMhx_25(amt, fp)
         fp.close()
         time2 = time.clock()
         log.message("Wrote MHX file in %g s: %s", time2-time1, filepath)
@@ -96,86 +97,69 @@ def exportMhx(human, filepath, config):
     return        
 
 
-def exportMhx_25(info, fp):
+def exportMhx_25(amt, fp):
     gui3d.app.progress(0, text="Exporting MHX")
     log.message("Export MHX")
     
     fp.write(
-"# MakeHuman exported MHX\n" +
-"# www.makeinfo.human.org\n" +
-"MHX %d %d ;\n" % (MAJOR_VERSION, MINOR_VERSION) +
-"#if Blender24\n" +
-"  error 'This file can only be read with Blender 2.5' ;\n" +
-"#endif\n")
+        "# MakeHuman exported MHX\n" +
+        "# www.makeinfo.human.org\n" +
+        "MHX %d %d ;\n" % (MAJOR_VERSION, MINOR_VERSION) +
+        "#if Blender24\n" +
+        "  error 'This file can only be read with Blender 2.5' ;\n" +
+        "#endif\n")
 
-    info.scanProxies()
-    mhx_rig.setupRig(info)
+    amt.scanProxies()
+    amt.setup()
     
-    if not info.config.cage:
+    if not amt.config.cage:
         fp.write(
-    "#if toggle&T_Cage\n" +
-    "  error 'This MHX file does not contain a cage. Unselect the Cage import option.' ;\n" +
-    "#endif\n")
+            "#if toggle&T_Cage\n" +
+            "  error 'This MHX file does not contain a cage. Unselect the Cage import option.' ;\n" +
+            "#endif\n")
 
     fp.write(
-"NoScale True ;\n" +
-"Object CustomShapes EMPTY None\n" +
-"  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
-"end Object\n\n")
+        "NoScale True ;\n" +
+        "Object CustomShapes EMPTY None\n" +
+        "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
+        "end Object\n\n")
 
-    if info.config.rigtype in ['mhx', 'rigify']:
-        for fname in info.config.gizmoFiles:
-            copyFile25(fname, fp, None, info)    
-        mhx_rig.setupCustomShapes(fp)
-    else:
-        for (name, data) in info.config.customShapes.items():
-            (typ, r) = data
-            if typ == "-circ":
-                mhx_rig.setupCircle(fp, name, 0.1*r)
-            elif typ == "-box":
-                mhx_rig.setupCube(fp, name, 0.1*r, (0,0,0))
-            else:
-                halt
-
-        if info.config.facepanel:
-            mhx_rig.setupCube(fp, "MHCube025", 0.25, 0)
-            mhx_rig.setupCube(fp, "MHCube05", 0.5, 0)
-            copyFile25("shared/mhx/templates/panel_gizmo25.mhx", fp, None, info)    
+    amt.setupCustomShapes(fp)
         
     gui3d.app.progress(0.1, text="Exporting amtpkg")
-    copyFile25("shared/mhx/templates/rig-armature25.mhx", fp, None, info)    
+    copyFile25("shared/mhx/templates/rig-armature25.mhx", fp, None, amt)    
     
     gui3d.app.progress(0.15, text="Exporting materials")    
     fp.write("\nNoScale False ;\n\n")
-    if info.human.uvset:
-        writeMultiMaterials(info, fp)
+    if amt.human.uvset:
+        writeMultiMaterials(amt, fp)
     else:
-        copyFile25("shared/mhx/templates/materials25.mhx", fp, None, info)    
+        copyFile25("shared/mhx/templates/materials25.mhx", fp, None, amt)    
 
-    if info.config.cage:
-        proxyCopy('Cage', 'T_Cage', info, fp, 0.2, 0.25)
+    if amt.config.cage:
+        proxyCopy('Cage', 'T_Cage', amt, fp, 0.2, 0.25)
     
     gui3d.app.progress(0.25, text="Exporting main mesh")    
     fp.write("#if toggle&T_Mesh\n")
-    copyFile25("shared/mhx/templates/meshes25.mhx", fp, None, info)    
+    copyFile25("shared/mhx/templates/meshes25.mhx", fp, None, amt)    
     fp.write("#endif\n")
 
-    proxyCopy('Proxy', 'T_Proxy', info, fp, 0.35, 0.4)
-    proxyCopy('Clothes', 'T_Clothes', info, fp, 0.4, 0.55)
-    proxyCopy('Hair', 'T_Clothes', info, fp, 0.55, 0.6)
+    proxyCopy('Proxy', 'T_Proxy', amt, fp, 0.35, 0.4)
+    proxyCopy('Clothes', 'T_Clothes', amt, fp, 0.4, 0.55)
+    proxyCopy('Hair', 'T_Clothes', amt, fp, 0.55, 0.6)
 
-    copyFile25("shared/mhx/templates/rig-poses25.mhx", fp, None, info) 
+    copyFile25("shared/mhx/templates/rig-poses25.mhx", fp, None, amt) 
 
-    if info.config.rigtype == 'rigify':
-        fp.write("Rigify %s ;\n" % info.name)
+    if amt.config.rigtype == 'rigify':
+        fp.write("Rigify %s ;\n" % amt.name)
 
     gui3d.app.progress(1.0)
     return
     
 
-def proxyCopy(type, test, info, fp, t0, t1):
+def proxyCopy(type, test, amt, fp, t0, t1):
     n = 0
-    for proxy in info.proxies.values():
+    for proxy in amt.proxies.values():
         if proxy.type == type:
             n += 1
     if n == 0:
@@ -183,27 +167,27 @@ def proxyCopy(type, test, info, fp, t0, t1):
         
     dt = (t1-t0)/n
     t = t0
-    for proxy in info.proxies.values():
+    for proxy in amt.proxies.values():
         if proxy.type == type:
             gui3d.app.progress(t, text="Exporting %s" % proxy.name)
             fp.write("#if toggle&%s\n" % test)
-            copyFile25("shared/mhx/templates/proxy25.mhx", fp, proxy, info)    
+            copyFile25("shared/mhx/templates/proxy25.mhx", fp, proxy, amt)    
             fp.write("#endif\n")
             t += dt
         
 #
-#    copyFile25(tmplName, fp, proxy, info):
+#    copyFile25(tmplName, fp, proxy, amt):
 #
 
-def copyFile25(tmplName, fp, proxy, info):
+def copyFile25(tmplName, fp, proxy, amt):
     tmpl = open(tmplName)
     if tmpl == None:
         log.error("*** Cannot open %s", tmplName)
         return
 
     bone = None
-    config = info.config
-    #faces = loadFacesIndices(info.mesh)
+    config = amt.config
+    #faces = loadFacesIndices(amt.mesh)
     ignoreLine = False
     for line in tmpl:
         words= line.split()
@@ -217,32 +201,32 @@ def copyFile25(tmplName, fp, proxy, info):
                     suffix = words[3]
                 else:
                     suffix = ""
-                fp.write("    %s Refer Object %s%s ;\n" % (words[2], info.name, suffix))
+                fp.write("    %s Refer Object %s%s ;\n" % (words[2], amt.name, suffix))
 
             elif key == 'rig-bones':
-                fp.write("Armature %s %s   Normal \n" % (info.name, info.name))
-                mhx_rig.writeArmature(fp, info, info.config.armatureBones)
+                fp.write("Armature %s %s   Normal \n" % (amt.name, amt.name))
+                amt.writeArmature(fp)
 
             elif key == 'human-object':
                 if words[2] == 'Mesh':
                     fp.write(
-                        "Object %sMesh MESH %sMesh\n"  % (info.name, info.name) +
-                        "  Property MhxOffsetX %.4f ;\n" % info.origin[0] +
-                        "  Property MhxOffsetY %.4f ;\n" % info.origin[1] +
-                        "  Property MhxOffsetZ %.4f ;\n" % info.origin[2])
+                        "Object %sMesh MESH %sMesh\n"  % (amt.name, amt.name) +
+                        "  Property MhxOffsetX %.4f ;\n" % amt.origin[0] +
+                        "  Property MhxOffsetY %.4f ;\n" % amt.origin[1] +
+                        "  Property MhxOffsetZ %.4f ;\n" % amt.origin[2])
                 elif words[2] == 'ControlRig':
                     fp.write(
-                        "Object %s ARMATURE %s\n"  % (info.name, info.name) +
+                        "Object %s ARMATURE %s\n"  % (amt.name, amt.name) +
                         "  Property MhxVersion %d ;\n" % MINOR_VERSION)
 
             elif key == 'rig-poses':
-                fp.write("Pose %s\n" % info.name)
-                mhx_rig.writeControlPoses(fp, info)
+                fp.write("Pose %s\n" % amt.name)
+                amt.writeControlPoses(fp)
                 fp.write("  ik_solver 'LEGACY' ;\nend Pose\n")
 
             elif key == 'rig-actions':
-                fp.write("Pose %s\nend Pose\n" % info.name)
-                mhx_rig.writeAllActions(fp, info)
+                fp.write("Pose %s\nend Pose\n" % amt.name)
+                amt.writeAllActions(fp)
 
             elif key == 'if-true':
                 value = eval(words[2])
@@ -250,23 +234,23 @@ def copyFile25(tmplName, fp, proxy, info):
                 fp.write("#if %s\n" % value)
 
             elif key == 'rig-drivers':
-                if info.config.rigtype == "mhx":
-                    fp.write("AnimationData %s True\n" % info.name)
-                    mhx_rig.writeAllDrivers(fp, info)
+                if amt.config.rigtype == "mhx":
+                    fp.write("AnimationData %s True\n" % amt.name)
+                    amt.writeDrivers(fp)
                     rigDriversEnd(fp)
 
             elif key == 'rig-correct':
-                fp.write("CorrectRig %s ;\n" % info.name)
+                fp.write("CorrectRig %s ;\n" % amt.name)
 
             elif key == 'recalc-roll':
-                if info.config.rigtype == "mhx":
-                    fp.write("  RecalcRoll %s ;\n" % info.config.recalcRoll)
+                if amt.config.rigtype == "mhx":
+                    fp.write("  RecalcRoll %s ;\n" % amt.config.recalcRoll)
 
             elif key == 'ProxyMesh':
-                writeProxyMesh(fp, info, proxy)
+                writeProxyMesh(fp, amt, proxy)
 
             elif key == 'ProxyObject':
-                writeProxyObject(fp, info, proxy)
+                writeProxyObject(fp, amt, proxy)
 
             elif key == 'ProxyLayers':
                 fp.write("layers Array ")
@@ -278,38 +262,38 @@ def copyFile25(tmplName, fp, proxy, info):
                 fp.write(";\n")
 
             elif key == 'MeshAnimationData':
-                writeHideAnimationData(fp, info, "", info.name)
+                writeHideAnimationData(fp, amt, "", amt.name)
 
             elif key == 'ProxyAnimationData':
-                writeHideAnimationData(fp, info, info.name, proxy.name)
+                writeHideAnimationData(fp, amt, amt.name, proxy.name)
 
             elif key == 'toggleCage':
                 if proxy and proxy.cage:
                     fp.write(
                     "  draw_type 'WIRE' ;\n" +
                     "  #if False\n")
-                elif info.config.cage:                    
+                elif amt.config.cage:                    
                     fp.write("  #if toggle&T_Cage\n")
                 else:
                     fp.write("  #if False\n")
 
             elif key == 'ProxyVerts':
-                ox = info.origin[0]
-                oy = info.origin[1]
-                oz = info.origin[2]
-                scale = info.config.scale
+                ox = amt.origin[0]
+                oy = amt.origin[1]
+                oz = amt.origin[2]
+                scale = amt.config.scale
                 for refVert in proxy.refVerts:
                     (x,y,z) = refVert.getCoord()
                     fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(x-ox), scale*(-z+oz), scale*(y-oy)))
 
             elif key == 'Verts':
                 proxy = None
-                fp.write("Mesh %sMesh %sMesh\n  Verts\n" % (info.name, info.name))
-                ox = info.origin[0]
-                oy = info.origin[1]
-                oz = info.origin[2]
-                scale = info.config.scale
-                for co in info.mesh.coord:
+                fp.write("Mesh %sMesh %sMesh\n  Verts\n" % (amt.name, amt.name))
+                ox = amt.origin[0]
+                oy = amt.origin[1]
+                oz = amt.origin[2]
+                scale = amt.config.scale
+                for co in amt.mesh.coord:
                     fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(co[0]-ox), scale*(-co[2]+oz), scale*(co[1]-oy)))
 
             elif key == 'ProxyFaces':
@@ -325,7 +309,7 @@ def copyFile25(tmplName, fp, proxy, info):
                     fp.write("    ftall 0 1 ;\n")
 
             elif key == 'Faces':
-                for fverts in info.mesh.fvert:
+                for fverts in amt.mesh.fvert:
                     if fverts[0] == fverts[3]:
                         fp.write("    f %d %d %d ;\n" % tuple(fverts[0:3]))
                     else:
@@ -333,11 +317,11 @@ def copyFile25(tmplName, fp, proxy, info):
                 fp.write("#if False\n")
 
             elif key == 'EndFaces':
-                writeFaceNumbers(fp, info)
+                writeFaceNumbers(fp, amt)
 
             elif key == 'FTTriangles':
                 pass
-                #for f in info.mesh.faces:
+                #for f in amt.mesh.faces:
                 #    if f.isTriangle():
                 #        fp.write("    mn %d 1 ;\n" % f.idx)
 
@@ -364,72 +348,72 @@ def copyFile25(tmplName, fp, proxy, info):
                         '  end MeshTextureFaceLayer\n')
 
             elif key == 'TexVerts':
-                if info.human.uvset:
-                    for ft in info.human.uvset.texFaces:
+                if amt.human.uvset:
+                    for ft in amt.human.uvset.texFaces:
                         fp.write("    vt")
                         for vt in ft:
-                            uv = info.human.uvset.texVerts[vt]
+                            uv = amt.human.uvset.texVerts[vt]
                             fp.write(" %.4g %.4g" %(uv[0], uv[1]))
                         fp.write(" ;\n")
                 else:
-                    for fuv in info.mesh.fuvs:
-                        uv0 = info.mesh.texco[fuv[0]]
-                        uv1 = info.mesh.texco[fuv[1]]
-                        uv2 = info.mesh.texco[fuv[2]]
-                        uv3 = info.mesh.texco[fuv[3]]
+                    for fuv in amt.mesh.fuvs:
+                        uv0 = amt.mesh.texco[fuv[0]]
+                        uv1 = amt.mesh.texco[fuv[1]]
+                        uv2 = amt.mesh.texco[fuv[2]]
+                        uv3 = amt.mesh.texco[fuv[3]]
                         if fuv[0] == fuv[3]:
                             fp.write("    vt %.4g %.4g %.4g %.4g %.4g %.4g ;\n" % (uv0[0], uv0[1], uv1[0], uv1[1], uv2[0], uv2[1]))
                         else:
                             fp.write("    vt %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g ;\n" % (uv0[0], uv0[1], uv1[0], uv1[1], uv2[0], uv2[1], uv3[0], uv3[1]))
 
             elif key == 'Material':
-                fp.write("Material %s%s\n" % (info.name, words[2]))
+                fp.write("Material %s%s\n" % (amt.name, words[2]))
 
             elif key == 'Materials':
-                writeBaseMaterials(fp, info)
+                writeBaseMaterials(fp, amt)
 
             elif key == 'ProxyMaterials':
                 if proxy.useBaseMaterials:
-                    writeBaseMaterials(fp, info)
+                    writeBaseMaterials(fp, amt)
                 elif proxy.material:
-                    fp.write("  Material %s%s ;\n" % (info.name, proxy.material.name))
+                    fp.write("  Material %s%s ;\n" % (amt.name, proxy.material.name))
 
             elif key == 'VertexGroup':
-                writeVertexGroups(fp, info, proxy)
+                writeVertexGroups(fp, amt, proxy)
 
             elif key == 'group':
-                writeGroups(fp, info)
+                writeGroups(fp, amt)
 
             elif key == 'mesh-shapeKey':
-                writeShapeKeys(fp, info, "%sMesh" % info.name, None)
+                writeShapeKeys(fp, amt, "%sMesh" % amt.name, None)
 
             elif key == 'proxy-shapeKey':
-                proxyShapes('Cage', 'T_Cage', info, fp)
-                proxyShapes('Proxy', 'T_Proxy', info, fp)
-                proxyShapes('Clothes', 'T_Clothes', info, fp)
-                proxyShapes('Hair', 'T_Clothes', info, fp)
+                proxyShapes('Cage', 'T_Cage', amt, fp)
+                proxyShapes('Proxy', 'T_Proxy', amt, fp)
+                proxyShapes('Clothes', 'T_Clothes', amt, fp)
+                proxyShapes('Hair', 'T_Clothes', amt, fp)
 
             elif key == 'ProxyModifiers':
-                writeProxyModifiers(fp, info, proxy)
+                writeProxyModifiers(fp, amt, proxy)
 
             elif key == 'MTex':
                 n = nMasks + int(words[2])
                 fp.write("  MTex %d %s %s %s\n" % (n, words[3], words[4], words[5]))
 
             elif key == 'SkinStart':
-                nMasks = writeSkinStart(fp, proxy, info)
+                nMasks = writeSkinStart(fp, proxy, amt)
 
             elif key == 'curves':
-                mhx_rig.writeAllCurves(fp, info)
+                amt.writeCurves(fp)
 
             elif key == 'properties':
-                mhx_rig.writeAllProperties(fp, words[2], info)
-                writeHideProp(fp, info.name)
-                for proxy in info.proxies.values():
+                amt.writeProperties(fp, words[2])
+                writeHideProp(fp, amt.name)
+                for proxy in amt.proxies.values():
                     writeHideProp(fp, proxy.name)
-                if info.config.useCustomShapes: 
-                    exportutils.custom.listCustomFiles(info.config)                            
-                for path,name in info.config.customShapeFiles:
+                if amt.config.useCustomShapes: 
+                    exportutils.custom.listCustomFiles(amt.config)                            
+                for path,name in amt.config.customShapeFiles:
                     fp.write("  DefProp Float %s 0 %s  min=-1.0,max=2.0 ;\n" % (name, name[3:]))
 
             elif key == 'material-drivers':
@@ -439,13 +423,13 @@ def copyFile25(tmplName, fp, proxy, info):
                 for n in range(3):
                     fp.write(" 1")
                 fp.write(" ;\n")
-                fp.write("  AnimationData %sMesh True\n" % info.name)
+                fp.write("  AnimationData %sMesh True\n" % amt.name)
                 #amtpkg.drivers.writeTextureDrivers(fp, rig_panel_25.BodyLanguageTextureDrivers)
-                writeMaskDrivers(fp, info)
+                writeMaskDrivers(fp, amt)
                 fp.write("  end AnimationData\n")
 
             elif key == 'Filename':
-                file = info.config.getTexturePath(words[2], words[3], True, info.human)
+                file = amt.config.getTexturePath(words[2], words[3], True, amt.human)
                 fp.write("  Filename %s ;\n" % file)
 
             else:
@@ -459,7 +443,7 @@ def copyFile25(tmplName, fp, proxy, info):
     return
 
 #
-#   writeFaceNumbers(fp, info):
+#   writeFaceNumbers(fp, amt):
 #
 
 MaterialNumbers = {
@@ -476,24 +460,24 @@ MaterialNumbers = {
     "blue"   : 7      # blue
 }
     
-def writeFaceNumbers(fp, info):
+def writeFaceNumbers(fp, amt):
     fp.write("#else\n")
-    if info.human.uvset:
-        for ftn in info.human.uvset.faceNumbers:
+    if amt.human.uvset:
+        for ftn in amt.human.uvset.faceNumbers:
             fp.write(ftn)
     else:            
-        obj = info.mesh
+        obj = amt.mesh
         fmats = numpy.zeros(len(obj.coord), int)
         for fn,mtl in obj.materials.items():
             fmats[fn] = MaterialNumbers[mtl]
             
-        if info.config.hidden:
+        if amt.config.hidden:
             deleteVerts = None
             deleteGroups = []
         else:
             deleteGroups = []
             deleteVerts = numpy.zeros(len(obj.coord), bool)
-            for proxy in info.proxies.values():
+            for proxy in amt.proxies.values():
                 deleteGroups += proxy.deleteGroups
                 deleteVerts = deleteVerts | proxy.deleteVerts
                     
@@ -531,25 +515,25 @@ def writeFaceNumbers(fp, info):
             fp.write("  ftn %d %d 1 ;\n" % (fn-f0, mn))
     fp.write("#endif\n")
 
-def writeBaseMaterials(fp, info):      
-    if info.human.uvset:
-        for mat in info.human.uvset.materials:
-            fp.write("  Material %s_%s ;\n" % (info.name, mat.name))
+def writeBaseMaterials(fp, amt):      
+    if amt.human.uvset:
+        for mat in amt.human.uvset.materials:
+            fp.write("  Material %s_%s ;\n" % (amt.name, mat.name))
     else:
         fp.write(
-"  Material %sSkin ;\n" % info.name +
-"  Material %sMouth ;\n" % info.name +
-"  Material %sEye ;\n" % info.name +
-"  Material %sBrows ;\n" % info.name +
-"  Material %sInvisio ;\n" % info.name +
-"  Material %sRed ;\n" % info.name +
-"  Material %sGreen ;\n" % info.name +
-"  Material %sBlue ;\n" % info.name
+"  Material %sSkin ;\n" % amt.name +
+"  Material %sMouth ;\n" % amt.name +
+"  Material %sEye ;\n" % amt.name +
+"  Material %sBrows ;\n" % amt.name +
+"  Material %sInvisio ;\n" % amt.name +
+"  Material %sRed ;\n" % amt.name +
+"  Material %sGreen ;\n" % amt.name +
+"  Material %sBlue ;\n" % amt.name
 )
     
-def addMaskImage(fp, info, mask):            
+def addMaskImage(fp, amt, mask):            
     (folder, file) = mask
-    path = info.config.getTexturePath(file, folder, True, info.human)
+    path = amt.config.getTexturePath(file, folder, True, amt.human)
     fp.write(
 "Image %s\n" % file +
 "  Filename %s ;\n" % path +
@@ -585,23 +569,23 @@ def addMaskMTex(fp, mask, proxy, blendtype, n):
     return n+1
 
 
-def writeSkinStart(fp, proxy, info):
-    if not info.config.useMasks:
-        fp.write("Material %sSkin\n" % info.name)
+def writeSkinStart(fp, proxy, amt):
+    if not amt.config.useMasks:
+        fp.write("Material %sSkin\n" % amt.name)
         return 0
         
     if proxy:
-        fp.write("Material %s%sSkin\n" % (info.name, proxy.name))
+        fp.write("Material %s%sSkin\n" % (amt.name, proxy.name))
         return 0
 
     nMasks = 0
-    prxList = list(info.proxies.values())
+    prxList = list(amt.proxies.values())
     
     for prx in prxList:
         if prx.mask:
-            addMaskImage(fp, info, prx.mask)
+            addMaskImage(fp, amt, prx.mask)
             nMasks += 1
-    fp.write("Material %sSkin\n" % info.name)
+    fp.write("Material %sSkin\n" % amt.name)
              #"  MTex 0 diffuse UV COLOR\n" +
              #"    texture Refer Texture diffuse ;\n" +
              #"  end MTex\n"
@@ -614,40 +598,40 @@ def writeSkinStart(fp, proxy, info):
     return nMasks
                
 
-def writeMaskDrivers(fp, info):
-    if not info.config.useMasks:
+def writeMaskDrivers(fp, amt):
+    if not amt.config.useMasks:
         return
     fp.write("#if toggle&T_Clothes\n")
     n = 0
-    for prx in info.proxies.values():
+    for prx in amt.proxies.values():
         if prx.type == 'Clothes' and prx.mask:
             (dir, file) = prx.mask
-            amtpkg.drivers.writePropDriver(fp, info, ["Mhh%s" % prx.name], "1-x1", 'use_textures', n)
+            amtpkg.drivers.writePropDriver(fp, amt, ["Mhh%s" % prx.name], "1-x1", 'use_textures', n)
             n += 1            
     fp.write("#endif\n")
     return
     
 
-def writeVertexGroups(fp, info, proxy):                
+def writeVertexGroups(fp, amt, proxy):                
     if proxy and proxy.weights:
         writeRigWeights(fp, proxy.weights)
         return
 
-    if info.config.vertexWeights:
+    if amt.vertexWeights:
         if proxy:
-            weights = mh2proxy.getProxyWeights(info.config.vertexWeights, proxy)
+            weights = mh2proxy.getProxyWeights(amt.vertexWeights, proxy)
         else:
-            weights = info.config.vertexWeights                    
+            weights = amt.vertexWeights                    
         writeRigWeights(fp, weights)
     else:
-        for file in info.config.vertexGroupFiles:
+        for file in amt.vertexGroupFiles:
             copyVertexGroups(file, fp, proxy)
             
-    #for path in info.config.customvertexgroups:
+    #for path in amt.config.customvertexgroups:
     #    print("    %s" % path)
     #    copyVertexGroups(path, fp, proxy)    
 
-    if info.config.cage and not (proxy and proxy.cage):
+    if amt.config.cage and not (proxy and proxy.cage):
         fp.write("#if toggle&T_Cage\n")
         copyVertexGroups("cage", fp, proxy)    
         fp.write("#endif\n")
@@ -667,19 +651,19 @@ def rigDriversEnd(fp):
         "end AnimationData\n")
 
 
-def writeGroups(fp, info):                
+def writeGroups(fp, amt):                
     fp.write(
-        "PostProcess %sMesh %s 0000003f 00080000 0068056b 0000c000 ;\n" % (info.name, info.name) + 
-        "Group %s\n"  % info.name +
+        "PostProcess %sMesh %s 0000003f 00080000 0068056b 0000c000 ;\n" % (amt.name, amt.name) + 
+        "Group %s\n"  % amt.name +
         "  Objects\n" +
-        "    ob %s ;\n" % info.name +
+        "    ob %s ;\n" % amt.name +
         "#if toggle&T_Mesh\n" +
-        "    ob %sMesh ;\n" % info.name +
+        "    ob %sMesh ;\n" % amt.name +
         "#endif\n")
-    groupProxy('Cage', 'T_Cage', fp, info)
-    groupProxy('Proxy', 'T_Proxy', fp, info)
-    groupProxy('Clothes', 'T_Clothes', fp, info)
-    groupProxy('Hair', 'T_Clothes', fp, info)
+    groupProxy('Cage', 'T_Cage', fp, amt)
+    groupProxy('Proxy', 'T_Proxy', fp, amt)
+    groupProxy('Clothes', 'T_Clothes', fp, amt)
+    groupProxy('Hair', 'T_Clothes', fp, amt)
     fp.write(
         "    ob CustomShapes ;\n" + 
         "  end Objects\n" +
@@ -687,32 +671,32 @@ def writeGroups(fp, info):
         "end Group\n")
     return
     
-def groupProxy(typ, test, fp, info):
+def groupProxy(typ, test, fp, amt):
     fp.write("#if toggle&%s\n" % test)
-    for proxy in info.proxies.values():
+    for proxy in amt.proxies.values():
         if proxy.type == typ:
-            name = info.name + proxy.name
+            name = amt.name + proxy.name
             fp.write("    ob %sMesh ;\n" % name)
     fp.write("#endif\n")
     return
 
-def writeProxyMesh(fp, info, proxy):                
+def writeProxyMesh(fp, amt, proxy):                
     mat = proxy.material
     if mat:
         if proxy.material_file:
-            copyProxyMaterialFile(fp, proxy.material_file, mat, proxy, info)
+            copyProxyMaterialFile(fp, proxy.material_file, mat, proxy, amt)
         else:
-            writeProxyMaterial(fp, mat, proxy, info)
-    name = info.name + proxy.name
+            writeProxyMaterial(fp, mat, proxy, amt)
+    name = amt.name + proxy.name
     fp.write("Mesh %sMesh %sMesh \n" % (name, name))
     return
 
 
-def writeProxyObject(fp, info, proxy): 
-    name = info.name + proxy.name
+def writeProxyObject(fp, amt, proxy): 
+    name = amt.name + proxy.name
     fp.write(
         "Object %sMesh MESH %sMesh \n" % (name, name) +
-        "  parent Refer Object %s ;\n" % info.name +
+        "  parent Refer Object %s ;\n" % amt.name +
         "  hide False ;\n" +
         "  hide_render False ;\n")
     if proxy.wire:
@@ -720,7 +704,7 @@ def writeProxyObject(fp, info, proxy):
     return
 
 
-def writeProxyModifiers(fp, info, proxy):
+def writeProxyModifiers(fp, amt, proxy):
     for mod in proxy.modifiers:
         if mod[0] == 'subsurf':
             fp.write(
@@ -732,7 +716,7 @@ def writeProxyModifiers(fp, info, proxy):
             offset = mod[1]
             fp.write(
                 "    Modifier ShrinkWrap SHRINKWRAP\n" +
-                "      target Refer Object %sMesh ;\n" % info.name +
+                "      target Refer Object %sMesh ;\n" % amt.name +
                 "      offset %.4f ;\n" % offset +
                 "      use_keep_above_surface True ;\n" +
                 "    end Modifier\n")
@@ -752,16 +736,16 @@ def writeHideProp(fp, name):
     return
 
 
-def writeHideAnimationData(fp, info, prefix, name):
+def writeHideAnimationData(fp, amt, prefix, name):
     fp.write("AnimationData %s%sMesh True\n" % (prefix, name))
-    amtpkg.drivers.writePropDriver(fp, info, ["Mhh%s" % name], "x1", "hide", -1)
-    amtpkg.drivers.writePropDriver(fp, info, ["Mhh%s" % name], "x1", "hide_render", -1)
+    amtpkg.drivers.writePropDriver(fp, amt, ["Mhh%s" % name], "x1", "hide", -1)
+    amtpkg.drivers.writePropDriver(fp, amt, ["Mhh%s" % name], "x1", "hide_render", -1)
     fp.write("end AnimationData\n")
     return    
        
 
-def copyProxyMaterialFile(fp, pair, mat, proxy, info):
-    prxList = sortedMasks(info)
+def copyProxyMaterialFile(fp, pair, mat, proxy, amt):
+    prxList = sortedMasks(amt)
     nMasks = countMasks(proxy, prxList)
     tex = None
     
@@ -774,24 +758,24 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, info):
         if len(words) == 0:
             fp.write(line)
         elif words[0] == 'Texture':
-            words[1] = info.name + words[1]
+            words[1] = amt.name + words[1]
             for word in words:
                 fp.write("%s " % word)
             fp.write("\n")
             tex = os.path.join(folder,words[1])
         elif words[0] == 'Material':
-            words[1] = info.name + words[1]
+            words[1] = amt.name + words[1]
             for word in words:
                 fp.write("%s " % word)
             fp.write("\n")
             addProxyMaskMTexs(fp, mat, proxy, prxList, tex)
         elif words[0] == 'MTex':
-            words[2] = info.name + words[2]
+            words[2] = amt.name + words[2]
             for word in words:
                 fp.write("%s " % word)
             fp.write("\n")                
         elif words[0] == 'Filename':
-            file = info.config.getTexturePath(words[1], folder, True, info.human)
+            file = amt.config.getTexturePath(words[1], folder, True, amt.human)
             fp.write("  Filename %s ;\n" % file)
         else:
             fp.write(line)
@@ -799,14 +783,14 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, info):
     return
        
 
-def writeProxyTexture(fp, texture, mat, extra, info):        
+def writeProxyTexture(fp, texture, mat, extra, amt):        
     (folder,name) = texture
     tex = os.path.join(folder,name)
-    #print(info.name)
+    #print(amt.name)
     log.debug("Tex %s", tex)
-    texname = info.name + os.path.basename(tex)
+    texname = amt.name + os.path.basename(tex)
     fromDir = os.path.dirname(tex)
-    texfile = info.config.getTexturePath(tex, fromDir, True, None)
+    texfile = amt.config.getTexturePath(tex, fromDir, True, None)
     fp.write(
         "Image %s\n" % texname +
         "  Filename %s ;\n" % texfile +
@@ -820,7 +804,7 @@ def writeProxyTexture(fp, texture, mat, extra, info):
     return (tex, texname)
     
     
-def writeProxyMaterial(fp, mat, proxy, info):
+def writeProxyMaterial(fp, mat, proxy, amt):
     alpha = mat.alpha
     tex = None
     bump = None
@@ -829,30 +813,30 @@ def writeProxyMaterial(fp, mat, proxy, info):
     transparency = None
     if proxy.texture:
         uuid = proxy.getUuid()
-        if uuid in info.human.clothesObjs.keys() and info.human.clothesObjs[uuid]:
+        if uuid in amt.human.clothesObjs.keys() and amt.human.clothesObjs[uuid]:
             # Apply custom texture
-            clothesObj = info.human.clothesObjs[uuid]
+            clothesObj = amt.human.clothesObjs[uuid]
             texture = clothesObj.mesh.texture
             texPath = (os.path.dirname(texture), os.path.basename(texture))
-            (tex,texname) = writeProxyTexture(fp, texPath, mat, "", info)
+            (tex,texname) = writeProxyTexture(fp, texPath, mat, "", amt)
         else:
-            (tex,texname) = writeProxyTexture(fp, proxy.texture, mat, "", info)
+            (tex,texname) = writeProxyTexture(fp, proxy.texture, mat, "", amt)
     if proxy.bump:
-        (bump,bumpname) = writeProxyTexture(fp, proxy.bump, mat, "", info)
+        (bump,bumpname) = writeProxyTexture(fp, proxy.bump, mat, "", amt)
     if proxy.normal:
         (normal,normalname) = writeProxyTexture(fp, proxy.normal, mat, 
             ("    use_normal_map True ;\n"),
-            info)
+            amt)
     if proxy.displacement:
-        (displacement,dispname) = writeProxyTexture(fp, proxy.displacement, mat, "", info)
+        (displacement,dispname) = writeProxyTexture(fp, proxy.displacement, mat, "", amt)
     if proxy.transparency:
-        (transparency,transname) = writeProxyTexture(fp, proxy.transparency, mat, "", info)
+        (transparency,transname) = writeProxyTexture(fp, proxy.transparency, mat, "", amt)
            
-    prxList = sortedMasks(info)
+    prxList = sortedMasks(amt)
     nMasks = countMasks(proxy, prxList)
     slot = nMasks
     
-    fp.write("Material %s%s \n" % (info.name, mat.name))
+    fp.write("Material %s%s \n" % (amt.name, mat.name))
     addProxyMaskMTexs(fp, mat, proxy, prxList, tex)
     writeProxyMaterialSettings(fp, mat.settings)   
     uvlayer = proxy.uvtexLayerName[proxy.textureLayer]
@@ -954,11 +938,11 @@ def addProxyMaskMTexs(fp, mat, proxy, prxList, tex):
         n = addMaskMTex(fp, (None,'solid'), proxy, 'MIX', n)
     return   
     
-def sortedMasks(info):
-    if not info.config.useMasks:
+def sortedMasks(amt):
+    if not amt.config.useMasks:
         return []
     prxList = []
-    for prx in info.proxies.values():
+    for prx in amt.proxies.values():
         if prx.type == 'Clothes' and prx.mask:
             prxList.append((prx.z_depth, prx))
     prxList.sort()
@@ -1043,16 +1027,16 @@ def printProxyVGroup(fp, vgroups):
 
 
 
-def writeCorrectives(fp, info, drivers, folder, landmarks, proxy, t0, t1):  
+def writeCorrectives(fp, amt, drivers, folder, landmarks, proxy, t0, t1):  
     try:
-        shapeList = info.loadedShapes[folder]
+        shapeList = amt.loadedShapes[folder]
     except KeyError:
         shapeList = None
     if shapeList is None:
-        shapeList = exportutils.shapekeys.readCorrectives(drivers, info.human, folder, landmarks, t0, t1)
-        info.loadedShapes[folder] = shapeList
+        shapeList = exportutils.shapekeys.readCorrectives(drivers, amt.human, folder, landmarks, t0, t1)
+        amt.loadedShapes[folder] = shapeList
     for (shape, pose, lr) in shapeList:
-        writeShape(fp, pose, lr, shape, 0, 1, proxy, info.config.scale)
+        writeShape(fp, pose, lr, shape, 0, 1, proxy, amt.config.scale)
     
 
 def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
@@ -1073,11 +1057,11 @@ def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
     fp.write("end ShapeKey\n")
 
 
-def writeShapeKeys(fp, info, name, proxy):
+def writeShapeKeys(fp, amt, name, proxy):
 
     isHuman = ((not proxy) or proxy.type == 'Proxy')
     isHair = (proxy and proxy.type == 'Hair')
-    scale = info.config.scale
+    scale = amt.config.scale
     
     fp.write(
 "#if toggle&T_Shapekeys\n" +
@@ -1085,73 +1069,73 @@ def writeShapeKeys(fp, info, name, proxy):
 "  ShapeKey Basis Sym True\n" +
 "  end ShapeKey\n")
 
-    if isHuman and info.config.facepanel:
-        shapeList = exportutils.shapekeys.readFaceShapes(info.human, rig_panel_25.BodyLanguageShapeDrivers, 0.6, 0.7)
+    if isHuman and amt.config.facepanel:
+        shapeList = exportutils.shapekeys.readFaceShapes(amt.human, rig_panel_25.BodyLanguageShapeDrivers, 0.6, 0.7)
         for (pose, shape, lr, min, max) in shapeList:
             writeShape(fp, pose, lr, shape, min, max, proxy, scale)
     
-    if isHuman and info.config.expressions:
+    if isHuman and amt.config.expressions:
         try:
-            shapeList = info.loadedShapes["expressions"]
+            shapeList = amt.loadedShapes["expressions"]
         except KeyError:
             shapeList = None
         if shapeList is None:
-            shapeList = exportutils.shapekeys.readExpressionUnits(info.human, 0.7, 0.9)
-            info.loadedShapes["expressions"] = shapeList
+            shapeList = exportutils.shapekeys.readExpressionUnits(amt.human, 0.7, 0.9)
+            amt.loadedShapes["expressions"] = shapeList
         for (pose, shape) in shapeList:
             writeShape(fp, pose, "Sym", shape, -1, 2, proxy, scale)
         
-    if info.config.bodyShapes and info.config.rigtype == "mhx" and not isHair:
-        writeCorrectives(fp, info, rig_shoulder_25.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)                
-        writeCorrectives(fp, info, rig_leg_25.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)                
-        writeCorrectives(fp, info, rig_arm_25.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)                
-        writeCorrectives(fp, info, rig_leg_25.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)                
+    if amt.config.bodyShapes and amt.config.rigtype == "mhx" and not isHair:
+        writeCorrectives(fp, amt, rig_shoulder_25.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)                
+        writeCorrectives(fp, amt, rig_leg_25.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)                
+        writeCorrectives(fp, amt, rig_arm_25.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)                
+        writeCorrectives(fp, amt, rig_leg_25.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)                
 
     if isHuman:
-        for path,name in info.config.customShapeFiles:
+        for path,name in amt.config.customShapeFiles:
             try:
-                shape = info.loadedShapes[path]
+                shape = amt.loadedShapes[path]
             except KeyError:
                 shape = None
             if shape is None:
                 log.message("    %s", path)
                 shape = exportutils.custom.readCustomTarget(path)
-                info.loadedShapes[path] = shape
+                amt.loadedShapes[path] = shape
             writeShape(fp, name, "Sym", shape, -1, 2, proxy, scale)                        
 
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
         
-    if info.config.bodyShapes and info.config.rigtype == "mhx" and not isHair:
-        amtpkg.drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, info.name)
-        amtpkg.drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, info.name)
-        amtpkg.drivers.writeTargetDrivers(fp, rig_arm_25.ElbowTargetDrivers, info.name)
-        amtpkg.drivers.writeTargetDrivers(fp, rig_leg_25.KneeTargetDrivers, info.name)
+    if amt.config.bodyShapes and amt.config.rigtype == "mhx" and not isHair:
+        amtpkg.drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, amt.name)
+        amtpkg.drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, amt.name)
+        amtpkg.drivers.writeTargetDrivers(fp, rig_arm_25.ElbowTargetDrivers, amt.name)
+        amtpkg.drivers.writeTargetDrivers(fp, rig_leg_25.KneeTargetDrivers, amt.name)
 
         amtpkg.drivers.writeRotDiffDrivers(fp, rig_arm_25.ArmShapeDrivers, proxy)
         amtpkg.drivers.writeRotDiffDrivers(fp, rig_leg_25.LegShapeDrivers, proxy)
-        #amtpkg.drivers.writeShapePropDrivers(fp, info, rig_body_25.bodyShapes, proxy, "Mha")
+        #amtpkg.drivers.writeShapePropDrivers(fp, amt, rig_body_25.bodyShapes, proxy, "Mha")
 
     fp.write("#if toggle&T_ShapeDrivers\n")
 
     if isHuman:
-        for path,name in info.config.customShapeFiles:
-            amtpkg.drivers.writeShapePropDrivers(fp, info, [name], proxy, "")    
+        for path,name in amt.config.customShapeFiles:
+            amtpkg.drivers.writeShapePropDrivers(fp, amt, [name], proxy, "")    
 
-        if info.config.expressions:
-            amtpkg.drivers.writeShapePropDrivers(fp, info, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
+        if amt.config.expressions:
+            amtpkg.drivers.writeShapePropDrivers(fp, amt, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
             
-        if info.config.facepanel:
-            amtpkg.drivers.writeShapeDrivers(fp, info, rig_panel_25.BodyLanguageShapeDrivers, proxy)
+        if amt.config.facepanel:
+            amtpkg.drivers.writeShapeDrivers(fp, amt, rig_panel_25.BodyLanguageShapeDrivers, proxy)
         
         skeys = []
-        for (skey, val, string, min, max) in  info.config.customProps:
+        for (skey, val, string, min, max) in  amt.config.customProps:
             skeys.append(skey)
-        amtpkg.drivers.writeShapePropDrivers(fp, info, skeys, proxy, "Mha")    
+        amtpkg.drivers.writeShapePropDrivers(fp, amt, skeys, proxy, "Mha")    
     fp.write("#endif\n")
         
     fp.write("  end AnimationData\n\n")
 
-    if info.config.expressions and not proxy:
+    if amt.config.expressions and not proxy:
         exprList = exportutils.shapekeys.readExpressionMhm("data/expressions")
         writeExpressions(fp, exprList, "Expression")        
         visemeList = exportutils.shapekeys.readExpressionMhm("data/visemes")
@@ -1171,15 +1155,15 @@ def writeExpressions(fp, exprList, label):
         fp.write("  end\n")
             
 
-def proxyShapes(typ, test, info, fp):
+def proxyShapes(typ, test, amt, fp):
     fp.write("#if toggle&%s\n" % test)
-    for proxy in info.proxies.values():
+    for proxy in amt.proxies.values():
         if proxy.name and proxy.type == typ:
-            writeShapeKeys(fp, info, info.name+proxy.name+"Mesh", proxy)
+            writeShapeKeys(fp, amt, amt.name+proxy.name+"Mesh", proxy)
     fp.write("#endif\n")
         
 #
-#   writeMultiMaterials(uvset, info, fp):
+#   writeMultiMaterials(uvset, amt, fp):
 #
       
 TX_SCALE = 1
@@ -1194,16 +1178,16 @@ TexInfo = {
     "displacement": ("DISPLACEMENT", "use_map_displacement", "displacement_factor", TX_SCALE|TX_BW),
 }    
 
-def writeMultiMaterials(info, fp):
-    uvset = info.human.uvset
+def writeMultiMaterials(amt, fp):
+    uvset = amt.human.uvset
     folder = os.path.dirname(uvset.filename)
     log.debug("Folder %s", folder)
     for mat in uvset.materials:
         for tex in mat.textures:
             name = os.path.basename(tex.file)
             fp.write("Image %s\n" % name)
-            #file = info.config.getTexturePath(tex, "data/textures", True, info.human)
-            file = info.config.getTexturePath(name, folder, True, info.human)
+            #file = amt.config.getTexturePath(tex, "data/textures", True, amt.human)
+            file = amt.config.getTexturePath(name, folder, True, amt.human)
             fp.write(
                 "  Filename %s ;\n" % file +
 #                "  alpha_mode 'PREMUL' ;\n" +
@@ -1212,7 +1196,7 @@ def writeMultiMaterials(info, fp):
                 "  Image %s ;\n" % name +
                 "end Texture\n\n")
             
-        fp.write("Material %s_%s\n" % (info.name, mat.name))
+        fp.write("Material %s_%s\n" % (amt.name, mat.name))
         alpha = False
         for (key, value) in mat.settings:
             if key == "alpha":
@@ -1273,5 +1257,524 @@ def writeRigWeights(fp, weights):
         fp.write("  end VertexGroup\n")
     return
     
+
+
+#-------------------------------------------------------------------------------        
+#   Setup custom shapes
+#-------------------------------------------------------------------------------        
+
+def setupCircle(fp, name, r):
+    """
+    Write circle object to the MHX file. Circles are used as custom shapes.
+    
+    fp:
+        *File*: Output file pointer. 
+    name:
+        *string*: Object name.
+    r:
+        *float*: Radius.
+    """
+
+    fp.write("\n"+
+        "Mesh %s %s \n" % (name, name) +
+        "  Verts\n")
+    for n in range(16):
+        v = n*pi/8
+        y = 0.5 + 0.02*sin(4*v)
+        fp.write("    v %.3f %.3f %.3f ;\n" % (r*math.cos(v), y, r*math.sin(v)))
+    fp.write(
+        "  end Verts\n" +
+        "  Edges\n")
+    for n in range(15):
+        fp.write("    e %d %d ;\n" % (n, n+1))
+    fp.write(
+        "    e 15 0 ;\n" +
+        "  end Edges\n"+
+        "end Mesh\n")
+        
+    fp.write(
+        "Object %s MESH %s\n" % (name, name) +
+        "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n"+
+        "  parent Refer Object CustomShapes ;\n"+
+        "end Object\n")
+
+
+def setupCube(fp, name, r, offs):
+    """
+    Write cube object to the MHX file. Cubes are used as custom shapes.
+    
+    fp:
+        *File*: Output file pointer. 
+    name:
+        *string*: Object name.
+    r:
+        *float* or *float triple*: Side(s) of cube.
+    offs:
+        *float* or *float triple*: Y offset or offsets from origin.
+    """
+    
+    try:
+        (rx,ry,rz) = r
+    except:
+        (rx,ry,rz) = (r,r,r)
+    try:
+        (dx,dy,dz) = offs
+    except:
+        (dx,dy,dz) = (0,offs,0)
+
+    fp.write("\n"+
+        "Mesh %s %s \n" % (name, name) +
+        "  Verts\n")
+    for x in [-rx,rx]:
+        for y in [-ry,ry]:
+            for z in [-rz,rz]:
+                fp.write("    v %.2f %.2f %.2f ;\n" % (x+dx,y+dy,z+dz))
+    fp.write(
+        "  end Verts\n" +
+        "  Faces\n" +
+        "    f 0 1 3 2 ;\n" +
+        "    f 4 6 7 5 ;\n" +
+        "    f 0 2 6 4 ;\n" +
+        "    f 1 5 7 3 ;\n" +
+        "    f 1 0 4 5 ;\n" +
+        "    f 2 3 7 6 ;\n" +
+        "  end Faces\n" +
+        "end Mesh\n")
+
+    fp.write(
+        "Object %s MESH %s\n" % (name, name) +
+        "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
+        "  parent Refer Object CustomShapes ;\n" +
+        "end Object\n")
+
+
+def setupCustomShapes(fp):
+    """
+    Write simple custom shapes to the MHX file. Additional custom shapes are defined in 
+    mhx files in mhx/templates.
+    
+    fp:
+        *File*: Output file pointer. 
+    """
+    
+    setupCircle(fp, "MHCircle01", 0.1)
+    setupCircle(fp, "MHCircle025", 0.25)
+    setupCircle(fp, "MHCircle05", 0.5)
+    setupCircle(fp, "MHCircle10", 1.0)
+    setupCircle(fp, "MHCircle15", 1.5)
+    setupCircle(fp, "MHCircle20", 2.0)
+    setupCube(fp, "MHCube01", 0.1, 0)
+    setupCube(fp, "MHCube025", 0.25, 0)
+    setupCube(fp, "MHCube05", 0.5, 0)
+    setupCube(fp, "MHEndCube01", 0.1, 1)
+    setupCube(fp, "MHChest", (0.7,0.25,0.5), (0,0.5,0.35))
+    setupCube(fp, "MHRoot", (1.25,0.5,1.0), 1)
+    return
+
+#-------------------------------------------------------------------------------        
+#   Armature used for export
+#-------------------------------------------------------------------------------        
+
+class ExportArmature(CArmature):
+
+    def __init__(self, name, human, config):    
+        CArmature. __init__(self, name, human, config)
+        self.customShapeFiles = []
+        self.customShapes = {}
+        self.poseInfo = {}
+        self.gizmoFiles = []
+
+
+    def scanProxies(self):
+        self.proxies = {}
+        for pfile in self.config.getProxyList():
+            if pfile.file:
+                print("Scan", pfile, pfile.type)
+                proxy = mh2proxy.readProxyFile(self.mesh, pfile, True)
+                if proxy:
+                    self.proxies[proxy.name] = proxy        
+
+
+    def setup(self):
+        if self.config.facepanel:            
+            self.joints += rig_panel_25.PanelJoints
+            self.headsTails += rig_panel_25.PanelHeadsTails
+            self.boneDefs += rig_panel_25.PanelArmature
+
+        amtpkg.rigdefs.CArmature.setup(self)
+        
+        if self.config.clothesRig:
+            for proxy in self.proxies.values():
+                if proxy.rig:
+                    coord = []
+                    for refVert in proxy.refVerts:
+                        coord.append(refVert.getCoord())
+                    (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, amt.mesh, coord=coord) 
+                    proxy.weights = self.prefixWeights(weights, proxy.name)
+                    appendRigBones(boneList, proxy.name, L_CLO, body, amt)
+        
+
+    def setupCustomShapes(self, fp):
+        if self.gizmoFiles:
+            for fname in self.gizmoFiles:
+                copyFile25(fname, fp, None, self)    
+            setupCustomShapes(fp)
+        else:        
+            for (name, data) in self.customShapes.items():
+                (typ, r) = data
+                if typ == "-circ":
+                    setupCircle(fp, name, 0.1*r)
+                elif typ == "-box":
+                    setupCube(fp, name, 0.1*r, (0,0,0))
+                else:
+                    halt
+
+        if self.config.facepanel:
+            setupCube(fp, "MHCube025", 0.25, 0)
+            setupCube(fp, "MHCube05", 0.5, 0)
+            copyFile25("shared/mhx/templates/panel_gizmo25.mhx", fp, None, self)    
+        
+
+    def writeArmature(self, fp):        
+        for data in self.boneDefs:
+            (bone, roll, parent, flags, layers, bbone) = data
+            print(data)
+            conn = (flags & F_CON != 0)
+            deform = (flags & F_DEF != 0)
+            restr = (flags & F_RES != 0)
+            wire = (flags & F_WIR != 0)
+            lloc = (flags & F_NOLOC == 0)
+            lock = (flags & F_LOCK != 0)
+            cyc = (flags & F_NOCYC == 0)
+        
+            scale = self.config.scale
+    
+            fp.write("\n  Bone %s %s\n" % (bone, True))
+            (x, y, z) = scale*self.rigHeads[bone]
+            fp.write("    head  %.6g %.6g %.6g  ;\n" % (x,-z,y))
+            (x, y, z) = scale*self.rigTails[bone]
+            fp.write("    tail %.6g %.6g %.6g  ;\n" % (x,-z,y))
+            if type(parent) == tuple:
+                (soft, hard) = parent
+                if hard:
+                    fp.write(
+                        "#if toggle&T_HardParents\n" +
+                        "    parent Refer Bone %s ;\n" % hard +
+                        "#endif\n")
+                if soft:
+                    fp.write(
+                        "#if toggle&T_HardParents==0\n" +
+                        "    parent Refer Bone %s ;\n" % soft +
+                        "#endif\n")
+            elif parent:
+                fp.write("    parent Refer Bone %s ; \n" % (parent))
+            fp.write(
+                "    roll %.6g ; \n" % (roll)+
+                "    use_connect %s ; \n" % (conn) +
+                "    use_deform %s ; \n" % (deform) +
+                "    show_wire %s ; \n" % (wire))
+    
+            if 1 and (flags & F_HID):
+                fp.write("    hide True ; \n")
+    
+            if bbone:
+                (bin, bout, bseg) = bbone
+                fp.write(
+                    "    bbone_in %d ; \n" % (bin) +
+                    "    bbone_out %d ; \n" % (bout) +
+                    "    bbone_segments %d ; \n" % (bseg))
+    
+            if flags & F_NOROT:
+                fp.write("    use_inherit_rotation False ; \n")
+            if flags & F_SCALE:
+                fp.write("    use_inherit_scale True ; \n")
+            else:
+                fp.write("    use_inherit_scale False ; \n")
+            fp.write("    layers Array ")
+    
+            bit = 1
+            for n in range(32):
+                if layers & bit:
+                    fp.write("1 ")
+                else:
+                    fp.write("0 ")
+                bit = bit << 1
+    
+            fp.write(" ; \n" +
+                "    use_local_location %s ; \n" % lloc +
+                "    lock %s ; \n" % lock +
+                "    use_envelope_multiply False ; \n"+
+                "    hide_select %s ; \n" % (restr) +
+                "  end Bone \n")
+
+
+    def writeBoneGroups(self, fp):    
+        if not fp:
+            return
+        for (name, color) in self.boneGroups:
+            fp.write(
+                "    BoneGroup %s\n" % name +
+                "      name '%s' ;\n" % name +
+                "      color_set '%s' ;\n" % color +
+                "    end BoneGroup\n")
+        return
+
+
+    def writeControlPoses(self, fp):
+        if self.config.facepanel:
+            rig_panel_25.PanelControlPoses(fp, self)
+            
+        for (bone, cinfo) in self.poseInfo.items():
+            cs = None
+            constraints = []
+            for (key, value) in cinfo:
+                if key == "CS":
+                    cs = value
+                elif key == "IK":
+                    goal = value[0]
+                    n = int(value[1])
+                    inf = float(value[2])
+                    pt = value[3]
+                    if pt:
+                        log.debug("%s %s %s %s", goal, n, inf, pt)
+                        subtar = pt[0]
+                        poleAngle = float(pt[1])
+                        pt = (poleAngle, subtar)
+                    constraints =  [('IK', 0, inf, ['IK', goal, n, pt, (True,False,True)])]
+            posebone.addPoseBone(fp, self, bone, cs, None, (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0, constraints)       
+
+
+    def writeProperties(self, fp, typ):
+        if typ != 'Object':
+            return
+        for (key, val) in self.objectProps:
+            fp.write("  Property %s %s ;\n" % (key, val))
+        for (key, val, string, min, max) in self.config.customProps:
+            fp.write('  DefProp Float Mha%s %.2f %s min=-%.2f,max=%.2f ;\n' % (key, val, string, min, max) )
+    
+        if self.config.expressions:
+            fp.write("#if toggle&T_Shapekeys\n")
+            for skey in exportutils.shapekeys.ExpressionUnits:
+                fp.write("  DefProp Float Mhs%s 0.0 %s min=-1.0,max=2.0 ;\n" % (skey, skey))
+            fp.write("#endif\n")   
+
+#-------------------------------------------------------------------------------        
+#   MHX armature
+#-------------------------------------------------------------------------------        
+
+class MhxArmature(ExportArmature):
+
+    def __init__(self, name, human, config):    
+        ExportArmature. __init__(self, name, human, config)
+        self.rigtype = 'mhx'
+
+        self.boneGroups = [
+            ('Master', 'THEME13'),
+            ('Spine', 'THEME05'),
+            ('FK_L', 'THEME09'),
+            ('FK_R', 'THEME02'),
+            ('IK_L', 'THEME03'),
+            ('IK_R', 'THEME04'),
+        ]
+        self.recalcRoll = "['Foot_L','Toe_L','Foot_R','Toe_R','DfmFoot_L','DfmToe_L','DfmFoot_R','DfmToe_R']"
+        self.gizmoFiles = ["./shared/mhx/templates/custom-shapes25.mhx", 
+                      "./shared/mhx/templates/panel_gizmo25.mhx",
+                      "./shared/mhx/templates/gizmos25.mhx"]
+
+        self.objectProps = [("MhxRig", '"MHX"')]
+        self.armatureProps = []
+        self.headName = 'Head'
+        self.preservevolume = False
+        
+        self.vertexGroupFiles = ["head", "bones", "palm", "tight"]
+        if config.skirtRig == "own":
+            self.vertexGroupFiles.append("skirt-rigged")    
+        elif config.skirtRig == "inh":
+            self.vertexGroupFiles.append("skirt")    
+
+        if config.maleRig:
+            self.vertexGroupFiles.append( "male" )
+                                                        
+        self.joints = (
+            amtpkg.joints.DeformJoints +
+            rig_body_25.BodyJoints +
+            amtpkg.joints.FloorJoints +
+            rig_arm_25.ArmJoints +
+            rig_shoulder_25.ShoulderJoints +
+            rig_finger_25.FingerJoints +
+            rig_leg_25.LegJoints +
+            #rig_toe_25.ToeJoints +
+            rig_face_25.FaceJoints
+        )            
+        
+        self.headsTails = (
+            rig_body_25.BodyHeadsTails +
+            rig_shoulder_25.ShoulderHeadsTails +
+            rig_arm_25.ArmHeadsTails +
+            rig_finger_25.FingerHeadsTails +
+            rig_leg_25.LegHeadsTails +
+            #rig_toe_25.ToeHeadsTails +
+            rig_face_25.FaceHeadsTails
+        )
+
+        self.boneDefs = list(rig_body_25.BodyArmature1)
+        if config.advancedSpine:
+            self.boneDefs += rig_body_25.BodyArmature2Advanced
+        else:
+            self.boneDefs += rig_body_25.BodyArmature2Simple
+        self.boneDefs += rig_body_25.BodyArmature3
+        if config.advancedSpine:
+            self.boneDefs += rig_body_25.BodyArmature4Advanced
+        else:
+            self.boneDefs += rig_body_25.BodyArmature4Simple
+        self.boneDefs += rig_body_25.BodyArmature5
+
+        self.boneDefs += (
+            rig_shoulder_25.ShoulderArmature1 +
+            rig_shoulder_25.ShoulderArmature2 +
+            rig_arm_25.ArmArmature +            
+            rig_finger_25.FingerArmature +
+            rig_leg_25.LegArmature +
+            #rig_toe_25.ToeArmature +
+            rig_face_25.FaceArmature
+        )
+        
+        if config.skirtRig == "own":
+            self.joints += rig_skirt_25.SkirtJoints
+            self.headsTails += rig_skirt_25.SkirtHeadsTails
+            self.boneDefs += rig_skirt_25.SkirtArmature        
+
+        if config.maleRig:
+            self.boneDefs += rig_body_25.MaleArmature        
+
+        if False and config.custom:
+            (custJoints, custHeadsTails, custArmature, config.customProps) = exportutils.custom.setupCustomRig(config)
+            self.joints += custJoints
+            self.headsTails += custHeadsTails
+            self.boneDefs += custArmature
+        
+
+    def dynamicLocations(self):
+        rig_body_25.BodyDynamicLocations()
+        
+
+    def writeControlPoses(self, fp):
+        self.writeBoneGroups(fp)
+        rig_body_25.BodyControlPoses(fp, self)
+        rig_shoulder_25.ShoulderControlPoses(fp, self)
+        rig_arm_25.ArmControlPoses(fp, self)
+        rig_finger_25.FingerControlPoses(fp, self)
+        rig_leg_25.LegControlPoses(fp, self)
+        #rig_toe_25.ToeControlPoses(fp, self)
+        rig_face_25.FaceControlPoses(fp, self)
+        if self.config.maleRig:
+            rig_body_25.MaleControlPoses(fp, self)
+        if self.config.skirtRig == "own":
+            rig_skirt_25.SkirtControlPoses(fp, self)            
+        ExportArmature.writeControlPoses(self, fp)
+
+
+    def writeDrivers(self, fp):
+        driverList = (
+            amtpkg.drivers.writePropDrivers(fp, self, rig_arm_25.ArmPropDrivers, "", "Mha") +
+            amtpkg.drivers.writePropDrivers(fp, self, rig_arm_25.ArmPropLRDrivers, "_L", "Mha") +
+            amtpkg.drivers.writePropDrivers(fp, self, rig_arm_25.ArmPropLRDrivers, "_R", "Mha") +
+            amtpkg.drivers.writePropDrivers(fp, self, rig_arm_25.SoftArmPropLRDrivers, "_L", "Mha") +
+            amtpkg.drivers.writePropDrivers(fp, self, rig_arm_25.SoftArmPropLRDrivers, "_R", "Mha") +
+            #writeScriptedBoneDrivers(fp, rig_leg_25.LegBoneDrivers) +
+            amtpkg.drivers.writePropDrivers(fp, self, rig_leg_25.LegPropDrivers, "", "Mha") +
+            amtpkg.drivers.writePropDrivers(fp, self, rig_leg_25.LegPropLRDrivers, "_L", "Mha") +
+            amtpkg.drivers.writePropDrivers(fp, self, rig_leg_25.LegPropLRDrivers, "_R", "Mha") +
+            amtpkg.drivers.writePropDrivers(fp, self, rig_leg_25.SoftLegPropLRDrivers, "_L", "Mha") +
+            amtpkg.drivers.writePropDrivers(fp, self, rig_leg_25.SoftLegPropLRDrivers, "_R", "Mha") +
+            amtpkg.drivers.writePropDrivers(fp, self, rig_body_25.BodyPropDrivers, "", "Mha")
+        )
+        if self.config.advancedSpine:
+            driverList += amtpkg.drivers.writePropDrivers(fp, self, rig_body_25.BodyPropDriversAdvanced, "", "Mha") 
+        driverList += (
+            amtpkg.drivers.writePropDrivers(fp, self, rig_face_25.FacePropDrivers, "", "Mha") +
+            amtpkg.drivers.writePropDrivers(fp, self, rig_face_25.SoftFacePropDrivers, "", "Mha")
+        )
+        fingDrivers = rig_finger_25.getFingerPropDrivers()
+        driverList += (
+            amtpkg.drivers.writePropDrivers(fp, self, fingDrivers, "_L", "Mha") +
+            amtpkg.drivers.writePropDrivers(fp, self, fingDrivers, "_R", "Mha") +
+            #rig_panel_25.FingerControlDrivers(fp)
+            amtpkg.drivers.writeMuscleDrivers(fp, rig_shoulder_25.ShoulderDeformDrivers, self.name) +
+            amtpkg.drivers.writeMuscleDrivers(fp, rig_arm_25.ArmDeformDrivers, self.name) +
+            amtpkg.drivers.writeMuscleDrivers(fp, rig_leg_25.LegDeformDrivers, self.name)
+        )
+        faceDrivers = rig_face_25.FaceDeformDrivers(fp, self)
+        driverList += amtpkg.drivers.writeDrivers(fp, True, faceDrivers)
+        return driverList
+    
+    def writeActions(self, fp):
+        #rig_arm_25.ArmWriteActions(fp)
+        #rig_leg_25.LegWriteActions(fp)
+        #rig_finger_25.FingerWriteActions(fp)
+        return
+
+#-------------------------------------------------------------------------------        
+#   Rigify armature
+#-------------------------------------------------------------------------------        
+
+class RigifyArmature(ExportArmature):
+
+    def __init__(self, name, human, config):    
+        ExportArmature. __init__(self, name, human, config)
+        self.rigtype = 'rigify'
+
+        self.vertexGroupFiles = ["head", "rigify"]
+        self.gizmoFiles = ["./shared/mhx/templates/panel_gizmo25.mhx",
+                          "./shared/mhx/templates/rigify_gizmo25.mhx"]
+        self.headName = 'head'
+        self.preservevolume = True
+        faceArmature = swapParentNames(rig_face_25.FaceArmature, 
+                           {'Head' : 'head', 'MasterFloor' : None} )
+            
+        self.joints = (
+            amtpkg.joints.DeformJoints +
+            rig_body_25.BodyJoints +
+            amtpkg.joints.FloorJoints +
+            rigify_rig.RigifyJoints +
+            rig_face_25.FaceJoints
+        )
+        
+        self.headsTails = (
+            rigify_rig.RigifyHeadsTails +
+            rig_face_25.FaceHeadsTails
+        )
+
+        self.boneDefs = (
+            rigify_rig.RigifyArmature +
+            faceArmature
+        )
+
+        self.objectProps = rigify_rig.RigifyObjectProps + [("MhxRig", '"Rigify"')]
+        self.armatureProps = rigify_rig.RigifyArmatureProps
+
+
+    def writeDrivers(self, fp):
+        rig_face_25.FaceDeformDrivers(fp, self)        
+        amtpkg.drivers.writePropDrivers(fp, self, rig_face_25.FacePropDrivers, "", "Mha")
+        amtpkg.drivers.writePropDrivers(fp, self, rig_face_25.SoftFacePropDrivers, "", "Mha")
+        return []
+
+
+    def writeControlPoses(self, fp):
+        rigify_rig.RigifyWritePoses(fp, self)
+        rig_face_25.FaceControlPoses(fp, self)
+        ExportArmature.writeControlPoses(self, fp)
+
+
+def swapParentNames(bones, changes):
+    nbones = []
+    for bone in bones:
+        (name, roll, par, flags, level, bb) = bone
+        try:
+            nbones.append( (name, roll, changes[par], flags, level, bb) )
+        except KeyError:
+            nbones.append(bone)
+    return nbones
 
 

@@ -169,7 +169,7 @@ def writeDriver(fp, cond, drvdata, extra, channel, index, coeffs, variables):
 """
 def writeEnumDrivers(fp, drivers):
     for (bone, cns, targ, channel) in drivers:
-        drvVars = [("x", 'TRANSFORMS', [('OBJECT', info.name, targ, channel, C_LOC)])]
+        drvVars = [("x", 'TRANSFORMS', [('OBJECT', amt.name, targ, channel, C_LOC)])]
         for n, cnsName in enumerate(cns):
             expr = '(x>%.1f)*(x<%.1f)' % (n-0.5, n+0.5)
             drv = writeDriver(fp, True, ('SCRIPTED', expr), "","pose.bones[\"%s\"].constraints[\"%s\"].influence" % (bone, cnsName), -1, (0,1), drvVars)
@@ -178,13 +178,13 @@ def writeEnumDrivers(fp, drivers):
 """
 
 
-def writePropDrivers(fp, info, drivers, suffix, prefix):
+def writePropDrivers(fp, amt, drivers, suffix, prefix):
     driverList = []
     for (bone, cns, props, expr) in drivers:
         drvVars = []
         n = 1
         for prop in props:
-            drvVars.append( ("x%d" % n, 'SINGLE_PROP', [('OBJECT', info.name, '["%s%s%s"]' % (prefix,prop,suffix))]) )
+            drvVars.append( ("x%d" % n, 'SINGLE_PROP', [('OBJECT', amt.name, '["%s%s%s"]' % (prefix,prop,suffix))]) )
             n += 1
         drv = writeDriver(fp, True, ('SCRIPTED', expr), "",
             "pose.bones[\"%s%s\"].constraints[\"%s\"].influence" % (bone, suffix, cns), 
@@ -193,11 +193,11 @@ def writePropDrivers(fp, info, drivers, suffix, prefix):
     return driverList
 
 
-def writeShapePropDrivers(fp, info, skeys, proxy, prefix):
+def writeShapePropDrivers(fp, amt, skeys, proxy, prefix):
     driverList = []
     for skey in skeys:
         if useThisShape(skey, proxy):
-            drvVar = ("x", 'SINGLE_PROP', [('OBJECT', info.name, '["%s%s"]' % (prefix, skey))])
+            drvVar = ("x", 'SINGLE_PROP', [('OBJECT', amt.name, '["%s%s"]' % (prefix, skey))])
             drv = writeDriver(fp, True, ('SCRIPTED', "x"), "",
                 "key_blocks[\"%s\"].value" % (skey), 
                 -1, (0,1), [drvVar])
@@ -205,27 +205,27 @@ def writeShapePropDrivers(fp, info, skeys, proxy, prefix):
     return driverList
     
 
-def writePropDriver(fp, info, props, expr, dataPath, index):
+def writePropDriver(fp, amt, props, expr, dataPath, index):
     drvVars = []
     n = 1
     for prop in props:
-        drvVars.append( ("x%d" % n, 'SINGLE_PROP', [('OBJECT', info.name, '["%s"]' % (prop))]) )
+        drvVars.append( ("x%d" % n, 'SINGLE_PROP', [('OBJECT', amt.name, '["%s"]' % (prop))]) )
         n += 1
     return writeDriver(fp, True, ('SCRIPTED', expr), "", dataPath, index, (0,1), drvVars)
     
 
-def writeTextureDrivers(fp, info, drivers):
+def writeTextureDrivers(fp, amt, drivers):
     driverList = []
     for (tex, vlist) in drivers.items():
         drvVars = []
         (texnum, targ, channel, coeffs) = vlist
-        drvVars.append( (targ, 'TRANSFORMS', [('OBJECT', info.name, targ, channel, C_LOC)]) )
+        drvVars.append( (targ, 'TRANSFORMS', [('OBJECT', amt.name, targ, channel, C_LOC)]) )
         drv = writeDriver(fp, 'toggle&T_Shapekeys', 'AVERAGE', "", "texture_slots[%d].normal_factor" % (texnum), -1, coeffs, drvVars)
         driverList.append(drv)
     return driverList
 
 
-def writeShapeDrivers(fp, info, drivers, proxy):
+def writeShapeDrivers(fp, amt, drivers, proxy):
     driverList = []
     dlist = list(drivers.items())
     dlist.sort()
@@ -233,7 +233,7 @@ def writeShapeDrivers(fp, info, drivers, proxy):
         if useThisShape(shape, proxy):
             drvVars = []
             (file, targ, channel, coeffs, min, max) = vlist
-            drvVars.append( (targ, 'TRANSFORMS', [('OBJECT', info.name, targ, channel, C_LOC)]) )
+            drvVars.append( (targ, 'TRANSFORMS', [('OBJECT', amt.name, targ, channel, C_LOC)]) )
             drv = writeDriver(fp, 'toggle&T_Shapekeys', 'AVERAGE', "", "key_blocks[\"%s\"].value" % (shape), -1, coeffs, drvVars)
             driverList.append(drv)
     return driverList
@@ -277,7 +277,7 @@ def writeMuscleDrivers(fp, drivers, rig):
             if typ == 'ROTATION_DIFF':
                 drvVars.append( (var, typ, [('OBJECT', rig, targ1, C_LOC), ('OBJECT', rig, targ2, C_LOC)]) )
             elif typ == 'SINGLE_PROP':
-                drvVars.append( (var, typ, [('OBJECT', info.name, '["%s"]' % (targ1))]) )
+                drvVars.append( (var, typ, [('OBJECT', amt.name, '["%s"]' % (targ1))]) )
         drv = writeDriver(fp, True, drvdata, "","pose.bones[\"%s\"].constraints[\"%s\"].influence" % (bone, cnsName), -1, keypoints, drvVars)
         driverList.append(drv)
     return driverList
@@ -289,8 +289,8 @@ def writeRotDiffDrivers(fp, drivers, proxy):
         if useThisShape(shape, proxy):
             (targ1, targ2, keypoints) = vlist
             drvVars = [(targ2, 'ROTATION_DIFF', [
-            ('OBJECT', info.name, targ1, C_LOC),
-            ('OBJECT', info.name, targ2, C_LOC)] )]
+            ('OBJECT', amt.name, targ1, C_LOC),
+            ('OBJECT', amt.name, targ2, C_LOC)] )]
             drv = writeDriver(fp, True, 'MIN', "", "key_blocks[\"%s\"].value" % (shape), -1, keypoints, drvVars)
             driverList.append(drv)
     return driverList
@@ -301,7 +301,7 @@ def writeScriptedBoneDrivers(fp, bones):
     for (driven, driver, channel, expr) in bones:
         drivers.append( 
             (driven, 'ROTE', ('SCRIPTED', expr), None, 0, (0, 1),
-                [("x", 'TRANSFORMS', [('OBJECT', info.name, driver, channel, C_LOC)])]) )
+                [("x", 'TRANSFORMS', [('OBJECT', amt.name, driver, channel, C_LOC)])]) )
     return writeDrivers(fp, True, drivers)
     
 

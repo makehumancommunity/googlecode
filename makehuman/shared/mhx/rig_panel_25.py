@@ -120,11 +120,11 @@ neg = ('0', '-4.0')
 
 FMX = 0.7
 
-def PanelControlPoses(fp, info):
-    config = info.config
+def PanelControlPoses(fp, amt):
+    config = amt.config
     if config.exporting:
-        addPoseBone(fp, info, 'PFace', 'MHCube05', None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0, [])
-        addPoseBone(fp, info, 'PFaceDisp', 'MHFace', None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0, [])
+        addPoseBone(fp, amt, 'PFace', 'MHCube05', None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0, [])
+        addPoseBone(fp, amt, 'PFaceDisp', 'MHFace', None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0, [])
 
         addYSlider(fp, config, 'PBrow_L', MX)
         addYSlider(fp, config, 'PBrow_R', MX)

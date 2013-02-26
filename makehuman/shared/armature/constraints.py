@@ -73,7 +73,7 @@ class CConstraint:
         log.debug("    <Constraint %s %s %.3g>", self.type, self.name, self.influence)
         
 
-    def write25(self, info, fp):
+    def write25(self, amt, fp):
         fp.write(
             "      influence %s ;\n" % self.influence +
             "      is_proxy_local False ;\n" +
@@ -102,13 +102,13 @@ class CIkConstraint(CConstraint):
         self.lockRot = lockRot
         (lockRotX, lockRotY, lockRotZ) = lockRot
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s IK True\n" % self.name)
 
         if self.subtar:
             fp.write(
-            "      target Refer Object %s ;\n" % (info.name) +
+            "      target Refer Object %s ;\n" % (amt.name) +
             "      subtarget '%s' ;\n" % self.subtar +
             "      use_tail True ;\n")
         else:
@@ -129,14 +129,14 @@ class CIkConstraint(CConstraint):
             fp.write(
             "      pole_angle %.6g ;\n" % self.angle +
             "      pole_subtarget '%s' ;\n" % self.ptar +
-            "      pole_target Refer Object %s ;\n" % (info.name))
+            "      pole_target Refer Object %s ;\n" % (amt.name))
 
         fp.write(
             "      use_location %s ;\n" % self.useLoc +
             "      use_rotation %s ;\n" % self.useRot +
             "      use_stretch %s ;\n" % self.useStretch +
             "      weight 1 ;\n")
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
         
         
     def update(self, amt, bone):
@@ -166,10 +166,10 @@ class CActionConstraint(CConstraint):
         (self.sframe, self.eframe) = data[4]
         (self.amin, self.amax) = data[5]
     
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s ACTION True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name)+
+            "      target Refer Object %s ;\n" % (amt.name)+
             "      action Refer Action %s ; \n" % self.action+
             "      frame_start %s ; \n" % self.sframe +
             "      frame_end %d ; \n" % self.eframe)
@@ -184,7 +184,7 @@ class CActionConstraint(CConstraint):
         fp.write(
             "      subtarget '%s' ; \n" % self.subtar +
             "      transform_channel '%s' ;\n" % self.channel)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
 
 class CCopyRotConstraint(CConstraint):
@@ -195,15 +195,15 @@ class CCopyRotConstraint(CConstraint):
         (self.invertX, self.invertY, self.invertZ) = data[3]
         self.useOffs = data[4]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s COPY_ROTATION True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name)+
+            "      target Refer Object %s ;\n" % (amt.name)+
             "      invert Array %d %d %d ; \n" % (self.invertX, self.invertY, self.invertZ)+
             "      use Array %d %d %d  ; \n" % (self.usex, self.usey, self.usez)+
             "      subtarget '%s' ;\n" % self.subtar +
             "      use_offset %s ; \n" % self.useOffs)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
     def update(self, amt, bone):
         target = amt.bones[self.subtar]
@@ -240,16 +240,16 @@ class CCopyLocConstraint(CConstraint):
         self.head_tail = data[4]
         self.useOffs = data[5]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s COPY_LOCATION True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name)+
+            "      target Refer Object %s ;\n" % (amt.name)+
             "      invert Array %d %d %d ; \n" % (self.invertX, self.invertY, self.invertZ)+
             "      use Array %d %d %d  ; \n" % (self.usex, self.usey, self.usez)+
             "      head_tail %.3f ;\n" % self.head_tail +
             "      subtarget '%s' ;\n" % self.subtar +
             "      use_offset %s ; \n" % self.useOffs)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
     def update(self, amt, bone):
         target = amt.bones[self.subtar]
@@ -270,14 +270,14 @@ class CCopyScaleConstraint(CConstraint):
         (self.usex, self.usey, self.usez) = data[2]
         self.useOffs = data[3]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s COPY_ROTATION True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name) +
+            "      target Refer Object %s ;\n" % (amt.name) +
             "      use Array %d %d %d  ; \n" % (self.usex, self.usey, self.usez)+
             "      subtarget '%s' ;\n" % self.subtar +
             "      use_offset %s ;\n" % self.useOffs)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
     def update(self, amt, bone):
         target = amt.bones[self.subtar]
@@ -302,13 +302,13 @@ class CCopyTransConstraint(CConstraint):
         self.subtar = data[1]
         self.head_tail = data[2]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s COPY_TRANSFORMS True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name) +
+            "      target Refer Object %s ;\n" % (amt.name) +
             "      head_tail %.3f ;\n" % self.head_tail +
             "      subtarget '%s' ;\n" % self.subtar)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
     def update(self, amt, bone):
         if self.ownsp == 'WORLD':
@@ -327,7 +327,7 @@ class CLimitRotConstraint(CConstraint):
         (self.usex, self.usey, self.usez) = data[2]
         self.ltra = (flags & C_LTRA != 0)
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s LIMIT_ROTATION True\n" % self.name +
             "      use_transform_limit %s ; \n" % self.ltra+
@@ -340,7 +340,7 @@ class CLimitRotConstraint(CConstraint):
             "      use_limit_x %s ; \n" % self.usex +
             "      use_limit_y %s ; \n" % self.usey +
             "      use_limit_z %s ; \n" % self.usez)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
     def update(self, amt, bone):
         quat = bone.getPoseQuaternion()
@@ -370,7 +370,7 @@ class CLimitLocConstraint(CConstraint):
         (self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax) = data[1]
         (self.useminx, self.usemaxx, self.useminy, self.usemaxy, self.useminz, self.usemaxz) = data[2]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s LIMIT_LOCATION True\n" % self.name +
             "      use_transform_limit True ;\n" +
@@ -386,7 +386,7 @@ class CLimitLocConstraint(CConstraint):
             "      use_min_x %s ;\n" % self.useminx +
             "      use_min_y %s ;\n" % self.useminy +
             "      use_min_z %s ;\n" % self.useminz)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
         
     def update(self, amt, bone):
         pass
@@ -398,7 +398,7 @@ class CLimitScaleConstraint(CConstraint):
         (self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax) = data[1]
         (self.usex, self.usey, self.usez) = data[2]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s LIMIT_SCALE True\n" % self.name +
             "      max_x %.6g ;\n" % self.xmax +
@@ -413,7 +413,7 @@ class CLimitScaleConstraint(CConstraint):
             "      use_min_x %s ;\n" % self.usex +
             "      use_min_y %s ;\n" % self.usey +
             "      use_min_z %s ;\n" % self.usez)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
     def update(self, amt, bone):
         pass
@@ -431,10 +431,10 @@ class CTransformConstraint(CConstraint):
         self.to_min = data[7]
         self.to_max = data[8]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s TRANSFORM True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name) +
+            "      target Refer Object %s ;\n" % (amt.name) +
             "      subtarget '%s' ;\n" % self.subtar +
             "      map_from '%s' ;\n" % self.map_from + 
             "      from_min_x %s ;\n" % self.from_min[0] + 
@@ -453,7 +453,7 @@ class CTransformConstraint(CConstraint):
             "      to_max_x %s ;\n" % self.to_max[0] + 
             "      to_max_y %s ;\n" % self.to_max[1] + 
             "      to_max_z %s ;\n" % self.to_max[2])
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
     def update(self, amt, bone):
         target = amt.bones[self.subtar]
@@ -494,14 +494,14 @@ class CDampedTrackConstraint(CConstraint):
         self.track = data[2]
         self.headtail = data[3]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s DAMPED_TRACK True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name) +
+            "      target Refer Object %s ;\n" % (amt.name) +
             "      subtarget '%s' ;\n" % self.subtar +
             "      head_tail %d ;\n" % self.headtail +
             "      track_axis '%s' ;\n" % self.track)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
 
 class CLockedTrackConstraint(CConstraint):
@@ -510,13 +510,13 @@ class CLockedTrackConstraint(CConstraint):
         self.subtar = data[1]
         self.trackAxis = data[2]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s LOCKED_TRACK True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name) +
+            "      target Refer Object %s ;\n" % (amt.name) +
             "      subtarget '%s' ;\n" % self.subtar +
             "      track_axis '%s' ;\n" % self.trackAxis)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
 
 class CStretchToConstraint(CConstraint):
@@ -538,10 +538,10 @@ class CStretchToConstraint(CConstraint):
         else:
             self.axis = 'PLANE_X'
 
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s STRETCH_TO True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name) +
+            "      target Refer Object %s ;\n" % (amt.name) +
             "      bulge %.2f ;\n" % self.bulge +
             "      head_tail %s ;\n" % self.head_tail +
             "      keep_axis '%s' ;\n" % self.axis +
@@ -549,7 +549,7 @@ class CStretchToConstraint(CConstraint):
             "      volume '%s' ;\n" % self.volume)
         if self.rest_length != None:
             fp.write("      rest_length %s ;\n" % self.rest_length)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
     def update(self, amt, bone):
         target = amt.bones[self.subtar]
@@ -566,16 +566,16 @@ class CTrackToConstraint(CConstraint):
         self.up_axis = data[4]
         self.use_target_z = data[5]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s TRACK_TO True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name) +
+            "      target Refer Object %s ;\n" % (amt.name) +
             "      head_tail %s ;\n" % self.head_tail +
             "      track_axis '%s' ;\n" % self.track_axis +
             "      up_axis '%s' ;\n" % self.up_axis +
             "      subtarget '%s' ;\n" % self.subtar +
             "      use_target_z %s ;\n" % self.use_target_z)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
 
 class CLimitDistConstraint(CConstraint):
@@ -584,13 +584,13 @@ class CLimitDistConstraint(CConstraint):
         self.subtar = data[1]
         self.limit_mode = data[2]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s LIMIT_DISTANCE True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name) +
+            "      target Refer Object %s ;\n" % (amt.name) +
             "      limit_mode '%s' ;\n" % self.limit_mode +
             "      subtarget '%s' ;\n" % self.subtar)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
     def update(self, amt, bone):
         pass
@@ -604,10 +604,10 @@ class CChildOfConstraint(CConstraint):
         (self.rotx, self.roty, self.rotz) = data[3]
         (self.scalex, self.scaley, self.scalez) = data[4]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s CHILD_OF True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name) +
+            "      target Refer Object %s ;\n" % (amt.name) +
             "      subtarget '%s' ;\n" % self.subtar +
             "      use_location_x %s ;\n" % self.locx +
             "      use_location_y %s ;\n" % self.locy +
@@ -618,7 +618,7 @@ class CChildOfConstraint(CConstraint):
             "      use_scale_x %s ;\n" % self.scalex +
             "      use_scale_y %s ;\n" % self.scaley +
             "      use_scale_z %s ;\n" % self.scalez)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
 
 class CSplineIkConstraint(CConstraint):
@@ -627,7 +627,7 @@ class CSplineIkConstraint(CConstraint):
         self.target = data[1]
         self.count = data[2]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s SPLINE_IK True\n" % self.name +
             "      target Refer Object %s ;\n" % self.target +
@@ -637,7 +637,7 @@ class CSplineIkConstraint(CConstraint):
             "      use_even_divisions False ;\n" +
             "      use_y_stretch True ;\n" +
             "      xz_scale_mode 'NONE' ;\n")
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
 
 class CFloorConstraint(CConstraint):
@@ -649,22 +649,22 @@ class CFloorConstraint(CConstraint):
         self.use_rotation = data[4]
         self.use_sticky = data[5]
         
-    def write25(self, info, fp):        
+    def write25(self, amt, fp):        
         fp.write(
             "    Constraint %s FLOOR True\n" % self.name +
-            "      target Refer Object %s ;\n" % (info.name) +
+            "      target Refer Object %s ;\n" % (amt.name) +
             "      floor_location '%s' ;\n" % self.floor_location +
             "      offset %.4f ;\n" % self.offset +
             "      subtarget '%s' ;\n" % self.subtar +
             "      use_rotation %s ;\n" % self.use_rotation +
             "      use_sticky %s ;\n" % self.use_sticky)
-        CConstraint.write25(self, info, fp)
+        CConstraint.write25(self, amt, fp)
 
 #
-#    writeConstraints(fp, info, bname, constraints, lockLoc, lockRot)
+#    writeConstraints(fp, amt, bname, constraints, lockLoc, lockRot)
 #
 
-def writeConstraints(fp, info, bname, constraints, lockLoc, lockRot):
+def writeConstraints(fp, amt, bname, constraints, lockLoc, lockRot):
     uses = (0,0,0)
     mins = (-pi, -pi, -pi)
     maxs = (pi, pi, pi)
@@ -677,60 +677,60 @@ def writeConstraints(fp, info, bname, constraints, lockLoc, lockRot):
 
         if typ == 'IK':
             cns = CIkConstraint(flags, inf, data, lockLoc, lockRot)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'Action':
             cns = CActionConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'CopyRot':
             cns = CCopyRotConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'CopyLoc':
             cns = CCopyLocConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'CopyScale':
             cns = CCopyScaleConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'CopyTrans':
             cns = CCopyTransConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'LimitRot':
             cns = CLimitRotConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
             mins = (cns.xmin, cns.ymin, cns.zmin)
             maxs = (cns.xmax, cns.ymax, cns.zmax)
         elif typ == 'LimitLoc':
             cns = CLimitLocConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'LimitScale':
             cns = CLimitScaleConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'Transform':
             cns = CTransformConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'LockedTrack':
             cns = CLockedTrackConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'DampedTrack':
             cns = CDampedTrackConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'StretchTo':
             cns = CStretchToConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'TrackTo':
             cns = CTrackToConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'LimitDist':
             cns = CLimitDistConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'ChildOf':
             cns = CChildOfConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'SplineIK':
             cns = CSplineIkConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         elif typ == 'Floor':
             cns = CFloorConstraint(flags, inf, data)
-            cns.write25(info, fp)
+            cns.write25(amt, fp)
         else:
             log.message("%s", label)
             log.message("%s", typ)

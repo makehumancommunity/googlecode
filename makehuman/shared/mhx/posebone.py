@@ -22,31 +22,29 @@ Abstract
 TODO
 """
 
-
 from armature.flags import *
-
 import armature as amtpkg
 
 
-def addCSlider(fp, info, bone, mx):
+def addCSlider(fp, amt, bone, mx):
     mn = "-"+mx
-    addPoseBone(fp, info, bone, 'MHCube025', None, (0,1,0), (1,1,1), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, amt, bone, 'MHCube025', None, (0,1,0), (1,1,1), (1,1,1), (1,1,1), 0,
         [('LimitLoc', C_OW_LOCAL+C_LTRA, 1, ['Const', (mn,mx, '0','0', mn,mx), (1,1,1,1,1,1)])])
     
-def addYSlider(fp, info, bone, mx):
+def addYSlider(fp, amt, bone, mx):
     mn = "-"+mx
-    addPoseBone(fp, info, bone, 'MHCube025', None, (1,1,0), (1,1,1), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, amt, bone, 'MHCube025', None, (1,1,0), (1,1,1), (1,1,1), (1,1,1), 0,
         [('LimitLoc', C_OW_LOCAL+C_LTRA, 1, ['Const', ('0','0', '0','0', mn,mx), (1,1,1,1,1,1)])])
     
-def addXSlider(fp, info, bone, mn, mx, dflt):
-    addPoseBone(fp, info, bone, 'MHCube025', None, ((0,1,1), (dflt,0,0)), (1,1,1), (1,1,1), (1,1,1), 0,
+def addXSlider(fp, amt, bone, mn, mx, dflt):
+    addPoseBone(fp, amt, bone, 'MHCube025', None, ((0,1,1), (dflt,0,0)), (1,1,1), (1,1,1), (1,1,1), 0,
         [('LimitLoc', C_OW_LOCAL+C_LTRA, 1, ['Const', (mn,mx, '0','0', mn,mx), (1,1,1,1,1,1)])])
 
 #
-#    addPoseBone(fp, info, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, flags, constraints):
+#    addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, flags, constraints):
 #
 
-def addPoseBone(fp, info, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, flags, constraints):
+def addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, flags, constraints):
     try:
         (lockLoc, location) = locArg
     except:
@@ -65,16 +63,16 @@ def addPoseBone(fp, info, bone, customShape, boneGroup, locArg, lockRot, lockSca
     hide = (flags & P_HID != 0)
 
     if not fp:
-        info.createdArmature.bones[bone].constraints = amtpkg.constraints.getConstraints(bone, constraints, lockLoc, lockRot)
+        amt.createdArmature.bones[bone].constraints = amtpkg.constraints.getConstraints(bone, constraints, lockLoc, lockRot)
         return
     
     fp.write("\n  Posebone %s %s \n" % (bone, True))
         
     if boneGroup:
-        index = boneGroupIndex(boneGroup, info)
+        index = boneGroupIndex(boneGroup, amt)
         fp.write("    bone_group Refer BoneGroup %s ;\n" % boneGroup)
 
-    (uses, mins, maxs) = amtpkg.constraints.writeConstraints(fp, info, bone, constraints, lockLoc, lockRot)
+    (uses, mins, maxs) = amtpkg.constraints.writeConstraints(fp, amt, bone, constraints, lockLoc, lockRot)
 
     ik_stretch = None
     ik_stiff = None
@@ -140,9 +138,9 @@ def rotationMode(flags):
     return modes[(flags&P_ROTMODE) >> 8]
         
 
-def boneGroupIndex(grp, info):
+def boneGroupIndex(grp, amt):
     index = 1
-    for (name, color) in info.config.boneGroups:
+    for (name, color) in amt.boneGroups:
         if name == grp:
             return index
         index += 1

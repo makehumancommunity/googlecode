@@ -210,106 +210,106 @@ SkirtArmature = [
 
 ]
 
-def SkirtControlPoses(fp, info):
+def SkirtControlPoses(fp, amt):
     # Skirt
-    addPoseBone(fp, info, 'SkirtUp1Front_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0,
+    addPoseBone(fp, amt, 'SkirtUp1Front_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0,
         [('CopyLoc', 0, 1, ['SkirtFrontFix', 'SkirtFrontFix', (1,1,1), (0,0,0), 0, False])])
 
-    addPoseBone(fp, info, 'SkirtUp2Front_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp2Front_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'SkirtUp3Front_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp3Front_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'SkirtLo1Front_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo1Front_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
         #[('CopyLoc', 0, 1, ['SkirtUp3Front_L', 'SkirtUp3Front_L', (1,1,1), (0,0,0), 1, False])])
 
-    addPoseBone(fp, info, 'SkirtLo2Front_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo2Front_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
 
-    addPoseBone(fp, info, 'SkirtUp1Front_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp1Front_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
         #[('CopyLoc', 0, 1, ['SkirtFrontFix', 'SkirtFrontFix', (1,1,1), (0,0,0), 1, False])])
 
-    addPoseBone(fp, info, 'SkirtUp2Front_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp2Front_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
     
-    addPoseBone(fp, info, 'SkirtUp3Front_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp3Front_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
     
-    addPoseBone(fp, info, 'SkirtLo1Front_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo1Front_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
         #[('CopyLoc', 0, 1, ['SkirtUp3Front_R', 'SkirtUp3Front_R', (1,1,1), (0,0,0), 1, False])])
         
-    addPoseBone(fp, info, 'SkirtLo2Front_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo2Front_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
     
 
-    addPoseBone(fp, info, 'SkirtUp1Back_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp1Back_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
         #[('CopyLoc', 0, 1, ['SkirtBackFix', 'SkirtBackFix', (1,1,1), (0,0,0), 0, False])])
 
-    addPoseBone(fp, info, 'SkirtUp2Back_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp2Back_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'SkirtUp3Back_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp3Back_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'SkirtLo1Back_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo1Back_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
         #[('CopyLoc', 0, 1, ['SkirtUp3Back_L', 'SkirtUp3Back_L', (1,1,1), (0,0,0), 1, False])])
 
-    addPoseBone(fp, info, 'SkirtLo2Back_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo2Back_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
 
-    addPoseBone(fp, info, 'SkirtUp1Back_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp1Back_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
         #[('CopyLoc', 0, 1, ['SkirtBackFix', 'SkirtBackFix', (1,1,1), (0,0,0), 1, False])])
 
-    addPoseBone(fp, info, 'SkirtUp2Back_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp2Back_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
     
-    addPoseBone(fp, info, 'SkirtUp3Back_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp3Back_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
     
-    addPoseBone(fp, info, 'SkirtLo1Back_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, []) 
+    addPoseBone(fp, amt, 'SkirtLo1Back_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, []) 
         #[('CopyLoc', 0, 1, ['SkirtUp3Back_R', 'SkirtUp3Back_R', (1,1,1), (0,0,0), 1, False])])
         
-    addPoseBone(fp, info, 'SkirtLo2Back_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo2Back_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
     
 
-    addPoseBone(fp, info, 'SkirtUp1Out_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp1Out_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
         #[('CopyLoc', 0, 1, ['SkirtOutFix', 'SkirtOutFix', (1,1,1), (0,0,0), 0, False])])
 
-    addPoseBone(fp, info, 'SkirtUp2Out_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp2Out_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'SkirtUp3Out_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp3Out_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'SkirtLo1Out_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo1Out_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
         #[('CopyLoc', 0, 1, ['SkirtUp3Out_L', 'SkirtUp3Out_L', (1,1,1), (0,0,0), 1, False])])
 
-    addPoseBone(fp, info, 'SkirtLo2Out_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo2Out_L', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
 
-    addPoseBone(fp, info, 'SkirtUp1Out_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp1Out_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
         #[('CopyLoc', 0, 1, ['SkirtOutFix', 'SkirtOutFix', (1,1,1), (0,0,0), 1, False])])
 
-    addPoseBone(fp, info, 'SkirtUp2Out_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp2Out_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
     
-    addPoseBone(fp, info, 'SkirtUp3Out_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp3Out_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
     
-    addPoseBone(fp, info, 'SkirtLo1Out_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo1Out_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
         #[('CopyLoc', 0, 1, ['SkirtUp3Out_R', 'SkirtUp3Out_R', (1,1,1), (0,0,0), 1, False])])
         
-    addPoseBone(fp, info, 'SkirtLo2Out_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo2Out_R', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
     
 
-    addPoseBone(fp, info, 'SkirtUp1MidFront', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp1MidFront', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'SkirtUp2MidFront', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp2MidFront', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'SkirtUp3MidFront', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp3MidFront', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'SkirtLo1MidFront', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo1MidFront', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'SkirtLo2MidFront', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo2MidFront', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
 
-    addPoseBone(fp, info, 'SkirtUp1MidBack', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp1MidBack', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'SkirtUp2MidBack', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp2MidBack', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
     
-    addPoseBone(fp, info, 'SkirtUp3MidBack', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtUp3MidBack', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
     
-    addPoseBone(fp, info, 'SkirtLo1MidBack', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo1MidBack', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
         
-    addPoseBone(fp, info, 'SkirtLo2MidBack', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SkirtLo2MidBack', 'MHHook', None, (1,1,1), (0,0,0), (1,0,1), (1,1,1), 0, [])
     
 
     return

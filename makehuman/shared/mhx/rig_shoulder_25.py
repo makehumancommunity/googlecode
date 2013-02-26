@@ -288,98 +288,98 @@ limShoulder_L = (-16*D,40*D, -40*D,40*D,  -45*D,45*D)
 limShoulder_R = (-16*D,40*D,  -40*D,40*D,  -45*D,45*D)
 
 #
-#    ShoulderControlPoses(fp, info):
+#    ShoulderControlPoses(fp, amt):
 #
 
-def ShoulderControlPoses(fp, info):
+def ShoulderControlPoses(fp, amt):
     # Clavicle
-    addPoseBone(fp, info, 'Clavicle_L', 'MHShoulder', 'Spine', (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, amt, 'Clavicle_L', 'MHShoulder', 'Spine', (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
         [('LimitRot', C_OW_LOCAL, 1, ['LimitRot', limShoulder_L, (True, True, True)]),
          ('CopyTrans', 0, 0, ['Elbow', 'ELClavicle_L', 0])
         ])
 
-    addPoseBone(fp, info, 'Clavicle_R', 'MHShoulder', 'Spine', (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, amt, 'Clavicle_R', 'MHShoulder', 'Spine', (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
         [('LimitRot', C_OW_LOCAL, 1, ['LimitRot', limShoulder_R, (True, True, True)]),
          ('CopyTrans', 0, 0, ['Elbow', 'ELClavicle_R', 0])
         ])
 
-    addPoseBone(fp, info, 'ShoulderPivot_L', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, amt, 'ShoulderPivot_L', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
         [('DampedTrack', 0, 0.5, ['DampedTrack', 'Clavicle_L', 'TRACK_Y', 1])])
 
-    addPoseBone(fp, info, 'ShoulderPivot_R', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, amt, 'ShoulderPivot_R', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
         [('DampedTrack', 0, 0.5, ['DampedTrack', 'Clavicle_R', 'TRACK_Y', 1])])
 
 
     # Shoulder
     
-    addPoseBone(fp, info, 'Shoulder_L', 'MHBall025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'Shoulder_L', 'MHBall025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'Shoulder_R', 'MHBall025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'Shoulder_R', 'MHBall025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'UpArmSocket_L', None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, amt, 'UpArmSocket_L', None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0,
         [('CopyLoc', 0, 1, ['Location', 'Shoulder_L', (1,1,1), (0,0,0), 0, False]),
          ('CopyTrans', 0, 0, ['Hinge', 'Shoulder_L', 0])])
 
-    addPoseBone(fp, info, 'UpArmSocket_R', None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, amt, 'UpArmSocket_R', None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0,
         [('CopyLoc', 0, 1, ['Location', 'Shoulder_R', (1,1,1), (0,0,0), 0, False]),
          ('CopyTrans', 0, 0, ['Hinge', 'Shoulder_R', 0])])
 
-    addPoseBone(fp, info, 'UpArmHinge_L', None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'UpArmHinge_L', None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'UpArmHinge_R', None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'UpArmHinge_R', None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0, [])
          
 
     # Elbow lock
     
-    if info.config.exporting:
-        addPoseBone(fp, info, 'Elbow_L', 'MHBall025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, 
+    if amt.config.exporting:
+        addPoseBone(fp, amt, 'Elbow_L', 'MHBall025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, 
             [
             #('LimitDist', 0, 0, ['DistSternum', 'Sternum', 'LIMITDIST_INSIDE']),
             ])
         
-        addPoseBone(fp, info, 'ELClavicle_L', None, None, (1,1,1), (0,0,0), (1,1,1), 
+        addPoseBone(fp, amt, 'ELClavicle_L', None, None, (1,1,1), (0,0,0), (1,1,1), 
                     ((1,0,1), (0.6,1,0.6), 0.0, None), 0, [])
 
-        addPoseBone(fp, info, 'ELUpArm_L', None, None, (1,1,1), (0,0,0), (1,1,1), 
+        addPoseBone(fp, amt, 'ELUpArm_L', None, None, (1,1,1), (0,0,0), (1,1,1), 
                     ((1,1,1), (0.2,0.6,0.2), 0.05, None), 0,     
             [('IK', 0, 1, ['IK', 'Elbow_L', 2, (90*D, 'ELClavPT_L'), (True, False,True)])])
 
-        addPoseBone(fp, info, 'ELClavPT_L', 'MHCube025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, [])
+        addPoseBone(fp, amt, 'ELClavPT_L', 'MHCube025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, [])
 
-        addPoseBone(fp, info, 'ELClavLinkPT_L', None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0,
+        addPoseBone(fp, amt, 'ELClavLinkPT_L', None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0,
             [('StretchTo', 0, 1, ['Stretch', 'ELClavPT_L', 0, 1])])
         
 
-        addPoseBone(fp, info, 'Elbow_R', 'MHBall025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, 
+        addPoseBone(fp, amt, 'Elbow_R', 'MHBall025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, 
             [
             #('LimitDist', 0, 0, ['DistSternum', 'Sternum', 'LIMITDIST_INSIDE']),
             ])
         
-        addPoseBone(fp, info, 'ELClavicle_R', None, None, (1,1,1), (0,0,0), (1,1,1), 
+        addPoseBone(fp, amt, 'ELClavicle_R', None, None, (1,1,1), (0,0,0), (1,1,1), 
                     ((1,0,1), (0.6,1,0.6), 0.0, None), 0, [])
 
-        addPoseBone(fp, info, 'ELUpArm_R', None, None, (1,1,1), (0,0,0), (1,1,1), 
+        addPoseBone(fp, amt, 'ELUpArm_R', None, None, (1,1,1), (0,0,0), (1,1,1), 
                     ((1,1,1), (0.2,0.6,0.2), 0.05, None), 0,     
             [('IK', 0, 1, ['IK', 'Elbow_R', 2, (90*D, 'ELClavPT_R'), (True, False,True)])])
 
-        addPoseBone(fp, info, 'ELClavPT_R', 'MHCube025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, [])
+        addPoseBone(fp, amt, 'ELClavPT_R', 'MHCube025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, [])
 
-        addPoseBone(fp, info, 'ELClavLinkPT_R', None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0,
+        addPoseBone(fp, amt, 'ELClavLinkPT_R', None, None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0,
             [('StretchTo', 0, 1, ['Stretch', 'ELClavPT_R', 0, 1])])
 
 
     # Muscles
     
-    addPoseBone(fp, info, 'DfmPect2_L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
+    addPoseBone(fp, amt, 'DfmPect2_L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
         [('StretchTo', 0, 1, ['Stretch', 'DfmUpArm1_L', 1.0, 1])])
 
-    addPoseBone(fp, info, 'DfmPect2_R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
+    addPoseBone(fp, amt, 'DfmPect2_R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
         [('StretchTo', 0, 1, ['Stretch', 'DfmUpArm1_R', 1.0, 1])])
 
-    addPoseBone(fp, info, 'DfmTrap2_L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
+    addPoseBone(fp, amt, 'DfmTrap2_L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
          [('StretchTo', 0, 1, ['Stretch', 'DfmUpArm1_L', 1.0, 1])])
 
-    addPoseBone(fp, info, 'DfmTrap2_R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
+    addPoseBone(fp, amt, 'DfmTrap2_R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
         [('StretchTo', 0, 1, ['Stretch', 'DfmUpArm1_R', 1.0, 1])])
 
 
@@ -387,14 +387,14 @@ def ShoulderControlPoses(fp, info):
         return        
          
 
-    addPoseBone(fp, info, 'DfmDeltoid_L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
+    addPoseBone(fp, amt, 'DfmDeltoid_L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
         [('CopyLoc', 0, 1, ['CopyLoc', 'DeltoidOffset_L', (1,1,1), (0,0,0), 1, False]),
          ('Transform', C_LOCAL, 1, 
             ['Transform', 'UpArm_L', 
             'ROTATION', (0,0,0), (120,0,0), ('X','Y','Z'),
             'ROTATION', (0,0,0), (60,0,0)]) ])
 
-    addPoseBone(fp, info, 'DfmDeltoid_R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
+    addPoseBone(fp, amt, 'DfmDeltoid_R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
         [('CopyLoc', 0, 1, ['CopyLoc', 'DeltoidOffset_R', (1,1,1), (0,0,0), 1, False]),
          ('Transform', C_LOCAL, 1, 
             ['Transform', 'UpArm_R', 
@@ -402,49 +402,49 @@ def ShoulderControlPoses(fp, info):
             'ROTATION', (0,0,0), (60,0,0)]) ])
 
 
-    addPoseBone(fp, info, 'Sternum', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'Sternum', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'SternumTarget', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'SternumTarget', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
 
     # Muscle bones
     
-    addPoseBone(fp, info, 'DfmPect1_L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
+    addPoseBone(fp, amt, 'DfmPect1_L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
         [('StretchTo', 0, 1, ['Stretch', 'PectTrg_L', 1.0, 1])])
 
-    addPoseBone(fp, info, 'DfmPect1_R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
+    addPoseBone(fp, amt, 'DfmPect1_R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
         [('StretchTo', 0, 1, ['Stretch', 'PectTrg_R', 1.0, 1])])
 
 
-    addPoseBone(fp, info, 'DfmTrap1_L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
+    addPoseBone(fp, amt, 'DfmTrap1_L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
          [('StretchTo', 0, 1, ['Stretch', 'TrapTrg_L', 1.0, 1])])
-    addPoseBone(fp, info, 'DfmTrap1_R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
+    addPoseBone(fp, amt, 'DfmTrap1_R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
         [('StretchTo', 0, 1, ['Stretch', 'TrapTrg_R', 1.0, 1])])
 
 
-    addPoseBone(fp, info, 'DfmLat_L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
+    addPoseBone(fp, amt, 'DfmLat_L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
         [('StretchTo', 0, 1, ['Stretch', 'UpArmVec_L', 1.0, 1])])
 
-    addPoseBone(fp, info, 'DfmLat_R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
+    addPoseBone(fp, amt, 'DfmLat_R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0,
         [('StretchTo', 0, 1, ['Stretch', 'UpArmVec_R', 1.0, 1])])
 
 
     # Scapula
     
-    addPoseBone(fp, info, 'ShoulderPivot_L', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, amt, 'ShoulderPivot_L', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
         [('CopyRot', 0, 0.5, ['Rot', 'Clavicle_L', (1,1,1), (0,0,0), False])])
     
-    addPoseBone(fp, info, 'ShoulderUp_L', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'ShoulderUp_L', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
     
-    addPoseBone(fp, info, 'ShoulderAim_L', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, 
+    addPoseBone(fp, amt, 'ShoulderAim_L', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, 
         [('IK', 0, 1, ['IK', 'SternumTarget', 1, (90*D, 'ShoulderUp_L'), (True, False,True)])])
     
     
-    addPoseBone(fp, info, 'ShoulderPivot_R', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, amt, 'ShoulderPivot_R', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
         [('CopyRot', 0, 0.5, ['Rot', 'Clavicle_R', (1,1,1), (0,0,0), False])])
     
-    addPoseBone(fp, info, 'ShoulderUp_R', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'ShoulderUp_R', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
     
-    addPoseBone(fp, info, 'ShoulderAim_R', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, 
+    addPoseBone(fp, amt, 'ShoulderAim_R', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, 
         [('IK', 0, 1, ['IK', 'SternumTarget', 1, (90*D, 'ShoulderUp_R'), (True, False,True)])])
         
     return

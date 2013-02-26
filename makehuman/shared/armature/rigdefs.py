@@ -34,12 +34,12 @@ from numpy import dot
 from numpy.linalg import inv
 import transformations as tm
 
+import mh2proxy
+import exportutils
 from exportutils.config import Config
     
-import mhx
 from .flags import *
-
-D = pi/180
+from . import joints
 
 #
 #
@@ -76,11 +76,233 @@ LayerNames = [
     (L_DEF, "Deform")
 ]
        
+#-------------------------------------------------------------------------------        
+#   Armature base class.
+#   Used by export armatures (in mhx_rig.py) and pose armatures (in this file)
+#-------------------------------------------------------------------------------        
        
-class CArmatureInfo(mhx.mhx_info.CInfo):
+class CArmature:
+
+    def __init__(self, name, human, config):
+        self.name = name
+        self.human = human
+        self.mesh = human.meshData
+        self.config = config
+        self.rigtype = config.rigtype
+        self.proxies = {}
+        self.locations = {}
+        self.rigHeads = {}
+        self.rigTails = {}
+        self.origin = [0,0,0]
+        self.loadedShapes = {}
+        
+        self.locations = {}
+        self.boneList = []
+        self.vertexWeights = []
+        self.joints = []
+        self.headsTails = []
+        self.boneDefs = []
+        
+        self.boneGroups = []
+        self.recalcRoll = []              
+        self.vertexGroupFiles = []
+        self.gizmoFiles = []
+        self.headName = 'Head'
+        self.objectProps = [("MhxRig", '"%s"' % config.rigtype)]
+        self.armatureProps = []
+        self.customProps = []
+        
+
+    def __repr__(self):
+        return ("  <CArmature %s %s>" % (self.name, self.rigtype))
+        
+
+    def setup(self):
+        if self.rigtype in ["mhx", "rigify"]:
+            self.setupJoints()       
+            self.moveOriginToFloor()
+            self.dynamicLocations()
+            for (bone, head, tail) in self.headsTails:
+                self.rigHeads[bone] = self.findLocation(head)
+                self.rigTails[bone] = self.findLocation(tail)
+        else:
+            rigfile = "data/rigs/%s.rig" % self.config.rigtype
+            (self.locations, self.boneList, self.vertexWeights) = exportutils.rig.readRigFile(rigfile, self.mesh)        
+            self.joints = joints.DeformJoints + joints.FloorJoints
+            self.appendRigBones("", L_MAIN, [])
+    
+    
+    def dynamicLocations(self):
+        return
+
+
+    def prefixWeights(self, weights, prefix):
+        pweights = {}
+        for name in weights.keys():
+            if name in self.rigHeads:
+                pweights[name] = weights[name]
+            else:
+                pweights[prefix+name] = weights[name]
+        return pweights
+    
+    
+    def appendRigBones(self, prefix, layer, body):        
+        for data in self.boneDefs:
+            (bone0, head, tail, roll, parent0, options) = data
+            if bone0 in body:
+                continue
+            bone = prefix + bone0
+            if parent0 == "-":
+                parent = None
+            elif parent0 in body:
+                parent = parent0
+            else:
+                parent = prefix + parent0
+            flags = F_DEF|F_CON
+            for (key, value) in options.items():
+                if key == "-nc":
+                    flags &= ~F_CON
+                elif key == "-nd":
+                    flags &= ~F_DEF
+                elif key == "-res":
+                    flags |= F_RES
+                elif key == "-circ":
+                    name = "Circ"+value[0]
+                    self.customShapes[name] = (key, int(value[0]))
+                    self.addPoseInfo(bone, ("CS", name))
+                    flags |= F_WIR
+                elif key == "-box":
+                    name = "Box" + value[0]
+                    self.customShapes[name] = (key, int(value[0]))
+                    self.addPoseInfo(bone, ("CS", name))
+                    flags |= F_WIR
+                elif key == "-ik":
+                    try:
+                        pt = options["-pt"]
+                    except KeyError:
+                        pt = None
+                    log.debug("%s %s", value, pt)
+                    value.append(pt)
+                    self.addPoseInfo(bone, ("IK", value))
+                elif key == "-ik":
+                    pass
+            self.boneDefs.append((bone, roll, parent, flags, layer, NoBB))
+            self.rigHeads[bone] = head - self.origin
+            self.rigTails[bone] = tail - self.origin
+
+
+    def addPoseInfo(self, bone, info):
+        try:
+            self.poseInfo[bone]
+        except KeyError:
+            self.poseInfo[bone] = []
+        self.poseInfo[bone].append(info)
+
+
+    def setupJoints (self):
+        """
+        Evaluate symbolic expressions for joint locations and store them in self.locations.
+        Joint locations are specified symbolically in the *Joints list in the beginning of the
+        rig_*.py files (e.g. ArmJoints in rig_arm.py). 
+        """
+        
+        self.locations = {}
+        for (key, typ, data) in self.joints:
+            print(key)
+            if typ == 'j':
+                loc = mh2proxy.calcJointPos(self.mesh, data)
+                self.locations[key] = loc
+                self.locations[data] = loc
+            elif typ == 'v':
+                v = int(data)
+                self.locations[key] = self.mesh.coord[v]
+            elif typ == 'x':
+                self.locations[key] = numpy.array((float(data[0]), float(data[2]), -float(data[1])))
+            elif typ == 'vo':
+                v = int(data[0])
+                offset = numpy.array((float(data[1]), float(data[3]), -float(data[2])))
+                self.locations[key] = self.mesh.coord[v] + offset
+            elif typ == 'vl':
+                ((k1, v1), (k2, v2)) = data
+                loc1 = self.mesh.coord[int(v1)]
+                loc2 = self.mesh.coord[int(v2)]
+                self.locations[key] = k1*loc1 + k2*loc2
+            elif typ == 'f':
+                (raw, head, tail, offs) = data
+                rloc = self.locations[raw]
+                hloc = self.locations[head]
+                tloc = self.locations[tail]
+                vec = tloc - hloc
+                vraw = rloc - hloc
+                x = dot(vec, vraw)/dot(vec,vec)
+                self.locations[key] = hloc + x*vec + numpy.array(offs)
+            elif typ == 'b':
+                self.locations[key] = self.locations[data]
+            elif typ == 'p':
+                x = self.locations[data[0]]
+                y = self.locations[data[1]]
+                z = self.locations[data[2]]
+                self.locations[key] = numpy.array((x[0],y[1],z[2]))
+            elif typ == 'vz':
+                v = int(data[0])
+                z = self.mesh.coord[v][2]
+                loc = self.locations[data[1]]
+                self.locations[key] = numpy.array((loc[0],loc[1],z))
+            elif typ == 'X':
+                r = self.locations[data[0]]
+                (x,y,z) = data[1]
+                r1 = numpy.array([float(x), float(y), float(z)])
+                self.locations[key] = numpy.cross(r, r1)
+            elif typ == 'l':
+                ((k1, joint1), (k2, joint2)) = data
+                self.locations[key] = k1*self.locations[joint1] + k2*self.locations[joint2]
+            elif typ == 'o':
+                (joint, offsSym) = data
+                if type(offsSym) == str:
+                    offs = self.locations[offsSym]
+                else:
+                    offs = numpy.array(offsSym)
+                self.locations[key] = self.locations[joint] + offs
+            else:
+                raise NameError("Unknown %s" % typ)
+        return
+    
+    
+    def moveOriginToFloor(self):
+        if self.config.feetOnGround:
+            self.origin = self.locations['floor']
+            for key in self.locations.keys():
+                self.locations[key] = self.locations[key] - self.origin
+        else:
+            self.origin = numpy.array([0,0,0], float)
+        return
+    
+        
+    def setupHeadsTails(self):
+        self.rigHeads = {}
+        self.rigTails = {}
+        scale = self.config.scale
+        for (bone, head, tail) in self.headsTails:
+            self.rigHeads[bone] = findLocation(self, head)
+            self.rigTails[bone] = findLocation(self, tail)
+        
+    
+    def findLocation(self, joint):
+        try:
+            (bone, offs) = joint
+            return self.locations[bone] + offs
+        except:
+            return self.locations[joint]
+
+
+#-------------------------------------------------------------------------------        
+#   Pose armature
+#-------------------------------------------------------------------------------        
+       
+class CPoseArmature(CArmature):
 
     def __init__(self, human, config):
-    	mhx.mhx_info.CInfo.__init__(self, "Armature", human, config)
+        CArmature.__init__(self, "Armature", human, config)
 
         self.modifier = None
         self.restPosition = False
@@ -91,30 +313,26 @@ class CArmatureInfo(mhx.mhx_info.CInfo):
         self.roots = []
         self.controls = []
         self.deforms = []
-        if config.rigtype == 'mhx':
+        if self.rigtype == 'mhx':
             self.visible = VISIBLE_LAYERS
             self.last = 32
         else:
             self.visible = 1
             self.last = 1
 
-        mhx.mhx_rig.setupRig(self)
+        self.setup()
 
         self.matrixGlobal = tm.identity_matrix()
         self.restCoords = None
         self.boneWeights = {}
         if config.vertexWeights:
-            self.vertexgroups = config.vertexWeights
-        elif config.rigtype == "mhx":
-            self.vertexgroups = {}
-            for name in ["head", "bones", "palm"]:
-                mhx.mhx_main.getVertexGroups(name, self.vertexgroups)                    
+            self.vertexWeights = config.vertexWeights
 
     def __repr__(self):
-        return ("  <CArmatureInfo %s>" % self.name)
+        return ("  <CPoseArmature %s>" % self.name)
         
     def display(self):
-        log.debug("<CArmatureInfo %s", self.name)
+        log.debug("<CPoseArmature %s", self.name)
         for bone in self.boneList:
             bone.display()
         log.debug(">")
@@ -183,7 +401,7 @@ class CArmatureInfo(mhx.mhx_info.CInfo):
         log.message("Rebuild %s %s %s", self, update, self.config.rigtype)
         obj = self.human.meshData
         self.proxies = {}
-        mhx.mhx_rig.setupRig(self)
+        self.setupRig()
         log.debug("RHT %s %s", self.rigHeads["Root"], self.rigTails["Root"])
         for bone in self.boneList:
             bone.rebuild()
@@ -471,6 +689,9 @@ class CArmatureInfo(mhx.mhx_info.CInfo):
 
         self.update()                    
 
+#-------------------------------------------------------------------------------        
+#   Bone in pose armature
+#-------------------------------------------------------------------------------        
                 
 class CBone:
     def __init__(self, amt, name, roll, parent, flags, layers, bbone):
@@ -906,9 +1127,9 @@ def createRig(human, rigtype):
     config.setHuman(human)
 
     fp = None
-    amt = CArmatureInfo(human, config)
+    amt = CPoseArmature(human, config)
 
-    for (bname, roll, parent, flags, layers, bbone) in config.armatureBones:
+    for (bname, roll, parent, flags, layers, bbone) in config.boneDefs:
         if config.exporting or layers & ACTIVE_LAYERS:
             bone = CBone(amt, bname, roll, parent, flags, layers, bbone)
             amt.boneList.append(bone)        
@@ -924,13 +1145,13 @@ def createRig(human, rigtype):
 
     #setupCustomShapes(fp)
 
-    mhx.mhx_rig.writeControlPoses(fp, amt)
+    amt.writeControlPoses(fp)
     amt.checkDirty()
     return amt
 
-    mhx.mhx_rig.writeAllActions(fp, amt)
+    #amt.writeAllActions(fp)
 
-    drivers = mhx.mhx_rig.writeAllDrivers(fp, amt)
+    drivers = amt.writeDrivers(fp)
     amt.assignDrivers(drivers)
     
     #amt.display()

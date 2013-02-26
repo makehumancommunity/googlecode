@@ -80,52 +80,52 @@ FaceArmature = [
 
 
 #
-#    FaceControlPoses(fp, info):
+#    FaceControlPoses(fp, amt):
 #
 
-def FaceControlPoses(fp, info):
-    addPoseBone(fp, info, 'Jaw', 'MHJaw', None, (1,1,1), (0,1,0), (1,1,1), (1,1,1), 0,
+def FaceControlPoses(fp, amt):
+    addPoseBone(fp, amt, 'Jaw', 'MHJaw', None, (1,1,1), (0,1,0), (1,1,1), (1,1,1), 0,
          [('LimitRot', C_OW_LOCAL, 1, ['LimitRot', (-5*D,45*D, 0,0, -20*D,20*D), (1,1,1)])])
 
-    addPoseBone(fp, info, 'TongueBase', None, None, (1,1,1), (0,1,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'TongueBase', None, None, (1,1,1), (0,1,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'TongueMid', None, None, (1,1,1), (0,1,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'TongueMid', None, None, (1,1,1), (0,1,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'TongueTip', None, None, (1,1,1), (0,1,0), (1,0,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'TongueTip', None, None, (1,1,1), (0,1,0), (1,0,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'Gaze', 'MHGaze', None, (0,0,0), (1,1,1), (0,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'Gaze', 'MHGaze', None, (0,0,0), (1,1,1), (0,1,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'GazeParent', None, None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, amt, 'GazeParent', None, None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0,
          [('CopyTrans', 0, 1, ['Head', 'Head', 0])])
 
-    addPoseBone(fp, info, 'DfmUpLid_R', None, None, (1,1,1), (0,1,1), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'DfmUpLid_R', None, None, (1,1,1), (0,1,1), (1,1,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'DfmLoLid_R', None, None, (1,1,1), (0,1,1), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'DfmLoLid_R', None, None, (1,1,1), (0,1,1), (1,1,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'DfmUpLid_L', None, None, (1,1,1), (0,1,1), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'DfmUpLid_L', None, None, (1,1,1), (0,1,1), (1,1,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'DfmLoLid_L', None, None, (1,1,1), (0,1,1), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'DfmLoLid_L', None, None, (1,1,1), (0,1,1), (1,1,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'Eyes', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
+    addPoseBone(fp, amt, 'Eyes', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0,
         [('IK', 0, 1, ['IK', 'Gaze', 1, None, (True, False,False), 1.0])])
 
-    addPoseBone(fp, info, 'Eye_R', 'MHCircle025', None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'Eye_R', 'MHCircle025', None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'Eye_L', 'MHCircle025', None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
+    addPoseBone(fp, amt, 'Eye_L', 'MHCircle025', None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, [])
 
-    addPoseBone(fp, info, 'EyeParent_L', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, 
+    addPoseBone(fp, amt, 'EyeParent_L', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, 
         [('CopyRot', C_LOCAL, 1, ['Eyes', 'Eyes', (1,1,1), (0,0,0), True])])
 
-    addPoseBone(fp, info, 'EyeParent_R', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, 
+    addPoseBone(fp, amt, 'EyeParent_R', None, None, (1,1,1), (0,0,0), (1,1,1), (1,1,1), 0, 
         [('CopyRot', C_LOCAL, 1, ['Eyes', 'Eyes', (1,1,1), (0,0,0), True])])
 
     return
 
 #
-#    FaceDeformDrivers(fp, info):
+#    FaceDeformDrivers(fp, amt):
 #
 
-def FaceDeformDrivers(fp, info):
+def FaceDeformDrivers(fp, amt):
     lidBones = [
     ('DfmUpLid_L', 'PUpLid_L', (0, 40*D)),
     ('DfmLoLid_L', 'PLoLid_L', (0, 20*D)),
@@ -136,7 +136,7 @@ def FaceDeformDrivers(fp, info):
     drivers = []
     for (driven, driver, coeff) in lidBones:
         drivers.append(    (driven, 'ROTQ', 'AVERAGE', None, 1, coeff,
-         [("var", 'TRANSFORMS', [('OBJECT', info.name, driver, 'LOC_Z', C_LOC)])]) )
+         [("var", 'TRANSFORMS', [('OBJECT', amt.name, driver, 'LOC_Z', C_LOC)])]) )
     return drivers
 
 #
