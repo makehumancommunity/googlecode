@@ -23,7 +23,7 @@ TODO
 """
 
 
-from .mhx_globals import *
+from armature.flags import *
 
 import armature as amtpkg
 

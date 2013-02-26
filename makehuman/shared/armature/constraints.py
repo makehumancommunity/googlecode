@@ -29,8 +29,7 @@ from numpy.linalg import inv
 import transformations as tm
 import log
 
-import mhx
-from mhx.mhx_globals import *
+from .flags import *
 
 #
 #   Master class

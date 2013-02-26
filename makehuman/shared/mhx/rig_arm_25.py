@@ -23,7 +23,7 @@ Arm bone definitions
 """
 
 
-from .mhx_globals import *
+from armature.flags import *
 from .posebone import addPoseBone
 
 prcUpArmVec    = 0.15

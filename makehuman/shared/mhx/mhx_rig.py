@@ -29,14 +29,13 @@ import numpy
 import os
 import sys
 import mh2proxy
-import armature as amtpkg
 import exportutils
 import log
 
+import armature as amtpkg
+from armature.flags import *
 
-from .mhx_globals import *
 from . import posebone
-
 from . import rig_joints_25
 from . import rig_body_25
 from . import rig_shoulder_25

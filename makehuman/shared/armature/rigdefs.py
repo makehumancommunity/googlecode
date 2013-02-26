@@ -37,7 +37,7 @@ import transformations as tm
 from exportutils.config import Config
     
 import mhx
-from mhx.mhx_globals import *
+from .flags import *
 
 D = pi/180
 

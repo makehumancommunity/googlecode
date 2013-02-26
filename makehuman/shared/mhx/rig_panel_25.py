@@ -23,7 +23,7 @@ Panel bone definitions
 """
 
 
-from .mhx_globals import *
+from armature.flags import *
 from . import posebone
 from posebone import addPoseBone, addYSlider, addCSlider
 
