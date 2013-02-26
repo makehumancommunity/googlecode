@@ -23,15 +23,13 @@ Global variables used by MHX package
 """
 
 import math
-from math import pi
 import warp
-import numpy
 import gui3d
 import warpmodifier
 import log
 
-from numpy import dot
-from numpy.linalg import inv
+import numpy as np
+import numpy.linalg as la
 import transformations as tm
 
 import mh2proxy
@@ -217,10 +215,10 @@ class CArmature:
                 v = int(data)
                 self.locations[key] = self.mesh.coord[v]
             elif typ == 'x':
-                self.locations[key] = numpy.array((float(data[0]), float(data[2]), -float(data[1])))
+                self.locations[key] = np.array((float(data[0]), float(data[2]), -float(data[1])))
             elif typ == 'vo':
                 v = int(data[0])
-                offset = numpy.array((float(data[1]), float(data[3]), -float(data[2])))
+                offset = np.array((float(data[1]), float(data[3]), -float(data[2])))
                 self.locations[key] = self.mesh.coord[v] + offset
             elif typ == 'vl':
                 ((k1, v1), (k2, v2)) = data
@@ -234,25 +232,25 @@ class CArmature:
                 tloc = self.locations[tail]
                 vec = tloc - hloc
                 vraw = rloc - hloc
-                x = dot(vec, vraw)/dot(vec,vec)
-                self.locations[key] = hloc + x*vec + numpy.array(offs)
+                x = np.dot(vec, vraw)/np.dot(vec,vec)
+                self.locations[key] = hloc + x*vec + np.array(offs)
             elif typ == 'b':
                 self.locations[key] = self.locations[data]
             elif typ == 'p':
                 x = self.locations[data[0]]
                 y = self.locations[data[1]]
                 z = self.locations[data[2]]
-                self.locations[key] = numpy.array((x[0],y[1],z[2]))
+                self.locations[key] = np.array((x[0],y[1],z[2]))
             elif typ == 'vz':
                 v = int(data[0])
                 z = self.mesh.coord[v][2]
                 loc = self.locations[data[1]]
-                self.locations[key] = numpy.array((loc[0],loc[1],z))
+                self.locations[key] = np.array((loc[0],loc[1],z))
             elif typ == 'X':
                 r = self.locations[data[0]]
                 (x,y,z) = data[1]
-                r1 = numpy.array([float(x), float(y), float(z)])
-                self.locations[key] = numpy.cross(r, r1)
+                r1 = np.array([float(x), float(y), float(z)])
+                self.locations[key] = np.cross(r, r1)
             elif typ == 'l':
                 ((k1, joint1), (k2, joint2)) = data
                 self.locations[key] = k1*self.locations[joint1] + k2*self.locations[joint2]
@@ -261,7 +259,7 @@ class CArmature:
                 if type(offsSym) == str:
                     offs = self.locations[offsSym]
                 else:
-                    offs = numpy.array(offsSym)
+                    offs = np.array(offsSym)
                 self.locations[key] = self.locations[joint] + offs
             else:
                 raise NameError("Unknown %s" % typ)
@@ -274,7 +272,7 @@ class CArmature:
             for key in self.locations.keys():
                 self.locations[key] = self.locations[key] - self.origin
         else:
-            self.origin = numpy.array([0,0,0], float)
+            self.origin = np.array([0,0,0], float)
         return
     
         
@@ -485,11 +483,11 @@ class CPoseArmature(CArmature):
     def updateObj(self):
         obj = self.human.meshData
         nVerts = len(obj.coord)
-        coords = numpy.zeros((nVerts,4), float)
+        coords = np.zeros((nVerts,4), float)
         for bname,data in self.boneWeights.items():
             bone = self.bones[bname]
             verts,weights = data
-            vec = dot(bone.matrixVerts, self.restCoords[verts].transpose())
+            vec = np.dot(bone.matrixVerts, self.restCoords[verts].transpose())
             wvec = weights*vec
             coords[verts] += wvec.transpose()
 
@@ -497,10 +495,10 @@ class CPoseArmature(CArmature):
         for vn in range(nVerts):
             vert = self.restVerts[vn]
             if vert.groups:
-                mat = numpy.zeros((4,4), float)
+                mat = np.zeros((4,4), float)
                 for bone,w in vert.groups:
                     mat += w*bone.matrixVerts
-                coords[vn] = dot(mat,vert.co)[:3] 
+                coords[vn] = np.dot(mat,vert.co)[:3] 
             else:
                 coords[vn] = vert.co[:3]
         """
@@ -526,18 +524,18 @@ class CPoseArmature(CArmature):
 
         if not self.boneWeights:
             nVerts = len(self.human.meshData.coord)
-            self.restCoords = numpy.zeros((nVerts,4), float)
+            self.restCoords = np.zeros((nVerts,4), float)
             self.restCoords[:,3] = 1
             self.syncRestVerts("rest")
             
-            wtot = numpy.zeros(nVerts, float)
+            wtot = np.zeros(nVerts, float)
             for vgroup in self.vertexgroups.values():
                 for vn,w in vgroup:
                     wtot[vn] += w
 
             self.boneWeights = {}
             for bname,vgroup in self.vertexgroups.items():
-                weights = numpy.zeros(len(vgroup), float)
+                weights = np.zeros(len(vgroup), float)
                 verts = []
                 n = 0
                 for vn,w in vgroup:
@@ -588,7 +586,7 @@ class CPoseArmature(CArmature):
                 quat = float(words[2]),float(words[3]),float(words[4]),float(words[5])
                 mat = tm.quaternion_matrix(quat)
                 if words[1] == "gquat":
-                    mat = dot(inv(bone.matrixRelative), mat)
+                    mat = np.dot(la.inv(bone.matrixRelative), mat)
                 bone.matrixPose[:3,:3] = mat[:3,:3]
         fp.close()
         self.update()                    
@@ -670,7 +668,7 @@ class CPoseArmature(CArmature):
                 ak,aj,ai = angles     
                 order = "s" + order
                 mat1 = tm.euler_matrix(ai, aj, ak, axes=order) 
-                mat2 = dot(dot(inv(bone.matrixRest), mat1), bone.matrixRest)
+                mat2 = np.dot(np.dot(la.inv(bone.matrixRest), mat1), bone.matrixRest)
                 bone.matrixPose[:3,:3] = mat2[:3,:3]
                 if isRoot and False:
                     bone.matrixPose[0,3] = rx
@@ -761,23 +759,23 @@ class CBone:
 
     def build0(self):
         x,y,z = self.head
-        self.head3 = numpy.array(self.head)
-        self.head4 = numpy.array((x,y,z,1.0))
+        self.head3 = np.array(self.head)
+        self.head4 = np.array((x,y,z,1.0))
         x,y,z = self.tail
-        self.tail3 = numpy.array(self.tail)
-        self.tail4 = numpy.array((x,y,z,1.0))
+        self.tail3 = np.array(self.tail)
+        self.tail4 = np.array((x,y,z,1.0))
         self.length, self.matrixRest = getMatrix(self.head3, self.tail3, self.roll)
         self.vector4 = self.tail4 - self.head4
-        self.yvector4 = numpy.array((0, self.length, 0, 1))
+        self.yvector4 = np.array((0, self.length, 0, 1))
 
         if self.parent:
-            self.matrixRelative = dot(inv(self.parent.matrixRest), self.matrixRest)
-            self.matrixGlobal = dot(self.parent.matrixGlobal, self.matrixRelative)
+            self.matrixRelative = np.dot(la.inv(self.parent.matrixRest), self.matrixRest)
+            self.matrixGlobal = np.dot(self.parent.matrixGlobal, self.matrixRelative)
         else:
             self.matrixRelative = self.matrixRest
             self.matrixGlobal = self.matrixRelative   
         try:
-            self.matrixVerts = dot(self.matrixGlobal, inv(self.matrixRest))
+            self.matrixVerts = np.dot(self.matrixGlobal, la.inv(self.matrixRest))
         except:
             log.debug("%s %s %s", self.name, self.head, self.tail)
             log.debug("%s", self.matrixRest)
@@ -788,7 +786,7 @@ class CBone:
         return self.matrixGlobal[:3,3]
         
     def getTail(self):
-        tail4 = dot(self.matrixGlobal, self.yvector4)
+        tail4 = np.dot(self.matrixGlobal, self.yvector4)
         return tail4[:3]
 
     def getRoll(self, R):
@@ -797,7 +795,7 @@ class CBone:
         qw = R[0,0] + R[1,1] + R[2,2] + 1;
 
         if qw < 1e-4:
-            roll = pi
+            roll = math.pi
         else:
             roll = 2*math.atan2(qy, qw);
         return roll
@@ -815,7 +813,7 @@ class CBone:
         
 
     def zeroTransformation(self):
-        self.matrixPose = numpy.identity(4, float)
+        self.matrixPose = np.identity(4, float)
 
     
     def setRotationIndex(self, index, angle, useQuat):
@@ -842,19 +840,19 @@ class CBone:
             return 1000.0
 
     Axes = [
-        numpy.array((1,0,0)),
-        numpy.array((0,1,0)),
-        numpy.array((0,0,1))
+        np.array((1,0,0)),
+        np.array((0,1,0)),
+        np.array((0,0,1))
     ]
 
     def rotate(self, angle, axis, rotWorld):
         mat = tm.rotation_matrix(angle*D, CBone.Axes[axis])
         if rotWorld:
-            mat = dot(mat, self.matrixGlobal)        
+            mat = np.dot(mat, self.matrixGlobal)        
             self.matrixGlobal[:3,:3] = mat[:3,:3]
             self.matrixPose = self.getPoseFromGlobal()
         else:
-            mat = dot(mat, self.matrixPose)
+            mat = np.dot(mat, self.matrixPose)
             self.matrixPose[:3,:3] = mat[:3,:3]
 
 
@@ -873,7 +871,7 @@ class CBone:
 
         az,ay,ax = tm.euler_from_matrix(pose, axes='szyx')
         rot = tm.rotation_matrix(-ay + self.roll, CBone.Axes[1])
-        self.matrixGlobal[:3,:3] = dot(self.matrixGlobal[:3,:3], rot[:3,:3])
+        self.matrixGlobal[:3,:3] = np.dot(self.matrixGlobal[:3,:3], rot[:3,:3])
         pose2 = self.getPoseFromGlobal()
         
         if 0 and self.name in ["DfmKneeBack_L", "DfmLoLeg_L"]:
@@ -887,18 +885,18 @@ class CBone:
     def poleTargetCorrect(self, head, goal, pole, angle):
         yvec = goal-head
         xvec = pole-head
-        xy = dot(xvec, yvec)/dot(yvec,yvec)
+        xy = np.dot(xvec, yvec)/np.dot(yvec,yvec)
         xvec = xvec - xy * yvec
-        xlen = math.sqrt(dot(xvec,xvec))
+        xlen = math.sqrt(np.dot(xvec,xvec))
         if xlen > 1e-6:
             xvec = xvec / xlen
             zvec = self.matrixGlobal[:3,2]
-            zlen = math.sqrt(dot(zvec,zvec))
+            zlen = math.sqrt(np.dot(zvec,zvec))
             zvec = zvec / zlen
-            angle0 = math.asin( dot(xvec,zvec) )
+            angle0 = math.asin( np.dot(xvec,zvec) )
             rot = tm.rotation_matrix(angle - angle0, CBone.Axes[1])
             #m0 = self.matrixGlobal.copy()
-            self.matrixGlobal[:3,:3] = dot(self.matrixGlobal[:3,:3], rot[:3,:3])
+            self.matrixGlobal[:3,:3] = np.dot(self.matrixGlobal[:3,:3], rot[:3,:3])
             
             if 0 and self.name == "DfmUpArm2_L":
                 log.debug("")
@@ -915,9 +913,9 @@ class CBone:
 
     def getPoseFromGlobal(self):
         if self.parent:
-            return dot(inv(self.matrixRelative), dot(inv(self.parent.matrixGlobal), self.matrixGlobal))
+            return np.dot(la.inv(self.matrixRelative), np.dot(la.inv(self.parent.matrixGlobal), self.matrixGlobal))
         else:
-            return dot(inv(self.matrixRelative), self.matrixGlobal)
+            return np.dot(la.inv(self.matrixRelative), self.matrixGlobal)
         
     
     def setRotation(self, angles):
@@ -940,9 +938,9 @@ class CBone:
 
     def updateBone(self):
         if self.parent:
-            self.matrixGlobal = dot(self.parent.matrixGlobal, dot(self.matrixRelative, self.matrixPose))
+            self.matrixGlobal = np.dot(self.parent.matrixGlobal, np.dot(self.matrixRelative, self.matrixPose))
         else:
-            self.matrixGlobal = dot(self.matrixRelative, self.matrixPose)
+            self.matrixGlobal = np.dot(self.matrixRelative, self.matrixPose)
         """    
         pquat = tm.quaternion_from_matrix(self.matrixPose)
         gquat = tm.quaternion_from_matrix(self.matrixGlobal)
@@ -952,7 +950,7 @@ class CBone:
     def updateConstraints(self):
         for cns in self.constraints:
             cns.update(self.amtInfo, self)
-        self.matrixVerts = dot(self.matrixGlobal, numpy.linalg.inv(self.matrixRest))
+        self.matrixVerts = np.dot(self.matrixGlobal, np.linalg.la.inv(self.matrixRest))
             
 
 
@@ -962,42 +960,42 @@ class CBone:
     
     PrismVectors = {
         'Prism': [
-            numpy.array((0, 0, 0, 0)),
-            numpy.array((0.14, 0.25, 0, 0)),
-            numpy.array((0, 0.25, 0.14, 0)),
-            numpy.array((-0.14, 0.25, 0, 0)),
-            numpy.array((0, 0.25, -0.14, 0)),
-            numpy.array((0, 1, 0, 0)),
+            np.array((0, 0, 0, 0)),
+            np.array((0.14, 0.25, 0, 0)),
+            np.array((0, 0.25, 0.14, 0)),
+            np.array((-0.14, 0.25, 0, 0)),
+            np.array((0, 0.25, -0.14, 0)),
+            np.array((0, 1, 0, 0)),
         ],
         'Box' : [
-            numpy.array((-0.10, 0, -0.10, 0)), 
-            numpy.array((-0.10, 0, 0.10, 0)),
-            numpy.array((-0.10, 1, -0.10, 0)),
-            numpy.array((-0.10, 1, 0.10, 0)),
-            numpy.array((0.10, 0, -0.10, 0)),
-            numpy.array((0.10, 0, 0.10, 0)),
-            numpy.array((0.10, 1, -0.10, 0)),
-            numpy.array((0.10, 1, 0.10, 0)),
+            np.array((-0.10, 0, -0.10, 0)), 
+            np.array((-0.10, 0, 0.10, 0)),
+            np.array((-0.10, 1, -0.10, 0)),
+            np.array((-0.10, 1, 0.10, 0)),
+            np.array((0.10, 0, -0.10, 0)),
+            np.array((0.10, 0, 0.10, 0)),
+            np.array((0.10, 1, -0.10, 0)),
+            np.array((0.10, 1, 0.10, 0)),
         ],
         'Cube' : [
-            numpy.array((-1, 0, -1, 0)), 
-            numpy.array((-1, 0, 1, 0)),
-            numpy.array((-1, 1, -1, 0)),
-            numpy.array((-1, 1, 1, 0)),
-            numpy.array((1, 0, -1, 0)),
-            numpy.array((1, 0, 1, 0)),
-            numpy.array((1, 1, -1, 0)),
-            numpy.array((1, 1, 1, 0)),
+            np.array((-1, 0, -1, 0)), 
+            np.array((-1, 0, 1, 0)),
+            np.array((-1, 1, -1, 0)),
+            np.array((-1, 1, 1, 0)),
+            np.array((1, 0, -1, 0)),
+            np.array((1, 0, 1, 0)),
+            np.array((1, 1, -1, 0)),
+            np.array((1, 1, 1, 0)),
         ],
         'Line' : [    
-            numpy.array((-0.03, 0, -0.03, 0)),
-            numpy.array((-0.03, 0, 0.03, 0)),
-            numpy.array((-0.03, 1, -0.03, 0)),
-            numpy.array((-0.03, 1, 0.03, 0)),
-            numpy.array((0.03, 0, -0.03, 0)),
-            numpy.array((0.03, 0, 0.03, 0)),
-            numpy.array((0.03, 1, -0.03, 0)),
-            numpy.array((0.03, 1, 0.03, 0)),
+            np.array((-0.03, 0, -0.03, 0)),
+            np.array((-0.03, 0, 0.03, 0)),
+            np.array((-0.03, 1, -0.03, 0)),
+            np.array((-0.03, 1, 0.03, 0)),
+            np.array((0.03, 0, -0.03, 0)),
+            np.array((0.03, 0, 0.03, 0)),
+            np.array((0.03, 1, -0.03, 0)),
+            np.array((0.03, 1, 0.03, 0)),
         ]
     }
 
@@ -1010,7 +1008,7 @@ class CBone:
                    (1,5,7,3), (1,0,4,5), (2,3,7,6) ],
     }                   
     
-    HeadVec = numpy.array((0,0,0,1))
+    HeadVec = np.array((0,0,0,1))
          
     def prismPoints(self, type):
         if self.amtInfo.restPosition:
@@ -1024,7 +1022,7 @@ class CBone:
         vectors = CBone.PrismVectors[type]
         points = []
         for vec in vectors:
-            p = dot(mat, (vec*length + CBone.HeadVec))
+            p = np.dot(mat, (vec*length + CBone.HeadVec))
             points.append(p[:3])
         return points, CBone.PrismFaces[type]
 
@@ -1057,46 +1055,46 @@ class CBone:
         log.debug("H4 %s", self.head4)
         log.debug("T4 %s", self.tail4)
         log.debug("RM %s", self.matrixRest)
-        log.debug("RV %s", dot(self.matrixRest, self.yvector4))
+        log.debug("RV %s", np.dot(self.matrixRest, self.yvector4))
         log.debug("P %s", self.matrixPose)
         log.debug("Rel %s", self.matrixRelative)
         log.debug("G %s", self.matrixGlobal)
-        log.debug("GV %s", dot(self.matrixGlobal, self.yvector4))
+        log.debug("GV %s", np.dot(self.matrixGlobal, self.yvector4))
             
 #
 #
 #
 
-YUnit = numpy.array((0,1,0))
+YUnit = np.array((0,1,0))
 
-YZRotation = numpy.array(((1,0,0,0),(0,0,1,0),(0,-1,0,0),(0,0,0,1)))
-ZYRotation = numpy.array(((1,0,0,0),(0,0,-1,0),(0,1,0,0),(0,0,0,1)))
+YZRotation = np.array(((1,0,0,0),(0,0,1,0),(0,-1,0,0),(0,0,0,1)))
+ZYRotation = np.array(((1,0,0,0),(0,0,-1,0),(0,1,0,0),(0,0,0,1)))
 
 def toBlender3(vec):
-    return dot(ZYRotation[:3,:3], vec)
+    return np.dot(ZYRotation[:3,:3], vec)
     
 def fromBlender4(mat):
-    return dot(YZRotation, mat)
+    return np.dot(YZRotation, mat)
     
 def getMatrix(head, tail, roll):
     vector = toBlender3(tail - head)
-    length = math.sqrt(dot(vector, vector))
+    length = math.sqrt(np.dot(vector, vector))
     vector = vector/length
-    yproj = dot(vector, YUnit)
+    yproj = np.dot(vector, YUnit)
     
     if yproj > 1-1e-6:
         axis = YUnit
         angle = 0
     elif yproj < -1+1e-6:
         axis = YUnit
-        angle = pi
+        angle = math.pi
     else:
-        axis = numpy.cross(YUnit, vector)
-        axis = axis / math.sqrt(dot(axis,axis))
+        axis = np.cross(YUnit, vector)
+        axis = axis / math.sqrt(np.dot(axis,axis))
         angle = math.acos(yproj)
     mat = tm.rotation_matrix(angle, axis)
     if roll:
-        mat = dot(mat, tm.rotation_matrix(roll, YUnit))         
+        mat = np.dot(mat, tm.rotation_matrix(roll, YUnit))         
     mat = fromBlender4(mat)
     mat[:3,3] = head
     return length, mat
