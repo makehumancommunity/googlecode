@@ -50,6 +50,7 @@ class MhxConfig(Config):
         self.rigtype =          rigtype
         
         # Used by mhx exporter
+        """
         self.vertexWeights = []
         self.customShapes = {}
         self.poseInfo = {}
@@ -61,9 +62,10 @@ class MhxConfig(Config):
         self.objectProps = []
         self.armatureProps = []
         self.customProps = []
-        self.customShapeFiles = []
+        """
+        self.customShapeFiles = []        
         self.customPrefix = "Mhc"
-        
+
 
 class ExporterMHX(Exporter):
     def __init__(self):

@@ -23,8 +23,13 @@ MHX package __init__ file.
 """
 
 
-from . import mhx_info
 from . import mhx_main
+from . import mhx_mesh
+from . import mhx_armature
+from . import mhx_materials
+from . import mhx_proxy
+from . import mhx_pose
+
 from . import rigify_rig
 
 from . import rig_body_25
