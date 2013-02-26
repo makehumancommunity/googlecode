@@ -33,7 +33,7 @@
 import bpy
 from bpy.props import StringProperty, FloatProperty, IntProperty, BoolProperty, EnumProperty
 from . import utils, simplify
-from . import globvar as the
+from . import mcp
 from .utils import MocapError
 
 
@@ -49,7 +49,7 @@ class CFilterData:
         self.fb = 0
         self.m = 0
 
-the.filterData = {}
+mcp.filterData = {}
 
 #
 #   calcFilters(context):
@@ -66,10 +66,10 @@ def calcFilters(context):
         return            
 
     try:
-        fd = the.filterData[rig.name]
+        fd = mcp.filterData[rig.name]
     except:
         fd = CFilterData()
-        the.filterData[rig.name] = fd
+        mcp.filterData[rig.name] = fd
     fd.Gs = {}
     fd.Ls = {}
 
@@ -152,7 +152,7 @@ def reconstructAction(context):
         return
     (fcurves, minTime, maxTime) = simplify.getActionFCurves(act, False, False, scn)
 
-    fd = the.filterData[rig.name]
+    fd = mcp.filterData[rig.name]
     s = {}
     for k in range(fd.fb-1):
         s[k] = rig["s_%d" % k]
@@ -213,7 +213,7 @@ class VIEW3D_OT_DiscardFiltersButton(bpy.types.Operator):
     def execute(self, context):
         rig = context.object
         try:
-            del the.filterData[rig.name]
+            del mcp.filterData[rig.name]
         except:
             pass
         return{'FINISHED'}    

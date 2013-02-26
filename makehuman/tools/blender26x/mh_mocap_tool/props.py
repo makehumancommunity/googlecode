@@ -336,7 +336,7 @@ def saveDefaults(context):
         return
     filename = settingsFile()
     try:
-        fp = open(filename, "w")
+        fp = open(filename, "w", encoding="utf-8", newline="\n")
     except:
         print("Unable to open %s for writing" % filename)
         return

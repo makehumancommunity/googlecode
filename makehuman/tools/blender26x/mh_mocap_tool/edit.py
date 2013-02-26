@@ -29,7 +29,7 @@ from math import pi, sqrt
 from mathutils import *
 from . import utils, load, simplify, props, action
 #from .target_rigs import rig_mhx
-from . import globvar as the
+from . import mcp
 from .utils import MocapError
 
 ########################################################################
@@ -59,8 +59,8 @@ def startEdit(context):
     rig["McpUndoAction"] = act.name
     rig["McpActionName"] = aname
 
-    the.editLoc = utils.quadDict()
-    the.editRot = utils.quadDict()
+    mcp.editLoc = utils.quadDict()
+    mcp.editRot = utils.quadDict()
 
     for fcu in act.fcurves:
         (name, mode) = utils.fCurveIdentity(fcu)
@@ -109,8 +109,8 @@ def undoEdit(context):
     if not oact:
         raise MocapError("No action to undo")
     rig["McpUndoAction"] = ""
-    the.editLoc = None
-    the.editRot = None
+    mcp.editLoc = None
+    mcp.editRot = None
     rig["McpActionName"] = ""
     act = rig.animation_data.action
     act.name = "#Delete"
@@ -127,19 +127,19 @@ class VIEW3D_OT_McpUndoEditButton(bpy.types.Operator):
     answer = StringProperty(default="")
 
     def execute(self, context):
-        the.EditString = "?"
+        mcp.editString = "?"
         if self.answer == "":
-            the.EditString = "Really undo editing?"
-            the.EditConfirm = self.bl_idname
+            mcp.editString = "Really undo editing?"
+            mcp.editConfirm = self.bl_idname
         elif self.answer == "yes":
-            the.EditConfirm = ""
+            mcp.editConfirm = ""
             setKeyMap(context, "mcp.insert_locrot", False)
             try:
                 undoEdit(context)
             except MocapError:
                 bpy.ops.mcp.error('INVOKE_DEFAULT')
         else:
-            the.EditConfirm = ""
+            mcp.editConfirm = ""
         return{'FINISHED'} 
         
 #
@@ -153,11 +153,11 @@ def getActionPair(context):
         raise MocapError("No action is currently being edited")
         return None
     try:
-        the.editLoc
-        the.editRot
+        mcp.editLoc
+        mcp.editRot
     except:
-        the.editLoc = utils.quadDict()
-        the.editRot = utils.quadDict()
+        mcp.editLoc = utils.quadDict()
+        mcp.editRot = utils.quadDict()
     act = utils.getAction(rig)
     if act:
         return (act, oact)
@@ -183,21 +183,21 @@ def confirmEdit(context):
         (name,mode) =  utils.fCurveIdentity(fcu)
         if utils.isRotation(mode):
             try:
-                edit = the.editRot[fcu.array_index][name]
+                edit = mcp.editRot[fcu.array_index][name]
             except:
                 continue
             displaceFCurve(fcu, ofcu, edit)
         elif  utils.isLocation(mode):
             try:
-                edit = the.editLoc[fcu.array_index][name]
+                edit = mcp.editLoc[fcu.array_index][name]
             except:
                 continue
             displaceFCurve(fcu, ofcu, edit)
 
     rig["McpUndoAction"] = ""
     rig["McpActionName"] = ""
-    the.editLoc = None
-    the.editRot = None
+    mcp.editLoc = None
+    mcp.editRot = None
     utils.deleteAction(oact)
     print("Action changed")
     return                
@@ -246,12 +246,12 @@ def insertKey(context, useLoc, useRot):
         if not pb.bone.select:
             continue
         if useLoc:
-            setEditDict(the.editLoc, frame, pb.name, pb.location, 3)
+            setEditDict(mcp.editLoc, frame, pb.name, pb.location, 3)
         if useRot:        
             if pb.rotation_mode == 'QUATERNION':
-                setEditDict(the.editRot, frame, pb.name, pb.rotation_quaternion, 4)
+                setEditDict(mcp.editRot, frame, pb.name, pb.rotation_quaternion, 4)
             else:
-                setEditDict(the.editRot, frame, pb.name, pb.rotation_euler, 3)
+                setEditDict(mcp.editRot, frame, pb.name, pb.rotation_euler, 3)
         for fcu in act.fcurves:
             ofcu = utils.findFCurve(fcu.data_path, fcu.array_index, oact.fcurves)
             if not ofcu:
@@ -259,9 +259,9 @@ def insertKey(context, useLoc, useRot):
             (name,mode) =  utils.fCurveIdentity(fcu)
             if name == pb.name:
                 if utils.isRotation(mode) and useRot:
-                    displaceFCurve(fcu, ofcu, the.editRot[fcu.array_index][name])
+                    displaceFCurve(fcu, ofcu, mcp.editRot[fcu.array_index][name])
                 if  utils.isLocation(mode) and useLoc:
-                    displaceFCurve(fcu, ofcu, the.editLoc[fcu.array_index][name])
+                    displaceFCurve(fcu, ofcu, mcp.editLoc[fcu.array_index][name])
     return                
 
 class VIEW3D_OT_McpInsertLocButton(bpy.types.Operator):

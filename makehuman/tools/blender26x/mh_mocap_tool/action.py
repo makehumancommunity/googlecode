@@ -2,12 +2,12 @@
 #
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; eithe.r version 2
+#  as published by the Free Software Foundation; eimcp.r version 2
 #  of the License, or (at your option) any later version.
 #
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the.
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See mcp.
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
@@ -26,7 +26,7 @@
 import bpy
 from bpy.props import EnumProperty, StringProperty
 
-from . import globvar as the
+from . import mcp
 from . import utils
 from .utils import MocapError
 
@@ -52,26 +52,26 @@ def listAllActions(context):
     except:
         doFilter = False
         
-    the.actions = []     
+    mcp.actions = []     
     for act in bpy.data.actions:
         name = act.name
         if (not doFilter) or (name[0:flen] == filter):
-            the.actions.append((name, name, name))
+            mcp.actions.append((name, name, name))
     bpy.types.Scene.McpActions = EnumProperty(
-        items = the.actions,
+        items = mcp.actions,
         name = "Actions")  
     bpy.types.Scene.McpFirstAction = EnumProperty(
-        items = the.actions,
+        items = mcp.actions,
         name = "First action")  
     bpy.types.Scene.McpSecondAction = EnumProperty(
-        items = the.actions,
+        items = mcp.actions,
         name = "Second action")  
     print("Actions declared")
     return
 
 
 def findActionNumber(name):
-    for n,enum in enumerate(the.actions):
+    for n,enum in enumerate(mcp.actions):
         (name1, name2, name3) = enum        
         if name == name1:
             return n
@@ -110,7 +110,7 @@ def deleteAction(context):
     if act.users == 0:
         print("Deleting", act)
         n = findActionNumber(act.name)
-        the.actions.pop(n)
+        mcp.actions.pop(n)
         bpy.data.actions.remove(act)
         print('Action', act, 'deleted')
         listAllActions(context)
@@ -130,18 +130,18 @@ class VIEW3D_OT_McpDeleteButton(bpy.types.Operator):
     #    return context.scene.McpReallyDelete
 
     def execute(self, context):
-        the.UtilityString = "?"
+        mcp.utilityString = "?"
         if self.answer == "":
-            the.UtilityString = "Really delete action?"
-            the.UtilityConfirm = self.bl_idname
+            mcp.utilityString = "Really delete action?"
+            mcp.utilityConfirm = self.bl_idname
         elif self.answer == "yes":
-            the.UtilityConfirm = ""
+            mcp.utilityConfirm = ""
             try:
                 deleteAction(context)
             except MocapError:
                 bpy.ops.mcp.error('INVOKE_DEFAULT')
         else:
-            the.UtilityConfirm = ""
+            mcp.utilityConfirm = ""
         return{'FINISHED'}    
 
 #

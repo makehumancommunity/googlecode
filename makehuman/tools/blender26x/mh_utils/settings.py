@@ -70,7 +70,7 @@ def readDefaultSettings(context):
 
 def saveDefaultSettings(context):
     fname = settingsFile("settings")
-    fp = open(fname, "w")
+    fp = open(fname, "w", encoding="utf-8", newline="\n")
     scn = context.scene
     for (key, value) in [
         ("MhProgramPath", scn.MhProgramPath), 

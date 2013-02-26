@@ -41,7 +41,7 @@ def exportUVs(context):
     ob = context.object
     (outpath, outfile) = makeclothes.getFileName(ob, context, "mhuv")
     print("Creating UV file %s" % outfile)
-    fp= open(outfile, "wb")
+    fp= open(outfile, "w", encoding="utf-8", newline="\n")
     makeclothes.printClothesHeader(fp, scn)
     fp.write("# name %s\n" % ob.name.replace(" ","_"))
     

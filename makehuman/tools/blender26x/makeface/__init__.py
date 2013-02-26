@@ -38,6 +38,7 @@ if "bpy" in locals():
     print("Reloading makeface")
     import imp    
     imp.reload(mh_utils)
+    imp.reload(mh)
     imp.reload(utils)
     imp.reload(settings)
     imp.reload(proxy)
@@ -54,7 +55,7 @@ else:
     from bpy_extras.io_utils import ImportHelper, ExportHelper
 
     import mh_utils
-    from mh_utils import globvars as the
+    from mh_utils import mh
     from mh_utils import utils
     from mh_utils import settings
     from mh_utils import proxy

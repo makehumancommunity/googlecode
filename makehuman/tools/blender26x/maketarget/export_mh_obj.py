@@ -100,7 +100,7 @@ def exportObjFile(path, groupsAsMaterials, context):
     (name,ext) = os.path.splitext(path)
     if ext.lower() != ".obj":
         path = path + ".obj"
-    fp = open(path, "w")
+    fp = open(path, "w", encoding="utf-8", newline="\n")
     scn = context.scene
 
     for v in me.vertices:

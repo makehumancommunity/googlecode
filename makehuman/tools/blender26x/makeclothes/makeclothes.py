@@ -1575,7 +1575,7 @@ def makeClothes(context, doFindClothes):
     checkSingleVGroups(pob)
     if scn.MCLogging:
         logfile = '%s/clothes.log' % scn.MCDirectory
-        log = open(logfile, "w")
+        log = open(logfile, "w", encoding="utf-8", newline="\n")
     else:
         log = None
     if doFindClothes:
@@ -2297,7 +2297,7 @@ def readDefaultSettings(context):
     
 def saveDefaultSettings(context):
     fname = settingsFile("settings")
-    fp = open(fname, "w")
+    fp = open(fname, "w", encoding="utf-8", newline="\n")
     scn = context.scene
     for (prop, value) in scn.items():
         if prop[0:2] == "MC":

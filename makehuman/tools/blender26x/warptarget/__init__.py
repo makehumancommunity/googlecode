@@ -26,7 +26,7 @@
 bl_info = {
     "name": "Warp Target",
     "author": "Thomas Larsson",
-    "version": "0.1",
+    "version": "0.2",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Warp Target",
     "description": "Warp MakeHuman Targets To New Characters",
@@ -37,6 +37,7 @@ bl_info = {
 if "bpy" in locals():
     print("Reloading warptarget")
     import imp    
+    imp.reload(mh)
     imp.reload(mh_utils)
     imp.reload(utils)
     imp.reload(settings)
@@ -54,7 +55,7 @@ else:
     from bpy_extras.io_utils import ImportHelper, ExportHelper
 
     import mh_utils
-    from mh_utils import globvars as the
+    from mh_utils import mh
     from mh_utils import utils
     from mh_utils import settings
     from mh_utils import proxy
@@ -84,7 +85,7 @@ class WarpTargetPanel(bpy.types.Panel):
             return
 
         layout.label("Source Character")
-        srcChar = the.SourceCharacter.character
+        srcChar = warptarget.theSourceCharacter.character
         srcChar.drawFiles(layout, scn)
         if srcChar.files:            
             layout.operator("mh.load_source_character")
@@ -97,7 +98,7 @@ class WarpTargetPanel(bpy.types.Panel):
 
         layout.separator()
         layout.label("Target Character")
-        trgChar = the.TargetCharacter.character
+        trgChar = warptarget.theTargetCharacter.character
         character.drawItems(layout, scn)
         layout.operator("mh.update_target_character")
         trgChar.drawFiles(layout, scn)

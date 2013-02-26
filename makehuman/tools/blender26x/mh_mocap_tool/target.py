@@ -2,12 +2,12 @@
 #
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; eithe.r version 2
+#  as published by the Free Software Foundation; eimcp.r version 2
 #  of the License, or (at your option) any later version.
 #
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the.
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See mcp.
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
@@ -33,7 +33,7 @@ import os
 from . import utils
 #from . import target_rigs
 #from .target_rigs import rig_mhx, rig_simple, rig_game, rig_second_life
-from . import globvar as the
+from . import mcp
 from .utils import MocapError
 
 Deg2Rad = math.pi/180
@@ -44,14 +44,14 @@ Deg2Rad = math.pi/180
 
 def getTrgBone(b):
     try:
-        return the.trgBone[b]
+        return mcp.trgBone[b]
     except:
         return None
         
         
 def renameBone(b):
     try:
-        return the.Renames[b]
+        return mcp.renames[b]
     except:
         return b
 
@@ -69,13 +69,13 @@ def getTargetArmature(rig, scn):
             name = scn.McpTargetRig
         except:
             raise MocapError("Initialize Target Panel first")
-    the.target = name        
-    (boneAssoc, the.Renames, the.IkBones) = the.TargetInfo[name]
+    mcp.target = name        
+    (boneAssoc, mcp.renames, mcp.ikBones) = mcp.targetInfo[name]
     if not testTargetRig(name, bones, boneAssoc):
         print("Bones", bones)
         raise MocapError("Target armature %s does not match armature %s" % (rig.name, name))
     print("Target armature %s" % name)
-    parAssoc = assocParents(rig, boneAssoc, the.Renames)                        
+    parAssoc = assocParents(rig, boneAssoc, mcp.renames)                        
     return (boneAssoc, parAssoc, None)
 
 
@@ -85,8 +85,8 @@ def guessArmature(rig, bones, scn):
     if 'KneePT_L' in bones:
         return 'MHX'
     else:
-        for (name, info) in the.TargetInfo.items():
-            (boneAssoc, the.Renames, the.IkBones) = info
+        for (name, info) in mcp.targetInfo.items():
+            (boneAssoc, mcp.renames, mcp.ikBones) = info
             if testTargetRig(name, bones, boneAssoc):           
                 return name
     print("Bones", bones)
@@ -95,11 +95,11 @@ def guessArmature(rig, bones, scn):
 
 def assocParents(rig, boneAssoc, names):          
     parAssoc = {}
-    the.trgBone = {}
+    mcp.trgBone = {}
     taken = [ None ]
     for (name, mhx) in boneAssoc:
         name = getName(name, names)
-        the.trgBone[mhx] = name
+        mcp.trgBone[mhx] = name
         pb = rig.pose.bones[name]
         taken.append(name)
         parAssoc[name] = None
@@ -188,7 +188,7 @@ TargetBoneNames = [
 
 
 def loadTargets():
-    the.TargetInfo = {}
+    mcp.targetInfo = {}
     
 def isTargetInited(scn):
     try:
@@ -199,23 +199,23 @@ def isTargetInited(scn):
 
 
 def initTargets(scn):        
-    the.TargetInfo = {}
+    mcp.targetInfo = {}
     path = os.path.join(os.path.dirname(__file__), "target_rigs")
     for fname in os.listdir(path):
         file = os.path.join(path, fname)
         (name, ext) = os.path.splitext(fname)
         if ext == ".trg" and os.path.isfile(file):
             (name, stuff) = readTrgArmature(file, name)
-            the.TargetInfo[name] = stuff
+            mcp.targetInfo[name] = stuff
 
-    the.trgArmatureEnums = []
-    keys = list(the.TargetInfo.keys())
+    mcp.trgArmatureEnums = []
+    keys = list(mcp.targetInfo.keys())
     keys.sort()
     for key in keys:
-        the.trgArmatureEnums.append((key,key,key))
+        mcp.trgArmatureEnums.append((key,key,key))
         
     bpy.types.Scene.McpTargetRig = EnumProperty(
-        items = the.trgArmatureEnums,
+        items = mcp.trgArmatureEnums,
         name = "Target rig",
         default = 'MHX')
     scn.McpTargetRig = 'MHX'

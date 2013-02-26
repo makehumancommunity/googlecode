@@ -1,17 +1,17 @@
 # ##### BEGIN GPL LICENSE BLOCK #####
 #
 #  This program is free software; you can redistribute it and/or
-#  modify it under the. terms of the. GNU General Public License
-#  as published by the. Free Software Foundation; eithe.r version 2
-#  of the. License, or (at your option) any later version.
+#  modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation; either version 2
+#  of the License, or (at your option) any later version.
 #
-#  This program is distributed in the. hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the. implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the.
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 #
-#  You should have received a copy of the. GNU General Public License
-#  along with this program; if not, write to the. Free Software Foundation,
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software Foundation,
 #  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 #
 # ##### END GPL LICENSE BLOCK #####
@@ -32,13 +32,13 @@ from bpy_extras.io_utils import ImportHelper
 from bpy.props import *
 
 from . import utils, props, target, source, simplify
-from . import globvar as the
+from . import mcp
 from .utils import MocapError
 
 ###################################################################################
 #    BVH importer. 
 #    The importer that comes with Blender had memory leaks which led to instability.
-#    It also creates a weird skeleton from CMU data, with hands the.at start at the. wrist
+#    It also creates a weird skeleton from CMU data, with hands theat start at the wrist
 #    and ends at the elbow.
 #
 
@@ -233,7 +233,7 @@ def readBvhFile(context, filepath, scn, scan):
                 pbones = rig.pose.bones
                 for pb in pbones:
                     #try:
-                    #    trgName = the.srcArmature[pb.name.lower()]
+                    #    trgName = mcp.srcArmature[pb.name.lower()]
                     #    pb.rotation_mode = trgPbones[trgName].rotation_mode
                     #except:
                     pb.rotation_mode = 'QUATERNION'
@@ -409,7 +409,7 @@ def renameBones(srcRig, scn):
 def getTargetFromSource(srcName):    
     lname = source.canonicalSrcName(srcName)
     try:
-        return the.srcArmature[lname]     
+        return mcp.srcArmature[lname]     
     except KeyError:
         pass
     raise MocapError("No target bone corresponding to source bone %s (%s)" % (srcName, lname))

@@ -29,13 +29,14 @@ import mathutils
 import math
 from bpy.props import *
 
-from mh_utils import globvars as the
+from mh_utils import mh
 from mh_utils import utils
 from mh_utils import proxy
 from mh_utils import character
 from mh_utils import warp
 from mh_utils import import_obj
 
+Epsilon = 1e-4
 
 #----------------------------------------------------------
 #   Base character
@@ -187,13 +188,13 @@ class VIEW3D_OT_SaveFaceButton(bpy.types.Operator):
 
     def execute(self, context):
         path = context.object.MhMaskFilePath
-        if the.Confirm:
-            the.Confirm = None
+        if mh.Confirm:
+            mh.Confirm = None
             doSaveTarget(context, path, False)
         else:
-            the.Confirm = "mh.save_face"
-            the.ConfirmString = "Overwrite target file?"
-            the.ConfirmString2 = ' "%s?"' % os.path.basename(path)
+            mh.Confirm = "mh.save_face"
+            mh.ConfirmString = "Overwrite target file?"
+            mh.ConfirmString2 = ' "%s?"' % os.path.basename(path)
         return{'FINISHED'}    
 
 
@@ -223,7 +224,7 @@ def doSaveTarget(context, filepath, saveas):
     base = getBaseChar(context)
     (fname,ext) = os.path.splitext(filepath)
     filepath = fname + ".target"
-    fp = open(filepath, "w")  
+    fp = open(filepath, "w", encoding="utf-8", newline="\n")  
     skey = base.data.shape_keys.key_blocks[-1]
     if skey.name == "Shape":
         skey.name = os.path.basename(fname)
@@ -231,7 +232,7 @@ def doSaveTarget(context, filepath, saveas):
     for v in base.data.vertices:
         vn = v.index
         vec = skey.data[vn].co - v.co
-        if vec.length > the.Epsilon:
+        if vec.length > Epsilon:
             fp.write("%d %.4f %.4f %.4f\n" % (vn, vec[0], vec[2], -vec[1]))
     fp.close()    
     base["MhMaskFilePath"] = filepath

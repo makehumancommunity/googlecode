@@ -85,7 +85,7 @@ class CCharacter:
         scn.MhTone = self.tone
 
 
-    def updateFiles(self, scn, include):
+    def updateFiles(self, scn):
         folder = "macrodetails"
         if self.race == "caucasian":
             race = "neutral"
@@ -174,7 +174,7 @@ class CCharacter:
             print(filepath)
         
         #self.setSceneProps(context)
-        self.updateFiles(context.scene, include)        
+        self.updateFiles(context.scene)        
         (filename, ext) = os.path.splitext(filepath)
         #print("include", include, filepath, filename)
         if include and filename not in self.files:

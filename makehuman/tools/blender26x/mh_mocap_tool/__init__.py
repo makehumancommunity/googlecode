@@ -87,10 +87,9 @@ if "bpy" in locals():
     #imp.reload(source_rigs)
     #imp.reload(target_rigs)
     imp.reload(utils)
-    imp.reload(globvar)
+    imp.reload(mcp)
     imp.reload(props)
     imp.reload(load)
-    #imp.reload(old_retarget)
     imp.reload(new_retarget)
     imp.reload(source)
     imp.reload(target)
@@ -110,7 +109,7 @@ else:
     #from . import source_rigs
     #from . import target_rigs
     from . import utils
-    from . import globvar as the
+    from . import mcp
     from . import props
     from . import load
     from . import new_retarget
@@ -152,7 +151,7 @@ class MhxSourceBonesPanel(bpy.types.Panel):
         layout.prop(scn, "McpSourceRig")
         
         if scn.McpSourceRig:
-            bones = the.sourceArmatures[scn.McpSourceRig]
+            bones = mcp.sourceArmatures[scn.McpSourceRig]
             box = layout.box()
             for boneText in target.TargetBoneNames:
                 if not boneText:
@@ -198,7 +197,7 @@ class MhxTargetBonesPanel(bpy.types.Panel):
         layout.prop(scn, "McpTargetRig")
 
         if scn.McpTargetRig:
-            (bones, renames, ikBones) = the.TargetInfo[scn.McpTargetRig]
+            (bones, renames, ikBones) = mcp.targetInfo[scn.McpTargetRig]
 
             layout.label("FK bones")
             box = layout.box()
@@ -341,8 +340,8 @@ class EditPanel(bpy.types.Panel):
         scn = context.scene
         ob = context.object
 
-        if the.EditConfirm:
-            confirmPanel(layout, the.EditConfirm, the.EditString)
+        if mcp.editConfirm:
+            confirmPanel(layout, mcp.editConfirm, mcp.editString)
             return
             
         layout.label("Plant keys")
@@ -377,7 +376,7 @@ class EditPanel(bpy.types.Panel):
         layout.label("Signal Processing")        
         layout.operator("mcp.calc_filters")
         try:
-            fd = the.filterData[ob.name]
+            fd = mcp.filterData[ob.name]
         except:
             fd = None
         if fd:
@@ -439,8 +438,8 @@ class UtilityPanel(bpy.types.Panel):
         scn = context.scene
         ob = context.object
         
-        if the.UtilityConfirm:
-            confirmPanel(layout, the.UtilityConfirm, the.UtilityString)
+        if mcp.utilityConfirm:
+            confirmPanel(layout, mcp.utilityConfirm, mcp.utilityString)
             return
             
         layout.label("Initialization")
@@ -471,10 +470,10 @@ class UtilityPanel(bpy.types.Panel):
 #    Confirm
 #
 
-the.EditConfirm = None
-the.EditString = "?"
-the.UtilityConfirm = None
-the.UtilityString = "?"
+mcp.editConfirm = None
+mcp.editString = "?"
+mcp.utilityConfirm = None
+mcp.utilityString = "?"
 
 def confirmPanel(layout, confirm, string):            
     layout.label(string)

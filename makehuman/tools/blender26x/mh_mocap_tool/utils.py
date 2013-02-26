@@ -29,7 +29,7 @@ from bpy.props import *
 from math import sin, cos, atan, pi
 from mathutils import *
 
-from . import globvar as the
+from . import mcp
 
 #
 #   printMat3(string, mat)
@@ -279,7 +279,7 @@ class MocapError(Exception):
     def __init__(self, value):
         self.value = value
         print("*** Mocap error ***\n%s" % value)
-        the.errorLines = value.split("\n")
+        mcp.errorLines = value.split("\n")
     def __str__(self):
         return repr(self.value)
   
@@ -295,7 +295,7 @@ class ErrorOperator(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
-        for line in the.errorLines:
+        for line in mcp.errorLines:
             self.layout.label(line)
 #
 #
@@ -308,8 +308,8 @@ import sys
 def initModules():
     basePath = os.path.realpath(".")
     print("Path", basePath) 
-    the.targetRigs = initModulesPath(basePath, "target_rigs")
-    the.sourceRigs = initModulesPath(basePath, "source_rigs")
+    mcp.targetRigs = initModulesPath(basePath, "target_rigs")
+    mcp.sourceRigs = initModulesPath(basePath, "source_rigs")
     return
 
 def initModulesPath(basePath, subPath):

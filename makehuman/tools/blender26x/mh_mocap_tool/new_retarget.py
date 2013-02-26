@@ -33,7 +33,7 @@ from bpy.props import *
 
 from . import utils, props, source, target, toggle, load, simplify
 #from .target_rigs import rig_mhx
-from . import globvar as the
+from . import mcp
 from .utils import MocapError
 
 Deg2Rad = math.pi/180
@@ -447,7 +447,7 @@ def changeTargetData(rig, anim):
         
     norotBones = []    
     """
-    if the.target == 'MHX':
+    if mcp.target == 'MHX':
         for (name, parent) in [("UpLegRot_L", "Hip_L"), ("UpLegRot_R", "Hip_R")]:
             try:
                 anim.boneDatas[parent]
@@ -622,7 +622,7 @@ def ik2fkLeg(rig, ikBones, fkBones, legIkToAnkle, suffix, frame, first):
    
    
 def retargetIkBones(rig, frame, first):
-    if the.target == 'MHX':
+    if mcp.target == 'MHX':
         lArmIkBones = getSnapBones(rig, "ArmIK", "_L")
         lArmFkBones = getSnapBones(rig, "ArmFK", "_L")
         rArmIkBones = getSnapBones(rig, "ArmIK", "_R")
@@ -637,7 +637,7 @@ def retargetIkBones(rig, frame, first):
         ik2fkLeg(rig, lLegIkBones, lLegFkBones, rig["MhaLegIkToAnkle_L"], "_L", frame, first)
         ik2fkLeg(rig, rLegIkBones, rLegFkBones, rig["MhaLegIkToAnkle_R"], "_R", frame, first)
     else:
-        for (ik,fk) in the.IkBones:
+        for (ik,fk) in mcp.ikBones:
             ikPb = rig.pose.bones[ik]
             fkPb = rig.pose.bones[fk]
             matchPoseTranslation(ikPb, fkPb, frame)  

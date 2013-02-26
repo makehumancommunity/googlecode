@@ -2,12 +2,12 @@
 #
 #  This program is free software; you can redistribute it and/or
 #  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; eithe.r version 2
+#  as published by the Free Software Foundation; eimcp.r version 2
 #  of the License, or (at your option) any later version.
 #
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the.
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See mcp.
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
@@ -32,7 +32,7 @@ from bpy.props import *
 from bpy_extras.io_utils import ImportHelper
 
 from . import target
-from . import globvar as the
+from . import mcp
 from . import utils
 from .utils import MocapError
               
@@ -45,8 +45,8 @@ def guessSrcArmature(rig, scn):
     bestMisses = 1000
     misses = {}
     bones = rig.data.bones
-    for name in the.sourceArmatures.keys():
-        amt = the.sourceArmatures[name]
+    for name in mcp.sourceArmatures.keys():
+        amt = mcp.sourceArmatures[name]
         nMisses = 0
         for bone in bones:
             try:
@@ -75,10 +75,10 @@ def guessSrcArmature(rig, scn):
 def findSrcArmature(context, rig):
     scn = context.scene
     if scn.McpGuessSourceRig:
-        (the.srcArmature, name) = guessSrcArmature(rig, scn)
+        (mcp.srcArmature, name) = guessSrcArmature(rig, scn)
     else:
         name = scn.McpSourceRig
-        the.srcArmature = the.sourceArmatures[name]
+        mcp.srcArmature = mcp.sourceArmatures[name]
     rig.McpArmature = name
     print("Using matching armature %s." % name)
     return
@@ -98,7 +98,7 @@ def setArmature(rig, scn):
         scn.McpSourceRig = name
     else:
         raise MocapError("No armature set")
-    the.srcArmature = the.sourceArmatures[name]
+    mcp.srcArmature = mcp.sourceArmatures[name]
     print("Set armature %s" % name)
     return
     
@@ -115,7 +115,7 @@ def findSourceKey(mhx, struct):
     
     
 def getSourceRoll(mhx):
-    (bone, roll) = findSourceKey(mhx, the.srcArmature)
+    (bone, roll) = findSourceKey(mhx, mcp.srcArmature)
     return roll
             
     
@@ -139,22 +139,22 @@ def isSourceInited(scn):
 
 
 def initSources(scn):       
-    the.sourceArmatures = {}
+    mcp.sourceArmatures = {}
     path = os.path.join(os.path.dirname(__file__), "source_rigs")
     for fname in os.listdir(path):
         file = os.path.join(path, fname)
         (name, ext) = os.path.splitext(fname)
         if ext == ".src" and os.path.isfile(file):
             (name, armature) = readSrcArmature(file, name)
-            the.sourceArmatures[name] = armature
-    the.srcArmatureEnums = []
-    keys = list(the.sourceArmatures.keys())
+            mcp.sourceArmatures[name] = armature
+    mcp.srcArmatureEnums = []
+    keys = list(mcp.sourceArmatures.keys())
     keys.sort()
     for key in keys:
-        the.srcArmatureEnums.append((key,key,key))
+        mcp.srcArmatureEnums.append((key,key,key))
         
     bpy.types.Scene.McpSourceRig = EnumProperty(
-        items = the.srcArmatureEnums,
+        items = mcp.srcArmatureEnums,
         name = "Source rig",
         default = 'MB')
     scn.McpSourceRig = 'MB'
