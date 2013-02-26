@@ -126,7 +126,7 @@ class PovrayTaskView(gui3d.TaskView):
                                     'AA': 0.5-0.49*self.AA.getValue(),
                                     'bintype': binary,
                                     'SSS': True if self.useSSS.selected else False,
-                                    'SSSA': 6*self.SSSA.getValue(), # power of 2
+                                    'SSSA': 5*self.SSSA.getValue(), # power of 2
                                     'skinoil': 0.001 *(10**(4*self.skinoil.getValue())), # exponential slider
                                     'rough':0.001 *(10**(2*self.rough.getValue())), # exponential slider
                                     'wrinkles': 0.5*self.wrinkles.getValue(),
