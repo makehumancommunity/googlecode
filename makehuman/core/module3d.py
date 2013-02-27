@@ -348,7 +348,6 @@ class Object3D(object):
 
         if indices is None:
             indices = np.s_[...]
-        nverts = len(coords)
         self.coord[indices] = coords
 
     def setUVs(self, uvs):
