@@ -124,8 +124,7 @@ class EditingTaskView(gui3d.TaskView):
         delta = pos - self.center
 
         coord = self.original + delta[None,:] * self.weights[:,None]
-        human.meshData.coord[self.verts] = coord
-        human.meshData.markCoords(self.verts, coor=True)
+        human.meshData.changeCoords(coord, self.verts)
         human.meshData.calcNormals(True, True, self.verts, self.faces)
         human.meshData.update()
         mh.redraw()
