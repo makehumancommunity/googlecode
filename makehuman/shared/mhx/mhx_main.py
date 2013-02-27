@@ -54,9 +54,9 @@ from . import mhx_proxy
 from . import mhx_armature
 from . import mhx_pose
 
-#
-#    exportMhx(human, filepath, config):
-#
+#-------------------------------------------------------------------------------        
+#   Export MHX file
+#-------------------------------------------------------------------------------        
 
 def exportMhx(human, filepath, config):  
     gui3d.app.progress(0, text="Exporting MHX")
@@ -94,7 +94,7 @@ def exportMhx(human, filepath, config):
         "  error 'This file can only be read with Blender 2.5' ;\n" +
         "#endif\n")
 
-    amt.scanProxies()
+    scanProxies(config, amt)
     amt.setup()
     
     if not config.cage:
@@ -142,8 +142,23 @@ def exportMhx(human, filepath, config):
     gui3d.app.progress(1.0)
     return
     
+#-------------------------------------------------------------------------------        
+#   Scan proxies
+#-------------------------------------------------------------------------------        
+    
+def scanProxies(config, amt):
+    amt.proxies = {}
+    for pfile in config.getProxyList():
+        if pfile.file:
+            proxy = mh2proxy.readProxyFile(amt.mesh, pfile, True)
+            if proxy:
+                amt.proxies[proxy.name] = proxy        
 
-def writeGroups(fp, amt):                
+#-------------------------------------------------------------------------------        
+#   Groups   
+#-------------------------------------------------------------------------------        
+    
+def writeGroups(fp, amt):    
     fp.write("""
 # ---------------- Groups -------------------------------- # 
 

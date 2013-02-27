@@ -29,6 +29,9 @@ import gui3d
 from . import mhx_mesh
 from . import mhx_materials
 
+#-------------------------------------------------------------------------------        
+#   
+#-------------------------------------------------------------------------------        
 
 def writeProxyType(type, test, amt, fp, t0, t1):
     n = 0
@@ -49,6 +52,9 @@ def writeProxyType(type, test, amt, fp, t0, t1):
             t += dt
         
 
+#-------------------------------------------------------------------------------        
+#   
+#-------------------------------------------------------------------------------        
 
 def writeProxy(fp, amt, proxy):
     fp.write("""
@@ -160,52 +166,7 @@ end Mesh
 #if toggle&T_Armature
 """)
 
-    if proxy.cage:
-        fp.write(
-        "  draw_type 'WIRE' ;\n" +
-        "  #if False")
-    elif amt.config.cage:            
-        fp.write("  #if toggle&T_Cage")
-    else:
-        fp.write("  #if False")
-   
-    fp.write("""
-    Modifier MeshDeform MESH_DEFORM
-      invert_vertex_group False ;
-""")
-
-    fp.write("    object Refer Object %sCageMesh ;" % amt.name)
-      
-    fp.write("""
-      precision 6 ;
-      use_dynamic_bind True ;
-    end Modifier
-    Modifier Armature ARMATURE
-      invert_vertex_group False ;
-""")
-
-    fp.write("    object Refer Object %s ;" % amt.name)
-      
-    fp.write("""      
-      use_bone_envelopes False ;
-      use_deform_preserve_volume False ;
-      use_multi_modifier True ;
-      use_vertex_groups True ;
-      vertex_group 'Cage' ;
-    end Modifier
-  #else
-    Modifier Armature ARMATURE
-""")    
-      
-    fp.write("    object Refer Object %s ;" % amt.name)
-
-    fp.write("""
-      use_bone_envelopes False ;
-      use_vertex_groups True ;
-    end Modifier
-  #endif
-""")
-
+    mhx_mesh.writeArmatureModifier(fp, amt, proxy) 
     writeProxyModifiers(fp, amt, proxy)
 
     fp.write("""
@@ -224,8 +185,9 @@ end Object
 
     mhx_mesh.writeHideAnimationData(fp, amt, amt.name, proxy.name)
 
-
-
+#-------------------------------------------------------------------------------        
+#   
+#-------------------------------------------------------------------------------        
 
 def writeProxyModifiers(fp, amt, proxy):
     for mod in proxy.modifiers:

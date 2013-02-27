@@ -27,6 +27,9 @@ import os
 import mh2proxy
 import armature as amtpkg
 
+#-------------------------------------------------------------------------------        
+#   
+#-------------------------------------------------------------------------------        
 
 def writeMesh(fp, amt):
 
@@ -53,39 +56,6 @@ def writeMesh(fp, amt):
             fp.write("    f %d %d %d ;\n" % tuple(fverts[0:3]))
         else:
             fp.write("    f %d %d %d %d ;\n" % tuple(fverts))
-    fp.write("#if False\n")
-
-    fp.write("""
-    ftn 227 0 1 ;
-    ftn 166 1 1 ;
-    ftn 150 0 1 ;
-    ftn 383 1 1 ;
-    ftn 71 0 1 ;
-    ftn 394 1 1 ;
-    ftn 55 0 1 ;
-    ftn 20 1 1 ;
-    ftn 4 0 1 ;
-    ftn 164 1 1 ;
-    ftn 11 0 1 ;
-    ftn 135 1 1 ;
-    ftn 34 0 1 ;
-    ftn 992 4 1 ;
-    ftn 278 0 1 ;
-    ftn 177 2 1 ;
-    ftn 3013 0 1 ;
-    ftn 1019 1 1 ;
-    ftn 1740 0 1 ;
-    ftn 177 2 1 ;
-    ftn 3009 0 1 ;
-    ftn 1019 1 1 ;
-    ftn 900 0 1 ;
-    ftn 176 2 1 ;
-    ftn 161 3 1 ;
-    ftn 176 2 1 ;
-    ftn 161 3 1 ;
-    ftn 714 7 1 ;
-    ftn 2390 5 1 ;
-""")
 
     writeFaceNumbers(fp, amt)
 
@@ -134,55 +104,14 @@ end Mesh
         "  Property MhxOffsetX %.4f ;\n" % amt.origin[0] +
         "  Property MhxOffsetY %.4f ;\n" % amt.origin[1] +
         "  Property MhxOffsetZ %.4f ;\n" % amt.origin[2])
-
     fp.write("""
   layers Array 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  ;
 #if toggle&T_Armature
 """)
 
-    if amt.config.cage:            
-        fp.write("  #if toggle&T_Cage")
-    else:
-        fp.write("  #if False")
-
-    fp.write("""
-    Modifier MeshDeform MESH_DEFORM
-      invert_vertex_group False ;
-""")
-
-    fp.write("  object Refer Object %sCageMesh ;" % amt.name)
-
-    fp.write("""
-      precision 6 ;
-      use_dynamic_bind True ;
-    end Modifier
-    Modifier Armature ARMATURE
-      invert_vertex_group False ;
-""")
-
-    fp.write("  object Refer Object %s ;" % amt.name)
-
-    fp.write("""
-      use_bone_envelopes False ;
-      use_multi_modifier True ;
-      use_vertex_groups True ;
-      vertex_group 'Cage' ;
-    end Modifier
-  #else
-    Modifier Armature ARMATURE
-""")
-
-    fp.write("  object Refer Object %s ;" % amt.name)
-
-    fp.write("""
-      use_bone_envelopes False ;
-      use_vertex_groups True ;
-    end Modifier
-  #endif
-""")
+    writeArmatureModifier(fp, amt, None)
 
     fp.write("  parent Refer Object %s ;\n" % amt.name)
-
     fp.write("""
   parent_type 'OBJECT' ;
 #endif
@@ -201,13 +130,63 @@ end Object
 """)
 
     writeHideAnimationData(fp, amt, "", amt.name)
+    return
 
 
+#-------------------------------------------------------------------------------        
+#   Armature modifier. 
+#-------------------------------------------------------------------------------        
 
+def writeArmatureModifier(fp, amt, proxy):
+    if (amt.config.cage and
+        not (proxy and proxy.cage)):
+    
+        fp.write("""
+  #if toggle&T_Cage
+    Modifier MeshDeform MESH_DEFORM
+      invert_vertex_group False ;
+""")
+        fp.write("  object Refer Object %sCageMesh ;" % amt.name)
+        fp.write("""
+      precision 6 ;
+      use_dynamic_bind True ;
+    end Modifier
+    Modifier Armature ARMATURE
+      invert_vertex_group False ;
+""")
+        fp.write("  object Refer Object %s ;" % amt.name)
+        fp.write("""
+      use_bone_envelopes False ;
+      use_multi_modifier True ;
+      use_vertex_groups True ;
+      vertex_group 'Cage' ;
+    end Modifier
+  #else
+    Modifier Armature ARMATURE
+""")
+        fp.write("  object Refer Object %s ;" % amt.name)
+        fp.write("""
+      use_bone_envelopes False ;
+      use_vertex_groups True ;
+    end Modifier
+  #endif
+""")
 
-#
-#   writeFaceNumbers(fp, amt):
-#
+    else:
+    
+        fp.write("""
+    Modifier Armature ARMATURE
+""")
+        fp.write("  object Refer Object %s ;" % amt.name)
+        fp.write("""
+      use_bone_envelopes False ;
+      use_vertex_groups True ;
+    end Modifier
+""")
+    
+#-------------------------------------------------------------------------------        
+#   Face numbers
+#-------------------------------------------------------------------------------        
 
 MaterialNumbers = {
     ""       : 0,     # skin
@@ -224,7 +203,6 @@ MaterialNumbers = {
 }
     
 def writeFaceNumbers(fp, amt):
-    fp.write("#else\n")
     if amt.human.uvset:
         for ftn in amt.human.uvset.faceNumbers:
             fp.write(ftn)
@@ -276,8 +254,10 @@ def writeFaceNumbers(fp, amt):
             fn += 1
         if fn != f0:
             fp.write("  ftn %d %d 1 ;\n" % (fn-f0, mn))
-    fp.write("#endif\n")
 
+#-------------------------------------------------------------------------------        
+#   Material access
+#-------------------------------------------------------------------------------        
 
 def writeBaseMaterials(fp, amt):      
     if amt.human.uvset:
@@ -303,6 +283,9 @@ def writeHideAnimationData(fp, amt, prefix, name):
     fp.write("end AnimationData\n")
     return    
        
+#-------------------------------------------------------------------------------        
+#   Vertex groups   
+#-------------------------------------------------------------------------------        
 
 def writeVertexGroups(fp, amt, proxy):                
     if proxy and proxy.weights:

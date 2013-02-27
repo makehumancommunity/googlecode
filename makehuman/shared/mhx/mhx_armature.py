@@ -169,16 +169,6 @@ class ExportArmature(CArmature):
         self.gizmos = None
 
 
-    def scanProxies(self):
-        self.proxies = {}
-        for pfile in self.config.getProxyList():
-            if pfile.file:
-                print("Scan", pfile, pfile.type)
-                proxy = mh2proxy.readProxyFile(self.mesh, pfile, True)
-                if proxy:
-                    self.proxies[proxy.name] = proxy        
-
-
     def setup(self):
         if self.config.facepanel:            
             self.joints += rig_panel_25.PanelJoints
@@ -670,9 +660,7 @@ class MhxArmature(ExportArmature):
   
   Property &SpineStretch 0.2 Spine_stretch_amount ;
   PropKeys &SpineStretch "min":0.0,"max":1.0, ;    
-""")
-
-        
+""")        
 
 #-------------------------------------------------------------------------------        
 #   Rigify armature

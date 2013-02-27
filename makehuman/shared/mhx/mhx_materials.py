@@ -24,6 +24,9 @@ MHX materials
 
 import armature as amtpkg
 
+#-------------------------------------------------------------------------------        
+#   
+#-------------------------------------------------------------------------------        
 
 def writeMaterials(fp, amt):
     
@@ -569,7 +572,11 @@ end Material
     writeSimpleMaterial(fp, "Red", amt, (1,0,0))
     writeSimpleMaterial(fp, "Green", amt, (0,1,0))
     writeSimpleMaterial(fp, "Blue", amt, (0,0,1))
+    return
     
+#-------------------------------------------------------------------------------        
+#   Simple materials: red, green, blue   
+#-------------------------------------------------------------------------------           
 
 def writeSimpleMaterial(fp, name, amt, color):
     fp.write(
@@ -588,6 +595,9 @@ def writeSimpleMaterial(fp, name, amt, color):
 end Material
 """)
 
+#-------------------------------------------------------------------------------        
+#   
+#-------------------------------------------------------------------------------        
 
 def writeSkinStart(fp, proxy, amt):
     if not amt.config.useMasks:
@@ -631,10 +641,9 @@ def writeMaskDrivers(fp, amt):
     fp.write("#endif\n")
     return
 
-
-#
-#   writeMultiMaterials(fp, amt):
-#
+#-------------------------------------------------------------------------------        
+#   Multi materials   
+#-------------------------------------------------------------------------------        
       
 TX_SCALE = 1
 TX_BW = 2
@@ -715,6 +724,9 @@ def writeMultiMaterials(fp, amt):
             n += 1
         fp.write("end Material\n\n")
   
+#-------------------------------------------------------------------------------        
+#   Masking   
+#-------------------------------------------------------------------------------        
   
 def addMaskImage(fp, amt, mask):            
     (folder, file) = mask
