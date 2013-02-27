@@ -106,19 +106,11 @@ class SubdivisionObject(Object3D):
 
         progress(4)
 
-        vedgelist = []
-        vedgemap = {}
         fvert = vtx_rmap[parent.fvert[self.face_map]]
         vedges = np.dstack((fvert,np.roll(fvert,-1,axis=1)))
-        fverts = []
 
-        tedgelist = []
-        tedgemap = {}
         fuv = uv_rmap[parent.fuvs[self.face_map]]
         tedges = np.dstack((fuv,np.roll(fuv,-1,axis=1)))
-        fuvs = []
-
-        groups = []
 
         self.cbase = nverts
         self.ebase = nverts + nfaces
@@ -128,46 +120,35 @@ class SubdivisionObject(Object3D):
 
         progress(5)
 
-        fvedges2 = []
-        ftedges2 = []
+        vedges = vedges.astype(np.uint64)
+        va = np.min(vedges, axis=-1)
+        vb = np.max(vedges, axis=-1)
+        p = (va << 32) | vb
+        p = p.reshape(-1)
+        del va, vb
+        vedgelist, fvedges2 = np.unique(p, return_inverse=True)
+        del p
+        vedgelist = vedgelist[:,None] >> np.array([[32,0]], dtype=np.uint64)
+        vedgelist = vedgelist.astype(np.uint32)
+        fvedges2 = fvedges2.reshape(vedges[...,0].shape)
 
-        for i, fi in enumerate(self.face_map):
-            group = parent.group[fi]
+        _, x0 = np.unique(fvedges2, return_index=True)
+        _, x1 = np.unique(fvedges2[::-1], return_index=True)
+        xmap = np.hstack((x0[:,None]/4, len(fvedges2) - 1 - x1[:,None]/4))
+        vedgelist = np.hstack((vedgelist, xmap)).reshape((-1,2,2))
+        del xmap
 
-            fvedges = []
-            ftedges = []
-
-            for (va,vb) in vedges[i]:
-                if va > vb:
-                    va,vb = vb,va
-                p = va,vb
-
-                vi = vedgemap.get(p)
-                if vi is None:
-                    vi = len(vedgelist)
-                    vedgelist.append((p,(i,i)))
-                    vedgemap[p] = vi
-                else:
-                    p,(j,_) = vedgelist[vi]
-                    vedgelist[vi] = (p,(j,i))
-
-                fvedges.append(vi)
-
-            for j, (ta,tb) in enumerate(tedges[i]):
-                if ta > tb:
-                    ta,tb = tb,ta
-                q = ta,tb
-
-                ti = tedgemap.get(q)
-                if ti is None:
-                    ti = len(tedgelist)
-                    tedgelist.append(q)
-                    tedgemap[q] = ti
-
-                ftedges.append(ti)
-
-            fvedges2.append(fvedges)
-            ftedges2.append(ftedges)
+        tedges = tedges.astype(np.uint64)
+        ta = np.min(tedges, axis=-1)
+        tb = np.max(tedges, axis=-1)
+        q = (ta << 32) | tb
+        q = q.reshape(-1)
+        del ta, tb
+        tedgelist, ftedges2 = np.unique(q, return_inverse=True)
+        del q
+        tedgelist = tedgelist[:,None] >> np.array([[32,0]], dtype=np.uint64)
+        tedgelist = tedgelist.astype(np.uint32)
+        ftedges2 = ftedges2.reshape(tedges[...,0].shape)
 
         progress(6)
 
@@ -218,10 +199,17 @@ class SubdivisionObject(Object3D):
 
         progress(9)
 
-        for i, (vab,_) in enumerate(self.evert):
-            for v in vab:
-                self.vedge[v, self.nedges[v]] = i
-                self.nedges[v] += 1
+        map = np.argsort(self.evert[:,0,:].flat)
+        vi = self.evert[:,0,:].flat[map]
+        ei = np.mgrid[:len(self.evert),:2][0].flat[map].astype(np.uint32)
+        del map
+        ix, first = np.unique(vi, return_index=True)
+        n = first[1:] - first[:-1]
+        n = np.hstack((n, np.array([len(vi) - first[-1]])))
+        self.nedges[ix] = n.astype(np.uint8)
+        for i in xrange(len(ix)):
+            self.vedge[ix[i],:n[i]] = ei[first[i]:][:n[i]]
+        del vi, ei, ix, n, first
 
         progress(10)
 
@@ -255,13 +243,6 @@ class SubdivisionObject(Object3D):
         self.fmtls = self.fmtls.reshape(nfaces)
         self.face_mask = self.face_mask.reshape(nfaces)
         self.fnorm = np.zeros((nfaces,3))
-
-        # nfaces = len(fverts)
-        # 
-        # self.fvert = np.asarray(fverts, dtype=np.uint32)
-        # self.fnorm = np.zeros((nfaces, 3), dtype=np.float32)
-        # self.fuvs  = np.asarray(fuvs, dtype=np.uint32)
-        # self.group = np.asarray(groups, dtype=np.uint16)
 
         progress(13)
 

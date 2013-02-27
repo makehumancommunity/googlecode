@@ -428,12 +428,16 @@ class Object3D(object):
         return self.fuvs[indices]
 
     def _update_faces(self):
-        for i, f in enumerate(self.fvert):
-            for v in f:
-                if i in self.vface[v,:self.nfaces[v]]:
-                    continue
-                self.vface[v, self.nfaces[v]] = i
-                self.nfaces[v] += 1
+        map = np.argsort(self.fvert.flat)
+        vi = self.fvert.flat[map]
+        fi = np.mgrid[:self.fvert.shape[0],:self.fvert.shape[1]][0].flat[map].astype(np.uint32)
+        del map
+        ix, first = np.unique(vi, return_index=True)
+        n = first[1:] - first[:-1]
+        n = np.hstack((n, np.array([len(vi) - first[-1]])))
+        self.nfaces[ix] = n.astype(np.uint8)
+        for i in xrange(len(ix)):
+            self.vface[ix[i],:n[i]] = fi[first[i]:][:n[i]]
 
     def updateIndexBuffer(self):
         self.updateIndexBufferVerts()
