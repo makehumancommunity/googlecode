@@ -48,7 +48,7 @@ class ExporterOBJ(Exporter):
         import mh2obj
         import mh2bvh
 
-        mh2obj.exportProxyObj(human, filename("obj"), ObjConfig(self))
+        mh2obj.exportObj(human, filename("obj"), ObjConfig(self))
 
         if self.skeleton.selected:
             mh2bvh.exportSkeleton(human.meshData, filename("bvh", True))

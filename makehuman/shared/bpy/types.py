@@ -301,7 +301,11 @@ class MeshGroup:
 class MeshPolygon:
     def __init__(self, idx, obj):
         self.index = idx
-        self.vertices = obj.fvert[idx]
+        fv = obj.fvert[idx]
+        if fv[0] == fv[3]:
+            self.vertices = fv[:3]
+        else:
+            self.vertices = fv
         self.material_index = 0
         self.normal = obj.fnorm[idx]
         return
@@ -312,7 +316,11 @@ class UvLayer:
         self.uvloop = UvLoop("UVset0", obj.texco)
         uvlist = []
         for fuv in obj.fuvs:
-            uvlist.extend(list(fuv))
+            if fuv[0] == fuv[3]:
+                vts = list(fuv[:3])
+            else:
+                vts = list(fuv)
+            uvlist.extend(vts)
         self.uvfaces = uvlist
 
         

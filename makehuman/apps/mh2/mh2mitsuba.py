@@ -527,11 +527,15 @@ def exportObj_TL(obj, filename):
     nTexCo = 1
     for stuff in stuffs:
         obj = stuff.meshInfo.object
-        for fn,fverts in enumerate(obj.fvert):
+        for fn,fv in enumerate(obj.fvert):
             fuv = obj.fuvs[fn]
+            if fv[0] == fv[3]:
+                nv = 3
+            else:
+                nv = 4
             f.write('f ')
-            for n in range(4):
-                f.write("%d/%d " % (fverts[n]+nVerts, fuv[n]+nTexCo))
+            for n in range(nv):
+                f.write("%d/%d " % (fv[n]+nVerts, fuv[n]+nTexCo))
             f.write('\n')
         nVerts += len(obj.coord)
         nTexCo += len(obj.texco)

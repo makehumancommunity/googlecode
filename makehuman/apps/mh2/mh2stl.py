@@ -74,22 +74,23 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
     for stuff in stuffs:
         obj = stuff.meshInfo.object
         
-        for fn,fverts in enumerate(obj.fvert):
+        for fn,fv in enumerate(obj.fvert):
             f.write('facet normal %f %f %f\n' % tuple(obj.fnorm[fn]))
             f.write('\touter loop\n')
-            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fverts[0]]))
-            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fverts[1]]))
-            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fverts[2]]))
+            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[0]]))
+            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[1]]))
+            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[2]]))
             f.write('\tendloop\n')
             f.write('\tendfacet\n')
             
-            f.write('facet normal %f %f %f\n' % tuple(obj.fnorm[fn]))
-            f.write('\touter loop\n')
-            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fverts[2]]))
-            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fverts[3]]))
-            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fverts[0]]))
-            f.write('\tendloop\n')
-            f.write('\tendfacet\n')
+            if fv[0] != fv[3]:
+                f.write('facet normal %f %f %f\n' % tuple(obj.fnorm[fn]))
+                f.write('\touter loop\n')
+                f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[2]]))
+                f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[3]]))
+                f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[0]]))
+                f.write('\tendloop\n')
+                f.write('\tendfacet\n')
         
     f.write('endsolid %s\n' % solid)
     f.close()

@@ -669,16 +669,21 @@ def writeShapeKey(fp, name, shape, stuff, config):
 #'          <input semantic="NORMAL" source="#%sMeshMorph_%s-normals" offset="1"/>\n' % (stuff.name, name) +
 '          <vcount>')
 
-    for fverts in obj.fvert:
-        fp.write('%d ' % len(fverts))
-
+    for fv in obj.fvert:
+        if fv[0] == fv[3]:
+            fp.write("3 ")
+        else:
+            fp.write("4 ")
+        
     fp.write('\n' +
 '          </vcount>\n' +
 '          <p>')
 
-    for fverts in obj.fvert:
-        for vn in fverts:
-            fp.write("%d " % (vn))
+    for fv in obj.fvert:
+        if fv[0] == fv[3]:
+            fp.write("%d %d %d " % (fv[0], fv[1], fv[2]))
+        else:
+            fp.write("%d %d %d %s " % (fv[0], fv[1], fv[2], fv[3]))
 
     fp.write('\n' +
 '          </p>\n' +
@@ -720,17 +725,24 @@ def writePolylist(fp, stuff):
 '          <input offset="2" semantic="TEXCOORD" source="#%s-UV"/>\n' % stuff.name +
 '          <vcount>')
 
-    for fverts in obj.fvert:
-        fp.write('%d ' % len(fverts))
+    for fv in obj.fvert:
+        if fv[0] == fv[3]:
+            fp.write('3 ')
+        else:
+            fp.write('4 ')
 
     fp.write('\n' +
 '          </vcount>\n'
 '          <p>')
 
-    for fn,fverts in enumerate(obj.fvert):
+    for fn,fv in enumerate(obj.fvert):
         fuv = obj.fuvs[fn]
-        for n,vn in enumerate(fverts):
-            fp.write("%d %d %d " % (vn, vn, fuv[n]))
+        if fv[0] == fv[3]:
+            nverts = 3
+        else:
+            nverts = 4
+        for n in range(nverts):
+            fp.write("%d %d %d " % (fv[n], fv[n], fuv[n]))
 
     fp.write(
 '          </p>\n' +

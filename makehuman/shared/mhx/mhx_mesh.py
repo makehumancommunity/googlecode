@@ -37,7 +37,6 @@ def writeMesh(fp, amt, config):
 # ----------------------------- MESH --------------------- # 
 """)    
 
-    proxy = None
     fp.write("Mesh %sMesh %sMesh\n  Verts\n" % (amt.name, amt.name))
     ox = amt.origin[0]
     oy = amt.origin[1]

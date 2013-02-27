@@ -105,10 +105,14 @@ def exportMd5(human, filepath, config):
         del uvs
 
         f.write('\n\tnumtris %d\n' % (len(obj.fvert) * 2))
-        for fn,fverts in enumerate(obj.fvert):
+        fn = 0
+        for fv in obj.fvert:
             # tri [triIndex] [vertIndex1] [vertIndex2] [vertIndex3]
-            f.write('\ttri %d %d %d %d\n' % (2*fn, fverts[2], fverts[1], fverts[0]))
-            f.write('\ttri %d %d %d %d\n' % (2*fn+1, fverts[0], fverts[3], fverts[2]))
+            f.write('\ttri %d %d %d %d\n' % (fn, fv[2], fv[1], fv[0]))
+            fn += 1
+            if fv[0] != fv[3]:
+                f.write('\ttri %d %d %d %d\n' % (fn, fv[0], fv[3], fv[2]))
+                fn += 1
 
         f.write('\n\tnumweights %d\n' % (len(obj.coord)))
         for idx,co in enumerate(obj.coord):

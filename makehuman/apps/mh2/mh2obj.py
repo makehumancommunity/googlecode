@@ -27,10 +27,10 @@ import exportutils
 import mh2proxy
 
 #
-#    exportProxyObj(human, filepath, config):    
+#    exportObj(human, filepath, config):    
 #
 
-def exportProxyObj(human, filepath, config):
+def exportObj(human, filepath, config):
     obj = human.meshData
     config.setHuman(human)
     config.setupTexFolder(filepath)
@@ -85,18 +85,22 @@ def exportProxyObj(human, filepath, config):
         fp.write("g %s\n" % stuff.name)    
         obj = stuff.meshInfo.object
         if obj.has_uv:
-            for fn,fverts in enumerate(obj.fvert):
+            for fn,fv in enumerate(obj.fvert):
                 fp.write('f ')
                 fuv = obj.fuvs[fn]                
-                for n,vn in enumerate(fverts):
-                    fp.write("%d/%d " % (vn+nVerts, fuv[n]+nTexVerts))
+                if fv[0] == fv[3]:
+                    nv = 3
+                else:
+                    nv = 4
+                for n in range(nv):
+                    fp.write("%d/%d " % (fv[n]+nVerts, fuv[n]+nTexVerts))
                 fp.write('\n')
         else:            
-            for fverts in obj.fvert:
-                fp.write('f ')
-                for vn in fverts:
-                    fp.write("%d " % (vn+nVerts))
-                fp.write('\n')
+            for fv in obj.fvert:
+                if fv[0] == fv[3]:
+                    fp.write("f %d %d %d\n" % (fv[0]+nVerts, fv[1]+nVerts, fv[2]+nVerts))
+                else:
+                    fp.write("f %d %d %d %d\n" % (fv[0]+nVerts, fv[1]+nVerts, fv[2]+nVerts, fv[3]+nVerts))
         
         nVerts += len(obj.coord)
         nTexVerts += len(obj.texco)
