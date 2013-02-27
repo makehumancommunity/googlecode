@@ -216,7 +216,6 @@ class Object3D(object):
         self.fnorm[ix] = np.cross(va, vb)
 
     def calcVertexNormals(self, ix = None):
-        sync_all = ix is None
         self.markCoords(ix, norm=True)
         if ix is None:
             ix = np.s_[:]
@@ -345,8 +344,6 @@ class Object3D(object):
                     self.ucolr[indices] = True
 
     def changeCoords(self, coords, indices = None):
-        sync_all = indices is None
-
         self.markCoords(indices, coor=True)
 
         if indices is None:
