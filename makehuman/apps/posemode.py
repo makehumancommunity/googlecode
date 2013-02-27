@@ -63,7 +63,7 @@ def enterPoseMode():
     warpmodifier.clearRefObject()
     human.warpsNeedReset = False
     if False and theShadowBones:
-        amt = amtpkg.rigdefs.createRig(human, "Soft1", False)
+        amt = amtpkg.rigdefs.createPoseRig(human, "Soft1", False)
         human.amtpkg = amt
         amt.restore(theShadowBones)
         amt.update()

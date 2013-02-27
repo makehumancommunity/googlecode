@@ -241,7 +241,7 @@ MaleArmature = [
 ]
 
 #
-#    BodyControlPoses(fp, amt):
+#    BodyControlPoses(fp, amt, config):
 #
 
 limHips = (-50*D,40*D, -45*D,45*D, -16*D,16*D)
@@ -250,13 +250,13 @@ limSpine2 = (-90*D,70*D, -20*D,20*D, -50*D,50*D)
 limSpine3 = (-20*D,20*D, 0,0, -20*D,20*D)
 limNeck = (-60*D,40*D, -45*D,45*D, -60*D,60*D)
 
-def BodyControlPoses(fp, amt):
+def BodyControlPoses(fp, amt, config):
     addPoseBone(fp, amt,  'MasterFloor', 'GZM_Root', 'Master', (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0, [])
 
     addPoseBone(fp, amt,  'Root', 'MHCrown', 'Master', (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0, 
         [('LimitRot', C_OW_LOCAL, 0, ['LimitRot', (0,0, -45*D,45*D, 0,0), (1,1,1)]) ])
 
-    if amt.config.exporting:
+    if amt.exporting:
         addPoseBone(fp, amt,  'Shoulders', 'MHCrown', 'Master', (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0,
             [('LimitRot', C_OW_LOCAL, 1, ['LimitRot', (0,0, -45*D,45*D, 0,0), (1,1,1)]),
              #('LimitDist', 0, 1, ['LimitDist', 'Root', 'LIMITDIST_INSIDE'])
@@ -287,7 +287,7 @@ def BodyControlPoses(fp, amt):
          [('LimitRot', C_OW_LOCAL, 1, ['LimitRot', limNeck, (1,1,1)])])
          
 
-    if amt.config.exporting and amt.config.advancedSpine:
+    if amt.exporting and config.advancedSpine:
         # Spine IK
         addPoseBone(fp, amt, 'SpinePT', 'MHCube025', 'Spine', (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, [])
 

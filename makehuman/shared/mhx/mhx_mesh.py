@@ -31,7 +31,7 @@ import armature as amtpkg
 #   
 #-------------------------------------------------------------------------------        
 
-def writeMesh(fp, amt):
+def writeMesh(fp, amt, config):
 
     fp.write("""
 # ----------------------------- MESH --------------------- # 
@@ -42,7 +42,7 @@ def writeMesh(fp, amt):
     ox = amt.origin[0]
     oy = amt.origin[1]
     oz = amt.origin[2]
-    scale = amt.config.scale
+    scale = config.scale
     for co in amt.mesh.coord:
         fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(co[0]-ox), scale*(-co[2]+oz), scale*(co[1]-oy)))
   
@@ -57,7 +57,7 @@ def writeMesh(fp, amt):
         else:
             fp.write("    f %d %d %d %d ;\n" % tuple(fverts))
 
-    writeFaceNumbers(fp, amt)
+    writeFaceNumbers(fp, amt, config)
 
     fp.write("""
   end Faces
@@ -93,7 +93,7 @@ def writeMesh(fp, amt):
 """)
 
     writeBaseMaterials(fp, amt)
-    writeVertexGroups(fp, amt, None)
+    writeVertexGroups(fp, amt, config, None)
 
     fp.write("""
 end Mesh
@@ -109,7 +109,7 @@ end Mesh
 #if toggle&T_Armature
 """)
 
-    writeArmatureModifier(fp, amt, None)
+    writeArmatureModifier(fp, amt, config, None)
 
     fp.write("  parent Refer Object %s ;\n" % amt.name)
     fp.write("""
@@ -137,8 +137,8 @@ end Object
 #   Armature modifier. 
 #-------------------------------------------------------------------------------        
 
-def writeArmatureModifier(fp, amt, proxy):
-    if (amt.config.cage and
+def writeArmatureModifier(fp, amt, config, proxy):
+    if (config.cage and
         not (proxy and proxy.cage)):
     
         fp.write("""
@@ -202,7 +202,7 @@ MaterialNumbers = {
     "blue"   : 7      # blue
 }
     
-def writeFaceNumbers(fp, amt):
+def writeFaceNumbers(fp, amt, config):
     if amt.human.uvset:
         for ftn in amt.human.uvset.faceNumbers:
             fp.write(ftn)
@@ -212,7 +212,7 @@ def writeFaceNumbers(fp, amt):
         for fn,mtl in obj.materials.items():
             fmats[fn] = MaterialNumbers[mtl]
             
-        if amt.config.hidden:
+        if config.hidden:
             deleteVerts = None
             deleteGroups = []
         else:
@@ -287,7 +287,7 @@ def writeHideAnimationData(fp, amt, prefix, name):
 #   Vertex groups   
 #-------------------------------------------------------------------------------        
 
-def writeVertexGroups(fp, amt, proxy):                
+def writeVertexGroups(fp, amt, config, proxy):                
     if proxy and proxy.weights:
         writeRigWeights(fp, proxy.weights)
         return
@@ -302,11 +302,11 @@ def writeVertexGroups(fp, amt, proxy):
         for file in amt.vertexGroupFiles:
             copyVertexGroups(file, fp, proxy)
             
-    #for path in amt.config.customvertexgroups:
+    #for path in config.customvertexgroups:
     #    print("    %s" % path)
     #    copyVertexGroups(path, fp, proxy)    
 
-    if amt.config.cage and not (proxy and proxy.cage):
+    if config.cage and not (proxy and proxy.cage):
         fp.write("#if toggle&T_Cage\n")
         copyVertexGroups("cage", fp, proxy)    
         fp.write("#endif\n")

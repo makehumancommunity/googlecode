@@ -424,7 +424,7 @@ def LegControlPoses(fp, amt):
     
     # Leg IK
 
-    if amt.config.exporting:
+    if amt.exporting:
         addPoseBone(fp, amt, 'UpLegIK_L', None, 'IK_L', (1,1,1), (0,0,0), (1,0,1), 
                     ((1,1,1), (0,0,0), 0.05, limUpLeg_L), 0, [])
 

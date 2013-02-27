@@ -163,6 +163,7 @@ class ExportArmature(CArmature):
 
     def __init__(self, name, human, config):    
         CArmature. __init__(self, name, human, config)
+        self.exporting = True
         self.customShapeFiles = []
         self.customShapes = {}
         self.poseInfo = {}
@@ -295,7 +296,7 @@ class ExportArmature(CArmature):
         return
 
 
-    def writeControlPoses(self, fp):
+    def writeControlPoses(self, fp, config):
         if self.config.facepanel:
             rig_panel_25.PanelControlPoses(fp, self)
             
@@ -496,9 +497,9 @@ class MhxArmature(ExportArmature):
         rig_body_25.BodyDynamicLocations()
         
 
-    def writeControlPoses(self, fp):
+    def writeControlPoses(self, fp, config):
         self.writeBoneGroups(fp)
-        rig_body_25.BodyControlPoses(fp, self)
+        rig_body_25.BodyControlPoses(fp, self, config)
         rig_shoulder_25.ShoulderControlPoses(fp, self)
         rig_arm_25.ArmControlPoses(fp, self)
         rig_finger_25.FingerControlPoses(fp, self)
@@ -509,7 +510,7 @@ class MhxArmature(ExportArmature):
             rig_body_25.MaleControlPoses(fp, self)
         if self.config.skirtRig == "own":
             rig_skirt_25.SkirtControlPoses(fp, self)            
-        ExportArmature.writeControlPoses(self, fp)
+        ExportArmature.writeControlPoses(self, fp, config)
 
 
     def writeDrivers(self, fp):
@@ -710,10 +711,10 @@ class RigifyArmature(ExportArmature):
         return []
 
 
-    def writeControlPoses(self, fp):
+    def writeControlPoses(self, fp, config):
         rigify_rig.RigifyWritePoses(fp, self)
         rig_face_25.FaceControlPoses(fp, self)
-        ExportArmature.writeControlPoses(self, fp)
+        ExportArmature.writeControlPoses(self, fp, config)
 
 
 def swapParentNames(bones, changes):

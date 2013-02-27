@@ -87,6 +87,7 @@ class CArmature:
         self.mesh = human.meshData
         self.config = config
         self.rigtype = config.rigtype
+        self.exporting = False
         self.proxies = {}
         self.locations = {}
         self.rigHeads = {}
@@ -1117,9 +1118,8 @@ def checkPoints(vec1, vec2):
             (abs(vec1[2]-vec2[2]) < 1e-6))
     
 
-def createRig(human, rigtype):
+def createPoseRig(human, rigtype):
     config = Config()
-    config.exporting = False
     config.feetOnGround = False
     config.rigtype = rigtype
     config.setHuman(human)
@@ -1128,7 +1128,7 @@ def createRig(human, rigtype):
     amt = CPoseArmature(human, config)
 
     for (bname, roll, parent, flags, layers, bbone) in config.boneDefs:
-        if config.exporting or layers & ACTIVE_LAYERS:
+        if amt.exporting or layers & ACTIVE_LAYERS:
             bone = CBone(amt, bname, roll, parent, flags, layers, bbone)
             amt.boneList.append(bone)        
             amt.bones[bname] = bone
@@ -1143,7 +1143,7 @@ def createRig(human, rigtype):
 
     #setupCustomShapes(fp)
 
-    amt.writeControlPoses(fp)
+    amt.writeControlPoses(fp, config)
     amt.checkDirty()
     return amt
 
@@ -1154,6 +1154,6 @@ def createRig(human, rigtype):
     
     #amt.display()
     return amt
-    
+ 
     
 

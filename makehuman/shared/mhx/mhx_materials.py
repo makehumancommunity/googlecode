@@ -28,7 +28,7 @@ import armature as amtpkg
 #   
 #-------------------------------------------------------------------------------        
 
-def writeMaterials(fp, amt):
+def writeMaterials(fp, amt, config):
     
     if amt.human.uvset:
         writeMultiMaterials(fp, amt)
@@ -40,7 +40,7 @@ def writeMaterials(fp, amt):
 Image texture.png
 """)
 
-    filename = amt.config.getTexturePath("texture.png", "data/textures", True, amt.human)
+    filename = config.getTexturePath("texture.png", "data/textures", True, amt.human)
     fp.write("  Filename %s ;" % filename)
 
     fp.write("""
@@ -50,7 +50,7 @@ end Image
 Image texture_ref.png
 """)
 
-    filename = amt.config.getTexturePath("texture_ref.png", "data/textures", True, amt.human)
+    filename = config.getTexturePath("texture_ref.png", "data/textures", True, amt.human)
     fp.write("  Filename %s ;" % filename)
 
     fp.write("""
@@ -72,7 +72,7 @@ end Texture
 # --------------- Materials ----------------------------- # 
 """)
 
-    nMasks = writeSkinStart(fp, None, amt)
+    nMasks = writeSkinStart(fp, None, amt, config)
 
     fp.write("  MTex %d diffuse UV COLOR\n" % nMasks)
 
@@ -254,7 +254,7 @@ end Texture
     fp.write(" ;\n")
     fp.write("  AnimationData %sMesh True\n" % amt.name)
     #amtpkg.drivers.writeTextureDrivers(fp, rig_panel_25.BodyLanguageTextureDrivers)
-    writeMaskDrivers(fp, amt)
+    writeMaskDrivers(fp, amt, config)
     fp.write("""
   end AnimationData
 end Material
@@ -424,7 +424,6 @@ end Material
 """)
 
     fp.write("Material %sBrows\n" % amt.name)
-
 
     fp.write("""
   MTex 0 diffuse UV COLOR
@@ -599,8 +598,8 @@ end Material
 #   
 #-------------------------------------------------------------------------------        
 
-def writeSkinStart(fp, proxy, amt):
-    if not amt.config.useMasks:
+def writeSkinStart(fp, proxy, amt, config):
+    if not config.useMasks:
         fp.write("Material %sSkin\n" % amt.name)
         return 0
         
@@ -613,7 +612,7 @@ def writeSkinStart(fp, proxy, amt):
     
     for prx in prxList:
         if prx.mask:
-            addMaskImage(fp, amt, prx.mask)
+            addMaskImage(fp, amt, config, prx.mask)
             nMasks += 1
     fp.write("Material %sSkin\n" % amt.name)
              #"  MTex 0 diffuse UV COLOR\n" +
@@ -628,8 +627,8 @@ def writeSkinStart(fp, proxy, amt):
     return nMasks
                
 
-def writeMaskDrivers(fp, amt):
-    if not amt.config.useMasks:
+def writeMaskDrivers(fp, amt, config):
+    if not config.useMasks:
         return
     fp.write("#if toggle&T_Clothes\n")
     n = 0
@@ -657,7 +656,7 @@ TexInfo = {
     "displacement": ("DISPLACEMENT", "use_map_displacement", "displacement_factor", TX_SCALE|TX_BW),
 }    
 
-def writeMultiMaterials(fp, amt):
+def writeMultiMaterials(fp, amt, config):
     uvset = amt.human.uvset
     folder = os.path.dirname(uvset.filename)
     log.debug("Folder %s", folder)
@@ -665,8 +664,8 @@ def writeMultiMaterials(fp, amt):
         for tex in mat.textures:
             name = os.path.basename(tex.file)
             fp.write("Image %s\n" % name)
-            #file = amt.config.getTexturePath(tex, "data/textures", True, amt.human)
-            file = amt.config.getTexturePath(name, folder, True, amt.human)
+            #file = config.getTexturePath(tex, "data/textures", True, amt.human)
+            file = config.getTexturePath(name, folder, True, amt.human)
             fp.write(
                 "  Filename %s ;\n" % file +
 #                "  alpha_mode 'PREMUL' ;\n" +
@@ -728,9 +727,9 @@ def writeMultiMaterials(fp, amt):
 #   Masking   
 #-------------------------------------------------------------------------------        
   
-def addMaskImage(fp, amt, mask):            
+def addMaskImage(fp, amt, config, mask):            
     (folder, file) = mask
-    path = amt.config.getTexturePath(file, folder, True, amt.human)
+    path = config.getTexturePath(file, folder, True, amt.human)
     fp.write(
 "Image %s\n" % file +
 "  Filename %s ;\n" % path +

@@ -116,21 +116,21 @@ def exportMhx(human, filepath, config):
     
     gui3d.app.progress(0.15, text="Exporting materials")    
     fp.write("\nNoScale False ;\n\n")
-    mhx_materials.writeMaterials(fp, amt)
+    mhx_materials.writeMaterials(fp, amt, config)
 
     if config.cage:
-        mhx_proxy.writeProxyType('Cage', 'T_Cage', amt, fp, 0.2, 0.25)
+        mhx_proxy.writeProxyType('Cage', 'T_Cage', amt, config, fp, 0.2, 0.25)
     
     gui3d.app.progress(0.25, text="Exporting main mesh")    
     fp.write("#if toggle&T_Mesh\n")
-    mhx_mesh.writeMesh(fp, amt)
+    mhx_mesh.writeMesh(fp, amt, config)
     fp.write("#endif\n")
 
-    mhx_proxy.writeProxyType('Proxy', 'T_Proxy', amt, fp, 0.35, 0.4)
-    mhx_proxy.writeProxyType('Clothes', 'T_Clothes', amt, fp, 0.4, 0.55)
-    mhx_proxy.writeProxyType('Hair', 'T_Clothes', amt, fp, 0.55, 0.6)
+    mhx_proxy.writeProxyType('Proxy', 'T_Proxy', amt, config, fp, 0.35, 0.4)
+    mhx_proxy.writeProxyType('Clothes', 'T_Clothes', amt, config, fp, 0.4, 0.55)
+    mhx_proxy.writeProxyType('Hair', 'T_Clothes', amt, config, fp, 0.55, 0.6)
 
-    mhx_pose.writePose(fp, amt)
+    mhx_pose.writePose(fp, amt, config)
 
     writeGroups(fp, amt)
 

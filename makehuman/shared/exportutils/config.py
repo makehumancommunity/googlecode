@@ -42,7 +42,6 @@ class Config:
         self.scale,self.unit    = 1.0, "decimeter"
         self.subdivide          = False
 
-        self.exporting          = True
         self.useRelPaths        = True
         self.feetOnGround       = False
         self.skirtRig           = "inh"
@@ -74,6 +73,7 @@ class Config:
         Set the human object for this config.
         """
         self.human = human
+    
     
     def getProxyList(self):
         """

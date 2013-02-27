@@ -255,7 +255,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
             if self.amtpkg:
                 self.amtpkg.rebuild()
             else:
-                self.amtpkg = amtpkg.rigdefs.createRig(human, self.amtpkg.rigtype)
+                self.amtpkg = amtpkg.rigdefs.createPoseRig(human, self.amtpkg.rigtype)
             self.updateAll()
 
         @self.rotSlider.mhEvent
@@ -341,7 +341,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
         if self.amtpkg:
             self.amtpkg.rebuild()
         else:
-            self.amtpkg = amtpkg.rigdefs.createRig(gui3d.app.selectedHuman, self.rigtype)
+            self.amtpkg = amtpkg.rigdefs.createPoseRig(gui3d.app.selectedHuman, self.rigtype)
         self.armatureObject = None
         
         self.mainBox.show()

@@ -37,19 +37,19 @@ from . import rig_panel_25
 #   
 #-------------------------------------------------------------------------------        
 
-def writePose(fp, amt):
+def writePose(fp, amt, config):
 
     fp.write("""
 # --------------- Shapekeys ----------------------------- # 
 """)
 
-    proxyShapes('Cage', 'T_Cage', amt, fp)
-    proxyShapes('Proxy', 'T_Proxy', amt, fp)
-    proxyShapes('Clothes', 'T_Clothes', amt, fp)
-    proxyShapes('Hair', 'T_Clothes', amt, fp)
+    proxyShapes('Cage', 'T_Cage', amt, config, fp)
+    proxyShapes('Proxy', 'T_Proxy', amt, config, fp)
+    proxyShapes('Clothes', 'T_Clothes', amt, config, fp)
+    proxyShapes('Hair', 'T_Clothes', amt, config, fp)
 
     fp.write("#if toggle&T_Mesh\n")
-    writeShapeKeys(fp, amt, "%sMesh" % amt.name, None)
+    writeShapeKeys(fp, amt, config, "%sMesh" % amt.name, None)
     
     fp.write("""    
 #endif
@@ -65,10 +65,10 @@ def writePose(fp, amt):
     #amt.writeAllActions(fp)
 
     fp.write("Pose %s\n" % amt.name)
-    amt.writeControlPoses(fp)
+    amt.writeControlPoses(fp, config)
     fp.write("  ik_solver 'LEGACY' ;\nend Pose\n")
 
-    if amt.config.rigtype == "mhx":
+    if config.rigtype == "mhx":
         fp.write("AnimationData %s True\n" % amt.name)
         amt.writeDrivers(fp)
         fp.write(
@@ -92,15 +92,15 @@ end AnimationData
 #   
 #-------------------------------------------------------------------------------        
 
-def proxyShapes(typ, test, amt, fp):
+def proxyShapes(typ, test, amt, config, fp):
     fp.write("#if toggle&%s\n" % test)
     for proxy in amt.proxies.values():
         if proxy.name and proxy.type == typ:
-            writeShapeKeys(fp, amt, amt.name+proxy.name+"Mesh", proxy)
+            writeShapeKeys(fp, amt, config, amt.name+proxy.name+"Mesh", proxy)
     fp.write("#endif\n")
         
 
-def writeCorrectives(fp, amt, drivers, folder, landmarks, proxy, t0, t1):  
+def writeCorrectives(fp, amt, config, drivers, folder, landmarks, proxy, t0, t1):  
     try:
         shapeList = amt.loadedShapes[folder]
     except KeyError:
@@ -109,7 +109,7 @@ def writeCorrectives(fp, amt, drivers, folder, landmarks, proxy, t0, t1):
         shapeList = exportutils.shapekeys.readCorrectives(drivers, amt.human, folder, landmarks, t0, t1)
         amt.loadedShapes[folder] = shapeList
     for (shape, pose, lr) in shapeList:
-        writeShape(fp, pose, lr, shape, 0, 1, proxy, amt.config.scale)
+        writeShape(fp, pose, lr, shape, 0, 1, proxy, config.scale)
     
 
 def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
@@ -130,11 +130,11 @@ def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
     fp.write("end ShapeKey\n")
 
 
-def writeShapeKeys(fp, amt, name, proxy):
+def writeShapeKeys(fp, amt, config, name, proxy):
 
     isHuman = ((not proxy) or proxy.type == 'Proxy')
     isHair = (proxy and proxy.type == 'Hair')
-    scale = amt.config.scale
+    scale = config.scale
     
     fp.write(
 "#if toggle&T_Shapekeys\n" +
@@ -142,12 +142,12 @@ def writeShapeKeys(fp, amt, name, proxy):
 "  ShapeKey Basis Sym True\n" +
 "  end ShapeKey\n")
 
-    if isHuman and amt.config.facepanel:
+    if isHuman and config.facepanel:
         shapeList = exportutils.shapekeys.readFaceShapes(amt.human, rig_panel_25.BodyLanguageShapeDrivers, 0.6, 0.7)
         for (pose, shape, lr, min, max) in shapeList:
             writeShape(fp, pose, lr, shape, min, max, proxy, scale)
     
-    if isHuman and amt.config.expressions:
+    if isHuman and config.expressions:
         try:
             shapeList = amt.loadedShapes["expressions"]
         except KeyError:
@@ -158,14 +158,14 @@ def writeShapeKeys(fp, amt, name, proxy):
         for (pose, shape) in shapeList:
             writeShape(fp, pose, "Sym", shape, -1, 2, proxy, scale)
         
-    if amt.config.bodyShapes and amt.config.rigtype == "mhx" and not isHair:
-        writeCorrectives(fp, amt, rig_shoulder_25.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)
-        writeCorrectives(fp, amt, rig_leg_25.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)                
-        writeCorrectives(fp, amt, rig_arm_25.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)                
-        writeCorrectives(fp, amt, rig_leg_25.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)                
+    if config.bodyShapes and config.rigtype == "mhx" and not isHair:
+        writeCorrectives(fp, amt, config, rig_shoulder_25.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)
+        writeCorrectives(fp, amt, config, rig_leg_25.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)                
+        writeCorrectives(fp, amt, config, rig_arm_25.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)                
+        writeCorrectives(fp, amt, config, rig_leg_25.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)                
 
     if isHuman:
-        for path,name in amt.config.customShapeFiles:
+        for path,name in config.customShapeFiles:
             try:
                 shape = amt.loadedShapes[path]
             except KeyError:
@@ -178,7 +178,7 @@ def writeShapeKeys(fp, amt, name, proxy):
 
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
         
-    if amt.config.bodyShapes and amt.config.rigtype == "mhx" and not isHair:
+    if config.bodyShapes and config.rigtype == "mhx" and not isHair:
         amtpkg.drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, amt.name)
         amtpkg.drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, amt.name)
         amtpkg.drivers.writeTargetDrivers(fp, rig_arm_25.ElbowTargetDrivers, amt.name)
@@ -191,13 +191,13 @@ def writeShapeKeys(fp, amt, name, proxy):
     fp.write("#if toggle&T_ShapeDrivers\n")
 
     if isHuman:
-        for path,name in amt.config.customShapeFiles:
+        for path,name in config.customShapeFiles:
             amtpkg.drivers.writeShapePropDrivers(fp, amt, [name], proxy, "")    
 
-        if amt.config.expressions:
+        if config.expressions:
             amtpkg.drivers.writeShapePropDrivers(fp, amt, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
             
-        if amt.config.facepanel:
+        if config.facepanel:
             amtpkg.drivers.writeShapeDrivers(fp, amt, rig_panel_25.BodyLanguageShapeDrivers, proxy)
         
         skeys = []
@@ -208,7 +208,7 @@ def writeShapeKeys(fp, amt, name, proxy):
         
     fp.write("  end AnimationData\n\n")
 
-    if amt.config.expressions and not proxy:
+    if config.expressions and not proxy:
         exprList = exportutils.shapekeys.readExpressionMhm("data/expressions")
         writeExpressions(fp, exprList, "Expression")        
         visemeList = exportutils.shapekeys.readExpressionMhm("data/visemes")
