@@ -51,8 +51,6 @@ class Config:
         self.texFolder          = None
         self.customPrefix       = ""
         self.human              = None
-        self.vertexWeights      = None
-        self.boneDefs           = None
 
 
     def selectedOptions(self, exporter):

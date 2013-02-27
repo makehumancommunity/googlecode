@@ -214,7 +214,6 @@ class ExportArmature(CArmature):
     def writeEditBones(self, fp):        
         for data in self.boneDefs:
             (bone, roll, parent, flags, layers, bbone) = data
-            print(data)
             conn = (flags & F_CON != 0)
             deform = (flags & F_DEF != 0)
             restr = (flags & F_RES != 0)
@@ -493,6 +492,10 @@ class MhxArmature(ExportArmature):
             self.boneDefs += custArmature
         
 
+    def setup(self):
+        ExportArmature.setupSpecial(self)
+
+
     def dynamicLocations(self):
         rig_body_25.BodyDynamicLocations()
         
@@ -702,6 +705,10 @@ class RigifyArmature(ExportArmature):
 
         self.objectProps = rigify_rig.RigifyObjectProps + [("MhxRig", '"Rigify"')]
         self.armatureProps = rigify_rig.RigifyArmatureProps
+        
+
+    def setup(self):
+        ExportArmature.setupSpecial(self)
 
 
     def writeDrivers(self, fp):

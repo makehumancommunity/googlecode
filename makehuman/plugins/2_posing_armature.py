@@ -48,7 +48,7 @@ class PoseRadioButton(gui.RadioButton):
         
         @self.mhEvent
         def onClicked(event):
-            self.view.amtpkg.readBvhFile(self.file, gui3d.app.selectedHuman)
+            self.view.armature.readBvhFile(self.file, gui3d.app.selectedHuman)
             self.view.updateAll()
             self.view.poseBox.hide()
 
@@ -61,7 +61,7 @@ class BoneRadioButton(gui.RadioButton):
         
         @self.mhEvent
         def onClicked(event):
-            bone = self.view.amtpkg.bones[self.name]
+            bone = self.view.armature.bones[self.name]
             if self.view.activeBone:
                 self.view.armatureObject.setColor(self.view.activeBone, [255, 255, 255, 255])
             self.view.armatureObject.setColor(bone, [0, 255, 0, 255])
@@ -91,7 +91,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
 
         self.zone = ""
         self.rigtype = None
-        self.amtpkg = None
+        self.armature = None
         self.armatureObject = None
         self.objects = []
         self.activeBone = None
@@ -194,7 +194,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
             
         @self.testButton.mhEvent
         def onClicked(event):
-            listBones = doTest1(self.amtpkg.bones)
+            listBones = doTest1(self.armature.bones)
             self.updateAll()
             doTest2(listBones)
                 
@@ -239,7 +239,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
         @self.zeroAllButton.mhEvent
         def onClicked(event):
             self.zeroSliders()
-            for bone in self.amtpkg.controls:
+            for bone in self.armature.controls:
                 bone.zeroTransformation()
             self.updateAll()
 
@@ -252,10 +252,10 @@ class PoseArmatureTaskView(gui3d.TaskView):
             if amt:
                 #amt.hide()
                 gui3d.app.removeObject(amt)
-            if self.amtpkg:
-                self.amtpkg.rebuild()
+            if self.armature:
+                self.armature.rebuild()
             else:
-                self.amtpkg = amtpkg.rigdefs.createPoseRig(human, self.amtpkg.rigtype)
+                self.armature = amtpkg.rigdefs.createPoseRig(human, self.armature.rigtype)
             self.updateAll()
 
         @self.rotSlider.mhEvent
@@ -338,10 +338,10 @@ class PoseArmatureTaskView(gui3d.TaskView):
     def selectRig(self, prismType, rigtype):     
         self.prismType = prismType
         self.rigtype = rigtype
-        if self.amtpkg:
-            self.amtpkg.rebuild()
+        if self.armature:
+            self.armature.rebuild()
         else:
-            self.amtpkg = amtpkg.rigdefs.createPoseRig(gui3d.app.selectedHuman, self.rigtype)
+            self.armature = amtpkg.rigdefs.createPoseRig(gui3d.app.selectedHuman, self.rigtype)
         self.armatureObject = None
         
         self.mainBox.show()
@@ -351,7 +351,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
         first = True
         radio = []
         self.boneButtons = {}
-        for bone in self.amtpkg.controls:
+        for bone in self.armature.controls:
             log.debug("bone: %s", bone.name)
             button = BoneRadioButton(radio, bone.name, first, self)
             self.boneButtons[bone.name] = self.boneBox.addWidget(button)
@@ -362,7 +362,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
         if self.rigtype == "mhx":
             self.layerButtons = []
             for bit,lname in amtpkg.rigdefs.LayerNames:
-                check = LayerCheckBox(lname, self.amtpkg.visible & bit, self)
+                check = LayerCheckBox(lname, self.armature.visible & bit, self)
                 self.layerButtons.append(self.layerBox.addWidget(check))
             self.layerBox.show()
         else:
@@ -398,7 +398,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
         for (name,button) in self.boneButtons.items():
             if button.selected:
                 #print "Bone", name, "selected"
-                return self.amtpkg.bones[name]
+                return self.armature.bones[name]
         log.notice("BUG: No bone selected")
         return None
 
@@ -416,14 +416,14 @@ class PoseArmatureTaskView(gui3d.TaskView):
             if button.selected:
                 bit,lname = amtpkg.rigdefs.LayerNames[n]
                 vis |= bit
-        self.amtpkg.visible = vis
+        self.armature.visible = vis
         self.updateAll()                
 
 
     def onShow(self, event):
         # if not self.rigtype:
         #     self.selectRig("Prism", "rigid")       
-        if self.amtpkg:
+        if self.armature:
             self.cube.show()
         self.activeBone = None
         #self.status.setText("")
@@ -438,11 +438,11 @@ class PoseArmatureTaskView(gui3d.TaskView):
         
      
     def updateAll(self):    
-        if not self.amtpkg:
+        if not self.armature:
             return
-        self.amtpkg.restPosition = self.restPosition.selected
+        self.armature.restPosition = self.restPosition.selected
         human = gui3d.app.selectedHuman
-        self.amtpkg.update()
+        self.armature.update()
         amt = self.getArmature()
 
         if self.showMesh.selected:
@@ -467,7 +467,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
 
         human = gui3d.app.selectedHuman
         human.show()
-        if self.amtpkg:
+        if self.armature:
             amt = self.getArmature()
             if amt:
                 amt.hide()
@@ -479,10 +479,10 @@ class PoseArmatureTaskView(gui3d.TaskView):
     def getArmature(self):
         
         human = gui3d.app.selectedHuman
-        #self.amtpkg.update()
+        #self.armature.update()
         
         if not self.armatureObject:            
-            self.armatureObject = CArmatureObject(self.amtpkg, self)
+            self.armatureObject = CArmatureObject(self.armature, self)
             self.armatureObject.build(human)
             self.armatureObject.setRotation(human.getRotation())        
         else:            
@@ -509,17 +509,17 @@ class PoseArmatureTaskView(gui3d.TaskView):
 
 class CArmatureObject:
     def __init__(self, amtpkg, view):
-        self.amtpkg = amtpkg
+        self.armature = amtpkg
         self.view = view
         self.layers = {}
-        for n in range(self.amtpkg.last):
+        for n in range(self.armature.last):
             self.layers[n] = None
 
 
     def getLayers(self, mask):
         layers = []
         bit = 1
-        for n in range(self.amtpkg.last):
+        for n in range(self.armature.last):
             if bit & mask:
                 layers.append(n)
             bit <<= 1
@@ -534,7 +534,7 @@ class CArmatureObject:
         
         
     def build(self, human):
-        for bone in self.amtpkg.boneList:
+        for bone in self.armature.boneList:
             for n in self.getLayers(bone.layers):
                 if not self.layers[n]:
                     self.layers[n] = CLayerObject('Layer%2d' % n, self.view.prismType)
@@ -547,12 +547,12 @@ class CArmatureObject:
                     
     def update(self):
         change = False
-        for bone in self.amtpkg.boneList:
-            for n in self.getLayers(bone.layers & self.amtpkg.visible):
+        for bone in self.armature.boneList:
+            for n in self.getLayers(bone.layers & self.armature.visible):
                 layer = self.layers[n]
                 change |= layer.updateBoneMesh(bone)
             
-        for n in self.getLayers(self.amtpkg.visible):
+        for n in self.getLayers(self.armature.visible):
             layer = self.layers[n]
             if layer:
                 layer.update(change)
@@ -572,10 +572,10 @@ class CArmatureObject:
 
     def show(self): 
         bit = 1
-        for n in range(self.amtpkg.last):
+        for n in range(self.armature.last):
             layer = self.layers[n]
             if layer:
-                if bit & self.amtpkg.visible:
+                if bit & self.armature.visible:
                     layer.object.show()
                 else:
                     layer.object.hide()

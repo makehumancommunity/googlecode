@@ -116,21 +116,6 @@ class CArmature:
         return ("  <CArmature %s %s>" % (self.name, self.rigtype))
         
 
-    def setup(self):
-        if self.rigtype in ["mhx", "rigify"]:
-            self.setupJoints()       
-            self.moveOriginToFloor()
-            self.dynamicLocations()
-            for (bone, head, tail) in self.headsTails:
-                self.rigHeads[bone] = self.findLocation(head)
-                self.rigTails[bone] = self.findLocation(tail)
-        else:
-            rigfile = "data/rigs/%s.rig" % self.config.rigtype
-            (self.locations, self.boneList, self.vertexWeights) = exportutils.rig.readRigFile(rigfile, self.mesh)        
-            self.joints = joints.DeformJoints + joints.FloorJoints
-            self.appendRigBones("", L_MAIN, [])
-    
-    
     def dynamicLocations(self):
         return
 
@@ -145,18 +130,24 @@ class CArmature:
         return pweights
     
     
-    def appendRigBones(self, prefix, layer, body):        
-        for data in self.boneDefs:
-            (bone0, head, tail, roll, parent0, options) = data
-            if bone0 in body:
-                continue
-            bone = prefix + bone0
-            if parent0 == "-":
+    def setupSpecial(self):
+        self.setupJoints()       
+        self.moveOriginToFloor()
+        self.dynamicLocations()
+        for (bone, head, tail) in self.headsTails:
+            self.rigHeads[bone] = self.findLocation(head)
+            self.rigTails[bone] = self.findLocation(tail)
+
+
+    def setup(self):
+        rigfile = "data/rigs/%s.rig" % self.config.rigtype
+        (self.locations, boneList, self.vertexWeights) = exportutils.rig.readRigFile(rigfile, self.mesh)        
+        #self.joints = joints.DeformJoints + joints.FloorJoints
+
+        for data in boneList:
+            (bone, head, tail, roll, parent, options) = data
+            if parent == "-":
                 parent = None
-            elif parent0 in body:
-                parent = parent0
-            else:
-                parent = prefix + parent0
             flags = F_DEF|F_CON
             for (key, value) in options.items():
                 if key == "-nc":
@@ -185,7 +176,8 @@ class CArmature:
                     self.addPoseInfo(bone, ("IK", value))
                 elif key == "-ik":
                     pass
-            self.boneDefs.append((bone, roll, parent, flags, layer, NoBB))
+
+            self.boneDefs.append((bone, roll, parent, flags, L_MAIN, NoBB))
             self.rigHeads[bone] = head - self.origin
             self.rigTails[bone] = tail - self.origin
 
@@ -324,8 +316,7 @@ class CPoseArmature(CArmature):
         self.matrixGlobal = tm.identity_matrix()
         self.restCoords = None
         self.boneWeights = {}
-        if config.vertexWeights:
-            self.vertexWeights = config.vertexWeights
+
 
     def __repr__(self):
         return ("  <CPoseArmature %s>" % self.name)
@@ -417,11 +408,8 @@ class CPoseArmature(CArmature):
 
 
     def syncRestVerts(self, caller):
-        log.message("Synch rest verts: %s", caller)
-        #nVerts = len(self.restVerts)
+        log.message("Sync rest verts: %s", caller)
         self.restCoords[:,:3] = warpmodifier.getWarpedCoords(self.human)
-        #for n in range(nVerts):
-        #    self.restVerts[n].co[:3] = coords[n]
     
 
     def removeModifier(self):
@@ -444,7 +432,8 @@ class CPoseArmature(CArmature):
     def setModifier(self, modifier):
         self.removeModifier()
         self.modifier = modifier
-        self.modifier.updateValue(self.human, 1.0)
+        if modifier:
+            modifier.updateValue(self.human, 1.0)
         self.syncRestVerts("setModifier")
         self.printLocs(["setModifier", self.modifier])
 
@@ -509,7 +498,7 @@ class CPoseArmature(CArmature):
 
 
     def build(self):
-        if self.config.exporting:
+        if self.exporting:
             return
         self.controls = []
         self.deforms = []
@@ -530,12 +519,12 @@ class CPoseArmature(CArmature):
             self.syncRestVerts("rest")
             
             wtot = np.zeros(nVerts, float)
-            for vgroup in self.vertexgroups.values():
+            for vgroup in self.vertexWeights.values():
                 for vn,w in vgroup:
                     wtot[vn] += w
 
             self.boneWeights = {}
-            for bname,vgroup in self.vertexgroups.items():
+            for bname,vgroup in self.vertexWeights.items():
                 weights = np.zeros(len(vgroup), float)
                 verts = []
                 n = 0
@@ -951,7 +940,7 @@ class CBone:
     def updateConstraints(self):
         for cns in self.constraints:
             cns.update(self.amtInfo, self)
-        self.matrixVerts = np.dot(self.matrixGlobal, np.linalg.la.inv(self.matrixRest))
+        self.matrixVerts = np.dot(self.matrixGlobal, la.inv(self.matrixRest))
             
 
 
@@ -1127,7 +1116,7 @@ def createPoseRig(human, rigtype):
     fp = None
     amt = CPoseArmature(human, config)
 
-    for (bname, roll, parent, flags, layers, bbone) in config.boneDefs:
+    for (bname, roll, parent, flags, layers, bbone) in amt.boneDefs:
         if amt.exporting or layers & ACTIVE_LAYERS:
             bone = CBone(amt, bname, roll, parent, flags, layers, bbone)
             amt.boneList.append(bone)        

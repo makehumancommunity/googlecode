@@ -112,19 +112,29 @@ class PoseLoadTaskView(gui3d.TaskView):
 
         posemode.enterPoseMode()
         folder = os.path.dirname(filepath)
-        (fname, ext) = os.path.splitext(os.path.basename(filepath))
-        filenamePattern = "${gender}-${age}-${tone}-${weight}-%s.target" % fname
-        modpath = os.path.join(folder, filenamePattern)
-        log.debug('PoseLoadTaskView.loadMhpFile: %s %s', filepath, modpath)
-        modifier = PoseModifier(modpath)
-        modifier.updateValue(human, 1.0)
+
+        hasTargets = False
+        for file in os.listdir(folder):
+            if os.path.splitext(file)[1] == ".target":
+                hasTargets = True
+                break
+
+        if hasTargets:                
+            (fname, ext) = os.path.splitext(os.path.basename(filepath))
+            filenamePattern = "${gender}-${age}-${tone}-${weight}-%s.target" % fname
+            modpath = os.path.join(folder, filenamePattern)
+            log.debug('PoseLoadTaskView.loadMhpFile: %s %s', filepath, modpath)
+            modifier = PoseModifier(modpath)
+            modifier.updateValue(human, 1.0)
+        else:
+            modifier = None
         
-        amt = human.amtpkg
+        amt = human.armature
         if amt:
             pass
             #amt.rebuild()
         else:
-            amt = human.amtpkg = amtpkg.rigdefs.createPoseRig(human, "soft1")            
+            amt = human.armature = amtpkg.rigdefs.createPoseRig(human, "soft1")            
         amt.setModifier(modifier)
         amt.readMhpFile(filepath)
         #amt.listPose()
