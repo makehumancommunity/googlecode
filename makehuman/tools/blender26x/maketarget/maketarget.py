@@ -51,8 +51,12 @@ from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 from mh_utils import mh
 from mh_utils import utils
+from mh_utils.utils import round
 from mh_utils import proxy
 from mh_utils import import_obj
+
+Epsilon = 1e-4
+NTotalVerts    = 18528
 
 #----------------------------------------------------------
 #   Settings
@@ -72,24 +76,6 @@ def setSettings(context):
     else:
         print("Unknown mesh version")
         settings = None
-
-#----------------------------------------------------------
-#   
-#----------------------------------------------------------
-
-Epsilon = 1e-4
-NTotalVerts    = 18528
-
-def round(x):
-    if abs(x) < Epsilon:
-        return "0"
-    string = "%.4g" % x
-    if len(string) > 2:
-        if string[:2] == "0.":
-            return string[1:6]
-        elif string[:3] == "-0.":
-            return "-" + string[2:7]
-    return string
 
 #----------------------------------------------------------
 #   
