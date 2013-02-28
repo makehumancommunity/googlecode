@@ -26,6 +26,7 @@ import os
 import weakref
 
 import numpy as np
+import unique
 
 from compat import VertProxy, FaceProxy, VertsProxy, FacesProxy, MaterialsProxy
 import matrix
