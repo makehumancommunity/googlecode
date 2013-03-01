@@ -37,7 +37,6 @@ import exportutils
 from exportutils.config import Config
     
 from .flags import *
-from . import joints
 
 #
 #
@@ -142,7 +141,6 @@ class CArmature:
     def setup(self):
         rigfile = "data/rigs/%s.rig" % self.config.rigtype
         (self.locations, boneList, self.vertexWeights) = exportutils.rig.readRigFile(rigfile, self.mesh)        
-        #self.joints = joints.DeformJoints + joints.FloorJoints
 
         for data in boneList:
             (bone, head, tail, roll, parent, options) = data

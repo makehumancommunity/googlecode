@@ -23,7 +23,6 @@ Armature package __init__ file
 """
 
 import warp
-from . import joints
 from . import constraints
 from . import drivers
 from . import rigdefs

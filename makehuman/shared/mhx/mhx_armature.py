@@ -31,6 +31,7 @@ from armature.flags import *
 from armature.rigdefs import CArmature
 
 from . import posebone
+from . import rig_joints_25
 from . import rig_body_25
 from . import rig_shoulder_25
 from . import rig_arm_25
@@ -434,9 +435,9 @@ class MhxArmature(ExportArmature):
             self.vertexGroupFiles.append( "male" )
                                                         
         self.joints = (
-            amtpkg.joints.DeformJoints +
+            rig_joints_25.DeformJoints +
             rig_body_25.BodyJoints +
-            amtpkg.joints.FloorJoints +
+            rig_joints_25.FloorJoints +
             rig_arm_25.ArmJoints +
             rig_shoulder_25.ShoulderJoints +
             rig_finger_25.FingerJoints +
@@ -686,9 +687,9 @@ class RigifyArmature(ExportArmature):
                            {'Head' : 'head', 'MasterFloor' : None} )
             
         self.joints = (
-            amtpkg.joints.DeformJoints +
+            rig_joints_25.DeformJoints +
             rig_body_25.BodyJoints +
-            amtpkg.joints.FloorJoints +
+            rig_joints_25.FloorJoints +
             rigify_rig.RigifyJoints +
             rig_face_25.FaceJoints
         )
