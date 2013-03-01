@@ -1091,44 +1091,32 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
         progress(progbase+(i/stuffnum)*(nextpb-progbase),"Writing objects")
         obj = stuff.meshInfo.object
 
-        outputFileDescriptor.write('// Humanoid mesh2 definition\n')
+        outputFileDescriptor.write('// Mesh2 object definition\n')
         outputFileDescriptor.write('#declare %s_Mesh2Object = mesh2 {\n' % stuff.name)
 
         # Vertices - Write a POV-Ray array to the output stream
         outputFileDescriptor.write('  vertex_vectors {\n  ')
         outputFileDescriptor.write('    %s\n  ' % len(obj.coord))
-
         for co in obj.coord:
             outputFileDescriptor.write('<%s,%s,%s>' % (-co[0],co[1],co[2]))
-        outputFileDescriptor.write('''
-  }
-
-''')
-        progress(progbase+(i/stuffnum+0.2)*(nextpb-progbase),"Writing objects")
+        outputFileDescriptor.write('\n  }\n\n')
+        progress(progbase+(i/stuffnum+0.142)*(nextpb-progbase),"Writing objects")
 
         # Normals - Write a POV-Ray array to the output stream
         outputFileDescriptor.write('  normal_vectors {\n  ')
         outputFileDescriptor.write('    %s\n  ' % len(obj.vnorm))
         for no in obj.vnorm:
             outputFileDescriptor.write('<%s,%s,%s>' % (-no[0],no[1],no[2]))
-
-        outputFileDescriptor.write('''
-  }
-
-''')
-        progress(progbase+(i/stuffnum+0.4)*(nextpb-progbase),"Writing objects")
+        outputFileDescriptor.write('\n  }\n\n')
+        progress(progbase+(i/stuffnum+0.286)*(nextpb-progbase),"Writing objects")
     
         # UV Vectors - Write a POV-Ray array to the output stream
         outputFileDescriptor.write('  uv_vectors {\n  ')
         outputFileDescriptor.write('    %s\n  ' % len(obj.texco))
         for uv in obj.texco:
             outputFileDescriptor.write('<%s,%s>' % tuple(uv))        
-
-        outputFileDescriptor.write('''
-  }
-
-''')
-        progress(progbase+(i/stuffnum+0.6)*(nextpb-progbase),"Writing objects")
+        outputFileDescriptor.write('\n  }\n\n')
+        progress(progbase+(i/stuffnum+0.428)*(nextpb-progbase),"Writing objects")
 
         # Faces - Write a POV-Ray array of arrays to the output stream
         #nTriangles = 0
@@ -1142,37 +1130,25 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
 
         outputFileDescriptor.write('  face_indices {\n  ')
         outputFileDescriptor.write('    %s\n  ' % nTriangles)
-
         for fverts in obj.fvert:
             outputFileDescriptor.write('<%s,%s,%s>' % (fverts[0], fverts[1], fverts[2]))
             outputFileDescriptor.write('<%s,%s,%s>' % (fverts[2], fverts[3], fverts[0]))
-
-        outputFileDescriptor.write('''
-  }
-
-''')
-        progress(progbase+(i/stuffnum+0.8)*(nextpb-progbase),"Writing objects")
+        outputFileDescriptor.write('\n  }\n\n')
+        progress(progbase+(i/stuffnum+0.714)*(nextpb-progbase),"Writing objects")
 
 
         # UV Indices for each face - Write a POV-Ray array to the output stream
         outputFileDescriptor.write('  uv_indices {\n  ')
         outputFileDescriptor.write('    %s\n  ' % nTriangles)
-
         for fuv in obj.fuvs:
             outputFileDescriptor.write('<%s,%s,%s>' % (fuv[0], fuv[1], fuv[2]))
             outputFileDescriptor.write('<%s,%s,%s>' % (fuv[2], fuv[3], fuv[0]))
-
-        outputFileDescriptor.write('''
-  }
-''')
+        outputFileDescriptor.write('\n  }\n')
 
         # Mesh2 Object - Write the end squiggly bracket for the mesh2 object declaration
-        outputFileDescriptor.write('''
-      uv_mapping
-''')
-        outputFileDescriptor.write('''}
-
-''')
+        outputFileDescriptor.write('\n      uv_mapping\n')
+        outputFileDescriptor.write('}\n\n')
+        
         i += 1.0
     progbase = nextpb
                                             
