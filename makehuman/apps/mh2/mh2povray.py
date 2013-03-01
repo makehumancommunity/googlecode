@@ -1173,6 +1173,7 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
         outputFileDescriptor.write('''}
 
 ''')
+        i += 1.0
     progbase = nextpb
                                             
     # Copy texture definitions to the output file.
