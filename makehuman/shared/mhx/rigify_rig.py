@@ -617,17 +617,3 @@ RigifyArmatureProps = [
 	('MhxRig', '"Control"'),
 	('MhxVisemeSet', '"BodyLanguage"'),]
 
-
-def getRigifyDrivers():
-	human = mh2mhx.theHuman
-	return [
-  ('DfmUpLid_L', 'ROTQ', 'AVERAGE', None, 1, (0,0.698), [
-		('var', 'TRANSFORMS', [('OBJECT', human, 'PUpLid_L', 'LOC_Z', C_LOCAL) ]),]),
-  ('DfmLoLid_L', 'ROTQ', 'AVERAGE', None, 1, (0,0.349), [
-		('var', 'TRANSFORMS', [('OBJECT', human, 'PLoLid_L', 'LOC_Z', C_LOCAL) ]),]),
-  ('DfmUpLid_R', 'ROTQ', 'AVERAGE', None, 1, (0,0.698), [
-		('var', 'TRANSFORMS', [('OBJECT', human, 'PUpLid_R', 'LOC_Z', C_LOCAL) ]),]),
-  ('DfmLoLid_R', 'ROTQ', 'AVERAGE', None, 1, (0,0.349), [
-		('var', 'TRANSFORMS', [('OBJECT', human, 'PLoLid_R', 'LOC_Z', C_LOCAL) ]),]),
-]
-
