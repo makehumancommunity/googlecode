@@ -44,7 +44,7 @@ class MitsubaTaskView(gui3d.TaskView):
         pathBox = self.addLeftWidget(gui.GroupBox('Mitsuba  bin  path'))
         mitsuba_bin = gui3d.app.settings.get('mitsuba_bin', '')
         self.path= pathBox.addWidget(gui.TextEdit(str(mitsuba_bin)), 0, 0, 1, 2)
-        self.browse = pathBox.addWidget(gui.BrowseButton(), 1, 0, 1, 1)
+        self.browse = pathBox.addWidget(gui.BrowseButton('dir'), 1, 0, 1, 1)
         self.browse.setPath(mitsuba_bin)
         if sys.platform == 'win32':
             self.browse.setFilter('Executable programs (*.exe);;All files (*.*)')
