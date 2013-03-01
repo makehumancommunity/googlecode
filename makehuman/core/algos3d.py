@@ -170,10 +170,13 @@ class Target:
             log.error('error saving %s', name)
 
     def _load(self, name):
+        logger = log.getLogger('mh.load')
+        logger.debug('loading target %s', name)
         try:
             self._load_binary(name)
         except StandardError, e:
             self._load_text(name)
+        logger.debug('loaded target %s', name)
 
     def apply(self, obj, morphFactor, update=True, calcNormals=True, faceGroupToUpdateName=None, scale=(1.0,1.0,1.0)):
         self.morphFactor = morphFactor                
