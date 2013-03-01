@@ -197,7 +197,7 @@ def writeShapeKeys(fp, amt, config, name, proxy):
         if config.expressions:
             amtpkg.drivers.writeShapePropDrivers(fp, amt, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
             
-        if config.facepanel:
+        if config.facepanel and amt.rigtype=='mhx':
             amtpkg.drivers.writeShapeDrivers(fp, amt, rig_panel_25.BodyLanguageShapeDrivers, proxy)
         
         skeys = []

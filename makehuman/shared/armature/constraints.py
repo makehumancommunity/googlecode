@@ -23,9 +23,8 @@ Constraints
 """
 
 import math
-import numpy
-from numpy import dot
-from numpy.linalg import inv
+import numpy as np
+import numpy.linalg as la
 import transformations as tm
 import log
 
@@ -145,7 +144,7 @@ class CIkConstraint(CConstraint):
             head = bone.getHead()
             goal = target.getHead()
             vec = goal - head
-            dist = math.sqrt(dot(vec,vec))
+            dist = math.sqrt(np.dot(vec,vec))
             goal = head + vec*(bone.length/dist)
             bone.stretchTo(goal, False)
 

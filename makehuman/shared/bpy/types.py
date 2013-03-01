@@ -25,6 +25,7 @@ Blender API mockup: bpy.types
 from mathutils import *
 from math import *
 import os
+import numpy as np
 import log
 
 import exportutils
@@ -177,7 +178,7 @@ class Bone(Rna):
 
     def getLength(self):
         vector = self.tail.vector - self.head.vector
-        return sqrt(dot(vector, vector))
+        return sqrt(np.dot(vector, vector))
         
     def setLength(self):
         pass
@@ -211,7 +212,7 @@ class Bone(Rna):
         mat = tm.rotation_matrix(angle,axis)
         if self.roll:
             roll = tm.rotation_matrix(self.roll, Bone.ex)
-            mat = dot(mat, roll)
+            mat = np.dot(mat, roll)
         self.matrix_local = Matrix(mat)
         self.matrix_local.matrix[:3,3] = self.head.vector
 

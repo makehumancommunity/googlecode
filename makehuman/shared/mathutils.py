@@ -23,9 +23,8 @@ Blender API mockup
 """
 
 from math import *
-import numpy
-from numpy import dot
-from numpy.linalg import inv
+import numpy as np
+import numpy.linalg as la
 import transformations as tm
 
 #------------------------------------------------------------------
@@ -40,13 +39,13 @@ def round(x):
         
 #class Vector:
 #   def __init__(self, vec):
-#        self.vector = numpy.array(vec)
+#        self.vector = np.array(vec)
 
 class Vector:
     def __init__(self, vec):
         if isinstance(vec, Vector):
             vec = vec.vector
-        self.vector = numpy.array(vec)
+        self.vector = np.array(vec)
         
     def __repr__(self):
         string = "<Vector"
@@ -70,7 +69,7 @@ class Vector:
         return Vector(self.vector - vec.vector)
         
     def dot(self, vec):
-        return dot(self.vector, vec.vector)
+        return np.dot(self.vector, vec.vector)
         
     def __rmul__(self, factor):
         return Vector(factor*self.vector)
@@ -82,10 +81,10 @@ class Vector:
         return Vector(self.vector/denom)
         
     def cross(self, vec):
-        return Vector(numpy.cross(self.vector, vec.vector))
+        return Vector(np.cross(self.vector, vec.vector))
         
     def getLength(self):
-        return sqrt(dot(self.vector, self.vector))
+        return sqrt(np.dot(self.vector, self.vector))
         
     def setLength(self):
         pass
@@ -99,10 +98,10 @@ class Matrix:
     def __init__(self, data=None):
         if data is None:
             self.size = 4
-            self.matrix = numpy.identity(4,float)
+            self.matrix = np.identity(4,float)
         else:
             self.size = len(data)
-            self.matrix = numpy.array(data)    
+            self.matrix = np.array(data)    
 
     def __repr__(self):
         string = "<Matrix"
@@ -126,10 +125,10 @@ class Matrix:
         return Matrix(self.matrix.transpose())
    
     def inverted(self):
-        return Matrix(inv(self.matrix))
+        return Matrix(la.inv(self.matrix))
         
     def mult(self, mat):
-        return Matrix(dot(self.matrix, mat.matrix))
+        return Matrix(np.dot(self.matrix, mat.matrix))
     
     def to_3x3(self):
         return Matrix(3, self.matrix[:3,:3])        

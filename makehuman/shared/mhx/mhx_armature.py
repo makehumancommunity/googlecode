@@ -23,6 +23,7 @@ MHX armature
 """
 
 import math
+import numpy as np
 import mh2proxy
 import exportutils
 
@@ -172,12 +173,18 @@ class ExportArmature(CArmature):
 
 
     def setup(self):
-        if self.config.facepanel:            
-            self.joints += rig_panel_25.PanelJoints
-            self.headsTails += rig_panel_25.PanelHeadsTails
-            self.boneDefs += rig_panel_25.PanelArmature
-
-        amtpkg.rigdefs.CArmature.setup(self)
+        if self.rigtype in ["mhx", "rigify"]:
+            self.setupJoints()       
+            self.moveOriginToFloor()
+            self.dynamicLocations()
+            for (bone, head, tail) in self.headsTails:
+                self.rigHeads[bone] = self.findLocation(head)
+                self.rigTails[bone] = self.findLocation(tail)
+        else:
+            self.joints += rig_joints_25.DeformJoints + rig_joints_25.FloorJoints
+            self.setupJoints()
+            self.moveOriginToFloor()
+            amtpkg.rigdefs.CArmature.setup(self)
         
         if self.config.clothesRig:
             for proxy in self.proxies.values():
@@ -189,6 +196,101 @@ class ExportArmature(CArmature):
                     proxy.weights = self.prefixWeights(weights, proxy.name)
                     appendRigBones(boneList, proxy.name, L_CLO, body, amt)
         
+
+
+    def setupJoints (self):
+        """
+        Evaluate symbolic expressions for joint locations and store them in self.locations.
+        Joint locations are specified symbolically in the *Joints list in the beginning of the
+        rig_*.py files (e.g. ArmJoints in rig_arm.py). 
+        """
+        
+        for (key, typ, data) in self.joints:
+            if typ == 'j':
+                loc = mh2proxy.calcJointPos(self.mesh, data)
+                self.locations[key] = loc
+                self.locations[data] = loc
+            elif typ == 'v':
+                v = int(data)
+                self.locations[key] = self.mesh.coord[v]
+            elif typ == 'x':
+                self.locations[key] = np.array((float(data[0]), float(data[2]), -float(data[1])))
+            elif typ == 'vo':
+                v = int(data[0])
+                offset = np.array((float(data[1]), float(data[3]), -float(data[2])))
+                self.locations[key] = self.mesh.coord[v] + offset
+            elif typ == 'vl':
+                ((k1, v1), (k2, v2)) = data
+                loc1 = self.mesh.coord[int(v1)]
+                loc2 = self.mesh.coord[int(v2)]
+                self.locations[key] = k1*loc1 + k2*loc2
+            elif typ == 'f':
+                (raw, head, tail, offs) = data
+                rloc = self.locations[raw]
+                hloc = self.locations[head]
+                tloc = self.locations[tail]
+                vec = tloc - hloc
+                vraw = rloc - hloc
+                x = np.dot(vec, vraw)/np.dot(vec,vec)
+                self.locations[key] = hloc + x*vec + np.array(offs)
+            elif typ == 'b':
+                self.locations[key] = self.locations[data]
+            elif typ == 'p':
+                x = self.locations[data[0]]
+                y = self.locations[data[1]]
+                z = self.locations[data[2]]
+                self.locations[key] = np.array((x[0],y[1],z[2]))
+            elif typ == 'vz':
+                v = int(data[0])
+                z = self.mesh.coord[v][2]
+                loc = self.locations[data[1]]
+                self.locations[key] = np.array((loc[0],loc[1],z))
+            elif typ == 'X':
+                r = self.locations[data[0]]
+                (x,y,z) = data[1]
+                r1 = np.array([float(x), float(y), float(z)])
+                self.locations[key] = np.cross(r, r1)
+            elif typ == 'l':
+                ((k1, joint1), (k2, joint2)) = data
+                self.locations[key] = k1*self.locations[joint1] + k2*self.locations[joint2]
+            elif typ == 'o':
+                (joint, offsSym) = data
+                if type(offsSym) == str:
+                    offs = self.locations[offsSym]
+                else:
+                    offs = np.array(offsSym)
+                self.locations[key] = self.locations[joint] + offs
+            else:
+                raise NameError("Unknown %s" % typ)
+        return
+    
+    
+    def moveOriginToFloor(self):
+        if self.config.feetOnGround:
+            self.origin = self.locations['floor']
+            for key in self.locations.keys():
+                self.locations[key] = self.locations[key] - self.origin
+        else:
+            self.origin = np.array([0,0,0], float)
+        return
+    
+        
+    def setupHeadsTails(self):
+        self.rigHeads = {}
+        self.rigTails = {}
+        scale = self.config.scale
+        for (bone, head, tail) in self.headsTails:
+            self.rigHeads[bone] = findLocation(self, head)
+            self.rigTails[bone] = findLocation(self, tail)
+        
+    
+    def findLocation(self, joint):
+        try:
+            (bone, offs) = joint
+            return self.locations[bone] + offs
+        except:
+            return self.locations[joint]
+
 
     def setupCustomShapes(self, fp):
         if self.gizmos:
@@ -204,13 +306,6 @@ class ExportArmature(CArmature):
                 else:
                     halt
 
-        if self.config.facepanel:
-            import gizmos_panel
-            setupCube(fp, "MHCube025", 0.25, 0)
-            setupCube(fp, "MHCube05", 0.5, 0)
-            self.gizmos = gizmos_panel.asString()
-            fp.write(self.gizmos)
-        
 
     def writeEditBones(self, fp):        
         for data in self.boneDefs:
@@ -297,9 +392,6 @@ class ExportArmature(CArmature):
 
 
     def writeControlPoses(self, fp, config):
-        if self.config.facepanel:
-            rig_panel_25.PanelControlPoses(fp, self)
-            
         for (bone, cinfo) in self.poseInfo.items():
             cs = None
             constraints = []
@@ -486,6 +578,11 @@ class MhxArmature(ExportArmature):
         if config.maleRig:
             self.boneDefs += rig_body_25.MaleArmature        
 
+        if self.config.facepanel:            
+            self.joints += rig_panel_25.PanelJoints
+            self.headsTails += rig_panel_25.PanelHeadsTails
+            self.boneDefs += rig_panel_25.PanelArmature
+
         if False and config.custom:
             (custJoints, custHeadsTails, custArmature, self.customProps) = exportutils.custom.setupCustomRig(config)
             self.joints += custJoints
@@ -493,12 +590,18 @@ class MhxArmature(ExportArmature):
             self.boneDefs += custArmature
         
 
-    def setup(self):
-        ExportArmature.setupSpecial(self)
-
-
     def dynamicLocations(self):
         rig_body_25.BodyDynamicLocations()
+        
+
+    def setupCustomShapes(self, fp):
+        ExportArmature.setupCustomShapes(self, fp)
+        if self.config.facepanel:
+            import gizmos_panel
+            setupCube(fp, "MHCube025", 0.25, 0)
+            setupCube(fp, "MHCube05", 0.5, 0)
+            self.gizmos = gizmos_panel.asString()
+            fp.write(self.gizmos)
         
 
     def writeControlPoses(self, fp, config):
@@ -514,6 +617,8 @@ class MhxArmature(ExportArmature):
             rig_body_25.MaleControlPoses(fp, self)
         if self.config.skirtRig == "own":
             rig_skirt_25.SkirtControlPoses(fp, self)            
+        if self.config.facepanel:
+            rig_panel_25.PanelControlPoses(fp, self)
         ExportArmature.writeControlPoses(self, fp, config)
 
 
@@ -707,10 +812,6 @@ class RigifyArmature(ExportArmature):
         self.objectProps = rigify_rig.RigifyObjectProps + [("MhxRig", '"Rigify"')]
         self.armatureProps = rigify_rig.RigifyArmatureProps
         
-
-    def setup(self):
-        ExportArmature.setupSpecial(self)
-
 
     def writeDrivers(self, fp):
         rig_face_25.FaceDeformDrivers(fp, self)        

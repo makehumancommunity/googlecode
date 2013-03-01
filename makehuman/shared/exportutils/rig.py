@@ -23,8 +23,7 @@ Read rig file
 TODO
 """
 
-import numpy
-from numpy import dot
+import numpy as np
 import os
 import mh2proxy
 import log
@@ -45,7 +44,7 @@ def setupRigJoint (words, obj, coord, locations):
         x = locations[int(words[2])]
         y = locations[int(words[3])]
         z = locations[int(words[4])]
-        locations[key] = numpy.array((x[0],y[1],z[2]))
+        locations[key] = np.array((x[0],y[1],z[2]))
     elif typ == 'line':
         k1 = float(words[2])
         vn1 = int(words[3])
@@ -57,7 +56,7 @@ def setupRigJoint (words, obj, coord, locations):
     	x = float(words[3])
     	y = float(words[4])
     	z = float(words[5])
-        locations[key] = locations[vn] + numpy.array((x,y,z))
+        locations[key] = locations[vn] + np.array((x,y,z))
     elif typ == 'voffset':
         vn = int(words[2])
     	x = float(words[3])
@@ -67,25 +66,25 @@ def setupRigJoint (words, obj, coord, locations):
             loc = obj.coord[vn]
         except:
             loc = coord[vn]         
-        locations[key] = loc + numpy.array((x,y,z))
+        locations[key] = loc + np.array((x,y,z))
     elif typ == 'front':
         raw = locations[int(words[2])]
         head = locations[int(words[3])]
         tail = locations[int(words[4])]
         offs = map(float, words[5].strip().lstrip('[').rstrip(']').split(','))
-        offs = numpy.array(offs)
+        offs = np.array(offs)
         vec =  tail - head
         vraw = raw - head
-        x = dot(vec,vraw) / dot(vec, vec)
+        x = np.dot(vec,vraw) / np.dot(vec, vec)
         locations[key] = head + x*vec + offs
     else:
         raise NameError("Unknown %s" % typ)
 
 #
-#   readRigFile(filename, obj, coord=None):
+#   readRigFile(filename, obj, coord=None, locations={}):
 #
 
-def readRigFile(filename, obj, coord=None):
+def readRigFile(filename, obj, coord=None, locations={}):
     if type(filename) == tuple:
         (folder, fname) = filename
         filename = os.path.join(folder, fname)
@@ -101,7 +100,6 @@ def readRigFile(filename, obj, coord=None):
     doWeights = 3
     status = 0
 
-    locations = {}
     armature = []
     weights = {}
 
