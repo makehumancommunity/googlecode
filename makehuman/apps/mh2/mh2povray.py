@@ -971,16 +971,16 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
     """
 
     progbase = 0
-    def progress (base, prog, desc):
+    def progress (prog, desc):
         if progressCallback == None:
-            gui3d.app.progress(base + prog, desc)
+            gui3d.app.progress(prog, desc)
         else:
-            progressCallback(base + prog, desc)
+            progressCallback(prog, desc)
 
     # Certain blocks of SDL are mostly static and can be copied directly from reference
     # files into the output files.
-    progress (progbase,0,"Parsing data")
-    progbase = progbase + 0.05
+    progress (0,"Parsing data")
+    progbase = 0.2
     headerFile = 'data/povray/headercontent_mesh2only.inc'
     staticFile = 'data/povray/staticcontent_mesh2only_fsss.inc' if settings['SSS'] == True else 'data/povray/staticcontent_mesh2only_tl.inc'
     sceneFile = 'data/povray/makehuman_mesh2only_tl.pov'
@@ -1008,33 +1008,39 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
         resgreen = int(2.0**(10-resred/2))
         resred = int(2.0**(10-resred))
         # blue channel
-        lmap = projection.mapLighting(progressCallback = lambda p: progress(progbase,p*(0.55-progbase),"Rendering lightmaps"))
+        lmap = projection.mapLighting(progressCallback = lambda p: progress(progbase+p*(0.25-progbase),"Projecting lightmaps"))
+        progress (0.25,"Writing lightmaps")
         log.debug('SSS: Hi-Res lightmap resolution: %s', lmap.width)
         lmap.save(os.path.join(outputDirectory, 'lighthi.png'))
         # green channel
-        lmap.resize(resgreen,resgreen)
+        progress (0.26,"Writing lightmaps")
+        lmap2 = lmap.resized(resgreen,resgreen)
         log.debug('SSS: Mid-Res lightmap resolution: %s', lmap.width)
-        lmap.save(os.path.join(outputDirectory, 'lightmid.png'))
+        lmap2.save(os.path.join(outputDirectory, 'lightmid.png'))
         # red channel
-        lmap.resize(resred,resred)
-        log.debug('SSS: Low-Res lightmap resolution: %s', lmap.width)
-        lmap.save(os.path.join(outputDirectory, 'lightlo.png'))
+        progress (0.29,"Writing lightmaps")
+        lmap2 = lmap.resized(resred,resred)
+        log.debug('SSS: Low-Res lightmap resolution: %s', lmap2.width)
+        lmap2.save(os.path.join(outputDirectory, 'lightlo.png'))
         # create masks for blurred channels, for erasing seams.
+        progress (0.32,"Writing lightmaps")
         sssmask = mh.Image(pigmentMap)
         sssmask = sssmask.alphaChannel()
+        progress (0.33,"Writing lightmaps")
         sssmask.resize(resgreen,resgreen)
+        progress (0.36,"Writing lightmaps")
         sssmask.save(os.path.join(outputDirectory, 'maskmid.png'))
         sssmask.resize(resred,resred)
+        progress (0.39,"Writing lightmaps")
         sssmask.save(os.path.join(outputDirectory, 'masklo.png'))
-        progbase = 0.55
+        progbase = 0.4
 
     # Open the output file in Write mode
-    progress(progbase,0,"Writing code")
-    progbase = progbase + 0.5
+    progress(progbase,"Writing code")
     try:
         outputFileDescriptor = open(path, 'w')
     except:
-        log.error('Error opening file to write data.')
+        log.error('Error opening file to write data: %s', path)
         return 0
 
     # Write the file name into the top of the comment block that starts the file.
@@ -1045,7 +1051,7 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
     try:
         headerFileDescriptor = open(headerFile, 'r')
     except:
-        log.error('Error opening file to read standard headers.')
+        log.error('Error opening header file for reading: %s', headerFile)
         return 0
     headerLines = headerFileDescriptor.read()
     outputFileDescriptor.write(headerLines)
@@ -1054,6 +1060,7 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
 ''')
     headerFileDescriptor.close()
 
+    progress (progbase+0.02*(0.6-progbase),"Writing code")
     # Declare POV Ray variables containing the current makehuman camera.
     povrayCameraData(camera, resolution, outputFileDescriptor, settings)
     
@@ -1068,16 +1075,20 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
     # Calculate some useful values and add them to the output as POV-Ray variable
     # declarations so they can be readily accessed from a POV-Ray scene file.
 
+    progress (progbase+0.04*(0.6-progbase),"Writing code")
     povraySizeData(obj, outputFileDescriptor)
-
+    
     stuffs = exportutils.collect.setupObjects("MakeHuman", gui3d.app.selectedHuman, helpers=False, hidden=False,
                                             eyebrows=False, lashes=False, subdivide = settings['subdivide'],
-                                            progressCallback = lambda p: progress(progbase,p*(0.75-progbase),"Preparing Objects"))
-    progbase = 0.75
+                                            progressCallback = lambda p: progress(progbase+(0.06+0.94*p)*(0.6-progbase),"Analyzing objects"))
+    progbase = 0.6
 
     # Mesh2 Object - Write the initial part of the mesh2 object declaration
-    progress(progbase,0,"Writing objects")
+    stuffnum = float(len(stuffs))
+    i = 0.0
+    nextpb = 0.9
     for stuff in stuffs:
+        progress(progbase+(i/stuffnum)*(nextpb-progbase),"Writing objects")
         obj = stuff.meshInfo.object
 
         outputFileDescriptor.write('// Humanoid mesh2 definition\n')
@@ -1093,6 +1104,7 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
   }
 
 ''')
+        progress(progbase+(i/stuffnum+0.2)*(nextpb-progbase),"Writing objects")
 
         # Normals - Write a POV-Ray array to the output stream
         outputFileDescriptor.write('  normal_vectors {\n  ')
@@ -1104,6 +1116,7 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
   }
 
 ''')
+        progress(progbase+(i/stuffnum+0.4)*(nextpb-progbase),"Writing objects")
     
         # UV Vectors - Write a POV-Ray array to the output stream
         outputFileDescriptor.write('  uv_vectors {\n  ')
@@ -1115,6 +1128,7 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
   }
 
 ''')
+        progress(progbase+(i/stuffnum+0.6)*(nextpb-progbase),"Writing objects")
 
         # Faces - Write a POV-Ray array of arrays to the output stream
         #nTriangles = 0
@@ -1137,6 +1151,7 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
   }
 
 ''')
+        progress(progbase+(i/stuffnum+0.8)*(nextpb-progbase),"Writing objects")
 
 
         # UV Indices for each face - Write a POV-Ray array to the output stream
@@ -1158,10 +1173,10 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
         outputFileDescriptor.write('''}
 
 ''')
-    progbase = 0.85
+    progbase = nextpb
                                             
     # Copy texture definitions to the output file.
-    progress(progbase,0,"Writing Materials")
+    progress(progbase,"Writing Materials")
     try:
         staticContentFileDescriptor = open(staticFile, 'r')
     except:
@@ -1176,15 +1191,15 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
     staticContentFileDescriptor.close()
     
     # Write items' materials 
+    progress(progbase+0.2*(1-progbase),"Writing Materials")
     writeItemsMaterials(outputFileDescriptor, stuffs, settings, outputDirectory)
              
     # The POV-Ray include file is complete
     outputFileDescriptor.close()
     log.message("POV-Ray '#include' file generated.")
-    progbase = 0.95
 
     # Copy a sample scene file across to the output directory
-    progress(progbase,0,"Writing Scene file")
+    progress(1,"Writing Scene file")
     try:
         sceneFileDescriptor = open(sceneFile, 'r')
     except:
@@ -1215,10 +1230,9 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
     # Job done, clean up
     outputSceneFileDescriptor.close()
     sceneFileDescriptor.close()
-    progbase = 1
 
     # Copy the skin texture file into the output directory
-    progress(progbase,0,"Finishing")
+    progress(1,"Finishing")
     copyFile(pigmentMap, os.path.join(outputDirectory, "texture.png"))
 
     for stuff in stuffs[1:]:
@@ -1236,7 +1250,7 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
         """
 
     log.message('Sample POV-Ray scene file generated')
-    progress(0,0,"Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
+    progress(0,"Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
 
 """
 Item types
