@@ -28,7 +28,7 @@ import weakref
 import numpy as np
 import unique
 
-from compat import VertProxy, FaceProxy, VertsProxy, FacesProxy, MaterialsProxy
+from compat import MaterialsProxy
 import matrix
 import log
 
@@ -77,11 +77,6 @@ class FaceGroup(object):
 
     def setColor(self, rgba):
         self.color = np.asarray(rgba, dtype = np.uint8)
-
-    @property
-    def faces(self):
-        for f in np.argwhere(self.object.group == self.idx)[...,0]:
-            yield FaceProxy(self.object, f)
 
 class Object3D(object):
     def __init__(self, objName, vertsPerPrimitive=4):
@@ -196,14 +191,6 @@ class Object3D(object):
         if any(x != 1 for x in self.scale):
             m = m * matrix.scale(self.scale)
         return m
-
-    @property
-    def verts(self):
-        return VertsProxy(self)
-
-    @property
-    def faces(self):
-        return FacesProxy(self)
 
     def calcFaceNormals(self, ix = None):
         if ix is None:
@@ -780,12 +767,6 @@ class Object3D(object):
         vert_mask = np.zeros(len(self.coord), dtype = bool)
         vert_mask[verts] = True
         return vert_mask, face_mask
-
-    def getVerticesAndFacesForGroups(self, groupNames):
-        vert_mask, face_mask = self.getVertexAndFaceMasksForGroups(groupNames)
-        faces = np.argwhere(face_mask)[...,0]
-        verts = np.argwhere(vert_mask)[...,0]
-        return [VertProxy(self, idx) for idx in verts], [FaceProxy(self, idx) for idx in faces]
 
     def updateGroups(self, groupnames, recalcNormals=True, update=True):
         if recalcNormals or update:
