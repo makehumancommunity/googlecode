@@ -91,48 +91,48 @@ def exportDae(human, name, fp, config):
         upaxis = 'Y_UP'
         
     fp.write('<?xml version="1.0" encoding="utf-8"?>\n' +
-'<COLLADA version="1.4.0" xmlns="http://www.collada.org/2005/11/COLLADASchema">\n' +
-'  <asset>\n' +
-'    <contributor>\n' +
-'      <author>www.makehuman.org</author>\n' +
-'    </contributor>\n' +
-'    <created>%s</created>\n' % date +
-'    <modified>%s</modified>\n' % date +
-'    <unit meter="%.4f" name="%s"/>\n' % (0.1/config.scale, config.unit) +
-'    <up_axis>%s</up_axis>\n' % upaxis+
-'  </asset>\n' +
-'  <library_images>\n')
+        '<COLLADA version="1.4.0" xmlns="http://www.collada.org/2005/11/COLLADASchema">\n' +
+        '  <asset>\n' +
+        '    <contributor>\n' +
+        '      <author>www.makehuman.org</author>\n' +
+        '    </contributor>\n' +
+        '    <created>%s</created>\n' % date +
+        '    <modified>%s</modified>\n' % date +
+        '    <unit meter="%.4f" name="%s"/>\n' % (0.1/config.scale, config.unit) +
+        '    <up_axis>%s</up_axis>\n' % upaxis+
+        '  </asset>\n' +
+        '  <library_images>\n')
 
     for stuff in stuffs:
         writeImages(fp, stuff, human, config)
 
     fp.write(
-'  </library_images>\n' +
-'  <library_effects>\n')
+        '  </library_images>\n' +
+        '  <library_effects>\n')
 
     gui3d.app.progress(0.1, text="Exporting effects")
     for stuff in stuffs:
         writeEffects(fp, stuff)
 
     fp.write(
-'  </library_effects>\n' +
-'  <library_materials>\n')
+        '  </library_effects>\n' +
+        '  <library_materials>\n')
 
     gui3d.app.progress(0.2, text="Exporting materials")
     for stuff in stuffs:
         writeMaterials(fp, stuff)
 
     fp.write(
-'  </library_materials>\n'+
-'  <library_controllers>\n')
+        '  </library_materials>\n'+
+        '  <library_controllers>\n')
 
     gui3d.app.progress(0.3, text="Exporting controllers")
     for stuff in stuffs:
         writeController(fp, stuff, config)
 
     fp.write(
-'  </library_controllers>\n'+
-'  <library_geometries>\n')
+        '  </library_controllers>\n'+
+        '  <library_geometries>\n')
 
     dt = 0.4/len(stuffs)
     t = 0.4
@@ -142,29 +142,29 @@ def exportDae(human, name, fp, config):
         writeGeometry(fp, stuff, config)
 
     fp.write(
-'  </library_geometries>\n\n' +
-'  <library_visual_scenes>\n' +
-'    <visual_scene id="Scene" name="Scene">\n' +
-'      <node id="Armature">\n')
+        '  </library_geometries>\n\n' +
+        '  <library_visual_scenes>\n' +
+        '    <visual_scene id="Scene" name="Scene">\n' +
+        '      <node id="Armature">\n')
 
     gui3d.app.progress(0.8, text="Exporting bones")
     for root in mainStuff.boneInfo.hier:
         writeBone(fp, root, [0,0,0], 'layer="L1"', '  ', mainStuff, config)
 
     fp.write(
-'      </node>\n')
+        '      </node>\n')
 
     gui3d.app.progress(0.9, text="Exporting nodes")
     for stuff in stuffs:
         writeNode(fp, "        ", stuff, config)
 
     fp.write(
-'    </visual_scene>\n' +
-'  </library_visual_scenes>\n' +
-'  <scene>\n' +
-'    <instance_visual_scene url="#Scene"/>\n' +
-'  </scene>\n' +
-'</COLLADA>\n')
+        '    </visual_scene>\n' +
+        '  </library_visual_scenes>\n' +
+        '  <scene>\n' +
+        '    <instance_visual_scene url="#Scene"/>\n' +
+        '  </scene>\n' +
+        '</COLLADA>\n')
     return
 
 #
@@ -187,9 +187,9 @@ def writeImages(fp, stuff, human, config):
         else:
             texpath = path
         fp.write(
-        '    <image id="%s" name="%s">\n' % (name, name) +
-        '      <init_from>%s</init_from>\n' % texpath +
-        '    </image>\n'
+            '    <image id="%s" name="%s">\n' % (name, name) +
+            '      <init_from>%s</init_from>\n' % texpath +
+            '    </image>\n'
         )
     return
 
@@ -214,9 +214,9 @@ def writeIntensity(fp, tech, tex, value):
     
 def writeTexture(fp, tech, tex):            
     fp.write(
-'            <%s>\n' % tech +
-'              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % tex +
-'            </%s>\n' % tech)
+        '            <%s>\n' % tech +
+        '              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % tex +
+        '            </%s>\n' % tech)
     return    
     
 BlenderDaeColor = {
@@ -301,41 +301,41 @@ def writeEffects(fp, stuff):
     return
 
 def writeEffectStart(fp, name):        
-        fp.write(
-'    <effect id="%s-effect">\n' % name +
-'      <profile_COMMON>\n')
+    fp.write(
+       '    <effect id="%s-effect">\n' % name +
+       '      <profile_COMMON>\n')
 
 def writePhongStart(fp): 
-        fp.write(
-'        <technique sid="common">\n' +
-'          <phong>\n')
+    fp.write(
+        '        <technique sid="common">\n' +
+        '          <phong>\n')
 
 def writePhongEnd(fp):        
-        fp.write(
-'          </phong>\n' +
-'          <extra/>\n' +
-'        </technique>\n' +
-'        <extra>\n' +
-'          <technique profile="GOOGLEEARTH">\n' +
-'            <show_double_sided>1</show_double_sided>\n' +
-'          </technique>\n' +
-'        </extra>\n' +
-'      </profile_COMMON>\n' +
-'      <extra><technique profile="MAX3D"><double_sided>1</double_sided></technique></extra>\n' +
-'    </effect>\n')
+    fp.write(
+        '          </phong>\n' +
+        '          <extra/>\n' +
+        '        </technique>\n' +
+        '        <extra>\n' +
+        '          <technique profile="GOOGLEEARTH">\n' +
+        '            <show_double_sided>1</show_double_sided>\n' +
+        '          </technique>\n' +
+        '        </extra>\n' +
+        '      </profile_COMMON>\n' +
+        '      <extra><technique profile="MAX3D"><double_sided>1</double_sided></technique></extra>\n' +
+        '    </effect>\n')
 
 def writeSurfaceSampler(fp, tex):
     fp.write(
-'        <newparam sid="%s-surface">\n' % tex +
-'          <surface type="2D">\n' +
-'            <init_from>%s</init_from>\n' % tex +
-'          </surface>\n' +
-'        </newparam>\n' +
-'        <newparam sid="%s-sampler">\n' % tex +
-'          <sampler2D>\n' +
-'            <source>%s-surface</source>\n' % tex +
-'          </sampler2D>\n' +
-'        </newparam>\n')
+        '        <newparam sid="%s-surface">\n' % tex +
+        '          <surface type="2D">\n' +
+        '            <init_from>%s</init_from>\n' % tex +
+        '          </surface>\n' +
+        '        </newparam>\n' +
+        '        <newparam sid="%s-sampler">\n' % tex +
+        '          <sampler2D>\n' +
+        '            <source>%s-surface</source>\n' % tex +
+        '          </sampler2D>\n' +
+        '        </newparam>\n')
 
 #
 #    writeMaterials(fp, stuff):
@@ -346,9 +346,9 @@ def writeMaterials(fp, stuff):
     if matname:
         matname = matname.replace(" ", "_")
         fp.write(
-'    <material id="%s" name="%s">\n' % (matname, matname) +
-'      <instance_effect url="#%s-effect"/>\n' % matname +
-'    </material>\n')
+            '    <material id="%s" name="%s">\n' % (matname, matname) +
+            '      <instance_effect url="#%s-effect"/>\n' % matname +
+            '    </material>\n')
     return
 
 #
@@ -360,54 +360,53 @@ def writeController(fp, stuff, config):
     exportutils.collect.setStuffSkinWeights(stuff)
     nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
-    nNormals = nVerts
     nFaces = len(obj.fvert)
     nWeights = len(stuff.skinWeights)
     nBones = len(stuff.boneInfo.bones)
     nShapes = len(stuff.meshInfo.shapes)
 
     fp.write('\n' +
-'    <controller id="%s-skin">\n' % stuff.name +
-'      <skin source="#%sMesh">\n' % stuff.name +
-'        <bind_shape_matrix>\n' +
-'          1.0 0.0 0.0 0.0 \n' +
-'          0.0 1.0 0.0 0.0 \n' +
-'          0.0 0.0 1.0 0.0 \n' +
-'          0.0 0.0 0.0 1.0 \n' +
-'        </bind_shape_matrix>\n' +
-'        <source id="%s-skin-joints">\n' % stuff.name +
-'          <IDREF_array count="%d" id="%s-skin-joints-array">\n' % (nBones,stuff.name) +
-'           ')
+        '    <controller id="%s-skin">\n' % stuff.name +
+        '      <skin source="#%sMesh">\n' % stuff.name +
+        '        <bind_shape_matrix>\n' +
+        '          1.0 0.0 0.0 0.0 \n' +
+        '          0.0 1.0 0.0 0.0 \n' +
+        '          0.0 0.0 1.0 0.0 \n' +
+        '          0.0 0.0 0.0 1.0 \n' +
+        '        </bind_shape_matrix>\n' +
+        '        <source id="%s-skin-joints">\n' % stuff.name +
+        '          <IDREF_array count="%d" id="%s-skin-joints-array">\n' % (nBones,stuff.name) +
+        '           ')
 
     for b in stuff.boneInfo.bones:
         fp.write(' %s' % b)
     
     fp.write('\n' +
-'          </IDREF_array>\n' +
-'          <technique_common>\n' +
-'            <accessor count="%d" source="#%s-skin-joints-array" stride="1">\n' % (nBones,stuff.name) +
-'              <param type="IDREF" name="JOINT"></param>\n' +
-'            </accessor>\n' +
-'          </technique_common>\n' +
-'        </source>\n' +
-'        <source id="%s-skin-weights">\n' % stuff.name +
-'          <float_array count="%d" id="%s-skin-weights-array">\n' % (nWeights,stuff.name) +
-'           ')
+        '          </IDREF_array>\n' +
+        '          <technique_common>\n' +
+        '            <accessor count="%d" source="#%s-skin-joints-array" stride="1">\n' % (nBones,stuff.name) +
+        '              <param type="IDREF" name="JOINT"></param>\n' +
+        '            </accessor>\n' +
+        '          </technique_common>\n' +
+        '        </source>\n' +
+        '        <source id="%s-skin-weights">\n' % stuff.name +
+        '          <float_array count="%d" id="%s-skin-weights-array">\n' % (nWeights,stuff.name) +
+        '           ')
 
     for (n,b) in enumerate(stuff.skinWeights):
         (v,w) = stuff.skinWeights[n]
         fp.write(' %s' % w)
 
     fp.write('\n' +
-'          </float_array>\n' +    
-'          <technique_common>\n' +
-'            <accessor count="%d" source="#%s-skin-weights-array" stride="1">\n' % (nWeights,stuff.name) +
-'              <param type="float" name="WEIGHT"></param>\n' +
-'            </accessor>\n' +
-'          </technique_common>\n' +
-'        </source>\n' +
-'        <source id="%s-skin-poses">\n' % stuff.name +
-'          <float_array count="%d" id="%s-skin-poses-array">' % (16*nBones,stuff.name))
+        '          </float_array>\n' +    
+        '          <technique_common>\n' +
+        '            <accessor count="%d" source="#%s-skin-weights-array" stride="1">\n' % (nWeights,stuff.name) +
+        '              <param type="float" name="WEIGHT"></param>\n' +
+        '            </accessor>\n' +
+        '          </technique_common>\n' +
+        '        </source>\n' +
+        '        <source id="%s-skin-poses">\n' % stuff.name +
+        '          <float_array count="%d" id="%s-skin-poses-array">' % (16*nBones,stuff.name))
 
     mat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
     for b in stuff.boneInfo.bones:
@@ -422,30 +421,30 @@ def writeController(fp, stuff, config):
                 fp.write('%.4f ' % mat[i][j])
 
     fp.write('\n' +
-'          </float_array>\n' +    
-'          <technique_common>\n' +
-'            <accessor count="%d" source="#%s-skin-poses-array" stride="16">\n' % (nBones,stuff.name) +
-'              <param type="float4x4"></param>\n' +
-'            </accessor>\n' +
-'          </technique_common>\n' +
-'        </source>\n' +
-'        <joints>\n' +
-'          <input semantic="JOINT" source="#%s-skin-joints"/>\n' % stuff.name +
-'          <input semantic="INV_BIND_MATRIX" source="#%s-skin-poses"/>\n' % stuff.name +
-'        </joints>\n' +
-'        <vertex_weights count="%d">\n' % nVerts +
-'          <input offset="0" semantic="JOINT" source="#%s-skin-joints"/>\n' % stuff.name +
-'          <input offset="1" semantic="WEIGHT" source="#%s-skin-weights"/>\n' % stuff.name +
-'          <vcount>\n' +
-'            ')
+        '          </float_array>\n' +    
+        '          <technique_common>\n' +
+        '            <accessor count="%d" source="#%s-skin-poses-array" stride="16">\n' % (nBones,stuff.name) +
+        '              <param type="float4x4"></param>\n' +
+        '            </accessor>\n' +
+        '          </technique_common>\n' +
+        '        </source>\n' +
+        '        <joints>\n' +
+        '          <input semantic="JOINT" source="#%s-skin-joints"/>\n' % stuff.name +
+        '          <input semantic="INV_BIND_MATRIX" source="#%s-skin-poses"/>\n' % stuff.name +
+        '        </joints>\n' +
+        '        <vertex_weights count="%d">\n' % nVerts +
+        '          <input offset="0" semantic="JOINT" source="#%s-skin-joints"/>\n' % stuff.name +
+        '          <input offset="1" semantic="WEIGHT" source="#%s-skin-weights"/>\n' % stuff.name +
+        '          <vcount>\n' +
+        '            ')
 
     for wts in stuff.vertexWeights.values():
         fp.write('%d ' % len(wts))
 
     fp.write('\n' +
-'          </vcount>\n'
-'          <v>\n' +
-'           ')
+        '          </vcount>\n'
+        '          <v>\n' +
+        '           ')
 
     #print(stuff.vertexWeights)
     for (vn,wts) in stuff.vertexWeights.items():
@@ -459,10 +458,10 @@ def writeController(fp, stuff, config):
             fp.write(' %d %d' % (bn, wn))
 
     fp.write('\n' +
-'          </v>\n' +
-'        </vertex_weights>\n' +
-'      </skin>\n' +
-'    </controller>\n')
+        '          </v>\n' +
+        '        </vertex_weights>\n' +
+        '      </skin>\n' +
+        '    </controller>\n')
 
     # Morph controller
     
@@ -470,41 +469,41 @@ def writeController(fp, stuff, config):
         nShapes = len(stuff.meshInfo.shapes)
         
         fp.write(        
-'    <controller id="%sMorph" name="%sMorph">\n' % (stuff.name, stuff.name)+
-'      <morph source="#%sMesh" method="NORMALIZED">\n' % (stuff.name) +
-'        <source id="%sTargets">\n' % (stuff.name) +
-'          <IDREF_array id="%sTargets-array" count="%d">' % (stuff.name, nShapes))
+            '    <controller id="%sMorph" name="%sMorph">\n' % (stuff.name, stuff.name)+
+            '      <morph source="#%sMesh" method="NORMALIZED">\n' % (stuff.name) +
+            '        <source id="%sTargets">\n' % (stuff.name) +
+            '          <IDREF_array id="%sTargets-array" count="%d">' % (stuff.name, nShapes))
 
         for key,_ in stuff.meshInfo.shapes:
             fp.write(" %sMeshMorph_%s" % (stuff.name, key))
 
         fp.write(
-'        </IDREF_array>\n' +
-'          <technique_common>\n' +
-'            <accessor source="#%sTargets-array" count="%d" stride="1">\n' % (stuff.name, nShapes) +
-'              <param name="IDREF" type="IDREF"/>\n' +
-'            </accessor>\n' +
-'          </technique_common>\n' +
-'        </source>\n' +
-'        <source id="%sWeights">\n' % (stuff.name) +
-'          <float_array id="%sWeights-array" count="%d">' % (stuff.name, nShapes))
+            '        </IDREF_array>\n' +
+            '          <technique_common>\n' +
+            '            <accessor source="#%sTargets-array" count="%d" stride="1">\n' % (stuff.name, nShapes) +
+            '              <param name="IDREF" type="IDREF"/>\n' +
+            '            </accessor>\n' +
+            '          </technique_common>\n' +
+            '        </source>\n' +
+            '        <source id="%sWeights">\n' % (stuff.name) +
+            '          <float_array id="%sWeights-array" count="%d">' % (stuff.name, nShapes))
 
         fp.write(nShapes*" 0")
 
         fp.write('\n' +
-'        </float_array>\n' +
-'          <technique_common>\n' +
-'            <accessor source="#%sWeights-array" count="%d" stride="1">\n' % (stuff.name, nShapes) +
-'              <param name="MORPH_WEIGHT" type="float"/>\n' +
-'            </accessor>\n' +
-'          </technique_common>\n' +
-'        </source>\n' +
-'        <targets>\n' +
-'          <input semantic="MORPH_TARGET" source="#%sTargets"/>\n' % (stuff.name) +
-'          <input semantic="MORPH_WEIGHT" source="#%sWeights"/>\n' % (stuff.name) +
-'        </targets>\n' +
-'      </morph>\n' +
-'    </controller>\n')
+            '        </float_array>\n' +
+            '          <technique_common>\n' +
+            '            <accessor source="#%sWeights-array" count="%d" stride="1">\n' % (stuff.name, nShapes) +
+            '              <param name="MORPH_WEIGHT" type="float"/>\n' +
+            '            </accessor>\n' +
+            '          </technique_common>\n' +
+            '        </source>\n' +
+            '        <targets>\n' +
+            '          <input semantic="MORPH_TARGET" source="#%sTargets"/>\n' % (stuff.name) +
+            '          <input semantic="MORPH_WEIGHT" source="#%sWeights"/>\n' % (stuff.name) +
+            '        </targets>\n' +
+            '      </morph>\n' +
+            '    </controller>\n')
 
 
 
@@ -516,17 +515,16 @@ def writeGeometry(fp, stuff, config):
     obj = stuff.meshInfo.object
     nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
-    nNormals = nVerts
     nWeights = len(stuff.skinWeights)
     nBones = len(stuff.boneInfo.bones)
     nShapes = len(stuff.meshInfo.shapes)
 
     fp.write('\n' +
-'    <geometry id="%sMesh" name="%s">\n' % (stuff.name,stuff.name) +
-'      <mesh>\n' +
-'        <source id="%s-Position">\n' % stuff.name +
-'          <float_array count="%d" id="%s-Position-array">\n' % (3*nVerts,stuff.name) +
-'          ')
+        '    <geometry id="%sMesh" name="%s">\n' % (stuff.name,stuff.name) +
+        '      <mesh>\n' +
+        '        <source id="%s-Position">\n' % stuff.name +
+        '          <float_array count="%d" id="%s-Position-array">\n' % (3*nVerts,stuff.name) +
+        '          ')
 
 
     for co in obj.coord:
@@ -534,75 +532,76 @@ def writeGeometry(fp, stuff, config):
         fp.write("%.4f %.4f %.4f " % (x,y,z))
 
     fp.write('\n' +
-'          </float_array>\n' +
-'          <technique_common>\n' +
-'            <accessor count="%d" source="#%s-Position-array" stride="3">\n' % (nVerts,stuff.name) +
-'              <param type="float" name="X"></param>\n' +
-'              <param type="float" name="Y"></param>\n' +
-'              <param type="float" name="Z"></param>\n' +
-'            </accessor>\n' +
-'          </technique_common>\n' +
-'        </source>\n')
+        '          </float_array>\n' +
+        '          <technique_common>\n' +
+        '            <accessor count="%d" source="#%s-Position-array" stride="3">\n' % (nVerts,stuff.name) +
+        '              <param type="float" name="X"></param>\n' +
+        '              <param type="float" name="Y"></param>\n' +
+        '              <param type="float" name="Z"></param>\n' +
+        '            </accessor>\n' +
+        '          </technique_common>\n' +
+        '        </source>\n')
 
     # Normals
-    """
-    fp.write(
-'        <source id="%s-Normals">\n' % stuff.name +
-'          <float_array count="%d" id="%s-Normals-array">\n' % (3*nNormals,stuff.name) +
-'          ')
+    
+    if config.useNormals:
+        obj.calcFaceNormals()
+        nNormals = len(obj.fnorm)
+        fp.write(
+            '        <source id="%s-Normals">\n' % stuff.name +
+            '          <float_array count="%d" id="%s-Normals-array">\n' % (3*nNormals,stuff.name) +
+            '          ')
 
-    for no in obj.vnorm:
-        (x,y,z) = rotateLoc(no, config)
-        fp.write("%.4f %.4f %.4f " % (x,y,z))
+        for no in obj.fnorm:
+            (x,y,z) = rotateLoc(no, config)
+            fp.write("%.4f %.4f %.4f " % (x,y,z))
 
-    fp.write('\n' +
-'          </float_array>\n' +
-'          <technique_common>\n' +
-'            <accessor count="%d" source="#%s-Normals-array" stride="3">\n' % (nNormals,stuff.name) +
-'              <param type="float" name="X"></param>\n' +
-'              <param type="float" name="Y"></param>\n' +
-'              <param type="float" name="Z"></param>\n' +
-'            </accessor>\n' +
-'          </technique_common>\n' +
-'        </source>\n')
-    """
+        fp.write('\n' +
+            '          </float_array>\n' +
+            '          <technique_common>\n' +
+            '            <accessor count="%d" source="#%s-Normals-array" stride="3">\n' % (nNormals,stuff.name) +
+            '              <param type="float" name="X"></param>\n' +
+            '              <param type="float" name="Y"></param>\n' +
+            '              <param type="float" name="Z"></param>\n' +
+            '            </accessor>\n' +
+            '          </technique_common>\n' +
+            '        </source>\n')
     
     # UV coordinates
     
     fp.write(
-'        <source id="%s-UV">\n' % stuff.name +
-
-'          <float_array count="%d" id="%s-UV-array">\n' % (2*nUvVerts,stuff.name) +
-'           ')
+        '        <source id="%s-UV">\n' % stuff.name +
+        '          <float_array count="%d" id="%s-UV-array">\n' % (2*nUvVerts,stuff.name) +
+        '           ')
 
 
     for uv in obj.texco:
         fp.write(" %.4f %.4f" % tuple(uv))
 
     fp.write('\n' +
-'          </float_array>\n' +
-'          <technique_common>\n' +
-'            <accessor count="%d" source="#%s-UV-array" stride="2">\n' % (nUvVerts,stuff.name) +
-'              <param type="float" name="S"></param>\n' +
-'              <param type="float" name="T"></param>\n' +
-'            </accessor>\n' +
-'          </technique_common>\n' +
-'        </source>\n')
+        '          </float_array>\n' +
+        '          <technique_common>\n' +
+        '            <accessor count="%d" source="#%s-UV-array" stride="2">\n' % (nUvVerts,stuff.name) +
+        '              <param type="float" name="S"></param>\n' +
+        '              <param type="float" name="T"></param>\n' +
+        '            </accessor>\n' +
+        '          </technique_common>\n' +
+        '        </source>\n')
 
     # Faces
     
     fp.write(
-'        <vertices id="%s-Vertex">\n' % stuff.name +
-'          <input semantic="POSITION" source="#%s-Position"/>\n' % stuff.name +
-'        </vertices>\n')
+        '        <vertices id="%s-Vertex">\n' % stuff.name +
+        '          <input semantic="POSITION" source="#%s-Position"/>\n' % stuff.name +
+        '        </vertices>\n')
 
     checkFaces(stuff, nVerts, nUvVerts)
-    #writePolygons(fp, stuff)
-    writePolylist(fp, stuff)
+    #writePolygons(fp, stuff, config)
+    writePolylist(fp, stuff, config)
     
     fp.write(
-'      </mesh>\n' +
-'    </geometry>\n')
+        '      </mesh>\n' +
+        '    </geometry>\n')
 
     for name,shape in stuff.meshInfo.shapes:
         writeShapeKey(fp, name, shape, stuff, config)
@@ -616,11 +615,11 @@ def writeShapeKey(fp, name, shape, stuff, config):
     # Verts
     
     fp.write(
-'    <geometry id="%sMeshMorph_%s" name="%s">\n' % (stuff.name, name, name) +
-'      <mesh>\n' +
-'        <source id="%sMeshMorph_%s-positions">\n' % (stuff.name, name) +
-'          <float_array id="%sMeshMorph_%s-positions-array" count="%d">\n' % (stuff.name, name, 3*nVerts) +
-'           ')
+        '    <geometry id="%sMeshMorph_%s" name="%s">\n' % (stuff.name, name, name) +
+        '      <mesh>\n' +
+        '        <source id="%sMeshMorph_%s-positions">\n' % (stuff.name, name) +
+        '          <float_array id="%sMeshMorph_%s-positions-array" count="%d">\n' % (stuff.name, name, 3*nVerts) +
+        '           ')
 
     target = numpy.array(obj.coord)
     for n,dr in shape.items():
@@ -630,15 +629,15 @@ def writeShapeKey(fp, name, shape, stuff, config):
         fp.write(" %.4g %.4g %.4g" % tuple(loc))
 
     fp.write('\n' +
-'          </float_array>\n' +
-'          <technique_common>\n' +
-'            <accessor source="#%sMeshMorph_%s-positions-array" count="%d" stride="3">\n' % (stuff.name, name, nVerts) +
-'              <param name="X" type="float"/>\n' +
-'              <param name="Y" type="float"/>\n' +
-'              <param name="Z" type="float"/>\n' +
-'            </accessor>\n' +
-'          </technique_common>\n' +
-'        </source>\n')
+        '          </float_array>\n' +
+        '          <technique_common>\n' +
+        '            <accessor source="#%sMeshMorph_%s-positions-array" count="%d" stride="3">\n' % (stuff.name, name, nVerts) +
+        '              <param name="X" type="float"/>\n' +
+        '              <param name="Y" type="float"/>\n' +
+        '              <param name="Z" type="float"/>\n' +
+        '            </accessor>\n' +
+        '          </technique_common>\n' +
+        '        </source>\n')
 
     # Normals
     """
@@ -647,27 +646,27 @@ def writeShapeKey(fp, name, shape, stuff, config):
 '          <float_array id="%sMeshMorph_%s-normals-array" count="18">\n' % (stuff.name, name))
 -0.9438583 0 0.3303504 0 0.9438583 0.3303504 0.9438583 0 0.3303504 0 -0.9438583 0.3303504 0 0 -1 0 0 1
     fp.write(
-'          </float_array>\n' +
-'          <technique_common>\n' +
-'            <accessor source="#%sMeshMorph_%s-normals-array" count="6" stride="3">\n' % (stuff.name, name) +
-'              <param name="X" type="float"/>\n' +
-'              <param name="Y" type="float"/>\n' +
-'              <param name="Z" type="float"/>\n' +
-'            </accessor>\n' +
-'          </technique_common>\n' +
-'        </source>\n')
+        '          </float_array>\n' +
+        '          <technique_common>\n' +
+        '            <accessor source="#%sMeshMorph_%s-normals-array" count="6" stride="3">\n' % (stuff.name, name) +
+        '              <param name="X" type="float"/>\n' +
+        '              <param name="Y" type="float"/>\n' +
+        '              <param name="Z" type="float"/>\n' +
+        '            </accessor>\n' +
+        '          </technique_common>\n' +
+        '        </source>\n')
     """
 
     # Polylist
 
     fp.write(
-'        <vertices id="%sMeshMorph_%s-vertices">\n' % (stuff.name, name) +
-'          <input semantic="POSITION" source="#%sMeshMorph_%s-positions"/>\n' % (stuff.name, name) +
-'        </vertices>\n' +
-'        <polylist count="%d">\n' % len(obj.fvert) +
-'          <input semantic="VERTEX" source="#%sMeshMorph_%s-vertices" offset="0"/>\n' % (stuff.name, name) +
-#'          <input semantic="NORMAL" source="#%sMeshMorph_%s-normals" offset="1"/>\n' % (stuff.name, name) +
-'          <vcount>')
+        '        <vertices id="%sMeshMorph_%s-vertices">\n' % (stuff.name, name) +
+        '          <input semantic="POSITION" source="#%sMeshMorph_%s-positions"/>\n' % (stuff.name, name) +
+        '        </vertices>\n' +
+        '        <polylist count="%d">\n' % len(obj.fvert) +
+        '          <input semantic="VERTEX" source="#%sMeshMorph_%s-vertices" offset="0"/>\n' % (stuff.name, name) +
+        #'          <input semantic="NORMAL" source="#%sMeshMorph_%s-normals" offset="1"/>\n' % (stuff.name, name) +
+        '          <vcount>')
 
     for fv in obj.fvert:
         if fv[0] == fv[3]:
@@ -676,8 +675,8 @@ def writeShapeKey(fp, name, shape, stuff, config):
             fp.write("4 ")
         
     fp.write('\n' +
-'          </vcount>\n' +
-'          <p>')
+        '          </vcount>\n' +
+        '          <p>')
 
     for fv in obj.fvert:
         if fv[0] == fv[3]:
@@ -686,24 +685,24 @@ def writeShapeKey(fp, name, shape, stuff, config):
             fp.write("%d %d %d %s " % (fv[0], fv[1], fv[2], fv[3]))
 
     fp.write('\n' +
-'          </p>\n' +
-'        </polylist>\n' +
-'      </mesh>\n' +
-'    </geometry>\n')
+        '          </p>\n' +
+        '        </polylist>\n' +
+        '      </mesh>\n' +
+        '    </geometry>\n')
 
     
 #
-#   writePolygons(fp, stuff):
-#   writePolylist(fp, stuff):
+#   writePolygons(fp, stuff, config):
+#   writePolylist(fp, stuff, config):
 #
 
-def writePolygons(fp, stuff):
+def writePolygons(fp, stuff, config):
     obj = stuff.meshInfo.object
     fp.write(        
-'        <polygons count="%d">\n' % len(obj.fvert) +
-'          <input offset="0" semantic="VERTEX" source="#%s-Vertex"/>\n' % stuff.name +
-'          <input offset="1" semantic="NORMAL" source="#%s-Normals"/>\n' % stuff.name +
-'          <input offset="2" semantic="TEXCOORD" source="#%s-UV"/>\n' % stuff.name)
+        '        <polygons count="%d">\n' % len(obj.fvert) +
+        '          <input offset="0" semantic="VERTEX" source="#%s-Vertex"/>\n' % stuff.name +
+        '          <input offset="1" semantic="NORMAL" source="#%s-Normals"/>\n' % stuff.name +
+        '          <input offset="2" semantic="TEXCOORD" source="#%s-UV"/>\n' % stuff.name)
 
     for fn,fverts in enumerate(obj.fvert):
         fuv = obj.fuvs[fn]
@@ -713,17 +712,24 @@ def writePolygons(fp, stuff):
         fp.write('</p>\n')
     
     fp.write('\n' +
-'        </polygons>\n')
+        '        </polygons>\n')
     return
 
-def writePolylist(fp, stuff):
+def writePolylist(fp, stuff, config):
     obj = stuff.meshInfo.object
     fp.write(        
-'        <polylist count="%d">\n' % len(obj.fvert) +
-'          <input offset="0" semantic="VERTEX" source="#%s-Vertex"/>\n' % stuff.name +
-'          <input offset="1" semantic="NORMAL" source="#%s-Normals"/>\n' % stuff.name +
-'          <input offset="2" semantic="TEXCOORD" source="#%s-UV"/>\n' % stuff.name +
-'          <vcount>')
+        '        <polylist count="%d">\n' % len(obj.fvert) +
+        '          <input offset="0" semantic="VERTEX" source="#%s-Vertex"/>\n' % stuff.name)
+        
+    if config.useNormals:
+        fp.write(
+        '          <input offset="1" semantic="NORMAL" source="#%s-Normals"/>\n' % stuff.name +
+        '          <input offset="2" semantic="TEXCOORD" source="#%s-UV"/>\n' % stuff.name +
+        '          <vcount>')
+    else:
+        fp.write(
+        '          <input offset="1" semantic="TEXCOORD" source="#%s-UV"/>\n' % stuff.name +
+        '          <vcount>')
 
     for fv in obj.fvert:
         if fv[0] == fv[3]:
@@ -732,8 +738,8 @@ def writePolylist(fp, stuff):
             fp.write('4 ')
 
     fp.write('\n' +
-'          </vcount>\n'
-'          <p>')
+        '          </vcount>\n'
+        '          <p>')
 
     for fn,fv in enumerate(obj.fvert):
         fuv = obj.fuvs[fn]
@@ -741,12 +747,16 @@ def writePolylist(fp, stuff):
             nverts = 3
         else:
             nverts = 4
-        for n in range(nverts):
-            fp.write("%d %d %d " % (fv[n], fv[n], fuv[n]))
+        if config.useNormals:
+            for n in range(nverts):
+                fp.write("%d %d %d " % (fv[n], fn, fuv[n]))
+        else:
+            for n in range(nverts):
+                fp.write("%d %d " % (fv[n], fuv[n]))
 
     fp.write(
-'          </p>\n' +
-'        </polylist>\n')
+        '          </p>\n' +
+        '        </polylist>\n')
     return
 
 #
@@ -770,35 +780,32 @@ def checkFaces(stuff, nVerts, nUvVerts):
 
 def writeNode(fp, pad, stuff, config):    
     fp.write('\n' +
-'%s<node id="%sObject" name="%s">\n' % (pad, stuff.name,stuff.name) +
-'%s  <translate sid="translate">0 0 0</translate>\n' % pad +
-'%s  <rotate sid="rotateZ">0 0 1 0</rotate>\n' % pad +
-'%s  <rotate sid="rotateY">0 1 0 0</rotate>\n' % pad +
-'%s  <rotate sid="rotateX">1 0 0 0</rotate>\n' % pad+
-#'%s  <scale sid="scale">1 1 1</scale>\n' % pad+
-'%s  <instance_controller url="#%s-skin">\n' % (pad, stuff.name) +
-'%s    <skeleton>#%s</skeleton>\n' % (pad, stuff.boneInfo.root))
+        '%s<node id="%sObject" name="%s">\n' % (pad, stuff.name,stuff.name) +
+        '%s  <translate sid="translate">0 0 0</translate>\n' % pad +
+        '%s  <rotate sid="rotateZ">0 0 1 0</rotate>\n' % pad +
+        '%s  <rotate sid="rotateY">0 1 0 0</rotate>\n' % pad +
+        '%s  <rotate sid="rotateX">1 0 0 0</rotate>\n' % pad+
+        #'%s  <scale sid="scale">1 1 1</scale>\n' % pad+
+        '%s  <instance_controller url="#%s-skin">\n' % (pad, stuff.name) +
+        '%s    <skeleton>#%s</skeleton>\n' % (pad, stuff.boneInfo.root))
 
     (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)    
     if matname:
         matname = matname.replace(" ", "_")    
         fp.write(
-'%s    <bind_material>\n' % pad +
-'%s      <technique_common>\n' % pad +
-'%s        <instance_material symbol="%s" target="#%s">\n' % (pad, matname, matname) +
-'%s          <bind_vertex_input semantic="UVTex" input_semantic="TEXCOORD" input_set="0"/>\n' % pad +
-'%s        </instance_material>\n' % pad +
-'%s      </technique_common>\n' % pad +
-'%s    </bind_material>\n' % pad)
+            '%s    <bind_material>\n' % pad +
+            '%s      <technique_common>\n' % pad +
+            '%s        <instance_material symbol="%s" target="#%s">\n' % (pad, matname, matname) +
+            '%s          <bind_vertex_input semantic="UVTex" input_semantic="TEXCOORD" input_set="0"/>\n' % pad +
+            '%s        </instance_material>\n' % pad +
+            '%s      </technique_common>\n' % pad +
+            '%s    </bind_material>\n' % pad)
 
     fp.write(
-'%s  </instance_controller>\n' % pad +
-'%s</node>\n' % pad)
+        '%s  </instance_controller>\n' % pad +
+        '%s</node>\n' % pad)
     return
 
-#
-#
-#
 
 def rotateLoc(loc, config):    
     (x,y,z) = loc
@@ -815,65 +822,29 @@ def rotateLoc(loc, config):
 
 def writeBone(fp, bone, orig, extra, pad, stuff, config):
     (name, children) = bone
-    head = stuff.boneInfo.heads[name]
-    vec = head - orig
-    printNode(fp, name, vec, extra, pad, config)
-    for child in children:
-        writeBone(fp, child, head, '', pad+'  ', stuff, config)    
-    fp.write('\n%s      </node>' % pad)
-    return
-    
-    
-def printNode(fp, name, vec, extra, pad, config):
     if name:
         nameStr = 'sid="%s"' % name
         idStr = 'id="%s" name="%s"' % (name, name)
     else:
         nameStr = ''
         idStr = ''
-    fp.write('\n'+
-'%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr) +
-'%s        <translate sid="translate"> ' % pad)
-    #(scale, name) = config["scale"]
+
+    head = stuff.boneInfo.heads[name]
+    vec = head - orig
     (x,y,z) = rotateLoc(vec, config)
-    fp.write("%.4f %.4f %.4f " % (x,y,z))
-    fp.write('</translate>\n' +
-'%s        <rotate sid="rotateZ">0 0 1 0.0</rotate>\n' % pad +
-'%s        <rotate sid="rotateY">0 1 0 0.0</rotate>\n' % pad +
-'%s        <rotate sid="rotateX">1 0 0 0.0</rotate>\n' % pad +
-'%s        <scale sid="scale">1.0 1.0 1.0</scale>' % pad)
+
+    fp.write('\n'+
+        '%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr) +
+        '%s        <translate sid="translate"> %.4f %.4f %.4f </translate>\n' % (pad,x,y,z) +
+        '%s        <rotate sid="rotateZ">0 0 1 0.0</rotate>\n' % pad +
+        '%s        <rotate sid="rotateY">0 1 0 0.0</rotate>\n' % pad +
+        '%s        <rotate sid="rotateX">1 0 0 0.0</rotate>\n' % pad +
+        '%s        <scale sid="scale">1.0 1.0 1.0</scale>' % pad)    
+
+    for child in children:
+        writeBone(fp, child, head, '', pad+'  ', stuff, config)    
+
+    fp.write('\n%s      </node>' % pad)
+    return
     
-
-#
-#    loadShapeKeys(tmplName):    
-#    ShapeKey BrowsDown LR toggle&T_Face
-#      sv 2139 0 0 -0.0109844
-#
-
-def loadShapeKeys(tmplName):
-    tmpl = open(tmplName, "rU")
-    if tmpl == None:
-        log.warning("Cannot open template %s" % tmplName)
-        return []
-
-    targets = []
-    for line in tmpl:
-        lineSplit= line.split()
-
-        if len(lineSplit) == 0:
-            pass
-        elif lineSplit[0] == 'ShapeKey':
-            morph = {}
-            targets.append((lineSplit[1], morph))
-        elif lineSplit[0] == 'wv':
-            v = int(lineSplit[1])
-            x = float(lineSplit[2])
-            y = float(lineSplit[3])
-            z = float(lineSplit[4])
-            morph[v] = [x,y,z]
-
-    tmpl.close()
-    return targets
-
-    
-
+            

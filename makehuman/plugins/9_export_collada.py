@@ -34,6 +34,7 @@ class DaeConfig(Config):
         
         self.useRelPaths = True
         self.rigtype =   rigtype
+        self.useNormals = exporter.useNormals.selected
         self.rotate90X = exporter.rotate90X.selected
         self.rotate90Z = exporter.rotate90Z.selected
         self.expressions     = exporter.expressions.selected
@@ -49,6 +50,7 @@ class ExporterCollada(Exporter):
 
     def build(self, options, taskview):
         Exporter.build(self, options, taskview)
+        self.useNormals = options.addWidget(gui.CheckBox("Vertex normals", False))
         self.rotate90X = options.addWidget(gui.CheckBox("Rotate 90 X", False))
         self.rotate90Z = options.addWidget(gui.CheckBox("Rotate 90 Z", False))
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))

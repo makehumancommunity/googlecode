@@ -23,6 +23,7 @@ Exports proxy mesh to obj
 """
 
 import os
+import math
 import exportutils
 import mh2proxy
 
@@ -62,10 +63,14 @@ def exportObj(human, filepath, config):
 
     # Vertex normals
     
-    for stuff in stuffs:
-        obj = stuff.meshInfo.object
-        #for no in obj.vnorm:
-        #    fp.write("vn %.4g %.4g %.4g\n" % tuple(no))
+    if config.useNormals:
+        for stuff in stuffs:
+            obj = stuff.meshInfo.object
+            obj.calcFaceNormals()
+            #obj.calcVertexNormals()
+            for no in obj.fnorm:
+                no = no/math.sqrt(no.dot(no))
+                fp.write("vn %.4g %.4g %.4g\n" % tuple(no))
 
 
     # UV vertices
@@ -84,23 +89,32 @@ def exportObj(human, filepath, config):
         fp.write("usemtl %s\n" % stuff.name)
         fp.write("g %s\n" % stuff.name)    
         obj = stuff.meshInfo.object
-        if obj.has_uv:
-            for fn,fv in enumerate(obj.fvert):
-                fp.write('f ')
-                fuv = obj.fuvs[fn]                
-                if fv[0] == fv[3]:
-                    nv = 3
+        for fn,fv in enumerate(obj.fvert):
+            fp.write('f ')
+            fuv = obj.fuvs[fn]                
+            if fv[0] == fv[3]:
+                nv = 3
+            else:
+                nv = 4
+            if config.useNormals:
+                if obj.has_uv:            
+                    for n in range(nv):
+                        vn = fv[n]+nVerts
+                        fp.write("%d/%d/%d " % (vn, fuv[n]+nTexVerts, fn))
                 else:
-                    nv = 4
-                for n in range(nv):
-                    fp.write("%d/%d " % (fv[n]+nVerts, fuv[n]+nTexVerts))
-                fp.write('\n')
-        else:            
-            for fv in obj.fvert:
-                if fv[0] == fv[3]:
-                    fp.write("f %d %d %d\n" % (fv[0]+nVerts, fv[1]+nVerts, fv[2]+nVerts))
+                    for n in range(nv):
+                        vn = fv[n]+nVerts
+                        fp.write("%d//%d " % (vn, fn))
+            else:
+                if obj.has_uv:
+                    for n in range(nv):
+                        vn = fv[n]+nVerts
+                        fp.write("%d/%d " % (vn, fuv[n]+nTexVerts))
                 else:
-                    fp.write("f %d %d %d %d\n" % (fv[0]+nVerts, fv[1]+nVerts, fv[2]+nVerts, fv[3]+nVerts))
+                    for n in range(nv):
+                        vn = fv[n]+nVerts
+                        fp.write("%d " % (vn))
+            fp.write('\n')
         
         nVerts += len(obj.coord)
         nTexVerts += len(obj.texco)
