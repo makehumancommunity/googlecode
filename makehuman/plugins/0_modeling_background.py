@@ -35,7 +35,7 @@ import projection
 import gui
 import filechooser as fc
 import log
-from language import language
+import language
 import texture
 
 class BackgroundAction(gui3d.Action):
@@ -237,7 +237,7 @@ class BackgroundChooser(gui3d.TaskView):
 
         gui3d.TaskView.onShow(self, event)
         gui3d.app.selectedHuman.hide()
-        text = language.getLanguageString(u'Images which are placed in %s will show up here.') % self.backgroundsFolder
+        text = language.language.getLanguageString(u'Images which are placed in %s will show up here.') % self.backgroundsFolder
         gui3d.app.prompt('Info', text, 'OK', helpId='backgroundHelp')
         gui3d.app.statusPersist(text)
         self.opacitySlider.setValue(self.opacity)

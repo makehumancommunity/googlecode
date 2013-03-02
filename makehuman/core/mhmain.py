@@ -40,7 +40,7 @@ from aljabr import centroid
 import algos3d
 #import posemode
 import gui
-import language as lang
+import language
 import log
 
 @contextlib.contextmanager
@@ -702,16 +702,16 @@ class MHApplication(gui3d.Application, mh.Application):
         else:
             return os.path.join("data/themes/default/", folder, id)
 
-    def setLanguage(self, language):
-        log.debug("Setting language to %s", language)
-        lang.language.setLanguage(language)
-        self.settings['rtl'] = lang.language.rtl
+    def setLanguage(self, lang):
+        log.debug("Setting language to %s", lang)
+        language.language.setLanguage(lang)
+        self.settings['rtl'] = language.language.rtl
 
     def getLanguageString(self, string):
-        return lang.language.getLanguageString(string)
+        return language.language.getLanguageString(string)
 
     def dumpMissingStrings(self):
-        lang.language.dumpMissingStrings()
+        language.language.dumpMissingStrings()
 
     # Caption
     def setCaption(self, caption):
