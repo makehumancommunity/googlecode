@@ -33,6 +33,10 @@ class EditingTaskView(gui3d.TaskView):
         value = self.converter.displayToData(self.radius)
         self.radiusSlider = self.addLeftWidget(gui.Slider(value, min=-5.0, max=3.0, label="Radius",
                                                           valueConverter=self.converter))
+        self.modeBox = self.addLeftWidget(gui.GroupBox("Mode"))
+        modes = []
+        self.grab = self.modeBox.addWidget(gui.RadioButton(modes, "Grab", selected=True))
+        self.norm = self.modeBox.addWidget(gui.RadioButton(modes, "Normal"))
 
         self.buildCircle()
         self.updateRadius()
@@ -123,7 +127,12 @@ class EditingTaskView(gui3d.TaskView):
         pos = np.array([x, y, z])
         delta = pos - self.center
 
-        coord = self.original + delta[None,:] * self.weights[:,None]
+        if self.norm.selected:
+            dist = np.sqrt(np.sum(delta ** 2, axis=-1))
+            coord = self.original + dist * self.weights[:,None] * human.meshData.vnorm[self.verts]
+        else:
+            coord = self.original + delta[None,:] * self.weights[:,None]
+
         human.meshData.changeCoords(coord, self.verts)
         human.meshData.calcNormals(True, True, self.verts, self.faces)
         human.meshData.update()
