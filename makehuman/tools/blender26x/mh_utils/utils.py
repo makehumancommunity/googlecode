@@ -176,96 +176,13 @@ def printVec(string, vec):
     print(string, "(%.4f %.4f %.4f)" % (vec[0], vec[1], vec[2]))
     
 #----------------------------------------------------------
-#   setupVertexPairs(ob, insist):
-#----------------------------------------------------------
-
-mh.Left = {}
-mh.Right = {}
-mh.Mid = {}
-
-def setupVertexPairs(context, insist):
-    if mh.Left.keys() and not insist:
-        print("Vertex pair already set up")
-        return
-    ob = context.object
-    verts = []
-    for v in ob.data.vertices:
-        x = v.co[0]
-        y = v.co[1]
-        z = v.co[2]
-        verts.append((z,y,x,v.index))
-    verts.sort()     
-    
-    mh.Left = {}
-    mh.Right = {}
-    mh.Mid = {}
-    nmax = len(verts)
-    notfound = []
-    for n,data in enumerate(verts):
-        (z,y,x,vn) = data
-        findMirrorVert(n, nmax, verts, vn, x, y, z, Epsilon, notfound)
-    
-    """
-    remainder = notfound
-    notfound = []
-    for n,vn,x,y,z in remainder:
-        findMirrorVert(n, nmax, verts, vn, x, y, z, 12*Epsilon, notfound)
-    """
-    
-    if notfound:            
-        print("Did not find mirror image for vertices:")
-        for n,vn,x,y,z in notfound:
-            print("  %d at (%.4f %.4f %.4f)" % (vn, x, y, z))
-        selectVerts(notfound, ob)
-    print("left-right-mid", len(mh.Left.keys()), len(mh.Right.keys()), len(mh.Mid.keys()))
-    return
-    
-    
-def findMirrorVert(n, nmax, verts, vn, x, y, z, epsilon, notfound):        
-    n1 = n - 20
-    n2 = n + 20
-    if n1 < 0: n1 = 0
-    if n2 >= nmax: n2 = nmax
-    vmir = findVert(n, verts[n1:n2], vn, -x, y, z, notfound)
-    if vmir < 0:
-        mh.Mid[vn] = vn
-    elif x > epsilon:
-        mh.Left[vn] = vmir
-    elif x < -epsilon:
-        mh.Right[vn] = vmir
-    else:
-        mh.Mid[vn] = vmir
-
-
-def selectVerts(notfound, ob):
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.mesh.select_all(action='DESELECT')
-    bpy.ops.object.mode_set(mode='OBJECT')
-    for n,vn,x,y,z in notfound:
-        ob.data.vertices[vn].select = True
-    return    
-    
-
-def findVert(n, verts, v, x, y, z, notfound):
-    for (z1,y1,x1,v1) in verts:
-        dx = x-x1
-        dy = y-y1
-        dz = z-z1
-        dist = math.sqrt(dx*dx + dy*dy + dz*dz)
-        if dist < Epsilon:
-            return v1
-    if abs(x) > Epsilon:            
-        notfound.append((n,v,x,y,z))
-    return -1            
-
-#----------------------------------------------------------
 #   loadTarget(filepath, context):
 #----------------------------------------------------------
 
 def loadTarget(filepath, context, firstIrrelevant=100000, lastIrrelevant=100000, offset=0):
     realpath = os.path.realpath(os.path.expanduser(filepath))
     fp = open(realpath, "rU")  
-    #print("Loading target %s" % realpath)
+    print("Loading target %s, ignoring %d to %d" % (realpath, firstIrrelevant, lastIrrelevant))
 
     ob = context.object
     bpy.ops.object.mode_set(mode='OBJECT')

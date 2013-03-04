@@ -99,13 +99,13 @@ class CSettings(mh.CSettings):
         elif version == "alpha8":
 
             self.irrelevantVerts = {
-               "Body" : (self.vertices["Body"][0], self.nTotalVerts),
+               "Body" : (self.vertices["Penis"][0], self.nTotalVerts),
                "Skirt" : (self.vertices["Skirt"][1], self.nTotalVerts),
-               "Tights" : (self.vertices["Skirt"][0], self.nTotalVerts),
+               "Tights" : (self.vertices["Tights"][1], self.nTotalVerts),
             }
 
             self.affectedVerts = {
-                "Body" : (0, self.vertices["Tights"][0]),
+                "Body" : (0, self.vertices["Penis"][0]),
                 "Skirt" : self.vertices["Skirt"],
                 "Tights" : self.vertices["Tights"],
             }

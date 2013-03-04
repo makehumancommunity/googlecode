@@ -51,7 +51,6 @@ def importBaseObj(context, filepath=None):
     ob["ProxyFile"] = 0
     ob["ObjFile"] =  filepath
     ob["MhxMesh"] = True
-    utils.setupVertexPairs(context, True)
     print("Base object imported")
     return ob
 
@@ -66,7 +65,6 @@ def importBaseMhclo(context, filepath=None):
     ob["ProxyFile"] = filepath
     ob["ObjFile"] = mh.proxy.obj_file
     ob["MhxMesh"] = True
-    utils.setupVertexPairs(context, True)
     print("Base object imported")
     print(mh.proxy)
     return ob

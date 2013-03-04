@@ -26,7 +26,7 @@
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "0.4",
+    "version": "1.00",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -38,14 +38,15 @@ if "bpy" in locals():
     print("Reloading maketarget")
     import imp    
     imp.reload(mh_utils)
-    imp.reload(mh)
     imp.reload(utils)
+    """
+    imp.reload(mh)
     imp.reload(settings)
     imp.reload(proxy)
     imp.reload(warp)
     imp.reload(import_obj)
     imp.reload(character)
-    
+    """
     imp.reload(mt)
     imp.reload(maketarget)
     imp.reload(export_mh_obj)
@@ -57,14 +58,15 @@ else:
     from bpy_extras.io_utils import ImportHelper, ExportHelper
 
     import mh_utils
-    from mh_utils import mh
     from mh_utils import utils
+    """
+    from mh_utils import mh
     from mh_utils import settings
     from mh_utils import proxy
     from mh_utils import warp
     from mh_utils import import_obj
     from mh_utils import character
-    
+    """
     from . import mt
     from . import maketarget
     from . import export_mh_obj
@@ -74,7 +76,7 @@ else:
 #----------------------------------------------------------
 
 class MakeTargetPanel(bpy.types.Panel):
-    bl_label = "Make Target"
+    bl_label = "Make Target  Version %s" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     
@@ -88,35 +90,33 @@ class MakeTargetPanel(bpy.types.Panel):
         scn = context.scene
         if not utils.drawConfirm(layout, scn):
             return
-            
-        settings.drawDirectories(layout, scn)
 
-        if False:
-            layout.label("Pruning")
-            row = layout.row()
-            row.prop(ob, "MhPruneEnabled")
-            row.prop(ob, "MhPruneWholeDir")
-            row.prop(ob, "MhPruneRecursively")
-            layout.operator("mh.prune_target_file")
+        layout.prop(scn, "MhAdvanced")
+        if scn.MhAdvanced:            
+            mh_utils.settings.drawDirectories(layout, scn)
 
-        layout.label("Load materials from")
-        layout.prop(scn, "MhLoadMaterial", expand=True)
-        layout.separator()
+            if False:
+                layout.label("Pruning")
+                row = layout.row()
+                row.prop(ob, "MhPruneEnabled")
+                row.prop(ob, "MhPruneWholeDir")
+                row.prop(ob, "MhPruneRecursively")
+                layout.operator("mh.prune_target_file")
+
+            layout.label("Load materials from")
+            layout.prop(scn, "MhLoadMaterial", expand=True)
+            layout.separator()
+
         if utils.isBaseOrTarget(ob):
-            layout.operator("mh.quick_import_base_mhclo", text="Quick Reimport Base Mhclo").delete = True
-            layout.operator("mh.quick_import_base_obj", text="Quick Reimport Base Obj").delete = True
-            layout.operator("mh.import_base_obj", text="Reimport Base Obj").delete = True
-            #layout.operator("mh.delete_clothes")
-            #layout.operator("mh.tights_only")
+            layout.operator("mh.reset_base")
         else:
-            layout.operator("mh.quick_import_base_mhclo", text="Quick Import Base Mhclo").delete = False
-            layout.operator("mh.quick_import_base_obj", text="Quick Import Base Obj").delete = False
-            layout.operator("mh.import_base_obj", text="Import Base Obj").delete = False
-            #if rig and rig.type == 'ARMATURE':
-            if True:
-                layout.operator("mh.make_base_obj")
+            layout.operator("mh.import_base_obj", text="Import Base Obj")
+            layout.operator("mh.import_base_mhclo", text="Import Base Mhclo")
+            layout.operator("mh.make_base_obj")
+        layout.prop(scn, "MhDeleteHelpers")
 
         if utils.isBase(ob):
+            layout.label("Load Target")
             layout.operator("mh.new_target")
             layout.operator("mh.load_target")            
             layout.operator("mh.load_target_from_mesh")                        
@@ -127,7 +127,6 @@ class MakeTargetPanel(bpy.types.Panel):
                 layout.operator("mh.fix_inconsistency")
                 return
             layout.separator()
-            layout.prop(ob, "show_only_shape_key")
             box = layout.box()
             n = 0
             for skey in ob.data.shape_keys.key_blocks:
@@ -143,33 +142,41 @@ class MakeTargetPanel(bpy.types.Panel):
                 row.prop(skey, "value", text=skey.name)
                 n += 1
 
-            layout.separator()
+            layout.label("Load Target")
             layout.operator("mh.new_target", text="New Secondary Target")
             layout.operator("mh.load_target", text="Load Secondary From File")            
-            layout.operator("mh.load_target_from_mesh", text="Load Secondary From Mesh")                        
-            layout.operator("mh.fit_target")
-            layout.separator()
+            layout.operator("mh.load_target_from_mesh", text="Load Secondary From Mesh")    
+            ext = os.path.splitext(ob.MhFilePath)[1]
+            if ext == ".mhclo":
+                layout.operator("mh.fit_target")
+
+            layout.label("Discard Target")
             layout.operator("mh.discard_target")
             layout.operator("mh.discard_all_targets")
-            layout.operator("mh.apply_targets")
 
-            layout.separator()            
-            row = layout.row()
-            row.prop(ob, "SelectedOnly")
-            row.prop(ob, "MhZeroOtherTargets")
+            layout.label("Symmetry")
+            row = layout.row()            
+            row.operator("mh.symmetrize_target", text="Left->Right").action = "Left"
+            row.operator("mh.symmetrize_target", text="Right->Left").action = "Right"
+            if scn.MhAdvanced:
+                row.operator("mh.symmetrize_target", text="Mirror").action = "Mirror"
+
+            layout.label("Save Target")            
+            layout.prop(ob, "SelectedOnly")
+            if scn.MhAdvanced:
+                layout.prop(ob, "MhZeroOtherTargets")
             if ob["FilePath"]:
                 layout.operator("mh.save_target")           
             layout.operator("mh.saveas_target")       
-            
-            layout.separator()
-            layout.operator("mh.symmetrize_target", text="Symm Left->Right").action = "Left"
-            layout.operator("mh.symmetrize_target", text="Symm Right->Left").action = "Right"
-            layout.operator("mh.symmetrize_target", text="Mirror Target").action = "Mirror"
-            if ob.MhAffectOnly == 'Skirt':
-                layout.operator("mh.snap_waist")
-                layout.operator("mh.straighten_skirt")
 
+            if scn.MhAdvanced:
+                layout.separator()
+                layout.operator("mh.apply_targets")
+            
+        if not scn.MhAdvanced:
             return
+
+        if utils.isBaseOrTarget(ob):
             layout.separator()
             if ob.MhIrrelevantDeleted:
                 layout.label("Only %s Affected" % ob.MhAffectOnly)
@@ -178,6 +185,10 @@ class MakeTargetPanel(bpy.types.Panel):
                 layout.prop(ob, "MhAffectOnly", expand=True)
                 layout.operator("mh.delete_irrelevant")  
                 
+            if ob.MhAffectOnly == 'Skirt':
+                layout.operator("mh.snap_waist")
+                layout.operator("mh.straighten_skirt")
+
         if rig and rig.type == 'ARMATURE':
             layout.separator()
             layout.label("Export/Import MHP")
@@ -257,7 +268,7 @@ class OBJECT_OT_FactorySettingsButton(bpy.types.Operator):
     bl_label = "Restore Factory Settings"
 
     def execute(self, context):
-        settings.restoreFactorySettings(context)
+        mh_utils.settings.restoreFactorySettings(context)
         return{'FINISHED'}    
 
 
@@ -266,7 +277,7 @@ class OBJECT_OT_SaveSettingsButton(bpy.types.Operator):
     bl_label = "Save Settings"
 
     def execute(self, context):
-        settings.saveDefaultSettings(context)
+        mh_utils.settings.saveDefaultSettings(context)
         return{'FINISHED'}    
 
 
@@ -275,7 +286,7 @@ class OBJECT_OT_ReadSettingsButton(bpy.types.Operator):
     bl_label = "Read Settings"
 
     def execute(self, context):
-        settings.readDefaultSettings(context)
+        mh_utils.settings.readDefaultSettings(context)
         return{'FINISHED'}    
 
 #----------------------------------------------------------

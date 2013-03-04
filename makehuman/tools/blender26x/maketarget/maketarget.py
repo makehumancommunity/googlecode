@@ -49,14 +49,12 @@ from mathutils import Vector, Quaternion, Matrix
 from bpy.props import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
+import mh_utils
 from mh_utils import mh
 from mh_utils import utils
 from mh_utils.utils import round
-from mh_utils import proxy
-from mh_utils import import_obj
 
 Epsilon = 1e-4
-NTotalVerts    = 18528
 
 #----------------------------------------------------------
 #   Settings
@@ -65,55 +63,62 @@ NTotalVerts    = 18528
 from . import mt
 
 def setSettings(context):
-    global settings
+    global theSettings
     ob = context.object
     if len(ob.data.vertices) == mt.settings["alpha7"].nTotalVerts:
         print("Alpha 7 mesh detected")
-        settings = mt.settings["alpha7"]
+        theSettings = mt.settings["alpha7"]
     elif len(ob.data.vertices) == mt.settings["alpha8"].nTotalVerts:
         print("Alpha 8 mesh detected")
-        settings = mt.settings["alpha8"]
+        theSettings = mt.settings["alpha8"]
     else:
         print("Unknown mesh version")
-        settings = None
+        theSettings = None
 
 #----------------------------------------------------------
 #   
 #----------------------------------------------------------
 
-class VIEW3D_OT_QuickImportBaseMhcloButton(bpy.types.Operator):
-    bl_idname = "mh.quick_import_base_mhclo"
-    bl_label = "Mhclo"
+def afterImport(context, filepath):
+    ob = context.object
+    scn = context.scene
+    ob.MhFilePath = filepath
+    setSettings(context)
+    if scn.MhDeleteHelpers:
+        affect = "Body"
+    else:
+        affect = "All"
+    deleteIrrelevant(ob, affect)
+
+
+class VIEW3D_OT_ImportBaseMhcloButton(bpy.types.Operator):
+    bl_idname = "mh.import_base_mhclo"
+    bl_label = "Import Base Mhclo File"
     bl_options = {'UNDO'}
-    delete = BoolProperty()
 
-    def execute(self, context):    
-        if self.delete:
-            utils.deleteAll(context)
-        import_obj.importBaseMhclo(context)
-        setSettings(context)
-        return{'FINISHED'}    
-
-
-class VIEW3D_OT_QuickImportBaseObjButton(bpy.types.Operator):
-    bl_idname = "mh.quick_import_base_obj"
-    bl_label = "Obj"
-    bl_options = {'UNDO'}
-    delete = BoolProperty()
+    filename_ext = ".mhclo"
+    filter_glob = StringProperty(default="*.mhclo", options={'HIDDEN'})
+    filepath = bpy.props.StringProperty(
+        name="File Path", 
+        description="File path used for base mhclo", 
+        maxlen= 1024, default= "")
 
     def execute(self, context):
         if self.delete:
             utils.deleteAll(context)
-        import_obj.importBaseObj(context)
-        setSettings(context)
-        return{'FINISHED'}    
+        mh_utils.import_obj.importBaseMhclo(context, filepath=self.filepath)
+        afterImport(context, self.filepath)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 
 class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
     bl_idname = "mh.import_base_obj"
     bl_label = "Import Base Obj File"
     bl_options = {'UNDO'}
-    delete = BoolProperty()
 
     filename_ext = ".obj"
     filter_glob = StringProperty(default="*.obj", options={'HIDDEN'})
@@ -123,10 +128,8 @@ class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
         maxlen= 1024, default= "")
 
     def execute(self, context):
-        if self.delete:
-            utils.deleteAll(context)
-        import_obj.importBaseObj(context, filepath=self.filepath)
-        setSettings(context)
+        mh_utils.import_obj.importBaseObj(context, filepath=self.filepath)
+        afterImport(context, self.filepath)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -134,9 +137,30 @@ class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
 
+class VIEW3D_OT_ResetBaseButton(bpy.types.Operator):
+    bl_idname = "mh.reset_base"
+    bl_label = "Reset Base"
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        return context.object
+
+    def execute(self, context):
+        filepath = context.object.MhFilePath
+        utils.deleteAll(context)
+        ext = os.path.splitext(filepath)[1]
+        if ext == ".obj":
+            mh_utils.import_obj.importBaseObj(context, filepath=filepath)
+        elif ext == ".mhclo":
+            mh_utils.import_obj.importBaseMhclo(context, filepath=filepath)
+        afterImport(context, filepath)
+        return {'FINISHED'}
+
+
 class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
     bl_idname = "mh.make_base_obj"
-    bl_label = "Make Base Object"
+    bl_label = "Set As Base"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -154,11 +178,16 @@ class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
         ob["ProxyFile"] = 0
         ob["ObjFile"] =  0
         ob["MhxMesh"] = True        
-        utils.setupVertexPairs(context, True)
         return{'FINISHED'}    
 
 
-def deleteBetween(ob, first, last):
+def deleteIrrelevant(ob, affect):
+    if ob.MhIrrelevantDeleted or theSettings is None:
+        return
+    if affect != 'All':
+        first,last = theSettings.irrelevantVerts[affect]
+        nVerts = len(ob.data.vertices)
+
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -172,6 +201,12 @@ def deleteBetween(ob, first, last):
         bpy.ops.mesh.delete(type='VERT')
         bpy.ops.object.mode_set(mode='OBJECT')
 
+        ob.MhMeshVertsDeleted = True
+        ob.MhIrrelevantDeleted = True
+        ob.MhAffectOnly = affect
+        print("Deleted verts: %d -> %d" % (first, last))
+        print("# Verts: %d -> %d" % (nVerts, len(ob.data.vertices)))
+
 
 class VIEW3D_OT_DeleteIrrelevantButton(bpy.types.Operator):
     bl_idname = "mh.delete_irrelevant"
@@ -184,14 +219,7 @@ class VIEW3D_OT_DeleteIrrelevantButton(bpy.types.Operator):
 
     def execute(self, context):
         ob = context.object
-        if ob.MhIrrelevantDeleted:
-            return
-        if ob.MhAffectOnly != 'All':
-            first,last = settings.irrelevantVerts[ob.MhAffectOnly]
-            deleteBetween(ob, first, last)
-            if ob.MhAffectOnly in ['Tights']:
-                ob.MhMeshVertsDeleted = True
-            ob.MhIrrelevantDeleted = True
+        deleteIrrelevant(ob, ob.MhAffectOnly)
         return{'FINISHED'}    
 
  
@@ -214,8 +242,8 @@ class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
     def execute(self, context):
         ob = context.object
         if ob.MhMeshVertsDeleted:
-            first,last = settings.irrelevantVerts[ob.MhAffectOnly]
-            offset = settings.offsetVerts[ob.MhAffectOnly]
+            first,last = theSettings.irrelevantVerts[ob.MhAffectOnly]
+            offset = theSettings.offsetVerts[ob.MhAffectOnly]
             utils.loadTarget(self.properties.filepath, context, firstIrrelevant=first, lastIrrelevant=last, offset=offset)
         else:
             utils.loadTarget(self.properties.filepath, context)
@@ -335,13 +363,13 @@ def doSaveTarget(context, filepath):
     filepath = fname + ".target"
     print("Saving target %s to %s" % (ob, filepath))
     if ob.MhAffectOnly != 'All':
-        first,last = settings.affectedVerts[ob.MhAffectOnly]
+        first,last = theSettings.affectedVerts[ob.MhAffectOnly]
         before,after = readLines(filepath, first,last)
         fp = open(filepath, "w", encoding="utf-8", newline="\n")  
         for line in before:
             fp.write(line)
         if ob.MhMeshVertsDeleted:
-            offset = settings.offsetVerts[ob.MhAffectOnly]
+            offset = theSettings.offsetVerts[ob.MhAffectOnly]
         else:
             offset = 0
         saveVerts(fp, ob, verts, saveAll, first, last, offset)
@@ -359,7 +387,7 @@ def readLines(filepath, first, last):
     after = []
     try:
         fp = open(filepath, "rU")
-    except NameError:
+    except FileNotFoundError:
         return before,after
     for line in fp:
         words = line.split(None, 1)
@@ -412,7 +440,6 @@ class VIEW3D_OT_SaveTargetButton(bpy.types.Operator):
     def execute(self, context):
         ob = context.object
         path = ob["FilePath"]
-        print("ST", mh.confirm, path)
         if mh.confirm:
             mh.confirm = None
             doSaveTarget(context, path)
@@ -914,14 +941,13 @@ def fitTarget(context):
         path = ob["ProxyFile"]
         if path:
             print("Rereading %s" % path)
-            mh.proxy = proxy.CProxy()
+            mh.proxy = mh_utils.proxy.CProxy()
             mh.proxy.read(path)
         else:
             raise NameError("Object %s has no associated mhclo file. Cannot fit" % ob.name)
             return
-    #print(mh.proxy)
     if ob.MhAffectOnly != 'All':
-        first,last = settings.affectedVerts[ob.MhAffectOnly]
+        first,last = theSettings.affectedVerts[ob.MhAffectOnly]
         mh.proxy.update(ob.active_shape_key.data, ob.active_shape_key.data, skipBefore=first, skipAfter=last)
     else:
         mh.proxy.update(ob.active_shape_key.data, ob.active_shape_key.data)
@@ -1004,8 +1030,89 @@ class VIEW3D_OT_DiscardAllTargetsButton(bpy.types.Operator):
 # symmetrizeTarget(context, left2right, mirror):
 #----------------------------------------------------------
 
+class CPairing:
+
+    def __init__(self):
+        self.left = {}
+        self.right = {}
+        self.mid = {}        
+        self.epsilon = 1e-3
+        self.verts = []
+        self.nmax = 0
+        self.notfound = []
+    
+    
+    def setup(self, context, insist):
+        if self.left.keys() and not insist:
+            print("Vertex pair already set up")
+            return
+        ob = context.object
+        self.verts = []
+        for v in ob.data.vertices:
+            x = v.co[0]
+            y = v.co[1]
+            z = v.co[2]
+            self.verts.append((z,y,x,v.index))
+        self.verts.sort()     
+        self.nmax = len(self.verts)
+    
+        self.left = {}
+        self.right = {}
+        self.mid = {}
+        self.notfound = []
+        for n,data in enumerate(self.verts):
+            (z,y,x,vn) = data
+            self.findMirrorVert(n, vn, x, y, z)
+    
+        if self.notfound:            
+            print("Did not find mirror image for vertices:")
+            for n,vn,x,y,z in self.notfound:
+                print("  %d at (%.4f %.4f %.4f)" % (vn, x, y, z))
+            self.selectVerts(ob)
+        print("left-right-mid", len(self.left), len(self.right), len(self.mid))
+        return self
+
+    
+    def findMirrorVert(self, n, vn, x, y, z):        
+        n1 = n - 20
+        n2 = n + 20
+        if n1 < 0: n1 = 0
+        if n2 >= self.nmax: n2 = self.nmax
+        vmir = self.findVert(n, self.verts[n1:n2], vn, -x, y, z)
+        if vmir < 0:
+            self.mid[vn] = vn
+        elif x > self.epsilon:
+            self.left[vn] = vmir
+        elif x < -self.epsilon:
+            self.right[vn] = vmir
+        else:
+            self.mid[vn] = vmir
+
+
+    def selectVerts(self, ob):
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
+        for n,vn,x,y,z in self.notfound:
+            ob.data.vertices[vn].select = True
+        return    
+    
+
+    def findVert(self, n, verts, v, x, y, z):
+        for (z1,y1,x1,v1) in verts:
+            dx = x-x1
+            dy = y-y1
+            dz = z-z1
+            dist = math.sqrt(dx*dx + dy*dy + dz*dz)
+            if dist < self.epsilon:
+                return v1
+        if abs(x) > self.epsilon:            
+            self.notfound.append((n,v,x,y,z))
+        return -1            
+
+
 def symmetrizeTarget(context, left2right, mirror):
-    utils.setupVertexPairs(context, False)
+    pairing = CPairing().setup(context, False)
     ob = context.object
     scn = context.scene
     if not utils.isTarget(ob):
@@ -1013,11 +1120,11 @@ def symmetrizeTarget(context, left2right, mirror):
     bpy.ops.object.mode_set(mode='OBJECT')
     verts = ob.active_shape_key.data
     
-    for vn in mh.Mid.keys():
+    for vn in pairing.mid.keys():
         v = verts[vn]
         v.co[0] = 0
         
-    for (lvn,rvn) in mh.Left.items():
+    for (lvn,rvn) in pairing.left.items():
         lv = verts[lvn].co
         rv = verts[rvn].co
         if mirror:
@@ -1042,10 +1149,10 @@ def symmetrizeTarget(context, left2right, mirror):
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
         
-    for vn in mh.Mid.keys():
+    for vn in pairing.mid.keys():
         bverts[vn].select = selected[vn]
 
-    for (lvn,rvn) in mh.Left.items():
+    for (lvn,rvn) in pairing.left.items():
         if mirror:
             bverts[lvn].select = selected[rvn]
             bverts[rvn].select = selected[lvn]
@@ -1091,13 +1198,13 @@ class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
     def execute(self, context):
         ob = context.object
         bpy.ops.object.mode_set(mode='OBJECT')
-        nVerts = len(settings.skirtWaist)
-        if len(settings.tightsWaist) != nVerts:
+        nVerts = len(theSettings.skirtWaist)
+        if len(theSettings.tightsWaist) != nVerts:
             halt
         skey = ob.data.shape_keys.key_blocks[-1]
         verts = skey.data
         for n in range(nVerts):
-            verts[settings.skirtWaist[n]].co = verts[settings.tightsWaist[n]].co
+            verts[theSettings.skirtWaist[n]].co = verts[theSettings.tightsWaist[n]].co
         bpy.ops.object.mode_set(mode='EDIT')
         return{'FINISHED'}            
 
@@ -1324,11 +1431,15 @@ class VIEW3D_OT_ConvertRigButton(bpy.types.Operator):
 
 def init():
     bpy.types.Scene.MhUnlock = BoolProperty(default = False)
+    bpy.types.Scene.MhAdvanced = BoolProperty(name="Advanced options", default = False)
+    bpy.types.Scene.MhDeleteHelpers = BoolProperty(name="Delete helpers", default = False)
     
     bpy.types.Object.MhPruneWholeDir = BoolProperty(name="Prune Entire Directory", default = False)
     bpy.types.Object.MhPruneEnabled = BoolProperty(name="Pruning Enabled", default = False)
     bpy.types.Object.MhPruneRecursively = BoolProperty(name="Prune Folders Recursively", default = False)
 
+    bpy.types.Object.MhFilePath = StringProperty(default = "")
+    
     bpy.types.Scene.MhSourceRig = StringProperty(default = "rigid")
     bpy.types.Scene.MhTargetRig = StringProperty(default = "soft1")
     bpy.types.Scene.MhPoseTargetDir = StringProperty(default = "dance1-soft1")
@@ -1347,7 +1458,7 @@ def init():
     bpy.types.Object.MhMeshVertsDeleted = BoolProperty(name="Cannot load", default = False)
 
     bpy.types.Object.SelectedOnly = BoolProperty(name="Selected verts only", default = True)
-    bpy.types.Object.MhZeroOtherTargets = BoolProperty(name="Only save active target", description="Set values of all other targets to 0", default = True)
+    bpy.types.Object.MhZeroOtherTargets = BoolProperty(name="Active target only", description="Set values of all other targets to 0", default = True)
 
     bpy.types.Scene.MhImportRotateMode = EnumProperty(
             name="Rotation",
