@@ -63,17 +63,20 @@ Epsilon = 1e-4
 from . import mt
 
 def setSettings(context):
-    global theSettings
     ob = context.object
     if len(ob.data.vertices) == mt.settings["alpha7"].nTotalVerts:
         print("Alpha 7 mesh detected")
-        theSettings = mt.settings["alpha7"]
+        ob.MhMeshVersion = "alpha7"
     elif len(ob.data.vertices) == mt.settings["alpha8"].nTotalVerts:
         print("Alpha 8 mesh detected")
-        theSettings = mt.settings["alpha8"]
+        ob.MhMeshVersion = "alpha8"
     else:
         print("Unknown mesh version")
-        theSettings = None
+        ob.MhMeshVersion = ""
+        
+
+def getSettings(ob):
+    return mt.settings[ob.MhMeshVersion]
 
 #----------------------------------------------------------
 #   
@@ -182,10 +185,11 @@ class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
 
 
 def deleteIrrelevant(ob, affect):
-    if ob.MhIrrelevantDeleted or theSettings is None:
+    settings = getSettings(ob)
+    if ob.MhIrrelevantDeleted or settings is None:
         return
     if affect != 'All':
-        first,last = theSettings.irrelevantVerts[affect]
+        first,last = settings.irrelevantVerts[affect]
         nVerts = len(ob.data.vertices)
 
         bpy.ops.object.mode_set(mode='EDIT')
@@ -241,9 +245,10 @@ class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
 
     def execute(self, context):
         ob = context.object
+        settings = getSettings(ob)
         if ob.MhMeshVertsDeleted:
-            first,last = theSettings.irrelevantVerts[ob.MhAffectOnly]
-            offset = theSettings.offsetVerts[ob.MhAffectOnly]
+            first,last = settings.irrelevantVerts[ob.MhAffectOnly]
+            offset = settings.offsetVerts[ob.MhAffectOnly]
             utils.loadTarget(self.properties.filepath, context, firstIrrelevant=first, lastIrrelevant=last, offset=offset)
         else:
             utils.loadTarget(self.properties.filepath, context)
@@ -347,6 +352,7 @@ class VIEW3D_OT_NewTargetButton(bpy.types.Operator):
     
 def doSaveTarget(context, filepath):    
     ob = context.object
+    settings = getSettings(ob)
     if not utils.isTarget(ob):
         raise NameError("%s is not a target")
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -363,13 +369,13 @@ def doSaveTarget(context, filepath):
     filepath = fname + ".target"
     print("Saving target %s to %s" % (ob, filepath))
     if ob.MhAffectOnly != 'All':
-        first,last = theSettings.affectedVerts[ob.MhAffectOnly]
+        first,last = settings.affectedVerts[ob.MhAffectOnly]
         before,after = readLines(filepath, first,last)
         fp = open(filepath, "w", encoding="utf-8", newline="\n")  
         for line in before:
             fp.write(line)
         if ob.MhMeshVertsDeleted:
-            offset = theSettings.offsetVerts[ob.MhAffectOnly]
+            offset = settings.offsetVerts[ob.MhAffectOnly]
         else:
             offset = 0
         saveVerts(fp, ob, verts, saveAll, first, last, offset)
@@ -930,6 +936,7 @@ class VIEW3D_OT_BatchRenderButton(bpy.types.Operator):
 
 def fitTarget(context):
     ob = context.object
+    settings = getSettings(ob)
     bpy.ops.object.mode_set(mode='OBJECT')
     scn = context.scene
     if not utils.isTarget(ob):
@@ -947,7 +954,7 @@ def fitTarget(context):
             raise NameError("Object %s has no associated mhclo file. Cannot fit" % ob.name)
             return
     if ob.MhAffectOnly != 'All':
-        first,last = theSettings.affectedVerts[ob.MhAffectOnly]
+        first,last = settings.affectedVerts[ob.MhAffectOnly]
         mh.proxy.update(ob.active_shape_key.data, ob.active_shape_key.data, skipBefore=first, skipAfter=last)
     else:
         mh.proxy.update(ob.active_shape_key.data, ob.active_shape_key.data)
@@ -1197,14 +1204,15 @@ class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
 
     def execute(self, context):
         ob = context.object
+        settings = getSettings(ob)
         bpy.ops.object.mode_set(mode='OBJECT')
-        nVerts = len(theSettings.skirtWaist)
-        if len(theSettings.tightsWaist) != nVerts:
+        nVerts = len(settings.skirtWaist)
+        if len(settings.tightsWaist) != nVerts:
             halt
         skey = ob.data.shape_keys.key_blocks[-1]
         verts = skey.data
         for n in range(nVerts):
-            verts[theSettings.skirtWaist[n]].co = verts[theSettings.tightsWaist[n]].co
+            verts[settings.skirtWaist[n]].co = verts[settings.tightsWaist[n]].co
         bpy.ops.object.mode_set(mode='EDIT')
         return{'FINISHED'}            
 
@@ -1439,6 +1447,7 @@ def init():
     bpy.types.Object.MhPruneRecursively = BoolProperty(name="Prune Folders Recursively", default = False)
 
     bpy.types.Object.MhFilePath = StringProperty(default = "")
+    bpy.types.Object.MhMeshVersion = StringProperty(default = "None")
     
     bpy.types.Scene.MhSourceRig = StringProperty(default = "rigid")
     bpy.types.Scene.MhTargetRig = StringProperty(default = "soft1")

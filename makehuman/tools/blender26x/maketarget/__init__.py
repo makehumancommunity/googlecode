@@ -26,7 +26,7 @@
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.00",
+    "version": "1.01",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -39,14 +39,6 @@ if "bpy" in locals():
     import imp    
     imp.reload(mh_utils)
     imp.reload(utils)
-    """
-    imp.reload(mh)
-    imp.reload(settings)
-    imp.reload(proxy)
-    imp.reload(warp)
-    imp.reload(import_obj)
-    imp.reload(character)
-    """
     imp.reload(mt)
     imp.reload(maketarget)
     imp.reload(export_mh_obj)
@@ -59,14 +51,6 @@ else:
 
     import mh_utils
     from mh_utils import utils
-    """
-    from mh_utils import mh
-    from mh_utils import settings
-    from mh_utils import proxy
-    from mh_utils import warp
-    from mh_utils import import_obj
-    from mh_utils import character
-    """
     from . import mt
     from . import maketarget
     from . import export_mh_obj
@@ -93,8 +77,6 @@ class MakeTargetPanel(bpy.types.Panel):
 
         layout.prop(scn, "MhAdvanced")
         if scn.MhAdvanced:            
-            mh_utils.settings.drawDirectories(layout, scn)
-
             if False:
                 layout.label("Pruning")
                 row = layout.row()

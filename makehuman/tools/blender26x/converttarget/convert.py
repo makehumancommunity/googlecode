@@ -406,7 +406,7 @@ class CVertex:
 def init():
     folder = os.path.dirname(__file__)
     bpy.types.Scene.CTBaseObj = StringProperty(default = os.path.join(folder, "data", "a8_basemesh.obj"))
-    bpy.types.Scene.CTConvertMhclo = StringProperty(default = os.path.join(folder, "data", "a7_a8_clothes.mhclo"))
+    bpy.types.Scene.CTConvertMhclo = StringProperty(default = os.path.join(folder, "data", "a7_a8_targets.mhclo"))
     bpy.types.Scene.CTTargetDir = StringProperty(default = os.path.join(folder, "output"))
     bpy.types.Scene.CTSourceTarget = StringProperty()
     bpy.types.Scene.CTSourceMhclo = StringProperty()
