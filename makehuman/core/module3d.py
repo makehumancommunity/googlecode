@@ -104,10 +104,9 @@ class Object3D(object):
         self.tmap = None
         self.priority = 0
         self.cull = 0
+        self.MAX_FACES = 8
 
         self.__object = None
-
-    MAX_FACES = 8
 
     def get_x(self):
         return self.loc[0]
