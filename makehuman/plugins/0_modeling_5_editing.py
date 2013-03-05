@@ -21,6 +21,7 @@ class EditingTaskView(gui3d.TaskView):
         gui3d.TaskView.__init__(self, category, 'Proportional editing', label='Edit')
 
         self.radius = 1.0
+        self.start = None
         self.center = None
         self.depth = None
         self.morph = None
@@ -37,6 +38,9 @@ class EditingTaskView(gui3d.TaskView):
         modes = []
         self.grab = self.modeBox.addWidget(gui.RadioButton(modes, "Grab", selected=True))
         self.norm = self.modeBox.addWidget(gui.RadioButton(modes, "Normal"))
+        self.scalex = self.modeBox.addWidget(gui.RadioButton(modes, "Scale X"))
+        self.scaley = self.modeBox.addWidget(gui.RadioButton(modes, "Scale Y"))
+        self.scalez = self.modeBox.addWidget(gui.RadioButton(modes, "Scale Z"))
 
         self.buildCircle()
         self.updateRadius()
@@ -99,11 +103,13 @@ class EditingTaskView(gui3d.TaskView):
         if not len(verts):
             return
 
+        self.start = (event.x, event.y)
         self.center = center
         self.depth = depth
         self.verts = verts[:,0]
         self.weights = self.falloff(np.sqrt(distance2[self.verts]) / self.radius)
         self.original = human.meshData.coord[self.verts]
+        self.normals = human.meshData.vnorm[self.verts]
         self.faces = human.meshData.getFacesForVertices(self.verts)
 
     @staticmethod
@@ -115,22 +121,34 @@ class EditingTaskView(gui3d.TaskView):
         human = gui3d.app.selectedHuman
         x, y, z = gui3d.app.modelCamera.convertToWorld2D(event.x, event.y, human.mesh)
 
+    def scale(self, vector, factor):
+        vector = np.array(vector, dtype=np.float32)
+        ones = 1 - vector
+        scale = 2 ** (factor * self.weights[:,None])
+        return self.center + (ones + vector * scale) * (self.original - self.center)
+
     def onMouseDragged(self, event):
         self.updatePosition(event.x, event.y)
 
-        if self.center is None or self.depth is None:
+        if self.start is None or self.center is None or self.depth is None:
             return
 
         human = gui3d.app.selectedHuman
 
-        x, y, z = gui3d.app.modelCamera.convertToWorld3D(event.x, event.y, self.depth, human.mesh)
-        pos = np.array([x, y, z])
-        delta = pos - self.center
+        dist = (event.x - self.start[0]) / 100.0
 
         if self.norm.selected:
-            dist = np.sqrt(np.sum(delta ** 2, axis=-1))
-            coord = self.original + dist * self.weights[:,None] * human.meshData.vnorm[self.verts]
+            coord = self.original + dist * self.weights[:,None] * self.normals
+        elif self.scalex.selected:
+            coord = self.scale([1, 0, 0], dist)
+        elif self.scaley.selected:
+            coord = self.scale([0, 1, 0], dist)
+        elif self.scalez.selected:
+            coord = self.scale([0, 0, 1], dist)
         else:
+            x, y, z = gui3d.app.modelCamera.convertToWorld3D(event.x, event.y, self.depth, human.mesh)
+            pos = np.array([x, y, z])
+            delta = pos - self.center
             coord = self.original + delta[None,:] * self.weights[:,None]
 
         human.meshData.changeCoords(coord, self.verts)
@@ -139,12 +157,13 @@ class EditingTaskView(gui3d.TaskView):
         mh.redraw()
 
     def onMouseUp(self, event):
-        if self.center is None or self.depth is None:
+        if self.start is None or self.center is None or self.depth is None:
             return
 
         human = gui3d.app.selectedHuman
         self.morph = human.meshData.coord[self.verts] - self.original
 
+        self.start = None
         self.center = None
         self.depth = None
         self.original = None
