@@ -1,5 +1,6 @@
 
 import math
+import os
 import numpy as np
 import events3d
 import gui3d
@@ -7,6 +8,51 @@ import mh
 import gui
 import log
 import module3d
+import algos3d
+
+class EditTarget(algos3d.Target):
+    _count = 0
+    _path = None
+
+    @classmethod
+    def getName(cls):
+        if cls._path is None:
+            cls._path = os.path.join(mh.getPath(''), "edits")
+            if not os.path.isdir(cls._path):
+                os.mkdir(cls._path)
+
+        while True:
+            name = os.path.join(cls._path, "edit%04d" % cls._count)
+            if not os.path.exists(name + ".index.npy"):
+                return name
+            cls._count += 1
+
+    def __init__(self, obj, verts, coords):
+        self.name = self.getName()
+        self.morphFactor = -1
+        self.verts = verts.copy()
+        self.data = coords.copy()
+        self.faces = obj.getFacesForVertices(self.verts)
+
+class EditAction(gui3d.Action):
+    def __init__(self, human, targets, value, update=True):
+        super(EditAction, self).__init__('Change detail')
+        self.human = human
+        self.targets = [(target, value, human.getDetail(target))
+                        for target in targets]
+        self.update = update
+
+    def do(self):
+        for target, new, old in self.targets:
+            self.human.setDetail(target, new)
+        self.human.applyAllTargets(gui3d.app.progress, update=self.update)
+        return True
+
+    def undo(self):
+        for target, new, old in self.targets:
+            self.human.setDetail(target, old)
+        self.human.applyAllTargets()
+        return True
 
 class ValueConverter(object):
     def dataToDisplay(self, value):
@@ -24,8 +70,8 @@ class EditingTaskView(gui3d.TaskView):
         self.start = None
         self.center = None
         self.depth = None
-        self.morph = None
         self.original = None
+        self.normals = None
         self.weights = None
         self.verts = None
         self.faces = None
@@ -34,6 +80,7 @@ class EditingTaskView(gui3d.TaskView):
         value = self.converter.displayToData(self.radius)
         self.radiusSlider = self.addLeftWidget(gui.Slider(value, min=-5.0, max=3.0, label="Radius",
                                                           valueConverter=self.converter))
+        self.clear = self.addLeftWidget(gui.Button("Clear"))
         self.modeBox = self.addLeftWidget(gui.GroupBox("Mode"))
         modes = []
         self.grab = self.modeBox.addWidget(gui.RadioButton(modes, "Grab", selected=True))
@@ -46,6 +93,15 @@ class EditingTaskView(gui3d.TaskView):
         self.updateRadius()
 
         self.circle = self.addObject(gui3d.Object([0, 0, 0], self.circleMesh))
+
+        @self.clear.mhEvent
+        def onClicked(dummy):
+            human = gui3d.app.selectedHuman
+            targets = []
+            for name in human.targetsDetailStack.keys():
+                if isinstance(algos3d.getTarget(human, name), EditTarget):
+                    targets.append(name)
+            gui3d.app.do(EditAction(human, targets, 0.0))
 
         @self.radiusSlider.mhEvent
         def onChanging(value):
@@ -161,13 +217,20 @@ class EditingTaskView(gui3d.TaskView):
             return
 
         human = gui3d.app.selectedHuman
-        self.morph = human.meshData.coord[self.verts] - self.original
+        morph = EditTarget(human.meshData, self.verts,
+                           human.meshData.coord[self.verts] - self.original)
+        algos3d.targetBuffer[morph.name] = morph
+        morph._save_binary(morph.name)
+        gui3d.app.do(EditAction(human, [morph.name], 1.0))
 
         self.start = None
         self.center = None
         self.depth = None
         self.original = None
+        self.normals = None
         self.weights = None
+        self.verts = None
+        self.faces = None
 
 def load(app):
     category = app.getCategory('Modelling')
