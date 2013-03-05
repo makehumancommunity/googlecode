@@ -223,13 +223,11 @@ class CMeshInfo:
         obj = self.object = module3d.Object3D(self.name)
         obj.setCoords(coords)
         obj.setUVs(texVerts)
-
-        for n,f in enumerate(faceVerts):
-            if len(f) == 3:
-                f.append(f[0])
-                tf = faceUvs[n]
-                tf.append(tf[0])
-
+        
+        for fv in faceVerts:
+            if len(fv) != 4:
+                raise NameError("Mesh %s has non-quad faces and can not be handled by MakeHuman" % self.name)
+                
         obj.setFaces(faceVerts, faceUvs)
         self.weights = weights
         self.shapes = shapes

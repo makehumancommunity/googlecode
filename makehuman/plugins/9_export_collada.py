@@ -50,7 +50,7 @@ class ExporterCollada(Exporter):
 
     def build(self, options, taskview):
         Exporter.build(self, options, taskview)
-        self.useNormals = options.addWidget(gui.CheckBox("Vertex normals", False))
+        self.useNormals = options.addWidget(gui.CheckBox("Normals", False))
         self.rotate90X = options.addWidget(gui.CheckBox("Rotate 90 X", False))
         self.rotate90Z = options.addWidget(gui.CheckBox("Rotate 90 Z", False))
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))

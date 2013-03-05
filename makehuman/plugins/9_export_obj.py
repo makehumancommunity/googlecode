@@ -43,7 +43,7 @@ class ExporterOBJ(Exporter):
 
     def build(self, options, taskview):
         Exporter.build(self, options, taskview)
-        self.useNormals = options.addWidget(gui.CheckBox("Vertex normals", False))
+        self.useNormals = options.addWidget(gui.CheckBox("Normals", False))
         self.skeleton  = options.addWidget(gui.CheckBox("Skeleton", True))
 
     def export(self, human, filename):
