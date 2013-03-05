@@ -187,13 +187,13 @@ def goodName(name):
     
 def getFileName(pob, context, ext):            
     name = goodName(pob.name)
-    outpath = '%s/%s' % (context.scene.MCDirectory, name)
-    outpath = os.path.realpath(os.path.expanduser(outpath))
-    if not os.path.exists(outpath):
-        print("Creating directory %s" % outpath)
-        os.mkdir(outpath)
-    outfile = os.path.join(outpath, "%s.%s" % (name, ext))
-    return (outpath, outfile)
+    outdir = '%s/%s' % (context.scene.MCDirectory, name)
+    outdir = os.path.realpath(os.path.expanduser(outdir))
+    if not os.path.exists(outdir):
+        print("Creating directory %s" % outdir)
+        os.makedirs(outdir)
+    outfile = os.path.join(outdir, "%s.%s" % (name, ext))
+    return (outdir, outfile)
     
 #
 #
@@ -1569,6 +1569,7 @@ def isOnEdge(v, faceTable, texFaces):
 def makeClothes(context, doFindClothes):
     (bob, pob) = getObjectPair(context)
     scn = context.scene
+    checkNoTriangles(pob)
     checkObjectOK(bob, context)
     checkAndVertexDiamonds(scn, bob)
     checkObjectOK(pob, context)
@@ -1588,9 +1589,14 @@ def makeClothes(context, doFindClothes):
         log.close()
     return
     
-#
-#   checkObjectOK(ob, context):
-#
+
+def checkNoTriangles(ob):
+    for f in ob.data.polygons:
+        if len(f.vertices) != 4:
+            msg = "Object %s can not be used for clothes creation because it has non-quad faces.\n" % (ob.name)
+            print(msg)
+            raise error.MhcloError(msg)
+        
 
 def checkObjectOK(ob, context):
     old = context.object
