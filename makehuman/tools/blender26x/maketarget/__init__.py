@@ -95,7 +95,9 @@ class MakeTargetPanel(bpy.types.Panel):
             layout.operator("mh.import_base_obj", text="Import Base Obj")
             layout.operator("mh.import_base_mhclo", text="Import Base Mhclo")
             layout.operator("mh.make_base_obj")
-            layout.prop(scn, "MhDeleteHelpers")
+            row = layout.row()
+            row.prop(scn, "MhDeleteHelpers")
+            row.prop(scn, "MhUseMaterials")
 
         elif utils.isBase(ob):
             layout.label("Load Target")

@@ -145,26 +145,7 @@ def importObj(filepath, context):
             addUvLayerBMesh(obname, me, texverts, texfaces)
         else:
             addUvLayerNoBMesh(obname, me, texverts, texfaces)
-                
-    if scn.MhLoadMaterial == 'Groups':
-        addMaterials(groups, me, "Group")
-    elif scn.MhLoadMaterial == 'Materials':
-        addMaterials(materials, me, "Material")
-        for (name,group) in groups.items():
-            vgrp = ob.vertex_groups.new(name=name)
-            if vgrp.name != name:
-                print("WARNING: Group name %s => %s" % (name, vgrp.name))
-            if BMeshAware:
-                for nf in group:
-                    f = me.polygons[nf]
-                    for v in f.vertices:
-                        vgrp.add([v], 1.0, 'REPLACE')
-            else:
-                for nf in group:
-                    f = me.faces[nf]
-                    for v in f.vertices:
-                        vgrp.add([v], 1.0, 'REPLACE')
-                    
+                                
     scn.objects.link(ob)
     ob.select = True
     scn.objects.active = ob
@@ -214,30 +195,6 @@ def addUvLayerNoBMesh(obname, me, texverts, texfaces):
             data[n].uv3 = texverts[tf[2]]
             if len(tf) == 4:
                 data[n].uv4 = texverts[tf[3]]
-
-
-def addMaterials(groups, me, string):  
-    global BMeshAware
-    mn = 0
-    for (name,group) in groups.items():
-        try:
-            mat = bpy.data.materials[name]
-        except:
-            mat = bpy.data.materials.new(name=name)
-        if mat.name != name:
-            print("WARNING: %s name %s => %s" % (string, name, mat.name))
-        mat.diffuse_color = (random.random(), random.random(), random.random())
-        me.materials.append(mat)
-        if BMeshAware:
-            for nf in group:
-                f = me.polygons[nf]
-                f.material_index = mn
-        else:
-            for nf in group:
-                f = me.faces[nf]
-                f.material_index = mn
-        mn += 1
-    return        
 
 
 def init():

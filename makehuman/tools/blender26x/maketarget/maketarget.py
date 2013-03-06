@@ -87,11 +87,44 @@ def afterImport(context, filepath):
     scn = context.scene
     ob.MhFilePath = filepath
     setSettings(context)
+    settings = getSettings(ob)
+    
+    if context.scene.MhUseMaterials:
+        addMaterial(ob, 0, "White", (1,1,1), (0, settings.nTotalVerts))
+        addMaterial(ob, 1, "Red", (1,0,0), settings.vertices["Tights"])
+        addMaterial(ob, 2, "Green", (0,1,0), settings.vertices["Joints"])
+        addMaterial(ob, 3, "Blue", (0,0,1), settings.vertices["Skirt"])
+        addMaterial(ob, 4, "Yellow", (1,1,0), settings.vertices["Hair"])        
+        addMaterial(ob, 3, "Blue", (0,0,1), settings.vertices["Eyes"])
+        addMaterial(ob, 5, "Violet", (1,0,1), settings.vertices["Penis"])
+        addMaterial(ob, 5, "Violet", (1,0,1), settings.vertices["UpTeeth"])
+        addMaterial(ob, 5, "Violet", (1,0,1), settings.vertices["LoTeeth"])
+        addMaterial(ob, 5, "Violet", (1,0,1), settings.vertices["EyeLashes"])
+        addMaterial(ob, 1, "Red", (1,0,0), settings.vertices["Tongue"])
+                    
     if scn.MhDeleteHelpers:
         affect = "Body"
     else:
         affect = "All"
     deleteIrrelevant(ob, affect)
+   
+
+def addMaterial(ob, index, name, color, verts):  
+    first,last = verts
+    try:
+        mat = bpy.data.materials[name]
+    except KeyError:
+        mat = bpy.data.materials.new(name=name)
+    ob.data.materials.append(mat)
+    print(mat)
+    if mat.name != name:
+        print("WARNING: duplicate material %s => %s" % (name, mat.name))
+    mat.diffuse_color = color
+    for f in ob.data.polygons:
+        vn = f.vertices[0]
+        if vn >= first and vn < last:
+            f.material_index = index
+
 
 
 class VIEW3D_OT_ImportBaseMhcloButton(bpy.types.Operator):
@@ -99,21 +132,22 @@ class VIEW3D_OT_ImportBaseMhcloButton(bpy.types.Operator):
     bl_label = "Import Base Mhclo File"
     bl_options = {'UNDO'}
 
-    filename_ext = ".mhclo"
-    filter_glob = StringProperty(default="*.mhclo", options={'HIDDEN'})
-    filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for base mhclo", 
-        maxlen= 1024, default= "")
+    #filename_ext = ".mhclo"
+    #filter_glob = StringProperty(default="*.mhclo", options={'HIDDEN'})
+    #filepath = bpy.props.StringProperty(
+    #    name="File Path", 
+    #    description="File path used for base mhclo", 
+    #    maxlen= 1024, default= "")
 
     def execute(self, context):
-        mh_utils.import_obj.importBaseMhclo(context, filepath=self.filepath)
-        afterImport(context, self.filepath)
+        scn = context.scene
+        mh_utils.import_obj.importBaseMhclo(context, filepath=context.scene.MhBaseMhclo)
+        afterImport(context, scn.MhBaseMhclo)
         return {'FINISHED'}
 
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
+    #def invoke(self, context, event):
+    #    context.window_manager.fileselect_add(self)
+    #    return {'RUNNING_MODAL'}
 
 
 class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
@@ -121,23 +155,24 @@ class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
     bl_label = "Import Base Obj File"
     bl_options = {'UNDO'}
 
-    filename_ext = ".obj"
-    filter_glob = StringProperty(default="*.obj", options={'HIDDEN'})
-    filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for base obj", 
-        maxlen= 1024, default= "")
+    #filename_ext = ".obj"
+    #filter_glob = StringProperty(default="*.obj", options={'HIDDEN'})
+    #filepath = bpy.props.StringProperty(
+    #    name="File Path", 
+    #    description="File path used for base obj", 
+    #    maxlen= 1024, default= "")
 
     def execute(self, context):
-        mh_utils.import_obj.importBaseObj(context, filepath=self.filepath)
-        afterImport(context, self.filepath)
+        scn = context.scene
+        mh_utils.import_obj.importBaseObj(context, filepath=scn.MhBaseObj)
+        afterImport(context, scn.MhBaseObj)
         return {'FINISHED'}
 
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
+    #def invoke(self, context, event):
+    #    context.window_manager.fileselect_add(self)
+    #    return {'RUNNING_MODAL'}
 
-
+"""
 class VIEW3D_OT_ResetBaseButton(bpy.types.Operator):
     bl_idname = "mh.reset_base"
     bl_label = "Reset Base"
@@ -157,7 +192,7 @@ class VIEW3D_OT_ResetBaseButton(bpy.types.Operator):
             mh_utils.import_obj.importBaseMhclo(context, filepath=filepath)
         afterImport(context, filepath)
         return {'FINISHED'}
-
+"""
 
 class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
     bl_idname = "mh.make_base_obj"
@@ -1436,9 +1471,16 @@ class VIEW3D_OT_ConvertRigButton(bpy.types.Operator):
 #----------------------------------------------------------
 
 def init():
+    folder = os.path.dirname(__file__)
+    bpy.types.Scene.MhBaseObj = StringProperty(default = os.path.join(folder, "data", "a8_v55_targets.obj"))
+    bpy.types.Scene.MhBaseMhclo = StringProperty(default = os.path.join(folder, "data", "a8_v55_clothes.mhclo"))
+    bpy.types.Scene.MhConvertMhclo = StringProperty(default = os.path.join(folder, "data", "a8_v55_targets.mhclo"))
+    bpy.types.Scene.MhTargetDir = StringProperty(default = os.path.expanduser("~"))
+
     bpy.types.Scene.MhUnlock = BoolProperty(default = False)
-    bpy.types.Scene.MhAdvanced = BoolProperty(name="Advanced options", default = False)
-    bpy.types.Scene.MhDeleteHelpers = BoolProperty(name="Delete helpers", default = False)
+    bpy.types.Scene.MhAdvanced = BoolProperty(name="Advanced Options", default = False)
+    bpy.types.Scene.MhDeleteHelpers = BoolProperty(name="Delete Helpers", default = False)
+    bpy.types.Scene.MhUseMaterials = BoolProperty(name="Use Materials", default = False)
     
     bpy.types.Object.MhPruneWholeDir = BoolProperty(name="Prune Entire Directory", default = False)
     bpy.types.Object.MhPruneEnabled = BoolProperty(name="Pruning Enabled", default = False)
