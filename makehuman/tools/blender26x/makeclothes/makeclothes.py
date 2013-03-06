@@ -115,30 +115,18 @@ def getObjectPair(context):
     return (human, clothing)  
 
     
-def copyObject(human, n0, n1, context, name):
-    scn = context.scene
-    for ob in scn.objects:
-        ob.select = False
-    human.select = True
-    scn.objects.active = human
+def selectHelpers(context):
+    ob = context.object
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.reveal()
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.duplicate(linked=False)
-    ob = context.object
-    ob.name = name
-    ob.data.name = name
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.mesh.select_all(action='SELECT')
-    bpy.ops.object.mode_set(mode='OBJECT')
-    print(context.object, context.object.data)
+    n0 = theSettings.vertices["Penis"][0]
+    n1 = theSettings.nTotalVerts
     for n in range(n0,n1):
-        ob.data.vertices[n].select = False
+        ob.data.vertices[n].select = True
     bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.mesh.delete(type='VERT')
-    bpy.ops.object.mode_set(mode='OBJECT')
-    return ob
+
 
 #
 #   snapSelectedVerts(context):
@@ -551,9 +539,14 @@ def printClothes(context, bob, pob, data):
         printScale(fp, bob, scn, 'y_scale', 2, vnums[2])
 
     printStuff(fp, pob, context)
-
     printFaceNumbers(fp, pob)
+    
     fp.write("# verts %d\n" % (firstVert))
+
+    if scn.MCSelfClothed:
+        for n in range(theSettings.vertices["Penis"][0]):
+            fp.write("%5d\n" % n)
+
     for (pv, exact, verts, wts, diff) in data:
         if exact:
             (bv, dist) = verts[0]
@@ -2199,14 +2192,12 @@ def getHumanVerts(me, scn):
         
 
 def addHelperVerts(me, htype, verts):
+    vnums = theSettings.vertices
     if htype == 'All':
-        for vn in range(FirstSkirtVert, NTotalVerts):
+        for vn in range(theSettings.clothesVerts[0], theSettings.clothesVerts[1]):
             verts[vn] = me.vertices[vn]
-    elif htype == 'Skirt':
-        for vn in range(FirstSkirtVert, FirstTightsVert):
-            verts[vn] = me.vertices[vn]
-    elif htype == 'Tights':
-        for vn in range(FirstTightsVert, NTotalVerts):
+    elif htype in ['Skirt', 'Tights']:
+        for vn in range(vnums[htype][0], vnums[htype][1]):
             verts[vn] = me.vertices[vn]
     elif htype == 'Coat':
         zmax = -1e6
@@ -2214,9 +2205,9 @@ def addHelperVerts(me, htype, verts):
             zn = me.vertices[vn].co[2]
             if zn > zmax:
                 zmax = zn
-        for vn in range(FirstSkirtVert, FirstTightsVert):
+        for vn in range(vnums["Skirt"][0], vnums["Skirt"][1]):
             verts[vn] = me.vertices[vn]
-        for vn in range(FirstTightsVert, NTotalVerts):
+        for vn in range(vnums["Tights"][0], vnums["Tights"][1]):
             zn = me.vertices[vn].co[2]
             if zn > zmax:
                 verts[vn] = me.vertices[vn]
@@ -2530,11 +2521,7 @@ def initInterface():
         maxlen=1024,
         default="/home/svn/makehuman")
 
-    bpy.types.Scene.MCSelfClothed = EnumProperty(
-        items = ClothingEnums,
-        name="Self clothed", 
-        description="Clothes included in body mesh",
-        default="Tights")
+    bpy.types.Scene.MCSelfClothed = BoolProperty(default=False)
 
     bpy.types.Scene.MCKeepVertsUntil = EnumProperty(
         items = ClothingEnums,

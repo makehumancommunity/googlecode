@@ -26,7 +26,7 @@
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.01",
+    "version": "1.02",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -54,7 +54,9 @@ else:
     from . import mt
     from . import maketarget
     from . import export_mh_obj
-            
+     
+Thomas = False
+
 #----------------------------------------------------------
 #   class MakeTargetPanel(bpy.types.Panel):
 #----------------------------------------------------------
@@ -77,7 +79,7 @@ class MakeTargetPanel(bpy.types.Panel):
 
         layout.prop(scn, "MhAdvanced")
         if scn.MhAdvanced:            
-            if False:
+            if Thomas:
                 layout.label("Pruning")
                 row = layout.row()
                 row.prop(ob, "MhPruneEnabled")
@@ -85,19 +87,17 @@ class MakeTargetPanel(bpy.types.Panel):
                 row.prop(ob, "MhPruneRecursively")
                 layout.operator("mh.prune_target_file")
 
-            layout.label("Load materials from")
-            layout.prop(scn, "MhLoadMaterial", expand=True)
-            layout.separator()
+                layout.label("Load materials from")
+                layout.prop(scn, "MhLoadMaterial", expand=True)
+                layout.separator()
 
-        if utils.isBaseOrTarget(ob):
-            layout.operator("mh.reset_base")
-        else:
+        if not utils.isBaseOrTarget(ob):
             layout.operator("mh.import_base_obj", text="Import Base Obj")
             layout.operator("mh.import_base_mhclo", text="Import Base Mhclo")
             layout.operator("mh.make_base_obj")
-        layout.prop(scn, "MhDeleteHelpers")
+            layout.prop(scn, "MhDeleteHelpers")
 
-        if utils.isBase(ob):
+        elif utils.isBase(ob):
             layout.label("Load Target")
             layout.operator("mh.new_target")
             layout.operator("mh.load_target")            
@@ -132,9 +132,10 @@ class MakeTargetPanel(bpy.types.Panel):
             if ext == ".mhclo":
                 layout.operator("mh.fit_target")
 
-            layout.label("Discard Target")
+            layout.label("Discard And Apply Target")
             layout.operator("mh.discard_target")
             layout.operator("mh.discard_all_targets")
+            layout.operator("mh.apply_targets")
 
             layout.label("Symmetry")
             row = layout.row()            
@@ -151,10 +152,6 @@ class MakeTargetPanel(bpy.types.Panel):
                 layout.operator("mh.save_target")           
             layout.operator("mh.saveas_target")       
 
-            if scn.MhAdvanced:
-                layout.separator()
-                layout.operator("mh.apply_targets")
-            
         if not scn.MhAdvanced:
             return
 

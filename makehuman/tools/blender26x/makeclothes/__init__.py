@@ -213,9 +213,9 @@ class MakeClothesPanel(bpy.types.Panel):
         layout.separator()
         layout.label("For internal use")
         layout.prop(scn, "MCLogging")
-        layout.prop(scn, "MCSelfClothed")
         layout.prop(scn, "MCMakeHumanDirectory")
-        layout.operator("mhclo.split_human")
+        layout.prop(scn, "MCSelfClothed")
+        layout.operator("mhclo.select_helpers")
         layout.operator("mhclo.export_base_uvs_py")
 
         #layout.prop(scn, "MCVertexGroups")
@@ -509,15 +509,15 @@ class OBJECT_OT_ExportBaseUvsPyButton(bpy.types.Operator):
             error.handleError(context)
         return{'FINISHED'}    
         
-class OBJECT_OT_SplitHumanButton(bpy.types.Operator):
-    bl_idname = "mhclo.split_human"
-    bl_label = "Split human"
+class OBJECT_OT_SelectHelpersButton(bpy.types.Operator):
+    bl_idname = "mhclo.select_helpers"
+    bl_label = "Select Helpers"
     bl_options = {'UNDO'}
 
     def execute(self, context):
         makeclothes.setSettings(context)
         try:
-            makeclothes.getObjectPair(context)
+            makeclothes.selectHelpers(context)
         except error.MhcloError:
             error.handleError(context)
         return{'FINISHED'}    

@@ -40,6 +40,7 @@ class CSettings:
                 "Tights"    : (16096, 18528),
             }
 
+            self.clothesVerts   = (self.vertices["Skirt"][0], self.vertices["Tights"][1])
             self.nTotalVerts    = self.vertices["Tights"][1]
             self.nBodyVerts     = self.vertices["Body"][1]
             self.nBodyFaces     = 14812           
@@ -59,6 +60,7 @@ class CSettings:
                 "Hair"      : (18738, 19166),
             }
 
+            self.clothesVerts   = (self.vertices["Tights"][0], self.vertices["Skirt"][1])
             self.nTotalVerts    = self.vertices["Hair"][1]
             self.nBodyVerts     = self.vertices["Body"][1]
             self.nBodyFaces     = 14812

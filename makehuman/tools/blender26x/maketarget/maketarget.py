@@ -107,8 +107,6 @@ class VIEW3D_OT_ImportBaseMhcloButton(bpy.types.Operator):
         maxlen= 1024, default= "")
 
     def execute(self, context):
-        if self.delete:
-            utils.deleteAll(context)
         mh_utils.import_obj.importBaseMhclo(context, filepath=self.filepath)
         afterImport(context, self.filepath)
         return {'FINISHED'}
