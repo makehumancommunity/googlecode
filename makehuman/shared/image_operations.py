@@ -55,22 +55,22 @@ def blurred(img, level=10):
     t = np.linspace(-dist, dist, kernelSize)
     bump = np.exp(-0.1*t**2)
     bump /= np.trapz(bump) # normalize the integral to 1
+    padSize = int(kernelSize/2)
+    paddedShape = (img.data.shape[0] + padSize, img.data.shape[1] + padSize)
 
     # make a 2-D kernel out of it
     kernel = bump[:,np.newaxis] * bump[np.newaxis,:]
 
     # padded fourier transform, with the same shape as the image
-    kernel_ft = np.fft.fft2(kernel, s=img.data.shape[:2], axes=(0, 1))
+    kernel_ft = np.fft.fft2(kernel, s=paddedShape, axes=(0, 1))
 
     # convolve
-    wSize= img.data.shape[0]
-    hSize= img.data.shape[1]
-    img_ft = np.fft.fft2(img.data, axes=(0, 1))
+    img_ft = np.fft.fft2(img.data, s=paddedShape, axes=(0, 1))
     img2_ft = kernel_ft[:,:,np.newaxis] * img_ft
     data = np.fft.ifft2(img2_ft, axes=(0, 1)).real
 
     # clip values to range
     data = np.clip(data, 0, 255)
 
-    return image.Image(data = data)
+    return image.Image(data = data[padSize:data.shape[0], padSize:data.shape[1], :])
 
