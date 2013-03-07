@@ -97,10 +97,10 @@ def afterImport(context, filepath):
         addMaterial(ob, 4, "Hair", (1,1,0), settings.vertices["Hair"])        
         addMaterial(ob, 5, "Eyes", (0,1,1), settings.vertices["Eyes"])
         addMaterial(ob, 6, "Penis", (0.5,0,1), settings.vertices["Penis"])
-        addMaterial(ob, 7, "Teeth", (1,0,1), settings.vertices["UpTeeth"])
-        addMaterial(ob, 7, "Teeth", (1,0,1), settings.vertices["LoTeeth"])
-        addMaterial(ob, 8, "Lashes", (1,0,0.5), settings.vertices["EyeLashes"])
-        addMaterial(ob, 9, "Tongue", (1,0.5,0), settings.vertices["Tongue"])
+        addMaterial(ob, 7, "UpTeeth", (0,0.5,1), settings.vertices["UpTeeth"])
+        addMaterial(ob, 8, "LoTeeth", (0,0.5,0.5), settings.vertices["LoTeeth"])
+        addMaterial(ob, 9, "Lashes", (1,0,1), settings.vertices["EyeLashes"])
+        addMaterial(ob, 10, "Tongue", (0.5,0,0.5), settings.vertices["Tongue"])
                     
     if scn.MhDeleteHelpers:
         affect = "Body"
