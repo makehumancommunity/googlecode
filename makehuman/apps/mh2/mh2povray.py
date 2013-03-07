@@ -47,6 +47,7 @@ import mh2povray_ini
 import random
 import mh
 import log
+import image_operations
 
 def downloadPovRay():
     
@@ -1014,12 +1015,12 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
         lmap.save(os.path.join(outputDirectory, 'lighthi.png'))
         # green channel
         progress (0.26,"Writing lightmaps")
-        lmap2 = lmap.resized(resgreen,resgreen)
+        lmap2 = image_operations.resized(lmap, resgreen,resgreen)
         log.debug('SSS: Mid-Res lightmap resolution: %s', lmap.width)
         lmap2.save(os.path.join(outputDirectory, 'lightmid.png'))
         # red channel
         progress (0.29,"Writing lightmaps")
-        lmap2 = lmap.resized(resred,resred)
+        lmap2 = image_operations.resized(lmap, resred,resred)
         log.debug('SSS: Low-Res lightmap resolution: %s', lmap2.width)
         lmap2.save(os.path.join(outputDirectory, 'lightlo.png'))
         # create masks for blurred channels, for erasing seams.
@@ -1027,10 +1028,10 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
         sssmask = mh.Image(pigmentMap)
         sssmask = sssmask.alphaChannel()
         progress (0.33,"Writing lightmaps")
-        sssmask.resize(resgreen,resgreen)
+        sssmask = image_operations.resized(sssmask,resgreen,resgreen)
         progress (0.36,"Writing lightmaps")
         sssmask.save(os.path.join(outputDirectory, 'maskmid.png'))
-        sssmask.resize(resred,resred)
+        sssmask = image_operations.resized(sssmask,resred,resred)
         progress (0.39,"Writing lightmaps")
         sssmask.save(os.path.join(outputDirectory, 'masklo.png'))
         progbase = 0.4
