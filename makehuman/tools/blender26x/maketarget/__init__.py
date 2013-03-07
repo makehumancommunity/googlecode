@@ -26,7 +26,7 @@
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.02",
+    "version": "1.03",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -41,6 +41,8 @@ if "bpy" in locals():
     imp.reload(utils)
     imp.reload(mt)
     imp.reload(maketarget)
+    imp.reload(convert)
+    imp.reload(pose)
     imp.reload(export_mh_obj)
 else:
     print("Loading maketarget")
@@ -53,9 +55,48 @@ else:
     from mh_utils import utils
     from . import mt
     from . import maketarget
+    from . import convert
+    from . import pose
     from . import export_mh_obj
      
 Thomas = False
+
+#----------------------------------------------------------
+#   class ConvertTargetPanel(bpy.types.Panel):
+#----------------------------------------------------------
+
+class ConvertTargetPanel(bpy.types.Panel):
+    bl_label = "Convert Target %s" % bl_info["version"]
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_options = {'DEFAULT_CLOSED'}
+    
+    def draw(self, context):
+        layout = self.layout
+        scn = context.scene
+        
+        layout.operator("mh.set_target_dir")
+        layout.prop(scn, "MhTargetDir", text="")
+
+        layout.separator()
+        layout.label("Target Conversion")
+        layout.operator("mh.set_source_target")
+        layout.prop(scn, "MhSourceTarget", text="")
+        layout.operator("mh.convert_target")
+        
+        return
+
+        #layout.separator()
+        #layout.label("Clothes Conversion")
+        #layout.operator("mh.set_source_mhclo")
+        #layout.prop(scn, "MhSourceMhclo", text="")
+        #layout.operator("mh.convert_mhclo")
+
+        layout.separator()
+        layout.label("Vertex Group Conversion")
+        layout.operator("mh.set_source_vgroup")
+        layout.prop(scn, "MhSourceVGroup", text="")
+        layout.operator("mh.convert_vgroup")
 
 #----------------------------------------------------------
 #   class MakeTargetPanel(bpy.types.Panel):
@@ -280,6 +321,8 @@ def menu_func(self, context):
 def register():
     mh_utils.init()
     maketarget.init()
+    convert.init()
+    pose.init()
     try:
         maketarget.initBatch(bpy.context.scene)
     except:

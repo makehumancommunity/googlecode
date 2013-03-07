@@ -23,7 +23,14 @@
 # Script copyright (C) MakeHuman Team 2001-2013
 # Coding Standards:    See http://www.makehuman.org/node/165
 
+import os
 from mh_utils import mh
+
+folder = os.path.dirname(__file__)
+baseObjFile = os.path.join(folder, "data", "a8_v55_targets.obj")
+baseMhcloFile = os.path.join(folder, "data", "a8_v55_clothes.mhclo")
+convertMhcloFile = os.path.join(folder, "data", "a8_v55_targets.mhclo")
+
 
 class CSettings(mh.CSettings):
     

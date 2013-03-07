@@ -90,17 +90,17 @@ def afterImport(context, filepath):
     settings = getSettings(ob)
     
     if context.scene.MhUseMaterials:
-        addMaterial(ob, 0, "White", (1,1,1), (0, settings.nTotalVerts))
-        addMaterial(ob, 1, "Red", (1,0,0), settings.vertices["Tights"])
-        addMaterial(ob, 2, "Green", (0,1,0), settings.vertices["Joints"])
-        addMaterial(ob, 3, "Blue", (0,0,1), settings.vertices["Skirt"])
-        addMaterial(ob, 4, "Yellow", (1,1,0), settings.vertices["Hair"])        
-        addMaterial(ob, 3, "Blue", (0,0,1), settings.vertices["Eyes"])
-        addMaterial(ob, 5, "Violet", (1,0,1), settings.vertices["Penis"])
-        addMaterial(ob, 5, "Violet", (1,0,1), settings.vertices["UpTeeth"])
-        addMaterial(ob, 5, "Violet", (1,0,1), settings.vertices["LoTeeth"])
-        addMaterial(ob, 5, "Violet", (1,0,1), settings.vertices["EyeLashes"])
-        addMaterial(ob, 1, "Red", (1,0,0), settings.vertices["Tongue"])
+        addMaterial(ob, 0, "Skin", (1,1,1), (0, settings.nTotalVerts))
+        addMaterial(ob, 1, "Tights", (1,0,0), settings.vertices["Tights"])
+        addMaterial(ob, 2, "Joints", (0,1,0), settings.vertices["Joints"])
+        addMaterial(ob, 3, "Skirt", (0,0,1), settings.vertices["Skirt"])
+        addMaterial(ob, 4, "Hair", (1,1,0), settings.vertices["Hair"])        
+        addMaterial(ob, 5, "Eyes", (0,1,1), settings.vertices["Eyes"])
+        addMaterial(ob, 6, "Penis", (0.5,0,1), settings.vertices["Penis"])
+        addMaterial(ob, 7, "Teeth", (1,0,1), settings.vertices["UpTeeth"])
+        addMaterial(ob, 7, "Teeth", (1,0,1), settings.vertices["LoTeeth"])
+        addMaterial(ob, 8, "Lashes", (1,0,0.5), settings.vertices["EyeLashes"])
+        addMaterial(ob, 9, "Tongue", (1,0.5,0), settings.vertices["Tongue"])
                     
     if scn.MhDeleteHelpers:
         affect = "Body"
@@ -116,7 +116,6 @@ def addMaterial(ob, index, name, color, verts):
     except KeyError:
         mat = bpy.data.materials.new(name=name)
     ob.data.materials.append(mat)
-    print(mat)
     if mat.name != name:
         print("WARNING: duplicate material %s => %s" % (name, mat.name))
     mat.diffuse_color = color
@@ -130,73 +129,32 @@ def addMaterial(ob, index, name, color, verts):
 class VIEW3D_OT_ImportBaseMhcloButton(bpy.types.Operator):
     bl_idname = "mh.import_base_mhclo"
     bl_label = "Import Base Mhclo File"
+    bl_description = "Load the base object. Clothes fitting enabled."
     bl_options = {'UNDO'}
 
-    #filename_ext = ".mhclo"
-    #filter_glob = StringProperty(default="*.mhclo", options={'HIDDEN'})
-    #filepath = bpy.props.StringProperty(
-    #    name="File Path", 
-    #    description="File path used for base mhclo", 
-    #    maxlen= 1024, default= "")
-
     def execute(self, context):
-        scn = context.scene
-        mh_utils.import_obj.importBaseMhclo(context, filepath=context.scene.MhBaseMhclo)
-        afterImport(context, scn.MhBaseMhclo)
+        mh_utils.import_obj.importBaseMhclo(context, filepath=mt.baseMhcloFile)
+        afterImport(context, mt.baseMhcloFile)
         return {'FINISHED'}
-
-    #def invoke(self, context, event):
-    #    context.window_manager.fileselect_add(self)
-    #    return {'RUNNING_MODAL'}
 
 
 class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
     bl_idname = "mh.import_base_obj"
     bl_label = "Import Base Obj File"
+    bl_description = "Load the base object. Clothes fitting disabled."
     bl_options = {'UNDO'}
-
-    #filename_ext = ".obj"
-    #filter_glob = StringProperty(default="*.obj", options={'HIDDEN'})
-    #filepath = bpy.props.StringProperty(
-    #    name="File Path", 
-    #    description="File path used for base obj", 
-    #    maxlen= 1024, default= "")
 
     def execute(self, context):
         scn = context.scene
-        mh_utils.import_obj.importBaseObj(context, filepath=scn.MhBaseObj)
-        afterImport(context, scn.MhBaseObj)
+        mh_utils.import_obj.importBaseObj(context, filepath=mt.baseObjFile)
+        afterImport(context, mt.baseObjFile)
         return {'FINISHED'}
 
-    #def invoke(self, context, event):
-    #    context.window_manager.fileselect_add(self)
-    #    return {'RUNNING_MODAL'}
-
-"""
-class VIEW3D_OT_ResetBaseButton(bpy.types.Operator):
-    bl_idname = "mh.reset_base"
-    bl_label = "Reset Base"
-    bl_options = {'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        return context.object
-
-    def execute(self, context):
-        filepath = context.object.MhFilePath
-        utils.deleteAll(context)
-        ext = os.path.splitext(filepath)[1]
-        if ext == ".obj":
-            mh_utils.import_obj.importBaseObj(context, filepath=filepath)
-        elif ext == ".mhclo":
-            mh_utils.import_obj.importBaseMhclo(context, filepath=filepath)
-        afterImport(context, filepath)
-        return {'FINISHED'}
-"""
 
 class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
     bl_idname = "mh.make_base_obj"
     bl_label = "Set As Base"
+    bl_description = "Make the selected object into a maketarget base object."
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -248,6 +206,7 @@ def deleteIrrelevant(ob, affect):
 class VIEW3D_OT_DeleteIrrelevantButton(bpy.types.Operator):
     bl_idname = "mh.delete_irrelevant"
     bl_label = "Delete Irrelevant Verts"
+    bl_description = "Delete not affected vertices for better visibility."
     bl_options = {'UNDO'}
 
     @classmethod
@@ -263,6 +222,7 @@ class VIEW3D_OT_DeleteIrrelevantButton(bpy.types.Operator):
 class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
     bl_idname = "mh.load_target"
     bl_label = "Load Target File"
+    bl_description = "Load a target file"
     bl_options = {'UNDO'}
 
     filename_ext = ".target"
@@ -335,6 +295,7 @@ def loadTargetFromMesh(context):
 class VIEW3D_OT_LoadTargetFromMeshButton(bpy.types.Operator):
     bl_idname = "mh.load_target_from_mesh"
     bl_label = "Load Target From Mesh"
+    bl_description = "Make selected mesh a shapekey of active mesh."
     bl_options = {'UNDO'}
 
     @classmethod
@@ -369,6 +330,7 @@ def newTarget(context):
 class VIEW3D_OT_NewTargetButton(bpy.types.Operator):
     bl_idname = "mh.new_target"
     bl_label = "New Target"
+    bl_description = "Create a new target and make it active."
     bl_options = {'UNDO'}
 
     @classmethod
@@ -470,6 +432,7 @@ def evalVertLocations(ob):
 class VIEW3D_OT_SaveTargetButton(bpy.types.Operator):
     bl_idname = "mh.save_target"
     bl_label = "Save Target"
+    bl_description = "Save target(s), overwriting existing file. If Active Only is selected, only save the last target, otherwise save the sum of all targets"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -493,6 +456,7 @@ class VIEW3D_OT_SaveTargetButton(bpy.types.Operator):
 class VIEW3D_OT_SaveasTargetButton(bpy.types.Operator, ExportHelper):
     bl_idname = "mh.saveas_target"
     bl_label = "Save Target As"
+    bl_description = "Save target(s) to new file. If Active Only is selected, only save the last target, otherwise save the sum of all targets"
     bl_options = {'UNDO'}
 
     filename_ext = ".target"
@@ -515,16 +479,46 @@ class VIEW3D_OT_SaveasTargetButton(bpy.types.Operator, ExportHelper):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
+#----------------------------------------------------------
+#   Apply targets to mesh
+#----------------------------------------------------------
+
+def applyTargets(context):
+    ob = context.object
+    bpy.ops.object.mode_set(mode='OBJECT')
+    verts = evalVertLocations(ob)   
+    utils.removeShapeKeys(ob)
+    for prop in ob.keys():
+        del ob[prop]
+    for v in ob.data.vertices:
+        v.co = verts[v.index]
+    return
+    
+
+class VIEW3D_OT_ApplyTargetsButton(bpy.types.Operator):
+    bl_idname = "mh.apply_targets"
+    bl_label = "Apply Targets"
+    bl_description = "Apply all shapekeys to mesh"
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        return (context.object and not context.object.MhMeshVertsDeleted)
+
+    def execute(self, context):
+        applyTargets(context)
+        return{'FINISHED'}            
 
 #----------------------------------------------------------
 #   
 #----------------------------------------------------------
 
 def pruneTarget(ob, filepath):
+    settings = getSettings(ob)
     lines = []
     before,after = readLines(filepath, -1,-1)
     for vn,string in after:
-        if vn < NTotalVerts and ob.data.vertices[vn].select:
+        if vn < settings.nTotalVerts and ob.data.vertices[vn].select:
             lines.append((vn, string))
     print("Pruning", len(before), len(after), len(lines))
     fp = open(filepath, "w", encoding="utf-8", newline="\n")
@@ -549,6 +543,7 @@ def pruneFolder(ob, folder):
 class VIEW3D_OT_PruneTargetFileButton(bpy.types.Operator, ExportHelper):
     bl_idname = "mh.prune_target_file"
     bl_label = "Prune Target File"
+    bl_description = "Remove not selected vertices from target file(s)"
     bl_options = {'UNDO'}
 
     filename_ext = ".target"
@@ -577,303 +572,11 @@ class VIEW3D_OT_PruneTargetFileButton(bpy.types.Operator, ExportHelper):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
-
-#----------------------------------------------------------
-#   saveMhpFile(context, filepath):
-#   loadMhpFile(context, filepath):
-#----------------------------------------------------------
-
-def saveMhpFile(context, filepath):
-    ob = context.object
-    rig = ob.parent
-    scn = context.scene
-    if rig and rig.type == 'ARMATURE': 
-        roots = rigRoots(rig)
-        if len(roots) > 1:
-            raise NameError("Armature %s has multiple roots: %s" % (rig.name, roots))
-        (pname, ext) = os.path.splitext(filepath)
-        mhppath = pname + ".mhp"
-        
-        fp = open(mhppath, "w", encoding="utf-8", newline="\n")
-        root = rig.pose.bones[roots[0]]
-        writeMhpBones(fp, root)
-        fp.close()
-        print("Mhp file %s saved" % mhppath)
-        
-        
-def writeMhpBones(fp, pb):
-    b = pb.bone
-    if pb.parent:
-        string = "quat"
-        mat = b.matrix_local.inverted() * b.parent.matrix_local * pb.parent.matrix.inverted() * pb.matrix
-    else:
-        string = "gquat"
-        mat = pb.matrix.copy()
-        maty = mat[1].copy()
-        matz = mat[2].copy()
-        mat[1] = matz
-        mat[2] = -maty
-    q = mat.to_quaternion()
-    fp.write("%s\t%s\t%s\t%s\t%s\t%s\n" % (pb.name, string, round(q.w), round(q.x), round(q.y), round(q.z)))
-    for child in pb.children:
-        writeMhpBones(fp, child)
-
-
-def loadMhpFile(context, filepath):
-    ob = context.object
-    rig = ob.parent
-    scn = context.scene
-    if rig and rig.type == 'ARMATURE':
-        (pname, ext) = os.path.splitext(filepath)
-        mhppath = pname + ".mhp"
-        
-        fp = open(mhppath, "rU")
-        for line in fp:
-            words = line.split()
-            if len(words) < 5:
-                continue
-            elif words[1] == "quat":
-                q = Quaternion((float(words[2]), float(words[3]), float(words[4]), float(words[5])))
-                mat = q.to_matrix().to_4x4()
-                pb = rig.pose.bones[words[0]]
-                pb.matrix_basis = mat
-            elif words[1] == "gquat":
-                q = Quaternion((float(words[2]), float(words[3]), float(words[4]), float(words[5])))
-                mat = q.to_matrix().to_4x4()
-                maty = mat[1].copy()
-                matz = mat[2].copy()
-                mat[1] = -matz
-                mat[2] = maty
-                pb = rig.pose.bones[words[0]]
-                pb.matrix_basis = pb.bone.matrix_local.inverted() * mat
-        fp.close()
-        print("Mhp file %s loaded" % mhppath)
-                
-                
-
-class VIEW3D_OT_LoadMhpButton(bpy.types.Operator):
-    bl_idname = "mh.load_mhp"
-    bl_label = "Load MHP File"
-    bl_options = {'UNDO'}
-
-    filename_ext = ".mhp"
-    filter_glob = StringProperty(default="*.mhp", options={'HIDDEN'})
-    filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for mhp file", 
-        maxlen= 1024, default= "")
-
-    @classmethod
-    def poll(self, context):
-        return context.object
-
-    def execute(self, context):
-        loadMhpFile(context, self.properties.filepath)
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
-
-class VIEW3D_OT_SaveasMhpFileButton(bpy.types.Operator, ExportHelper):
-    bl_idname = "mh.saveas_mhp"
-    bl_label = "Save MHP File"
-    bl_options = {'UNDO'}
-
-    filename_ext = ".mhp"
-    filter_glob = StringProperty(default="*.mhp", options={'HIDDEN'})
-    filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for mhp file", 
-        maxlen= 1024, default= "")
-
-    @classmethod
-    def poll(self, context):
-        return context.object
-
-    def execute(self, context):
-        saveMhpFile(context, self.properties.filepath)
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
-#----------------------------------------------------------
-#   saveBvhFile(context, filepath):
-#   loadBvhFile(context, filepath):
-#----------------------------------------------------------
-
-import io_anim_bvh
-from io_anim_bvh import export_bvh, import_bvh
-
-def saveBvhFile(context, filepath):
-    ob = context.object
-    rig = ob.parent
-    scn = context.scene
-    if rig and rig.type == 'ARMATURE': 
-        roots = rigRoots(rig)
-        if len(roots) > 1:
-            raise NameError("Armature %s has multiple roots: %s" % (rig.name, roots))
-        scn.objects.active = rig
-        (pname, ext) = os.path.splitext(filepath)
-        bvhpath = pname + ".bvh"
-        
-        export_bvh.write_armature(context, bvhpath,
-           frame_start = scn.frame_current,
-           frame_end = scn.frame_current,
-           global_scale = 1.0,
-           rotate_mode = scn.MhExportRotateMode,
-           root_transform_only = True
-           )    
-        scn.objects.active = ob
-        print("Saved %s" % bvhpath)
-        return True
-    else:
-        return False
-
-
-def rigRoots(rig):
-    roots = []
-    for bone in rig.data.bones:
-        if not bone.parent:
-            roots.append(bone.name)
-    return roots
-    
-    
-def loadBvhFile(context, filepath):
-    ob = context.object
-    rig = ob.parent
-    scn = context.scene
-    if rig and rig.type == 'ARMATURE':
-        (pname, ext) = os.path.splitext(filepath)
-        bvhpath = pname + ".bvh"
-
-        bvh_nodes = import_bvh.read_bvh(context, bvhpath,
-            rotate_mode=scn.MhImportRotateMode,
-            global_scale=1.0)
-
-        frame_orig = context.scene.frame_current
-
-        bvh_name = bpy.path.display_name_from_filepath(bvhpath)
-
-        import_bvh.bvh_node_dict2armature(context, bvh_name, bvh_nodes,
-                               rotate_mode = scn.MhImportRotateMode,
-                               frame_start = scn.frame_current,
-                               IMPORT_LOOP = False,
-                               global_matrix = rig.matrix_world,
-                               )
-        context.scene.frame_set(frame_orig)
-
-        tmp = context.object
-        bpy.ops.object.mode_set(mode='POSE')
-        scn.objects.active = rig
-        bpy.ops.object.mode_set(mode='POSE')
-        copyPose(tmp, rig)
-        scn.objects.active = ob
-        scn.objects.unlink(tmp)
-        del tmp
-        print("Loaded %s" % bvhpath)
-        return True
-    else:
-        return False
-
-
-def copyPose(src, trg):
-    for name,srcBone in src.pose.bones.items():
-        trgBone = trg.pose.bones[srcBone.name]
-        s = srcBone.matrix_basis
-        t = trgBone.matrix_basis.copy()
-        for i in range(3):
-            for j in range(3):
-                t[i][j] = s[i][j]
-        trgBone.matrix_basis = t
-        
-
-class VIEW3D_OT_LoadBvhButton(bpy.types.Operator):
-    bl_idname = "mh.load_bvh"
-    bl_label = "Load BVH File"
-    bl_options = {'UNDO'}
-
-    filename_ext = ".bvh"
-    filter_glob = StringProperty(default="*.bvh", options={'HIDDEN'})
-    filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for bvh file", 
-        maxlen= 1024, default= "")
-
-    @classmethod
-    def poll(self, context):
-        return context.object
-
-    def execute(self, context):
-        loadBvhFile(context, self.properties.filepath)
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
-
-class VIEW3D_OT_SaveasBvhFileButton(bpy.types.Operator, ExportHelper):
-    bl_idname = "mh.saveas_bvh"
-    bl_label = "Save BVH File"
-    bl_options = {'UNDO'}
-
-    filename_ext = ".bvh"
-    filter_glob = StringProperty(default="*.bvh", options={'HIDDEN'})
-    filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for bvh file", 
-        maxlen= 1024, default= "")
-
-    @classmethod
-    def poll(self, context):
-        return context.object
-
-    def execute(self, context):
-        saveBvhFile(context, self.properties.filepath)
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
-#----------------------------------------------------------
-#   Apply bvhs
-#----------------------------------------------------------
-
-def applyTargets(context):
-    ob = context.object
-    bpy.ops.object.mode_set(mode='OBJECT')
-    verts = evalVertLocations(ob)   
-    utils.removeShapeKeys(ob)
-    for prop in ob.keys():
-        del ob[prop]
-    for v in ob.data.vertices:
-        v.co = verts[v.index]
-    return
-    
-
-class VIEW3D_OT_ApplyTargetsButton(bpy.types.Operator):
-    bl_idname = "mh.apply_targets"
-    bl_label = "Apply Targets"
-    bl_options = {'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        return (context.object and not context.object.MhMeshVertsDeleted)
-
-    def execute(self, context):
-        applyTargets(context)
-        return{'FINISHED'}            
-
 #----------------------------------------------------------
 #   batch
 #----------------------------------------------------------
 
-def batchFixTargets(context, folder):
+def batchFitTargets(context, folder):
     print("Batch", folder)
     for fname in os.listdir(folder):
         (root, ext) = os.path.splitext(fname)
@@ -885,13 +588,14 @@ def batchFixTargets(context, folder):
             doSaveTarget(context, file)
             discardTarget(context)  
         elif os.path.isdir(file):
-            batchFixTargets(context, file)
+            batchFitTargets(context, file)
     return            
 
             
-class VIEW3D_OT_BatchFixButton(bpy.types.Operator):
-    bl_idname = "mh.batch_fix"
-    bl_label = "Batch Fix Targets"
+class VIEW3D_OT_BatchFitButton(bpy.types.Operator):
+    bl_idname = "mh.batch_fit"
+    bl_label = "Batch Fit Targets"
+    bl_description = "Fit all targets in directory"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -902,17 +606,17 @@ class VIEW3D_OT_BatchFixButton(bpy.types.Operator):
         global TargetSubPaths
         scn = context.scene
         if not mh.confirm:
-            mh.confirmString = "Really batch fix targets?"
+            mh.confirmString = "Really batch fit targets?"
             mh.confirmString2 = None
-            mh.confirm = "mh.batch_fix"
+            mh.confirm = "mh.batch_fit"
             return {'FINISHED'} 
         mh.confirm = None
         folder = os.path.realpath(os.path.expanduser(scn.MhTargetPath))
-        batchFixTargets(context, folder)
+        batchFitTargets(context, folder)
         #for subfolder in TargetSubPaths:
         #    if scn["Mh%s" % subfolder]:
-        #        batchFixTargets(context, os.path.join(folder, subfolder))
-        print("All targets fixed")
+        #        batchFitTargets(context, os.path.join(folder, subfolder))
+        print("All targets fited")
         return {'FINISHED'}            
  
 #----------------------------------------------------------
@@ -941,6 +645,7 @@ def batchRenderTargets(context, folder, opengl, outdir):
 class VIEW3D_OT_BatchRenderButton(bpy.types.Operator):
     bl_idname = "mh.batch_render"
     bl_label = "Batch Render"
+    bl_description = "Render all targets in directory"
     bl_options = {'UNDO'}
     opengl = BoolProperty()
 
@@ -997,6 +702,7 @@ def fitTarget(context):
 class VIEW3D_OT_FitTargetButton(bpy.types.Operator):
     bl_idname = "mh.fit_target"
     bl_label = "Fit Target"
+    bl_description = "Fit clothes to character"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -1042,6 +748,7 @@ def checkValid(ob):
 class VIEW3D_OT_DiscardTargetButton(bpy.types.Operator):
     bl_idname = "mh.discard_target"
     bl_label = "Discard Target"
+    bl_description = "Remove the active target and make the second last active"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -1056,6 +763,7 @@ class VIEW3D_OT_DiscardTargetButton(bpy.types.Operator):
 class VIEW3D_OT_DiscardAllTargetsButton(bpy.types.Operator):
     bl_idname = "mh.discard_all_targets"
     bl_label = "Discard All Targets"
+    bl_description = "Discard all targets in the target stack"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -1210,6 +918,7 @@ def symmetrizeTarget(context, left2right, mirror):
 class VIEW3D_OT_SymmetrizeTargetButton(bpy.types.Operator):
     bl_idname = "mh.symmetrize_target"
     bl_label = "Symmetrize"
+    bl_description = "Symmetrize or mirror active target"
     bl_options = {'UNDO'}
     action = StringProperty()
 
@@ -1229,6 +938,7 @@ class VIEW3D_OT_SymmetrizeTargetButton(bpy.types.Operator):
 class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
     bl_idname = "mh.snap_waist"
     bl_label = "Snap Skirt Waist"
+    bl_description = "Snap the top row of skirt verts to the corresponding tight verts"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -1253,6 +963,7 @@ class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
 class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
     bl_idname = "mh.straighten_skirt"
     bl_label = "Straighten Skirt Columns"
+    bl_description = "Make the skirt perfectly straight."
     bl_options = {'UNDO'}
 
     @classmethod
@@ -1306,6 +1017,7 @@ def fixInconsistency(context):
 class VIEW3D_OT_FixInconsistencyButton(bpy.types.Operator):
     bl_idname = "mh.fix_inconsistency"
     bl_label = "Fix It!"
+    bl_description = "Due to a bug, the target stack has become corrupt. Fix it."
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -1322,161 +1034,10 @@ class VIEW3D_OT_SkipButton(bpy.types.Operator):
         return{'FINISHED'}           
 
 #----------------------------------------------------------
-#   Convert weights
-#----------------------------------------------------------
-
-def readWeights(filepath, nVerts):
-    weights = {}
-    for n in range(nVerts):
-        weights[n] = []
-    bone = None
-    fp = open(filepath, "rU")
-    for line in fp:
-        words = line.split()
-        if len(words) < 2:
-            pass
-        elif words[0] == "#":
-            if words[1] == "weights":
-                bone = words[2]
-            else:
-                bone = None
-        elif bone:
-            vn = int(words[0])
-            if vn < mh.NBodyVerts:
-                weights[vn].append( (bone, float(words[1])) )
-    fp.close()           
-    
-    normedWeights = {}
-    for vn,data in weights.items():
-        wsum = 0.0
-        for bone,w in data:
-            wsum += w
-        ndata = []
-        for bone,w in data:
-            ndata.append((bone,w/wsum))
-        normedWeights[vn] = ndata
-
-    return normedWeights            
-
-
-def defineMatrices(rig):
-    mats = {}
-    for pb in rig.pose.bones:
-        mats[pb.name] = pb.matrix * pb.bone.matrix_local.inverted()
-    return mats
-        
-
-def getPoseLocs(mats, restLocs, weights, nVerts):
-    locs = {}
-    for n in range(nVerts):
-        if weights[n]:
-            mat = getMatrix(mats, weights[n])
-            locs[n] = mat * restLocs[n]
-        else:
-            locs[n] = restLocs[n]
-    return locs
-    
-    
-def getRestLocs(mats, poseLocs, weights, nVerts):
-    locs = {}
-    for n in range(nVerts):
-        if weights[n]:
-            mat = getMatrix(mats, weights[n])
-            locs[n] = mat.inverted() * poseLocs[n]
-        else:
-            locs[n] = poseLocs[n]
-    return locs
-    
-    
-def getMatrix(mats, weight):        
-    mat = Matrix()
-    mat.zero()
-    for bname,w in weight:
-        mat += w * mats[bname]
-    return mat
-
-
-def getShapeLocs(ob, nVerts):
-    locs = {}
-    filename = "test"
-    for n in range(nVerts):
-        locs[n] = Vector((0,0,0))
-    for skey in ob.data.shape_keys.key_blocks:
-        if skey.name == "Basis":
-            continue       
-        filename = skey.name
-        for n,v in enumerate(skey.data):
-            bv = ob.data.vertices[n]
-            vec = v.co - bv.co
-            locs[n] += skey.value*vec
-    return locs, filename
-    
-    
-def addLocs(locs1, locs2, nVerts):
-    locs = {}
-    for n in range(nVerts):
-        locs[n] = locs1[n] + locs2[n]
-    return locs
-
-
-def subLocs(locs1, locs2, nVerts):
-    locs = {}
-    for n in range(nVerts):
-        locs[n] = locs1[n] - locs2[n]
-    return locs
-
-
-def saveNewTarget(filepath, locs, nVerts):
-    fp = open(filepath, "w", encoding="utf-8", newline="\n")
-    locList = list(locs.items())
-    locList.sort()
-    for (n, dr) in locList:
-        if dr.length > Epsilon:
-            fp.write("%d %s %s %s\n" % (n, round(dr[0]), round(dr[2]), round(-dr[1])))
-    fp.close()
-    return
-        
-
-class VIEW3D_OT_ConvertRigButton(bpy.types.Operator):
-    bl_idname = "mh.convert_rig"
-    bl_label = "Convert to rig"
-    bl_options = {'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        return context.object
-
-    def execute(self, context):
-        scn = context.scene
-        ob = context.object
-        rig = ob.parent
-        nVerts = len(ob.data.vertices)
-        oldWeights = readWeights(os.path.join(scn.MhProgramPath, "data/rigs", scn.MhSourceRig+".rig"), nVerts)
-        newWeights = readWeights(os.path.join(scn.MhProgramPath, "data/rigs",scn.MhTargetRig+".rig"), nVerts)
-        mats = defineMatrices(rig)
-        restLocs = {}
-        for n in range(nVerts):
-            restLocs[n] = ob.data.vertices[n].co
-        oldShapeDiffs, filename = getShapeLocs(ob, nVerts)
-        oldRestLocs = addLocs(restLocs, oldShapeDiffs, nVerts)
-        globalLocs = getPoseLocs(mats, oldRestLocs, oldWeights, nVerts)
-        newRestLocs = getRestLocs(mats, globalLocs, newWeights, nVerts)
-        newShapeDiffs = subLocs(newRestLocs, restLocs, nVerts)
-        saveNewTarget(os.path.join(scn.MhProgramPath, "data/poses", scn.MhPoseTargetDir, filename + ".target"), newShapeDiffs, nVerts)
-
-        return{'FINISHED'}           
-
-#----------------------------------------------------------
 #   Init
 #----------------------------------------------------------
 
 def init():
-    folder = os.path.dirname(__file__)
-    bpy.types.Scene.MhBaseObj = StringProperty(default = os.path.join(folder, "data", "a8_v55_targets.obj"))
-    bpy.types.Scene.MhBaseMhclo = StringProperty(default = os.path.join(folder, "data", "a8_v55_clothes.mhclo"))
-    bpy.types.Scene.MhConvertMhclo = StringProperty(default = os.path.join(folder, "data", "a8_v55_targets.mhclo"))
-    bpy.types.Scene.MhTargetDir = StringProperty(default = os.path.expanduser("~"))
-
     bpy.types.Scene.MhUnlock = BoolProperty(default = False)
     bpy.types.Scene.MhAdvanced = BoolProperty(name="Advanced Options", default = False)
     bpy.types.Scene.MhDeleteHelpers = BoolProperty(name="Delete Helpers", default = False)
@@ -1488,10 +1049,6 @@ def init():
 
     bpy.types.Object.MhFilePath = StringProperty(default = "")
     bpy.types.Object.MhMeshVersion = StringProperty(default = "None")
-    
-    bpy.types.Scene.MhSourceRig = StringProperty(default = "rigid")
-    bpy.types.Scene.MhTargetRig = StringProperty(default = "soft1")
-    bpy.types.Scene.MhPoseTargetDir = StringProperty(default = "dance1-soft1")
     
     #bpy.types.Object.MhTightsOnly = BoolProperty(default = False)
     #bpy.types.Object.MhSkirtOnly = BoolProperty(default = False)
@@ -1509,38 +1066,6 @@ def init():
     bpy.types.Object.SelectedOnly = BoolProperty(name="Selected verts only", default = True)
     bpy.types.Object.MhZeroOtherTargets = BoolProperty(name="Active target only", description="Set values of all other targets to 0", default = True)
 
-    bpy.types.Scene.MhImportRotateMode = EnumProperty(
-            name="Rotation",
-            description="Rotation conversion",
-            items=(('QUATERNION', "Quaternion",
-                    "Convert rotations to quaternions"),
-                   ('NATIVE', "Euler (Native)", ("Use the rotation order "
-                                                 "defined in the BVH file")),
-                   ('XYZ', "Euler (XYZ)", "Convert rotations to euler XYZ"),
-                   ('XZY', "Euler (XZY)", "Convert rotations to euler XZY"),
-                   ('YXZ', "Euler (YXZ)", "Convert rotations to euler YXZ"),
-                   ('YZX', "Euler (YZX)", "Convert rotations to euler YZX"),
-                   ('ZXY', "Euler (ZXY)", "Convert rotations to euler ZXY"),
-                   ('ZYX', "Euler (ZYX)", "Convert rotations to euler ZYX"),
-                   ),
-            default='NATIVE',
-            )
-
-    bpy.types.Scene.MhExportRotateMode = EnumProperty(
-            name="Rotation",
-            description="Rotation conversion",
-            items=(('NATIVE', "Euler (Native)",
-                    "Use the rotation order defined in the BVH file"),
-                   ('XYZ', "Euler (XYZ)", "Convert rotations to euler XYZ"),
-                   ('XZY', "Euler (XZY)", "Convert rotations to euler XZY"),
-                   ('YXZ', "Euler (YXZ)", "Convert rotations to euler YXZ"),
-                   ('YZX', "Euler (YZX)", "Convert rotations to euler YZX"),
-                   ('ZXY', "Euler (ZXY)", "Convert rotations to euler ZXY"),
-                   ('ZYX', "Euler (ZYX)", "Convert rotations to euler ZYX"),
-                   ),
-            default='ZYX',
-            )
-    
     return
 
 
@@ -1571,6 +1096,7 @@ def isInited(scn):
 class VIEW3D_OT_InitButton(bpy.types.Operator):
     bl_idname = "mh.init"
     bl_label = "Initialize"
+    bl_description = ""
     bl_options = {'UNDO'}
 
     @classmethod
