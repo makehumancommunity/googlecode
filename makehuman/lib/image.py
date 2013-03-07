@@ -87,6 +87,45 @@ class Image(object):
     def resize(self, width, height):
         self._data = self.resized_(width, height)
 
+    def blur(self):
+        """
+        Apply a gaussian blur on this image.
+        """
+        self._data = self.blurred_()
+        
+    def blurred(self):
+        """
+        Create a gaussian blurred copy of this image.
+        """
+        return Image(data = self.blurred_())
+
+    def blurred_(self):
+        """
+        Apply a gaussian blur on the image pixels.
+
+        Based on a Scipy lecture example from https://github.com/scipy-lectures/scipy-lecture-notes
+        Licensed under Creative Commons Attribution 3.0 United States License
+        (CC-by) http://creativecommons.org/licenses/by/3.0/us
+        """
+        # prepare an 1-D Gaussian convolution kernel
+        t = np.linspace(-10, 10, 30)
+        bump = np.exp(-0.1*t**2)
+        bump /= np.trapz(bump) # normalize the integral to 1
+
+        # make a 2-D kernel out of it
+        kernel = bump[:,np.newaxis] * bump[np.newaxis,:]
+
+        # padded fourier transform, with the same shape as the image
+        kernel_ft = np.fft.fft2(kernel, s=self._data.shape[:2], axes=(0, 1))
+
+        # convolve
+        img_ft = np.fft.fft2(self._data, axes=(0, 1))
+        img2_ft = kernel_ft[:,:,np.newaxis] * img_ft
+        data = np.fft.ifft2(img2_ft, axes=(0, 1)).real
+
+        # clip values to range
+        return np.clip(data, 0, 255)
+
     def blit(self, other, x, y):
         dh, dw, dc = self._data.shape
         sh, sw, sc = other._data.shape
