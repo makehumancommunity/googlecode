@@ -87,28 +87,39 @@ class Image(object):
     def resize(self, width, height):
         self._data = self.resized_(width, height)
 
-    def blur(self):
+    def blur(self, level=10):
         """
         Apply a gaussian blur on this image.
+        Level is the level of blurring and should be an integer between 0 and 20
         """
-        self._data = self.blurred_()
+        self._data = self.blurred_(level)
         
-    def blurred(self):
+    def blurred(self, level=10):
         """
         Create a gaussian blurred copy of this image.
+        Level is the level of blurring and should be an integer between 0 and 20
         """
-        return Image(data = self.blurred_())
+        return Image(data = self.blurred_(level))
 
-    def blurred_(self):
+    def blurred_(self, level=10):
         """
         Apply a gaussian blur on the image pixels.
+        Level is the level of blurring and should be an integer between 0 and 20
 
         Based on a Scipy lecture example from https://github.com/scipy-lectures/scipy-lecture-notes
         Licensed under Creative Commons Attribution 3.0 United States License
         (CC-by) http://creativecommons.org/licenses/by/3.0/us
         """
+        level = int(level)
+        if level > 20:
+            level = 20
+        elif level < 0:
+            level = 0
+
         # prepare an 1-D Gaussian convolution kernel
-        t = np.linspace(-10, 10, 30)
+        dist = 21 - level
+        offset = 30
+        t = np.linspace(-dist, dist, offset)
         bump = np.exp(-0.1*t**2)
         bump /= np.trapz(bump) # normalize the integral to 1
 
