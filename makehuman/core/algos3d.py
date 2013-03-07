@@ -351,7 +351,7 @@ def saveTranslationTarget(obj, targetPath, groupToSave=None, epsilon=0.001):
     """
 
     if not groupToSave:
-        vertsToSave = xrange(len(obj.coord))
+        vertsToSave = np.arange(len(obj.coord))
     else:
         pass  # TODO verts from group
 
@@ -360,7 +360,7 @@ def saveTranslationTarget(obj, targetPath, groupToSave=None, epsilon=0.001):
 
     delta = targetVerts - originalVerts
     dist2 = np.sum(delta ** 2, axis=-1)
-    valid = dist2[index] > (epsilon ** 2)
+    valid = dist2 > (epsilon ** 2)
     del dist2
     delta = delta[valid]
     vertsToSave = vertsToSave[valid]
