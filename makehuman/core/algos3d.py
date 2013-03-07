@@ -351,7 +351,7 @@ def saveTranslationTarget(obj, targetPath, groupToSave=None, epsilon=0.001):
     """
 
     if not groupToSave:
-        vertsToSave = xrange(len(obj.verts))
+        vertsToSave = xrange(len(obj.coord))
     else:
         pass  # TODO verts from group
 
