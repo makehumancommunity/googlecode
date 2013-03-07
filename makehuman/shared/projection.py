@@ -51,12 +51,12 @@ class UvAlphaShader(Shader):
         self.uva = uva
 
     def shade(self, i, xy, uvw):
-        dst = self.dst._data[xy[...,1],xy[...,0]]
+        dst = self.dst.data[xy[...,1],xy[...,0]]
         uva = np.sum(self.uva[i][None,None,:,:] * uvw[...,[1,2,0]][:,:,:,None], axis=2)
         ix = np.floor(uva[:,:,:2] * self.size[None,None,:]).astype(int)
         ix = np.minimum(ix, self.size - 1)
         ix = np.maximum(ix, 0)
-        src = self.texture._data[ix[...,1], ix[...,0]]
+        src = self.texture.data[ix[...,1], ix[...,0]]
         a = uva[:,:,2]
         return a[:,:,None] * (src.astype(float) - dst) + dst
 
@@ -91,9 +91,9 @@ def RasterizeTriangles(dst, coords, shader, progress = None):
         uvw = np.sum(perp[i,None,None,:,:] * xy[:,:,None,:], axis=-1) - base[i,None,None,:]
         mask = np.all(uvw > 0, axis=-1)
         col = shader.shade(i, ixy, uvw)
-        # log.debug('dst: %s', dst._data[miny[i]:maxy[i],minx[i]:maxx[i]].shape)
+        # log.debug('dst: %s', dst.data[miny[i]:maxy[i],minx[i]:maxx[i]].shape)
         # log.debug('src: %s', col.shape)
-        dst._data[miny[i]:maxy[i],minx[i]:maxx[i],:][mask] = col[mask]
+        dst.data[miny[i]:maxy[i],minx[i]:maxx[i],:][mask] = col[mask]
 
 def getCamera(mesh):
     ex, ey, ez = gui3d.app.modelCamera.eye
@@ -161,7 +161,7 @@ def mapImageSoft(srcImg, mesh, leftTop, rightBottom):
     def progress(base, i, n):
         gui3d.app.progress(base + 0.5 * i / n)
 
-    # log.debug('src: %s, dst: %s', srcImg._data.shape, dstImg._data.shape)
+    # log.debug('src: %s, dst: %s', srcImg.data.shape, dstImg.data.shape)
 
     log.debug("mapImage: begin render")
 
@@ -214,10 +214,10 @@ def mapImage(imgMesh, mesh, leftTop, rightBottom):
         return mapImageSoft(mh.Image(imgMesh.getTexture()), mesh, leftTop, rightBottom)
 
 def fixSeams(img):
-    h,w,c = img._data.shape
+    h,w,c = img.data.shape
     neighbors = np.empty((3,3,h,w,c), dtype=np.uint8)
 
-    neighbors[1,1,:,:,:] = img._data
+    neighbors[1,1,:,:,:] = img.data
 
     neighbors[1,0,:,:,:] = np.roll(neighbors[1,1,:,:,:], -1, axis=-2)
     neighbors[1,2,:,:,:] = np.roll(neighbors[1,1,:,:,:],  1, axis=-2)
@@ -236,8 +236,8 @@ def fixSeams(img):
     alpha_f = alpha_f.astype(np.float32)[...,None]
     fill = np.sum(chroma_f[:,:,:,:] * alpha_f[:,:,:,:], axis=0) / np.sum(alpha_f[:,:,:,:], axis=0)
 
-    img._data[...,:-1][border] = fill.astype(np.uint8)[border]
-    img._data[...,-1:][border] = 255
+    img.data[...,:-1][border] = fill.astype(np.uint8)[border]
+    img.data[...,-1:][border] = 255
 
 def mapLightingSoft(progressCallback = None):
     """
@@ -250,7 +250,7 @@ def mapLightingSoft(progressCallback = None):
     H = 1024
     
     dstImg = mh.Image(width=W, height=H, components=4)
-    dstImg._data[...] = 0
+    dstImg.data[...] = 0
 
     delta = (-10.99, 20.0, 20.0) - mesh.coord
     ld = vnorm(delta)
@@ -350,7 +350,7 @@ def rasterizeHLines(dstImg, edges, delta, progress = None):
     x1 = np.ceil(x1).astype(int)
     del y0
 
-    data = dstImg._data[::-1]
+    data = dstImg.data[::-1]
 
     for i in xrange(len(x0)):
         if progress is not None and i % 100 == 0:
@@ -378,7 +378,7 @@ def rasterizeVLines(dstImg, edges, delta, progress = None):
     y1 = np.ceil(y1).astype(int)
     del x0
 
-    data = dstImg._data[::-1]
+    data = dstImg.data[::-1]
 
     for i in xrange(len(y0)):
         if progress is not None and i % 100 == 0:
@@ -398,7 +398,7 @@ def mapUVSoft():
     H = 2048
     
     dstImg = mh.Image(width=W, height=H, components=3)
-    dstImg._data[...] = 0
+    dstImg.data[...] = 0
 
     faces = getFaces(mesh)
 
