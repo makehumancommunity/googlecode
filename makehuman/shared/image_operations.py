@@ -32,10 +32,13 @@ def resized(img, width, height):
     ymap = np.floor((np.arange(height) + 0.5) * sh / float(height)).astype(int)
     return Image(data = img.data[ymap,:][:,xmap])
 
-def blurred(img, level=10, quality=30):
+def blurred(img, level=10, kernelSize=10):
     """
     Apply a gaussian blur on the specified image. Returns a new blurred image.
-    Level is the level of blurring and should be an integer between 0 and 20
+    Level is the level of blurring and should be an integer between 0 and 20.
+    KernelSize is the size of the kernel used for convolution, and dictates the
+    number of samples used, requiring longer processing for higher values.
+    KernelSize should be a value between 5 and 30
 
     Based on a Scipy lecture example from https://github.com/scipy-lectures/scipy-lecture-notes
     Licensed under Creative Commons Attribution 3.0 United States License
@@ -47,9 +50,14 @@ def blurred(img, level=10, quality=30):
     elif level < 0:
         level = 0
 
+    kernelSize = int(kernelSize)
+    if kernelSize < 5:
+        kernelSize = 5
+    elif kernelSize > 30:
+        kernelSize = 30
+
     # prepare an 1-D Gaussian convolution kernel
     dist = 21 - level
-    kernelSize = quality
     t = np.linspace(-dist, dist, kernelSize)
     bump = np.exp(-0.1*t**2)
     bump /= np.trapz(bump) # normalize the integral to 1
