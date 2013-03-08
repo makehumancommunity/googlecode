@@ -239,7 +239,7 @@ def fixSeams(img):
     img.data[...,:-1][border] = fill.astype(np.uint8)[border]
     img.data[...,-1:][border] = 255
 
-def mapLightingSoft(progressCallback = None):
+def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), progressCallback = None):
     """
     Create a lightmap for the selected human.
     """
@@ -252,7 +252,7 @@ def mapLightingSoft(progressCallback = None):
     dstImg = mh.Image(width=W, height=H, components=4)
     dstImg.data[...] = 0
 
-    delta = (-10.99, 20.0, 20.0) - mesh.coord
+    delta = lightpos - mesh.coord
     ld = vnorm(delta)
     del delta
     s = np.sum(ld * mesh.vnorm, axis=-1)
@@ -288,7 +288,7 @@ def mapLightingSoft(progressCallback = None):
 
     return dstImg
 
-def mapLightingGL():
+def mapLightingGL(lightpos = (-10.99, 20.0, 20.0)):
     """
     Create a lightmap for the selected human.
     """
@@ -298,7 +298,7 @@ def mapLightingGL():
     W = 1024
     H = 1024
 
-    delta = (-10.99, 20.0, 20.0) - mesh.coord
+    delta = lightpos - mesh.coord
     ld = vnorm(delta)
     del delta
     s = np.sum(ld * mesh.vnorm, axis=-1)
@@ -325,11 +325,11 @@ def mapLightingGL():
 
     return dstImg
 
-def mapLighting(progressCallback = None):
+def mapLighting(lightpos = (-10.99, 20.0, 20.0), progressCallback = None):
     if mh.hasRenderSkin():
-        return mapLightingGL()
+        return mapLightingGL(lightpos)
     else:
-        return mapLightingSoft(progressCallback)
+        return mapLightingSoft(lightpos, progressCallback)
 
 def rasterizeHLines(dstImg, edges, delta, progress = None):
     flip = delta[:,0] < 0
