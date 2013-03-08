@@ -175,6 +175,3 @@ class Image(object):
             data = color
 
         return type(self)(data = data)
-
-    def alphaChannel(self):
-        return Image(data = self._data[:,:,-1:])

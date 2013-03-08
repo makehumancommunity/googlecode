@@ -23,16 +23,14 @@ Various image processing operations.
 """
 
 import numpy as np
-import image
+from image import Image
 
 
 def resized(img, width, height):
-    dw, dh = width, height
     sw, sh = img.size
-    xmap = np.floor((np.arange(dw) + 0.5) * sw / dw).astype(int)
-    ymap = np.floor((np.arange(dh) + 0.5) * sh / dh).astype(int)
-    data = img.data[ymap,:][:,xmap]
-    return image.Image(data = data)
+    xmap = np.floor((np.arange(width) + 0.5) * sw / float(width)).astype(int)
+    ymap = np.floor((np.arange(height) + 0.5) * sh / float(height)).astype(int)
+    return Image(data = img.data[ymap,:][:,xmap])
 
 def blurred(img, level=10):
     """
@@ -72,5 +70,10 @@ def blurred(img, level=10):
     # clip values to range
     data = np.clip(data, 0, 255)
 
-    return image.Image(data = data[padSize:data.shape[0], padSize:data.shape[1], :])
+    return Image(data = data[padSize:data.shape[0], padSize:data.shape[1], :])
 
+def alphaChannel(img):
+    return Image(data = self._data[:,:,-1:])
+
+def getChannel(img, channel):
+    return Image(data = img.data[:,:,(channel-1):channel])
