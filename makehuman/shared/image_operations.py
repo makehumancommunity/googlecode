@@ -73,7 +73,7 @@ def blurred(img, level=10):
     return Image(data = data[padSize:data.shape[0], padSize:data.shape[1], :])
 
 def getAlpha(img):
-    return Image(data = self._data[:,:,-1:])
+    return Image(data = img.data[:,:,-1:])
 
 def getChannel(img, channel):
     return Image(data = img.data[:,:,(channel-1):channel])
