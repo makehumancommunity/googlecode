@@ -134,6 +134,7 @@ class BackgroundChooser(gui3d.TaskView):
             radioBtn.side = side
 
         self.opacitySlider = self.bgSettingsBox.addWidget(gui.Slider(value=self.opacity, min=0,max=255, label = "Opacity: %d"))
+        self.foregroundTggl = self.bgSettingsBox.addWidget(gui.ToggleButton("Show in foreground"))
 
         @self.opacitySlider.mhEvent
         def onChanging(value):
@@ -142,6 +143,9 @@ class BackgroundChooser(gui3d.TaskView):
         def onChange(value):
             self.opacity = value
             self.backgroundImage.mesh.setColor([255, 255, 255, value])
+        @self.foregroundTggl.mhEvent
+        def onClicked(value):
+            self.setShowBgInFront(self.foregroundTggl.selected)
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
@@ -218,6 +222,16 @@ class BackgroundChooser(gui3d.TaskView):
             self.backgroundImageToggle.setChecked(False)
             mh.redraw()
 
+    def setShowBgInFront(self, enabled):
+        if enabled:
+            self.backgroundImage.mesh.priority = 100
+        else:
+            self.backgroundImage.mesh.priority = -90
+        mh.redraw()
+
+    def isShowBgInFront(self):
+        return self.backgroundImage.mesh.priority == 100
+
     def isBackgroundSet(self):
         for bgFile in self.filenames.values():
             if bgFile:
@@ -241,6 +255,7 @@ class BackgroundChooser(gui3d.TaskView):
         gui3d.app.prompt('Info', text, 'OK', helpId='backgroundHelp')
         gui3d.app.statusPersist(text)
         self.opacitySlider.setValue(self.opacity)
+        self.foregroundTggl.setChecked(self.isShowBgInFront())
         self.filechooser.setFocus()
 
     def onHide(self, event):
@@ -309,6 +324,8 @@ class TextureProjectionView(gui3d.TaskView) :
 
         # sliders
         self.opacitySlider = self.backgroundBox.addWidget(gui.Slider(value=backgroundChooserView.opacity, min=0,max=255, label = "Opacity: %d"))
+        self.foregroundTggl = self.backgroundBox.addWidget(gui.ToggleButton("Show in foreground"))
+
 
         @self.opacitySlider.mhEvent
         def onChanging(value):
@@ -317,6 +334,10 @@ class TextureProjectionView(gui3d.TaskView) :
         def onChange(value):
             backgroundChooserView.opacity = value
             self.backgroundImage.mesh.setColor([255, 255, 255, value])
+
+        @self.foregroundTggl.mhEvent
+        def onClicked(value):
+            self.backgroundChooserView.setShowBgInFront(self.foregroundTggl.selected)
 
         @self.backgroundImage.mhEvent
         def onMouseDragged(event):
@@ -392,6 +413,7 @@ class TextureProjectionView(gui3d.TaskView) :
         self.backgroundImage.mesh.setPickable(self.dragButton.selected)
         gui3d.app.selectedHuman.mesh.setShadeless(1 if self.shadelessButton.selected else 0)
         self.opacitySlider.setValue(self.backgroundChooserView.opacity)
+        self.foregroundTggl.setChecked(self.backgroundChooserView.isShowBgInFront())
 
     def onHide(self, event):
 
