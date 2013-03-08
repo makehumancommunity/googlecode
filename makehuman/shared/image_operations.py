@@ -32,7 +32,7 @@ def resized(img, width, height):
     ymap = np.floor((np.arange(height) + 0.5) * sh / float(height)).astype(int)
     return Image(data = img.data[ymap,:][:,xmap])
 
-def blurred(img, level=10):
+def blurred(img, level=10, quality=30):
     """
     Apply a gaussian blur on the specified image. Returns a new blurred image.
     Level is the level of blurring and should be an integer between 0 and 20
@@ -49,7 +49,7 @@ def blurred(img, level=10):
 
     # prepare an 1-D Gaussian convolution kernel
     dist = 21 - level
-    kernelSize = 30
+    kernelSize = quality
     t = np.linspace(-dist, dist, kernelSize)
     bump = np.exp(-0.1*t**2)
     bump /= np.trapz(bump) # normalize the integral to 1
@@ -71,6 +71,11 @@ def blurred(img, level=10):
     data = np.clip(data, 0, 255)
 
     return Image(data = data[padSize:data.shape[0], padSize:data.shape[1], :])
+
+def mix(img1, img2, weight1, weight2 = None):
+    if weight2 is None:
+        weight2 =  1 - weight1
+    return np.around(weight1*img1.data + weight2*img2.data)
 
 def getAlpha(img):
     return Image(data = img.data[:,:,-1:])
