@@ -77,6 +77,20 @@ def mix(img1, img2, weight1, weight2 = None):
         weight2 =  1 - weight1
     return np.around(weight1*img1.data + weight2*img2.data)
 
+def compose(img, channels):
+    # 'channels' is a sequence of Images.
+    outch = []
+    i = 0
+    for c in channels:
+        if c.components == 1:
+            outch.append(c.data[:,:,0:1])
+        else:
+            if c.components < i:
+                raise TypeError("Image No. %i has not enough channels" % i)
+            outch.append(c.data[:,:,i:i+1])
+        i += 1
+    return Image(data = np.dstack(outch))
+
 def getAlpha(img):
     return Image(data = img.data[:,:,-1:])
 
