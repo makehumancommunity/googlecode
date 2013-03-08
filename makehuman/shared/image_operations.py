@@ -83,7 +83,7 @@ def blurred(img, level=10, kernelSize=10):
 def mix(img1, img2, weight1, weight2 = None):
     if weight2 is None:
         weight2 =  1 - weight1
-    return np.around(weight1*img1.data + weight2*img2.data)
+    return Image(data = np.around(weight1*img1.data + weight2*img2.data).astype(int))
 
 def compose(img, channels):
     # 'channels' is a sequence of Images.
