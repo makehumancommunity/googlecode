@@ -962,8 +962,8 @@ class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
 
 class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
     bl_idname = "mh.straighten_skirt"
-    bl_label = "Straighten Skirt Columns"
-    bl_description = "Make the skirt perfectly straight."
+    bl_label = "Straighten Skirt"
+    bl_description = "Make (the right side of) the skirt perfectly straight."
     bl_options = {'UNDO'}
 
     @classmethod
@@ -972,11 +972,12 @@ class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
 
     def execute(self, context):
         ob = context.object
+        settings = getSettings(ob)
         bpy.ops.object.mode_set(mode='OBJECT')
         skey = ob.data.shape_keys.key_blocks[-1]
         verts = skey.data
 
-        for col in XYSkirtColumns:
+        for col in settings.XYSkirtColumns:
             xsum = 0.0
             ysum = 0.0
             for vn in col:
@@ -989,7 +990,7 @@ class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
                 verts[vn].co[0] = x
                 verts[vn].co[1] = y
                 
-        for row in ZSkirtRows:
+        for row in settings.ZSkirtRows:
             zsum = 0.0
             for vn in row:
                 zsum += verts[vn].co[2]

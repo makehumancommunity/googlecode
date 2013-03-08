@@ -2551,6 +2551,7 @@ def initInterface():
                  ('Leg', 'Leg', 'Leg'),
                  ('Foot', 'Foot', 'Foot'),
                  ('Eye', 'Eye', 'Eye'),
+                 ('Body', 'Body', 'Body'),
                  ],
         default='Head')                 
 

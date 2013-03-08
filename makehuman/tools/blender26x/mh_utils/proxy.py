@@ -95,9 +95,9 @@ class CProxy:
         rlen,first = self.checkSanity(trgVerts)
 
         s0 = getScale(self.xScale, srcVerts, 0)
-        s1 = getScale(self.yScale, srcVerts, 1)
-        s2 = getScale(self.zScale, srcVerts, 2)
-        scales = Vector((s0,s2,s1))
+        s2 = getScale(self.yScale, srcVerts, 2)
+        s1 = getScale(self.zScale, srcVerts, 1)
+        scales = (s0,s1,s2)
 
         for n in range(rlen):
             if n < skipBefore or n >= skipAfter:

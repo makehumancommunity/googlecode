@@ -26,7 +26,7 @@
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.03",
+    "version": "1.04",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -199,6 +199,9 @@ class MakeTargetPanel(bpy.types.Panel):
             return
 
         if utils.isBaseOrTarget(ob):
+            layout.label("Skirt Editing")
+            layout.operator("mh.snap_waist")
+            layout.operator("mh.straighten_skirt")
             layout.separator()
             if ob.MhIrrelevantDeleted:
                 layout.label("Only %s Affected" % ob.MhAffectOnly)
@@ -207,9 +210,6 @@ class MakeTargetPanel(bpy.types.Panel):
                 layout.prop(ob, "MhAffectOnly", expand=True)
                 layout.operator("mh.delete_irrelevant")  
                 
-            if ob.MhAffectOnly == 'Skirt':
-                layout.operator("mh.snap_waist")
-                layout.operator("mh.straighten_skirt")
 
         if rig and rig.type == 'ARMATURE':
             layout.separator()
