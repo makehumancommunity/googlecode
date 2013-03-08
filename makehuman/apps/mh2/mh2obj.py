@@ -31,7 +31,9 @@ import mh2proxy
 #    exportObj(human, filepath, config):    
 #
 
-def exportObj(human, filepath, config):
+def exportObj(human, filepath, config=None):
+    if config is None:
+        config = exportutils.config.Config()
     obj = human.meshData
     config.setHuman(human)
     config.setupTexFolder(filepath)

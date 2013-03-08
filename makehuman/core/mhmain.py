@@ -1007,17 +1007,14 @@ class MHApplication(gui3d.Application, mh.Application):
         algos3d.saveTranslationTarget(human.meshData, "full_target.target")
         log.message("Full target exported")
 
-    # TL: This will not work, because need configs defined in 9_export plugins
     def quickExport(self):
         exportPath = mh.getPath('exports')
         if not os.path.exists(exportPath):
             os.makedirs(exportPath)
         import mh2obj
-        mh2obj.exportObj(self.selectedHuman.meshData, exportPath + '/quick_export.obj')
+        mh2obj.exportObj(self.selectedHuman, exportPath + '/quick_export.obj')
         import mh2bvh
         mh2bvh.exportSkeleton(self.selectedHuman.meshData, exportPath + '/quick_export.bvh')
-        import mhx
-        mhx.mhx_main.exportMhx(human, filename, config).exportMhx(self.selectedHuman.meshData, exportPath + '/quick_export.mhx')
 
     def grabScreen(self):
         grabPath = mh.getPath('grab')

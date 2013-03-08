@@ -42,6 +42,7 @@ class Config:
         self.scale,self.unit    = 1.0, "decimeter"
         self.subdivide          = False
 
+        self.useNormals         = False
         self.useRelPaths        = True
         self.feetOnGround       = False
         self.skirtRig           = "inh"
