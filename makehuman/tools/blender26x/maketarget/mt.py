@@ -107,20 +107,23 @@ class CSettings(mh.CSettings):
 
             self.irrelevantVerts = {
                "Body" : (self.vertices["Penis"][0], self.nTotalVerts),
-               "Skirt" : (self.vertices["Skirt"][1], self.nTotalVerts),
                "Tights" : (self.vertices["Tights"][1], self.nTotalVerts),
+               "Skirt" : (self.vertices["Skirt"][1], self.nTotalVerts),
+               "Hair" : (self.vertices["Hair"][1], self.nTotalVerts),
             }
 
             self.affectedVerts = {
                 "Body" : (0, self.vertices["Penis"][0]),
-                "Skirt" : self.vertices["Skirt"],
                 "Tights" : self.vertices["Tights"],
+                "Skirt" : self.vertices["Skirt"],
+                "Hair" : self.vertices["Hair"],
             }
 
             self.offsetVerts = {
                 "Body" : 0,
-                "Skirt" : self.vertices["Skirt"][0] - self.vertices["Tights"][0],
                 "Tights" : 0,
+                "Skirt" : 0,
+                "Hair" : 0,
             }
 
             

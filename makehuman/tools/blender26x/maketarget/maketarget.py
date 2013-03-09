@@ -82,14 +82,15 @@ def getSettings(ob):
 #   
 #----------------------------------------------------------
 
-def afterImport(context, filepath):
+def afterImport(context, filepath, deleteHelpers, useMaterials):
     ob = context.object
-    scn = context.scene
     ob.MhFilePath = filepath
+    ob.MhDeleteHelpers = deleteHelpers
+    ob.MhUseMaterials = useMaterials
     setSettings(context)
     settings = getSettings(ob)
     
-    if context.scene.MhUseMaterials:
+    if ob.MhUseMaterials:
         addMaterial(ob, 0, "Skin", (1,1,1), (0, settings.nTotalVerts))
         addMaterial(ob, 1, "Tights", (1,0,0), settings.vertices["Tights"])
         addMaterial(ob, 2, "Joints", (0,1,0), settings.vertices["Joints"])
@@ -102,7 +103,7 @@ def afterImport(context, filepath):
         addMaterial(ob, 9, "Lashes", (1,0,1), settings.vertices["EyeLashes"])
         addMaterial(ob, 10, "Tongue", (0.5,0,0.5), settings.vertices["Tongue"])
                     
-    if scn.MhDeleteHelpers:
+    if ob.MhDeleteHelpers:
         affect = "Body"
     else:
         affect = "All"
@@ -125,29 +126,27 @@ def addMaterial(ob, index, name, color, verts):
             f.material_index = index
 
 
-
 class VIEW3D_OT_ImportBaseMhcloButton(bpy.types.Operator):
     bl_idname = "mh.import_base_mhclo"
-    bl_label = "Import Base Mhclo File"
+    bl_label = "Load Human + Fit Tools"
     bl_description = "Load the base object. Clothes fitting enabled."
     bl_options = {'UNDO'}
 
     def execute(self, context):
         mh_utils.import_obj.importBaseMhclo(context, filepath=mt.baseMhcloFile)
-        afterImport(context, mt.baseMhcloFile)
+        afterImport(context, mt.baseMhcloFile, False, True)
         return {'FINISHED'}
 
 
 class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
     bl_idname = "mh.import_base_obj"
-    bl_label = "Import Base Obj File"
+    bl_label = "Load Human"
     bl_description = "Load the base object. Clothes fitting disabled."
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        scn = context.scene
         mh_utils.import_obj.importBaseObj(context, filepath=mt.baseObjFile)
-        afterImport(context, mt.baseObjFile)
+        afterImport(context, mt.baseObjFile, True, False)
         return {'FINISHED'}
 
 
@@ -278,7 +277,8 @@ def loadTargetFromMesh(context):
     skey = ob.shape_key_add(name=name, from_mix=False)
     ob.active_shape_key_index = utils.shapeKeyLen(ob) - 1
     skey.name = name
-    for v in trg.data.vertices:
+    nVerts = len(ob.data.vertices)
+    for v in trg.data.vertices[0:nVerts]:
         skey.data[v.index].co = v.co
     skey.slider_min = -1.0
     skey.slider_max = 1.0
@@ -300,7 +300,8 @@ class VIEW3D_OT_LoadTargetFromMeshButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return (context.object and not context.object.MhMeshVertsDeleted)
+        return context.object
+        #return (context.object and not context.object.MhMeshVertsDeleted)
 
     def execute(self, context):
         loadTargetFromMesh(context)
@@ -503,7 +504,7 @@ class VIEW3D_OT_ApplyTargetsButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return (context.object and not context.object.MhMeshVertsDeleted)
+        return context.object
 
     def execute(self, context):
         applyTargets(context)
@@ -957,6 +958,8 @@ class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
         for n in range(nVerts):
             verts[settings.skirtWaist[n]].co = verts[settings.tightsWaist[n]].co
         bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
         return{'FINISHED'}            
 
 
@@ -985,7 +988,6 @@ class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
                 ysum += verts[vn].co[1]
             x = xsum/len(col)
             y = ysum/len(col)
-            print("xy col", x, y)
             for vn in col:
                 verts[vn].co[0] = x
                 verts[vn].co[1] = y
@@ -995,11 +997,12 @@ class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
             for vn in row:
                 zsum += verts[vn].co[2]
             z = zsum/len(row)
-            print("z row", z)
             for vn in row:
                 verts[vn].co[2] = z
                 
         bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
         return{'FINISHED'}            
 
 
@@ -1040,9 +1043,9 @@ class VIEW3D_OT_SkipButton(bpy.types.Operator):
 
 def init():
     bpy.types.Scene.MhUnlock = BoolProperty(default = False)
-    bpy.types.Scene.MhAdvanced = BoolProperty(name="Advanced Options", default = False)
-    bpy.types.Scene.MhDeleteHelpers = BoolProperty(name="Delete Helpers", default = False)
-    bpy.types.Scene.MhUseMaterials = BoolProperty(name="Use Materials", default = False)
+
+    bpy.types.Object.MhDeleteHelpers = BoolProperty(name="Delete Helpers", default = False)
+    bpy.types.Object.MhUseMaterials = BoolProperty(name="Use Materials", default = False)
     
     bpy.types.Object.MhPruneWholeDir = BoolProperty(name="Prune Entire Directory", default = False)
     bpy.types.Object.MhPruneEnabled = BoolProperty(name="Pruning Enabled", default = False)
@@ -1056,8 +1059,9 @@ def init():
                  
     bpy.types.Object.MhAffectOnly = EnumProperty(
         items = [('Body','Body','Body'),
-                 ('Skirt','Skirt','Skirt'),
                  ('Tights','Tights','Tights'),
+                 ('Skirt','Skirt','Skirt'),
+                 ('Hair','Hair','Hair'),
                  ('All','All','All')],
     default='All')
     

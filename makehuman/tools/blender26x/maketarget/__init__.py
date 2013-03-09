@@ -26,7 +26,7 @@
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.04",
+    "version": "1.05",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -118,27 +118,18 @@ class MakeTargetPanel(bpy.types.Panel):
         if not utils.drawConfirm(layout, scn):
             return
 
-        layout.prop(scn, "MhAdvanced")
-        if scn.MhAdvanced:            
-            if Thomas:
-                layout.label("Pruning")
-                row = layout.row()
-                row.prop(ob, "MhPruneEnabled")
-                row.prop(ob, "MhPruneWholeDir")
-                row.prop(ob, "MhPruneRecursively")
-                layout.operator("mh.prune_target_file")
-
-                layout.label("Load materials from")
-                layout.prop(scn, "MhLoadMaterial", expand=True)
-                layout.separator()
+        if Thomas:
+            layout.label("Pruning")
+            row = layout.row()
+            row.prop(ob, "MhPruneEnabled")
+            row.prop(ob, "MhPruneWholeDir")
+            row.prop(ob, "MhPruneRecursively")
+            layout.operator("mh.prune_target_file")
 
         if not utils.isBaseOrTarget(ob):
-            layout.operator("mh.import_base_obj", text="Import Base Obj")
-            layout.operator("mh.import_base_mhclo", text="Import Base Mhclo")
+            layout.operator("mh.import_base_obj")
+            layout.operator("mh.import_base_mhclo")
             layout.operator("mh.make_base_obj")
-            row = layout.row()
-            row.prop(scn, "MhDeleteHelpers")
-            row.prop(scn, "MhUseMaterials")
 
         elif utils.isBase(ob):
             layout.label("Load Target")
@@ -184,31 +175,29 @@ class MakeTargetPanel(bpy.types.Panel):
             row = layout.row()            
             row.operator("mh.symmetrize_target", text="Left->Right").action = "Left"
             row.operator("mh.symmetrize_target", text="Right->Left").action = "Right"
-            if scn.MhAdvanced:
+            if Thomas:
                 row.operator("mh.symmetrize_target", text="Mirror").action = "Mirror"
 
             layout.label("Save Target")            
             layout.prop(ob, "SelectedOnly")
-            if scn.MhAdvanced:
+            if Thomas:
                 layout.prop(ob, "MhZeroOtherTargets")
             if ob["FilePath"]:
                 layout.operator("mh.save_target")           
             layout.operator("mh.saveas_target")       
 
-        if not scn.MhAdvanced:
-            return
-
-        if utils.isBaseOrTarget(ob):
-            layout.label("Skirt Editing")
-            layout.operator("mh.snap_waist")
-            layout.operator("mh.straighten_skirt")
-            layout.separator()
-            if ob.MhIrrelevantDeleted:
-                layout.label("Only %s Affected" % ob.MhAffectOnly)
-            else:
-                layout.label("Affect Only:")
-                layout.prop(ob, "MhAffectOnly", expand=True)
-                layout.operator("mh.delete_irrelevant")  
+            if not ob.MhDeleteHelpers:
+                layout.label("Skirt Editing")
+                layout.operator("mh.snap_waist")
+                layout.operator("mh.straighten_skirt")
+            
+                if ob.MhIrrelevantDeleted:
+                    layout.separator()
+                    layout.label("Only %s Affected" % ob.MhAffectOnly)
+                else:
+                    layout.label("Affect Only:")
+                    layout.prop(ob, "MhAffectOnly", expand=True)
+                    layout.operator("mh.delete_irrelevant")  
                 
 
         if rig and rig.type == 'ARMATURE':
