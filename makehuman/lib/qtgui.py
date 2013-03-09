@@ -264,7 +264,7 @@ class Slider(QtGui.QWidget, Widget):
             cls._imageCache[path] = QtGui.QPixmap(path)
         return cls._imageCache[path]
 
-    def __init__(self, value=0.0, min=0.0, max=1.0, label=None, vertical=False, valueConverter=None, image=None):
+    def __init__(self, value=0.0, min=0.0, max=1.0, label=None, vertical=False, valueConverter=None, image=None, scale=1000):
         super(Slider, self).__init__()
         Widget.__init__(self)
         self.text = getLanguageString(label) or ''
@@ -278,8 +278,9 @@ class Slider(QtGui.QWidget, Widget):
 
         self.min = min
         self.max = max
+        self.scale = scale
         self.slider.setMinimum(0)
-        self.slider.setMaximum(1000)
+        self.slider.setMaximum(self.scale)
         self.slider.setValue(self._f2i(value))
         self.slider.setTracking(False)
         self.connect(self.slider, QtCore.SIGNAL('sliderMoved(int)'), self._changing)
@@ -394,10 +395,10 @@ class Slider(QtGui.QWidget, Widget):
             self.edit.setText('%.2f' % self.toDisplay(value))
 
     def _f2i(self, x):
-        return int(round(1000 * (x - self.min) / (self.max - self.min)))
+        return int(round(self.scale * (x - self.min) / (self.max - self.min)))
 
     def _i2f(self, x):
-        return self.min + (x / 1000.0) * (self.max - self.min)
+        return self.min + (x / float(self.scale)) * (self.max - self.min)
 
     def setValue(self, value):
         if self._f2i(value) == self.slider.value():
