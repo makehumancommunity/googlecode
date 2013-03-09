@@ -69,7 +69,6 @@ class CStuff:
             self.material = None
             self.texture = ("data/textures", "texture.png") 
             self.specular = None # ("data/textures", "texture_ref.png") 
-            self.bump = None
             self.normal = None
             self.transparency = None
             self.bump = None
