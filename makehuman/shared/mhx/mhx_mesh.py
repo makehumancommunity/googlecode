@@ -191,14 +191,14 @@ MaterialNumbers = {
     ""       : 0,     # skin
     "skin"   : 0,     # skin
     "nail"   : 0,     # nail
-    "teeth"  : 1,     # teeth
-    "eye"    : 2,     # eye
-    "cornea" : 2,     # cornea
-    "brow"   : 3,     # brows
-    "joint"  : 4,     # joint
-    "red"    : 5,     # red
-    "green"  : 6,     # green
-    "blue"   : 7      # blue
+    "teeth"  : 0,     # teeth
+    "eye"    : 1,     # eye
+    "cornea" : 1,     # cornea
+    "brow"   : 1,     # brows
+    "joint"  : 2,     # joint
+    "red"    : 3,     # red
+    "green"  : 4,     # green
+    "blue"   : 5      # blue
 }
     
 def writeFaceNumbers(fp, amt, config):
