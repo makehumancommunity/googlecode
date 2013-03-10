@@ -403,6 +403,10 @@ def writeProxyMaterialSettings(fp, settings):
 
 
 def addProxyMaskMTexs(fp, mat, proxy, prxList, tex):
+    if proxy.maskLayer < 0:
+        return
+    print(proxy, proxy.maskLayer)
+    halt
     n = 0  
     m = len(prxList)
     for (zdepth, prx) in prxList:
@@ -411,7 +415,6 @@ def addProxyMaskMTexs(fp, mat, proxy, prxList, tex):
             n = mhx_materials.addMaskMTex(fp, prx.mask, proxy, 'MULTIPLY', n)
     if not tex:            
         n = mhx_materials.addMaskMTex(fp, (None,'solid'), proxy, 'MIX', n)
-    return   
     
     
 def sortedMasks(amt, config):

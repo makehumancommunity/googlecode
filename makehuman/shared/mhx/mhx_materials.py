@@ -68,12 +68,19 @@ end Texture
 
 Texture solid IMAGE
 end Texture
-
-# --------------- Materials ----------------------------- # 
 """)
 
-    nMasks = writeSkinStart(fp, None, amt, config)
+    if config.useMasks:    
+        prxList = list(amt.proxies.values())        
+        for prx in prxList:
+            if prx.mask:
+                addMaskImage(fp, amt, config, prx.mask)
 
+    fp.write(
+        "# --------------- Materials ----------------------------- #\n\n" +
+        "Material %sSkin\n" % amt.name)
+        
+    nMasks = writeMaskMTexs(fp, amt, config)
     fp.write("  MTex %d diffuse UV COLOR" % nMasks)
 
     fp.write("""
@@ -138,28 +145,16 @@ end Texture
   use_raytrace True ;
   use_transparency True ;
   transparency_method 'Z_TRANSPARENCY' ;
-  use_textures Array 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1  ;
   Property MhxDriven True ;
 """)
 
-    fp.write("  use_textures Array")
-    for n in range(nMasks):
-        fp.write(" 1")
-    for n in range(3):
-        fp.write(" 1")
-    fp.write(" ;\n")
-    fp.write("  AnimationData %sMesh True\n" % amt.name)
-    #amtpkg.drivers.writeTextureDrivers(fp, rig_panel_25.BodyLanguageTextureDrivers)
-    writeMaskDrivers(fp, amt, config)
-    fp.write("""
-  end AnimationData
-end Material
-""")
+    writeMaterialAnimationData(fp, nMasks, 2, amt, config)
+    fp.write("end Material\n\n")
 
-    fp.write("Material %sEye" % amt.name)
-
+    fp.write("Material %sShiny\n" % amt.name)
+    nMasks = writeMaskMTexs(fp, amt, config)
+    fp.write("  MTex %d diffuse UV COLOR\n" % nMasks)
     fp.write("""
-  MTex 0 diffuse UV COLOR
     texture Refer Texture diffuse ;
     use_map_color_diffuse True ;
     use_map_translucency True ;
@@ -176,8 +171,6 @@ end Material
   specular_color Array 1.0 1.0 1.0  ;
   specular_shader 'PHONG' ;
   specular_intensity 1.0 ;
-  active_texture Refer Texture diffuse ;
-  active_texture_index 0 ;
   alpha 0 ;
   specular_alpha 0 ;
   specular_hardness 369 ;
@@ -190,8 +183,10 @@ end Material
   use_shadows True ;
   use_transparency True ;
   use_transparent_shadows True ;
-end Material
 """)
+
+    writeMaterialAnimationData(fp, nMasks, 1, amt, config)
+    fp.write("end Material\n\n")
 
     writeSimpleMaterial(fp, "Invisio", amt, (1,1,1))
     writeSimpleMaterial(fp, "Red", amt, (1,0,0))
@@ -224,34 +219,28 @@ end Material
 #   
 #-------------------------------------------------------------------------------        
 
-def writeSkinStart(fp, proxy, amt, config):
-    if not config.useMasks:
-        fp.write("Material %sSkin\n" % amt.name)
-        return 0
-        
-    if proxy:
-        fp.write("Material %s%sSkin\n" % (amt.name, proxy.name))
-        return 0
-
-    nMasks = 0
-    prxList = list(amt.proxies.values())
+def writeMaterialAnimationData(fp, nMasks, nTextures, amt, config):
+    fp.write("  use_textures Array")
+    for n in range(nMasks):
+        fp.write(" 1")
+    for n in range(nTextures):
+        fp.write(" 1")
+    fp.write(" ;\n")
+    fp.write("  AnimationData %sMesh True\n" % amt.name)
+    #amtpkg.drivers.writeTextureDrivers(fp, rig_panel_25.BodyLanguageTextureDrivers)
+    writeMaskDrivers(fp, amt, config)
+    fp.write("  end AnimationData\n")
     
-    for prx in prxList:
-        if prx.mask:
-            addMaskImage(fp, amt, config, prx.mask)
-            nMasks += 1
-    fp.write("Material %sSkin\n" % amt.name)
-             #"  MTex 0 diffuse UV COLOR\n" +
-             #"    texture Refer Texture diffuse ;\n" +
-             #"  end MTex\n"
 
-    n = 0    
-    for prx in prxList:
-        if prx.mask:
-            n = addMaskMTex(fp, prx.mask, proxy, 'MULTIPLY', n)
-            
-    return nMasks
-               
+def writeMaskMTexs(fp, amt, config):
+    nMasks = 0
+    if config.useMasks:        
+        prxList = list(amt.proxies.values())        
+        for prx in prxList:
+            if prx.mask:
+                nMasks = addMaskMTex(fp, prx.mask, None, 'MULTIPLY', nMasks)
+    return nMasks                
+    
 
 def writeMaskDrivers(fp, amt, config):
     if not config.useMasks:

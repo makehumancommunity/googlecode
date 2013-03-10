@@ -190,8 +190,8 @@ def writeArmatureModifier(fp, amt, config, proxy):
 MaterialNumbers = {
     ""       : 0,     # skin
     "skin"   : 0,     # skin
-    "nail"   : 0,     # nail
-    "teeth"  : 0,     # teeth
+    "nail"   : 1,     # nail
+    "teeth"  : 1,     # teeth
     "eye"    : 1,     # eye
     "cornea" : 1,     # cornea
     "brow"   : 1,     # brows
@@ -265,9 +265,7 @@ def writeBaseMaterials(fp, amt):
     else:
         fp.write(
 "  Material %sSkin ;\n" % amt.name +
-"  Material %sMouth ;\n" % amt.name +
-"  Material %sEye ;\n" % amt.name +
-"  Material %sBrows ;\n" % amt.name +
+"  Material %sShiny ;\n" % amt.name +
 "  Material %sInvisio ;\n" % amt.name +
 "  Material %sRed ;\n" % amt.name +
 "  Material %sGreen ;\n" % amt.name +
