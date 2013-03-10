@@ -102,7 +102,7 @@ class ClothesTaskView(gui3d.TaskView):
             for name,clo in human.clothesObjs.items():
                 gui3d.app.removeObject(clo)
                 del human.clothesObjs[name]
-            human.clothesProxies = []
+            human.clothesProxies = {}
             self.clothesList = []
             human.activeClothing = None
             self.updateFaceMasks()
