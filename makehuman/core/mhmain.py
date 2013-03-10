@@ -1007,15 +1007,6 @@ class MHApplication(gui3d.Application, mh.Application):
         algos3d.saveTranslationTarget(human.meshData, "full_target.target")
         log.message("Full target exported")
 
-    def quickExport(self):
-        exportPath = mh.getPath('exports')
-        if not os.path.exists(exportPath):
-            os.makedirs(exportPath)
-        import mh2obj
-        mh2obj.exportObj(self.selectedHuman, exportPath + '/quick_export.obj')
-        import mh2bvh
-        mh2bvh.exportSkeleton(self.selectedHuman.meshData, exportPath + '/quick_export.bvh')
-
     def grabScreen(self):
         grabPath = mh.getPath('grab')
         if not os.path.exists(grabPath):
@@ -1211,7 +1202,6 @@ class MHApplication(gui3d.Application, mh.Application):
         self.actions.help      = action('help',      'Help',          self.goToHelp)
         self.actions.smooth    = action('smooth',    'Smooth',        self.toggleSubdivision, toggle=True)
         self.actions.savetgt   = action('savetgt',   'Save target',   self.saveTarget)
-        self.actions.qexport   = action('qexport',   'Quick export',  self.quickExport)
         self.actions.grab      = action('grab',      'Grab screen',   self.grabScreen)
 
         toolbar = self.view_toolbar = mh.addToolBar("View")
