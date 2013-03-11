@@ -40,15 +40,15 @@ class CSettings(mh.CSettings):
         if version == "alpha7":                    
             
             self.irrelevantVerts = {
-               "Body" : (self.vertices["Skirt"][0], self.nTotalVerts),
-               "Skirt" : (self.nTotalVerts, self.nTotalVerts),
-               "Tights" : self.vertices["Skirt"],
+               "Body" : [(self.vertices["Skirt"][0], self.nTotalVerts)],
+               "Skirt" : [(self.nTotalVerts, self.nTotalVerts)],
+               "Tights" : [self.vertices["Skirt"]],
             }
 
             self.affectedVerts = {
                 "Body" : (0, self.vertices["Skirt"][0]),
                 "Skirt" : self.vertices["Skirt"],
-                "Tights" : self.vertices["Tights"][0],
+                "Tights" : self.vertices["Tights"],
             }
 
             self.offsetVerts = {
@@ -106,24 +106,28 @@ class CSettings(mh.CSettings):
         elif version == "alpha8":
 
             self.irrelevantVerts = {
-               "Body" : (self.vertices["Penis"][0], self.nTotalVerts),
-               "Tights" : (self.vertices["Tights"][1], self.nTotalVerts),
-               "Skirt" : (self.vertices["Skirt"][1], self.nTotalVerts),
-               "Hair" : (self.vertices["Hair"][1], self.nTotalVerts),
+               "Body" :     [(self.vertices["Penis"][0], self.nTotalVerts)],
+               "Penis" :     [(self.vertices["Penis"][1], self.nTotalVerts)],
+               "Tights" :   [self.vertices["Penis"], (self.vertices["Tights"][1], self.nTotalVerts)],
+               "Skirt" :    [self.vertices["Penis"], (self.vertices["Skirt"][1], self.nTotalVerts)],
+               "Hair" :     [self.vertices["Penis"], (self.vertices["Hair"][1], self.nTotalVerts)],
             }
 
             self.affectedVerts = {
                 "Body" : (0, self.vertices["Penis"][0]),
+                "Penis" : self.vertices["Penis"],
                 "Tights" : self.vertices["Tights"],
                 "Skirt" : self.vertices["Skirt"],
                 "Hair" : self.vertices["Hair"],
             }
 
+            penis = self.vertices["Penis"][1] - self.vertices["Penis"][0]
             self.offsetVerts = {
                 "Body" : 0,
-                "Tights" : 0,
-                "Skirt" : 0,
-                "Hair" : 0,
+                "Penis" : 0,
+                "Tights" : penis,
+                "Skirt" : penis,
+                "Hair" : penis,
             }
 
             

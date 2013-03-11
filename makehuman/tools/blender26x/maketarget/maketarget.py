@@ -179,16 +179,15 @@ def deleteIrrelevant(ob, affect):
     if ob.MhIrrelevantDeleted or settings is None:
         return
     if affect != 'All':
-        first,last = settings.irrelevantVerts[affect]
         nVerts = len(ob.data.vertices)
-
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='OBJECT')
-        for n in range(first):
+        for n in range(nVerts):
             ob.data.vertices[n].select = False
-        for n in range(first, last):
-            ob.data.vertices[n].select = True
+        for first,last in settings.irrelevantVerts[affect]:
+            for n in range(first, last):
+                ob.data.vertices[n].select = True
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.mode_set(mode='EDIT')
@@ -239,9 +238,11 @@ class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
         ob = context.object
         settings = getSettings(ob)
         if ob.MhMeshVertsDeleted:
-            first,last = settings.irrelevantVerts[ob.MhAffectOnly]
-            offset = settings.offsetVerts[ob.MhAffectOnly]
-            utils.loadTarget(self.properties.filepath, context, firstIrrelevant=first, lastIrrelevant=last, offset=offset)
+            utils.loadTarget(
+                self.properties.filepath, 
+                context, 
+                irrelevant=settings.irrelevantVerts[ob.MhAffectOnly], 
+                offset=settings.offsetVerts[ob.MhAffectOnly])
         else:
             utils.loadTarget(self.properties.filepath, context)
         print("Target loaded")
@@ -1059,6 +1060,7 @@ def init():
                  
     bpy.types.Object.MhAffectOnly = EnumProperty(
         items = [('Body','Body','Body'),
+                 ('Penis','Penis','Penis'),
                  ('Tights','Tights','Tights'),
                  ('Skirt','Skirt','Skirt'),
                  ('Hair','Hair','Hair'),

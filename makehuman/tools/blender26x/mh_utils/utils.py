@@ -179,10 +179,10 @@ def printVec(string, vec):
 #   loadTarget(filepath, context):
 #----------------------------------------------------------
 
-def loadTarget(filepath, context, firstIrrelevant=100000, lastIrrelevant=100000, offset=0):
+def loadTarget(filepath, context, irrelevant=[], offset=0):
     realpath = os.path.realpath(os.path.expanduser(filepath))
     fp = open(realpath, "rU")  
-    print("Loading target %s, ignoring %d to %d" % (realpath, firstIrrelevant, lastIrrelevant))
+    print("Loading target %s, ignoring: %s" % (realpath, irrelevant))
 
     ob = context.object
     bpy.ops.object.mode_set(mode='OBJECT')
@@ -203,10 +203,10 @@ def loadTarget(filepath, context, firstIrrelevant=100000, lastIrrelevant=100000,
         else:
             index = int(words[0])
 
-            if index >= firstIrrelevant:
-                if index < lastIrrelevant:
+            if irrelevant:
+                if isIrrelevant(index, irrelevant):
                     continue
-                else:
+                elif index >= irrelevant[0][0]:
                     index -= offset
                  
             if index >= nverts:
@@ -232,6 +232,13 @@ def loadTarget(filepath, context, firstIrrelevant=100000, lastIrrelevant=100000,
     ob["FilePath"] = realpath
     ob["SelectedOnly"] = False
     return skey
+
+
+def isIrrelevant(index, irrelevant):
+    for first,last in irrelevant:
+        if index >= first and index < last:
+            return True
+    return False
 
 
 def shapeKeyLen(ob):
