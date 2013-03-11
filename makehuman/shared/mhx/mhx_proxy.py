@@ -405,8 +405,6 @@ def writeProxyMaterialSettings(fp, settings):
 def addProxyMaskMTexs(fp, mat, proxy, prxList, tex):
     if proxy.maskLayer < 0:
         return
-    print(proxy, proxy.maskLayer)
-    halt
     n = 0  
     m = len(prxList)
     for (zdepth, prx) in prxList:
