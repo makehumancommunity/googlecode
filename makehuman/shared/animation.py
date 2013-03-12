@@ -174,6 +174,21 @@ class AnimatedMesh(object):
     def getAnimation(self, name):
         return self.__animations[name]
 
+    def hasAnimation(self, name):
+        return name in self.__animations.keys()
+
+    def getAnimations(self):
+        return self.__animations.keys()
+
+    def removeAnimations(self):
+        self.__animations = {}
+        self.__currentAnim = None
+
+    def removeAnimation(self, name):
+        del self.__animations[name]
+        if self.__currentAnim and self.__currentAnim.name == name:
+            self.__currentAnim = None
+
     def setActiveAnimation(self, name):   # TODO maybe allow blending of several activated animations
         if not name:
             self.__currentAnim = None
@@ -183,6 +198,9 @@ class AnimatedMesh(object):
     def setAnimateInPlace(self, enable):
         self.__inPlace = enable
 
+    def getSkeleton(self):
+        return self.__skeleton
+
     def addMesh(self, mesh, vertexToBoneMapping):
         # allows multiple meshes (also to allow to animate one model consisting of multiple meshes)
         originalMeshCoords = np.zeros((mesh.getVertexCount(),4), np.float32)
@@ -191,6 +209,18 @@ class AnimatedMesh(object):
         self.__originalMeshCoords.append(originalMeshCoords)
         self.__vertexToBoneMaps.append(vertexToBoneMapping)
         self.__meshes.append(mesh)
+
+    def removeMesh(self, mesh):
+        rIdx = -1
+        for idx,m in enumerate(self.__meshes):
+            if mesh == m:
+                rIdx = idx
+                break
+
+        if rIdx > -1:
+            del self.__meshes[rIdx]
+            del self.__originalMeshCoords[rIdx]
+            del self.__vertexToBoneMaps[rIdx]
 
     def update(self, timeDeltaSecs):
         self.__playTime = self.__playTime + timeDeltaSecs
