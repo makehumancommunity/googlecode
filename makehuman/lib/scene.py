@@ -23,29 +23,45 @@ Definition of the scene class and some of the subclasses it uses.
 """
 
 from camera import Camera
+import pickle
 
-class Light:
+class Light(object):
     def __init__(self):
-        pos = (-10.99, 20.0, 20.0)
-        focus = (0,0,0)
-        color = (1,1,1)
-        fov = 180
-        attenuation = 0
+        self.pos = (-10.99, 20.0, 20.0)
+        self.focus = (0,0,0)
+        self.color = (1,1,1)
+        self.fov = 180
+        self.attenuation = 0
 
 
-class Scene:
+class Scene(object):
     def __init__(self, path = None):
-        if path is not None:
-            self.load(path)
-        else:
+        if path is None:
             self.camera = Camera()
-            self.lights = []
+            self.lights = [Light()]
+
+            self.unsaved = False
+        else:
+            self.load(path)
 
     def load(self, path):
-        # Load scene from a .mhscene file
-        pass
+        # Load scene from a .mhscene file.
+        hfile = open(path, 'rb')
+        self.camera = pickle.load(hfile)
+        nlig = pickle.load(hfile)
+        self.lights = []
+        for i in range(nlig):
+            lights.append(pickle.load(hfile))
+        hfile.close()
+        self.unsaved = False
 
     def save(self, path):
-        # Save scene to a .mhscene file
-        pass
+        # Save scene to a .mhscene file.
+        hfile = open(path, 'wb')
+        pickle.dump(self.camera)
+        pickle.dump(len(self.lights), hfile)
+        for light in self.lights:
+            pickle.dump(light, hfile)
+        hfile.close()
+        self.unsaved = False
     
