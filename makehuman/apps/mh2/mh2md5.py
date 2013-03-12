@@ -35,7 +35,6 @@ __docformat__ = 'restructuredtext'
 import os
 import numpy as np
 import exportutils
-from skeleton import Skeleton
 
 def exportMd5(human, filepath, config):
     """
@@ -68,18 +67,23 @@ def exportMd5(human, filepath, config):
         lashes=config.lashes,
         subdivide=config.subdivide)
 
-    skeleton = Skeleton()
-    skeleton.update(obj)
+    if human.skeleton:
+        numJoints = human.skeleton.getBoneCount() +1 # Amount of joints + the hardcoded origin below
+    else:
+        numJoints = 1
 
     f = open(filepath, 'w')
     f.write('MD5Version 10\n')
     f.write('commandline ""\n\n')
-    f.write('numJoints %d\n' % (skeleton.joints+1)) # Amount of joints + the hardcoded origin below
+    f.write('numJoints %d\n' % numJoints) 
     f.write('numMeshes %d\n\n' % (len(stuffs)))
     
     f.write('joints {\n')
+    # Hardcoded root joint
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % ('origin', -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
-    writeJoint(f, skeleton.root)
+    if human.skeleton:
+        for bone in human.skeleton.getBones():
+            writeBone(f, bone)
     f.write('}\n\n')
 
     for stuff in stuffs:
@@ -124,7 +128,7 @@ def exportMd5(human, filepath, config):
     f.close()
     
 
-def writeJoint(f, joint):
+def writeBone(f, bone):
     """
   This function writes out information describing one joint in MD5 format. 
   
@@ -134,18 +138,15 @@ def writeJoint(f, joint):
   f:     
     *file handle*.  The handle of the file being written to.
   joint:     
-    *Joint object*.  The joint object to be processed by this function call.
-  ident:     
-    *integer*.  The joint identifier.
+    *Bone object*.  The bone object to be processed by this function call.
   """
-    if joint.parent:
-        parentIndex = joint.parent.index
+    if bone.parent:
+        parentIndex = bone.parent.index + 1
     else:
-        parentIndex = 0
+        parentIndex = 0 # Refers to the hard-coded root joint
     # "[boneName]"   [parentIndex] ( [xPos] [yPos] [zPos] ) ( [xOrient] [yOrient] [zOrient] )
-    f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % (joint.name, parentIndex,
-        joint.position[0], joint.position[1], joint.position[2],
-        joint.direction[0], joint.direction[1], joint.direction[2]))
-
-    for joint in joint.children:
-        writeJoint(f, joint)
+    headPos = bone.getRestHeadPos()
+    direction = bone.getRestDirection()
+    f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % (bone.name, parentIndex,
+        headPos[0], headPos[1], headPos[2],
+        direction[0], direction[1], direction[2]))

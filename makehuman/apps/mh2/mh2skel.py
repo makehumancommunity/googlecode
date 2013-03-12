@@ -22,28 +22,29 @@ Abstract
 TODO
 """
 
-from os.path import basename
-from skeleton import Skeleton
+import gui3d
 
 def exportSkel(obj, filename):
 
-    skeleton = Skeleton()
-    skeleton.update(obj)
+    human = gui3d.app.selectedHuman
+    if not human.skeleton:
+        gui3d.app.prompt('Error', 'You did not select a skeleton from the library.', 'OK')
+        return
 
     f = open(filename, 'w')
     
-    writeJoint(f, skeleton.root)
+    for bone in human.skeleton.getBones():
+        writeBone(f, bone)
     
     f.close()
 
-def writeJoint(f, joint):
+def writeBone(f, bone):
 
-    if joint.parent:
-        parentIndex = joint.parent.index
+    if bone.parent:
+        parentIndex = bone.parent.index
     else:
         parentIndex = -1
 
-    f.write('%d %f %f %f %d\n' % (joint.index, joint.position[0], joint.position[1], joint.position[2], parentIndex))
+    position = bone.getRestHeadPos()
+    f.write('%d %f %f %f %d\n' % (bone.index, position[0], position[1], position[2], parentIndex))
 
-    for joint in joint.children:
-        writeJoint(f, joint)
