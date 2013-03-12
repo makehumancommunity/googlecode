@@ -68,9 +68,9 @@ def setupRigJoint (words, obj, coord, locations):
             loc = coord[vn]         
         locations[key] = loc + np.array((x,y,z))
     elif typ == 'front':
-        raw = locations[int(words[2])]
-        head = locations[int(words[3])]
-        tail = locations[int(words[4])]
+        raw = locations[words[2]]
+        head = locations[words[3]]
+        tail = locations[words[4]]
         offs = map(float, words[5].strip().lstrip('[').rstrip(']').split(','))
         offs = np.array(offs)
         vec =  tail - head
