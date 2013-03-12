@@ -220,6 +220,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.jointsMesh.priority = 100
         self.jointsMesh.setPickable(True)
         self.jointsObj = self.addObject( gui3d.Object(self.human.getPosition(), self.jointsMesh) )
+        self.jointsObj.setRotation(self.human.getRotation())
 
         color = np.asarray([255, 255, 0, 255], dtype=np.uint8)
         self.jointsMesh.color[:] = color[None,:]
@@ -257,7 +258,6 @@ class SkeletonLibrary(gui3d.TaskView):
         if enabled:
             self.human.meshData.setTransparentPrimitives(len(self.human.meshData.fvert))
         else:
-            # TODO not working...
             self.human.meshData.setTransparentPrimitives(self.oldHumanTransp)
 
     def onHumanRotated(self, event):
