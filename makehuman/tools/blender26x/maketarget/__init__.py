@@ -26,7 +26,7 @@
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.06",
+    "version": "1.07",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -180,8 +180,7 @@ class MakeTargetPanel(bpy.types.Panel):
 
             layout.label("Save Target")            
             layout.prop(ob, "SelectedOnly")
-            if Thomas:
-                layout.prop(ob, "MhZeroOtherTargets")
+            layout.prop(ob, "MhZeroOtherTargets")
             if ob["FilePath"]:
                 layout.operator("mh.save_target")           
             layout.operator("mh.saveas_target")       
@@ -189,8 +188,7 @@ class MakeTargetPanel(bpy.types.Panel):
             if not ob.MhDeleteHelpers:
                 layout.label("Skirt Editing")
                 layout.operator("mh.snap_waist")
-                layout.operator("mh.straighten_skirt")
-            
+                layout.operator("mh.straighten_skirt")            
                 if ob.MhIrrelevantDeleted:
                     layout.separator()
                     layout.label("Only %s Affected" % ob.MhAffectOnly)

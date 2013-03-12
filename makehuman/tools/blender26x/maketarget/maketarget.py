@@ -693,7 +693,7 @@ def fitTarget(context):
         else:
             raise NameError("Object %s has no associated mhclo file. Cannot fit" % ob.name)
             return
-    if ob.MhAffectOnly != 'All':
+    if False and ob.MhAffectOnly != 'All':
         first,last = settings.affectedVerts[ob.MhAffectOnly]
         mh.proxy.update(ob.active_shape_key.data, ob.active_shape_key.data, skipBefore=first, skipAfter=last)
     else:
@@ -709,7 +709,7 @@ class VIEW3D_OT_FitTargetButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return (context.object and not context.object.MhMeshVertsDeleted)
+        return (not context.object.MhMeshVertsDeleted)
 
     def execute(self, context):
         fitTarget(context)
@@ -924,10 +924,6 @@ class VIEW3D_OT_SymmetrizeTargetButton(bpy.types.Operator):
     bl_options = {'UNDO'}
     action = StringProperty()
 
-    @classmethod
-    def poll(self, context):
-        return context.object
-
     def execute(self, context):
         
         symmetrizeTarget(context, (self.action=="Right"), (self.action=="Mirror"))
@@ -945,19 +941,26 @@ class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return context.object
+        ob = context.object
+        return (ob.MhAffectOnly == 'Skirt' or not ob.MhIrrelevantDeleted)
 
     def execute(self, context):
         ob = context.object
         settings = getSettings(ob)
-        bpy.ops.object.mode_set(mode='OBJECT')
+        if ob.MhIrrelevantDeleted:
+            offset = settings.offsetVerts['Skirt']
+        else:
+            offset = 0
+
         nVerts = len(settings.skirtWaist)
         if len(settings.tightsWaist) != nVerts:
             halt
+        bpy.ops.object.mode_set(mode='OBJECT')
         skey = ob.data.shape_keys.key_blocks[-1]
-        verts = skey.data
+        verts = skey.data        
         for n in range(nVerts):
-            verts[settings.skirtWaist[n]].co = verts[settings.tightsWaist[n]].co
+            verts[settings.skirtWaist[n]-offset].co = verts[settings.tightsWaist[n]-offset].co
+
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -972,11 +975,17 @@ class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
 
     @classmethod
     def poll(self, context):
-        return context.object
+        ob = context.object
+        return (ob.MhAffectOnly == 'Skirt' or not ob.MhIrrelevantDeleted)
 
     def execute(self, context):
         ob = context.object
         settings = getSettings(ob)
+        if ob.MhIrrelevantDeleted:
+            offset = settings.offsetVerts['Skirt']
+        else:
+            offset = 0
+
         bpy.ops.object.mode_set(mode='OBJECT')
         skey = ob.data.shape_keys.key_blocks[-1]
         verts = skey.data
@@ -985,21 +994,21 @@ class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
             xsum = 0.0
             ysum = 0.0
             for vn in col:
-                xsum += verts[vn].co[0]
-                ysum += verts[vn].co[1]
+                xsum += verts[vn-offset].co[0]
+                ysum += verts[vn-offset].co[1]
             x = xsum/len(col)
             y = ysum/len(col)
             for vn in col:
-                verts[vn].co[0] = x
-                verts[vn].co[1] = y
+                verts[vn-offset].co[0] = x
+                verts[vn-offset].co[1] = y
                 
         for row in settings.ZSkirtRows:
             zsum = 0.0
             for vn in row:
-                zsum += verts[vn].co[2]
+                zsum += verts[vn-offset].co[2]
             z = zsum/len(row)
             for vn in row:
-                verts[vn].co[2] = z
+                verts[vn-offset].co[2] = z
                 
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='DESELECT')
@@ -1059,9 +1068,7 @@ def init():
     #bpy.types.Object.MhSkirtOnly = BoolProperty(default = False)
                  
     bpy.types.Object.MhAffectOnly = EnumProperty(
-        items = [('Body','Body','Body'),
-                 ('Penis','Penis','Penis'),
-                 ('Tights','Tights','Tights'),
+        items = [('Tights','Tights','Tights'),
                  ('Skirt','Skirt','Skirt'),
                  ('Hair','Hair','Hair'),
                  ('All','All','All')],
@@ -1071,7 +1078,7 @@ def init():
     bpy.types.Object.MhMeshVertsDeleted = BoolProperty(name="Cannot load", default = False)
 
     bpy.types.Object.SelectedOnly = BoolProperty(name="Selected verts only", default = True)
-    bpy.types.Object.MhZeroOtherTargets = BoolProperty(name="Active target only", description="Set values of all other targets to 0", default = True)
+    bpy.types.Object.MhZeroOtherTargets = BoolProperty(name="Active target only", description="Save the active (last) target only, setting the values of all other targets to 0", default = False)
 
     return
 
