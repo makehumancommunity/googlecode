@@ -158,6 +158,7 @@ class AnimationLibrary(gui3d.TaskView):
 
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
         self.setHumanTransparency(True)
+        self.human.meshData.setPickable(False)
 
         # Unload previously loaded animations
         self.animations = []
@@ -284,6 +285,7 @@ class AnimationLibrary(gui3d.TaskView):
 
         self.setToRestPose()
         self.setHumanTransparency(False)
+        self.human.meshData.setPickable(True)
 
     def createPlaybackControl(self):
         self.playbackBox = self.addRightWidget(gui.GroupBox('Playback'))

@@ -218,9 +218,23 @@ class AnimatedMesh(object):
                 break
 
         if rIdx > -1:
+            # First restore rest coords of mesh, then remove it
+            self._updateMeshVerts(self.__meshes[rIdx], self.__originalMeshCoords[rIdx][:,:3])
             del self.__meshes[rIdx]
             del self.__originalMeshCoords[rIdx]
             del self.__vertexToBoneMaps[rIdx]
+
+    def getMesh(self, name):
+        rIdx = -1
+        for idx, mesh in enumerate(self.__meshes):
+            if mesh.name == name:
+                rIdx = idx
+                break
+
+        if rIdx > -1:
+            return self.__meshes[rIdx], self.__vertexToBoneMaps[rIdx]
+        else:
+            return None, None
 
     def update(self, timeDeltaSecs):
         self.__playTime = self.__playTime + timeDeltaSecs

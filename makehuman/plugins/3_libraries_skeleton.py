@@ -92,6 +92,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
         self.setHumanTransparency(True)
+        self.human.meshData.setPickable(False)
 
         if not self.jointsObj:
             self.drawJointHelpers()
@@ -102,6 +103,7 @@ class SkeletonLibrary(gui3d.TaskView):
         gui3d.TaskView.onHide(self, event)
 
         self.setHumanTransparency(False)
+        self.human.meshData.setPickable(True)
 
     def reloadSkeletonChooser(self):
         # Remove old radio buttons
@@ -190,6 +192,11 @@ class SkeletonLibrary(gui3d.TaskView):
             self.selectedBone = event.group
             setColorForFaceGroup(self.skelMesh, self.selectedBone.name, [216, 110, 39, 255])
             gui3d.app.statusPersist(event.group.name)
+
+            # Draw bone weights
+            _, boneWeights = self.human.animated.getMesh(self.human.meshData.name)
+            self.showBoneWeights(event.group.name, boneWeights)
+
             gui3d.app.redraw()
 
         @self.skelObj.mhEvent
@@ -203,6 +210,10 @@ class SkeletonLibrary(gui3d.TaskView):
             if self.selectedBone:
                 setColorForFaceGroup(self.skelMesh, self.selectedBone.name, [255,255,255,255])
                 gui3d.app.statusPersist('')
+
+                self.clearBoneWeights()
+                self.selectedBone = None
+
                 gui3d.app.redraw()
 
     def drawJointHelpers(self):
@@ -253,6 +264,29 @@ class SkeletonLibrary(gui3d.TaskView):
                 setColorForFaceGroup(self.jointsMesh, self.selectedJoint.name, [255,255,0,255])
                 gui3d.app.statusPersist('')
                 gui3d.app.redraw()
+
+    def showBoneWeights(self, boneName, boneWeights):
+        mesh = self.human.meshData
+        try:
+            weights = np.asarray(boneWeights[boneName][1], dtype=np.float32)
+            verts = boneWeights[boneName][0]
+        except:
+            return
+        red = np.maximum(weights, 0)
+        green = 1.0 - red
+        blue = np.zeros_like(red)
+        alpha = np.ones_like(red)
+        color = np.array([red,green,blue,alpha]).T
+        color = (color * 255.99).astype(np.uint8)
+        mesh.color[verts,:] = color
+        mesh.markCoords(verts, colr = True)
+        mesh.sync_all()
+
+    def clearBoneWeights(self):
+        mesh = self.human.meshData
+        mesh.color[...] = (255,255,255,255)
+        mesh.markCoords(colr = True)
+        mesh.sync_all()
 
     def setHumanTransparency(self, enabled):
         if enabled:
