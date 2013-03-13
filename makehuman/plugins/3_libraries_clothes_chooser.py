@@ -55,9 +55,11 @@ class ClothesAction(gui3d.Action):
 
     def do(self):
         self.library.setClothes(self.human, self.mhclo)
+        return True
 
     def undo(self):
         self.library.setClothes(self.human, self.mhclo)
+        return True
 
 #
 #   Clothes
