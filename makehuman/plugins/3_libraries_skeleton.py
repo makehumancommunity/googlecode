@@ -84,6 +84,13 @@ class SkeletonLibrary(gui3d.TaskView):
                 self.jointsObj.hide()
         self.showJointsTggl.setSelected(True)
 
+        self.showWeightsTggl = displayBox.addWidget(gui.ToggleButton("Show bone weights"))
+        @self.showWeightsTggl.mhEvent
+        def onClicked(event):
+            if not self.showWeightsTggl.selected:
+                self.clearBoneWeights()
+        self.showWeightsTggl.setSelected(True)
+
         self.rigBox = self.addRightWidget(gui.GroupBox('Skeleton rig'))
         self.rigSelector = []
 
@@ -194,8 +201,9 @@ class SkeletonLibrary(gui3d.TaskView):
             gui3d.app.statusPersist(event.group.name)
 
             # Draw bone weights
-            _, boneWeights = self.human.animated.getMesh(self.human.meshData.name)
-            self.showBoneWeights(event.group.name, boneWeights)
+            if self.showWeightsTggl.selected:
+                _, boneWeights = self.human.animated.getMesh(self.human.meshData.name)
+                self.showBoneWeights(event.group.name, boneWeights)
 
             gui3d.app.redraw()
 
