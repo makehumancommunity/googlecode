@@ -113,6 +113,15 @@ class SkeletonLibrary(gui3d.TaskView):
 
         self.reloadSkeletonChooser()
 
+        # Rebuild skeleton if human has changed
+        if self.human.skeleton and self.human.skeleton.dirty:
+            # TODO have a more efficient way of adapting skeleton to new joint positions without re-reading rig files
+            # TODO offer a skeleton getter that exporters can use that will rebuild the skeleton if it is dirty
+            self.chooseSkeleton(self.human.skeleton.file)
+            # Re-draw joints positions
+            self.drawJointHelpers()
+            self.human.skeleton.dirty = False
+
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
 
@@ -165,6 +174,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.human.skeleton, boneWeights = skeleton.loadRig(filename, self.human.meshData)
         # Store a reference to the currently loaded rig
         self.human.skeleton.file = filename
+        self.human.skeleton.dirty = False   # Flag used for deferred updating
 
         # Created an AnimatedMesh object to manage the skeletal animation on the
         # human mesh and optionally additional meshes.
@@ -251,6 +261,12 @@ class SkeletonLibrary(gui3d.TaskView):
         Draw the joint helpers from the basemesh that define the default or
         reference rig.
         """
+        if self.jointsObj:
+            self.removeObject(self.jointsObj)
+            self.jointsObj = None
+            self.jointsMesh = None
+            self.selectedJoint = None
+
         jointGroupNames = [group.name for group in self.human.meshData.faceGroups if group.name.startswith("joint-")]
         # TODO maybe define a getter for this list in the skeleton module
         jointPositions = []
@@ -342,6 +358,12 @@ class SkeletonLibrary(gui3d.TaskView):
             self.human.meshData.setTransparentPrimitives(len(self.human.meshData.fvert))
         else:
             self.human.meshData.setTransparentPrimitives(self.oldHumanTransp)
+
+    def onHumanChanged(self, event):
+        human = event.human
+        # Set flag to do a deferred skeleton update in the future
+        if human.skeleton:
+            human.skeleton.dirty = True
 
     def onHumanRotated(self, event):
         if self.skelObj:
