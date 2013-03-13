@@ -66,6 +66,8 @@ class SkeletonLibrary(gui3d.TaskView):
         self.human.skeleton = None
         self.human.animated = None
 
+        self.humanChanged = False
+
         self.skelMesh = None
         self.skelObj = None
 
@@ -136,6 +138,10 @@ class SkeletonLibrary(gui3d.TaskView):
             # Re-draw joints positions
             self.drawJointHelpers()
             self.human.skeleton.dirty = False
+            self.humanChanged = False
+        elif self.humanChanged:
+            self.drawJointHelpers()
+            self.humanChanged = False
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
@@ -387,6 +393,7 @@ class SkeletonLibrary(gui3d.TaskView):
         # Set flag to do a deferred skeleton update in the future
         if human.skeleton:
             human.skeleton.dirty = True
+        self.humanChanged = True    # Used for updating joints
 
     def onHumanRotated(self, event):
         if self.skelObj:
