@@ -41,27 +41,36 @@ class Scene(object):
             self.lights = [Light()]
 
             self.unsaved = False
+            self.path = None
         else:
             self.load(path)
 
     def load(self, path):
         # Load scene from a .mhscene file.
-        hfile = open(path, 'rb')
+        self.unsaved = False
+        self.path = path
+        
+        hfile = open(self.path, 'rb')
         self.camera = pickle.load(hfile)
         nlig = pickle.load(hfile)
         self.lights = []
         for i in range(nlig):
             lights.append(pickle.load(hfile))
         hfile.close()
-        self.unsaved = False
 
-    def save(self, path):
+    def save(self, path = None):
         # Save scene to a .mhscene file.
-        hfile = open(path, 'wb')
+        if path is not None:
+            self.path = path
+        self.unsaved = False
+        
+        hfile = open(self.path, 'wb')
         pickle.dump(self.camera)
         pickle.dump(len(self.lights), hfile)
         for light in self.lights:
             pickle.dump(light, hfile)
         hfile.close()
-        self.unsaved = False
-    
+
+    def close(self):
+        self.__init__()
+        
