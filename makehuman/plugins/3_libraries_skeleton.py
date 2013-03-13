@@ -37,6 +37,21 @@ import animation
 import numpy as np
 import os
 
+class SkeletonAction(gui3d.Action):
+    def __init__(self, name, library, before, after):
+        super(SkeletonAction, self).__init__(name)
+        self.library = library
+        self.before = before
+        self.after = after
+
+    def do(self):
+        self.library.chooseSkeleton(self.after)
+        return True
+
+    def undo(self):
+        self.library.chooseSkeleton(self.before)
+        return True
+
 class SkeletonLibrary(gui3d.TaskView):
 
     def __init__(self, category):
@@ -152,12 +167,20 @@ class SkeletonLibrary(gui3d.TaskView):
             def onClicked(event):
                 for rdio in self.rigSelector:
                     if rdio.selected:
-                        self.chooseSkeleton(rdio.rigFile)
+                        if self.human.skeleton:
+                            oldSkelFile = self.human.skeleton.file
+                        else:
+                            oldSkelFile = None
+                        gui3d.app.do(SkeletonAction("Change skeleton",
+                                                    self,
+                                                    oldSkelFile,
+                                                    rdio.rigFile))
 
     def chooseSkeleton(self, filename):
         """
         Load skeleton from rig definition in a .rig file.
         """
+        log.debug("Loading skeleton from rig file %s", filename)
         if not filename:
             # Unload current skeleton
             self.human.skeleton = None
