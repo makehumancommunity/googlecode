@@ -37,7 +37,6 @@ import animation
 import numpy as np
 import os
 
-# TODO add bone explorer with weight highlighting on human mesh
 class SkeletonLibrary(gui3d.TaskView):
 
     def __init__(self, category):
@@ -87,12 +86,20 @@ class SkeletonLibrary(gui3d.TaskView):
         self.showWeightsTggl = displayBox.addWidget(gui.ToggleButton("Show bone weights"))
         @self.showWeightsTggl.mhEvent
         def onClicked(event):
-            if not self.showWeightsTggl.selected:
+            if self.showWeightsTggl.selected:
+                # Highlight bone selected in bone explorer again
+                for rdio in self.boneSelector:
+                    if rdio.selected:
+                        self.highlightBone(str(rdio.text()))
+            else:
                 self.clearBoneWeights()
         self.showWeightsTggl.setSelected(True)
 
         self.rigBox = self.addRightWidget(gui.GroupBox('Skeleton rig'))
         self.rigSelector = []
+
+        self.boneBox = self.addLeftWidget(gui.GroupBox('Bones'))
+        self.boneSelector = []
 
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
@@ -111,6 +118,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
         self.setHumanTransparency(False)
         self.human.meshData.setPickable(True)
+        self.removeBoneHighlights()
 
     def reloadSkeletonChooser(self):
         # Remove old radio buttons
@@ -165,6 +173,8 @@ class SkeletonLibrary(gui3d.TaskView):
 
         self.drawSkeleton(self.human.skeleton)
 
+        self.reloadBoneExplorer()
+
     def drawSkeleton(self, skel):
         if self.skelObj:
             # Remove old skeleton mesh
@@ -194,18 +204,8 @@ class SkeletonLibrary(gui3d.TaskView):
             Event fired when mouse hovers over a skeleton mesh facegroup
             """
             gui3d.TaskView.onMouseEntered(self, event)
-
-            # Highlight bones
-            self.selectedBone = event.group
-            setColorForFaceGroup(self.skelMesh, self.selectedBone.name, [216, 110, 39, 255])
-            gui3d.app.statusPersist(event.group.name)
-
-            # Draw bone weights
-            if self.showWeightsTggl.selected:
-                _, boneWeights = self.human.animated.getMesh(self.human.meshData.name)
-                self.showBoneWeights(event.group.name, boneWeights)
-
-            gui3d.app.redraw()
+            self.removeBoneHighlights()
+            self.highlightBone(event.group.name)
 
         @self.skelObj.mhEvent
         def onMouseExited(event):
@@ -213,16 +213,37 @@ class SkeletonLibrary(gui3d.TaskView):
             Event fired when mouse hovers off of a skeleton mesh facegroup
             """
             gui3d.TaskView.onMouseExited(self, event)
-            
-            # Disable highlight on bone
-            if self.selectedBone:
-                setColorForFaceGroup(self.skelMesh, self.selectedBone.name, [255,255,255,255])
-                gui3d.app.statusPersist('')
+            self.removeBoneHighlights()
 
-                self.clearBoneWeights()
-                self.selectedBone = None
+            # Highlight bone selected in bone explorer again
+            for rdio in self.boneSelector:
+                if rdio.selected:
+                    self.clearBoneWeights()
+                    self.highlightBone(str(rdio.text()))
 
-                gui3d.app.redraw()
+    def highlightBone(self, name):
+        # Highlight bones
+        self.selectedBone = name
+        setColorForFaceGroup(self.skelMesh, self.selectedBone, [216, 110, 39, 255])
+        gui3d.app.statusPersist(name)
+
+        # Draw bone weights
+        if self.showWeightsTggl.selected:
+            _, boneWeights = self.human.animated.getMesh(self.human.meshData.name)
+            self.showBoneWeights(name, boneWeights)
+
+        gui3d.app.redraw()
+
+    def removeBoneHighlights(self):
+        # Disable highlight on bone
+        if self.selectedBone:
+            setColorForFaceGroup(self.skelMesh, self.selectedBone, [255,255,255,255])
+            gui3d.app.statusPersist('')
+
+            self.clearBoneWeights()
+            self.selectedBone = None
+
+            gui3d.app.redraw()
 
     def drawJointHelpers(self):
         """
@@ -295,6 +316,22 @@ class SkeletonLibrary(gui3d.TaskView):
         mesh.color[...] = (255,255,255,255)
         mesh.markCoords(colr = True)
         mesh.sync_all()
+
+    def reloadBoneExplorer(self):
+        # Remove old radio buttons
+        for radioBtn in self.boneSelector:
+            radioBtn.hide()
+            radioBtn.destroy()
+        self.boneSelector = []
+
+        for bone in self.human.skeleton.getBones():
+            radioBtn = self.boneBox.addWidget(gui.RadioButton(self.boneSelector, bone.name))
+            @radioBtn.mhEvent
+            def onClicked(event):
+                for rdio in self.boneSelector:
+                    if rdio.selected:
+                        self.removeBoneHighlights()
+                        self.highlightBone(str(rdio.text()))
 
     def setHumanTransparency(self, enabled):
         if enabled:
