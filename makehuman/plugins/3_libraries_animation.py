@@ -71,6 +71,7 @@ class AnimationLibrary(gui3d.TaskView):
         self.playbackBox = None
         self.frameSlider = None
         self.playPauseBtn = None
+        self.animateInPlaceTggl = None
 
         self.showHumanTggl = displayBox.addWidget(gui.ToggleButton("Show human"))
         @self.showHumanTggl.mhEvent
@@ -118,6 +119,12 @@ class AnimationLibrary(gui3d.TaskView):
             # Scale rig
             bvhRig.scale(scale)      # TODO automatically rescale based on upper leg and fallback on bounding box
 
+        if self.animateInPlaceTggl:
+            inPlace = self.animateInPlaceTggl.selected
+        else:
+            inPlace = True
+        self.animatedMesh.setAnimateInPlace(inPlace)
+
         # Load animation data from BVH file and add it to AnimatedMesh (if not added yet)
         name = os.path.splitext(os.path.basename(filename))[0]
         if not self.animatedMesh.hasAnimation(name):
@@ -132,8 +139,6 @@ class AnimationLibrary(gui3d.TaskView):
         # Create playback controls
         if not self.playbackBox:
             self.createPlaybackControl()
-
-        self.animatedMesh.setAnimateInPlace(self.animateInPlaceTggl.selected)
 
     def addAnimation(self, anim):
         log.debug("Frames: %s", anim.nFrames)
@@ -241,14 +246,20 @@ class AnimationLibrary(gui3d.TaskView):
         else:
             self.skelObj.hide()
 
+        if self.animateInPlaceTggl:
+            inPlace = self.animateInPlaceTggl.selected
+        else:
+            inPlace = True
         mapping = skeleton_drawing.getVertBoneMapping(self.skeleton, self.skelMesh)
         if self.human.animated:
             # Add created skeleton to animatedMesh object associated with human.skeleton
             self.animatedMesh = self.human.animated
+            self.animatedMesh.setAnimateInPlace(inPlace)
             self.animatedMesh.addMesh(self.skelMesh, mapping)
         else:
             # Create an animateable mesh object to animate the skeleton mesh
             self.animatedMesh = animation.AnimatedMesh(self.skeleton, self.skelMesh, mapping)
+            self.animatedMesh.setAnimateInPlace(inPlace)
 
             # TODO we can skin the human model too if we retarget the BVH animation on a skeleton from the skeleton library (which define bone-to-vertex weights for the human)
             #self.animatedMesh.addMesh(self.human.meshData, mapping)
@@ -315,7 +326,7 @@ class AnimationLibrary(gui3d.TaskView):
         def onClicked(event):
             self.animatedMesh.setAnimateInPlace(self.animateInPlaceTggl.selected)
             self.updateAnimation(self.currFrame)
-        self.animateInPlaceTggl.setSelected(False)
+        self.animateInPlaceTggl.setSelected(True)
 
         self.restPoseBtn = self.playbackBox.addWidget(gui.Button("Set to Rest Pose"))
         @self.restPoseBtn.mhEvent

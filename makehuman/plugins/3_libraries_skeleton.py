@@ -159,6 +159,7 @@ class SkeletonLibrary(gui3d.TaskView):
                 self.skelObj = None
                 self.skelMesh = None
             self.selectedBone = None
+            self.reloadBoneExplorer()
             return
 
         self.human.skeleton, boneWeights = skeleton.loadRig(filename, self.human.meshData)
@@ -323,6 +324,9 @@ class SkeletonLibrary(gui3d.TaskView):
             radioBtn.hide()
             radioBtn.destroy()
         self.boneSelector = []
+
+        if not self.human.skeleton:
+            return
 
         for bone in self.human.skeleton.getBones():
             radioBtn = self.boneBox.addWidget(gui.RadioButton(self.boneSelector, bone.name))
