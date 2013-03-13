@@ -118,6 +118,19 @@ class SkeletonLibrary(gui3d.TaskView):
         self.boneBox = self.addLeftWidget(gui.GroupBox('Bones'))
         self.boneSelector = []
 
+        self.infoBox = self.addRightWidget(gui.GroupBox('Rig info'))
+        self.boneCountLbl = self.infoBox.addWidget(gui.TextView('Bones: '))
+        self.descrLbl = self.infoBox.addWidget(gui.TextView('Description: '))
+
+        self.rigDescriptions = { 
+            "soft1":       "Soft skinned rig\nSimple version of the MHX\nreference rig containing\n only its deforming bones.",
+            "xonotic":     "Rig compatible\nwith the open-source game\nXonotic.",
+            "second_life": "Rig compatible\nwith Second Life.",
+            "game":        "A simple rig\nwith a minimal amount of \nbones. Has limited\nexpressivity in hands\nand face.",
+            "humanik":     "Rig compatible\nwith the HumanIK software.",
+            "rigid":       "Same as soft1\na simple version of the MHX\nreference rig, but with\nrigid weighting.",
+        }
+
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
 
@@ -198,6 +211,8 @@ class SkeletonLibrary(gui3d.TaskView):
                 self.skelMesh = None
             self.selectedBone = None
             self.reloadBoneExplorer()
+            self.boneCountLbl.setText("Bones: ")
+            self.descrLbl.setText("Description: ")
             return
 
         self.human.skeleton, boneWeights = skeleton.loadRig(filename, self.human.meshData)
@@ -214,6 +229,12 @@ class SkeletonLibrary(gui3d.TaskView):
         self.drawSkeleton(self.human.skeleton)
 
         self.reloadBoneExplorer()
+        self.boneCountLbl.setText("Bones: %s" % self.human.skeleton.getBoneCount())
+        if self.human.skeleton.name in self.rigDescriptions.keys():
+            descr = self.rigDescriptions[self.human.skeleton.name]
+        else:
+            descr = "None available"
+        self.descrLbl.setText("Description: %s" % descr)
 
     def drawSkeleton(self, skel):
         if self.skelObj:
