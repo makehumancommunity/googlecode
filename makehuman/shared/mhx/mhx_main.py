@@ -69,7 +69,7 @@ def exportMhx(human, filepath, config):
     config.setupTexFolder(filepath)    
 
     fname = os.path.basename(os.path.splitext(filepath)[0])
-    name = fname.capitalize().replace(' ','_')
+    name = fname.capitalize().replace(' ','_').encode(encoding='ascii', errors='ignore')
     try:
         fp = open(filepath, 'w')
         log.message("Writing MHX file %s", filepath)
