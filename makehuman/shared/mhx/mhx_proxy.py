@@ -131,7 +131,7 @@ NoScale False ;
     mhx_mesh.writeVertexGroups(fp, amt, config, proxy)
   
     if proxy.useBaseMaterials:
-        writeBaseMaterials(fp, amt)
+        mhx_mesh.writeBaseMaterials(fp, amt)
     elif proxy.material:
         fp.write("  Material %s%s ;" % (amt.name, proxy.material.name))
 

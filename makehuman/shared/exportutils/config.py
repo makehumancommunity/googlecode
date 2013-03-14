@@ -40,7 +40,7 @@ class Config:
         self.helpers            = False
         self.hidden             = True
         self.scale,self.unit    = 1.0, "decimeter"
-        self.subdivide          = False
+        self.subdivide          = False        
 
         self.useNormals         = False
         self.useRelPaths        = True

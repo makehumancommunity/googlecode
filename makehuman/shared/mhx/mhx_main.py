@@ -68,13 +68,14 @@ def exportMhx(human, filepath, config):
     config.setHuman(human)
     config.setupTexFolder(filepath)    
 
-    fname = os.path.basename(os.path.splitext(filepath)[0])
-    name = fname.capitalize().replace(' ','_').encode(encoding='ascii', errors='ignore')
+    filepathname = filepath.encode(encoding='utf-8', errors='strict')
+    fname = os.path.basename(os.path.splitext(filepathname)[0])
+    name = fname.capitalize().replace(' ','_')
     try:
         fp = open(filepath, 'w')
-        log.message("Writing MHX file %s", filepath)
+        log.message("Writing MHX file %s", filepathname)
     except:
-        log.message("Unable to open file for writing %s", filepath)
+        log.message("Unable to open file for writing %s", filepathname)
         fp = 0
     if not fp:
         return
@@ -138,7 +139,7 @@ def exportMhx(human, filepath, config):
         fp.write("Rigify %s ;\n" % amt.name)
 
     fp.close()
-    log.message("File %s exported" % filepath)
+    log.message("File %s exported" % filepathname)
     gui3d.app.progress(1.0)
     return
     
