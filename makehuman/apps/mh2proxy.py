@@ -280,7 +280,7 @@ doDeleteVerts = 10
 def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
     if not file:
         return CProxy(None, 'Proxy', 2)
-    elif type(file) == str or type(file) == unicode:
+    elif isinstance(file, basestring):
         pfile = exportutils.config.CProxyFile()
         pfile.file = file
     else:
