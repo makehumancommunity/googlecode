@@ -245,15 +245,6 @@ class CMeshInfo:
     def __repr__(self):
         return ("<CMeshInfo %s w %d t %d>" % (self.object, len(self.weights), len(self.shapes)))       
         
-#
-#
-#
-def stringFromWords(words):
-    string = words[0]
-    for word in words[1:]:
-        string += " " + word
-    return string
-
 
 def getFileName(folder, file, suffix):
     folder = os.path.realpath(os.path.expanduser(folder))
@@ -331,7 +322,7 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
                 proxy.weights[words[2]] = weights
             elif key == 'material':
                 status = doMaterial
-                proxy.material.name = stringFromWords(words[2:])
+                proxy.material.name = " ".join(words[2:])
             elif key == 'useBaseMaterials':
                 proxy.useBaseMaterials = True
             elif key == 'faceNumbers':
@@ -353,11 +344,11 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
                 proxy.texFaces = []
                 proxy.texFacesLayers[layer] = proxy.texFaces
             elif key == 'name':
-                proxy.name = stringFromWords(words[2:])
+                proxy.name = " ".join(words[2:])
             elif key == 'uuid':
-                proxy.uuid = stringFromWords(words[2:])
+                proxy.uuid = " ".join(words[2:])
             elif key == 'tag':
-                proxy.tags.append( stringFromWords(words[2:]) )
+                proxy.tags.append( " ".join(words[2:]) )
             elif key == 'z_depth':
                 proxy.z_depth = int(words[2])
             elif key == 'wire':
