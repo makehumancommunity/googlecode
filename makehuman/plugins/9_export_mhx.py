@@ -36,6 +36,7 @@ class MhxConfig(Config):
         self.useRelPaths =      False
         self.helpers =          True
         self.hidden =           exporter.hidden.selected
+        self.encoding =         exporter.taskview.getEncoding()
         
         self.useMasks =         exporter.masks.selected
         self.expressions =      exporter.expressions.selected

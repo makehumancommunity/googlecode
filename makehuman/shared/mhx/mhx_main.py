@@ -68,7 +68,11 @@ def exportMhx(human, filepath, config):
     config.setHuman(human)
     config.setupTexFolder(filepath)    
 
-    filepathname = filepath.encode(encoding='utf-8', errors='strict')
+    try:
+        filepathname = filepath.encode(encoding=config.encoding, errors='strict')
+    except UnicodeEncodeError:
+        log.message("%s cannot encode this file path. Try a different encoding" % config.encoding)
+        
     fname = os.path.basename(os.path.splitext(filepathname)[0])
     name = fname.capitalize().replace(' ','_')
     try:

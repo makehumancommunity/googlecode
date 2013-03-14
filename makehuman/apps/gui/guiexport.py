@@ -57,6 +57,11 @@ class ExportTaskView(gui3d.TaskView):
         # Scales
         self.scaleBox = self.addLeftWidget(gui.GroupBox('Units'))
         self.scaleButtons = self.addScales(self.scaleBox)
+        
+        # Encodings
+        self.encodingBox = self.addLeftWidget(gui.GroupBox('Encoding'))
+        self.encodingButtons = self.addEncodings(self.encodingBox)
+        
 
         self.boxes = {
             'mesh': self.formatBox,
@@ -123,6 +128,24 @@ class ExportTaskView(gui3d.TaskView):
             if button.selected and name in self._scales:
                 return (self._scales[name], name)
         return (1, "decimeter")
+
+
+    def addEncodings(self, encodingBox):
+        check = True
+        buttons = []
+        encodings = []
+        for name in ["latin-1", "utf-8", "ascii"]:
+            button = encodingBox.addWidget(gui.RadioButton(encodings, name, check))
+            check = False
+            buttons.append((button,name))
+        return buttons
+
+    def getEncoding(self):
+        for (button, name) in self.encodingButtons:
+            if button.selected:
+                return name
+        return "ascii"
+
 
     def addExporter(self, exporter):
         radio = self.boxes[exporter.group].addWidget(gui.RadioButton(self.exportBodyGroup, exporter.name, self.empty))
