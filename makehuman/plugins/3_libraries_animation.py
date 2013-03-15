@@ -38,10 +38,41 @@ import skeleton
 import skeleton_drawing
 import animation
 
+
+class AnimationCollection(object):
+    def __init__(self, path):
+        self.path = path
+        self.uuid = None
+        self.rig = None
+        self.tags = set()
+        self.animations = []
+        self.scale = 1.0
+
+    def getAnimation(self, name):
+        for anim in self.animations:
+            if anim.name == name:
+                return anim
+
+class Animation(object):
+    def __init__(self, name):
+        self.name = name
+        self.bvh = None
+        self.options = []
+        self.collection = None
+
+    def getPath(self):
+        folder = os.path.dirname(self.collection.path)
+        return os.path.join(folder, self.bvh)
+
 class AnimationLibrary(gui3d.TaskView):
 
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Animations')
+
+        self.systemAnims = os.path.join('data', 'animations')
+        self.userAnims = os.path.join(mh.getPath(''), 'data', 'animations')
+        self.animPaths = [self.userAnims, self.systemAnims]
+        self.extension = "mhanim"
 
         # Test config param
         self.perFramePlayback = False   # Set to false to use time for playback
@@ -51,18 +82,19 @@ class AnimationLibrary(gui3d.TaskView):
         self.skelMesh = None
         self.skelObj = None
 
-        self.jointsMesh = None
-        self.jointsObj = None
-
         self.bvhRig = None
         self.animations = []
         self.anim = None
-        self.animatedMesh = None
+        self.collections = {}
 
+        self.tags = set()
+
+        self.lastSkeleton = None
         self.human = gui3d.app.selectedHuman
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
 
-        self.selectedBone = None
+        # Stores all selected animations and makes them available globally
+        self.human.animations = []
 
         self.timer = None
         self.currFrame = 0
@@ -89,207 +121,206 @@ class AnimationLibrary(gui3d.TaskView):
                 return
             if self.showSkeletonTggl.selected:
                 self.skelObj.show()
+                self.setHumanTransparency(True)
             else:
                 self.skelObj.hide()
+                self.setHumanTransparency(False)
         self.showSkeletonTggl.setSelected(True)
 
+        self.createPlaybackControl()
+
         self.animationSelector = []
-        self.animationsBox = self.addLeftWidget(gui.GroupBox('Animations'))
+        self.animationsBox = self.addRightWidget(gui.GroupBox('Animations'))
 
-    def loadPose(self, filename, scale = 1.0, swapYZ = False):
-        '''
-        ## Old method #########################
-        import armature
+        self.tagsBox = self.addLeftWidget(gui.GroupBox('Tags'))
+        self.tagSelector = []
 
-        amt = human.armature
-        if not amt:
-            # TODO createRig() does much much more than you would expect
-            amt = human.armature = armature.rigdefs.createPoseRig(human, "soft1")            
-        #amt.setModifier(modifier)
-        #amt.readMhpFile(filepath)
-        amt.readBvhFile(filename)
-        #amt.listPose()
-        #######################################
-        '''
-        print "Loading %s" % filename
-
-        # Load BVH data
-        bvhRig = bvh.load(filename, swapYZ)
-        if scale != 1.0:
-            # Scale rig
-            bvhRig.scale(scale)      # TODO automatically rescale based on upper leg and fallback on bounding box
-
-        if self.animateInPlaceTggl:
-            inPlace = self.animateInPlaceTggl.selected
-        else:
-            inPlace = True
-        self.animatedMesh.setAnimateInPlace(inPlace)
-
-        # Load animation data from BVH file and add it to AnimatedMesh (if not added yet)
-        name = os.path.splitext(os.path.basename(filename))[0]
-        if not self.animatedMesh.hasAnimation(name):
-            jointToBoneMap = [bone.name for bone in self.skeleton.getBones()] # This is a list that references a joint name in the BVH for each bone in the skeleton (breadth-first order)
-            anim = bvhRig.createAnimationTrack(jointToBoneMap, name)
-            # Sparsify data to test out interpolation
-            print "sparsifying anim with framerate %s to %s" % (anim.frameRate, anim.frameRate/10)
-            anim.sparsify(anim.frameRate/20)
-            anim.interpolationType = 1 if self.interpolate else 0
-            self.addAnimation(anim)
-
-        # Create playback controls
-        if not self.playbackBox:
-            self.createPlaybackControl()
-
-    def addAnimation(self, anim):
-        log.debug("Frames: %s", anim.nFrames)
-        log.debug("Playtime: %s", anim.getPlaytime())
-
-        self.animations.append(anim.name)
-
-        self.animatedMesh.addAnimation(anim)
-        if len(self.animations) == 1:
-            self.selectAnimation(anim.name)
-
-        radioBtn = self.animationsBox.addWidget(gui.RadioButton(self.animationSelector, anim.name, selected=len(self.animationSelector) == 0))
-
-        @radioBtn.mhEvent
-        def onClicked(event):
-            for rdio in self.animationSelector:
-                if rdio.selected:
-                    self.selectAnimation(str(rdio.text()))
-
-    def onShow(self, event):
-        gui3d.TaskView.onShow(self, event)
-
-        self.oldHumanTransp = self.human.meshData.transparentPrimitives
-        self.setHumanTransparency(True)
-        self.human.meshData.setPickable(False)
-
-        # Unload previously loaded animations
+    def reloadAnimations(self):
+        # Clear up old animations cache
         self.animations = []
+        self.anim = None
         for radioBtn in self.animationSelector:
             radioBtn.hide()
             radioBtn.destroy()
         self.animationSelector = []
-        self.anim = None
         if self.human.animated:
             self.human.animated.removeAnimations()
-        self.animatedMesh = None
 
-        # Remove old rig
-        if self.skelObj:
-            self.removeObject(self.skelObj)
-            if self.human.animated:
-                self.human.animated.removeMesh(self.skelMesh)
-            self.skelObj = None
-            self.skelMesh = None
-            self.selectedBone = None
+        for tgglBtn in self.tagSelector:
+            tgglBtn.hide()
+            tgglBtn.destroy()
+        self.tagSelector = []
+
+        # Reload animations list
+        self.animations = self.getAnimations()
+
+        for anim in self.animations:
+            if anim.collection.uuid not in self.collections.keys():
+                self.collections[anim.collection.uuid] = anim.collection
+
+        # Create a list of all animations in the GUI
+        self.tags = set()
+        for anim in self.animations:
+            radioBtn = self.animationsBox.addWidget(gui.RadioButton(self.animationSelector, anim.name, selected=len(self.animationSelector) == 0))
+            radioBtn.anim = anim
+
+            @radioBtn.mhEvent
+            def onClicked(event):
+                for rdio in self.animationSelector:
+                    if rdio.selected:
+                        self.highlightAnimation(rdio.anim)
+
+        for collection in self.collections.values():
+            self.tags = self.tags.union(collection.tags)
+
+        # Create tag list in GUI
+        for tag in self.tags:
+            btn = self.tagsBox.addWidget(gui.ToggleButton(tag))
+            btn.tag = tag
+            self.tagSelector.append(btn)
+            btn.setSelected(True)
+
+            @btn.mhEvent
+            def onClicked(event):
+                self.filterBySelectedTags()
+
+        self.highlightAnimation(self.animationSelector[0].anim)
+
+    def filterBySelectedTags(self):
+        tags = self.getSelectedTags()
+        for radioBtn in self.animationSelector:
+            if tags.intersection(radioBtn.anim.collection.tags):
+                radioBtn.show()
+            else:
+                radioBtn.hide()
+
+    def getSelectedTags(self):
+        tags = set()
+        for tgglBtn in self.tagSelector:
+            if tgglBtn.selected:
+                tags.add(tgglBtn.tag)
+        return tags
+
+    def loadAnimation(self, uuid, animName):
+        if not human.skeleton:
+            log.error("Cannot load animations when no skeleton is selected.")
+            gui3d.app.statusPersist("Error: cannot load animations when no skeleton is selected.")
+            return
+
+        # Cache all animation collection files
+        if len(self.animations) == 0:
+            self.reloadAnimations()
+
+        if not uuid in self.collections.keys():
+            return
+
+        collection = self.collections[uuid]
+        anim = collection.getAnimation(animName)
+
+        self.chooseAnimation(anim)
+
+    def getAnimations(self):
+        """
+        Find and parse all animation collection files.
+        """
+        animations = []
+
+        mhAnimFiles = searchFiles(self.animPaths, [self.extension])
+        for filename in mhAnimFiles:
+            mhAnim = readAnimCollectionFile(filename)
+            if mhAnim:
+                animations.extend( mhAnim.animations )
+            else:
+                log.debug("Failed to parse mhanim file %s", filename)
+        return animations
+
+    def loadBVH(self, anim):
+        """
+        Load animation from a BVH file.
+        """
+        if "z_is_up" in anim.options:
+            swapYZ = True
+        else:
+            swapYZ = False
+
+        log.debug("Loading BVH %s", anim.getPath())
+
+        # Load BVH data
+        bvhRig = bvh.load(anim.getPath(), swapYZ)
+        if anim.collection.scale != 1.0:
+            # Scale rig
+            bvhRig.scale(scale)
+            # Scale is only useful when using the joint locations of the BVH rig
+            # or when drawing the BVH rig.
+
+        if self.human.skeleton.name == anim.collection.rig:
+            # Skeleton and joint rig in BVH match, do a straight mapping of the
+            # motion:
+
+            # Load animation data from BVH file and add it to AnimatedMesh
+            # This is a list that references a joint name in the BVH for each 
+            # bone in the skeleton (breadth-first order):
+            jointToBoneMap = [bone.name for bone in self.human.skeleton.getBones()]
+            animTrack = bvhRig.createAnimationTrack(jointToBoneMap, getAnimationTrackName(anim.collection.uuid, anim.name))
+            gui3d.app.statusPersist("")
+        else:
+            # Skeleton and joint rig in BVH are not the same, retarget/remap
+            # the motion data:
+
+            # TODO implement retarget/remap
+            gui3d.app.statusPersist("Animation loading is currently only implemented for the same rig as in BVH. Try selecting the %s skeleton from the skeleton library.", anim.collection.rig)
+            return None
+
+        log.debug("Created animation track for %s rig.", self.human.skeleton.name)
+
+        # Sparsify data to test out interpolation
+        log.debug("sparsifying anim with framerate %s to %s", animTrack.frameRate, 10)
+        animTrack.sparsify(10)
+        animTrack.interpolationType = 1 if self.interpolate else 0
+
+        log.debug("Frames: %s", animTrack.nFrames)
+        log.debug("Playtime: %s", animTrack.getPlaytime())
+
+        return animTrack
+
+    def onShow(self, event):
+        gui3d.TaskView.onShow(self, event)
+
+        if not self.human.skeleton:
+            gui3d.app.statusPersist("No skeleton selected. Please select a skeleton rig from the Skeleton library first.")
+            return
+
+        # Detect when skeleton has changed
+        if self.human.skeleton and self.lastSkeleton and \
+           self.lastSkeleton != self.human.skeleton.name:
+            # Removed cached animation tracks (as they are mapped to a specific skeleton)
+            self.human.animated.removeAnimations()
+            self.anim = None
 
         if self.human.skeleton:
-            self.skeleton = self.human.skeleton
-
-            self.drawSkeleton()
-
-            if self.human.skeleton.name == "soft1":
-                # Load a test pose for the soft1 rig
-                path = os.path.join('data', 'poses', 'dance1')
-                filename = os.path.join(path, 'dance1.bvh')
-                self.loadPose(filename, 1.0, True)
-                gui3d.app.statusPersist("Loaded dance1 pose one soft1 rig.")
-            else:
-                gui3d.app.statusPersist('No animations to load for the skeleton "%s". Try with no skeleton or soft1 rig.' % self.human.skeleton.name)
+            self.lastSkeleton = self.human.skeleton.name
         else:
-            # Load skeleton from BVH file
-            # Load joint rig definition from BVH as skeleton
-            # Convert joint rig and animation to a bone-based skeleton
-            path = os.path.join('data', 'bvhs')
-            filename = os.path.join(path, '02_02.bvh')
-            bvhRig = bvh.load(filename, False)
-            bvhRig.scale(0.1)
-            self.skeleton = bvhRig.createSkeleton(False, None)
+            self.lastSkeleton = None
 
-            self.drawSkeleton()
+        self.skelObj = self.human.skeletonObject
+        self.skelMesh = self.skelObj.mesh
 
-            # Test with loading a rig from BVH
-            path = os.path.join('data', 'bvhs')
-            filename = os.path.join(path, '02_02.bvh')
-            self.loadPose(filename, 0.1, False)
-            filename = os.path.join(path, '03_03.bvh')
-            self.loadPose(filename, 0.1, False)
-            gui3d.app.statusPersist("Loaded a rig and animations from BVH files.")
-
-            '''
-            # CMU
-            path = os.path.join('data', 'bvhs/cmu')
-            filename = os.path.join(path, '12_01.bvh')
-            self.loadPose(filename)
-            filename = os.path.join(path, '12_02.bvh')
-            self.loadPose(filename)
-            filename = os.path.join(path, '12_03.bvh')
-            self.loadPose(filename)
-            filename = os.path.join(path, '12_04.bvh')
-            #self.loadPose(filename)
-            '''
+        if self.skelObj:
+            self.skelObj.show()
+            # Show skeleton through human 
+            self.oldHumanTransp = self.human.meshData.transparentPrimitives
+            self.setHumanTransparency(True)
+            self.human.meshData.setPickable(False)
 
         self.frameSlider.setValue(0)
 
-    def drawSkeleton(self):
-        # Create a mesh from the skeleton in rest pose
-        self.skelMesh = skeleton_drawing.meshFromSkeleton(self.skeleton, "Prism")
-        self.skelMesh.priority = 100
-        self.skelMesh.setPickable(True)
-        self.skelObj = self.addObject( gui3d.Object(self.human.getPosition(), self.skelMesh) )
-        self.skelObj.setRotation(self.human.getRotation())
-
-        if self.showSkeletonTggl.selected:
-            self.skelObj.show()
+        # Only load mhanim files at first time or when "Reload" button is pressed
+        if len(self.animations) == 0:
+            self.reloadAnimations()
+        elif self.anim:
+            self.startPlayback()
         else:
-            self.skelObj.hide()
-
-        if self.animateInPlaceTggl:
-            inPlace = self.animateInPlaceTggl.selected
-        else:
-            inPlace = True
-        mapping = skeleton_drawing.getVertBoneMapping(self.skeleton, self.skelMesh)
-        if self.human.animated:
-            # Add created skeleton to animatedMesh object associated with human.skeleton
-            self.animatedMesh = self.human.animated
-            self.animatedMesh.setAnimateInPlace(inPlace)
-            self.animatedMesh.addMesh(self.skelMesh, mapping)
-        else:
-            # Create an animateable mesh object to animate the skeleton mesh
-            self.animatedMesh = animation.AnimatedMesh(self.skeleton, self.skelMesh, mapping)
-            self.animatedMesh.setAnimateInPlace(inPlace)
-
-            # TODO we can skin the human model too if we retarget the BVH animation on a skeleton from the skeleton library (which define bone-to-vertex weights for the human)
-            #self.animatedMesh.addMesh(self.human.meshData, mapping)
-
-        # Add event listeners to skeleton mesh for bone highlighting
-        @self.skelObj.mhEvent
-        def onMouseEntered(event):
-            """
-            Event fired when mouse hovers over a skeleton mesh facegroup
-            """
-            gui3d.TaskView.onMouseEntered(self, event)
-
-            # Highlight bones
-            self.selectedBone = event.group
-            setColorForFaceGroup(self.skelMesh, self.selectedBone.name, [216, 110, 39, 255])
-            gui3d.app.statusPersist(event.group.name)
-            gui3d.app.redraw()
-
-        @self.skelObj.mhEvent
-        def onMouseExited(event):
-            """
-            Event fired when mouse hovers off of a skeleton mesh facegroup
-            """
-            gui3d.TaskView.onMouseExited(self, event)
-            
-            # Disable highlight on bone
-            if self.selectedBone:
-                setColorForFaceGroup(self.skelMesh, self.selectedBone.name, [255,255,255,255])
-                gui3d.app.statusPersist('')
-                gui3d.app.redraw()
+            self.highlightAnimation(self.animations[0])
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
@@ -298,13 +329,15 @@ class AnimationLibrary(gui3d.TaskView):
         self.setHumanTransparency(False)
         self.human.meshData.setPickable(True)
 
+        if self.skelObj:
+            self.skelObj.hide()
+
+        self.skelObj = None 
+        self.skelMesh = None
+
     def createPlaybackControl(self):
         self.playbackBox = self.addRightWidget(gui.GroupBox('Playback'))
-        maxFrame = self.anim.nFrames-1
-        if maxFrame < 1:
-            maxFrame = 1
-            # TODO disable slider
-        self.frameSlider = self.playbackBox.addWidget(gui.Slider(value = 0, min = 0, max = maxFrame, label = 'Frame: %d'))
+        self.frameSlider = self.playbackBox.addWidget(gui.Slider(value = 0, min = 0, max = 1, label = 'Frame: %d'))
         # TODO make slider use time instead of frames?
         @self.frameSlider.mhEvent
         def onChanging(value):
@@ -324,7 +357,7 @@ class AnimationLibrary(gui3d.TaskView):
         self.animateInPlaceTggl = self.playbackBox.addWidget(gui.ToggleButton("In-place animation"))
         @self.animateInPlaceTggl.mhEvent
         def onClicked(event):
-            self.animatedMesh.setAnimateInPlace(self.animateInPlaceTggl.selected)
+            self.human.animated.setAnimateInPlace(self.animateInPlaceTggl.selected)
             self.updateAnimation(self.currFrame)
         self.animateInPlaceTggl.setSelected(True)
 
@@ -341,6 +374,9 @@ class AnimationLibrary(gui3d.TaskView):
 
     def startPlayback(self):
         self.playPauseBtn.setText('Pause')
+        if self.timer:
+            mh.removeTimer(self.timer)
+            self.timer = None
         if self.perFramePlayback:
             self.timer = mh.addTimer(max(30, int(1.0/self.anim.frameRate * 1000)), self.onFrameChanged)
         else: # 30 FPS fixed
@@ -355,27 +391,47 @@ class AnimationLibrary(gui3d.TaskView):
             self.timer = None
 
     def setToRestPose(self):
-        # TODO have a one-method reset-to-rest on AnimatedMesh?
-        self.animatedMesh.setActiveAnimation(None)
-        self.animatedMesh.resetTime()
+        if not self.human.animated:
+            return
         self.stopPlayback()
+        self.human.animated.setToRestPose()
 
-    def selectAnimation(self, animName):
+    def chooseAnimation(self, anim):
+        if not anim in self.human.animations:
+            self.animations.append(anim)
+
+    def highlightAnimation(self, anim):
         self.stopPlayback()
-        self.animatedMesh.setActiveAnimation(animName)
-        self.anim = self.animatedMesh.getAnimation(animName)
-        print "Setting animation to %s" % animName
+        if not self.human.skeleton:
+            return
+
+        if not self.human.animated.hasAnimation(getAnimationTrackName(anim.collection.uuid, anim.name)):
+            # Load animation track (containing the actual animation data)
+            # Actually loading the BVH is only necessary when previewing the
+            # animation or exporting when the human is exported
+            animationTrack = self.loadBVH(anim)
+            if not animationTrack:
+                return
+            self.human.animated.addAnimation(animationTrack)
+
+        self.human.animated.setActiveAnimation(getAnimationTrackName(anim.collection.uuid, anim.name))
+        self.anim = self.human.animated.getAnimation(getAnimationTrackName(anim.collection.uuid, anim.name))
+        log.debug("Setting animation to %s", anim.name)
+
+        self.human.animated.setAnimateInPlace(self.animateInPlaceTggl.selected)
+
         if self.frameSlider:
             self.frameSlider.setMin(0)
             maxFrame = self.anim.nFrames-1
             if maxFrame < 1:
                 maxFrame = 1
-                # TODO disable slider
             self.frameSlider.setMax(maxFrame)
             self.currFrame = 0
             self.frameSlider.setValue(0)
         self.updateAnimation(0)
         gui3d.app.redraw()
+
+        self.startPlayback()
 
     def onFrameChanged(self):
         if not self.anim:
@@ -388,20 +444,20 @@ class AnimationLibrary(gui3d.TaskView):
             self.frameSlider.setValue(frame)
             self.updateAnimation(frame)
         else:
-            self.animatedMesh.setActiveAnimation(self.anim.name)
+            self.human.animated.setActiveAnimation(self.anim.name)
             self.anim.interpolationType = 1 if self.interpolate else 0
-            self.animatedMesh.update(1.0/30.0)
-            frame = self.anim.getFrameIndexAtTime(self.animatedMesh.getTime())[0]
+            self.human.animated.update(1.0/30.0)
+            frame = self.anim.getFrameIndexAtTime(self.human.animated.getTime())[0]
             self.frameSlider.setValue(frame)
         gui3d.app.redraw()
 
     def updateAnimation(self, frame):
-        if not self.anim:
+        if not self.anim or not self.human.skeleton:
             return
         self.currFrame = frame
-        self.animatedMesh.setActiveAnimation(self.anim.name)
+        self.human.animated.setActiveAnimation(self.anim.name)
         self.anim.interpolationType = 1 if self.interpolate else 0
-        self.animatedMesh.setToFrame(frame)
+        self.human.animated.setToFrame(frame)
 
     def setHumanTransparency(self, enabled):
         if enabled:
@@ -410,22 +466,32 @@ class AnimationLibrary(gui3d.TaskView):
             self.human.meshData.setTransparentPrimitives(self.oldHumanTransp)
 
     def loadHandler(self, human, values):
-        pass
-        
+        if values[0] == "animations" and len(values) >= 3:
+            uuid = values[1]
+            animName = values[2]
+
+            '''
+            mhanim = exportutils.config.getExistingProxyFile(None, uuid, "animations")
+            if not mhanim:
+                log.notice("Animation %s (%s) does not exist. Skipping.", animName, uuid)
+                return
+            self.loadAnimation(human, mhanim, animName)
+            '''
+
+            self.loadAnimation(uuid, animName)        
+
     def saveHandler(self, human, file):
-        pass
+        if self.human.animated and self.human.skeleton:
+            for anim in self.human.animations:
+                file.write('animations %s %s\n' % (anim.collection.uuid, anim.name))
 
     def onHumanRotated(self, event):
         if self.skelObj:
             self.skelObj.setRotation(gui3d.app.selectedHuman.getRotation())
-        if self.jointsObj:
-            self.jointsObj.setRotation(gui3d.app.selectedHuman.getRotation())
 
     def onHumanTranslated(self, event):
         if self.skelObj:
             self.skelObj.setPosition(gui3d.app.selectedHuman.getPosition())
-        if self.jointsObj:
-            self.jointsObj.setPosition(gui3d.app.selectedHuman.getPosition())
 
     def onMouseEntered(self, event):
         pass
@@ -453,3 +519,60 @@ def load(app):
 
 def unload(app):
     pass
+
+
+def readAnimCollectionFile(filename):
+    """
+    Parse a .mhanim file.
+    """
+    try:
+        fh = open(filename, "rU")
+    except:
+        return None
+
+    anims = AnimationCollection(filename)
+
+    for line in fh:
+        words = line.split()
+        if len(words) == 0:
+            pass
+
+        elif words[0] == '#':
+            if len(words) == 1:
+                continue
+
+            key = words[1]
+
+            if key == 'uuid':
+                anims.uuid = " ".join(words[2:])
+            elif key == 'tag':
+                anims.tags.add( " ".join(words[2:]) )
+            elif key == 'rig':
+                anims.rig = ( " ".join(words[2:]) )
+            elif key == 'scale':
+                anims.scale = float(words[2])
+            elif key == 'anim':
+                anim = Animation(name = words[2])
+                anim.options = words[4:]
+                anim.bvh = words[3]
+                anim.collection = anims
+
+                anims.animations.append(anim)
+            else:
+                # Unknown keyword
+                pass
+    return anims
+
+def getAnimationTrackName(collectionUuid, animationName):
+    return "%s_%s" % (collectionUuid, animationName)
+
+def searchFiles(paths, extensions):
+    # TODO move this method somewhere to a shared module?
+    for path in paths:
+        for root, dirs, files in os.walk(path):
+            for f in files:
+                ext = os.path.splitext(f)[1][1:].lower()
+                if ext in extensions:
+                    if f.lower().endswith('.' + ext):
+                        yield os.path.join(root, f)
+

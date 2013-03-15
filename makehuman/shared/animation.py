@@ -236,6 +236,9 @@ class AnimatedMesh(object):
         else:
             return None, None
 
+    def getMeshes(self):
+        return [mesh.name for mesh in self.__meshes]
+
     def update(self, timeDeltaSecs):
         self.__playTime = self.__playTime + timeDeltaSecs
         self._pose()
@@ -254,6 +257,10 @@ class AnimatedMesh(object):
         frameNb = int(frameNb)
         self.__playTime = float(frameNb)/self.__currentAnim.frameRate
         self._pose()
+
+    def setToRestPose(self):
+        self.setActiveAnimation(None)
+        self.resetTime()
 
     def getTime(self):
         return self.__playTime

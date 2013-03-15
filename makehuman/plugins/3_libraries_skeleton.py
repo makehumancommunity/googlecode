@@ -65,6 +65,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.human = gui3d.app.selectedHuman
         self.human.skeleton = None
         self.human.animated = None
+        self.human.skeletonObject = None
 
         self.humanChanged = False
 
@@ -138,6 +139,9 @@ class SkeletonLibrary(gui3d.TaskView):
         self.setHumanTransparency(True)
         self.human.meshData.setPickable(False)
 
+        if self.skelObj:
+            self.skelObj.show()
+
         if not self.jointsObj:
             self.drawJointHelpers()
 
@@ -159,6 +163,8 @@ class SkeletonLibrary(gui3d.TaskView):
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
 
+        if self.skelObj:
+            self.skelObj.hide()
         self.setHumanTransparency(False)
         self.human.meshData.setPickable(True)
         self.removeBoneHighlights()
@@ -200,13 +206,16 @@ class SkeletonLibrary(gui3d.TaskView):
         Load skeleton from rig definition in a .rig file.
         """
         log.debug("Loading skeleton from rig file %s", filename)
+
+        self.removeBoneHighlights()
+
         if not filename:
             # Unload current skeleton
             self.human.skeleton = None
             self.human.animated = None
             if self.skelObj:
                 # Remove old skeleton mesh
-                self.removeObject(self.skelObj)
+                gui3d.app.removeObject(self.skelObj)
                 self.skelObj = None
                 self.skelMesh = None
             self.selectedBone = None
@@ -239,7 +248,7 @@ class SkeletonLibrary(gui3d.TaskView):
     def drawSkeleton(self, skel):
         if self.skelObj:
             # Remove old skeleton mesh
-            self.removeObject(self.skelObj)
+            gui3d.app.removeObject(self.skelObj)
             self.skelObj = None
             self.skelMesh = None
             self.selectedBone = None
@@ -249,7 +258,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.skelMesh = skeleton_drawing.meshFromSkeleton(skel, "Prism")
         self.skelMesh.priority = 100
         self.skelMesh.setPickable(True)
-        self.skelObj = self.addObject(gui3d.Object(self.human.getPosition(), self.skelMesh) )
+        self.skelObj = gui3d.app.addObject(gui3d.Object(self.human.getPosition(), self.skelMesh) )
         self.skelObj.setRotation(self.human.getRotation())
 
         # Add the skeleton mesh to the human AnimatedMesh so it animates together with the skeleton
@@ -257,6 +266,9 @@ class SkeletonLibrary(gui3d.TaskView):
         # rigid vertex-bone weights (for each vertex exactly one weight of 1 to one bone)
         mapping = skeleton_drawing.getVertBoneMapping(skel, self.skelMesh)
         self.human.animated.addMesh(self.skelMesh, mapping)
+
+        # Store a reference to the skeleton mesh object for other plugins
+        self.human.skeletonObject = self.skelObj
 
         # Add event listeners to skeleton mesh for bone highlighting
         @self.skelObj.mhEvent
