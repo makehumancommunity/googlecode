@@ -1068,7 +1068,8 @@ def init():
     #bpy.types.Object.MhSkirtOnly = BoolProperty(default = False)
                  
     bpy.types.Object.MhAffectOnly = EnumProperty(
-        items = [('Tights','Tights','Tights'),
+        items = [('Body','Body','Body'),
+                 ('Tights','Tights','Tights'),
                  ('Skirt','Skirt','Skirt'),
                  ('Hair','Hair','Hair'),
                  ('All','All','All')],
