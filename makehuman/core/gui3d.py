@@ -51,7 +51,7 @@ class Object(events3d.EventHandler):
     def __init__(self, position, mesh, visible=True):
         
         if mesh.object:
-            raise RuntimeException('This mesh is already attached to an object')
+            raise RuntimeError('This mesh is already attached to an object')
                 
         self.mesh = mesh
         self.mesh.setLoc(*position)
@@ -367,7 +367,7 @@ class View(events3d.EventHandler):
         :rvalue: gui3d.View
         """
         if view.parent:
-            raise RuntimeException('The view is already added to a view')
+            raise RuntimeError('The view is already added to a view')
             
         view._parent = weakref.ref(self)
         view._updateVisibility()
@@ -386,7 +386,7 @@ class View(events3d.EventHandler):
         :type view: gui3d.View
         """
         if view not in self.children:
-            raise RuntimeException('The view is not a child of this view')
+            raise RuntimeError('The view is not a child of this view')
             
         view._parent = None
         if self._attached:
@@ -404,7 +404,7 @@ class View(events3d.EventHandler):
         :rvalue: gui3d.Object
         """
         if object._view:
-            raise RuntimeException('The object is already added to a view')
+            raise RuntimeError('The object is already added to a view')
             
         object._view = weakref.ref(self)
         if self._attached:
@@ -422,7 +422,7 @@ class View(events3d.EventHandler):
         :type object: gui3d.Object
         """
         if object not in self.objects:
-            raise RuntimeException('The object is not a child of this view')
+            raise RuntimeError('The object is not a child of this view')
             
         object._view = None
         if self._attached:
@@ -625,7 +625,7 @@ class Application(events3d.EventHandler):
         :rvalue: gui3d.Object
         """
         if object._view:
-            raise RuntimeException('The object is already attached to a view')
+            raise RuntimeError('The object is already attached to a view')
             
         object._view = weakref.ref(self)
         object._attach()
@@ -642,7 +642,7 @@ class Application(events3d.EventHandler):
         :type object: gui3d.Object
         """
         if object not in self.objects:
-            raise RuntimeException('The object is not a child of this view')
+            raise RuntimeError('The object is not a child of this view')
             
         object._view = None
         object._detach()
@@ -659,7 +659,7 @@ class Application(events3d.EventHandler):
         :rvalue: gui3d.View
         """
         if view.parent:
-            raise RuntimeException('The view is already attached')
+            raise RuntimeError('The view is already attached')
             
         view._parent = weakref.ref(self)
         view._updateVisibility()
@@ -677,7 +677,7 @@ class Application(events3d.EventHandler):
         :type view: gui3d.View
         """
         if view not in self.children:
-            raise RuntimeException('The view is not a child of this view')
+            raise RuntimeError('The view is not a child of this view')
             
         view._parent = None
         view._detach()
@@ -700,7 +700,7 @@ class Application(events3d.EventHandler):
             raise KeyError('A category with this name already exists', category.name)
 
         if category.parent:
-            raise RuntimeException('The category is already attached')
+            raise RuntimeError('The category is already attached')
 
         self.categories[category.name] = category
         category.tab = self.tabs.addTab(category.name, category.label or category.name)
