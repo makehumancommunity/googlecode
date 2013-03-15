@@ -9,6 +9,7 @@ import gui
 import log
 import module3d
 import algos3d
+import matrix
 
 class EditTarget(algos3d.Target):
     _count = 0
@@ -69,6 +70,7 @@ class EditingTaskView(gui3d.TaskView):
         self.radius = 1.0
         self.start = None
         self.center = None
+        self.axis = None
         self.depth = None
         self.original = None
         self.normals = None
@@ -88,6 +90,7 @@ class EditingTaskView(gui3d.TaskView):
         self.scalex = self.modeBox.addWidget(gui.RadioButton(modes, "Scale X"))
         self.scaley = self.modeBox.addWidget(gui.RadioButton(modes, "Scale Y"))
         self.scalez = self.modeBox.addWidget(gui.RadioButton(modes, "Scale Z"))
+        self.rotate = self.modeBox.addWidget(gui.RadioButton(modes, "Rotate"))
 
         self.buildCircle()
         self.updateRadius()
@@ -153,6 +156,9 @@ class EditingTaskView(gui3d.TaskView):
         x, y, z = gui3d.app.modelCamera.convertToWorld2D(event.x, event.y, human.mesh)
         center = np.array([x, y, z])
         _, _, depth = gui3d.app.modelCamera.convertToScreen(x, y, z, human.mesh)
+        x1, y1, z1 = gui3d.app.modelCamera.convertToWorld3D(event.x, event.y, depth + 0.1, human.mesh)
+        axis = np.array([x1-x, y1-y, z1-z])
+        log.debug("axis: %s", axis)
 
         distance2 = np.sum((human.meshData.coord - center[None,:]) ** 2, axis=-1)
         verts = np.argwhere(distance2 < (self.radius ** 2))
@@ -161,6 +167,7 @@ class EditingTaskView(gui3d.TaskView):
 
         self.start = (event.x, event.y)
         self.center = center
+        self.axis = axis
         self.depth = depth
         self.verts = verts[:,0]
         self.weights = self.falloff(np.sqrt(distance2[self.verts]) / self.radius)
@@ -201,6 +208,14 @@ class EditingTaskView(gui3d.TaskView):
             coord = self.scale([0, 1, 0], dist)
         elif self.scalez.selected:
             coord = self.scale([0, 0, 1], dist)
+        elif self.rotate.selected:
+            mat = matrix.rotate(-dist * 90, self.axis)
+            mat = np.asarray(mat)[:3,:3]
+            coor = self.original - self.center
+            coor = np.dot(mat, coor.T).T
+            coor += self.center
+            delta = coor - self.original
+            coord = self.original + self.weights[:,None] * delta
         else:
             x, y, z = gui3d.app.modelCamera.convertToWorld3D(event.x, event.y, self.depth, human.mesh)
             pos = np.array([x, y, z])
@@ -225,6 +240,7 @@ class EditingTaskView(gui3d.TaskView):
 
         self.start = None
         self.center = None
+        self.axis = None
         self.depth = None
         self.original = None
         self.normals = None
