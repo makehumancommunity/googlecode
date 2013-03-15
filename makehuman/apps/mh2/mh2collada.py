@@ -57,8 +57,9 @@ def exportCollada(human, filepath, config):
         log.message("Writing Collada file %s" % filepath)
     except:
         log.error("Unable to open file for writing %s" % filepath)
-    (name,ext) = os.path.splitext(os.path.basename(filepath))
 
+    filename = os.path.basename(filepath)
+    name = config.goodName(os.path.splitext(filename)[0])
     exportDae(human, name, fp, config)
 
     fp.close()

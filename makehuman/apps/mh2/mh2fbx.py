@@ -47,8 +47,10 @@ def exportFbx(human, filepath, config):
 
     rigfile = "data/rigs/%s.rig" % config.rigtype
     rawTargets = exportutils.collect.readTargets(human, config)
+    filename = os.path.basename(filepath)
+    name = config.goodName(os.path.splitext(filename)[0])
     stuffs = exportutils.collect.setupObjects(
-        os.path.splitext(filepath)[0], 
+        name, 
         human, 
         config=config,
         rigfile=rigfile, 
@@ -59,7 +61,6 @@ def exportFbx(human, filepath, config):
         lashes=config.lashes)
 
     bpy.initialize(human, config)
-    name = os.path.splitext(os.path.basename(filepath))[0]
     boneInfo = stuffs[0].boneInfo
     rig = bpy.addRig(name, boneInfo)
     for stuff in stuffs:

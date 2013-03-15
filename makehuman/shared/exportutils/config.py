@@ -34,7 +34,8 @@ import log
 class Config:
 
     def __init__(self):
-        self.useTexFolder       = False
+        self.encoding           = 'utf-8'
+        self.useTexFolder       = True
         self.eyebrows           = True
         self.lashes             = True
         self.helpers            = False
@@ -55,6 +56,7 @@ class Config:
 
 
     def selectedOptions(self, exporter):
+        self.encoding           = exporter.taskview.getEncoding()
         self.useTexFolder       = exporter.useTexFolder.selected
         self.eyebrows           = exporter.eyebrows.selected
         self.lashes             = exporter.lashes.selected
@@ -186,7 +188,12 @@ class Config:
             
             
     def goodName(self, name):
-        return name.replace(" ", "_").replace("-","_").lower()
+        string = name.replace(" ", "_").replace("-","_").lower()
+        try:
+           return string.encode(encoding=self.encoding, errors='replace')
+        except UnicodeEncodeError:
+            log.message("%s cannot encode this file path. Try a different encoding" % self.encoding)
+            return string
 
 #
 #   class CProxyFile:

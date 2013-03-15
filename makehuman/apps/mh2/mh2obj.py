@@ -51,10 +51,12 @@ def exportObj(human, filepath, config=None):
         subdivide=config.subdivide)
     
     fp = open(filepath, 'w')
+    mtlfile = "%s.mtl" % os.path.splitext(filepath)[0]
+    mtlfile = mtlfile.encode(config.encoding, errors='replace')
     fp.write(
         "# MakeHuman exported OBJ\n" +
         "# www.makehuman.org\n\n" +
-        "mtllib %s.mtl\n" % os.path.basename(filepath))
+        "mtllib %s\n" % os.path.basename(mtlfile))
 
     # Vertices
     
@@ -123,7 +125,6 @@ def exportObj(human, filepath, config=None):
         
     fp.close()
     
-    mtlfile = "%s.mtl" % filepath
     fp = open(mtlfile, 'w')
     fp.write(
         '# MakeHuman exported MTL\n' +

@@ -23,7 +23,7 @@ MakeHuman to MHX (MakeHuman eXchange format) exporter. MHX files can be loaded i
 """
 
 MAJOR_VERSION = 1
-MINOR_VERSION = 14
+MINOR_VERSION = 15
 BODY_LANGUAGE = True
 
 import module3d
@@ -60,7 +60,7 @@ from . import mhx_pose
 
 def exportMhx(human, filepath, config):  
     gui3d.app.progress(0, text="Exporting MHX")
-    log.message("Export MHX")
+    log.message("Exporting %s" % filepath.encode('utf-8'))
     time1 = time.clock()
     posemode.exitPoseMode()        
     posemode.enterPoseMode()
@@ -68,21 +68,9 @@ def exportMhx(human, filepath, config):
     config.setHuman(human)
     config.setupTexFolder(filepath)    
 
-    try:
-        filepathname = filepath.encode(encoding=config.encoding, errors='strict')
-    except UnicodeEncodeError:
-        log.message("%s cannot encode this file path. Try a different encoding" % config.encoding)
-        
-    fname = os.path.basename(os.path.splitext(filepathname)[0])
-    name = fname.capitalize().replace(' ','_')
-    try:
-        fp = open(filepath, 'w')
-        log.message("Writing MHX file %s", filepathname)
-    except:
-        log.message("Unable to open file for writing %s", filepathname)
-        fp = 0
-    if not fp:
-        return
+    filename = os.path.basename(filepath)
+    name = config.goodName(os.path.splitext(filename)[0])
+    fp = open(filepath, 'w')
         
     if config.rigtype == 'mhx':
         amt = mhx_armature.MhxArmature(name, human, config)
@@ -143,7 +131,7 @@ def exportMhx(human, filepath, config):
         fp.write("Rigify %s ;\n" % amt.name)
 
     fp.close()
-    log.message("File %s exported" % filepathname)
+    log.message("%s exported" % filepath.encode('utf-8'))
     gui3d.app.progress(1.0)
     return
     

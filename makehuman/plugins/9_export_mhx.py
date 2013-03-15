@@ -33,7 +33,7 @@ class MhxConfig(Config):
         Config.__init__(self)
         self.useTexFolder =     exporter.useTexFolder.selected
         self.scale,self.unit =  exporter.taskview.getScale()
-        self.useRelPaths =      False
+        self.useRelPaths =      True
         self.helpers =          True
         self.hidden =           exporter.hidden.selected
         self.encoding =         exporter.taskview.getEncoding()
@@ -51,19 +51,6 @@ class MhxConfig(Config):
         self.rigtype =          rigtype
         
         # Used by mhx exporter
-        """
-        self.vertexWeights = []
-        self.customShapes = {}
-        self.poseInfo = {}
-        self.boneGroups = []
-        self.recalcRoll = []              
-        self.vertexGroupFiles = []
-        self.gizmoFiles = []
-        self.headName = "Head"
-        self.objectProps = []
-        self.armatureProps = []
-        self.customProps = []
-        """
         self.customShapeFiles = []        
         self.customPrefix = "Mhc"
 
@@ -78,7 +65,7 @@ class ExporterMHX(Exporter):
     def build(self, options, taskview):
         #Exporter.build(self, options, taskview)
         self.taskview       = taskview        
-        self.useTexFolder   = options.addWidget(gui.CheckBox("Separate folder", False))
+        self.useTexFolder   = options.addWidget(gui.CheckBox("Separate folder", True))
         self.hidden         = options.addWidget(gui.CheckBox("Keep hidden faces", True))
         
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))

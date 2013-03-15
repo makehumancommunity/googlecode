@@ -33,6 +33,8 @@ Requires:
 
 __docformat__ = 'restructuredtext'
 
+import gui3d
+
 def exportSkeleton(obj, filename):
     """
     This function exports joint information describing the structure of the 

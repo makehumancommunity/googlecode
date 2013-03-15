@@ -131,12 +131,10 @@ class ExportTaskView(gui3d.TaskView):
 
 
     def addEncodings(self, encodingBox):
-        check = True
         buttons = []
         encodings = []
-        for name in ["latin-1", "utf-8", "ascii"]:
+        for name,check in [("ascii",False), ("latin-1",False), ("utf-8",True)]:
             button = encodingBox.addWidget(gui.RadioButton(encodings, name, check))
-            check = False
             buttons.append((button,name))
         return buttons
 
