@@ -73,31 +73,39 @@ def tokenizeFbxFile(filepath):
     proot = pnode = ParseNode("RootNode:", None)
     fp = open(filepath, "rU")
     
+    prevline = ""
     for line in fp:
-        pnode = tokenizeLine(line, pnode)
+        line = line.strip()
+        if len(line) > 0:
+            if line[0] == ';':
+                pass
+            elif line[-1] == ',':
+                prevline += line
+            else:
+                pnode = tokenizeLine(prevline+line, pnode)
+                prevline = ""
     fp.close()    
     return proot
         
         
 def tokenizeLine(line, pnode):
 
-    if len(line) > 0 and line[0] != ';':
-        tokens = list(FbxLex(line))
-        if len(tokens) > 0:
-            key = tokens[0]
-            if key == '}':
-                return pnode.parent
-            elif key[-1] == ':':
-                node1 = ParseNode(key, pnode)
-                for token in tokens[1:]:
-                    if token == '{':
-                        return node1
-                    elif token in ['Y','N']:
-                        node1.values.append(token)
-                    elif token[0] == '"':
-                    	node1.values.append(token[1:-1])
-                    elif token not in [',','*']:
-                        node1.values.append(eval(token))
+    tokens = list(FbxLex(line))
+    if len(tokens) > 0:
+        key = tokens[0]
+        if key == '}':
+            return pnode.parent
+        elif key[-1] == ':':
+            node1 = ParseNode(key, pnode)
+            for token in tokens[1:]:
+                if token == '{':
+                    return node1
+                elif token in ['Y','N']:
+                    node1.values.append(token)
+                elif token[0] == '"':
+                    node1.values.append(token[1:-1])
+                elif token not in [',','*']:
+                    node1.values.append(eval(token))
 
     return pnode                        
             

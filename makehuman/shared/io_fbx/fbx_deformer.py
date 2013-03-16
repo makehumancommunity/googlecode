@@ -87,16 +87,26 @@ class FbxSkin(FbxObject):
         obNode = meNode.getBParent('OBJECT')
         ob = fbx.data[obNode.id]
 
-        rigNode = obNode.getFParent2('Model', 'Null')
+        rigNode = obNode.getBParent('OBJECT')
+        for link in obNode.links:
+            print("L", link)
+            if link.parent.btype == 'OBJECT':
+                print("  O", link.parent)
+        
         if rigNode:
             rig = fbx.data[rigNode.id]
             mod = ob.modifiers.new(rig.name, 'ARMATURE')
+            print("MOD", rig, rig.name)
+            print("  ", rig.type)
             mod.object = rig
+            print("  ", mod, mod.object)
             mod.use_bone_envelopes = False
             mod.use_vertex_groups = True
             ob.parent = rig
+            #halt
         
         for link in self.children:
+            print("C", link, link.child, ob)
             link.child.buildVertGroups(ob)
             
  
@@ -152,7 +162,12 @@ class FbxCluster(FbxObject):
         
         
     def buildVertGroups(self, ob):
-        vg = ob.vertex_groups.new(self.name)
+        links = self.getBChildLinks('BONE')
+        if links:
+            name = links[0].child.name
+        else:
+            name = self.name
+        vg = ob.vertex_groups.new(name)
         for n,vn in enumerate(self.indexes.values):        
             w = self.weights.values[n]
             vg.add([vn], w, 'REPLACE')

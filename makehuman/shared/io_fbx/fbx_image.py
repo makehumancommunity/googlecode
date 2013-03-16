@@ -62,19 +62,24 @@ class CImage(FbxObject):
     def make(self, img):        
         FbxObject.make(self, img)
         filepath = os.path.expanduser(bpy.path.abspath(img.filepath))
-        self.struct["Filename"] = str(os.path.normpath(filepath))
-        self.struct["RelativeFilename"] = str(os.path.normpath(os.path.relpath(filepath, fbx.activeFolder)))
-        self.struct["Type"] = "Clip"
-        self.struct["UseMipMap"] = 0
-
+        filename = str(os.path.normpath(filepath))
+        filename = filename.encode(fbx.settings.encoding)
+        relFilename = str(os.path.normpath(os.path.relpath(filepath, fbx.activeFolder)))
+        relFilename = relFilename.encode(fbx.settings.encoding, 'ignore')
+        self.setMulti([
+            ("Filename", filename),
+            ("RelativeFilename", relFilename),
+            ("Type", "Clip"),
+            ("UseMipMap", 0),
+        ])
         self.setProps([
-            ("Path", self.struct["Filename"])
+            ("Path", filename)
         ])
         return self
     
 
     def build1(self):
-        path = os.path.join(fbx.activeFolder, self.struct["RelativeFilename"]) 
+        path = os.path.join(fbx.activeFolder, self.struct["relativefilename"]) 
         fbx.message("Loading %s" % path)
         try:
             self.image = bpy.data.images.load(path)

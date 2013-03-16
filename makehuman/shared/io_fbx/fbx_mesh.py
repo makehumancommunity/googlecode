@@ -60,6 +60,7 @@ class FbxMesh(FbxGeometryBase):
     def parseNodes(self, pnodes):
         rest = []
         for pnode in pnodes:
+            print("V", pnode)
             if pnode.key == 'Vertices':
                 self.vertices.parse(pnode)
             elif pnode.key == 'Normals':
@@ -170,7 +171,6 @@ class FbxShape(FbxObject):
                 self.normals.parse(pnode)
             else:
                 rest.append(pnode)
-
         return FbxGeometryBase.parseNodes(self, rest)
 
     
@@ -212,7 +212,8 @@ class FbxShape(FbxObject):
             ob.shape_key_add("Basis")
         ob.active_shape_key_index = 0
         base = ob.active_shape_key
-        skey = self.datum = ob.shape_key_add(self.name)
+        name = self.name.split('.')[-1]
+        skey = self.datum = ob.shape_key_add(name)
         n = 0
         for vn in self.indexes.values:
             dx = fbx.f2b( self.vertices.values[n] )

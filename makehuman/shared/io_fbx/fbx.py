@@ -206,6 +206,7 @@ class Settings:
         self.zUp = False
         self.normals = False    
         self.scale = 1.0
+        self.encoding = 'utf-8'
     
     def maya(self):
         self.zUp = False

@@ -164,7 +164,7 @@ class FbxSurfaceMaterial(FbxObject):
         mat = fbx.data[self.id]
         try:
             self.shader = self.get("ShadingModel")
-        except AttributeError:
+        except KeyError:
             self.shader = "Phong"
         self.shader = self.shader.capitalize()
         mat.diffuse_shader = FbxSurfaceMaterial.BlenderShaders[self.shader]

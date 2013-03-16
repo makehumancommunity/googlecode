@@ -394,14 +394,18 @@ class CBone(CModel):
         parent = self.getFParent('Model')
         if (not parent) or (parent.id != 0):
             return
+        if self.name:
+            name = self.name
+        else:
+            name = "_RIG"
         
-        amt = bpy.data.armatures.new("_AMT")
-        ob = bpy.data.objects.new("_RIG", amt)
+        amt = bpy.data.armatures.new(name)
+        ob = bpy.data.objects.new(name, amt)
         scn = bpy.context.scene
         scn.objects.link(ob)
         
         amtNode = CArmature()
-        obNode = CObject("Null")
+        obNode = CObject(name)
         self.makeOOLink(obNode)
         amtNode.makeOOLink(obNode)
 

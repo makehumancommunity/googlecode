@@ -179,6 +179,7 @@ class CAnimationLayer(FbxObject):
         for link in self.children:
             acnode = link.child
             if acnode.ftype == 'AnimationCurveNode':
+                print(acnode)
                 acnode.build()
 
 #------------------------------------------------------------------
@@ -330,9 +331,12 @@ class FbxAnimationCurveNode(FbxObject):
     def build(self):
         rna = None
         group = None
-        link = self.getBParentLink(['BONE', 'OBJECT', 'BLEND_DEFORMER'])
+        link = self.getBParentLink(['BONE', 'ACTION', 'OBJECT', 'BLEND_DEFORMER'])
         user = link.parent
-        owner = user.owner
+        try:
+            owner = user.owner
+        except AttributeError:
+            return
         channel = link.channel
         rna = user.datum
         group = rna.name
@@ -363,7 +367,8 @@ class FbxAnimationCurveNode(FbxObject):
 
         else:
             fbx.debug("Unknown channel %s" % channel)
-            halt
+            return
+            #halt
 
         
         for link in self.children:       

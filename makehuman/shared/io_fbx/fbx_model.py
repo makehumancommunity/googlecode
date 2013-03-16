@@ -42,17 +42,21 @@ class FbxStuff(FbxPlug):
     # Struct        
 
     def get(self, key):
+        key = key.lower()
         try:
             return self.struct[key]
         except KeyError:
             fbx.debug("Unrecognized key %s" % key)
+            print(self.struct)
         return self.properties.getProp(key, self.template)
         
     def set(self, key, value):
+        key = key.lower()
         self.struct[key] = value
         
     def setMulti(self, list):
         for key,value in list:
+            key = key.lower()
             self.struct[key] = value
             
     # Properties
@@ -80,19 +84,20 @@ class FbxStuff(FbxPlug):
 
     def parseNodes(self, pnodes): 
         for pnode in pnodes:
+            key= pnode.key.lower()
             try:
-                elt = self.struct[pnode.key]
+                elt = self.struct[key]
             except KeyError:
                 elt = None
             
             if elt and isinstance(elt, FbxPlug):
                 elt.parse(pnode)
-            elif pnode.key == 'Properties70':
+            elif key == 'properties70':
                 self.properties.parse(pnode)
             elif len(pnode.values) == 1:
-                self.struct[pnode.key] = pnode.values[0]
+                self.struct[key] = pnode.values[0]
             elif len(pnode.values) > 1:
-                self.struct[pnode.key] = pnode.values  
+                self.struct[key] = pnode.values  
             else:
                 fbx.debug(pnode)
                 pnode.write()
@@ -375,6 +380,7 @@ class FbxNodeAttribute(FbxObject):
 
     def __init__(self, subtype, btype, typeflags=None):
         FbxObject.__init__(self, 'NodeAttribute', subtype, btype)
+        self.typeflags = typeflags
         if typeflags:
             self.struct['TypeFlags'] = typeflags
 

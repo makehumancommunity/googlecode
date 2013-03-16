@@ -110,7 +110,7 @@ def parseNodes(pnode):
     if pObjectsNode:
         for pnode2 in pObjectsNode.values:
             createNode(pnode2)
-            
+
     if pLinksNode:            
         for pnode2 in pLinksNode.values:
             parseLink(pnode2)
@@ -160,9 +160,6 @@ def createNode(pnode):
             node = fbx_nurb.FbxNurbsCurve(subtype)
         elif subtype == 'NurbsSurface':
             node = fbx_nurb.FbxNurbsSurface()
-        else:
-            fbx.debug("Bug: %s %s" % (pnode.key, pnode))
-            halt
     elif pnode.key == 'Material':
         node = fbx_material.FbxSurfaceMaterial(subtype)
     elif pnode.key == 'Texture':
@@ -176,9 +173,8 @@ def createNode(pnode):
             node = fbx_null.CNull(subtype)
         elif subtype == "LimbNode":
             node = fbx_armature.CBone(subtype)
-        else:
-            fbx.debug("Bug: %s %s" % (pnode.key, pnode))
-            halt
+        elif subtype in ["CameraSwitcher"]:
+            node = fbx_null.CNull(subtype)
     elif pnode.key == 'NodeAttribute':            
         if subtype == "LimbNode":
             node = fbx_armature.CBoneAttribute()
@@ -192,8 +188,8 @@ def createNode(pnode):
             node = fbx_constraint.CFKEffectorAttribute()
         elif subtype == "Null":
             node = fbx_null.FbxNullAttribute()
-        elif subtype == "Camera":
-            node = fbx_camera.FbxCamera()
+        elif subtype in ["CameraSwitcher"]:
+            node = fbx_null.FbxNullAttribute()
     elif pnode.key == 'Pose':            
         node = fbx_armature.FbxPose()
     elif pnode.key == 'Bone':            
@@ -201,9 +197,6 @@ def createNode(pnode):
     elif pnode.key == 'Constraint':            
         if subtype == "Single Chain IK":
             node = fbx_constraint.FbxConstraintSingleChainIK()
-        else:
-            fbx.debug("Bug: %s %s" % (pnode.key, pnode))
-            halt            
     elif pnode.key == 'Deformer':     
         if subtype == 'Skin':
             node = fbx_deformer.FbxSkin()
@@ -213,9 +206,6 @@ def createNode(pnode):
             node = fbx_deformer.FbxBlendShape()        
         elif subtype == 'BlendShapeChannel':
             node = fbx_deformer.FbxBlendShapeChannel()        
-        else:
-            fbx.debug("Bug: %s %s" % (pnode.key, pnode))
-            halt
     elif pnode.key == 'AnimationStack':   
         node = fbx_anim.CAnimationStack(subtype)
     elif pnode.key == 'AnimationLayer':            
@@ -227,11 +217,9 @@ def createNode(pnode):
 
     if node:
         node.setid(id, name)
-        fbx.nodes[node.id] = node
+        fbx.nodes[node.id] = node        
     else:
-        fbx.debug("Bug: %s %s" % (pnode.key, pnode))
-        #halt
-        
+        fbx.debug("Bug: %s %s %s" % (pnode.key, subtype, pnode))
 
 
 def parseObjectProperty(pnode):

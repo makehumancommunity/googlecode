@@ -138,7 +138,8 @@ class CProperties70(FbxPlug):
 #------------------------------------------------------------------
 
 SimpleTypes = [
-        "int", "float", "bool", "enum", "double", "Number",
+        "int", "short", "float", "bool", "enum", "double", "Number",
+        "Int", "Short", "Float", "Bool", "Enum", "Double",
         "ULongLong", "Shape",
         "FieldOfView",
         "Time", "KTime",
@@ -146,7 +147,7 @@ SimpleTypes = [
 ]
     
 StringTypes = [
-        "KString", "object", "Url", "DateTime"
+        "KString", "object", "Url", "DateTime", "Filename"
 ]
     
 VectorTypes = [

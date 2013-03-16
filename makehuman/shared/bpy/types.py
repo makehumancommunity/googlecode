@@ -134,22 +134,22 @@ class Collection:
 
 class Armature(Rna):
 
-    def __init__(self, name, boneInfo):
+    def __init__(self, name, boneInfo, scale):
         Rna.__init__(self, name, 'ARMATURE')
         self.bones = {}
         self.boneList = []
         self.edit_bones = self.bones
         self.boneInfo = boneInfo
-        self.addHierarchy(boneInfo.hier[0], None)
+        self.addHierarchy(boneInfo.hier[0], None, scale)
         
 
-    def addHierarchy(self, hier, parent):
+    def addHierarchy(self, hier, parent, scale):
         (bname, children) = hier
         bone = Bone(bname)
         self.bones[bname] = bone
         self.boneList.append(bone)
-        bone.head = Vector(self.boneInfo.heads[bname])
-        bone.tail = Vector(self.boneInfo.tails[bname])
+        bone.head = scale * Vector(self.boneInfo.heads[bname])
+        bone.tail = scale * Vector(self.boneInfo.tails[bname])
         bone.roll = self.boneInfo.rolls[bname]
         bone.parent = parent
 
@@ -157,7 +157,7 @@ class Armature(Rna):
 
         bone.children = []
         for child in children:
-            bone.children.append( self.addHierarchy(child, bone) )
+            bone.children.append( self.addHierarchy(child, bone, scale) )
         return bone
         
 
@@ -236,13 +236,13 @@ class Mesh(Rna):
         self.materials = []
         self.shape_keys = []
         
-    def fromObject(self, obj):        
+    def fromObject(self, obj, scale):        
         nVerts = len(obj.coord)
         nFaces = len(obj.fvert)
-        self.vertices = [MeshVertex(idx, obj) for idx in range(nVerts)]
+        self.vertices = [MeshVertex(idx, obj, scale) for idx in range(nVerts)]
         self.polygons = [MeshPolygon(idx, obj) for idx in range(nFaces)]
 
-    def fromStuff(self, stuff): 
+    def fromStuff(self, stuff, scale): 
         obj = stuff.meshInfo.object
         stuff.bones = []
         exportutils.collect.setStuffSkinWeights(stuff)
@@ -254,7 +254,7 @@ class Mesh(Rna):
         nBones = len(stuff.bones)
         nShapes = len(stuff.meshInfo.shapes)
 
-        self.vertices = [MeshVertex(idx, obj) for idx in range(nVerts)]
+        self.vertices = [MeshVertex(idx, obj, scale) for idx in range(nVerts)]
         self.polygons = [MeshPolygon(idx, obj) for idx in range(nFaces)]
 
         if obj.has_uv:
@@ -267,18 +267,18 @@ class Mesh(Rna):
 
         if stuff.meshInfo.shapes:
             self.shape_keys = ShapeKeys()
-            keyblock = KeyBlock("Basis", {})
+            keyblock = KeyBlock("Basis", {}, scale)
             self.shape_keys.key_blocks.append(keyblock)
             for (name,shape) in stuff.meshInfo.shapes:
-                keyblock = KeyBlock(name, shape)
+                keyblock = KeyBlock(name, shape, scale)
                 self.shape_keys.key_blocks.append(keyblock)
                 
             
 
 class MeshVertex:
-    def __init__(self, idx, obj):
+    def __init__(self, idx, obj, scale):
         self.index = idx
-        self.co = obj.coord[idx]
+        self.co = scale*obj.coord[idx]
         self.normal = obj.vnorm[idx]
         self.groups = []
         
@@ -337,14 +337,14 @@ class ShapeKeys:
         
         
 class KeyBlock:
-    def __init__(self, name, shape):
+    def __init__(self, name, shape, scale):
         self.name = name
         self.value = 0.0
         self.data = shape
         target = list(shape.items())
         target.sort()                
         self.indexes = [t[0] for t in target]
-        self.vertices = [t[1] for t in target]
+        self.vertices = [scale*t[1] for t in target]
         
     def __repr__(self):
         return ("<KeyBlock %s>" % self.name)

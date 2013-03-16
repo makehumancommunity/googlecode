@@ -178,14 +178,19 @@ Definitions:  {
 #   Export
 #------------------------------------------------------------------
     
-def exportFbxFile(context, filepath, scale):    
+def exportFbxFile(context, filepath, scale=1.0, encoding='utf-8'):    
     fbx.settings.scale= scale
+    fbx.settings.encoding = encoding
     fbx.setCsysChangers()
     filepath = filepath.replace('\\','/')
-    fbx.message('Export "%s"' % filepath)
-    print("Exp", fbx.b2f)
-    fbx.filepath = filepath
-    fbx.activeFolder = os.path.dirname(filepath)
+    try:
+        fbx.filepath = filepath.encode(encoding)
+    except UnicodeEncodeError:
+        filepath = filepath.encode('utf-8', 'replace')
+        fbx.message('Cannot encode "%s" with %s codec.' % (filepath, encoding))
+        return
+    fbx.message('Export "%s"' % fbx.filepath)
+    fbx.activeFolder = os.path.dirname(fbx.filepath)
 
     fbx_data.makeNodes(context)
     fbx_data.makeTakes(context)
@@ -193,8 +198,8 @@ def exportFbxFile(context, filepath, scale):
     fp = open(filepath, "w")
     fp.write(Header1)    
     fp.write(
-        '            P: "DocumentUrl", "KString", "Url", "", "%s"\n' % filepath +
-        '            P: "SrcDocumentUrl", "KString", "Url", "", "%s"' % filepath )
+        '            P: "DocumentUrl", "KString", "Url", "", "%s"\n' % fbx.filepath +
+        '            P: "SrcDocumentUrl", "KString", "Url", "", "%s"' % fbx.filepath )
     fp.write(Header2)    
     fp.write(GlobalSettings)
     fp.write(DocumentDescription)

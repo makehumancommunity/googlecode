@@ -160,7 +160,7 @@ class ExportFBX(bpy.types.Operator, ExportHelper):
         fbx.settings.includePropertyTemplates = self.includePropertyTemplates
         fbx.settings.makeSceneNode = self.makeSceneNode
         fbx.settings.selectedOnly = self.selectedOnly
-        fbx_export.exportFbxFile(context, self.filepath, self.scale)
+        fbx_export.exportFbxFile(context, self.filepath, scale=self.scale)
         return {'FINISHED'}
  
     def draw(self, context):
@@ -201,7 +201,7 @@ class VIEW3D_OT_TestExportButton(bpy.types.Operator):
         scn = context.scene
         fbx.settings.Zup = scn.FbxZUp
         fbx.settings.boneAxis = AxisNumber[scn.FbxBoneAxis]
-        fbx_export.exportFbxFile(context, self.filepath, 1.0)
+        fbx_export.exportFbxFile(context, self.filepath)
         return {'FINISHED'}
 
  

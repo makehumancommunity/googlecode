@@ -70,14 +70,14 @@ def initialize(human, cfg):
     context = Context(scn)
     
     
-def addMesh(name, stuff, rig, isStuff=True):
+def addMesh(name, stuff, rig, isStuff=True, scale=1.0):
     global data
     me = types.Mesh(name+"Mesh")
     data.meshes.append(me)
     if isStuff:
-        me.fromStuff(stuff)
+        me.fromStuff(stuff, scale)
     else:
-        me.fromObject(stuff)
+        me.fromObject(stuff, scale)
     ob = types.Object(name+"Mesh", me, stuff)    
     data.objects.append(ob)
     context.scene.objects.append(ob)
@@ -87,9 +87,9 @@ def addMesh(name, stuff, rig, isStuff=True):
     return ob
     
 
-def addRig(name, boneInfo):
+def addRig(name, boneInfo, scale=1.0):
     global data
-    amt = types.Armature(name, boneInfo)
+    amt = types.Armature(name, boneInfo, scale)
     data.armatures.append(amt)
     rig = types.Object(name, amt)
     data.objects.append(rig)

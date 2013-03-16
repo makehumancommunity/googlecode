@@ -62,15 +62,15 @@ def exportFbx(human, filepath, config):
 
     bpy.initialize(human, config)
     boneInfo = stuffs[0].boneInfo
-    rig = bpy.addRig(name, boneInfo)
+    rig = bpy.addRig(name, boneInfo, scale=config.scale)
     for stuff in stuffs:
-        ob = bpy.addMesh(stuff.name, stuff, rig, True)
+        ob = bpy.addMesh(stuff.name, stuff, rig, isStuff=True, scale=config.scale)
         
     #name = os.path.splitext(os.path.basename(filepath))[0]
-    #bpy.addMesh(name, human.meshData, False)
+    #bpy.addMesh(name, human.meshData, isStuff=False)
     
     gui3d.app.progress(0, text="Exporting %s" % filepath)
-    io_fbx.fbx_export.exportFbxFile(bpy.context, filepath, 1.0)
+    io_fbx.fbx_export.exportFbxFile(bpy.context, filepath, scale=1.0, encoding=config.encoding)
     gui3d.app.progress(1)
     posemode.exitPoseMode()        
     return
