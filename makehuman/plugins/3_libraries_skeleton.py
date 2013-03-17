@@ -184,7 +184,10 @@ class SkeletonLibrary(gui3d.TaskView):
             self.skelObj.hide()
         self.setHumanTransparency(False)
         self.human.meshData.setPickable(True)
-        self.removeBoneHighlights()
+        try:
+            self.removeBoneHighlights()
+        except:
+            pass
 
         # Reset smooth setting
         self.human.setSubdivided(self.oldSmoothValue)
@@ -227,7 +230,10 @@ class SkeletonLibrary(gui3d.TaskView):
         """
         log.debug("Loading skeleton from rig file %s", filename)
 
-        self.removeBoneHighlights()
+        try:
+            self.removeBoneHighlights()
+        except:
+            pass
 
         if not filename:
             # Unload current skeleton
@@ -301,7 +307,10 @@ class SkeletonLibrary(gui3d.TaskView):
             Event fired when mouse hovers over a skeleton mesh facegroup
             """
             gui3d.TaskView.onMouseEntered(self, event)
-            self.removeBoneHighlights()
+            try:
+                self.removeBoneHighlights()
+            except:
+                pass
             self.highlightBone(event.group.name)
 
         @self.skelObj.mhEvent
@@ -310,7 +319,10 @@ class SkeletonLibrary(gui3d.TaskView):
             Event fired when mouse hovers off of a skeleton mesh facegroup
             """
             gui3d.TaskView.onMouseExited(self, event)
-            self.removeBoneHighlights()
+            try:
+                self.removeBoneHighlights()
+            except:
+                pass
 
             # Highlight bone selected in bone explorer again
             for rdio in self.boneSelector:
@@ -436,7 +448,10 @@ class SkeletonLibrary(gui3d.TaskView):
             def onClicked(event):
                 for rdio in self.boneSelector:
                     if rdio.selected:
-                        self.removeBoneHighlights()
+                        try:
+                            self.removeBoneHighlights()
+                        except:
+                            pass
                         self.highlightBone(str(rdio.text()))
 
     def setHumanTransparency(self, enabled):
