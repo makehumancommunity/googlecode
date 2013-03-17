@@ -89,7 +89,6 @@ class AnimationLibrary(gui3d.TaskView):
 
         self.tags = set()
 
-        self.lastSkeleton = None
         self.human = gui3d.app.selectedHuman
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
 
@@ -289,17 +288,6 @@ class AnimationLibrary(gui3d.TaskView):
         if not self.human.getSkeleton():
             gui3d.app.statusPersist("No skeleton selected. Please select a skeleton rig from the Skeleton library first.")
             return
-
-        # Detect when skeleton (rig type) has changed
-        if self.human.getSkeleton() and self.human.getSkeleton().name != self.lastSkeleton:
-            # Remove cached animation tracks (as they are mapped to a specific skeleton)
-            self.human.animated.removeAnimations()
-            self.anim = None
-            # NOTE that animation tracks only need to be removed when the rig
-            # structure changes, not when only joint positions are translated
-            # a bit because of a change to the human model.
-
-        self.lastSkeleton = self.human.getSkeleton().name
 
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
         self.human.meshData.setPickable(False)

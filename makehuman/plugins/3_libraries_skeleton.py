@@ -61,6 +61,7 @@ def _getSkeleton(self):
         # Loads new skeleton, creates new skeleton mesh and new animatedMesh object (with up-to-date rest coords)
         self._skeleton._library.chooseSkeleton(self._skeleton.file)
         # TODO have a more efficient way of adapting skeleton to new joint positions without re-reading rig files
+        # TODO Also, currently a tiny change in joints positions causes a new animatedMesh to be constructed, requiring all BVH motions to be reloaded (which is not necessary if the rig structure does not change). It should be enough to re-sync the rest coordinates in the animatedMesh and move the coord positions of the skeleton mesh.
         self._skeleton.dirty = False
     return self._skeleton
 
