@@ -130,13 +130,16 @@ class BVH():
             jointsData = [joint.matrixPoses for joint in self.getJoints() if not joint.isEndConnector()]
             # We leave out end effectors as they should not have animation data
         else:
+            nFrames = self.frameCount
             import re
             # Remove the tail from duplicate bone names
             for idx,jName in enumerate(jointsOrder):
+                if not jName:
+                    continue
                 r = re.search("(.*)_\d+$",jName)
                 if r:
                     jointsOrder[idx] = r.group(1)
-            jointsData = [self.getJoint(jointName).matrixPoses for jointName in jointsOrder]
+            jointsData = [self.getJoint(jointName).matrixPoses if jointName else np.tile(np.identity(4), nFrames).transpose().reshape((nFrames,4,4)) for jointName in jointsOrder]
 
         nJoints = len(jointsData)
         nFrames = len(jointsData[0])
@@ -410,8 +413,7 @@ class BVHJoint():
         self.rotOrder = rotOrder
 
         # Calculate pose matrix for each animation frame
-        self.matrixPoses = np.zeros((nFrames,4,4), dtype=np.float32)
-        self.matrixPoses[:] = np.identity(4)    # TODO maybe this can be done more efficiently
+        self.matrixPoses = np.tile(np.identity(4), nFrames).transpose().reshape((nFrames,4,4))
 
         # Add rotations to pose matrices
         if len(rotAngles) > 0 and len(rotAngles) < 3:
