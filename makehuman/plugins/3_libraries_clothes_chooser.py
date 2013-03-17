@@ -98,6 +98,12 @@ class ClothesTaskView(gui3d.TaskView):
         def onClicked(event):
             self.syncMedia()
 
+        self.optionsBox = self.addRightWidget(gui.GroupBox('Options'))
+        self.faceHidingTggl = self.optionsBox.addWidget(gui.ToggleButton("Hide faces under clothes"))
+        @self.faceHidingTggl.mhEvent
+        def onClicked(event):
+            self.updateFaceMasks(self.faceHidingTggl.selected)
+        self.faceHidingTggl.setSelected(True)
         
     def setClothes(self, human, filepath):
         if os.path.basename(filepath) == "clear.mhclo":
@@ -107,7 +113,7 @@ class ClothesTaskView(gui3d.TaskView):
             human.clothesProxies = {}
             self.clothesList = []
             human.activeClothing = None
-            self.updateFaceMasks()
+            self.updateFaceMasks(self.faceHidingTggl.selected)
             return
 
         proxy = mh2proxy.readProxyFile(human.meshData, filepath)
@@ -173,7 +179,7 @@ class ClothesTaskView(gui3d.TaskView):
                 human.activeClothing = None
             proxy = human.clothesProxies[uuid]
             del human.clothesProxies[uuid]
-            self.updateFaceMasks()
+            self.updateFaceMasks(self.faceHidingTggl.selected)
             log.message("Removed clothing %s %s", proxy.name, uuid)
             return
 
@@ -240,7 +246,7 @@ class ClothesTaskView(gui3d.TaskView):
         
         #self.clothesButton.setTexture(obj.replace('.obj', '.png'))
         self.orderRenderQueue()
-        self.updateFaceMasks()
+        self.updateFaceMasks(self.faceHidingTggl.selected)
 
     def orderRenderQueue(self):
         """
@@ -261,12 +267,22 @@ class ClothesTaskView(gui3d.TaskView):
         for uuid in self.clothesList:
             gui3d.app.addObject(human.clothesObjs[uuid])
 
-    def updateFaceMasks(self):
+    def updateFaceMasks(self, enableFaceHiding = True):
         """
         Apply facemask (deleteVerts) defined on clothes to body and lower layers
         of clothing. Uses order as defined in self.clothesList.
         """
         human = gui3d.app.selectedHuman
+        if not enableFaceHiding:
+            human.meshData.changeFaceMask(self.originalHumanMask)
+            human.meshData.updateIndexBufferFaces()
+            for uuid in self.clothesList:
+                obj = human.clothesObjs[uuid]
+                faceMask = np.ones(obj.mesh.getFaceCount(), dtype=bool)
+                obj.mesh.changeFaceMask(faceMask)
+                obj.mesh.updateIndexBufferFaces()
+            return
+
         vertsMask = np.ones(human.meshData.getVertexCount(), dtype=bool)
         log.debug("masked verts %s", np.count_nonzero(~vertsMask))
         for uuid in reversed(self.clothesList):
@@ -298,7 +314,6 @@ class ClothesTaskView(gui3d.TaskView):
 
                 # Modify accumulated (basemesh) verts mask
                 verts = np.argwhere(proxy.deleteVerts)[...,0]
-                print "hidden verts: %s" % verts
                 vertsMask[verts] = False
             log.debug("masked verts %s", np.count_nonzero(~vertsMask))
 
@@ -342,7 +357,7 @@ class ClothesTaskView(gui3d.TaskView):
                 del human.clothesProxies[uuid]
             self.clothesList = []
             human.activeClothing = None
-            self.updateFaceMasks()
+            self.updateFaceMasks(self.faceHidingTggl.selected)
             # self.clothesButton.setTexture('data/clothes/clear.png')
 
     def onHumanChanged(self, event):
