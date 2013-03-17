@@ -807,7 +807,7 @@ def fixProxyVGroup(vgroup):
 
 
 def getProxyShapes(rawShapes, proxy, scale):
-    if not rawShapes:
+    if not rawShapes or proxy.type != 'Proxy':
         return []
     shapes = []
     for (key, rawShape) in rawShapes:
