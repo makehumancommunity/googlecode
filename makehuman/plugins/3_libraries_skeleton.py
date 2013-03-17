@@ -52,6 +52,18 @@ class SkeletonAction(gui3d.Action):
         self.library.chooseSkeleton(self.before)
         return True
 
+def _getSkeleton(self):
+    if not self._skeleton:
+        return None
+    if self._skeleton.dirty:
+        log.debug("Rebuilding skeleton.")
+        # Rebuild skeleton (when human has changed)
+        # Loads new skeleton, creates new skeleton mesh and new animatedMesh object (with up-to-date rest coords)
+        self._skeleton._library.chooseSkeleton(self._skeleton.file)
+        # TODO have a more efficient way of adapting skeleton to new joint positions without re-reading rig files
+        self._skeleton.dirty = False
+    return self._skeleton
+
 class SkeletonLibrary(gui3d.TaskView):
 
     def __init__(self, category):
@@ -63,11 +75,14 @@ class SkeletonLibrary(gui3d.TaskView):
         self.extension = "rig"
 
         self.human = gui3d.app.selectedHuman
-        self.human.skeleton = None
+        self.human._skeleton = None
         self.human.animated = None
-        self.human.skeletonObject = None
+        # Attach getter to human to access the skeleton, that takes care of deferred
+        # updating when the skeleton should change
+        import types
+        self.human.getSkeleton = types.MethodType(_getSkeleton, self.human, self.human.__class__)
 
-        self.humanChanged = False
+        self.humanChanged = False   # Used for determining when joints need to be redrawn
 
         self.skelMesh = None
         self.skelObj = None
@@ -147,16 +162,11 @@ class SkeletonLibrary(gui3d.TaskView):
 
         self.reloadSkeletonChooser()
 
-        # Rebuild skeleton if human has changed
-        if self.human.skeleton and self.human.skeleton.dirty:
-            # TODO have a more efficient way of adapting skeleton to new joint positions without re-reading rig files
-            # TODO offer a skeleton getter that exporters can use that will rebuild the skeleton if it is dirty
-            self.chooseSkeleton(self.human.skeleton.file)
-            # Re-draw joints positions
-            self.drawJointHelpers()
-            self.human.skeleton.dirty = False
-            self.humanChanged = False
-        elif self.humanChanged:
+        # Make sure skeleton is updated when human has changed
+        self.human.getSkeleton()
+
+        # Re-draw joints positions if human has changed
+        if self.humanChanged:
             self.drawJointHelpers()
             self.humanChanged = False
 
@@ -179,11 +189,11 @@ class SkeletonLibrary(gui3d.TaskView):
         # Retrieve all .rig files
         files = searchFiles(self.rigPaths, [self.extension])
 
-        radioBtn = self.rigBox.addWidget(gui.RadioButton(self.rigSelector, "No skeleton", selected=not self.human.skeleton))
+        radioBtn = self.rigBox.addWidget(gui.RadioButton(self.rigSelector, "No skeleton", selected=not self.human.getSkeleton()))
         radioBtn.rigFile = None
         for rigFile in files:
             rigName = os.path.splitext(os.path.basename(rigFile))[0]
-            active = bool(self.human.skeleton and self.human.skeleton.file == rigFile)
+            active = bool(self.human.getSkeleton() and self.human.getSkeleton().file == rigFile)
             radioBtn = self.rigBox.addWidget(gui.RadioButton(self.rigSelector, rigName, selected=active))
             radioBtn.rigFile = rigFile
 
@@ -192,8 +202,8 @@ class SkeletonLibrary(gui3d.TaskView):
             def onClicked(event):
                 for rdio in self.rigSelector:
                     if rdio.selected:
-                        if self.human.skeleton:
-                            oldSkelFile = self.human.skeleton.file
+                        if self.human.getSkeleton():
+                            oldSkelFile = self.human.getSkeleton().file
                         else:
                             oldSkelFile = None
                         gui3d.app.do(SkeletonAction("Change skeleton",
@@ -211,7 +221,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
         if not filename:
             # Unload current skeleton
-            self.human.skeleton = None
+            self.human._skeleton = None
             self.human.animated = None
             if self.skelObj:
                 # Remove old skeleton mesh
@@ -224,23 +234,27 @@ class SkeletonLibrary(gui3d.TaskView):
             self.descrLbl.setText("Description: ")
             return
 
-        self.human.skeleton, boneWeights = skeleton.loadRig(filename, self.human.meshData)
+        # Load skeleton definition from .rig file
+        self.human._skeleton, boneWeights = skeleton.loadRig(filename, self.human.meshData)
+
         # Store a reference to the currently loaded rig
-        self.human.skeleton.file = filename
-        self.human.skeleton.dirty = False   # Flag used for deferred updating
+        self.human._skeleton.file = filename
+        self.human._skeleton.dirty = False   # Flag used for deferred updating
+        self.human._skeleton._library = self  # Temporary member, used for rebuilding skeleton
 
         # Created an AnimatedMesh object to manage the skeletal animation on the
         # human mesh and optionally additional meshes.
         # The animation manager object is accessible by other plugins via 
         # gui3d.app.currentHuman.animated.
-        self.human.animated = animation.AnimatedMesh(self.human.skeleton, self.human.meshData, boneWeights)
+        self.human.animated = animation.AnimatedMesh(self.human.getSkeleton(), self.human.meshData, boneWeights)
 
-        self.drawSkeleton(self.human.skeleton)
+        # (Re-)draw the skeleton
+        self.drawSkeleton(self.human.getSkeleton())
 
         self.reloadBoneExplorer()
-        self.boneCountLbl.setText("Bones: %s" % self.human.skeleton.getBoneCount())
-        if self.human.skeleton.name in self.rigDescriptions.keys():
-            descr = self.rigDescriptions[self.human.skeleton.name]
+        self.boneCountLbl.setText("Bones: %s" % self.human.getSkeleton().getBoneCount())
+        if self.human.getSkeleton().name in self.rigDescriptions.keys():
+            descr = self.rigDescriptions[self.human.getSkeleton().name]
         else:
             descr = "None available"
         self.descrLbl.setText("Description: %s" % descr)
@@ -268,7 +282,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.human.animated.addMesh(self.skelMesh, mapping)
 
         # Store a reference to the skeleton mesh object for other plugins
-        self.human.skeletonObject = self.skelObj
+        self.human._skeleton.object = self.skelObj
 
         # Add event listeners to skeleton mesh for bone highlighting
         @self.skelObj.mhEvent
@@ -403,10 +417,10 @@ class SkeletonLibrary(gui3d.TaskView):
             radioBtn.destroy()
         self.boneSelector = []
 
-        if not self.human.skeleton:
+        if not self.human.getSkeleton():
             return
 
-        for bone in self.human.skeleton.getBones():
+        for bone in self.human.getSkeleton().getBones():
             radioBtn = self.boneBox.addWidget(gui.RadioButton(self.boneSelector, bone.name))
             @radioBtn.mhEvent
             def onClicked(event):
@@ -424,8 +438,8 @@ class SkeletonLibrary(gui3d.TaskView):
     def onHumanChanged(self, event):
         human = event.human
         # Set flag to do a deferred skeleton update in the future
-        if human.skeleton:
-            human.skeleton.dirty = True
+        if human._skeleton:
+            human._skeleton.dirty = True
         self.humanChanged = True    # Used for updating joints
 
     def onHumanRotated(self, event):

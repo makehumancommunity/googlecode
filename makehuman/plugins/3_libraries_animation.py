@@ -202,7 +202,7 @@ class AnimationLibrary(gui3d.TaskView):
         return tags
 
     def loadAnimation(self, uuid, animName):
-        if not human.skeleton:
+        if not human.getSkeleton():
             log.error("Cannot load animations when no skeleton is selected.")
             gui3d.app.statusPersist("Error: cannot load animations when no skeleton is selected.")
             return
@@ -253,14 +253,14 @@ class AnimationLibrary(gui3d.TaskView):
             # Scale is only useful when using the joint locations of the BVH rig
             # or when drawing the BVH rig.
 
-        if self.human.skeleton.name == anim.collection.rig:
+        if self.human.getSkeleton().name == anim.collection.rig:
             # Skeleton and joint rig in BVH match, do a straight mapping of the
             # motion:
 
             # Load animation data from BVH file and add it to AnimatedMesh
             # This is a list that references a joint name in the BVH for each 
             # bone in the skeleton (breadth-first order):
-            jointToBoneMap = [bone.name for bone in self.human.skeleton.getBones()]
+            jointToBoneMap = [bone.name for bone in self.human.getSkeleton().getBones()]
             animTrack = bvhRig.createAnimationTrack(jointToBoneMap, getAnimationTrackName(anim.collection.uuid, anim.name))
             gui3d.app.statusPersist("")
         else:
@@ -271,7 +271,7 @@ class AnimationLibrary(gui3d.TaskView):
             gui3d.app.statusPersist("Animation loading is currently only implemented for the same rig as in BVH. Try selecting the %s skeleton from the skeleton library.", anim.collection.rig)
             return None
 
-        log.debug("Created animation track for %s rig.", self.human.skeleton.name)
+        log.debug("Created animation track for %s rig.", self.human.getSkeleton().name)
 
         # Sparsify data to test out interpolation
         log.debug("sparsifying anim with framerate %s to %s", animTrack.frameRate, 10)
@@ -286,41 +286,50 @@ class AnimationLibrary(gui3d.TaskView):
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
 
-        if not self.human.skeleton:
+        if not self.human.getSkeleton():
             gui3d.app.statusPersist("No skeleton selected. Please select a skeleton rig from the Skeleton library first.")
             return
 
-        # Detect when skeleton has changed
-        if self.human.skeleton and self.lastSkeleton and \
-           self.lastSkeleton != self.human.skeleton.name:
-            # Removed cached animation tracks (as they are mapped to a specific skeleton)
+        # Detect when skeleton (rig type) has changed
+        if self.human.getSkeleton() and self.human.getSkeleton().name != self.lastSkeleton:
+            # Remove cached animation tracks (as they are mapped to a specific skeleton)
             self.human.animated.removeAnimations()
             self.anim = None
+            # NOTE that animation tracks only need to be removed when the rig
+            # structure changes, not when only joint positions are translated
+            # a bit because of a change to the human model.
 
-        if self.human.skeleton:
-            self.lastSkeleton = self.human.skeleton.name
-        else:
-            self.lastSkeleton = None
+        self.lastSkeleton = self.human.getSkeleton().name
 
-        self.skelObj = self.human.skeletonObject
-        self.skelMesh = self.skelObj.mesh
+        self.oldHumanTransp = self.human.meshData.transparentPrimitives
+        self.human.meshData.setPickable(False)
 
+        self.skelObj = self.human.getSkeleton().object
         if self.skelObj:
-            self.skelObj.show()
-            # Show skeleton through human 
-            self.oldHumanTransp = self.human.meshData.transparentPrimitives
-            self.setHumanTransparency(True)
-            self.human.meshData.setPickable(False)
+            self.skelMesh = self.skelObj.mesh
+
+            if self.showSkeletonTggl.selected:
+                self.skelObj.show()
+                # Show skeleton through human 
+                self.setHumanTransparency(True)
+            else:
+                self.skelObj.hide()
+        else:
+            self.skelMesh = None
 
         self.frameSlider.setValue(0)
 
         # Only load mhanim files at first time or when "Reload" button is pressed
         if len(self.animations) == 0:
             self.reloadAnimations()
-        elif self.anim:
+
+        if self.anim:
+            # Start playing previously highlighted animation
             self.startPlayback()
-        else:
+        elif len(self.animations) > 0:
+            # Start playing first animation
             self.highlightAnimation(self.animations[0])
+            self.startPlayback()
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
@@ -402,8 +411,14 @@ class AnimationLibrary(gui3d.TaskView):
 
     def highlightAnimation(self, anim):
         self.stopPlayback()
-        if not self.human.skeleton:
+        if not self.human.getSkeleton():
             return
+
+        for rdio in self.animationSelector:
+            if rdio.anim == anim:
+                rdio.setSelected(True)
+            else:
+                rdio.setSelected(False)
 
         if not self.human.animated.hasAnimation(getAnimationTrackName(anim.collection.uuid, anim.name)):
             # Load animation track (containing the actual animation data)
@@ -452,7 +467,7 @@ class AnimationLibrary(gui3d.TaskView):
         gui3d.app.redraw()
 
     def updateAnimation(self, frame):
-        if not self.anim or not self.human.skeleton:
+        if not self.anim or not self.human.getSkeleton():
             return
         self.currFrame = frame
         self.human.animated.setActiveAnimation(self.anim.name)
@@ -481,7 +496,7 @@ class AnimationLibrary(gui3d.TaskView):
             self.loadAnimation(uuid, animName)        
 
     def saveHandler(self, human, file):
-        if self.human.animated and self.human.skeleton:
+        if self.human.animated and self.human.getSkeleton():
             for anim in self.human.animations:
                 file.write('animations %s %s\n' % (anim.collection.uuid, anim.name))
 
