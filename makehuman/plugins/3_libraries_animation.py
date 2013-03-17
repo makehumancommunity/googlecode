@@ -85,10 +85,12 @@ class AnimationLibrary(gui3d.TaskView):
         self.bvhRig = None
         self.animations = []
         self.anim = None
+        self.animTrack = None
         self.collections = {}
 
         self.tags = set()
 
+        self.lastSkeleton = None
         self.human = gui3d.app.selectedHuman
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
 
@@ -138,6 +140,7 @@ class AnimationLibrary(gui3d.TaskView):
         # Clear up old animations cache
         self.animations = []
         self.anim = None
+        self.animTrack = None
         for radioBtn in self.animationSelector:
             radioBtn.hide()
             radioBtn.destroy()
@@ -289,6 +292,18 @@ class AnimationLibrary(gui3d.TaskView):
             gui3d.app.statusPersist("No skeleton selected. Please select a skeleton rig from the Skeleton library first.")
             return
 
+        # Detect when skeleton (rig type) has changed
+        if self.human.getSkeleton() and self.human.getSkeleton().name != self.lastSkeleton:
+            # Remove cached animation tracks (as they are mapped to a specific skeleton)
+            self.human.animated.removeAnimations()
+            self.anim = None
+            self.animTrack = None
+            # NOTE that animation tracks only need to be removed when the rig
+            # structure changes, not when only joint positions are translated
+            # a bit because of a change to the human model.
+
+        self.lastSkeleton = self.human.getSkeleton().name
+
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
         self.human.meshData.setPickable(False)
 
@@ -313,6 +328,7 @@ class AnimationLibrary(gui3d.TaskView):
 
         if self.anim:
             # Start playing previously highlighted animation
+            self.highlightAnimation(self.anim)
             self.startPlayback()
         elif len(self.animations) > 0:
             # Start playing first animation
@@ -375,7 +391,7 @@ class AnimationLibrary(gui3d.TaskView):
             mh.removeTimer(self.timer)
             self.timer = None
         if self.perFramePlayback:
-            self.timer = mh.addTimer(max(30, int(1.0/self.anim.frameRate * 1000)), self.onFrameChanged)
+            self.timer = mh.addTimer(max(30, int(1.0/self.animTrack.frameRate * 1000)), self.onFrameChanged)
         else: # 30 FPS fixed
             self.timer = mh.addTimer(30, self.onFrameChanged)
 
@@ -417,15 +433,16 @@ class AnimationLibrary(gui3d.TaskView):
                 return
             self.human.animated.addAnimation(animationTrack)
 
+        self.anim = anim
         self.human.animated.setActiveAnimation(getAnimationTrackName(anim.collection.uuid, anim.name))
-        self.anim = self.human.animated.getAnimation(getAnimationTrackName(anim.collection.uuid, anim.name))
+        self.animTrack = self.human.animated.getAnimation(getAnimationTrackName(anim.collection.uuid, anim.name))
         log.debug("Setting animation to %s", anim.name)
 
         self.human.animated.setAnimateInPlace(self.animateInPlaceTggl.selected)
 
         if self.frameSlider:
             self.frameSlider.setMin(0)
-            maxFrame = self.anim.nFrames-1
+            maxFrame = self.animTrack.nFrames-1
             if maxFrame < 1:
                 maxFrame = 1
             self.frameSlider.setMax(maxFrame)
@@ -447,10 +464,10 @@ class AnimationLibrary(gui3d.TaskView):
             self.frameSlider.setValue(frame)
             self.updateAnimation(frame)
         else:
-            self.human.animated.setActiveAnimation(self.anim.name)
-            self.anim.interpolationType = 1 if self.interpolate else 0
+            self.human.animated.setActiveAnimation(self.animTrack.name)
+            self.animTrack.interpolationType = 1 if self.interpolate else 0
             self.human.animated.update(1.0/30.0)
-            frame = self.anim.getFrameIndexAtTime(self.human.animated.getTime())[0]
+            frame = self.animTrack.getFrameIndexAtTime(self.human.animated.getTime())[0]
             self.frameSlider.setValue(frame)
         gui3d.app.redraw()
 
@@ -458,8 +475,8 @@ class AnimationLibrary(gui3d.TaskView):
         if not self.anim or not self.human.getSkeleton():
             return
         self.currFrame = frame
-        self.human.animated.setActiveAnimation(self.anim.name)
-        self.anim.interpolationType = 1 if self.interpolate else 0
+        self.human.animated.setActiveAnimation(self.animTrack.name)
+        self.animTrack.interpolationType = 1 if self.interpolate else 0
         self.human.animated.setToFrame(frame)
 
     def setHumanTransparency(self, enabled):
