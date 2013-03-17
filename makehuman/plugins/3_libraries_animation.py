@@ -483,6 +483,7 @@ class AnimationLibrary(gui3d.TaskView):
             self.human.animated.update(1.0/30.0)
             frame = self.animTrack.getFrameIndexAtTime(self.human.animated.getTime())[0]
             self.frameSlider.setValue(frame)
+            self.updateProxies()
         gui3d.app.redraw()
 
     def updateAnimation(self, frame):
@@ -492,6 +493,29 @@ class AnimationLibrary(gui3d.TaskView):
         self.human.animated.setActiveAnimation(self.animTrack.name)
         self.animTrack.interpolationType = 1 if self.interpolate else 0
         self.human.animated.setToFrame(frame)
+        self.updateProxies()
+
+    def updateProxies(self):
+        """
+        Apply animation (pose) on proxy objects (proxy mesh, clothes, hair)
+        """
+        if self.human.proxy:
+            self.human.updateProxyMesh()
+
+        if self.human.hairObj and self.human.hairProxy:            
+            mesh = self.human.hairObj.getSeedMesh()
+            self.human.hairProxy.update(mesh)
+            mesh.update()
+            if self.human.hairObj.isSubdivided():
+                self.human.hairObj.getSubdivisionMesh()
+
+        for (name,clo) in self.human.clothesObjs.items():            
+            if clo:
+                mesh = clo.getSeedMesh()
+                self.human.clothesProxies[name].update(mesh)
+                mesh.update()
+                if clo.isSubdivided():
+                    clo.getSubdivisionMesh()
 
     def setHumanTransparency(self, enabled):
         if enabled:
