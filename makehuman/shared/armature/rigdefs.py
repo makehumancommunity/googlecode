@@ -367,7 +367,6 @@ class CPoseArmature(CArmature):
         nVerts = len(obj.coord)
         coords = np.zeros((nVerts,4), float)
         for bname,data in self.boneWeights.items():
-            print "%s %s" % (bname, data)
             bone = self.bones[bname]
             verts,weights = data
             vec = np.dot(bone.matrixVerts, self.restCoords[verts].transpose())
