@@ -602,3 +602,58 @@ def loadRig(filename, mesh):
     skel = Skeleton(rigName)
     weights = skel.fromRigFile(filename, mesh)
     return skel, weights
+
+# TODO code replication is not nice...
+def loadJointsMapping(rigName, skel):
+    """
+    Returns mapping of skeleton bones to reference rig bone names.
+    Return format is a breadth-first ordered list with for each bone in the
+    skeleton respectively a reference bone name. Entries can be None if no
+    mapping to a bone exists. 
+    """
+    import os
+
+    os.path.join
+    path = os.path.join("tools/blender26x/mh_mocap_tool/target_rigs/", "%s.trg" % rigName)
+    if not os.path.isfile(path):
+        raise RuntimeError("File %s with skeleton rig mapping does not exist.", path)
+
+    fp = open(path, "r")
+    status = 0
+    bones = []
+    renames = {}
+    ikbones = []
+    for line in fp:
+        words = line.split()
+        if len(words) > 0:
+            key = words[0].lower()
+            if key[0] == "#":
+                continue
+            elif key == "name:":
+                name = words[1]
+            elif key == "bones:":
+                status = 1
+            elif key == "ikbones:":
+                status = 2
+            elif key == "renames:":
+                status = 3
+            elif len(words) != 2:
+                print("Ignored illegal line", line)
+            elif status == 1:
+                bones.append( (words[0], nameOrNone(words[1])) )
+            elif status == 2:
+                ikbones.append( (words[0], nameOrNone(words[1])) )
+            elif status == 3:
+                renames[words[0]] = nameOrNone(words[1])
+    fp.close()
+    #return (name, bones,renames,ikbones)
+
+    boneMap = {}
+    for (skelBone, refBone) in bones:
+        boneMap[skelBone] = refBone
+
+    return [boneMap[bone.name] if bone.name in boneMap.keys() else None  for bone in skel.getBones()]
+
+def nameOrNone(string):
+    return string if string != "None" else None
+

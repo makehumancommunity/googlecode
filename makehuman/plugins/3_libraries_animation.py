@@ -90,6 +90,8 @@ class AnimationLibrary(gui3d.TaskView):
 
         self.tags = set()
 
+        self.oldSmoothValue = False
+
         self.lastSkeleton = None
         self.human = gui3d.app.selectedHuman
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
@@ -269,9 +271,14 @@ class AnimationLibrary(gui3d.TaskView):
             # Skeleton and joint rig in BVH are not the same, retarget/remap
             # the motion data:
 
-            # TODO implement retarget/remap
-            gui3d.app.statusPersist("Animation loading is currently only implemented for the same rig as in BVH. Try selecting the %s skeleton from the skeleton library.", anim.collection.rig)
-            return None
+            try:
+                jointToBoneMap = skeleton.loadJointsMapping(self.human.getSkeleton().name, self.human.getSkeleton())
+                # TODO this only works if the BVH file contains only reference rig bone names (as is the case with rigid and soft1 rigs), else you need to do a second map
+            except:
+                gui3d.app.statusPersist("Cannot apply motion on the selected skeleton %s because there is no target mapping file for it.", self.human.getSkeleton().name)
+                return None
+
+            animTrack = bvhRig.createAnimationTrack(jointToBoneMap, getAnimationTrackName(anim.collection.uuid, anim.name))
 
         log.debug("Created animation track for %s rig.", self.human.getSkeleton().name)
 
@@ -303,6 +310,10 @@ class AnimationLibrary(gui3d.TaskView):
             # a bit because of a change to the human model.
 
         self.lastSkeleton = self.human.getSkeleton().name
+
+        # Disable smoothing in animation library
+        self.oldSmoothValue = self.human.isSubdivided()
+        self.human.setSubdivided(False)
 
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
         self.human.meshData.setPickable(False)
@@ -347,6 +358,9 @@ class AnimationLibrary(gui3d.TaskView):
 
         self.skelObj = None 
         self.skelMesh = None
+
+        # Reset smooth setting
+        self.human.setSubdivided(self.oldSmoothValue)
 
     def createPlaybackControl(self):
         self.playbackBox = self.addRightWidget(gui.GroupBox('Playback'))

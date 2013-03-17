@@ -83,6 +83,8 @@ class SkeletonLibrary(gui3d.TaskView):
         import types
         self.human.getSkeleton = types.MethodType(_getSkeleton, self.human, self.human.__class__)
 
+        self.oldSmoothValue = False
+
         self.humanChanged = False   # Used for determining when joints need to be redrawn
 
         self.skelMesh = None
@@ -151,6 +153,10 @@ class SkeletonLibrary(gui3d.TaskView):
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
 
+        # Disable smoothing in skeleton library
+        self.oldSmoothValue = self.human.isSubdivided()
+        self.human.setSubdivided(False)
+
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
         self.setHumanTransparency(True)
         self.human.meshData.setPickable(False)
@@ -179,6 +185,9 @@ class SkeletonLibrary(gui3d.TaskView):
         self.setHumanTransparency(False)
         self.human.meshData.setPickable(True)
         self.removeBoneHighlights()
+
+        # Reset smooth setting
+        self.human.setSubdivided(self.oldSmoothValue)
 
     def reloadSkeletonChooser(self):
         # Remove old radio buttons

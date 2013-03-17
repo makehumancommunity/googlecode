@@ -38,6 +38,8 @@ import log
 import language
 import texture
 
+import numpy as np
+
 class BackgroundAction(gui3d.Action):
     def __init__(self, name, library, side, before, after):
         super(BackgroundAction, self).__init__(name)
@@ -154,7 +156,6 @@ class BackgroundChooser(gui3d.TaskView):
             if os.path.splitext(filename)[1] == ".clear":
                 filename = None
 
-            print filename
             if self.filenames[side]:
                 oldBg = self.filenames[side][0]
             else:
@@ -265,7 +266,8 @@ class BackgroundChooser(gui3d.TaskView):
         gui3d.app.selectedHuman.show()
 
     def onHumanTranslated(self, event):
-        pass
+        self.updateBackgroundPosition()
+        #self.backgroundImage.setPosition(gui3d.app.selectedHuman.getPosition())
 
     def onHumanChanging(self, event):
         
@@ -289,9 +291,23 @@ class BackgroundChooser(gui3d.TaskView):
             self.backgroundImage.mesh.resize(2.0 * aspect, 2.0)
 
             self.backgroundImage.mesh.setTexture(filename)
+            self.fixateBackground(aspect)
             self.backgroundImage.show()
         else:
             self.backgroundImage.hide()
+
+    def fixateBackground(self, aspect):
+        self.referencePos = np.asarray(gui3d.app.selectedHuman.getPosition(), dtype=np.float32)
+
+        self.backgroundWidth = 2.0 * aspect #self.texture.width
+        self.backgroundHeight = 2.0 #self.texture.height
+        self.originalWidth = 2.0 * aspect #self.texture.width
+        self.originalHeight = 2.0 #self.texture.height
+
+        _, _, z = gui3d.app.modelCamera.convertToScreen(self.referencePos[0], self.referencePos[1], self.referencePos[2])
+        x, y, _ = self.backgroundImage.getPosition()
+        self.leftTop = np.asarray(gui3d.app.modelCamera.convertToWorld3D(x, y, z), dtype=np.float32)
+        self.rightBottom = np.asarray(gui3d.app.modelCamera.convertToWorld3D(x + self.backgroundWidth, y + self.backgroundHeight, z), dtype=np.float32)
 
     def onHumanRotated(self, event):
         if self.isBackgroundEnabled():
@@ -301,6 +317,27 @@ class BackgroundChooser(gui3d.TaskView):
         if not self.isBackgroundShowing():
             return None
         return self.filenames[self.getCurrentSide()]
+
+    def updateBackgroundPosition(self):
+        if self.isBackgroundShowing():
+            reference = np.asarray(gui3d.app.selectedHuman.getPosition(), dtype=np.float32)
+            ## hacks ###
+            diff = reference - self.referencePos
+            diff[1] = -diff[1]
+            diff = diff / 1000
+            ############
+            self.leftTop = self.leftTop + diff
+            self.rightBottom = self.rightBottom + diff
+
+            leftTop = gui3d.app.modelCamera.convertToScreen(self.leftTop[0], self.leftTop[1], self.leftTop[2])
+            rightBottom = gui3d.app.modelCamera.convertToScreen(self.rightBottom[0], self.rightBottom[1], self.rightBottom[2])
+
+            self.backgroundImage.setPosition([leftTop[0], leftTop[1], 1])
+            self.backgroundWidth = rightBottom[0]-leftTop[0]
+            self.backgroundHeight = rightBottom[1]-leftTop[1]
+            self.backgroundImage.mesh.resize(self.backgroundWidth, self.backgroundHeight)
+
+            self.referencePos = reference
 
 
 class TextureProjectionView(gui3d.TaskView) :

@@ -74,19 +74,6 @@ class Image(object):
     def save(self, path):
         image_qt.save(path, self._data)
 
-    def resized_(self, width, height):
-        dw, dh = width, height
-        sw, sh = self.size
-        xmap = np.floor((np.arange(dw) + 0.5) * sw / dw).astype(int)
-        ymap = np.floor((np.arange(dh) + 0.5) * sh / dh).astype(int)
-        return self._data[ymap,:][:,xmap]
-
-    def resized(self, width, height):
-        return Image(data = self.resized_(width, height))
-
-    def resize(self, width, height):
-        self._data = self.resized_(width, height)
-
     def blit(self, other, x, y):
         dh, dw, dc = self._data.shape
         sh, sw, sc = other._data.shape

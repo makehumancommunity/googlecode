@@ -1,18 +1,11 @@
 # author Jonas Hauquier
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 14378a80-f35c-413b-bbf8-16084adf20d2
-# basemesh alpha_7
+uuid 14378a80-f35c-413b-bbf8-16084adf20d2
+basemesh alpha_7
 
 # name Shirt_medium
-# material Shirt
-  diffuse_color 0.0122 0.0122 0.0122
-  diffuse_intensity 0.8935
-  specular_color 1.0000 1.0000 1.0000
-  specular_intensity 0.02336
-  alpha 1
-  texture ShirtTex diffuse 1
-# texVerts 0
+texVerts 0
 0.6206 0.8000
 0.6092 0.7964
 0.6117 0.7918
