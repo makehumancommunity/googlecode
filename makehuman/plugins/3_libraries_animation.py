@@ -130,6 +130,12 @@ class AnimationLibrary(gui3d.TaskView):
                 self.setHumanTransparency(False)
         self.showSkeletonTggl.setSelected(True)
 
+        self.skinProxiesTggl = displayBox.addWidget(gui.ToggleButton("Skin clothes and hair"))
+        @self.skinProxiesTggl.mhEvent
+        def onClicked(event):
+            self.setupProxySkinning()
+        self.skinProxiesTggl.setSelected(False)
+
         self.createPlaybackControl()
 
         self.animationSelector = []
@@ -331,6 +337,8 @@ class AnimationLibrary(gui3d.TaskView):
         else:
             self.skelMesh = None
 
+        self.setupProxySkinning()
+
         self.frameSlider.setValue(0)
 
         # Only load mhanim files at first time or when "Reload" button is pressed
@@ -358,6 +366,12 @@ class AnimationLibrary(gui3d.TaskView):
 
         self.skelObj = None 
         self.skelMesh = None
+
+        # Restore possible hidden proxies (clothes and hair)
+        for (name,obj) in self.human.clothesObjs.items():
+            obj.show()
+        if self.human.hairObj:
+            self.human.hairObj.show()
 
         # Reset smooth setting
         self.human.setSubdivided(self.oldSmoothValue)
@@ -495,10 +509,45 @@ class AnimationLibrary(gui3d.TaskView):
         self.human.animated.setToFrame(frame)
         self.updateProxies()
 
+    def setupProxySkinning(self):
+        # Remove all meshes but the human and skeleton mesh from the animatedMesh object
+        for mName in self.human.animated.getMeshes()[2:]:
+            self.human.animated.removeMesh(mName)
+            # TODO it's more optimized not to remove all proxy object meshes every time
+
+        _, bodyWeights = self.human.animated.getMesh("base.obj")
+
+        # Proxy mesh (always animate)
+        if self.human.proxy and self.human.isProxied():
+            weights = skeleton.getProxyWeights(self.human.proxy, bodyWeights, self.human.getProxyMesh())
+            self.human.animated.addMesh(self.human.getProxyMesh(), weights)
+
+        # Generate a vertex-to-bone mapping derived from that of the human for all proxy objects
+        if self.skinProxiesTggl.selected:
+            # Clothes
+            for (name,obj) in self.human.clothesObjs.items():
+                proxy = self.human.clothesProxies[name]
+                weights = skeleton.getProxyWeights(proxy, bodyWeights, obj.mesh)
+                self.human.animated.addMesh(obj.mesh, weights)
+                obj.show()
+
+            # Hair
+            if self.human.hairObj and self.human.hairProxy:
+                weights = skeleton.getProxyWeights(self.human.hairProxy, bodyWeights, self.human.hairObj.mesh)
+                self.human.animated.addMesh(self.human.hairObj.mesh, weights)
+                self.human.hairObj.show()
+        else:
+            # Hide not animated proxies (clothes and hair)
+            for (name,obj) in self.human.clothesObjs.items():
+                obj.hide()
+            if self.human.hairObj:
+                self.human.hairObj.hide()
+
     def updateProxies(self):
         """
         Apply animation (pose) on proxy objects (proxy mesh, clothes, hair)
         """
+        return
         if self.human.proxy:
             self.human.updateProxyMesh()
 
@@ -518,10 +567,16 @@ class AnimationLibrary(gui3d.TaskView):
                     clo.getSubdivisionMesh()
 
     def setHumanTransparency(self, enabled):
-        if enabled:
-            self.human.meshData.setTransparentPrimitives(len(self.human.meshData.fvert))
+        if self.human.proxy and self.human.isProxied():
+            if enabled:
+                self.human.getProxyMesh().setTransparentPrimitives(len(self.human.getProxyMesh().fvert))
+            else:
+                self.human.getProxyMesh().setTransparentPrimitives(0)
         else:
-            self.human.meshData.setTransparentPrimitives(self.oldHumanTransp)
+            if enabled:
+                self.human.meshData.setTransparentPrimitives(len(self.human.meshData.fvert))
+            else:
+                self.human.meshData.setTransparentPrimitives(self.oldHumanTransp)
 
     def loadHandler(self, human, values):
         if values[0] == "animations" and len(values) >= 3:

@@ -167,6 +167,7 @@ class AnimatedMesh(object):
         self.__playTime = 0.0
 
         self.__inPlace = False
+        self.onlyAnimateVisible = True
 
     def addAnimation(self, anim):
         self.__animations[anim.name] = anim
@@ -210,10 +211,10 @@ class AnimatedMesh(object):
         self.__vertexToBoneMaps.append(vertexToBoneMapping)
         self.__meshes.append(mesh)
 
-    def removeMesh(self, mesh):
+    def removeMesh(self, name):
         rIdx = -1
         for idx,m in enumerate(self.__meshes):
-            if mesh == m:
+            if name == m.name:
                 rIdx = idx
                 break
 
@@ -223,6 +224,10 @@ class AnimatedMesh(object):
             del self.__meshes[rIdx]
             del self.__originalMeshCoords[rIdx]
             del self.__vertexToBoneMaps[rIdx]
+
+    def containsMesh(self, mesh):
+        mesh2, _ = self.getMesh(mesh.name)
+        return mesh2 == mesh
 
     def getMesh(self, name):
         rIdx = -1
@@ -275,6 +280,8 @@ class AnimatedMesh(object):
             # TODO pass poseVerts matrices immediately from animation track for performance improvement (cache them)
             self.__skeleton.setPose(poseState)
             for idx,mesh in enumerate(self.__meshes):
+                if self.onlyAnimateVisible and not mesh.visibility:
+                    continue
                 posedCoords = self.__skeleton.skinMesh(self.__originalMeshCoords[idx], self.__vertexToBoneMaps[idx])
                 # TODO you could avoid an array copy by passing the mesh.coord list directly and modifying it in place
                 self._updateMeshVerts(mesh, posedCoords[:,:3])

@@ -603,6 +603,43 @@ def loadRig(filename, mesh):
     weights = skel.fromRigFile(filename, mesh)
     return skel, weights
 
+def getProxyWeights(proxy, humanWeights, mesh):
+    import mh2proxy
+
+    # Zip vertex indices and weights
+    rawWeights = {}
+    for (key, val) in humanWeights.items():
+        indxs, weights = val
+        rawWeights[key] = zip(indxs, weights)
+    vertexWeights = mh2proxy.getProxyWeights(rawWeights, proxy)
+
+    '''
+    # Unzip and normalize weights
+    result = {}
+    for (key,val) in weights.items():
+        unzipped = zip(*val)
+        result[key] = ( list(unzipped[0]), np.asarray(unzipped[1], dtype=np.float32) )
+    return result
+    '''
+
+    # Unzip and normalize weights (and put them in np format)
+    boneWeights = {}
+    wtot = np.zeros(mesh.getVertexCount(), np.float32)
+    for vgroup in vertexWeights.values():
+        for vn,w in vgroup:
+            wtot[vn] += w
+
+    for bname,vgroup in vertexWeights.items():
+        weights = np.zeros(len(vgroup), np.float32)
+        verts = []
+        n = 0
+        for vn,w in vgroup:
+            verts.append(vn)
+            weights[n] = w/wtot[vn]
+            n += 1
+        boneWeights[bname] = (verts, weights)
+    return boneWeights
+
 # TODO code replication is not nice...
 def loadJointsMapping(rigName, skel):
     """
@@ -638,7 +675,7 @@ def loadJointsMapping(rigName, skel):
             elif key == "renames:":
                 status = 3
             elif len(words) != 2:
-                print("Ignored illegal line", line)
+                log.debug("Ignored illegal line", line)
             elif status == 1:
                 bones.append( (words[0], nameOrNone(words[1])) )
             elif status == 2:
