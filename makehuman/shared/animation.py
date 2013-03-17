@@ -220,7 +220,10 @@ class AnimatedMesh(object):
 
         if rIdx > -1:
             # First restore rest coords of mesh, then remove it
-            self._updateMeshVerts(self.__meshes[rIdx], self.__originalMeshCoords[rIdx][:,:3])
+            try:
+                self._updateMeshVerts(self.__meshes[rIdx], self.__originalMeshCoords[rIdx][:,:3])
+            except:
+                pass    # Don't fail if the mesh was already detached/destroyed
             del self.__meshes[rIdx]
             del self.__originalMeshCoords[rIdx]
             del self.__vertexToBoneMaps[rIdx]
