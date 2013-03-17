@@ -497,7 +497,7 @@ class AnimationLibrary(gui3d.TaskView):
             self.human.animated.update(1.0/30.0)
             frame = self.animTrack.getFrameIndexAtTime(self.human.animated.getTime())[0]
             self.frameSlider.setValue(frame)
-            self.updateProxies()
+            #self.updateProxies()
         gui3d.app.redraw()
 
     def updateAnimation(self, frame):
@@ -507,7 +507,7 @@ class AnimationLibrary(gui3d.TaskView):
         self.human.animated.setActiveAnimation(self.animTrack.name)
         self.animTrack.interpolationType = 1 if self.interpolate else 0
         self.human.animated.setToFrame(frame)
-        self.updateProxies()
+        #self.updateProxies()
 
     def setupProxySkinning(self):
         # Remove all meshes but the human and skeleton mesh from the animatedMesh object
@@ -546,8 +546,10 @@ class AnimationLibrary(gui3d.TaskView):
     def updateProxies(self):
         """
         Apply animation (pose) on proxy objects (proxy mesh, clothes, hair)
+        by fitting them to the basemesh (the slow way).
+        It is faster to skin them along with the basemesh (by adding them to
+        an animatedMesh object together with a vertex-bone mapping and weighting).
         """
-        return
         if self.human.proxy:
             self.human.updateProxyMesh()
 
