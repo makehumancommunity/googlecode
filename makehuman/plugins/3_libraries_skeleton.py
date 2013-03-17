@@ -467,6 +467,11 @@ class SkeletonLibrary(gui3d.TaskView):
             human._skeleton.dirty = True
         self.humanChanged = True    # Used for updating joints
 
+    def onHumanChanging(self, event):
+        human = event.human
+        if event.change == 'reset':
+            self.chooseSkeleton(None)
+
     def onHumanRotated(self, event):
         if self.skelObj:
             self.skelObj.setRotation(gui3d.app.selectedHuman.getRotation())

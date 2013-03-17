@@ -606,6 +606,14 @@ class AnimationLibrary(gui3d.TaskView):
         if self.skelObj:
             self.skelObj.setPosition(gui3d.app.selectedHuman.getPosition())
 
+    def onHumanChanging(self, event):
+        human = event.human
+        if event.change == 'reset':
+            self.stopPlayback()
+            human.animations = []
+            self.anim = None
+            self.animTrack = None
+
     def onMouseEntered(self, event):
         pass
 
