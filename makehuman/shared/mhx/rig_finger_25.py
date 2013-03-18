@@ -23,7 +23,7 @@ Finger bone definitions
 """
 
 
-from armature.flags import *
+from .flags import *
 from . import posebone
 from posebone import addPoseBone
 

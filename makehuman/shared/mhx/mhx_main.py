@@ -38,13 +38,10 @@ import log
 
 import mh2proxy
 import exportutils
-import armature as amtpkg
 import warpmodifier
 import posemode
 import exportutils
 
-
-import armature as amtpkg
 from armature.rigdefs import CArmature
 
 from . import posebone

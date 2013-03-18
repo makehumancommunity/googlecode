@@ -130,11 +130,14 @@ class PoseLoadTaskView(gui3d.TaskView):
             modifier = None
         
         amt = human.armature
+        print("AMT", amt)
         if amt:
             pass
             #amt.rebuild()
         else:
             amt = human.armature = amtpkg.rigdefs.createPoseRig(human, "soft1")            
+        print("New", amt)
+        print(amt.bones.keys())
         amt.setModifier(modifier)
         amt.readMhpFile(filepath)
         #amt.listPose()

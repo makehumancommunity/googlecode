@@ -23,7 +23,7 @@ Arm bone definitions
 """
 
 
-from armature.flags import *
+from .flags import *
 from . import posebone
 from posebone import addPoseBone
 
@@ -331,7 +331,7 @@ def ShoulderControlPoses(fp, amt):
 
     # Elbow lock
     
-    if amt.exporting:
+    if True:
         addPoseBone(fp, amt, 'Elbow_L', 'MHBall025', None, (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, 
             [
             #('LimitDist', 0, 0, ['DistSternum', 'Sternum', 'LIMITDIST_INSIDE']),

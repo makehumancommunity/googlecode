@@ -23,7 +23,7 @@ Arm bone definitions
 """
 
 
-from armature.flags import *
+from .flags import *
 from .posebone import addPoseBone
 
 prcUpArmVec    = 0.15
@@ -373,7 +373,7 @@ def ArmControlPoses(fp, amt):
          ('CopyRot', 0, 0, ['WristRot', 'Wrist_R', (1,1,1), (0,0,0), False])
         ])
 
-    if amt.exporting:
+    if True:
         # IK arm
     
         addPoseBone(fp, amt, 'UpArmIK_L', None, 'IK_L', (1,1,1), (0,0,0), (1,1,1), 

@@ -35,43 +35,23 @@ import transformations as tm
 import exportutils
 from exportutils.config import Config
     
-from .flags import *
+#-------------------------------------------------------------------------------        
+#   These flags are the same as in mhx.flags
+#-------------------------------------------------------------------------------        
 
-#
-#
-#
+F_CON = 0x0001
+F_DEF = 0x0002
+F_RES = 0x0004
+F_WIR = 0x0008
+F_NOLOC = 0x0020
+F_LOCK = 0x0040
+F_HID = 0x0080
+F_NOCYC = 0x0100
+F_NOSCALE = 0x0200
+F_NOROT = 0x0400
 
-VISIBLE_LAYERS = L_MAIN|L_UPSPNFK|L_LARMFK|L_LLEGFK|L_RARMFK|L_RLEGFK
-
-ACTIVE_LAYERS = (
-    L_MAIN|L_UPSPNFK|L_LARMFK|L_LLEGFK|L_LHANDFK|L_LHANDIK|L_RHANDIK|
-    L_RARMFK|L_RLEGFK|L_RHANDFK|L_HEAD|L_LPALM|L_RPALM|
-    L_TWEAK|L_HELP|L_MSCL|L_DEF
-)
-
-LayerNames = [
-    (L_MAIN, "Root"),
-    (L_UPSPNFK, "Spine"),
-    (L_HEAD, "Head"),
-    (L_TWEAK, "Tweak"),
-
-    (L_LARMFK, "Left Arm"),
-    (L_LLEGFK, "Left Leg"),
-    (L_LPALM, "Left Palm"),
-    (L_LHANDIK, "Left Fingers"),
-    (L_LHANDFK, "Left Links"),
-
-    (L_RARMFK, "Right Arm"),
-    (L_RLEGFK, "Right Leg"),
-    (L_RHANDFK, "Right Links"),
-    (L_RHANDIK, "Right Fingers"),
-    (L_RPALM, "Right Palm"),
-
-    (L_HELP, "Help"),
-    (L_MSCL, "Muscles"),
-    (L_DEF, "Deform")
-]
-       
+L_MAIN = 0x0001
+    
 #-------------------------------------------------------------------------------        
 #   Armature base class.
 #   Used by export armatures (in mhx_rig.py) and pose armatures (in this file)
@@ -85,7 +65,6 @@ class CArmature:
         self.mesh = human.meshData
         self.config = config
         self.rigtype = config.rigtype
-        self.exporting = False
         self.proxies = {}
         self.locations = {}
         self.rigHeads = {}
@@ -99,24 +78,11 @@ class CArmature:
         self.joints = []
         self.headsTails = []
         self.boneDefs = []
-        
-        self.boneGroups = []
-        self.recalcRoll = []              
-        self.vertexGroupFiles = []
-        self.gizmoFiles = []
-        self.headName = 'Head'
-        self.objectProps = [("MhxRig", '"%s"' % config.rigtype)]
-        self.armatureProps = []
-        self.customProps = []
-        
+                
 
     def __repr__(self):
         return ("  <CArmature %s %s>" % (self.name, self.rigtype))
         
-
-    def dynamicLocations(self):
-        return
-
 
     def prefixWeights(self, weights, prefix):
         pweights = {}
@@ -165,7 +131,7 @@ class CArmature:
                 elif key == "-ik":
                     pass
 
-            self.boneDefs.append((bone, roll, parent, flags, L_MAIN, NoBB))
+            self.boneDefs.append((bone, roll, parent, flags, L_MAIN, None))
             self.rigHeads[bone] = head - self.origin
             self.rigTails[bone] = tail - self.origin
             
@@ -196,12 +162,14 @@ class CPoseArmature(CArmature):
         self.roots = []
         self.controls = []
         self.deforms = []
+        """
         if self.rigtype == 'mhx':
             self.visible = VISIBLE_LAYERS
             self.last = 32
         else:
             self.visible = 1
             self.last = 1
+        """
 
         self.setup()
 
@@ -232,14 +200,6 @@ class CPoseArmature(CArmature):
             y = self.restCoords[vn]
             log.debug("   %d (%.4f %.4f %.4f) (%.4f %.4f %.4f)", vn, x[0], x[1], x[2], y[0], y[1], y[2])
 
-
-    def assignDrivers(self, drivers):
-        for drv in drivers:
-            words = drv.channel.split('"')
-            if words[0] == "pose.bones[":
-                bone = self.bones[words[1]]
-                bone.drivers.append(drv)     
-                
 
     def listPose(self):
         for bone in self.boneList:
@@ -372,36 +332,23 @@ class CPoseArmature(CArmature):
             vec = np.dot(bone.matrixVerts, self.restCoords[verts].transpose())
             wvec = weights*vec
             coords[verts] += wvec.transpose()
-
-        """   
-        for vn in range(nVerts):
-            vert = self.restVerts[vn]
-            if vert.groups:
-                mat = np.zeros((4,4), float)
-                for bone,w in vert.groups:
-                    mat += w*bone.matrixVerts
-                coords[vn] = np.dot(mat,vert.co)[:3] 
-            else:
-                coords[vn] = vert.co[:3]
-        """
         obj.changeCoords(coords[:,:3])
         obj.calcNormals()
         obj.update()
 
 
     def build(self):
-        if self.exporting:
-            return
         self.controls = []
         self.deforms = []
 
         for bone in self.boneList:
+            print("BL", bone)
             bone.build()
             #print "Roll", bone.name, bone.roll, bone.getRoll()
             if bone.deform:
                 self.deforms.append(bone)
-            if bone.layers & self.visible:
-                self.controls.append(bone)
+            #if bone.layers & self.visible:
+            #    self.controls.append(bone)
             
 
         if not self.boneWeights:
@@ -1009,32 +956,14 @@ def createPoseRig(human, rigtype):
     amt = CPoseArmature(human, config)
 
     for (bname, roll, parent, flags, layers, bbone) in amt.boneDefs:
-        if amt.exporting or layers & ACTIVE_LAYERS:
-            bone = CBone(amt, bname, roll, parent, flags, layers, bbone)
-            amt.boneList.append(bone)        
-            amt.bones[bname] = bone
-        else:
-            pass
-            #print "Ignore %s L %x A %x" % (bname, layers, ACTIVE_LAYERS)
-
-    amt.build()        
+        bone = CBone(amt, bname, roll, parent, flags, layers, bbone)
+        amt.boneList.append(bone)        
+        amt.bones[bname] = bone
     
-    if rigtype != "mhx":
-        return amt
-
-    #setupCustomShapes(fp)
-
-    amt.writeControlPoses(fp, config)
-    amt.checkDirty()
+    amt.build()   
+    #amt.checkDirty()
     return amt
 
-    #amt.writeAllActions(fp)
-
-    drivers = amt.writeDrivers(fp)
-    amt.assignDrivers(drivers)
-    
-    #amt.display()
-    return amt
  
     
 

@@ -25,7 +25,7 @@ Mesh
 import numpy
 import os
 import mh2proxy
-import armature as amtpkg
+from . import mhx_drivers
 
 #-------------------------------------------------------------------------------        
 #   
@@ -275,8 +275,8 @@ def writeBaseMaterials(fp, amt):
 
 def writeHideAnimationData(fp, amt, prefix, name):
     fp.write("AnimationData %s%sMesh True\n" % (prefix, name))
-    amtpkg.drivers.writePropDriver(fp, amt, ["Mhh%s" % name], "x1", "hide", -1)
-    amtpkg.drivers.writePropDriver(fp, amt, ["Mhh%s" % name], "x1", "hide_render", -1)
+    mhx_drivers.writePropDriver(fp, amt, ["Mhh%s" % name], "x1", "hide", -1)
+    mhx_drivers.writePropDriver(fp, amt, ["Mhh%s" % name], "x1", "hide_render", -1)
     fp.write("end AnimationData\n")
     return    
        

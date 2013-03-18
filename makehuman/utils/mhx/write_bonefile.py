@@ -529,7 +529,7 @@ def writeBoneFile(character, scale, fname):
 "#\n" +
 "#  Bone definitions for %s rig\n" % character +
 "#\n" +
-"from armature.flags import *\n")
+"from mhx.flags import *\n")
 
     writeBones(character, scale, fp)
     fp.close()

@@ -22,7 +22,7 @@ Abstract
 MHX materials
 """
 
-import armature as amtpkg
+from . import mhx_drivers
 
 #-------------------------------------------------------------------------------        
 #   
@@ -227,7 +227,7 @@ def writeMaterialAnimationData(fp, nMasks, nTextures, amt, config):
         fp.write(" 1")
     fp.write(" ;\n")
     fp.write("  AnimationData %sMesh True\n" % amt.name)
-    #amtpkg.drivers.writeTextureDrivers(fp, rig_panel_25.BodyLanguageTextureDrivers)
+    #mhx_drivers.writeTextureDrivers(fp, rig_panel_25.BodyLanguageTextureDrivers)
     writeMaskDrivers(fp, amt, config)
     fp.write("  end AnimationData\n")
     
@@ -250,7 +250,7 @@ def writeMaskDrivers(fp, amt, config):
     for prx in amt.proxies.values():
         if prx.type == 'Clothes' and prx.mask:
             (dir, file) = prx.mask
-            amtpkg.drivers.writePropDriver(fp, amt, ["Mhh%s" % prx.name], "1-x1", 'use_textures', n)
+            mhx_drivers.writePropDriver(fp, amt, ["Mhh%s" % prx.name], "1-x1", 'use_textures', n)
             n += 1            
     fp.write("#endif\n")
     return

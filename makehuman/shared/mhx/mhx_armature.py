@@ -28,10 +28,12 @@ import mh2proxy
 import exportutils
 
 import armature as amtpkg
-from armature.flags import *
+from .flags import *
 from armature.rigdefs import CArmature
 
 from . import posebone
+from . import mhx_drivers
+from . import mhx_constraints
 from . import rig_joints_25
 from . import rig_body_25
 from . import rig_shoulder_25
@@ -165,11 +167,19 @@ class ExportArmature(CArmature):
 
     def __init__(self, name, human, config):    
         CArmature. __init__(self, name, human, config)
-        self.exporting = True
         self.customShapeFiles = []
         self.customShapes = {}
         self.poseInfo = {}
         self.gizmos = None
+
+        self.boneGroups = []
+        self.recalcRoll = []              
+        self.vertexGroupFiles = []
+        self.gizmoFiles = []
+        self.headName = 'Head'
+        self.objectProps = [("MhxRig", '"%s"' % config.rigtype)]
+        self.armatureProps = []
+        self.customProps = []
 
 
     def setup(self):
@@ -624,36 +634,36 @@ class MhxArmature(ExportArmature):
 
     def writeDrivers(self, fp):
         driverList = (
-            amtpkg.drivers.writePropDrivers(fp, self, rig_arm_25.ArmPropDrivers, "", "Mha") +
-            amtpkg.drivers.writePropDrivers(fp, self, rig_arm_25.ArmPropLRDrivers, "_L", "Mha") +
-            amtpkg.drivers.writePropDrivers(fp, self, rig_arm_25.ArmPropLRDrivers, "_R", "Mha") +
-            amtpkg.drivers.writePropDrivers(fp, self, rig_arm_25.SoftArmPropLRDrivers, "_L", "Mha") +
-            amtpkg.drivers.writePropDrivers(fp, self, rig_arm_25.SoftArmPropLRDrivers, "_R", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_arm_25.ArmPropDrivers, "", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_arm_25.ArmPropLRDrivers, "_L", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_arm_25.ArmPropLRDrivers, "_R", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_arm_25.SoftArmPropLRDrivers, "_L", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_arm_25.SoftArmPropLRDrivers, "_R", "Mha") +
             #writeScriptedBoneDrivers(fp, rig_leg_25.LegBoneDrivers) +
-            amtpkg.drivers.writePropDrivers(fp, self, rig_leg_25.LegPropDrivers, "", "Mha") +
-            amtpkg.drivers.writePropDrivers(fp, self, rig_leg_25.LegPropLRDrivers, "_L", "Mha") +
-            amtpkg.drivers.writePropDrivers(fp, self, rig_leg_25.LegPropLRDrivers, "_R", "Mha") +
-            amtpkg.drivers.writePropDrivers(fp, self, rig_leg_25.SoftLegPropLRDrivers, "_L", "Mha") +
-            amtpkg.drivers.writePropDrivers(fp, self, rig_leg_25.SoftLegPropLRDrivers, "_R", "Mha") +
-            amtpkg.drivers.writePropDrivers(fp, self, rig_body_25.BodyPropDrivers, "", "Mha")
+            mhx_drivers.writePropDrivers(fp, self, rig_leg_25.LegPropDrivers, "", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_leg_25.LegPropLRDrivers, "_L", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_leg_25.LegPropLRDrivers, "_R", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_leg_25.SoftLegPropLRDrivers, "_L", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_leg_25.SoftLegPropLRDrivers, "_R", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_body_25.BodyPropDrivers, "", "Mha")
         )
         if self.config.advancedSpine:
-            driverList += amtpkg.drivers.writePropDrivers(fp, self, rig_body_25.BodyPropDriversAdvanced, "", "Mha") 
+            driverList += mhx_drivers.writePropDrivers(fp, self, rig_body_25.BodyPropDriversAdvanced, "", "Mha") 
         driverList += (
-            amtpkg.drivers.writePropDrivers(fp, self, rig_face_25.FacePropDrivers, "", "Mha") +
-            amtpkg.drivers.writePropDrivers(fp, self, rig_face_25.SoftFacePropDrivers, "", "Mha")
+            mhx_drivers.writePropDrivers(fp, self, rig_face_25.FacePropDrivers, "", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_face_25.SoftFacePropDrivers, "", "Mha")
         )
         fingDrivers = rig_finger_25.getFingerPropDrivers()
         driverList += (
-            amtpkg.drivers.writePropDrivers(fp, self, fingDrivers, "_L", "Mha") +
-            amtpkg.drivers.writePropDrivers(fp, self, fingDrivers, "_R", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, fingDrivers, "_L", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, fingDrivers, "_R", "Mha") +
             #rig_panel_25.FingerControlDrivers(fp)
-            amtpkg.drivers.writeMuscleDrivers(fp, rig_shoulder_25.ShoulderDeformDrivers, self.name) +
-            amtpkg.drivers.writeMuscleDrivers(fp, rig_arm_25.ArmDeformDrivers, self.name) +
-            amtpkg.drivers.writeMuscleDrivers(fp, rig_leg_25.LegDeformDrivers, self.name)
+            mhx_drivers.writeMuscleDrivers(fp, rig_shoulder_25.ShoulderDeformDrivers, self.name) +
+            mhx_drivers.writeMuscleDrivers(fp, rig_arm_25.ArmDeformDrivers, self.name) +
+            mhx_drivers.writeMuscleDrivers(fp, rig_leg_25.LegDeformDrivers, self.name)
         )
         faceDrivers = rig_face_25.FaceDeformDrivers(fp, self)
-        driverList += amtpkg.drivers.writeDrivers(fp, True, faceDrivers)
+        driverList += mhx_drivers.writeDrivers(fp, True, faceDrivers)
         return driverList
     
 
@@ -815,8 +825,8 @@ class RigifyArmature(ExportArmature):
 
     def writeDrivers(self, fp):
         rig_face_25.FaceDeformDrivers(fp, self)        
-        amtpkg.drivers.writePropDrivers(fp, self, rig_face_25.FacePropDrivers, "", "Mha")
-        amtpkg.drivers.writePropDrivers(fp, self, rig_face_25.SoftFacePropDrivers, "", "Mha")
+        mhx_drivers.writePropDrivers(fp, self, rig_face_25.FacePropDrivers, "", "Mha")
+        mhx_drivers.writePropDrivers(fp, self, rig_face_25.SoftFacePropDrivers, "", "Mha")
         return []
 
 

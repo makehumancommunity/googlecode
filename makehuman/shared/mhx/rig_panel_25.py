@@ -23,7 +23,7 @@ Panel bone definitions
 """
 
 
-from armature.flags import *
+from .flags import *
 from . import posebone
 from posebone import addPoseBone, addYSlider, addCSlider
 
@@ -121,7 +121,7 @@ neg = ('0', '-4.0')
 FMX = 0.7
 
 def PanelControlPoses(fp, amt):
-    if amt.exporting:
+    if True:
         addPoseBone(fp, amt, 'PFace', 'MHCube05', None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), 0, [])
         addPoseBone(fp, amt, 'PFaceDisp', 'MHFace', None, (1,1,1), (1,1,1), (1,1,1), (1,1,1), 0, [])
 

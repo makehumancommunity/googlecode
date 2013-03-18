@@ -22,7 +22,4 @@ Abstract
 Armature package __init__ file
 """
 
-import warp
-from . import constraints
-from . import drivers
 from . import rigdefs

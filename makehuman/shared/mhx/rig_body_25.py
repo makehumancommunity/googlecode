@@ -23,7 +23,7 @@ Body bone definitions
 """
 
 
-from armature.flags import *
+from .flags import *
 from . import posebone
 from posebone import addPoseBone
 
@@ -256,11 +256,10 @@ def BodyControlPoses(fp, amt, config):
     addPoseBone(fp, amt,  'Root', 'MHCrown', 'Master', (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0, 
         [('LimitRot', C_OW_LOCAL, 0, ['LimitRot', (0,0, -45*D,45*D, 0,0), (1,1,1)]) ])
 
-    if amt.exporting:
-        addPoseBone(fp, amt,  'Shoulders', 'MHCrown', 'Master', (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0,
-            [('LimitRot', C_OW_LOCAL, 1, ['LimitRot', (0,0, -45*D,45*D, 0,0), (1,1,1)]),
-             #('LimitDist', 0, 1, ['LimitDist', 'Root', 'LIMITDIST_INSIDE'])
-            ])
+    addPoseBone(fp, amt,  'Shoulders', 'MHCrown', 'Master', (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0,
+        [('LimitRot', C_OW_LOCAL, 1, ['LimitRot', (0,0, -45*D,45*D, 0,0), (1,1,1)]),
+         #('LimitDist', 0, 1, ['LimitDist', 'Root', 'LIMITDIST_INSIDE'])
+        ])
 
     # Up spine
 
@@ -287,7 +286,7 @@ def BodyControlPoses(fp, amt, config):
          [('LimitRot', C_OW_LOCAL, 1, ['LimitRot', limNeck, (1,1,1)])])
          
 
-    if amt.exporting and config.advancedSpine:
+    if config.advancedSpine:
         # Spine IK
         addPoseBone(fp, amt, 'SpinePT', 'MHCube025', 'Spine', (0,0,0), (1,1,1), (1,1,1), (1,1,1), 0, [])
 

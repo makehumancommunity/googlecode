@@ -26,8 +26,8 @@ import log
 
 import mh2proxy
 import exportutils
-import armature as amtpkg
 
+from . import mhx_drivers
 from . import rig_shoulder_25
 from . import rig_arm_25
 from . import rig_leg_25
@@ -179,31 +179,31 @@ def writeShapeKeys(fp, amt, config, name, proxy):
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
         
     if config.bodyShapes and config.rigtype == "mhx" and not isHair:
-        amtpkg.drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, amt.name)
-        amtpkg.drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, amt.name)
-        amtpkg.drivers.writeTargetDrivers(fp, rig_arm_25.ElbowTargetDrivers, amt.name)
-        amtpkg.drivers.writeTargetDrivers(fp, rig_leg_25.KneeTargetDrivers, amt.name)
+        mhx_drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, amt.name)
+        mhx_drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, amt.name)
+        mhx_drivers.writeTargetDrivers(fp, rig_arm_25.ElbowTargetDrivers, amt.name)
+        mhx_drivers.writeTargetDrivers(fp, rig_leg_25.KneeTargetDrivers, amt.name)
 
-        amtpkg.drivers.writeRotDiffDrivers(fp, rig_arm_25.ArmShapeDrivers, proxy)
-        amtpkg.drivers.writeRotDiffDrivers(fp, rig_leg_25.LegShapeDrivers, proxy)
-        #amtpkg.drivers.writeShapePropDrivers(fp, amt, rig_body_25.bodyShapes, proxy, "Mha")
+        mhx_drivers.writeRotDiffDrivers(fp, rig_arm_25.ArmShapeDrivers, proxy)
+        mhx_drivers.writeRotDiffDrivers(fp, rig_leg_25.LegShapeDrivers, proxy)
+        #mhx_drivers.writeShapePropDrivers(fp, amt, rig_body_25.bodyShapes, proxy, "Mha")
 
     fp.write("#if toggle&T_ShapeDrivers\n")
 
     if isHuman:
         for path,name in config.customShapeFiles:
-            amtpkg.drivers.writeShapePropDrivers(fp, amt, [name], proxy, "")    
+            mhx_drivers.writeShapePropDrivers(fp, amt, [name], proxy, "")    
 
         if config.expressions:
-            amtpkg.drivers.writeShapePropDrivers(fp, amt, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
+            mhx_drivers.writeShapePropDrivers(fp, amt, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
             
         if config.facepanel and amt.rigtype=='mhx':
-            amtpkg.drivers.writeShapeDrivers(fp, amt, rig_panel_25.BodyLanguageShapeDrivers, proxy)
+            mhx_drivers.writeShapeDrivers(fp, amt, rig_panel_25.BodyLanguageShapeDrivers, proxy)
         
         skeys = []
         for (skey, val, string, min, max) in  amt.customProps:
             skeys.append(skey)
-        amtpkg.drivers.writeShapePropDrivers(fp, amt, skeys, proxy, "Mha")    
+        mhx_drivers.writeShapePropDrivers(fp, amt, skeys, proxy, "Mha")    
     fp.write("#endif\n")
         
     fp.write("  end AnimationData\n\n")
