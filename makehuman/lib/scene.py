@@ -55,7 +55,7 @@ class Scene(object):
         nlig = pickle.load(hfile)
         self.lights = []
         for i in range(nlig):
-            lights.append(pickle.load(hfile))
+            self.lights.append(pickle.load(hfile))
         hfile.close()
 
     def save(self, path = None):
@@ -65,7 +65,7 @@ class Scene(object):
         self.unsaved = False
         
         hfile = open(self.path, 'wb')
-        pickle.dump(self.camera)
+        pickle.dump(self.camera, hfile)
         pickle.dump(len(self.lights), hfile)
         for light in self.lights:
             pickle.dump(light, hfile)
