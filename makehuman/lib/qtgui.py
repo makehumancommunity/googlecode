@@ -551,7 +551,7 @@ class ListView(QtGui.QListWidget, Widget):
     def getSelectedItem(self):
         items = self.selectedItems()
         if len(items) > 0:
-            return str(items[0].text())
+            return str(items[0].text)
         return None
 
     def getSelectedItems(self):
