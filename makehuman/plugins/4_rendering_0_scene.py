@@ -14,8 +14,14 @@ class SceneItem(object):
         self.widgets = []
 
     def showProps(self, propsWidgets):
-        pass
-
+        self.widgetList = propsWidgets
+    
+    def hideProps(self):
+        for widget in self.widgetList:
+            self.sceneview.removeRightWidget(widget)
+        del self.sceneview.activePropsWidgets[:]
+        self.sceneview.activeItem = None
+        
 
 class HumanSceneItem(SceneItem):
     def __init__(self, sceneview):
@@ -45,7 +51,7 @@ class OutputSceneItem(SceneItem):
         gui3d.app.settings['rendering_height'] = 0 if not value else int(value)
 
     def showProps(self, propsWidgets):
-        self.widgetList = propsWidgets
+        SceneItem.showProps(self, propsWidgets)
         self.widthBox = self.widgetList[0].addWidget(gui.SpinBox(self.resWidth), 0, 0)
         self.heightBox = self.widgetList[0].addWidget(gui.SpinBox(self.resHeight), 0, 1)
 
@@ -65,7 +71,7 @@ class SceneItemAdder(SceneItem):
         self.widgets = ['Add Item']
 
     def showProps(self, propsWidgets):
-        self.widgetList = propsWidgets
+        SceneItem.showProps(self, propsWidgets)
         self.lightbtn = self.widgetList[0].addWidget(gui.Button('Add light'))
 
         @self.lightbtn.mhEvent
@@ -89,7 +95,7 @@ class LightSceneItem(SceneItem):
         self.light = light
 
     def showProps(self, propsWidgets):
-        self.widgetList = propsWidgets
+        SceneItem.showProps(self, propsWidgets)
         self.removebtn = self.widgetList[0].addWidget(
             gui.Button('Remove light ' + str(self.lightid)))
 
@@ -97,10 +103,8 @@ class LightSceneItem(SceneItem):
         def onClicked(event):
             self.sceneview.scene.removeLight(self.light)
             self.sceneview.readScene()
-            for widget in self.widgetList:
-                self.sceneview.removeRightWidget(widget)
-            del self.sceneview.activePropsWidgets[:]
-            
+            SceneItem.hideProps(self)
+
     
 class SceneTaskView(gui3d.TaskView):
 
@@ -121,6 +125,7 @@ class SceneTaskView(gui3d.TaskView):
         self.adder = SceneItemAdder(self)
 
         self.activePropsWidgets = []
+        self.activeItem = None
         self.scene = scene.Scene()
         self.readScene()
 
@@ -193,10 +198,9 @@ class SceneTaskView(gui3d.TaskView):
         self.fnlbl.setText(lbltxt)
 
     def displayProperties(self, sceneitem):
-        for widget in self.activePropsWidgets:
-            self.removeRightWidget(widget)
-            #BUG they're not removed!
-        del self.activePropsWidgets[:]
+        if self.activeItem:
+            self.activeItem.hideProps()
+        self.activeItem = sceneitem
         for widgetname in sceneitem.widgets:
             self.activePropsWidgets.append(
                 self.addRightWidget(gui.GroupBox(widgetname)))
