@@ -56,6 +56,8 @@ def getPath(type):
             path += u"\\makehuman\\grab\\"
         elif typeStr == "render":
             path += u"\\makehuman\\render\\"
+        elif typeStr == "scenes":
+            path += u"\\makehuman\\scenes\\"
         elif typeStr == "":
             path += u"\\makehuman\\"
         else:
@@ -76,6 +78,8 @@ def getPath(type):
             path += "/grab/"
         elif typeStr == "render":
             path += "/render/"
+        elif typeStr == "scenes":
+            path += "/scenes/"
         elif typeStr == "":
             path += "/"
         else:

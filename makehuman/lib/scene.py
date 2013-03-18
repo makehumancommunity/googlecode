@@ -73,4 +73,10 @@ class Scene(object):
 
     def close(self):
         self.__init__()
+
+    def addLight(self):
+        self.unsaved = True
+        newlight = Light()
+        self.lights.append(newlight)
+        return self.lights.index(newlight)
         
