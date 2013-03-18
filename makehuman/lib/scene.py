@@ -78,5 +78,8 @@ class Scene(object):
         self.unsaved = True
         newlight = Light()
         self.lights.append(newlight)
-        return self.lights.index(newlight)
+
+    def removeLight(self, light):
+        self.unsaved = True
+        self.lights.remove(light)
         

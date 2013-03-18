@@ -88,6 +88,19 @@ class LightSceneItem(SceneItem):
         self.lightid = lid
         self.light = light
 
+    def showProps(self, propsWidgets):
+        self.widgetList = propsWidgets
+        self.removebtn = self.widgetList[0].addWidget(
+            gui.Button('Remove light ' + str(self.lightid)))
+
+        @self.removebtn.mhEvent
+        def onClicked(event):
+            self.sceneview.scene.removeLight(self.light)
+            self.sceneview.readScene()
+            for widget in self.widgetList:
+                self.sceneview.removeRightWidget(widget)
+            del self.sceneview.activePropsWidgets[:]
+            
     
 class SceneTaskView(gui3d.TaskView):
 
