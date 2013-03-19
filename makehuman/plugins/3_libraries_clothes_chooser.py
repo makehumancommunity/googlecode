@@ -118,7 +118,6 @@ class ClothesTaskView(gui3d.TaskView):
 
         proxy = mh2proxy.readProxyFile(human.meshData, filepath)
         proxy.type = 'Clothes'
-        
         if not proxy:
             return
 
@@ -128,10 +127,12 @@ class ClothesTaskView(gui3d.TaskView):
         if proxy.clothings:
             t = 0
             dt = 1.0/len(proxy.clothings)
+            folder = os.path.dirname(filepath)
             for (pieceName, uuid) in proxy.clothings:
                 gui3d.app.progress(t, text="Loading %s" % pieceName)
                 t += dt
-                mhclo = exportutils.config.getExistingProxyFile(pieceName+".mhclo", uuid, "clothes")
+                piecePath = os.path.join(folder, pieceName+".mhclo")
+                mhclo = exportutils.config.getExistingProxyFile(piecePath, uuid, "clothes")
                 if mhclo:
                     self.setClothes(human, mhclo)
                 else:
