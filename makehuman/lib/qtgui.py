@@ -530,7 +530,7 @@ class ListView(QtGui.QListWidget, Widget):
 
     def setData(self, items):
         self.clear()
-        self.addItems(items)
+        self.addItems([ListItem(self, item) for item in items])
 
     _brushes = {}
     @classmethod
