@@ -172,7 +172,7 @@ class SceneTaskView(gui3d.TaskView):
         @self.itemList.mhEvent
         def onActivate(event):
             self.displayProperties(
-                self.items[str(self.itemList.selectedItems()[0].text())])
+                self.items[self.itemList.getSelectedItem()])
 
         @self.addButton.mhEvent
         def onClicked(event):
