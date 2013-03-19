@@ -49,13 +49,13 @@ def exportSkeleton(obj, filename):
       *string*.  The filename of the file to export the object to.
     """
     human = gui3d.app.selectedHuman
-    if not human.skeleton:
+    if not human.getSkeleton():
         gui3d.app.prompt('Error', 'You did not select a skeleton from the library.', 'OK')
         return
 
 
     # Write bvh file
-    root = human.skeleton.roots[0]  # we assume a skeleton with only one root
+    root = human.getSkeleton().roots[0]  # we assume a skeleton with only one root
 
     f = open(filename, 'w')
     f.write('HIERARCHY\n')

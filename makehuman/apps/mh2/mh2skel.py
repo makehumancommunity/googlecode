@@ -27,13 +27,13 @@ import gui3d
 def exportSkel(obj, filename):
 
     human = gui3d.app.selectedHuman
-    if not human.skeleton:
+    if not human.getSkeleton():
         gui3d.app.prompt('Error', 'You did not select a skeleton from the library.', 'OK')
         return
 
     f = open(filename, 'w')
     
-    for bone in human.skeleton.getBones():
+    for bone in human.getSkeleton().getBones():
         writeBone(f, bone)
     
     f.close()
