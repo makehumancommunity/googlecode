@@ -160,6 +160,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
         self.setHumanTransparency(True)
         self.human.meshData.setPickable(False)
+        mh.updatePickingBuffer()
 
         if self.skelObj:
             self.skelObj.show()
@@ -184,6 +185,7 @@ class SkeletonLibrary(gui3d.TaskView):
             self.skelObj.hide()
         self.setHumanTransparency(False)
         self.human.meshData.setPickable(True)
+        mh.updatePickingBuffer()
         try:
             self.removeBoneHighlights()
         except:
@@ -288,6 +290,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.skelMesh = skeleton_drawing.meshFromSkeleton(skel, "Prism")
         self.skelMesh.priority = 100
         self.skelMesh.setPickable(True)
+        mh.updatePickingBuffer()
         self.skelObj = gui3d.app.addObject(gui3d.Object(self.human.getPosition(), self.skelMesh) )
         self.skelObj.setRotation(self.human.getRotation())
 
@@ -374,6 +377,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.jointsMesh = skeleton_drawing.meshFromJoints(jointPositions, jointGroupNames)
         self.jointsMesh.priority = 100
         self.jointsMesh.setPickable(True)
+        mh.updatePickingBuffer()
         self.jointsObj = self.addObject( gui3d.Object(self.human.getPosition(), self.jointsMesh) )
         self.jointsObj.setRotation(self.human.getRotation())
 

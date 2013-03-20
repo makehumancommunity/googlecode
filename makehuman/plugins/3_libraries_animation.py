@@ -323,6 +323,7 @@ class AnimationLibrary(gui3d.TaskView):
 
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
         self.human.meshData.setPickable(False)
+        mh.updatePickingBuffer()
 
         self.skelObj = self.human.getSkeleton().object
         if self.skelObj:
@@ -360,6 +361,7 @@ class AnimationLibrary(gui3d.TaskView):
         self.setToRestPose()
         self.setHumanTransparency(False)
         self.human.meshData.setPickable(True)
+        mh.updatePickingBuffer()
 
         if self.skelObj:
             self.skelObj.hide()
