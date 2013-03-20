@@ -16,7 +16,7 @@
 # shapekey Breathe
 # uvtex_layer 0 base
 # objfile_layer 0
-# texture eve_t_shirt_texture.png 0
+# texture mono_white.png 0
 # material Eve_T_Shirt.001
 diffuse_color 0.4265 0.7898 0.8000
 diffuse_intensity 0.8
