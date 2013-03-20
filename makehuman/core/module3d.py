@@ -794,7 +794,8 @@ class Object3D(object):
         The first is generally used to model 3D objects (a human, clothes,
         etc.), while the second is used for 3D GUI controls.
 
-        :param cameraMode: The camera mode. 0 = fixed camera; 1 = movable camera.
+        :param cameraMode: The camera mode. 0 = movable camera (modelCamera);
+        1 = static camera (guiCamera).
         :type cameraMode: int
         """
 
