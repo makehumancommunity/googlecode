@@ -106,7 +106,7 @@ class BackgroundChooser(gui3d.TaskView):
                        'bottom': [-90,0,0],
                        'other': None }
 
-        self.filenames = {}
+        self.filenames = {}    # Stores (filename, aspect)
         for side in self.sides.keys():
             self.filenames[side] = None
 
@@ -154,7 +154,6 @@ class BackgroundChooser(gui3d.TaskView):
             if os.path.splitext(filename)[1] == ".clear":
                 filename = None
 
-            print filename
             if self.filenames[side]:
                 oldBg = self.filenames[side][0]
             else:
@@ -359,7 +358,7 @@ class TextureProjectionView(gui3d.TaskView) :
                 (_, aspect) = self.backgroundChooserView.getCurrentBackground()
                 if abs(event.dx) > abs(event.dy):
                     dx += event.dx
-                    dy = dx * aspect
+                    dy = dx * (1/aspect)
                 else:
                     dy += event.dy
                     dx = dy * aspect
