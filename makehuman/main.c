@@ -6,21 +6,20 @@
      <td><b>MakeHuman</b>                                </td></tr>
  <tr><td>Product Home Page:                              </td>
      <td>http://www.makehuman.org/                       </td></tr>
- <tr><td>SourceForge Home Page:                          </td>
-     <td>http://sourceforge.net/projects/makehuman/      </td></tr>
- <tr><td>Authors:                                        </td>
-     <td>Paolo Colombo, Simone Re, Hans-Peter Dusel</td></tr>
+ <tr><td>Google code Home Page:                          </td>
+     <td>http://code.google.com/p/makehuman/      </td></tr>
  <tr><td>Copyright(c):                                   </td>
-     <td>MakeHuman Team 2001-2011                        </td></tr>
+     <td>MakeHuman Team 2001-2013                        </td></tr>
  <tr><td>Licensing:                                      </td>
-     <td>GPL3 (see also
-         http://makehuman.wiki.sourceforge.net/Licensing)</td></tr>
+     <td>AGPL3 (see also
+         http://www.makehuman.org/node/318</td></tr>
  <tr><td>Coding Standards:                               </td>
-     <td>See http://makehuman.wiki.sourceforge.net/DG_Coding_Standards
+     <td>See http://www.makehuman.org/node/165
                                                          </td></tr>
  </table>
 
- This is the main C application file used to run the MakeHuman application.
+ This is the main C application file used to run the MakeHuman application
+ (when compiled as a binary).
  */
 
 #ifdef _DEBUG
