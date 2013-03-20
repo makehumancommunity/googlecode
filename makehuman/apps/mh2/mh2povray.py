@@ -980,12 +980,11 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
 
     # Certain blocks of SDL are mostly static and can be copied directly from reference
     # files into the output files.
-    progress (0,"Parsing data")
-    progbase = 0.2
+    nextpb = 0.1
+    progress (progbase,"Parsing data")
     headerFile = 'data/povray/headercontent_mesh2only.inc'
     staticFile = 'data/povray/staticcontent_mesh2only_fsss.inc' if settings['SSS'] == True else 'data/povray/staticcontent_mesh2only_tl.inc'
     sceneFile = 'data/povray/makehuman_mesh2only_tl.pov'
-    pigmentMap = gui3d.app.selectedHuman.mesh.texture
 
     # Define some additional file locations
     outputSceneFile = path.replace('.inc', '.pov')
@@ -1001,53 +1000,10 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
         except:
             log.error('Error creating export directory.')
             return 0
-
-    # If fake SSS is enabled, render lightmaps there.
-    if settings['SSS'] == True:
-        # TODO: move this after object collection.
-        # calculate resolution of each cannel, according to settings
-        resred = float(settings['SSSA'])
-        resgreen = int(2.0**(10-resred/2))
-        resred = int(2.0**(10-resred))
-        # blue channel
-        lmap = projection.mapLighting(progressCallback = lambda p: progress(progbase+p*(0.25-progbase),"Projecting lightmaps"))
-        lmap = imgop.getChannel(lmap,1)
-        progress (0.25,"Writing lightmaps")
-        log.debug('SSS: Hi-Res lightmap resolution: %s', lmap.width)
-        lmap.save(os.path.join(outputDirectory, 'lighthi.png'))
-        # green channel
-        progress (0.26,"Writing lightmaps")
-        lmap = imgop.resized(lmap, resgreen,resgreen)
-        log.debug('SSS: Mid-Res lightmap resolution: %s', lmap.width)
-        lmap.save(os.path.join(outputDirectory, 'lightmid.png'))
-        # red channel
-        progress (0.29,"Writing lightmaps")
-        lmap = imgop.resized(lmap, resred,resred)
-        log.debug('SSS: Low-Res lightmap resolution: %s', lmap.width)
-        lmap.save(os.path.join(outputDirectory, 'lightlo.png'))
-        # create masks for blurred channels, for erasing seams.
-        #progress (0.32,"Writing lightmaps")
-        #sssmask = mh.Image(pigmentMap)
-        #sssmask = imgop.getAlpha(sssmask)
-        #progress (0.33,"Writing lightmaps")
-        #sssmask = imgop.resized(sssmask,resgreen,resgreen)
-        progress (0.36,"Writing lightmaps")
-        #sssmask.save(os.path.join(outputDirectory, 'maskmid.png'))
-        #sssmask = imgop.resized(sssmask,resred,resred)
-        #progress (0.39,"Writing lightmaps")
-        #sssmask.save(os.path.join(outputDirectory, 'masklo.png'))
-        progbase = 0.4
-        # TEST. bump map blurring
-        '''
-        lmap = mh.Image(os.path.join(outputDirectory, 'bump.png'))
-        lmap = imgop.getChannel(lmap,1)
-        lmap = imgop.blurred(lmap,lmap.width/1024,15)
-        lmap.save(os.path.join(outputDirectory, 'bumpmid1.png'))
-        lmap = imgop.blurred(lmap,2*lmap.width/1024,15)
-        lmap.save(os.path.join(outputDirectory, 'bumplo1.png'))
-        '''
-
+    progbase = nextpb
+    
     # Open the output file in Write mode
+    nextpb = 0.6 - 0.2 * bool(settings['SSS'])
     progress(progbase,"Writing code")
     try:
         outputFileDescriptor = open(path, 'w')
@@ -1072,7 +1028,7 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
 ''')
     headerFileDescriptor.close()
 
-    progress (progbase+0.02*(0.6-progbase),"Writing code")
+    progress (progbase+0.05*(nextpb-progbase),"Writing code")
     # Declare POV Ray variables containing the current makehuman camera.
     povrayCameraData(camera, resolution, outputFileDescriptor, settings)
     
@@ -1087,13 +1043,59 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
     # Calculate some useful values and add them to the output as POV-Ray variable
     # declarations so they can be readily accessed from a POV-Ray scene file.
 
-    progress (progbase+0.04*(0.6-progbase),"Writing code")
+    progress (progbase+0.1*(nextpb-progbase),"Writing code")
     povraySizeData(obj, outputFileDescriptor)
     
     stuffs = exportutils.collect.setupObjects("MakeHuman", gui3d.app.selectedHuman, helpers=False, hidden=False,
                                             eyebrows=False, lashes=False, subdivide = settings['subdivide'],
-                                            progressCallback = lambda p: progress(progbase+(0.06+0.94*p)*(0.6-progbase),"Analyzing objects"))
-    progbase = 0.6
+                                            progressCallback = lambda p: progress(progbase+(0.15+0.85*p)*(nextpb-progbase),"Analyzing objects"))
+    progbase = nextpb
+
+    # If SSS is enabled, render the lightmaps.
+    if settings['SSS'] == True:
+        nextpb = 0.6
+        # TODO: move this after object collection.
+        # calculate resolution of each cannel, according to settings
+        resred = float(settings['SSSA'])
+        resgreen = int(2.0**(10-resred/2))
+        resred = int(2.0**(10-resred))
+        # blue channel
+        lmap = projection.mapLighting(progressCallback = lambda p: progress(progbase+0.5*p*(nextpb-progbase),"Projecting lightmaps"))
+        lmap = imgop.getChannel(lmap,1)
+        progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
+        log.debug('SSS: Hi-Res lightmap resolution: %s', lmap.width)
+        lmap.save(os.path.join(outputDirectory, 'lighthi.png'))
+        # green channel
+        progress (progbase+0.6*(nextpb-progbase),"Writing lightmaps")
+        lmap = imgop.resized(lmap, resgreen,resgreen)
+        log.debug('SSS: Mid-Res lightmap resolution: %s', lmap.width)
+        lmap.save(os.path.join(outputDirectory, 'lightmid.png'))
+        # red channel
+        progress (progbase+0.8*(nextpb-progbase),"Writing lightmaps")
+        lmap = imgop.resized(lmap, resred,resred)
+        log.debug('SSS: Low-Res lightmap resolution: %s', lmap.width)
+        lmap.save(os.path.join(outputDirectory, 'lightlo.png'))
+        # create masks for blurred channels, for erasing seams.
+        #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
+        #sssmask = mh.Image(os.path.join(stuffs[0].texture[0], stuffs[0].texture[1]))
+        #sssmask = imgop.getAlpha(sssmask)
+        #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
+        #sssmask = imgop.resized(sssmask,resgreen,resgreen)
+        #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
+        #sssmask.save(os.path.join(outputDirectory, 'maskmid.png'))
+        #sssmask = imgop.resized(sssmask,resred,resred)
+        #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
+        #sssmask.save(os.path.join(outputDirectory, 'masklo.png'))
+        progbase = nextpb
+        # TEST. bump map blurring
+        '''
+        lmap = mh.Image(os.path.join(outputDirectory, 'bump.png'))
+        lmap = imgop.getChannel(lmap,1)
+        lmap = imgop.blurred(lmap,lmap.width/1024,15)
+        lmap.save(os.path.join(outputDirectory, 'bumpmid1.png'))
+        lmap = imgop.blurred(lmap,2*lmap.width/1024,15)
+        lmap.save(os.path.join(outputDirectory, 'bumplo1.png'))
+        '''
 
     # Mesh2 Object - Write the initial part of the mesh2 object declaration
     stuffnum = float(len(stuffs))
@@ -1244,18 +1246,10 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
     log.message('Sample POV-Ray scene file generated')
     progress(0,"Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
 
-"""
-Item types
-(Negative value) - Error code
-0   - Nothing
-1   - Generic
-2   - Hair
-"""
 def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
     for stuff in stuffs[1:]:
         proxy = stuff.proxy
-        if (proxy.type == 'Hair'):
-            itemtype = 2 # Hair.
+        if proxy.type == 'Hair':
             texdata = getChannelData(stuff.texture)                        
             if settings['hairSpec'] == True:
                 # Export transparency map.
@@ -1274,9 +1268,7 @@ def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
             haircodeLines = string.replace (haircodeLines,"%%file%%",texdata[0])
             outputFileDescriptor.write(haircodeLines)
             haircodeFD.close()
-        else:
-            itemtype = 1
-            
+        else:            
             outputFileDescriptor.write("#ifndef (%s_Material)\n" % stuff.name +
                                        "#declare %s_Texture =\n" % stuff.name +
                                        "    texture {\n")
