@@ -47,7 +47,7 @@ import mh2povray_ini
 import random
 import mh
 import log
-import image_operations
+import image_operations as imgop
 
 def downloadPovRay():
     
@@ -191,10 +191,10 @@ class POVRender(threading.Thread):
         # Try to open an image viewer
         if os.name == 'nt': # Windows
             os.startfile (self.path)
-        elif sys.platform == 'darwin':
+        elif sys.platform == 'darwin': # Mac
             import findertools
             findertools.launch(self.path)
-        elif os.name == 'posix':
+        elif os.name == 'posix': # Linux
             subprocess.call(['xdg-open', self.path])
 
 def povrayExportArray(obj, camera, resolution, path):
@@ -1002,39 +1002,50 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
             log.error('Error creating export directory.')
             return 0
 
-    # If fake SSS is enabled, render lightmaps there. # TODO: if they aren't already rendered.
+    # If fake SSS is enabled, render lightmaps there.
     if settings['SSS'] == True:
+        # TODO: move this after object collection.
         # calculate resolution of each cannel, according to settings
         resred = float(settings['SSSA'])
         resgreen = int(2.0**(10-resred/2))
         resred = int(2.0**(10-resred))
         # blue channel
         lmap = projection.mapLighting(progressCallback = lambda p: progress(progbase+p*(0.25-progbase),"Projecting lightmaps"))
+        lmap = imgop.getChannel(lmap,1)
         progress (0.25,"Writing lightmaps")
         log.debug('SSS: Hi-Res lightmap resolution: %s', lmap.width)
         lmap.save(os.path.join(outputDirectory, 'lighthi.png'))
         # green channel
         progress (0.26,"Writing lightmaps")
-        lmap2 = image_operations.resized(lmap, resgreen,resgreen)
+        lmap = imgop.resized(lmap, resgreen,resgreen)
         log.debug('SSS: Mid-Res lightmap resolution: %s', lmap.width)
-        lmap2.save(os.path.join(outputDirectory, 'lightmid.png'))
+        lmap.save(os.path.join(outputDirectory, 'lightmid.png'))
         # red channel
         progress (0.29,"Writing lightmaps")
-        lmap2 = image_operations.resized(lmap, resred,resred)
-        log.debug('SSS: Low-Res lightmap resolution: %s', lmap2.width)
-        lmap2.save(os.path.join(outputDirectory, 'lightlo.png'))
+        lmap = imgop.resized(lmap, resred,resred)
+        log.debug('SSS: Low-Res lightmap resolution: %s', lmap.width)
+        lmap.save(os.path.join(outputDirectory, 'lightlo.png'))
         # create masks for blurred channels, for erasing seams.
-        progress (0.32,"Writing lightmaps")
-        sssmask = mh.Image(pigmentMap)
-        sssmask = sssmask.alphaChannel()
-        progress (0.33,"Writing lightmaps")
-        sssmask = image_operations.resized(sssmask,resgreen,resgreen)
+        #progress (0.32,"Writing lightmaps")
+        #sssmask = mh.Image(pigmentMap)
+        #sssmask = imgop.getAlpha(sssmask)
+        #progress (0.33,"Writing lightmaps")
+        #sssmask = imgop.resized(sssmask,resgreen,resgreen)
         progress (0.36,"Writing lightmaps")
-        sssmask.save(os.path.join(outputDirectory, 'maskmid.png'))
-        sssmask = image_operations.resized(sssmask,resred,resred)
-        progress (0.39,"Writing lightmaps")
-        sssmask.save(os.path.join(outputDirectory, 'masklo.png'))
+        #sssmask.save(os.path.join(outputDirectory, 'maskmid.png'))
+        #sssmask = imgop.resized(sssmask,resred,resred)
+        #progress (0.39,"Writing lightmaps")
+        #sssmask.save(os.path.join(outputDirectory, 'masklo.png'))
         progbase = 0.4
+        # TEST. bump map blurring
+        '''
+        lmap = mh.Image(os.path.join(outputDirectory, 'bump.png'))
+        lmap = imgop.getChannel(lmap,1)
+        lmap = imgop.blurred(lmap,lmap.width/1024,15)
+        lmap.save(os.path.join(outputDirectory, 'bumpmid1.png'))
+        lmap = imgop.blurred(lmap,2*lmap.width/1024,15)
+        lmap.save(os.path.join(outputDirectory, 'bumplo1.png'))
+        '''
 
     # Open the output file in Write mode
     progress(progbase,"Writing code")
@@ -1193,7 +1204,8 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
     sceneLines = string.replace(sceneLines, 'xxUnderScoresxx', underScores)
     sceneLines = string.replace(sceneLines, 'xxLowercaseFileNamexx', nameOnly.lower())
     outputSceneFileDescriptor.write(sceneLines)
-    
+
+    once = True
     for stuff in stuffs:
         outputSceneFileDescriptor.write(
             "object { \n" +
@@ -1202,8 +1214,11 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
             "   rotate <0, MakeHuman_RotateY, 0> \n" +
             "   rotate <MakeHuman_RotateX, 0, 0> \n" +
             "   translate <MakeHuman_TranslateX, MakeHuman_TranslateY, MakeHuman_TranslateZ> \n" +
-            "   material {%s_Material} \n" % stuff.name +
-            "}  \n")
+            "   material {%s_Material} \n" % stuff.name)
+        if once:
+            outputSceneFileDescriptor.write ("   no_shadow\n")
+            once = False
+        outputSceneFileDescriptor.write ("}  \n")
 
     # Job done, clean up
     outputSceneFileDescriptor.close()
@@ -1211,9 +1226,8 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
 
     # Copy the skin texture file into the output directory
     progress(1,"Finishing")
-    copyFile(pigmentMap, os.path.join(outputDirectory, "texture.png"))
 
-    for stuff in stuffs[1:]:
+    for stuff in stuffs:
         if stuff.texture:
             copyFile(stuff.texture, outputDirectory)
         """
@@ -1246,7 +1260,7 @@ def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
             if settings['hairSpec'] == True:
                 # Export transparency map.
                 hairtex = mh.Image(path = os.path.join(stuff.texture[0],stuff.texture[1]))
-                hairalpha = hairtex.alphaChannel()
+                hairalpha = imgop.getAlpha(hairtex)
                 hairalpha.save(path = os.path.join(outDir,"%s_TPOV.png" % stuff.name))
                 haircodeFD = open ("data/povray/hair_2.inc",'r')
                 haircodeLines = haircodeFD.read()
