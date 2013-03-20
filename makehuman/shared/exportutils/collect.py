@@ -163,6 +163,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     
     stuffs = []
     stuff = CStuff(name, None)
+    stuff.object = human
 
     if rigfile:
         stuff.boneInfo = getArmatureFromRigFile(rigfile, obj, config.scale)
@@ -179,15 +180,10 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     else:
         deleteVerts = numpy.zeros(len(obj.coord), bool)
     _,deleteVerts = setupProxies('Clothes', None, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
-    progress(0.03*(3-2*subdivide))
     _,deleteVerts = setupProxies('Hair', None, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
-    progress(0.06*(3-2*subdivide))
     foundProxy,deleteVerts = setupProxies('Proxy', name, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
-    progbase = 0.09*(3-2*subdivide)
-    progress(progbase)
+    progress(0.06*(3-2*subdivide))
     if not foundProxy:
-        # If we subdivide here, helpers will not be removed.
-        # Subdiv of main mesh moved below
         if helpers:     # helpers override everything
             if config.scale == 1.0:
                 stuff.meshInfo = meshInfo
@@ -196,79 +192,20 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
         else:
             stuff.meshInfo = filterMesh(meshInfo, config.scale, deleteGroups, deleteVerts, eyebrows, lashes)
         stuffs = [stuff] + stuffs
-        progbase = 0.12*(3-2*subdivide)
-        progress(progbase)
+    progbase = 0.12*(3-2*subdivide)
+    progress(progbase)
 
-    clothKeys = human.clothesObjs.keys()
-
-    # Apply custom textures if applicable
-    # TL: Clothes and Hair are now different proxy types.
-    # Can probably simplify this code. Need uuid?
+    # Apply custom textures, and subdivide, if requested.
     stuffnum = float(len(stuffs))
     i = 0.0
-    nextpb = 1-0.7*subdivide
     for stuff in stuffs:
-        progress(progbase+(i/stuffnum)*(nextpb-progbase))
-        proxy = stuff.proxy
-        if proxy:
-            if proxy.type == 'Clothes':
-                uuid = proxy.getUuid()
-                if uuid:
-                    if uuid in clothKeys:
-                        # Clothes
-                        clothesObj = human.clothesObjs[uuid]
-                        if clothesObj:
-                            texture = clothesObj.mesh.texture
-                            stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
-            elif proxy.type == 'Hair':
-                uuid = proxy.getUuid()
-                if uuid == human.hairProxy.getUuid():
-                    # Hair
-                    texture = human.hairObj.mesh.texture
-                    stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
-            elif proxy.type == 'Proxy':
-                # Proxy
-                texture = human.mesh.texture
-                stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
+        progress(progbase+(i/stuffnum)*(1-progbase))
+        texture = stuff.object.mesh.texture
+        stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
+        if subdivide:
+            subMesh = getSubdivision(stuff.object,  lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
+            stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
         i += 1.0
-    progbase = nextpb
-
-    # Subdivide meshes if requested
-    # TL: Subdivision of main mesh moved here
-    if subdivide:
-        i = 0.0
-        for stuff in stuffs:
-            progress(progbase+(i/stuffnum)*(1-progbase))
-            proxy = stuff.proxy
-            if proxy:
-                if proxy.type == 'Clothes':
-                    uuid = proxy.getUuid()
-                    if uuid and uuid in clothKeys:
-                        # Subdivide clothes
-                        clo = human.clothesObjs[uuid]
-                        subMesh = getSubdivision(clo, lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
-                        stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
-                if proxy.type == 'Hair':
-                    uuid = proxy.getUuid()
-                    if uuid == human.hairProxy.getUuid():
-                        # Subdivide hair
-                        hair = human.hairObj
-                        subMesh = getSubdivision(hair, lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
-                        stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
-                elif proxy.type == 'Proxy':
-                    # Subdivide proxy
-                    subMesh = getSubdivision(human, lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
-                    stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
-                    
-            else:
-                # Get filtered mesh
-                #TODO# obj = stuff.meshInfo.object.getObject() (which is None)
-                # temporarily assuming always human for now.
-                # maybe stuff should carry its object to make this universal (and get rid of uuids)
-                obj = human
-                subMesh = getSubdivision(obj,  lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
-                stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
-            i += 1.0
 
     progress(1)
     return stuffs
@@ -302,6 +239,7 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, de
                     else:
                         stuffname = None
 
+                    stuff.object = pfile.obj
                     stuff.meshInfo = mh2proxy.getMeshInfo(obj, proxy, config, meshInfo.weights, meshInfo.shapes, stuffname)
 
                     stuffs.append(stuff)

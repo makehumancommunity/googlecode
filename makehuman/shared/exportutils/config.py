@@ -90,6 +90,7 @@ class Config:
             words = self.human.hairObj.mesh.name.split('.')
             pfile = CProxyFile()
             pfile.set('Hair', 2)
+            pfile.obj = self.human.hairObj
             name = self.goodName(words[0])
             pfile.file = self.human.hairProxy.file
             proxyList.append(pfile)
@@ -99,6 +100,7 @@ class Config:
                 name = self.goodName(key)
                 pfile = CProxyFile()
                 pfile.set('Clothes', 3)            
+                pfile.obj = clo
                 proxy = self.human.clothesProxies[key]
                 pfile.file = proxy.file
                 proxyList.append(pfile)
@@ -107,6 +109,7 @@ class Config:
             name = self.goodName(self.human.proxy.name)
             pfile = CProxyFile()
             pfile.set('Proxy', 4)
+            pfile.obj = self.human
             pfile.file = self.human.proxy.file
             proxyList.append(pfile)    
     
@@ -204,6 +207,7 @@ class CProxyFile:
         self.type = 'Clothes'
         self.layer = 0
         self.file = ""
+        self.obj = None
         
     def set(self, type, layer):
         self.type = type
