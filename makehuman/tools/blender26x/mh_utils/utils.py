@@ -39,7 +39,10 @@ Epsilon = 1e-3
 def round(x):
     if abs(x) < 1e-3:
         return "0"
-    string = "%.4g" % x
+    elif abs(x) > 10.0:
+        string = "%.5g" % x
+    else:
+        string = "%.4g" % x
     if len(string) > 2:
         if string[:2] == "0.":
             return string[1:5]
