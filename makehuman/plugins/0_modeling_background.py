@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 """
@@ -26,6 +25,7 @@ TODO
 __docformat__ = 'restructuredtext'
 
 import os
+import numpy as np
 
 import gui3d
 import events3d
@@ -38,6 +38,7 @@ import log
 import language
 import texture
 
+# TODO store position and scale in action
 class BackgroundAction(gui3d.Action):
     def __init__(self, name, library, side, before, after):
         super(BackgroundAction, self).__init__(name)
@@ -107,11 +108,14 @@ class BackgroundChooser(gui3d.TaskView):
                        'other': None }
 
         self.filenames = {}    # Stores (filename, aspect)
+        self.transformations = {} # Stores ((posX,posY), scaleY)
         for side in self.sides.keys():
             self.filenames[side] = None
+            self.transformations[side] = [(0.0, 0.0), 1.0]
 
-        mesh = geometry3d.RectangleMesh(1, 1)
+        mesh = geometry3d.RectangleMesh(20, 20, centered=True)
         self.backgroundImage = gui3d.app.addObject(gui3d.Object([0, 0, 1], mesh, visible=False))
+        self.backgroundImage.mesh.setCameraProjection(0) # Set to model camera
         self.opacity = 100
         mesh.setColor([255, 255, 255, self.opacity])
         mesh.setPickable(False)
@@ -166,8 +170,8 @@ class BackgroundChooser(gui3d.TaskView):
 
             if self.sides[side]:
                 gui3d.app.selectedHuman.setRotation(self.sides[side])
-            #mh.changeTask('Texturing', 'Projection')
-            mh.changeCategory('Modelling')
+            mh.changeTask('Texturing', 'Projection')
+            #mh.changeCategory('Modelling')
             mh.redraw()
 
     def getSelectedSideCheckbox(self):
@@ -188,6 +192,8 @@ class BackgroundChooser(gui3d.TaskView):
             self.filenames[side] = (texturePath, aspect)
         else:
             self.filenames[side] = None
+
+        self.transformations[side] = [(0.0, 0.0), 1.0]
 
         if side == self.getCurrentSide():
             # Reload current texture
@@ -264,7 +270,7 @@ class BackgroundChooser(gui3d.TaskView):
         gui3d.app.selectedHuman.show()
 
     def onHumanTranslated(self, event):
-        pass
+        self.backgroundImage.setPosition(gui3d.app.selectedHuman.getPosition()) # TODO other Z offset?
 
     def onHumanChanging(self, event):
         
@@ -284,15 +290,18 @@ class BackgroundChooser(gui3d.TaskView):
         else:
             filename = aspect = None
         if filename:
-            self.backgroundImage.setPosition([-aspect, -1, 0])
-            self.backgroundImage.mesh.resize(2.0 * aspect, 2.0)
-
-            self.backgroundImage.mesh.setTexture(filename)
             self.backgroundImage.show()
+            self.backgroundImage.setPosition(gui3d.app.selectedHuman.getPosition())
+            (posX, posY), scale = self.transformations[side]
+            self.setBackgroundPosition(posX, posY)
+            self.setBackgroundScale(scale)
+            self.backgroundImage.mesh.setTexture(filename)
         else:
             self.backgroundImage.hide()
+        mh.redraw()
 
     def onHumanRotated(self, event):
+        # TODO when the camera rotates to an angle after pressing a view angle button, this method is called a lot of times repeatedly
         if self.isBackgroundEnabled():
             self.setBackgroundImage(self.getCurrentSide())
 
@@ -301,6 +310,34 @@ class BackgroundChooser(gui3d.TaskView):
             return None
         return self.filenames[self.getCurrentSide()]
 
+    def getBackgroundScale(self):
+        if not self.isBackgroundShowing():
+            return 0.0
+        side = self.getCurrentSide()
+        return self.transformations[side][1]
+
+    def moveBackground(self, dx, dy):
+        if not self.isBackgroundShowing():
+            return
+        side = self.getCurrentSide()
+        self.backgroundImage.mesh.move(dx, dy)
+        self.transformations[side][0] = self.backgroundImage.mesh.getOffset()
+
+    def setBackgroundScale(self, scale):
+        if not self.isBackgroundShowing():
+            return
+        side = self.getCurrentSide()
+        scale = abs(float(scale))
+        (_, aspect) = self.getCurrentBackground()
+        self.backgroundImage.mesh.resize(scale * 20.0 * aspect, scale * 20.0)
+        self.transformations[side][1] = scale
+
+    def setBackgroundPosition(self, x, y):
+        if not self.isBackgroundShowing():
+            return
+        side = self.getCurrentSide()
+        self.backgroundImage.mesh.setPosition(x, y)
+        self.transformations[side][0] = (float(x), float(y))
 
 class TextureProjectionView(gui3d.TaskView) :
 
@@ -313,10 +350,6 @@ class TextureProjectionView(gui3d.TaskView) :
 
         gui3d.TaskView.__init__(self, category, 'Projection')
 
-        y = 80
-
-        self.lastPos = [0, 0]
-
         self.projectionBox = self.addLeftWidget(gui.GroupBox('Projection'))
 
         self.backgroundBox = self.addLeftWidget(gui.GroupBox('Background settings'))
@@ -324,7 +357,6 @@ class TextureProjectionView(gui3d.TaskView) :
         # sliders
         self.opacitySlider = self.backgroundBox.addWidget(gui.Slider(value=backgroundChooserView.opacity, min=0,max=255, label = "Opacity: %d"))
         self.foregroundTggl = self.backgroundBox.addWidget(gui.ToggleButton("Show in foreground"))
-
 
         @self.opacitySlider.mhEvent
         def onChanging(value):
@@ -340,39 +372,25 @@ class TextureProjectionView(gui3d.TaskView) :
 
         @self.backgroundImage.mhEvent
         def onMouseDragged(event):
-
             if event.button == mh.Buttons.LEFT_MASK:
-                ((x0,y0,z0),(x1,y1,z1)) = self.backgroundImage.mesh.calcBBox()
-                x, y, z = gui3d.app.guiCamera.convertToScreen(x0, y0, z0, self.backgroundImage.mesh)
-                x += event.dx
-                y += event.dy
-                x, y, z = gui3d.app.guiCamera.convertToWorld3D(x, y, z, self.backgroundImage.mesh)
-                dx, dy = x - x0, y - y0
-                x, y, z = self.backgroundImage.getPosition()
-                self.backgroundImage.setPosition([x + dx, y + dy, z])
+                dx = float(event.dx)/10.0
+                dy = float(-event.dy)/10.0
+                self.backgroundChooserView.moveBackground(dx, dy)
             elif event.button == mh.Buttons.RIGHT_MASK:
-                ((x0,y0,z0),(x1,y1,z1)) = self.backgroundImage.mesh.calcBBox()
-                x0, y0, z0 = gui3d.app.guiCamera.convertToScreen(x0, y0, z0, self.backgroundImage.mesh)
-                x1, y1, z1 = gui3d.app.guiCamera.convertToScreen(x1, y1, z1, self.backgroundImage.mesh)
-                dx, dy = x1 - x0, y0 - y1
-                (_, aspect) = self.backgroundChooserView.getCurrentBackground()
+                scale = self.backgroundChooserView.getBackgroundScale()
                 if abs(event.dx) > abs(event.dy):
-                    dx += event.dx
-                    dy = dx * (1/aspect)
+                    scale += float(event.dx)/100.0
                 else:
-                    dy += event.dy
-                    dx = dy * aspect
-                x1, y0 = x0 + dx, y1 + dy
-                x0, y0, z0 = gui3d.app.guiCamera.convertToWorld3D(x0, y0, z0, self.backgroundImage.mesh)
-                x1, y1, z1 = gui3d.app.guiCamera.convertToWorld3D(x1, y1, z1, self.backgroundImage.mesh)
-                self.backgroundImage.mesh.resize(x1 - x0, y1 - y0)
-                self.backgroundImage.mesh.move(x0, y0)
+                    scale += float(event.dy)/100.0
+
+                self.backgroundChooserView.setBackgroundScale(scale)
 
         self.dragButton = self.backgroundBox.addWidget(gui.ToggleButton('Move && Resize'))
 
         @self.dragButton.mhEvent
         def onClicked(event):
             self.backgroundImage.mesh.setPickable(self.dragButton.selected)
+            gui3d.app.selectedHuman.mesh.setPickable(not self.dragButton.selected)
             mh.updatePickingBuffer()
 
         self.chooseBGButton = self.backgroundBox.addWidget(gui.Button('Choose background'))
@@ -410,6 +428,8 @@ class TextureProjectionView(gui3d.TaskView) :
 
         gui3d.TaskView.onShow(self, event)
         self.backgroundImage.mesh.setPickable(self.dragButton.selected)
+        gui3d.app.selectedHuman.mesh.setPickable(not self.dragButton.selected)
+        mh.updatePickingBuffer()
         gui3d.app.selectedHuman.mesh.setShadeless(1 if self.shadelessButton.selected else 0)
         self.opacitySlider.setValue(self.backgroundChooserView.opacity)
         self.foregroundTggl.setChecked(self.backgroundChooserView.isShowBgInFront())
@@ -417,8 +437,10 @@ class TextureProjectionView(gui3d.TaskView) :
     def onHide(self, event):
 
         gui3d.TaskView.onHide(self, event)
-        self.backgroundImage.mesh.setPickable(0)
         gui3d.app.selectedHuman.mesh.setShadeless(0)
+        self.backgroundImage.mesh.setPickable(False)
+        gui3d.app.selectedHuman.mesh.setPickable(True)
+        mh.updatePickingBuffer()
 
     def onHumanChanging(self, event):
         

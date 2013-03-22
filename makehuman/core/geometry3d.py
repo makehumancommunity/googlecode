@@ -23,6 +23,7 @@ This module contains classes for commonly used geometry
 """
 
 import module3d
+import numpy as np
 
 class NineSliceMesh(module3d.Object3D):
     
@@ -99,24 +100,23 @@ class RectangleMesh(module3d.Object3D):
     :type width: int or float
     :param height: The height.
     :type height: int or float
+    :param centered True to center the mesh around its local origin.
+    :type centered bool
     :param texture: The texture.
     :type texture: str
     """
             
-    def __init__(self, width, height, texture=None):
+    def __init__(self, width, height, centered = False, texture=None):
 
         module3d.Object3D.__init__(self, 'rectangle_%s' % texture)
+
+        self.centered = centered
         
         # create group
         fg = self.createFaceGroup('rectangle')
         
         # The 4 vertices
-        v = [
-            (0.0, 0.0, 0.0),
-            (width, 0.0, 0.0),
-            (width, height, 0.0),
-            (0.0, height, 0.0)
-            ]
+        v = self._getVerts(width, height)
         
         # The 4 uv values
         uv = ((0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0))
@@ -134,20 +134,63 @@ class RectangleMesh(module3d.Object3D):
         self.setShadeless(1)
         self.updateIndexBuffer()
 
+    def _getVerts(self, width, height):
+        if self.centered:
+            v = [
+                (-width/2, -height/2, 0.0),
+                (width/2, -height/2, 0.0),
+                (width/2, height/2, 0.0),
+                (-width/2, height/2, 0.0)
+                ]
+        else:
+            v = [
+                (0.0, 0.0, 0.0),
+                (width, 0.0, 0.0),
+                (width, height, 0.0),
+                (0.0, height, 0.0)
+                ]
+        return v
+
     def move(self, dx, dy):
         self.coord += (dx, dy, 0)
         self.markCoords(coor=True)
-        self.update()     
-        
-    def resize(self, width, height):
-        v = [
-            (0.0, 0.0, 0.0),
-            (width, 0.0, 0.0),
-            (width, height, 0.0),
-            (0.0, height, 0.0)
-            ]
+        self.update()
+
+    def setPosition(self, x, y):
+        width, height = self.getSize()
+        v = np.asarray(self._getVerts(width, height), dtype=np.float32)
+        v += (x, y, 0)
         self.changeCoords(v)
-        self.update()     
+        self.update()
+
+    def resetPosition(self):
+        width, height = self.getSize()
+        v = self._getVerts(width, height)
+        self.changeCoords(v)
+        self.update()
+
+    def resize(self, width, height):
+        dx, dy = self.getOffset()
+        v = np.asarray(self._getVerts(width, height), dtype=np.float32)
+        v[:, 0] += dx
+        v[:, 1] += dy
+        self.changeCoords(v)
+        self.update()
+
+    def getSize(self):
+        ((x0,y0,z0),(x1,y1,z1)) = self.calcBBox()
+        return (x1 - x0, y0 - y1)
+
+    def getOffset(self):
+        ((x0,y0,z0),(x1,y1,z1)) = self.calcBBox()
+        if self.centered:
+            w, h = (x1 - x0, y0 - y1)
+            dx = x0+w/2
+            dy = y1+h/2
+        else:
+            dx = x0
+            dy = y1
+        return dx, dy
        
 class FrameMesh(module3d.Object3D):
 
