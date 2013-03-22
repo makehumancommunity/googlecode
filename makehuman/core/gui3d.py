@@ -522,6 +522,7 @@ class TaskView(View):
         self.focusWidget = None
         self.tab = None
         self.left, self.right = mh.addPanels()
+        self.sortOrder = None
 
     def getModifiers(self):
         return {}
@@ -566,10 +567,13 @@ class Category(View):
 
     def _taskTab(self, task):
         if task.tab is None:
-            task.tab = self.tabs.addTab(task.name, task.label or task.name)
+            task.tab = self.tabs.addTab(task.name, task.label or task.name, self.tasks.index(task))
 
     def realize(self, app):
+        print "==== Realizing category %s" % self.name
+        self.tasks.sort(key = lambda t: t.sortOrder)
         for task in self.tasks:
+            print "====  Realizing task %s" % task.name
             self._taskTab(task)
 
         @self.tabs.mhEvent
@@ -580,7 +584,10 @@ class Category(View):
     def addTask(self, task):
         if task.name in self.tasksByName:
             raise KeyError('A task with this name already exists', task.name)
+        if task.sortOrder == None:
+            task.sortOrder = int(max([t.sortOrder for t in self.tasks]) + 1) if len(self.tasks) > 0 else 0
         self.tasks.append(task)
+        self.tasks.sort(key = lambda t: t.sortOrder)
         self.tasksByName[task.name] = task
         self.addView(task)
         if self.tabs is not None:

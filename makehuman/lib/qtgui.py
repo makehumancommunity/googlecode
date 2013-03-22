@@ -90,10 +90,10 @@ class TabsBase(Widget):
         self._tabs_by_idx = {}
         self._tabs_by_name = {}
 
-    def _addTab(self, name, label):
+    def _addTab(self, name, label, idx=None):
         label = getLanguageString(label)
         tab = Tab(self, name, label)
-        tab.idx = self._makeTab(tab)
+        tab.idx = self._makeTab(tab, idx)
         self._tabs_by_idx[tab.idx] = tab
         self._tabs_by_name[tab.name] = tab
         return tab
@@ -121,12 +121,15 @@ class Tabs(QtGui.QTabWidget, TabsBase):
         QtGui.QTabWidget.__init__(self, parent)
         TabsBase.__init__(self)
 
-    def _makeTab(self, tab):
+    def _makeTab(self, tab, idx=None):
         tab.child = TabBar(self)
+        if idx:
+            super(Tabs, self).insertTab(idx, tab.child, tab.label)
+            return idx
         return super(Tabs, self).addTab(tab.child, tab.label)
 
-    def addTab(self, name, label):
-        return super(Tabs, self)._addTab(name, label)
+    def addTab(self, name, label, idx = None):
+        return super(Tabs, self)._addTab(name, label, idx)
 
     def tabChanged(self, idx):
         super(Tabs, self).tabChanged(idx)
@@ -143,11 +146,14 @@ class TabBar(QtGui.QTabBar, TabsBase):
     def tabBar(self):
         return self
 
-    def _makeTab(self, tab):
+    def _makeTab(self, tab, idx = None):
+        if idx:
+            super(TabBar, self).insertTab(idx, tab.label)
+            return idx
         return super(TabBar, self).addTab(tab.label)
 
-    def addTab(self, name, label):
-        return super(TabBar, self)._addTab(name, label)
+    def addTab(self, name, label, idx = None):
+        return super(TabBar, self)._addTab(name, label, idx)
 
 class GroupBox(QtGui.QGroupBox, Widget):
     def __init__(self, label = ''):
