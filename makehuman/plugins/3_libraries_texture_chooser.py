@@ -393,7 +393,9 @@ class TextureTaskView(gui3d.TaskView):
 
 def load(app):
     category = app.getCategory('Library')
-    taskview = category.addTask(TextureTaskView(category))
+    taskview = TextureTaskView(category)
+    taskview.sortOrder = 3
+    category.addTask(taskview)
 
     app.addLoadHandler('textures', taskview.loadHandler)
     app.addLoadHandler('skinTexture', taskview.loadHandler)

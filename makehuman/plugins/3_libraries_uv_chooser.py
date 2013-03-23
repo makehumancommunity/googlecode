@@ -96,7 +96,9 @@ class UvTaskView(gui3d.TaskView):
 
 def load(app):
     category = app.getCategory('Library')
-    taskview = category.addTask(UvTaskView(category))
+    taskview = UvTaskView(category)
+    taskview.sortOrder = 9
+    category.addTask(taskview)
 
     app.addLoadHandler('uvset', taskview.loadHandler)
     app.addSaveHandler(taskview.saveHandler)

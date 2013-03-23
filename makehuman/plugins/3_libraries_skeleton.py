@@ -497,7 +497,9 @@ class SkeletonLibrary(gui3d.TaskView):
 
 def load(app):
     category = app.getCategory('Library')
-    taskview = category.addTask(SkeletonLibrary(category))
+    taskview = SkeletonLibrary(category)
+    taskview.sortOrder = 5
+    category.addTask(taskview)
 
     human = gui3d.app.selectedHuman
     app.addLoadHandler('skeleton', taskview.loadHandler)

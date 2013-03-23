@@ -405,7 +405,9 @@ class ClothesTaskView(gui3d.TaskView):
 
 def load(app):
     category = app.getCategory('Library')
-    taskview = category.addTask(ClothesTaskView(category))
+    taskview = ClothesTaskView(category)
+    taskview.sortOrder = 2
+    category.addTask(taskview)
 
     app.addLoadHandler('clothes', taskview.loadHandler)
     app.addSaveHandler(taskview.saveHandler)
