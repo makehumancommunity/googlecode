@@ -94,6 +94,14 @@ class TabsBase(Widget):
         label = getLanguageString(label)
         tab = Tab(self, name, label)
         tab.idx = self._makeTab(tab, idx)
+        if idx:
+            # Update index list when inserting tabs at arbitrary positions
+            newIdxList = {}
+            for tIdx, t in self._tabs_by_idx.items():
+                if int(tIdx) >= idx:
+                    t.idx += 1
+                newIdxList[t.idx] = t
+            self._tabs_by_idx = newIdxList
         self._tabs_by_idx[tab.idx] = tab
         self._tabs_by_name[tab.name] = tab
         return tab
@@ -124,8 +132,7 @@ class Tabs(QtGui.QTabWidget, TabsBase):
     def _makeTab(self, tab, idx=None):
         tab.child = TabBar(self)
         if idx:
-            super(Tabs, self).insertTab(idx, tab.child, tab.label)
-            return idx
+            return super(Tabs, self).insertTab(idx, tab.child, tab.label)
         return super(Tabs, self).addTab(tab.child, tab.label)
 
     def addTab(self, name, label, idx = None):
@@ -148,8 +155,7 @@ class TabBar(QtGui.QTabBar, TabsBase):
 
     def _makeTab(self, tab, idx = None):
         if idx:
-            super(TabBar, self).insertTab(idx, tab.label)
-            return idx
+            return super(TabBar, self).insertTab(idx, tab.label)
         return super(TabBar, self).addTab(tab.label)
 
     def addTab(self, name, label, idx = None):
