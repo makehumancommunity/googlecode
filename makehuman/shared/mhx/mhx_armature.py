@@ -425,15 +425,31 @@ class ExportArmature(CArmature):
     def writeProperties(self, fp):
         for (key, val) in self.objectProps:
             fp.write("  Property %s %s ;\n" % (key, val))
+            
         for (key, val, string, min, max) in self.customProps:
-            fp.write('  DefProp Float Mha%s %.2f %s min=-%.2f,max=%.2f ;\n' % (key, val, string, min, max) )
+            self.defProp(fp, "FLOAT", key, val, string, min, max)
     
         if self.config.expressions:
             fp.write("#if toggle&T_Shapekeys\n")
             for skey in exportutils.shapekeys.ExpressionUnits:
-                fp.write("  DefProp Float Mhs%s 0.0 %s min=-1.0,max=2.0 ;\n" % (skey, skey))
+                self.defProp(fp, "FLOAT", "Mhs%s"%skey, 0.0, skey, -1.0, 2.0)
+                #fp.write("  DefProp Float Mhs%s 0.0 %s min=-1.0,max=2.0 ;\n" % (skey, skey))
             fp.write("#endif\n")   
 
+
+    def defProp(self, fp, type, key, val, string, min=0, max=1):            
+        #fp.write("  DefProp %s %s %s %s min=%s,max=%s ;\n" % (type, key, val, string, min, max))
+        if type == "BOOLEAN":
+            fp.write(
+                '  Property %s %s %s ;\n' % (key, val, string) +
+                '  PropKeys %s "type":\'%s\', "min":%d,"max":%d, ;\n' % (key, type, min, max))
+        elif type == "FLOAT":
+            fp.write(
+                '  Property %s %.2f %s ;\n' % (key, val, string) +
+                '  PropKeys %s "min":%.2f,"max":%.2f, ;\n' % (key, min, max))
+        else:
+            halt
+    
 
     def writeArmature(self, fp, version):
         fp.write("""
@@ -481,22 +497,24 @@ end Armature
 """)
 
         self.writeProperties(fp)
-        writeHideProp(fp, self.name)
+        self.writeHideProp(fp, self.name)
         for proxy in self.proxies.values():
-            writeHideProp(fp, proxy.name)
+            self.writeHideProp(fp, proxy.name)
         if self.config.useCustomShapes: 
             exportutils.custom.listCustomFiles(self.config)                    
         for path,name in self.config.customShapeFiles:
-            fp.write("  DefProp Float %s 0 %s  min=-1.0,max=2.0 ;\n" % (name, name[3:]))
+            self.defProp(fp, "FLOAT", name, 0, name[3:], -1.0, 2.0)
+            #fp.write("  DefProp Float %s 0 %s  min=-1.0,max=2.0 ;\n" % (name, name[3:]))
   
         fp.write("""
 end Object
 """)
 
 
-def writeHideProp(fp, name):                
-    fp.write("  DefProp Bool Mhh%s False Control_%s_visibility ;\n" % (name, name))
-    return
+    def writeHideProp(self, fp, name):                
+        self.defProp(fp, "BOOLEAN", "Mhh%s"%name, False, "Control_%s_visibility"%name)
+        #fp.write("  DefProp Bool Mhh%s False Control_%s_visibility ;\n" % (name, name))
+        return
 
 
 #-------------------------------------------------------------------------------        
@@ -678,108 +696,108 @@ class MhxArmature(ExportArmature):
         ExportArmature.writeProperties(self, fp)
 
         fp.write("""
-  Property &ArmIk_L 0.0 Left_arm_FK/IK ;
-  PropKeys &ArmIk_L "min":0.0,"max":1.0, ;
+  Property MhaArmIk_L 0.0 Left_arm_FK/IK ;
+  PropKeys MhaArmIk_L "min":0.0,"max":1.0, ;
 
-  Property &ArmHinge_L False Left_arm_hinge ;
-  PropKeys &ArmHinge_L "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaArmHinge_L False Left_arm_hinge ;
+  PropKeys MhaArmHinge_L "type":'BOOLEAN',"min":0,"max":1, ;
 
-  Property &ElbowPlant_L False Left_elbow_plant ;
-  PropKeys &ElbowPlant_L "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaElbowPlant_L False Left_elbow_plant ;
+  PropKeys MhaElbowPlant_L "type":'BOOLEAN',"min":0,"max":1, ;
 
-  Property &HandFollowsWrist_L True Left_hand_follows_wrist ;
-  PropKeys &HandFollowsWrist_L "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaHandFollowsWrist_L True Left_hand_follows_wrist ;
+  PropKeys MhaHandFollowsWrist_L "type":'BOOLEAN',"min":0,"max":1, ;
 
-  Property &LegIk_L 0.0 Left_leg_FK/IK ;
-  PropKeys &LegIk_L "min":0.0,"max":1.0, ;
+  Property MhaLegIk_L 0.0 Left_leg_FK/IK ;
+  PropKeys MhaLegIk_L "min":0.0,"max":1.0, ;
   
-  Property &LegIkToAnkle_L False Left_leg_IK_to_ankle ;
-  PropKeys &LegIkToAnkle_L "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaLegIkToAnkle_L False Left_leg_IK_to_ankle ;
+  PropKeys MhaLegIkToAnkle_L "type":'BOOLEAN',"min":0,"max":1, ;
 
-  # Property &KneeFollowsFoot_L True Left_knee_follows_foot ;
-  # PropKeys &KneeFollowsFoot_L "type":'BOOLEAN',"min":0,"max":1, ;
+  # Property MhaKneeFollowsFoot_L True Left_knee_follows_foot ;
+  # PropKeys MhaKneeFollowsFoot_L "type":'BOOLEAN',"min":0,"max":1, ;
 
-  # Property &KneeFollowsHip_L False Left_knee_follows_hip ;
-  # PropKeys &KneeFollowsHip_L "type":'BOOLEAN',"min":0,"max":1, ;
+  # Property MhaKneeFollowsHip_L False Left_knee_follows_hip ;
+  # PropKeys MhaKneeFollowsHip_L "type":'BOOLEAN',"min":0,"max":1, ;
 
-  # Property &ElbowFollowsWrist_L False Left_elbow_follows_wrist ;
-  # PropKeys &ElbowFollowsWrist_L "type":'BOOLEAN',"min":0,"max":1, ;
+  # Property MhaElbowFollowsWrist_L False Left_elbow_follows_wrist ;
+  # PropKeys MhaElbowFollowsWrist_L "type":'BOOLEAN',"min":0,"max":1, ;
 
-  # Property &ElbowFollowsShoulder_L True Left_elbow_follows_shoulder ;
-  # PropKeys &ElbowFollowsShoulder_L "type":'BOOLEAN',"min":0,"max":1, ;
+  # Property MhaElbowFollowsShoulder_L True Left_elbow_follows_shoulder ;
+  # PropKeys MhaElbowFollowsShoulder_L "type":'BOOLEAN',"min":0,"max":1, ;
 
-  Property &FingerControl_L True Left_fingers_controlled ;
-  PropKeys &FingerControl_L "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaFingerControl_L True Left_fingers_controlled ;
+  PropKeys MhaFingerControl_L "type":'BOOLEAN',"min":0,"max":1, ;
 
-  Property &ArmIk_R 0.0 Right_arm_FK/IK ;
-  PropKeys &ArmIk_R "min":0.0,"max":1.0, ;
+  Property MhaArmIk_R 0.0 Right_arm_FK/IK ;
+  PropKeys MhaArmIk_R "min":0.0,"max":1.0, ;
 
-  Property &ArmHinge_R False Right_arm_hinge ;
-  PropKeys &ArmHinge_R "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaArmHinge_R False Right_arm_hinge ;
+  PropKeys MhaArmHinge_R "type":'BOOLEAN',"min":0,"max":1, ;
 
-  Property &ElbowPlant_R False Right_elbow_plant ;
-  PropKeys &ElbowPlant_R "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaElbowPlant_R False Right_elbow_plant ;
+  PropKeys MhaElbowPlant_R "type":'BOOLEAN',"min":0,"max":1, ;
 
-  Property &LegIk_R 0.0 Right_leg_FK/IK ;
-  PropKeys &LegIk_R "min":0.0,"max":1.0, ;
+  Property MhaLegIk_R 0.0 Right_leg_FK/IK ;
+  PropKeys MhaLegIk_R "min":0.0,"max":1.0, ;
 
-  Property &HandFollowsWrist_R True Right_hand_follows_wrist ;
-  PropKeys &HandFollowsWrist_R "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaHandFollowsWrist_R True Right_hand_follows_wrist ;
+  PropKeys MhaHandFollowsWrist_R "type":'BOOLEAN',"min":0,"max":1, ;
 
-  Property &LegIkToAnkle_R False Right_leg_IK_to_ankle ;
-  PropKeys &LegIkToAnkle_R "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaLegIkToAnkle_R False Right_leg_IK_to_ankle ;
+  PropKeys MhaLegIkToAnkle_R "type":'BOOLEAN',"min":0,"max":1, ;
 
-  # Property &KneeFollowsFoot_R True Right_knee_follows_foot ;
-  # PropKeys &KneeFollowsFoot_R "type":'BOOLEAN',"min":0,"max":1, ;
+  # Property MhaKneeFollowsFoot_R True Right_knee_follows_foot ;
+  # PropKeys MhaKneeFollowsFoot_R "type":'BOOLEAN',"min":0,"max":1, ;
 
-  # Property &KneeFollowsHip_R False Right_knee_follows_hip ;
-  # PropKeys &KneeFollowsHip_R "type":'BOOLEAN',"min":0,"max":1, ;
+  # Property MhaKneeFollowsHip_R False Right_knee_follows_hip ;
+  # PropKeys MhaKneeFollowsHip_R "type":'BOOLEAN',"min":0,"max":1, ;
 
-  # Property &ElbowFollowsWrist_R False Right_elbow_follows_wrist ;
-  # PropKeys &ElbowFollowsWrist_R "type":'BOOLEAN',"min":0,"max":1, ;
+  # Property MhaElbowFollowsWrist_R False Right_elbow_follows_wrist ;
+  # PropKeys MhaElbowFollowsWrist_R "type":'BOOLEAN',"min":0,"max":1, ;
 
-  # Property &ElbowFollowsShoulder_R True Right_elbow_follows_shoulder ;
-  # PropKeys &ElbowFollowsShoulder_R "type":'BOOLEAN',"min":0,"max":1, ;
+  # Property MhaElbowFollowsShoulder_R True Right_elbow_follows_shoulder ;
+  # PropKeys MhaElbowFollowsShoulder_R "type":'BOOLEAN',"min":0,"max":1, ;
 
-  Property &GazeFollowsHead 1.0 Gaze_follows_world_or_head ;
-  PropKeys &GazeFollowsHead "type":'BOOLEAN',"min":0.0,"max":1.0, ;
+  Property MhaGazeFollowsHead 1.0 Gaze_follows_world_or_head ;
+  PropKeys MhaGazeFollowsHead "type":'BOOLEAN',"min":0.0,"max":1.0, ;
 
-  Property &FingerControl_R True Right_fingers_controlled ;
-  PropKeys &FingerControl_R "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaFingerControl_R True Right_fingers_controlled ;
+  PropKeys MhaFingerControl_R "type":'BOOLEAN',"min":0,"max":1, ;
   
-  Property &ArmStretch_L 0.1 Left_arm_stretch_amount ;
-  PropKeys &ArmStretch_L "min":0.0,"max":1.0, ;
+  Property MhaArmStretch_L 0.1 Left_arm_stretch_amount ;
+  PropKeys MhaArmStretch_L "min":0.0,"max":1.0, ;
 
-  Property &LegStretch_L 0.1 Left_leg_stretch_amount ;
-  PropKeys &LegStretch_L "min":0.0,"max":1.0, ;
+  Property MhaLegStretch_L 0.1 Left_leg_stretch_amount ;
+  PropKeys MhaLegStretch_L "min":0.0,"max":1.0, ;
 
-  Property &ArmStretch_R 0.1 Right_arm_stretch_amount ;
-  PropKeys &ArmStretch_R "min":0.0,"max":1.0, ;
+  Property MhaArmStretch_R 0.1 Right_arm_stretch_amount ;
+  PropKeys MhaArmStretch_R "min":0.0,"max":1.0, ;
 
-  Property &LegStretch_R 0.1 Right_leg_stretch_amount ;
-  PropKeys &LegStretch_R "min":0.0,"max":1.0, ;
+  Property MhaLegStretch_R 0.1 Right_leg_stretch_amount ;
+  PropKeys MhaLegStretch_R "min":0.0,"max":1.0, ;
 
-  Property &RotationLimits 0.8 Influence_of_rotation_limit_constraints ;
-  PropKeys &RotationLimits "min":0.0,"max":1.0, ;
+  Property MhaRotationLimits 0.8 Influence_of_rotation_limit_constraints ;
+  PropKeys MhaRotationLimits "min":0.0,"max":1.0, ;
 
-  Property &FreePubis 0.5 Pubis_moves_freely ;
-  PropKeys &FreePubis "min":0.0,"max":1.0, ;
+  Property MhaFreePubis 0.5 Pubis_moves_freely ;
+  PropKeys MhaFreePubis "min":0.0,"max":1.0, ;
 
-  Property &Breathe 0.0 Breathe ;
-  PropKeys &Breathe "min":-0.5,"max":2.0, ;
+  Property MhaBreathe 0.0 Breathe ;
+  PropKeys MhaBreathe "min":-0.5,"max":2.0, ;
 """)
 
         if self.config.advancedSpine:
         
             fp.write("""
-  Property &SpineInvert False Spine_from_shoulders_to_pelvis ;
-  PropKeys &SpineInvert "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaSpineInvert False Spine_from_shoulders_to_pelvis ;
+  PropKeys MhaSpineInvert "type":'BOOLEAN',"min":0,"max":1, ;
   
-  Property &SpineIk False Spine_FK/IK ;
-  PropKeys &SpineIk "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaSpineIk False Spine_FK/IK ;
+  PropKeys MhaSpineIk "type":'BOOLEAN',"min":0,"max":1, ;
   
-  Property &SpineStretch 0.2 Spine_stretch_amount ;
-  PropKeys &SpineStretch "min":0.0,"max":1.0, ;    
+  Property MhaSpineStretch 0.2 Spine_stretch_amount ;
+  PropKeys MhaSpineStretch "min":0.0,"max":1.0, ;    
 """)        
 
 #-------------------------------------------------------------------------------        
