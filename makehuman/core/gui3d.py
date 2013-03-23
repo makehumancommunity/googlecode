@@ -590,8 +590,7 @@ class Category(View):
         self.addView(task)
         if self.tabs is not None:
             self._taskTab(task)
-        if self.task is None:
-            self.task = task.name
+        self.task = self.tasks[0].name
         return task
 
     def getTaskByName(self, name):
