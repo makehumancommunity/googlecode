@@ -570,10 +570,8 @@ class Category(View):
             task.tab = self.tabs.addTab(task.name, task.label or task.name, self.tasks.index(task))
 
     def realize(self, app):
-        print "==== Realizing category %s" % self.name
         self.tasks.sort(key = lambda t: t.sortOrder)
         for task in self.tasks:
-            print "====  Realizing task %s" % task.name
             self._taskTab(task)
 
         @self.tabs.mhEvent
