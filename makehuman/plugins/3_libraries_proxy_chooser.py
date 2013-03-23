@@ -166,9 +166,9 @@ class ProxyTaskView(gui3d.TaskView):
 
 
 def load(app):
-    category = app.getCategory('Library')
+    category = app.getCategory('Geometries')
     taskview = ProxyTaskView(category)
-    taskview.sortOrder = 4
+    taskview.sortOrder = 3
     category.addTask(taskview)
 
     app.addLoadHandler('proxy', taskview.loadHandler)

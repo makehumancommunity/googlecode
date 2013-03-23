@@ -177,9 +177,9 @@ class HairTaskView(gui3d.TaskView):
 
 
 def load(app):
-    category = app.getCategory('Library')
+    category = app.getCategory('Geometries')
     taskview = HairTaskView(category)
-    taskview.sortOrder = 2.5
+    taskview.sortOrder = 1
     category.addTask(taskview)
 
     app.addLoadHandler('hair', taskview.loadHandler)

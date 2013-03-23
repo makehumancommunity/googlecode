@@ -175,9 +175,9 @@ class PoseLoadTaskView(gui3d.TaskView):
 
 
 def load(app):
-    category = app.getCategory('Library')
+    category = app.getCategory('Pose/Animate')
     taskview = PoseLoadTaskView(category)
-    taskview.sortOrder = 1.7
+    taskview.sortOrder = 1
     category.addTask(taskview)
 
     app.addLoadHandler('poses', taskview.loadHandler)

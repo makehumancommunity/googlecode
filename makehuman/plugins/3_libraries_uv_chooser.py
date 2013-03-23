@@ -95,7 +95,7 @@ class UvTaskView(gui3d.TaskView):
 
 
 def load(app):
-    category = app.getCategory('Library')
+    category = app.getCategory('Textures')
     taskview = UvTaskView(category)
     taskview.sortOrder = 9
     category.addTask(taskview)

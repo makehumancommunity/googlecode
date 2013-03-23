@@ -95,7 +95,7 @@ class ClothesAction(Action):
 class TextureTaskView(gui3d.TaskView):
 
     def __init__(self, category):
-        gui3d.TaskView.__init__(self, category, 'Texture', label='Textures')
+        gui3d.TaskView.__init__(self, category, 'Texture', label='Skin/Material')
 
         self.systemSkins = os.path.join('data', 'skins')
         self.systemTextures = os.path.join('data', 'clothes', 'textures')
@@ -392,9 +392,9 @@ class TextureTaskView(gui3d.TaskView):
 
 
 def load(app):
-    category = app.getCategory('Library')
+    category = app.getCategory('Textures')
     taskview = TextureTaskView(category)
-    taskview.sortOrder = 3
+    taskview.sortOrder = 0
     category.addTask(taskview)
 
     app.addLoadHandler('textures', taskview.loadHandler)

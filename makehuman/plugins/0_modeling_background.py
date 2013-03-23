@@ -170,7 +170,7 @@ class BackgroundChooser(gui3d.TaskView):
 
             if self.sides[side]:
                 gui3d.app.selectedHuman.setRotation(self.sides[side])
-            mh.changeTask('Texturing', 'Projection')
+            mh.changeTask('Textures', 'Projection')
             #mh.changeCategory('Modelling')
             mh.redraw()
 
@@ -219,7 +219,7 @@ class BackgroundChooser(gui3d.TaskView):
                 self.backgroundImageToggle.setChecked(True)
                 mh.redraw()
             else:
-                mh.changeTask('Library', 'Background')
+                mh.changeTask('Textures', 'Background')
         else: # Disable
             self.backgroundImage.hide()
             # Switch to perspective view
@@ -397,7 +397,7 @@ class TextureProjectionView(gui3d.TaskView) :
 
         @self.chooseBGButton.mhEvent
         def onClicked(event):
-            mh.changeTask('Library', 'Background')
+            mh.changeTask('Textures', 'Background')
 
         self.projectBackgroundButton = self.projectionBox.addWidget(gui.Button('Project background'))
 
@@ -523,12 +523,14 @@ class TextureProjectionView(gui3d.TaskView) :
 
 
 def load(app):
-    category = app.getCategory('Library')
+    category = app.getCategory('Textures')
     bgChooser = BackgroundChooser(category)
-    bgChooser.sortOrder = 0
+    bgChooser.sortOrder = 1
     category.addTask(bgChooser)
-    category = app.getCategory('Texturing')
-    bgSettings = category.addTask(TextureProjectionView(category, bgChooser))
+    category = app.getCategory('Textures')
+    bgSettings = TextureProjectionView(category, bgChooser)
+    bgSettings.sortOrder = 1.5
+    category.addTask(bgSettings)
 
 # This method is called when the plugin is unloaded from makehuman
 # At the moment this is not used, but in the future it will remove the added GUI elements

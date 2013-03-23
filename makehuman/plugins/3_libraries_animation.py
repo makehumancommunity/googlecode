@@ -633,9 +633,10 @@ def setColorForFaceGroup(mesh, fgName, color):
 
 
 def load(app):
-    category = app.getCategory('Library')
+    category = app.getCategory('Geometries')
+    category = app.getCategory('Pose/Animate')
     taskview = AnimationLibrary(category)
-    taskview.sortOrder = 5.5
+    taskview.sortOrder = 3.5
     category.addTask(taskview)
 
     app.addLoadHandler('animations', taskview.loadHandler)

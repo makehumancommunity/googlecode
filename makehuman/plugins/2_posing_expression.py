@@ -268,23 +268,25 @@ class VisemeLoadTaskView(MhmLoadTaskView):
 
 
 def load(app):
-    category = app.getCategory('Gestures')
-    expressionview = category.addTask(ExpressionTaskView(category))
+    category = app.getCategory('Pose/Animate')
+    expressionTuning = ExpressionTaskView(category)
+    expressionTuning.sortOrder = 0.5
+    category.addTask(expressionTuning)
     
-    app.addLoadHandler('expression', expressionview.loadHandler)
-    app.addSaveHandler(expressionview.saveHandler)
+    app.addLoadHandler('expression', expressionTuning.loadHandler)
+    app.addSaveHandler(expressionTuning.saveHandler)
 
-    category = app.getCategory('Library')
-    taskview = ExpressionLoadTaskView(category, expressionview)
-    taskview.sortOrder = 1
-    category.addTask(taskview)
-    taskview = VisemeLoadTaskView(category, expressionview)
-    taskview.sortOrder = 1.5
-    category.addTask(taskview)
+    expressionView = ExpressionLoadTaskView(category, expressionTuning)
+    expressionView.sortOrder = 0
+    category.addTask(expressionView)
+
+    visemeView = VisemeLoadTaskView(category, expressionTuning)
+    visemeView.sortOrder = 9
+    category.addTask(visemeView)
 
 # This method is called when the plugin is unloaded from makehuman
 # At the moment this is not used, but in the future it will remove the added GUI elements
 
 
 def unload(app):
-    pass
+    pass    

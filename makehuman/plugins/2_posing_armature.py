@@ -804,8 +804,10 @@ taskview = None
 def load(app):
     return
     
-    category = app.getCategory('Gestures')
-    taskview = category.addTask(PoseArmatureTaskView(category))
+    category = app.getCategory('Pose/Animate')
+    taskview = PoseArmatureTaskView(category)
+    taskview.sortOrder = 1.9
+    category.addTask(taskview)
 
     app.addLoadHandler('poses', taskview.loadHandler)
     app.addSaveHandler(taskview.saveHandler)
