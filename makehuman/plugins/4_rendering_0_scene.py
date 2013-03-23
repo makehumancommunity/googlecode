@@ -1,12 +1,34 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+""" 
+**Project Name:**      MakeHuman
+
+**Product Home Page:** http://www.makehuman.org/
+
+**Code Home Page:**    http://code.google.com/p/makehuman/
+
+**Authors:**           Thanasis Papoutsidakis
+
+**Copyright(c):**      MakeHuman Team 2001-2013
+
+**Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
+
+**Coding Standards:**  See http://www.makehuman.org/node/165
+
+Abstract
+--------
+
+Scene editor plugin.
+"""
+
 import mh
 import gui
 import gui3d
 
 import os
 import scene
+
 
 class SceneItem(object):
     def __init__(self, sceneview):
@@ -96,6 +118,9 @@ class LightSceneItem(SceneItem):
 
     def showProps(self, propsWidgets):
         SceneItem.showProps(self, propsWidgets)
+        self.posbox = self.widgetList[0].addWidget(gui.TextView("Position"))
+        self.posbox = self.widgetList[0].addWidget(gui.TextEdit(
+            ", ".join([str(x) for x in self.light.pos])))
         self.removebtn = self.widgetList[0].addWidget(
             gui.Button('Remove light ' + str(self.lightid)))
 
@@ -105,7 +130,14 @@ class LightSceneItem(SceneItem):
             self.sceneview.readScene()
             SceneItem.hideProps(self)
 
-    
+        @self.posbox.mhEvent
+        def onChange(value):
+            try:
+                self.light.pos = tuple([float(x) for x in value.split(", ")])
+            except: # The user hasn't typed the value correctly yet.
+                pass
+
+
 class SceneTaskView(gui3d.TaskView):
 
     def __init__(self, category):
