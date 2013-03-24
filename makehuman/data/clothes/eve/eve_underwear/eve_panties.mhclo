@@ -11,7 +11,7 @@
 # y_scale 14022 14040 4.5292
 # z_depth 30
 # subsurf 0 1
-# solidify 0.020 -1.000
+# solidify 0.080 -1.000
 # shapekey Breathe
 # uvtex_layer 0 base
 # objfile_layer 0
