@@ -327,10 +327,11 @@ class MHApplication(gui3d.Application, mh.Application):
 
         # Set up categories and tasks
         self.getCategory("Modelling")
-        self.addCategory(guifiles.FilesCategory())
         self.getCategory("Geometries")
         self.getCategory("Textures")
         self.getCategory("Pose/Animate")
+        self.getCategory("Rendering")
+        self.addCategory(guifiles.FilesCategory())
 
     def loadPlugins(self):
 
