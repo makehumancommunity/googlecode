@@ -564,6 +564,7 @@ class Category(View):
         self.tabs = None
         self.panel = None
         self.task = None
+        self.sortOrder = None
 
     def _taskTab(self, task):
         if task.tab is None:
@@ -699,15 +700,26 @@ class Application(events3d.EventHandler):
         picked = mh.getColorPicked()
         return selection.selectionColorMap.getSelectedFaceGroup(picked)
 
-    def addCategory(self, category):
+    def addCategory(self, category, sortOrder = None):
         if category.name in self.categories:
             raise KeyError('A category with this name already exists', category.name)
 
         if category.parent:
             raise RuntimeError('The category is already attached')
 
+        if sortOrder == None:
+            categories = self.categories.values()
+            categories.sort(key = lambda c: c.sortOrder)
+            sortOrder = int(max([c.sortOrder for c in categories]) + 1) if len(categories) > 0 else 0
+
+        category.sortOrder = sortOrder
         self.categories[category.name] = category
-        category.tab = self.tabs.addTab(category.name, category.label or category.name)
+
+        categories = self.categories.values()
+        categories.sort(key = lambda c: c.sortOrder)
+        print [(idx, c.name) for idx,c in enumerate(categories)]
+
+        category.tab = self.tabs.addTab(category.name, category.label or category.name, categories.index(category))
         category.tabs = category.tab.child
         self.addView(category)
         category.realize(self)
@@ -764,11 +776,11 @@ class Application(events3d.EventHandler):
 
         self.switchTask(category.task)
 
-    def getCategory(self, name):
+    def getCategory(self, name, sortOrder = None):
         category = self.categories.get(name)
         if category:
             return category
-        return self.addCategory(Category(name))
+        return self.addCategory(Category(name), sortOrder = sortOrder)
 
     # called from native
 
