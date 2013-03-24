@@ -1195,16 +1195,19 @@ class MHApplication(gui3d.Application, mh.Application):
 
         self.actions.profiling = action('profiling', 'Profiling',     self.toggleProfiling, toggle=True)
 
-        toolbar = self.main_toolbar = mh.addToolBar("Main")
+        toolbar = self.main_toolbar = mh.addToolBar("Edit")
 
         self.actions.undo      = action('undo',      'Undo',          self.undo)
         self.actions.redo      = action('redo',      'Redo',          self.redo)
         self.actions.reset     = action('reset',     'Reset',         self.resetHuman)
+        self.actions.smooth    = action('smooth',    'Smooth',        self.toggleSubdivision, toggle=True)
+
+        toolbar = self.main_toolbar = mh.addToolBar("Edit")
+
         self.actions.save      = action('save',      'Save',          self.goToSave)
         self.actions.load      = action('load',      'Load',          self.goToLoad)
         self.actions.export    = action('export',    'Export',        self.goToExport)
         self.actions.help      = action('help',      'Help',          self.goToHelp)
-        self.actions.smooth    = action('smooth',    'Smooth',        self.toggleSubdivision, toggle=True)
         self.actions.savetgt   = action('savetgt',   'Save target',   self.saveTarget)
         self.actions.grab      = action('grab',      'Grab screen',   self.grabScreen)
 
