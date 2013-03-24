@@ -613,15 +613,6 @@ def getProxyWeights(proxy, humanWeights, mesh):
         rawWeights[key] = zip(indxs, weights)
     vertexWeights = mh2proxy.getProxyWeights(rawWeights, proxy)
 
-    '''
-    # Unzip and normalize weights
-    result = {}
-    for (key,val) in weights.items():
-        unzipped = zip(*val)
-        result[key] = ( list(unzipped[0]), np.asarray(unzipped[1], dtype=np.float32) )
-    return result
-    '''
-
     # Unzip and normalize weights (and put them in np format)
     boneWeights = {}
     wtot = np.zeros(mesh.getVertexCount(), np.float32)
