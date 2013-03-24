@@ -122,7 +122,7 @@ class ShellTaskView(gui3d.TaskView):
             self.line.setText(self.history[self.histitem])
 
 def load(app):
-    category = app.getCategory('Develop')
+    category = app.getCategory('Utilities')
     taskview = category.addTask(ShellTaskView(category))
 
 def unload(app):

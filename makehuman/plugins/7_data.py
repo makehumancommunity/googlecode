@@ -109,7 +109,7 @@ class DataTaskView(gui3d.TaskView):
         self.text.setText(self.pp.pformat(val))
 
 def load(app):
-    category = app.getCategory('Develop')
+    category = app.getCategory('Utilities')
     taskview = category.addTask(DataTaskView(category))
 
 def unload(app):

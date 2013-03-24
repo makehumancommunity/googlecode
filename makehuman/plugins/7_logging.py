@@ -58,7 +58,7 @@ class LoggingTaskView(gui3d.TaskView):
             G.app.clipboard().setText(text)
 
 def load(app):
-    category = app.getCategory('Develop')
+    category = app.getCategory('Utilities')
     taskview = category.addTask(LoggingTaskView(category))
 
 def unload(app):

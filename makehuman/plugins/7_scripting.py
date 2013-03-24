@@ -706,7 +706,7 @@ def load(app):
 
     global scriptingView
 
-    category = app.getCategory('Develop')
+    category = app.getCategory('Utilities')
     scriptingView = ScriptingView(category)
     executeView = ScriptingExecuteTab(category)
     taskview = category.addTask(scriptingView)

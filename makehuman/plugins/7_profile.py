@@ -189,7 +189,7 @@ class ProfilingTaskView(gui3d.TaskView):
 
 def load(app):
     global taskview
-    category = app.getCategory('Develop')
+    category = app.getCategory('Utilities')
     taskview = category.addTask(ProfilingTaskView(category))
     profiler.set_show(taskview.setProfile)
 
