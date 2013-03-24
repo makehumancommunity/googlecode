@@ -717,7 +717,6 @@ class Application(events3d.EventHandler):
 
         categories = self.categories.values()
         categories.sort(key = lambda c: c.sortOrder)
-        print [(idx, c.name) for idx,c in enumerate(categories)]
 
         category.tab = self.tabs.addTab(category.name, category.label or category.name, categories.index(category))
         category.tabs = category.tab.child
@@ -727,6 +726,8 @@ class Application(events3d.EventHandler):
         return category
 
     def switchTask(self, name):
+        if not self.currentCategory:
+            return 
         newTask = self.currentCategory.tasksByName[name]
 
         if self.currentTask and self.currentTask is newTask:
