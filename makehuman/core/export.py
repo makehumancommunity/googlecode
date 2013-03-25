@@ -36,7 +36,7 @@ class Exporter(object):
         self.useTexFolder   = options.addWidget(gui.CheckBox("Separate texture folder", True))
         self.eyebrows       = options.addWidget(gui.CheckBox("Eyebrows", True))
         self.lashes         = options.addWidget(gui.CheckBox("Eyelashes", True))
-        #self.helpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
+        self.helpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
         self.hidden         = options.addWidget(gui.CheckBox("Keep hidden faces", True))
         self.smooth         = options.addWidget(gui.CheckBox("Subdivide", False))
         #self.scales         = self.addScales(options)
