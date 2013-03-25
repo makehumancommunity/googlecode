@@ -228,7 +228,7 @@ class MhmLoadTaskView(gui3d.TaskView):
 
             gui3d.app.do(ExpressionAction(gui3d.app.selectedHuman, filename, self.mhmTaskView, self.include))
             
-            mh.changeCategory('Modelling')
+            mh.changeTask('Pose/Animate', 'Expression tuning')
 
     def onShow(self, event):
 
@@ -289,4 +289,4 @@ def load(app):
 
 
 def unload(app):
-    pass    
+    pass
