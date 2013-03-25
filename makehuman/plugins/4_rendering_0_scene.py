@@ -154,11 +154,12 @@ class SceneTaskView(gui3d.TaskView):
         self.itemList = itemBox.addWidget(gui.ListView())
         self.itemList.setSizePolicy(gui.SizePolicy.Ignored, gui.SizePolicy.Preferred)
 
-        self.addButton = itemBox.addWidget(gui.Button('Add...'))
-        self.adder = SceneItemAdder(self)
-
         self.propsBox = gui.StackedBox()
         self.addRightWidget(self.propsBox)
+
+        self.addButton = itemBox.addWidget(gui.Button('Add...'))
+        self.adder = SceneItemAdder(self)
+        self.propsBox.addWidget(self.adder.widget)
 
         self.items = {}
         self.activeItem = None
@@ -214,6 +215,7 @@ class SceneTaskView(gui3d.TaskView):
             self.adder.showProps()
 
     def readScene(self):
+        self.adder.showProps()
         self.items.clear()
         self.items = {'Human': HumanSceneItem(self),
                       'Camera': CameraSceneItem(self)}
