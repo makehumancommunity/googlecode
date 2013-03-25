@@ -32,29 +32,30 @@ import scene
 
 class SceneItem(object):
     def __init__(self, sceneview):
+        # Call this last
         self.sceneview = sceneview
-        self.widgets = []
+        self.widget = gui.GroupBox()
+        self.makeProps()
 
-    def showProps(self, propsWidgets):
-        self.widgetList = propsWidgets
-    
-    def hideProps(self):
-        for widget in self.widgetList:
-            self.sceneview.removeRightWidget(widget)
-        del self.sceneview.activePropsWidgets[:]
-        self.sceneview.activeItem = None
+    def makeProps(self):
+        pass
+
+    def showProps(self):
+        self.sceneview.propsBox.showWidget(self.widget)
+        self.sceneview.activeItem = self
+
+    def __del__(self):
+        self.widget.destroy()
         
 
 class HumanSceneItem(SceneItem):
     def __init__(self, sceneview):
         SceneItem.__init__(self, sceneview)
-        self.widgets = ['Human rendering options']
 
 
 class OutputSceneItem(SceneItem):
     def __init__(self, sceneview):
         SceneItem.__init__(self, sceneview)
-        self.widgets = ['Resolution']
 
     @property
     def resWidth(self):
@@ -72,29 +73,31 @@ class OutputSceneItem(SceneItem):
     def resHeight(self, value = None):
         gui3d.app.settings['rendering_height'] = 0 if not value else int(value)
 
-    def showProps(self, propsWidgets):
-        SceneItem.showProps(self, propsWidgets)
-        self.widthBox = self.widgetList[0].addWidget(gui.SpinBox(self.resWidth), 0, 0)
-        self.heightBox = self.widgetList[0].addWidget(gui.SpinBox(self.resHeight), 0, 1)
+    def makeProps(self):
+        SceneItem.makeProps(self)
+        self.widget.addWidget(gui.TextView("Resolution"))
+        self.resBox = self.widget.addWidget(gui.TextEdit(
+            "x".join([str(self.resWidth), str(self.resHeight)])))
 
-        @self.widthBox.mhEvent
+        @self.resBox.mhEvent
         def onChange(value):
-            self.resWidth = value
-
-        @self.heightBox.mhEvent
-        def onChange(value):
-            self.resHeight = value
+            try:
+                value = value.replace(" ", "")
+                res = [int(x) for x in value.split("x")]
+                self.resWidth = res[0]
+                self.resHeight = res[1]
+            except: # The user hasn't typed the value correctly yet.
+                pass
 
 
 class SceneItemAdder(SceneItem):
     # Virtual scene item for adding scene items.
     def __init__(self, sceneview):
         SceneItem.__init__(self, sceneview)
-        self.widgets = ['Add Item']
 
-    def showProps(self, propsWidgets):
-        SceneItem.showProps(self, propsWidgets)
-        self.lightbtn = self.widgetList[0].addWidget(gui.Button('Add light'))
+    def makeProps(self):
+        SceneItem.makeProps(self)
+        self.lightbtn = self.widget.addWidget(gui.Button('Add light'))
 
         @self.lightbtn.mhEvent
         def onClicked(event):
@@ -104,36 +107,34 @@ class SceneItemAdder(SceneItem):
 
 class CameraSceneItem(SceneItem):
     def __init__(self, sceneview):
-        SceneItem.__init__(self, sceneview)
-        self.widgets = ['Camera properties']
         self.camera = sceneview.scene.camera
+        SceneItem.__init__(self, sceneview)
 
 
 class LightSceneItem(SceneItem):
     def __init__(self, sceneview, light, lid):
-        SceneItem.__init__(self, sceneview)
-        self.widgets = ['Light ' + str(lid) + ' properties']
         self.lightid = lid
         self.light = light
+        SceneItem.__init__(self, sceneview)
 
-    def showProps(self, propsWidgets):
-        SceneItem.showProps(self, propsWidgets)
-        self.posbox = self.widgetList[0].addWidget(gui.TextView("Position"))
-        self.posbox = self.widgetList[0].addWidget(gui.TextEdit(
+    def makeProps(self):
+        SceneItem.makeProps(self)
+        self.widget.addWidget(gui.TextView("Position"))
+        self.posbox = self.widget.addWidget(gui.TextEdit(
             ", ".join([str(x) for x in self.light.pos])))
-        self.removebtn = self.widgetList[0].addWidget(
+        self.removebtn = self.widget.addWidget(
             gui.Button('Remove light ' + str(self.lightid)))
 
         @self.removebtn.mhEvent
         def onClicked(event):
             self.sceneview.scene.removeLight(self.light)
             self.sceneview.readScene()
-            SceneItem.hideProps(self)
 
         @self.posbox.mhEvent
         def onChange(value):
             try:
-                self.light.pos = tuple([float(x) for x in value.split(", ")])
+                value = value.replace(" ", "")
+                self.light.pos = tuple([float(x) for x in value.split(",")])
             except: # The user hasn't typed the value correctly yet.
                 pass
 
@@ -156,7 +157,10 @@ class SceneTaskView(gui3d.TaskView):
         self.addButton = itemBox.addWidget(gui.Button('Add...'))
         self.adder = SceneItemAdder(self)
 
-        self.activePropsWidgets = []
+        self.propsBox = gui.StackedBox()
+        self.addRightWidget(self.propsBox)
+
+        self.items = {}
         self.activeItem = None
         self.scene = scene.Scene()
         self.readScene()
@@ -203,14 +207,14 @@ class SceneTaskView(gui3d.TaskView):
                 
         @self.itemList.mhEvent
         def onActivate(event):
-            self.displayProperties(
-                self.items[self.itemList.getSelectedItem()])
+            self.items[self.itemList.getSelectedItem()].showProps()
 
         @self.addButton.mhEvent
         def onClicked(event):
-            self.displayProperties(self.adder)
+            self.adder.showProps()
 
     def readScene(self):
+        self.items.clear()
         self.items = {'Human': HumanSceneItem(self),
                       'Camera': CameraSceneItem(self)}
         i = 0
@@ -218,6 +222,8 @@ class SceneTaskView(gui3d.TaskView):
             i += 1
             self.items['Light ' + str(i)] = LightSceneItem(self, light, i)
         self.items['Output'] = OutputSceneItem(self)
+        for item in self.items.values():
+            self.propsBox.addWidget(item.widget)
         self.itemList.setData(self.items.keys()[::-1])
         self.updateFileTitle()
 
@@ -229,15 +235,6 @@ class SceneTaskView(gui3d.TaskView):
         if self.scene.unsaved:
             lbltxt += '*'
         self.fnlbl.setText(lbltxt)
-
-    def displayProperties(self, sceneitem):
-        if self.activeItem:
-            self.activeItem.hideProps()
-        self.activeItem = sceneitem
-        for widgetname in sceneitem.widgets:
-            self.activePropsWidgets.append(
-                self.addRightWidget(gui.GroupBox(widgetname)))
-        sceneitem.showProps(self.activePropsWidgets)
         
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
