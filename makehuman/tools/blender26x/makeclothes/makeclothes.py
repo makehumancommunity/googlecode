@@ -1038,14 +1038,13 @@ def storeData(pob, bob, data):
     fp.write("%s\n" % pob.name)
     fp.write("%s\n" % bob.name)
     for (pv, exact, verts, wts, diff) in data:
-        #print(pv,exact)
-        fp.write("%d %d\n" % (pv.index, exact))
-        #print(verts)
-        fp.write("%s\n" % verts)
-        if not exact:
-            #print(wts)
+        if exact:
+            bv,n = verts[0]
+            fp.write("%d %d %d\n" % (pv.index, exact, bv.index))
+        else:
+            fp.write("%d %d\n" % (pv.index, exact))
+            fp.write("%s\n" % verts)
             fp.write("(%s,%s,%s)\n" % wts)
-            #print(diff)
             fp.write("(%s,%s,%s)\n" % (diff[0],diff[1],diff[2]))
     fp.close()
     return
@@ -1079,7 +1078,12 @@ def restoreData(context):
         elif status == 1:
             pv = pob.data.vertices[int(words[0])]
             exact = int(words[1])
-            status = 2
+            if exact:
+                bv = bob.data.vertices[int(words[2])]
+                data.append((pv, exact, ((bv,-1),0,1), 0, 0))
+                status = 1
+            else:
+                status = 2
         elif status == 2:
             verts = parse(line)
             if exact:
