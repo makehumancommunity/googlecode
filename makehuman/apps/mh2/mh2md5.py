@@ -10,7 +10,7 @@ Export to id Software's MD5 format.
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Marc Flerackers
+**Authors:**           Marc Flerackers, Jonas Hauquier
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
@@ -160,8 +160,6 @@ def exportMd5(human, filepath, config):
                 f.write('\ttri %d %d %d %d\n' % (fn, fv[0], fv[3], fv[2]))
                 fn += 1
 
-        print len(joints)
-        print joints
         # Write bone weighting
         if human.getSkeleton():
             f.write('\n\tnumweights %d\n' % wCount)
