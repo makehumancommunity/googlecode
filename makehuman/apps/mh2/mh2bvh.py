@@ -55,7 +55,8 @@ def exportSkeleton(obj, filename):
 
 
     # Write bvh file
-    root = human.getSkeleton().roots[0]  # we assume a skeleton with only one root
+    skeleton = human.getSkeleton()
+    root = skeleton.roots[0]  # we assume a skeleton with only one root
 
     f = open(filename, 'w')
     f.write('HIERARCHY\n')
@@ -70,14 +71,15 @@ def exportSkeleton(obj, filename):
     f.write('MOTION\n')
     f.write('Frames:    1\n')
     f.write('Frame Time: 0.0\n')
-    f.write(" %f  %f  %f" %(skeleton.root.position[0],skeleton.root.position[1],skeleton.root.position[2]) )
-    for i in xrange(skeleton.endEffectors):
-      f.write(" 0.0000 0.0000 0.0000")
+    position = root.getRestHeadPos()
+    f.write(" %f  %f  %f" %(position[0],position[1],position[2]) )
+    #for i in xrange(skeleton.endEffectors):
+    #  f.write(" 0.0000 0.0000 0.0000")
     f.write("\n")
     f.close()
 
 
-def writeBone(f, joint, ident):
+def writeBone(f, bone, ident):
     """
   This function writes out information describing one joint in BVH format. 
   
@@ -87,19 +89,19 @@ def writeBone(f, joint, ident):
   f:     
     *file handle*.  The handle of the file being written to.
   bone:     
-    *Bone object*.  The joint object to be processed by this function call.
+    *Bone object*.  The bone object to be processed by this function call.
   ident:     
     *integer*.  The joint identifier.
   """
 
     f.write('\t' * ident + 'JOINT ' + bone.name + '\n')
     f.write('\t' * ident + '{\n')
-    offset = getRestOffset()
+    offset = bone.getRestOffset()
     f.write('\t' * (ident + 1) + "OFFSET	%f  %f  %f\n" % (offset[0], offset[1], offset[2]))
     f.write('\t' * (ident + 1) + 'CHANNELS 3 Zrotation Xrotation Yrotation\n')
     if len(bone.children) > 0:
-        for bone in bone.children:
-            writeBone(f, bone, ident + 1)
+        for childBone in bone.children:
+            writeBone(f, childBone, ident + 1)
     else:
         offset = bone.getRestTailPos() - bone.getRestHeadPos()
         f.write('\t' * (ident + 1) + 'End Site\n')
