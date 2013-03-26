@@ -35,6 +35,7 @@ __docformat__ = 'restructuredtext'
 import os
 import numpy as np
 import exportutils
+import skeleton
 
 def exportMd5(human, filepath, config):
     """
@@ -67,8 +68,8 @@ def exportMd5(human, filepath, config):
         lashes=config.lashes,
         subdivide=config.subdivide)
 
-    if human.skeleton:
-        numJoints = human.skeleton.getBoneCount() +1 # Amount of joints + the hardcoded origin below
+    if human.getSkeleton():
+        numJoints = human.getSkeleton().getBoneCount() +1 # Amount of joints + the hardcoded origin below
     else:
         numJoints = 1
 
@@ -81,12 +82,13 @@ def exportMd5(human, filepath, config):
     f.write('joints {\n')
     # Hardcoded root joint
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % ('origin', -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
-    if human.skeleton:
-        for bone in human.skeleton.getBones():
+    if human.getSkeleton():
+        for bone in human.getSkeleton().getBones():
             writeBone(f, bone)
     f.write('}\n\n')
 
     for stuff in stuffs:
+        # stuff.type: None is human, "Proxy" is human proxy, "Clothes" for clothing and "Hair" for hair
         obj = stuff.meshInfo.object
         
         f.write('mesh {\n')
@@ -98,16 +100,56 @@ def exportMd5(human, filepath, config):
         uvs = np.zeros(len(obj.coord), dtype=np.uint32)
         uvs[obj.fvert] = obj.fuvs
 
+        # Collect vertex weights
+        if human.getSkeleton():
+            _, bodyWeights = human.animated.getMesh("base.obj")
+
+            if stuff.type:
+                # Determine vertex weights for proxy
+                weights = skeleton.getProxyWeights(stuff.proxy, bodyWeights, obj)
+            else:
+                # Use vertex weights for human body
+                weights = bodyWeights
+
+            # Build a weights list indexed per vertex
+            jointIndexes = {}
+            jointIndexes['origin'] = 0
+            joints = [None] + human.getSkeleton().getBones() # origin joint is None
+            for idx,bone in enumerate(joints):
+                if bone:
+                    jointIndexes[bone.name] = idx
+            vertWeights = {}    # = dict( vertIdx: [ (jointIdx1, weight1), ...])
+            for (jointName, (verts,ws)) in weights.items():
+                for idx,v in enumerate(verts):
+                    if v not in vertWeights.keys():
+                        vertWeights[v] = []
+                    vertWeights[v].append((jointIndexes[jointName], ws[idx]))
+            for vert in xrange(len(obj.coord)):
+                if vert not in vertWeights.keys():
+                    # Weight vertex completely to origin joint
+                    vertWeights[vert] = [(0, 1.0)]
+        else:
+            vertWeights = None
+
+        # Write vertices
+        wCount = 0
         for vert in xrange(len(obj.coord)):
             if obj.has_uv:
                 u, v = obj.texco[uvs[vert]]
             else:
                 u, v = 0, 0
+            if vertWeights == None:
+                numWeights = 1
+            else:
+                numWeights = len(vertWeights[vert])
             # vert [vertIndex] ( [texU] [texV] ) [weightIndex] [weightElem]
-            f.write('\tvert %d ( %f %f ) %d %d\n' % (vert, u, 1.0-v, vert, 1))
+            f.write('\tvert %d ( %f %f ) %d %d\n' % (vert, u, 1.0-v, wCount, numWeights))
+            wCount = wCount + numWeights
 
         del uvs
 
+        # Write faces
+        # TODO account for masked faces
         f.write('\n\tnumtris %d\n' % (len(obj.fvert) * 2))
         fn = 0
         for fv in obj.fvert:
@@ -118,15 +160,30 @@ def exportMd5(human, filepath, config):
                 f.write('\ttri %d %d %d %d\n' % (fn, fv[0], fv[3], fv[2]))
                 fn += 1
 
-        f.write('\n\tnumweights %d\n' % (len(obj.coord)))
-        for idx,co in enumerate(obj.coord):
-            # TODO: We attach all vertices to the root with weight 1.0, this should become
-            # real weights to the correct bones
-            # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
-            f.write('\tweight %d %d %f ( %f %f %f )\n' % (idx, 0, 1.0, co[0], -co[2], co[1]))
+        print len(joints)
+        print joints
+        # Write bone weighting
+        if human.getSkeleton():
+            f.write('\n\tnumweights %d\n' % wCount)
+            wCount = 0
+            for idx,co in enumerate(obj.coord):
+                for (jointIdx, jointWght) in vertWeights[idx]:
+                    # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
+                    if joints[jointIdx]:
+                        relPos = co[:3] - joints[jointIdx].getRestHeadPos()
+                    else:
+                        relPos = co[:3]
+                    f.write('\tweight %d %d %f ( %f %f %f )\n' % (wCount, jointIdx, jointWght, relPos[0], -relPos[2], relPos[1]))
+                    wCount = wCount +1
+        else:
+            # No skeleton selected: Attach all vertices to the root with weight 1.0
+            f.write('\n\tnumweights %d\n' % (len(obj.coord)))
+            for idx,co in enumerate(obj.coord):
+                # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
+                f.write('\tweight %d %d %f ( %f %f %f )\n' % (idx, 0, 1.0, co[0], -co[2], co[1]))
+                # Note: MD5 has a z-up coordinate system
         f.write('}\n\n')
     f.close()
-    
 
 def writeBone(f, bone):
     """
@@ -148,5 +205,5 @@ def writeBone(f, bone):
     headPos = bone.getRestHeadPos()
     direction = bone.getRestDirection()
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % (bone.name, parentIndex,
-        headPos[0], headPos[1], headPos[2],
-        direction[0], direction[1], direction[2]))
+        headPos[0], -headPos[2], headPos[1],
+        direction[0], -direction[2], direction[1]))
