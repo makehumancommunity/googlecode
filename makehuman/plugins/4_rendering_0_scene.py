@@ -110,6 +110,57 @@ class CameraSceneItem(SceneItem):
         self.camera = sceneview.scene.camera
         SceneItem.__init__(self, sceneview)
 
+    def makeProps(self):
+        SceneItem.makeProps(self)
+
+        ''' Not working as expected.
+        self.useMHCam = self.widget.addWidget(
+            gui.Button('Use current view'))
+        '''
+
+        self.widget.addWidget(gui.TextView("Position"))
+        self.posbox = self.widget.addWidget(gui.TextEdit(
+            ", ".join([str(x) for x in self.camera.eye])))
+        
+        self.widget.addWidget(gui.TextView("Focus"))
+        self.focbox = self.widget.addWidget(gui.TextEdit(
+            ", ".join([str(x) for x in self.camera.focus])))
+        
+        self.widget.addWidget(gui.TextView("Field Of View"))
+        self.fov = self.widget.addWidget(gui.TextEdit(str(self.camera.fovAngle)))
+
+        '''
+        @self.useMHCam.mhEvent
+        def onClicked(event):
+            self.camera.eye = gui3d.app.modelCamera.eye
+            self.camera.focus = gui3d.app.modelCamera.focus
+            self.camera.fovAngle = gui3d.app.modelCamera.fovAngle
+        '''
+
+        @self.posbox.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                self.camera.eye = tuple([float(x) for x in value.split(",")])
+            except: # The user hasn't typed the value correctly yet.
+                pass
+
+        @self.focbox.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                self.camera.focus = tuple([float(x) for x in value.split(",")])
+            except:
+                pass
+
+        @self.fov.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                self.camera.fovAngle = float(value)
+            except:
+                pass
+
 
 class LightSceneItem(SceneItem):
     def __init__(self, sceneview, light, lid):
@@ -156,7 +207,6 @@ class LightSceneItem(SceneItem):
                 self.light.focus = tuple([float(x) for x in value.split(",")])
             except:
                 pass
-
 
         @self.colbox.mhEvent
         def onChange(value):
