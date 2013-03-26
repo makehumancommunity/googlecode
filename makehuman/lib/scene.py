@@ -28,10 +28,10 @@ import pickle
 class Light(object):
     def __init__(self):
         self.pos = (-10.99, 20.0, 20.0)
-        self.focus = (0,0,0)
-        self.color = (1,1,1)
-        self.fov = 180
-        self.attenuation = 0
+        self.focus = (0.0, 0.0, 0.0)
+        self.color = (1.0, 1.0, 1.0)
+        self.fov = 180.0
+        self.attenuation = 0.0
 
 
 class Scene(object):

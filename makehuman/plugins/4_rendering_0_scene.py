@@ -119,16 +119,27 @@ class LightSceneItem(SceneItem):
 
     def makeProps(self):
         SceneItem.makeProps(self)
+        
         self.widget.addWidget(gui.TextView("Position"))
         self.posbox = self.widget.addWidget(gui.TextEdit(
             ", ".join([str(x) for x in self.light.pos])))
+        
+        self.widget.addWidget(gui.TextView("Focus"))
+        self.focbox = self.widget.addWidget(gui.TextEdit(
+            ", ".join([str(x) for x in self.light.focus])))
+        
+        self.widget.addWidget(gui.TextView("Color"))
+        self.colbox = self.widget.addWidget(gui.TextEdit(
+            ", ".join([str(x) for x in self.light.color])))
+        
+        self.widget.addWidget(gui.TextView("Spot angle"))
+        self.fov = self.widget.addWidget(gui.TextEdit(str(self.light.fov)))
+
+        self.widget.addWidget(gui.TextView("Attenuation"))
+        self.att = self.widget.addWidget(gui.TextEdit(str(self.light.attenuation)))
+
         self.removebtn = self.widget.addWidget(
             gui.Button('Remove light ' + str(self.lightid)))
-
-        @self.removebtn.mhEvent
-        def onClicked(event):
-            self.sceneview.scene.removeLight(self.light)
-            self.sceneview.readScene()
 
         @self.posbox.mhEvent
         def onChange(value):
@@ -137,6 +148,44 @@ class LightSceneItem(SceneItem):
                 self.light.pos = tuple([float(x) for x in value.split(",")])
             except: # The user hasn't typed the value correctly yet.
                 pass
+
+        @self.focbox.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                self.light.focus = tuple([float(x) for x in value.split(",")])
+            except:
+                pass
+
+
+        @self.colbox.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                self.light.color = tuple([float(x) for x in value.split(",")])
+            except:
+                pass
+
+        @self.fov.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                self.light.fov = float(value)
+            except:
+                pass
+
+        @self.att.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                self.light.attenuation = float(value)
+            except:
+                pass
+
+        @self.removebtn.mhEvent
+        def onClicked(event):
+            self.sceneview.scene.removeLight(self.light)
+            self.sceneview.readScene()
 
 
 class SceneTaskView(gui3d.TaskView):
