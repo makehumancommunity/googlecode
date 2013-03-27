@@ -82,9 +82,9 @@ def writeMeshFile(human, filepath, stuffs, config):
         # Faces
         f.write('            <faces count="%s">\n' % numFaces)
         for fv in obj.fvert:
-            f.write('                <face v1="%s" v2="%s" v3="%s" />\n' % (fv[2], fv[1], fv[0]))
+            f.write('                <face v1="%s" v2="%s" v3="%s" />\n' % (fv[0], fv[1], fv[2]))
             if obj.vertsPerPrimitive == 4:
-                f.write('                <face v1="%s" v2="%s" v3="%s" />\n' % (fv[0], fv[3], fv[2]))
+                f.write('                <face v1="%s" v2="%s" v3="%s" />\n' % (fv[2], fv[3], fv[0]))
         f.write('            </faces>\n')
 
         # Vertices
