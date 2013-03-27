@@ -499,10 +499,18 @@ class SkeletonLibrary(gui3d.TaskView):
             self.jointsObj.setPosition(gui3d.app.selectedHuman.getPosition())
 
     def loadHandler(self, human, values):
-        pass
-        
+        if values[0] == "skeleton":
+            skelFile = values[1]
+            for path in self.rigPaths:
+                skelPath = os.path.join(path, skelFile)
+                if os.path.isfile(skelPath):
+                    self.chooseSkeleton(skelPath)
+                    return
+            log.warn("Could not load rig %s, file does not exist." % skelFile)
+
     def saveHandler(self, human, file):
-        pass
+        if human.getSkeleton():
+            file.write('skeleton %s\n' % os.path.basename(human.getSkeleton().file))
 
 
 def load(app):
