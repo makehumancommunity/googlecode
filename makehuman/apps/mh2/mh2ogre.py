@@ -118,7 +118,7 @@ def writeMeshFile(human, filepath, stuffs, config):
 
         # Skeleton bone assignments
         if human.getSkeleton():
-            _, bodyWeights = human.animated.getMesh("base.obj")
+            bodyWeights = human.getVertexWeights()
             if stuff.type:
                 # Determine vertex weights for proxy
                 weights = skeleton.getProxyWeights(stuff.proxy, bodyWeights, obj)

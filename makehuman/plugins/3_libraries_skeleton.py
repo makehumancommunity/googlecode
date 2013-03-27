@@ -65,6 +65,15 @@ def _getSkeleton(self):
         self._skeleton.dirty = False
     return self._skeleton
 
+def _getVertexWeights(self):
+    if not self.getSkeleton():
+        return None
+    if not self.animated:
+        return None
+
+    _, bodyWeights = self.animated.getMesh("base.obj")
+    return bodyWeights
+
 class SkeletonLibrary(gui3d.TaskView):
 
     def __init__(self, category):
@@ -82,6 +91,7 @@ class SkeletonLibrary(gui3d.TaskView):
         # updating when the skeleton should change
         import types
         self.human.getSkeleton = types.MethodType(_getSkeleton, self.human, self.human.__class__)
+        self.human.getVertexWeights = types.MethodType(_getVertexWeights, self.human, self.human.__class__)
 
         self.oldSmoothValue = False
 

@@ -102,7 +102,7 @@ def exportMd5(human, filepath, config):
 
         # Collect vertex weights
         if human.getSkeleton():
-            _, bodyWeights = human.animated.getMesh("base.obj")
+            bodyWeights = human.getVertexWeights()
 
             if stuff.type:
                 # Determine vertex weights for proxy
