@@ -54,14 +54,17 @@ class ExportTaskView(gui3d.TaskView):
         # Map formats
         self.mapsBox = self.addLeftWidget(gui.GroupBox('Maps'))
 
+        self.empty = True
+
+        self.optionsBox = self.addRightWidget(gui.StackedBox())
+
         # Scales
-        self.scaleBox = self.addLeftWidget(gui.GroupBox('Units'))
+        self.scaleBox = self.addRightWidget(gui.GroupBox('Scale units'))
         self.scaleButtons = self.addScales(self.scaleBox)
         
         # Encodings
-        self.encodingBox = self.addLeftWidget(gui.GroupBox('Encoding'))
+        self.encodingBox = self.addRightWidget(gui.GroupBox('Encoding'))
         self.encodingButtons = self.addEncodings(self.encodingBox)
-        
 
         self.boxes = {
             'mesh': self.formatBox,
@@ -69,10 +72,6 @@ class ExportTaskView(gui3d.TaskView):
             'map': self.mapsBox,
             'scale': self.scaleBox
             }
-
-        self.empty = True
-
-        self.optionsBox = self.addRightWidget(gui.StackedBox())
 
         self.updateGui()
         
