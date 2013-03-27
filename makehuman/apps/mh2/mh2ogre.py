@@ -214,4 +214,5 @@ def writeMaterialFile(human, filepath, stuffs, config):
     f.close()
 
 def formatName(name):
-    return name.rstrip('.mesh')
+    if name.endswith('.mesh'):
+        return name[:-5]
