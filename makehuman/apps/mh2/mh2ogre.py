@@ -106,6 +106,7 @@ def writeMeshFile(human, filepath, stuffs, config):
         for vIdx in xrange(numVerts): 
             if obj.has_uv:
                 u, v = obj.texco[uvs[vIdx]]
+                v = 1-v
             else:
                 u, v = 0, 0
             f.write('                    <vertex>\n')
