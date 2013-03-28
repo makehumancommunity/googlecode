@@ -372,7 +372,7 @@ class TextureProjectionView(gui3d.TaskView) :
 
         @self.backgroundImage.mhEvent
         def onMouseDragged(event):
-            if event.button == mh.Buttons.LEFT_MASK:
+            if event.button in [mh.Buttons.LEFT_MASK, mh.Buttons.MIDDLE_MASK]:
                 dx = float(event.dx)/30.0
                 dy = float(-event.dy)/30.0
                 self.backgroundChooserView.moveBackground(dx, dy)
