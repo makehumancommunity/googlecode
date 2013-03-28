@@ -205,6 +205,15 @@ def writeMaterialFile(human, filepath, stuffs, config):
         f.write('    {\n')
         f.write('        pass\n')
         f.write('        {\n')
+        f.write('            lighting on\n\n')
+        f.write('            ambient 0.3 0.3 0.3 1\n')
+        f.write('            diffuse 0.8 0.8 0.8 1\n')
+        f.write('            specular 0.1 0.1 0.1 1\n')
+        f.write('            emissive 0 0 0\n\n')
+        if not stuff.type:
+            # Enable transparency rendering on human
+            f.write('            depth_write on\n')
+            f.write('            alpha_rejection greater 128\n\n')
         f.write('            texture_unit\n')
         f.write('            {\n')
         f.write('                texture %s\n' % texfile)
@@ -218,3 +227,5 @@ def writeMaterialFile(human, filepath, stuffs, config):
 def formatName(name):
     if name.endswith('.mesh'):
         return name[:-5]
+    else:
+        return name
