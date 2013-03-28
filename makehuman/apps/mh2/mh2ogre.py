@@ -37,6 +37,8 @@ import skeleton
 def exportOgreMesh(human, filepath, config):
     obj = human.meshData
     config.setHuman(human)
+    config.feetOnGround = False    # TODO translate skeleton with feet-on-ground offset too
+    # TODO account for config.scale in skeleton
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
     name = formatName(config.goodName(os.path.splitext(filename)[0]))
@@ -163,7 +165,7 @@ def writeSkeletonFile(human, filepath, config):
     f.write('<skeleton>\n')
     f.write('    <bones>\n')
     for bIdx, bone in enumerate(skel.getBones()):
-        pos = bone.getRestHeadPos()
+        pos = bone.getRestOffset()
         f.write('        <bone id="%s" name="%s">\n' % (bIdx, bone.name))
         f.write('            <position x="%s" y="%s" z="%s" />\n' % (pos[0], pos[1], pos[2]))
         f.write('            <rotation angle="0">\n')
