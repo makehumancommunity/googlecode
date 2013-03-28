@@ -542,9 +542,19 @@ class ListView(QtGui.QListWidget, Widget):
         super(ListView, self).__init__()
         Widget.__init__(self)
         self.connect(self, QtCore.SIGNAL('itemActivated(QListWidgetItem *)'), self._activate)
+        self.connect(self, QtCore.SIGNAL('itemClicked(QListWidgetItem *)'), self._clicked)
 
     def _activate(self, item):
         self.callEvent('onActivate', item)
+
+    def _clicked(self, item):
+        self.callEvent('onClicked', item)
+
+    def onActivate(self, event):
+        pass
+
+    def onClicked(self, event):
+        pass
 
     def setData(self, items):
         self.clear()

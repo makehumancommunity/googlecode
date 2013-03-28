@@ -306,7 +306,7 @@ class SceneTaskView(gui3d.TaskView):
             self.updateFileTitle()
                 
         @self.itemList.mhEvent
-        def onActivate(event):
+        def onClicked(event):
             self.items[self.itemList.getSelectedItem()].showProps()
 
         @self.addButton.mhEvent
