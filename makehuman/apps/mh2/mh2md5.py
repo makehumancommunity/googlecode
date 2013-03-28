@@ -34,6 +34,8 @@ __docformat__ = 'restructuredtext'
 
 import os
 import numpy as np
+import numpy.linalg as la
+import aljabr
 import exportutils
 import skeleton
 
@@ -54,6 +56,7 @@ def exportMd5(human, filepath, config):
 
     obj = human.meshData
     config.setHuman(human)
+    config.feetOnGround = True    # TODO translate skeleton with feet-on-ground offset too
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
@@ -166,19 +169,30 @@ def exportMd5(human, filepath, config):
             wCount = 0
             for idx,co in enumerate(obj.coord):
                 for (jointIdx, jointWght) in vertWeights[idx]:
-                    # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
+                    # Get vertex position in bone space
                     if joints[jointIdx]:
-                        relPos = co[:3] - joints[jointIdx].getRestHeadPos()
+                        toBoneSpace = la.inv(joints[jointIdx].matRestGlobal)
+                        coor = np.ones(4, dtype=np.float32)
+                        coor[:3] = co[:3]
+                        relPos = np.dot(toBoneSpace, coor.transpose())
+
+
+                        #q = np.asarray( joints[jointIdx].getRestOrientationQuat() )
+                        #q1 = -q
+                        #q1[3] = q[3]
+                        #c = co - joints[jointIdx].getRestHeadPos()
+                        #relPos = aljabr.quaternionVectorTransform(q1, c)
                     else:
                         relPos = co[:3]
-                    f.write('\tweight %d %d %f ( %f %f %f )\n' % (wCount, jointIdx, jointWght, relPos[0], -relPos[2], relPos[1]))
+                    # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
+                    f.write('\tweight %d %d %f ( %f %f %f )\n' % (wCount, jointIdx, jointWght, relPos[0], relPos[1], relPos[2]))
                     wCount = wCount +1
         else:
             # No skeleton selected: Attach all vertices to the root with weight 1.0
             f.write('\n\tnumweights %d\n' % (len(obj.coord)))
             for idx,co in enumerate(obj.coord):
                 # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
-                f.write('\tweight %d %d %f ( %f %f %f )\n' % (idx, 0, 1.0, co[0], -co[2], co[1]))
+                f.write('\tweight %d %d %f ( %f %f %f )\n' % (idx, 0, 1.0, co[0], co[1], co[2]))
                 # Note: MD5 has a z-up coordinate system
         f.write('}\n\n')
     f.close()
@@ -200,8 +214,9 @@ def writeBone(f, bone):
     else:
         parentIndex = 0 # Refers to the hard-coded root joint
     # "[boneName]"   [parentIndex] ( [xPos] [yPos] [zPos] ) ( [xOrient] [yOrient] [zOrient] )
-    headPos = bone.getRestHeadPos()
-    direction = bone.getRestDirection()
+    pos = bone.getRestHeadPos()
+    #orientationQuat = bone.getRestOrientationQuat()
+    orientationQuat = [0,0,0]
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % (bone.name, parentIndex,
-        headPos[0], -headPos[2], headPos[1],
-        direction[0], -direction[2], direction[1]))
+        pos[0], pos[1], pos[2],
+        orientationQuat[0], orientationQuat[1], orientationQuat[2]))
