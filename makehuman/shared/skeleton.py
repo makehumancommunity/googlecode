@@ -95,6 +95,20 @@ class Skeleton(object):
                 n += 1
             boneWeights[bname] = (verts, weights)
 
+        # Assign unweighted vertices to root bone with weight 1
+        rootBone = self.roots[0].name
+        informed = False
+        for vIdx, wCount in enumerate(wtot):
+            if wCount == 0:
+                if rootBone not in boneWeights.keys():
+                    boneWeights[rootBone] = ([], [])
+                vs,ws = boneWeights[rootBone]
+                vs.append(vIdx)
+                ws.append(1.0)
+                if not informed:
+                    log.debug("Adding trivial bone weights to bone %s for unweighted vertices.", rootBone)
+                    informed = True
+
         return boneWeights
 
     def addBone(self, name, parentName, head, tail, roll=0):
@@ -361,7 +375,13 @@ class Bone(object):
             return self.getRestHeadPos()
 
     def getRestDirection(self):
-        return self.yvector4[:3]
+        return aljabr.vnorm(self.getRestOffset())
+
+    def getRestOrientationQuat(self):
+        direction = self.getRestDirection()
+        axis = aljabr.vnorm(aljabr.vcross([0.0, 0.0, 1.0], direction))
+        angle = aljabr.acos(aljabr.vdot([0.0, 0.0, 1.0], direction))
+        return aljabr.axisAngleToQuaternion(axis, angle)
 
     def getRoll(self):
         """
@@ -629,6 +649,7 @@ def getProxyWeights(proxy, humanWeights, mesh):
             weights[n] = w/wtot[vn]
             n += 1
         boneWeights[bname] = (verts, weights)
+
     return boneWeights
 
 # TODO code replication is not nice...
