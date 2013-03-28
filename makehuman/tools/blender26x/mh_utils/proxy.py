@@ -87,7 +87,9 @@ class CProxy:
         mlen = len(trgVerts)
         first = self.firstVert
         if (first+rlen) != mlen:
-            raise NameError( "Bug: %d refVerts != %d meshVerts" % (first+rlen, mlen) )
+            string = "Warning: %d refVerts != %d meshVerts" % (first+rlen, mlen)
+            print(string)
+            #raise NameError(string)
         return rlen,first
 
 
