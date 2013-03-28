@@ -339,7 +339,7 @@ class SceneTaskView(gui3d.TaskView):
         
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
-        gui3d.app.statusPersist('Scene Editor. Double - click a list item to view its properties.')
+        gui3d.app.status('Scene Editor')
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
