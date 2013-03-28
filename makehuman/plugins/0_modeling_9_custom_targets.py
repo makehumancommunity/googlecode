@@ -42,8 +42,7 @@ class FolderButton(gui.RadioButton):
         self.task = task
         
     def onClicked(self, event):
-        self.task.hideAllBoxes()
-        self.groupBox.show()
+        self.task.syncVisibility()
 
 class CustomTargetsTaskView(gui3d.TaskView):
 
@@ -58,6 +57,7 @@ class CustomTargetsTaskView(gui3d.TaskView):
         rescanButton = self.optionsBox.addWidget(gui.Button("Rescan targets' folder"))
 
         self.folderBox = self.addRightWidget(gui.GroupBox('Folders'))
+        self.targetsBox = self.addLeftWidget(gui.StackedBox())
         
         @rescanButton.mhEvent
         def onClicked(event):
@@ -72,36 +72,40 @@ class CustomTargetsTaskView(gui3d.TaskView):
     
         self.sliders = []
         self.modifiers = {}
+        active = None
         
         for folder in self.folders:
-            self.removeLeftWidget(folder)
+            self.targetsBox.removeWidget(folder)
+            folder.destroy()
         for child in self.folderBox.children[:]:
+            if child.selected:
+                active = child.getLabel()
             self.folderBox.removeWidget(child)
-            
+            child.destroy()
+
         self.folders = []
         group = []
         
         for root, dirs, files in os.walk(self.targetsPath):
 
-            groupBox = self.addLeftWidget(gui.GroupBox('Targets'))
+            groupBox = self.targetsBox.addWidget(gui.GroupBox('Targets'))
             button = self.folderBox.addWidget(FolderButton(self, group, os.path.basename(root), groupBox, len(self.folderBox.children) == 0))
             self.folders.append(groupBox)
 
             for f in files:
                 if f.endswith(".target"):
                     self.createTargetControls(groupBox, root, f)
-                    
-            groupBox.hide()
         
         for folder in self.folders:
             for child in folder.children:
                 child.update()
-            
-        if self.sliders:
-            self.folderBox.children[0].setSelected(True)
-            # self.folders[0].show()
-            if self.folders[0].children:
-                self.folders[0].children[0].setFocus()
+
+        if active is not None:
+            for child in self.folderBox.children[:]:
+                if active == child.getLabel():
+                    child.setSelected(True)
+
+        self.syncVisibility()
 
         self.syncStatus()
 
@@ -129,24 +133,19 @@ class CustomTargetsTaskView(gui3d.TaskView):
         
         for slider in self.sliders:
             slider.update()
-            
-    def hideAllBoxes(self):
-    
-        for folder in self.folders:
-            folder.hide()
+
+    def syncVisibility(self):
+        for button in self.folderBox.children:
+            if button.selected:
+                self.targetsBox.showWidget(button.groupBox)
+                if button.groupBox.children:
+                    button.groupBox.children[0].setFocus()
         
     def onShow(self, event):
 
         gui3d.TaskView.onShow(self, event)
-        if self.folders:
-            if self.folders[0].children:
-                self.folders[0].children[0].setFocus()
+        self.syncVisibility()
         self.syncSliders()
-        for button in self.folderBox.children:
-            if button.selected:
-                button.groupBox.show()
-            else:
-                button.groupBox.hide()
         self.syncStatus()
 
     def onHide(self, event):

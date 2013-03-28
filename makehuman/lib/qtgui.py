@@ -831,6 +831,12 @@ class StackedBox(QtGui.QStackedWidget, Widget):
         super(StackedBox, self).addWidget(w)
         return widget
 
+    def removeWidget(self, widget):
+        w = widget.parentWidget()
+        super(StackedBox, self).removeWidget(w)
+        w.layout().removeWidget(widget)
+        w.destroy()
+
     def showWidget(self, widget):
         self.setCurrentWidget(widget.parentWidget())
 
