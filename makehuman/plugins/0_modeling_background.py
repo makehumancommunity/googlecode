@@ -373,15 +373,12 @@ class TextureProjectionView(gui3d.TaskView) :
         @self.backgroundImage.mhEvent
         def onMouseDragged(event):
             if event.button == mh.Buttons.LEFT_MASK:
-                dx = float(event.dx)/10.0
-                dy = float(-event.dy)/10.0
+                dx = float(event.dx)/30.0
+                dy = float(-event.dy)/30.0
                 self.backgroundChooserView.moveBackground(dx, dy)
             elif event.button == mh.Buttons.RIGHT_MASK:
                 scale = self.backgroundChooserView.getBackgroundScale()
-                if abs(event.dx) > abs(event.dy):
-                    scale += float(event.dx)/100.0
-                else:
-                    scale += float(event.dy)/100.0
+                scale += float(event.dy)/100.0
 
                 self.backgroundChooserView.setBackgroundScale(scale)
 
