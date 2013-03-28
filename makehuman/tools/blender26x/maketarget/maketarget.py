@@ -71,7 +71,7 @@ def setSettings(context):
         print("Alpha 8 mesh detected")
         ob.MhMeshVersion = "alpha8"
     else:
-        print("Unknown mesh version")
+        print("Unknown mesh version with %d verts" % len(ob.data.vertices))
         ob.MhMeshVersion = ""
         
 

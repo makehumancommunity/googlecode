@@ -27,7 +27,7 @@ import os
 from mh_utils import mh
 
 folder = os.path.dirname(__file__)
-baseObjFile = os.path.join(folder, "data", "a8_v60.obj")
+baseObjFile = os.path.join(folder, "data", "a8_v64.obj")
 baseMhcloFile = os.path.join(folder, "data", "a8_v55_clothes.mhclo")
 convertMhcloFile = os.path.join(folder, "data", "a8_v55_targets.mhclo")
 
