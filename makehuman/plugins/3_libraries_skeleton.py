@@ -351,7 +351,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
         # Draw bone weights
         if self.showWeightsTggl.selected:
-            _, boneWeights = self.human.getVertexWeights()
+            boneWeights = self.human.getVertexWeights()
             self.showBoneWeights(name, boneWeights)
 
         gui3d.app.redraw()
