@@ -39,6 +39,8 @@ import aljabr
 import exportutils
 import skeleton
 
+scale = 5
+
 def exportMd5(human, filepath, config):
     """
     This function exports MakeHuman mesh and skeleton data to id Software's MD5 format. 
@@ -171,17 +173,25 @@ def exportMd5(human, filepath, config):
                 for (jointIdx, jointWght) in vertWeights[idx]:
                     # Get vertex position in bone space
                     if joints[jointIdx]:
-                        toBoneSpace = la.inv(joints[jointIdx].matRestGlobal)
-                        coor = np.ones(4, dtype=np.float32)
-                        coor[:3] = co[:3]
-                        relPos = np.dot(toBoneSpace, coor.transpose())
+                        invbonematrix = la.inv(joints[jointIdx].matRestGlobal)
+                        relPos = np.ones(4, dtype=np.float32)
+                        relPos[:3] = co[:3]
+                        relPos = np.dot(relPos, invbonematrix)
+                        relPos = relPos * scale
+
+
+                        #toBoneSpace = la.inv(joints[jointIdx].matRestGlobal)
+                        #coor[:3] = co[:3]
+                        #relPos = np.dot(toBoneSpace, coor.transpose())
+                        #relPos = relPos * scale
 
 
                         #q = np.asarray( joints[jointIdx].getRestOrientationQuat() )
                         #q1 = -q
                         #q1[3] = q[3]
                         #c = co - joints[jointIdx].getRestHeadPos()
-                        #relPos = aljabr.quaternionVectorTransform(q1, c)
+                        #relPos = np.asarray(aljabr.quaternionVectorTransform(q1, c), dtype=np.float32)
+                        #relPos = relPos * scale
                     else:
                         relPos = co[:3]
                     # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
@@ -192,6 +202,7 @@ def exportMd5(human, filepath, config):
             f.write('\n\tnumweights %d\n' % (len(obj.coord)))
             for idx,co in enumerate(obj.coord):
                 # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
+                co = co.copy() * scale
                 f.write('\tweight %d %d %f ( %f %f %f )\n' % (idx, 0, 1.0, co[0], co[1], co[2]))
                 # Note: MD5 has a z-up coordinate system
         f.write('}\n\n')
@@ -214,9 +225,17 @@ def writeBone(f, bone):
     else:
         parentIndex = 0 # Refers to the hard-coded root joint
     # "[boneName]"   [parentIndex] ( [xPos] [yPos] [zPos] ) ( [xOrient] [yOrient] [zOrient] )
-    pos = bone.getRestHeadPos()
-    #orientationQuat = bone.getRestOrientationQuat()
-    orientationQuat = [0,0,0]
+    pos = bone.getRestHeadPos() * scale
+    orientationQuat = bone.getRestOrientationQuat() # TODO transform global rest mat when using z-up coordinates
+    qx = orientationQuat[0]
+    qy = orientationQuat[1]
+    qz = orientationQuat[2]
+    w = orientationQuat[3]
+    #if w > 0:
+    #    qx = -qx
+    #    qy = -qy
+    #    qz = -qz
+
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % (bone.name, parentIndex,
         pos[0], pos[1], pos[2],
-        orientationQuat[0], orientationQuat[1], orientationQuat[2]))
+        qx, qy, qz))

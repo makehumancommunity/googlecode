@@ -350,23 +350,23 @@ class Bone(object):
         """
         The head position of this bone in world space.
         """
-        return self.matPoseGlobal[:3,3]
+        return self.matPoseGlobal[:3,3].copy()
         
     def getTail(self):
         """
         The tail position of this bone in world space.
         """
         tail4 = dot(self.matPoseGlobal, self.yvector4)
-        return tail4[:3]
+        return tail4[:3].copy()
 
     def getLength(self):
         return self.yvector4[1]
 
     def getRestHeadPos(self):
-        return self.headPos
+        return self.headPos.copy()
 
     def getRestTailPos(self):
-        return self.tailPos
+        return self.tailPos.copy()
 
     def getRestOffset(self):
         if self.parent:
@@ -378,10 +378,7 @@ class Bone(object):
         return aljabr.vnorm(self.getRestOffset())
 
     def getRestOrientationQuat(self):
-        direction = self.getRestDirection()
-        axis = aljabr.vnorm(aljabr.vcross([0.0, 0.0, 1.0], direction))
-        angle = aljabr.acos(aljabr.vdot([0.0, 0.0, 1.0], direction))
-        return aljabr.axisAngleToQuaternion(axis, angle)
+        return aljabr.matrix2Quaternion(self.matRestGlobal)
 
     def getRoll(self):
         """
