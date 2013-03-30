@@ -48,6 +48,9 @@ import random
 import mh
 import log
 import image_operations as imgop
+import gui3d
+import mh2proxy
+import exportutils
 
 def downloadPovRay():
     
@@ -76,16 +79,15 @@ def povrayExport(obj, app, settings):
   """
 
     log.message('POV-Ray Export of object: %s', obj.name)
-
-    # Read settings from an ini file. This reload enables the settings to be
-    # changed dynamically without forcing the user to restart the MH
-    # application for the changes to take effect.
   
     camera = app.modelCamera
     resW = app.settings.get('rendering_width', 800)
     resH = app.settings.get('rendering_height', 600)
     resolution = (resW,resH)
 
+    # Read settings from an ini file. This reload enables the settings to be
+    # changed dynamically without forcing the user to restart the MH
+    # application for the changes to take effect.
     reload(mh2povray_ini)
     
     path = os.path.join(mh.getPath('render'), mh2povray_ini.outputpath)
@@ -97,20 +99,13 @@ def povrayExport(obj, app, settings):
     # or the more flexible but slower array and macro combo is to be generated.
 
     if format == 'array':
-        povrayExportArray(obj, camera, resolution, path)
+        povrayExportArray(obj, camera, resolution, path, settings)
     if format == 'mesh2':
-        #povrayExportMesh2(obj, camera, resolution, path, settings)
-        povrayExportMesh2_TL(obj, camera, resolution, path, settings)
+        povrayExportMesh2(obj, camera, resolution, path, settings)
 
     outputDirectory = os.path.dirname(path)
     #
     log.debug('out folder: %s', outputDirectory)
-
-    # Export the hair model as a set of spline definitions.
-    # Load the test hair data and write it out in POV-Ray format.
-    # still unsupported <-- HUMMM!! cleanupcleanupcleanup
-    #povrayLoadHairsFile('data/hairs/test.hair')
-    #povrayWriteHairs(outputDirectory, obj)
 
     # The ini action option defines whether or not to attempt to render the file once it's been written.
     povray_bin = (app.settings.get('povray_bin', ''))
@@ -197,7 +192,8 @@ class POVRender(threading.Thread):
         elif os.name == 'posix': # Linux
             subprocess.call(['xdg-open', self.path])
 
-def povrayExportArray(obj, camera, resolution, path):
+
+def povrayExportArray(obj, camera, resolution, path, settings):
     """
   This function exports data in the form of arrays of data the can be used to 
   reconstruct a humanoid object using some very simple POV-Ray macros. These macros 
@@ -296,127 +292,12 @@ def povrayExportArray(obj, camera, resolution, path):
 
     povraySizeData(obj, outputFileDescriptor)
 
-  # Vertices - Write a POV-Ray array to the output stream
+    # Collect and prepare all objects.
+    stuffs = exportutils.collect.setupObjects("MakeHuman", gui3d.app.selectedHuman, helpers=False, hidden=False,
+                                            eyebrows=False, lashes=False, subdivide = settings['subdivide'])
 
-    outputFileDescriptor.write('#declare MakeHuman_VertexArray = array[%s] {\n  ' % len(obj.coord))
-    for co in obj.coord:
-        outputFileDescriptor.write('<%s,%s,%s>' % (co[0], co[1], co[2]))
-    outputFileDescriptor.write('''
-}
-
-''')
-
-  # Normals - Write a POV-Ray array to the output stream
-
-    outputFileDescriptor.write('#declare MakeHuman_NormalArray = array[%s] {\n  ' % len(obj.vnorm))
-    for no in obj.vnorm:
-        outputFileDescriptor.write('<%s,%s,%s>' % (no[0], no[1], no[2]))
-    outputFileDescriptor.write('''
-}
-
-''')
-
-    faces = [f for f in obj.faces if not 'joint-' in f.group.name]
-
-  # UV Vectors - Write a POV-Ray array to the output stream
-
-    outputFileDescriptor.write('#declare MakeHuman_UVArray = array[%s] {\n  ' % len(obj.texco))
-    for uv in obj.texco:
-        
-        outputFileDescriptor.write('<%s,%s>' % (uv[0], uv[1]))
-
-    # outputFileDescriptor.write("\n")
-
-    outputFileDescriptor.write('''
-}
-
-''')
-
-  # Faces - Write a POV-Ray array of arrays to the output stream
-
-    outputFileDescriptor.write('#declare MakeHuman_FaceArray = array[%s][3] {\n  ' % (len(faces) * 2))
-    for f in faces:
-        outputFileDescriptor.write('{%s,%s,%s}' % (f.verts[0].idx, f.verts[1].idx, f.verts[2].idx))
-        outputFileDescriptor.write('{%s,%s,%s}' % (f.verts[2].idx, f.verts[3].idx, f.verts[0].idx))
-    outputFileDescriptor.write('''
-}
-
-''')
-
-  # FaceGroups - Write a POV-Ray array to the output stream and build a list of indices
-  # that can be used to cross-reference faces to the Face Groups that they're part of.
-
-    outputFileDescriptor.write('#declare MakeHuman_FaceGroupArray = array[%s] {\n  ' % obj.faceGroupCount)
-    fgIndex = 0
-    faceGroupIndex = {}
-    for fg in obj.faceGroups:
-        faceGroupIndex[fg.name] = fgIndex
-        outputFileDescriptor.write('  "%s",\n' % fg.name)
-        fgIndex += 1
-    outputFileDescriptor.write('''}
-
-''')
-
-  # FaceGroupIndex - Write a POV-Ray array to the output stream
-
-    outputFileDescriptor.write('#declare MakeHuman_FaceGroupIndexArray = array[%s] {\n  ' % len(faces))
-    for f in faces:
-        outputFileDescriptor.write('%s,' % faceGroupIndex[f.group.name])
-    outputFileDescriptor.write('''
-}
-
-''')
-
-  # UV Indices for each face - Write a POV-Ray array to the output stream
-
-    outputFileDescriptor.write('#declare MakeHuman_UVIndexArray = array[%s][3] {\n  ' % (len(faces) * 2))
-    for f in faces:
-        outputFileDescriptor.write('{%s,%s,%s}' % (f.uv[0], f.uv[1], f.uv[2]))
-        outputFileDescriptor.write('{%s,%s,%s}' % (f.uv[2], f.uv[3], f.uv[0]))
-    outputFileDescriptor.write('''
-}
-
-''')
-
-  # Joint Positions - Write a set of POV-Ray variables to the output stream
-
-    faceGroupExtents = {}
-    for f in obj.faces:
-        if 'joint-' in f.group.name:
-
-      # Compare the components of each vertex to find the min and max values for this faceGroup
-
-            if f.group.name in faceGroupExtents:
-                maxX = max([f.verts[0].co[0], f.verts[1].co[0], f.verts[2].co[0], f.verts[3].co[0], faceGroupExtents[f.group.name][3]])
-                maxY = max([f.verts[0].co[1], f.verts[1].co[1], f.verts[2].co[1], f.verts[3].co[1], faceGroupExtents[f.group.name][4]])
-                maxZ = max([f.verts[0].co[2], f.verts[1].co[2], f.verts[2].co[2], f.verts[3].co[2], faceGroupExtents[f.group.name][5]])
-                minX = min([f.verts[0].co[0], f.verts[1].co[0], f.verts[2].co[0], f.verts[3].co[0], faceGroupExtents[f.group.name][0]])
-                minY = min([f.verts[0].co[1], f.verts[1].co[1], f.verts[2].co[1], f.verts[3].co[1], faceGroupExtents[f.group.name][1]])
-                minZ = min([f.verts[0].co[2], f.verts[1].co[2], f.verts[2].co[2], f.verts[3].co[2], faceGroupExtents[f.group.name][2]])
-            else:
-                maxX = max([f.verts[0].co[0], f.verts[1].co[0], f.verts[2].co[0], f.verts[3].co[0]])
-                maxY = max([f.verts[0].co[1], f.verts[1].co[1], f.verts[2].co[1], f.verts[3].co[1]])
-                maxZ = max([f.verts[0].co[2], f.verts[1].co[2], f.verts[2].co[2], f.verts[3].co[2]])
-                minX = min([f.verts[0].co[0], f.verts[1].co[0], f.verts[2].co[0], f.verts[3].co[0]])
-                minY = min([f.verts[0].co[1], f.verts[1].co[1], f.verts[2].co[1], f.verts[3].co[1]])
-                minZ = min([f.verts[0].co[2], f.verts[1].co[2], f.verts[2].co[2], f.verts[3].co[2]])
-            faceGroupExtents[f.group.name] = [minX, minY, minZ, maxX, maxY, maxZ]
-
-  # Write out the centre position of each joint
-
-    for fg in obj.faceGroups:
-        if 'joint-' in fg.name:
-            jointVarName = string.replace(fg.name, '-', '_')
-            jointCentreX = (faceGroupExtents[fg.name][0] + faceGroupExtents[fg.name][3]) / 2
-            jointCentreY = (faceGroupExtents[fg.name][1] + faceGroupExtents[fg.name][4]) / 2
-            jointCentreZ = (faceGroupExtents[fg.name][2] + faceGroupExtents[fg.name][5]) / 2
-
-      # jointCentre  = "<"+jointCentreX+","+jointCentreY+","+jointCentreZ+">"
-
-            outputFileDescriptor.write('#declare MakeHuman_%s=<%s,%s,%s>;\n' % (jointVarName, jointCentreX, jointCentreY, jointCentreZ))
-    outputFileDescriptor.write('''
-
-''')
+    # Write array data for the object.
+    povrayWriteArray(outputFileDescriptor, stuffs)
 
   # Copy macro and texture definitions straight across to the output file.
 
@@ -473,312 +354,50 @@ def povrayExportArray(obj, camera, resolution, path):
     sceneFileDescriptor.close()
     log.message('Sample POV-Ray scene file generated.')
 
+'''
+# Part of Chris' legacy. Note this funny code when using SSS:
+if SSS:
+    faces = [f for f in faces 
+             if not 'eye-cornea' in f.group.name  # for fix black eyes
+             and not 'eyebrown' in f.group.name
+             and not 'lash' in f.group.name]
+'''
 
-def povrayExportMesh2(obj, camera, resolution, path, settings):
+def povrayCameraData(camera, resolution, hfile, settings):
     """
-  This function exports data in the form of a mesh2 humanoid object. The POV-Ray 
-  file generated is fairly inflexible, but is highly efficient. 
-  
-  Parameters
-  ----------
-  
-  obj:
-      *3D object*. The object to export. This should be the humanoid object with
-      uv-mapping data and Face Groups defined.
-  
-  camera:
-      *Camera object*. The camera to render from. 
-  
-  path:
-      *string*. The file system path to the output files that need to be generated. 
-  """
+    This function outputs standard camera data common to all POV-Ray format exports. 
 
-  # Certain blocks of SDL are mostly static and can be copied directly from reference
-  # files into the output files.
-
-    headerFile = 'data/povray/headercontent_mesh2only.inc'
-    staticFile = 'data/povray/staticcontent_mesh2only.inc'
-    sceneFile = 'data/povray/makehuman_mesh2only.pov'
-    pigmentMap = gui3d.app.selectedHuman.mesh.texture
-
-  # Define some additional file locations
-
-    outputSceneFile = path.replace('.inc', '.pov')
-    baseName = os.path.basename(path)
-    nameOnly = string.replace(baseName, '.inc', '')
-    underScores = ''.ljust(len(baseName), '-')
-    outputDirectory = os.path.dirname(path)
-
-  # Make sure the directory exists
-
-    if not os.path.isdir(outputDirectory):
-        try:
-            os.makedirs(outputDirectory)
-        except:
-            log.error('Error creating export directory.')
-            return 0
-
-  # Open the output file in Write mode
-
-    try:
-        outputFileDescriptor = open(path, 'w')
-    except:
-        log.error('Error opening file to write data.')
-        return 0
-
-  # Write the file name into the top of the comment block that starts the file.
-
-    outputFileDescriptor.write('// %s\n' % baseName)
-    outputFileDescriptor.write('// %s\n' % underScores)
-
-  # Copy the header file SDL straight across to the output file
-
-    try:
-        headerFileDescriptor = open(headerFile, 'r')
-    except:
-        log.error('Error opening file to read standard headers.')
-        return 0
-    # povman test for include globals settings for test SSS
-    SSS = mh2povray_ini.SSS if settings['SSS'] == False else settings['SSS']
-    
-    if SSS:
-        outputFileDescriptor.write('// include global settings \n' +
-                                   'global_settings { \n' +
-                                   '    assumed_gamma 1 \n' +
-                                   '    subsurface { \n' +
-                                   '        samples 50, 50 \n' +
-                                   '        radiosity off }\n' +
-                                   '    mm_per_unit 25 \n' +
-                                   '} \n'
-                                   )
-        
-    headerLines = headerFileDescriptor.read()
-    outputFileDescriptor.write(headerLines)
-    outputFileDescriptor.write('''
-
-''')
-    headerFileDescriptor.close()
-
-  # Declare POV_Ray variables containing the current makehuman camera.
-
-    povrayCameraData(camera, resolution, outputFileDescriptor)
-    
-    outputFileDescriptor.write('#declare MakeHuman_TranslateX    = %s;\n' % -obj.x    +
-                               '#declare MakeHuman_TranslateY    = %s;\n' % obj.y     +
-                               '#declare MakeHuman_TranslateZ    = %s;\n\n' % obj.z   +
-                               '\n' +
-                               '#declare MakeHuman_RotateX       = %s;\n' % obj.rx    +
-                               '#declare MakeHuman_RotateY       = %s;\n' % -obj.ry   +
-                               '#declare MakeHuman_RotateZ       = %s;\n\n' % obj.rz  
-                               )
-
-  # Calculate some useful values and add them to the output as POV-Ray variable
-  # declarations so they can be readily accessed from a POV-Ray scene file.
-
-    povraySizeData(obj, outputFileDescriptor)
-
-  # Mesh2 Object - Write the initial part of the mesh2 object declaration
-  
-    # povman; test for write geometry data to new file 
-    # --------------------------------------------------------------------------
-    outputFileDescriptor.write('#if (file_exists("makehuman_geometry.inc")) \n' +
-                               '\t#include "makehuman_geometry.inc" \n' +
-                               '#end \n'
-                               )
-    #
-    fileGeometry = path.replace('.inc','_geometry.inc')
-    #
-    try:
-        outputFileGeometry = open(fileGeometry, 'w')
-    except:
-        log.error('Error opening file to write data.')
-        return 0
-    #---------------------------------------------------------------------------
-    # end
-    
-    outputFileGeometry.write('\n// Humanoid mesh2 definition\n' +
-                             '#declare MakeHuman_Mesh2Object = mesh2 {\n')
-
-  # Vertices - Write a POV-Ray array to the output stream
-
-    outputFileGeometry.write('  vertex_vectors {\n  ' +
-                             '    %s\n  ' % len(obj.coord)
-                             )
-    for co in obj.coord:
-        outputFileGeometry.write('<%s,%s,%s>' % (co[0], co[1], co[2]))
-    outputFileGeometry.write('''
-  }
-
-''')
-
-  # Normals - Write a POV-Ray array to the output stream
-
-    outputFileGeometry.write('  normal_vectors {\n  ' +
-                             '    %s\n  ' % len(obj.vnorm)
-                             )
-    for no in obj.vnorm:
-        outputFileGeometry.write('<%s,%s,%s>' % (no[0], no[1], no[2]))
-    outputFileGeometry.write('''
-  }
-
-''')
-
-  # UV Vectors - Write a POV-Ray array to the output stream
-
-    outputFileGeometry.write('  uv_vectors {\n  ' +
-                             '    %s\n  ' % len(obj.uvValues)
-                             )
-    for uv in obj.uvValues:
-        outputFileGeometry.write('<%s,%s>' % (uv[0], uv[1]))
-        
-    outputFileGeometry.write('''
-  }
-
-''')
-
-  # Faces - Write a POV-Ray array of arrays to the output stream
-    # basic filter: joints and helpers are not need for render
-    # if use SSS, separate eyebrows and eyes
-    
-    faces = [f for f in obj.faces 
-             if not 'joint' in f.group.name 
-             and not 'helper' in f.group.name]
-    #
-    if SSS:
-        faces = [f for f in faces 
-                 if not 'eye-cornea' in f.group.name  # for fix black eyes
-                 and not 'eyebrown' in f.group.name
-                 and not 'lash' in f.group.name]
-    #
-    outputFileGeometry.write('  face_indices {\n  ' +
-                             '    %s\n  ' % (len(faces) * 2)
-                             )
-    for f in faces:
-        outputFileGeometry.write('<%s,%s,%s>' % (f.verts[0].idx, f.verts[1].idx, f.verts[2].idx) +
-                                 '<%s,%s,%s>' % (f.verts[2].idx, f.verts[3].idx, f.verts[0].idx)
-                                )
-    outputFileGeometry.write('''
-  }
-
-''')
-
-  # UV Indices for each face - Write a POV-Ray array to the output stream
-
-    outputFileGeometry.write('  uv_indices {\n  ' +
-                             '    %s\n  ' % (len(faces) * 2)
-                             )
-    for fa in faces:
-        cont = 0
-        outputFileGeometry.write('<%s,%s,%s>' % (fa.uv[0], fa.uv[1], fa.uv[2]) +
-                                 '<%s,%s,%s>' % (fa.uv[2], fa.uv[3], fa.uv[0]) 
-                                 )
-    outputFileGeometry.write('''
-  }
-''')
-  
-  # Mesh2 Object - Write the end squiggly bracket for the mesh2 object declaration
-
-    outputFileGeometry.write('''
-  uv_mapping
-''')
-    outputFileGeometry.write('''}
-
-''')
-    
-    # povman
-    outputFileGeometry.close()
-    log.message("POV-Ray 'geometry' file generated.")
-    
-    # Copy texture definitions straight across to the output file.
-
-    try:
-        staticContentFileDescriptor = open(staticFile, 'r')
-    except:
-        log.error('Error opening file to read static content.')
-        return 0
-    staticContentLines = staticContentFileDescriptor.read()
-    outputFileDescriptor.write(staticContentLines)
-    outputFileDescriptor.write('\n')
-    staticContentFileDescriptor.close()
-
-    # The POV-Ray include file is complete
-
-    outputFileDescriptor.close()
-    log.message("POV-Ray '#include' file generated.")
-
-    # Copy a sample scene file across to the output directory
-
-    try:
-        sceneFileDescriptor = open(sceneFile, 'r')
-    except:
-        log.error('Error opening file to read standard scene file.')
-        return 0
-    try:
-        outputSceneFileDescriptor = open(outputSceneFile, 'w')
-    except:
-        log.error('Error opening file to write standard scene file.')
-        return 0
-    sceneLines = sceneFileDescriptor.read()
-    sceneLines = string.replace(sceneLines, 'xxFileNamexx', nameOnly)
-    sceneLines = string.replace(sceneLines, 'xxUnderScoresxx', underScores)
-    sceneLines = string.replace(sceneLines, 'xxLowercaseFileNamexx', nameOnly.lower())
-    outputSceneFileDescriptor.write(sceneLines)
-
-    # Copy the skin texture file into the output directory
-
-    try:
-        shutil.copy(pigmentMap, os.path.join(outputDirectory, "texture.png"))
-    except (IOError, os.error), why:
-        log.error("Can't copy %s" % str(why))
-
-    # Job done
-
-    outputSceneFileDescriptor.close()
-    sceneFileDescriptor.close()
-    log.message('Sample POV-Ray scene file generated')
-
-
-def povrayCameraData(camera, resolution, outputFileDescriptor, settings):
+    camera:
+        Camera - A MH camera to render from.
+    resolution:
+        (int, int) - Resolution of output image.
+    hfile:
+        file descriptor - The file to which the camera settings need to be written. 
     """
-  This function outputs standard camera data common to all POV-Ray format exports. 
 
-  Parameters
-  ----------
-  
-  cameraSettings:
-      *list of floats*. A list of float values conveying camera and image related 
-      information. This includes the position, orientation and field of view of the
-      camera along with the screen dimensions from MakeHuman. These values are passed 
-      along to POV-Ray as variables so that the default rendered image can mimic the
-      image last displayed in MakeHuman. 
-  
-  outputFileDescriptor:
-      *file descriptor*. The file to which the camera settings need to be written. 
-  """
-
-    outputFileDescriptor.write('// MakeHuman Camera and Viewport Settings. \n')
+    hfile.write('// MakeHuman Camera and Viewport Settings. \n')
     if settings['SSS'] == True:
-        outputFileDescriptor.write('#declare MakeHuman_LightX      = %s;\n' % 11)
-        outputFileDescriptor.write('#declare MakeHuman_LightY      = %s;\n' % 20)
-        outputFileDescriptor.write('#declare MakeHuman_LightZ      = %s;\n' % 20)
+        hfile.write('#declare MakeHuman_LightX      = %s;\n' % 11)
+        hfile.write('#declare MakeHuman_LightY      = %s;\n' % 20)
+        hfile.write('#declare MakeHuman_LightZ      = %s;\n' % 20)
     else:
-        outputFileDescriptor.write('#declare MakeHuman_LightX      = %s;\n' % camera.eyeX)
-        outputFileDescriptor.write('#declare MakeHuman_LightY      = %s;\n' % camera.eyeY)
-        outputFileDescriptor.write('#declare MakeHuman_LightZ      = %s;\n' % camera.eyeZ)
-    outputFileDescriptor.write('#declare MakeHuman_EyeX        = %s;\n' % camera.eyeX)
-    outputFileDescriptor.write('#declare MakeHuman_EyeY        = %s;\n' % camera.eyeY)
-    outputFileDescriptor.write('#declare MakeHuman_EyeZ        = %s;\n' % camera.eyeZ)
-    outputFileDescriptor.write('#declare MakeHuman_FocusX      = %s;\n' % camera.focusX)
-    outputFileDescriptor.write('#declare MakeHuman_FocusY      = %s;\n' % camera.focusY)
-    outputFileDescriptor.write('#declare MakeHuman_FocusZ      = %s;\n' % camera.focusZ)
-    outputFileDescriptor.write('#declare MakeHuman_ImageHeight = %s;\n' % resolution[1])
-    outputFileDescriptor.write('#declare MakeHuman_ImageWidth  = %s;\n' % resolution[0])
-    outputFileDescriptor.write('''
+        hfile.write('#declare MakeHuman_LightX      = %s;\n' % camera.eyeX)
+        hfile.write('#declare MakeHuman_LightY      = %s;\n' % camera.eyeY)
+        hfile.write('#declare MakeHuman_LightZ      = %s;\n' % camera.eyeZ)
+    hfile.write('#declare MakeHuman_EyeX        = %s;\n' % camera.eyeX)
+    hfile.write('#declare MakeHuman_EyeY        = %s;\n' % camera.eyeY)
+    hfile.write('#declare MakeHuman_EyeZ        = %s;\n' % camera.eyeZ)
+    hfile.write('#declare MakeHuman_FocusX      = %s;\n' % camera.focusX)
+    hfile.write('#declare MakeHuman_FocusY      = %s;\n' % camera.focusY)
+    hfile.write('#declare MakeHuman_FocusZ      = %s;\n' % camera.focusZ)
+    hfile.write('#declare MakeHuman_ImageHeight = %s;\n' % resolution[1])
+    hfile.write('#declare MakeHuman_ImageWidth  = %s;\n' % resolution[0])
+    hfile.write('''
 
 ''')
 
 
-def povraySizeData(obj, outputFileDescriptor):
+def povraySizeData(obj, hfile):
     """
   This function outputs standard object dimension data common to all POV-Ray 
   format exports. 
@@ -790,7 +409,7 @@ def povraySizeData(obj, outputFileDescriptor):
       *3D object*. The object to export. This should be the humanoid object with
       uv-mapping data and Face Groups defined.
   
-  outputFileDescriptor:
+  hfile:
       *file descriptor*. The file to which the camera settings need to be written. 
   """
 
@@ -807,149 +426,19 @@ def povraySizeData(obj, outputFileDescriptor):
         minX = min(minX, co[0])
         minY = min(minY, co[1])
         minZ = min(minZ, co[2])
-    outputFileDescriptor.write('// Figure Dimensions. \n')
-    outputFileDescriptor.write('#declare MakeHuman_MaxExtent = < %s, %s, %s>;\n' % (maxX, maxY, maxZ))
-    outputFileDescriptor.write('#declare MakeHuman_MinExtent = < %s, %s, %s>;\n' % (minX, minY, minZ))
-    outputFileDescriptor.write('#declare MakeHuman_Center    = < %s, %s, %s>;\n' % ((maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2))
-    outputFileDescriptor.write('#declare MakeHuman_Width     = %s;\n' % (maxX - minX))
-    outputFileDescriptor.write('#declare MakeHuman_Height    = %s;\n' % (maxY - minY))
-    outputFileDescriptor.write('#declare MakeHuman_Depth     = %s;\n' % (maxZ - minZ))
-    outputFileDescriptor.write('''
+    hfile.write('// Figure Dimensions. \n')
+    hfile.write('#declare MakeHuman_MaxExtent = < %s, %s, %s>;\n' % (maxX, maxY, maxZ))
+    hfile.write('#declare MakeHuman_MinExtent = < %s, %s, %s>;\n' % (minX, minY, minZ))
+    hfile.write('#declare MakeHuman_Center    = < %s, %s, %s>;\n' % ((maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2))
+    hfile.write('#declare MakeHuman_Width     = %s;\n' % (maxX - minX))
+    hfile.write('#declare MakeHuman_Height    = %s;\n' % (maxY - minY))
+    hfile.write('#declare MakeHuman_Depth     = %s;\n' % (maxZ - minZ))
+    hfile.write('''
 
 ''')
 
 
-# Temporary Function: The loading of hairs should be done by the main application.
-
-
-def povrayLoadHairsFile(path):
-
-    pass
-    #hairsClass.loadHairs(path)
-
-
-def povrayWriteHairs(outputDirectory, mesh):
-    """
-  This function generates hair for the POV-Ray format export. Each hair is 
-  written out as a sphere_sweep. 
-
-  Parameters
-  ----------
-  
-  outputDirectory:
-      *directory path*. A string containing the name of the directory into which the
-      output file is to be written. 
-  
-  mesh:
-      *mesh object*. The humanoid mesh object to which hair is added. 
-  """
-    return # This code needs to be updated
-    log.message('Writing hair')
-
-    hairsClass.humanVerts = mesh.verts
-    hairsClass.adjustGuides()
-    hairsClass.generateHairStyle1()
-    hairsClass.generateHairStyle2()
-
-  # The output file name should really be picked up from screen field settings.
-
-    hairFileName = '%s/makehuman_hair.inc' % outputDirectory
-    hairFile = open(hairFileName, 'w')
-
-  # Need to work out the total number of hairs upfront to know what size
-  # array will be needed in POV-Ray. Writing to an array rather than adding
-  # the hairs directly to the scene helps reduce the rendering times for
-  # test renders, because you can easily render every 10th hair or every
-  # 100th hair.
-
-    totalNumberOfHairs = 0
-    for hSet in hairsClass.hairStyle:
-        totalNumberOfHairs += len(hSet.hairs)
-    hairFile.write('#declare MakeHuman_HairArray = array[%i] {\n' % totalNumberOfHairs)
-
-  # MakeHuman hair styles consist of lots of sets of hairs.
-
-    hairCounter = 0
-    for hSet in hairsClass.hairStyle:
-        if 'clump' in hSet.name:
-            hDiameter = hairsClass.hairDiameterClump * random.uniform(0.5, 1)
-        else:
-            hDiameter = hairsClass.hairDiameterMultiStrand * random.uniform(0.5, 1)
-
-    # Each hair is represented as a separate sphere_sweep in POV-Ray.
-
-        for hair in hSet.hairs:
-            hairCounter += 1
-            hairFile.write('sphere_sweep{')
-            hairFile.write('b_spline ')
-            hairFile.write('%i,' % len(hair.controlPoints))
-            controlPointCounter = 0
-
-      # Each control point is written out, along with the radius of the
-      # hair at that point.
-
-            for cP in hair.controlPoints:
-                controlPointCounter += 1
-                hairFile.write('<%s,%s,%s>,%s' % (round(cP[0], 4), round(cP[1], 4), round(cP[2], 4), round(hDiameter / 2, 4)))
-
-      # All coordinates except the last need a following comma.
-
-                if controlPointCounter != len(hair.controlPoints):
-                    hairFile.write(',')
-
-      # End the sphere_sweep declaration for this hair
-
-            hairFile.write('}')
-
-      # All but the final sphere_sweep (each array element) needs a terminating comma.
-
-            if hairCounter != totalNumberOfHairs:
-                hairFile.write(',\n')
-            else:
-                hairFile.write('\n')
-
-  # End the array declaration.
-
-    hairFile.write('}\n')
-    hairFile.write('\n')
-
-  # Pick up the hair color and create a default POV-Ray hair texture.
-
-    hairFile.write('#ifndef (MakeHuman_HairTexture)\n')
-    hairFile.write('  #declare MakeHuman_HairTexture = texture {\n')
-    hairFile.write('    pigment {rgb <%s,%s,%s>}\n' % (hairsClass.tipColor[0], hairsClass.tipColor[1], hairsClass.tipColor[2]))
-    hairFile.write('  }\n')
-    hairFile.write('#end\n')
-    hairFile.write('\n')
-
-  # Dynamically create a union of the hairs (or a subset of the hairs).
-  # By default use every 25th hair, which is usually ok for test renders.
-
-    hairFile.write('#ifndef(MakeHuman_HairStep) #declare MakeHuman_HairStep = 25; #end\n')
-    hairFile.write('union{\n')
-    hairFile.write('  #local MakeHuman_I = 0;\n')
-    hairFile.write('  #while (MakeHuman_I < %i)\n' % totalNumberOfHairs)
-    hairFile.write('    object {MakeHuman_HairArray[MakeHuman_I] texture{MakeHuman_HairTexture}}\n')
-    hairFile.write('    #local MakeHuman_I = MakeHuman_I + MakeHuman_HairStep;\n')
-    hairFile.write('  #end\n')
-
-  # hairFile.write('  translate -z*0.0\n')
-
-    hairFile.write('}')
-    hairFile.close()
-    log.message('Totals hairs written: %s', totalNumberOfHairs)
-    log.message('Number of tufts %s', len(hairsClass.hairStyle))
-
-
-#--------------------------------------------------------------------------
-#   TL: A version of povrayExportMesh2 that handles clothes
-#--------------------------------------------------------------------------
-
-import gui3d
-import mh2proxy
-import exportutils
-
-def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallback = None):
+def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback = None):
     """
     This function exports data in the form of a mesh2 humanoid object. The POV-Ray 
     file generated is fairly inflexible, but is highly efficient. 
@@ -1023,16 +512,14 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
         return 0
     headerLines = headerFileDescriptor.read()
     outputFileDescriptor.write(headerLines)
-    outputFileDescriptor.write('''
-
-''')
+    outputFileDescriptor.write("\n\n")
     headerFileDescriptor.close()
 
     progress (progbase+0.05*(nextpb-progbase),"Writing code")
-    # Declare POV Ray variables containing the current makehuman camera.
+    # Write camera's position and settings.
     povrayCameraData(camera, resolution, outputFileDescriptor, settings)
     
-    # Declare POV Ray variables containing the current object position and rotation.
+    # Write object's position and rotation.
     outputFileDescriptor.write('#declare MakeHuman_TranslateX      = %s;\n' % -obj.x)
     outputFileDescriptor.write('#declare MakeHuman_TranslateY      = %s;\n' % obj.y)
     outputFileDescriptor.write('#declare MakeHuman_TranslateZ      = %s;\n\n' % obj.z)
@@ -1040,12 +527,11 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
     outputFileDescriptor.write('#declare MakeHuman_RotateY         = %s;\n' % -obj.ry)
     outputFileDescriptor.write('#declare MakeHuman_RotateZ         = %s;\n\n' % obj.rz)
 
-    # Calculate some useful values and add them to the output as POV-Ray variable
-    # declarations so they can be readily accessed from a POV-Ray scene file.
-
     progress (progbase+0.1*(nextpb-progbase),"Writing code")
+    # Write sizes to make size ratios available.
     povraySizeData(obj, outputFileDescriptor)
-    
+
+    # Collect and prepare all objects.
     stuffs = exportutils.collect.setupObjects("MakeHuman", gui3d.app.selectedHuman, helpers=False, hidden=False,
                                             eyebrows=False, lashes=False, subdivide = settings['subdivide'],
                                             progressCallback = lambda p: progress(progbase+(0.15+0.85*p)*(nextpb-progbase),"Analyzing objects"))
@@ -1053,118 +539,12 @@ def povrayExportMesh2_TL(obj, camera, resolution, path, settings, progressCallba
 
     # If SSS is enabled, render the lightmaps.
     if settings['SSS'] == True:
-        nextpb = 0.6
-        # TODO: move this after object collection.
-        # calculate resolution of each cannel, according to settings
-        resred = float(settings['SSSA'])
-        resgreen = int(2.0**(10-resred/2))
-        resred = int(2.0**(10-resred))
-        # blue channel
-        lmap = projection.mapLighting(progressCallback = lambda p: progress(progbase+0.5*p*(nextpb-progbase),"Projecting lightmaps"))
-        lmap = imgop.getChannel(lmap,1)
-        progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
-        log.debug('SSS: Hi-Res lightmap resolution: %s', lmap.width)
-        lmap.save(os.path.join(outputDirectory, 'lighthi.png'))
-        # green channel
-        progress (progbase+0.6*(nextpb-progbase),"Writing lightmaps")
-        lmap = imgop.resized(lmap, resgreen,resgreen)
-        log.debug('SSS: Mid-Res lightmap resolution: %s', lmap.width)
-        lmap.save(os.path.join(outputDirectory, 'lightmid.png'))
-        # red channel
-        progress (progbase+0.8*(nextpb-progbase),"Writing lightmaps")
-        lmap = imgop.resized(lmap, resred,resred)
-        log.debug('SSS: Low-Res lightmap resolution: %s', lmap.width)
-        lmap.save(os.path.join(outputDirectory, 'lightlo.png'))
-        # create masks for blurred channels, for erasing seams.
-        #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
-        #sssmask = mh.Image(os.path.join(stuffs[0].texture[0], stuffs[0].texture[1]))
-        #sssmask = imgop.getAlpha(sssmask)
-        #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
-        #sssmask = imgop.resized(sssmask,resgreen,resgreen)
-        #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
-        #sssmask.save(os.path.join(outputDirectory, 'maskmid.png'))
-        #sssmask = imgop.resized(sssmask,resred,resred)
-        #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
-        #sssmask.save(os.path.join(outputDirectory, 'masklo.png'))
-        progbase = nextpb
-        # TEST. bump map blurring
-        '''
-        lmap = mh.Image(os.path.join(outputDirectory, 'bump.png'))
-        lmap = imgop.getChannel(lmap,1)
-        lmap = imgop.blurred(lmap,lmap.width/1024,15)
-        lmap.save(os.path.join(outputDirectory, 'bumpmid1.png'))
-        lmap = imgop.blurred(lmap,2*lmap.width/1024,15)
-        lmap.save(os.path.join(outputDirectory, 'bumplo1.png'))
-        '''
+        povrayProcessSSS(stuffs, outputDirectory, settings, lambda p: progress(progbase+p*(0.6-progbase),"Processing Subsurface Scattering"))
+        progbase = 0.6
 
-    # Mesh2 Object - Write the initial part of the mesh2 object declaration
-    stuffnum = float(len(stuffs))
-    i = 0.0
-    nextpb = 0.9
-    for stuff in stuffs:
-        progress(progbase+(i/stuffnum)*(nextpb-progbase),"Writing objects")
-        obj = stuff.meshInfo.object
-
-        outputFileDescriptor.write('// Mesh2 object definition\n')
-        outputFileDescriptor.write('#declare %s_Mesh2Object = mesh2 {\n' % stuff.name)
-
-        # Vertices - Write a POV-Ray array to the output stream
-        outputFileDescriptor.write('  vertex_vectors {\n  ')
-        outputFileDescriptor.write('    %s\n  ' % len(obj.coord))
-        for co in obj.coord:
-            outputFileDescriptor.write('<%s,%s,%s>' % (-co[0],co[1],co[2]))
-        outputFileDescriptor.write('\n  }\n\n')
-        progress(progbase+(i/stuffnum+0.142)*(nextpb-progbase),"Writing objects")
-
-        # Normals - Write a POV-Ray array to the output stream
-        outputFileDescriptor.write('  normal_vectors {\n  ')
-        outputFileDescriptor.write('    %s\n  ' % len(obj.vnorm))
-        for no in obj.vnorm:
-            outputFileDescriptor.write('<%s,%s,%s>' % (-no[0],no[1],no[2]))
-        outputFileDescriptor.write('\n  }\n\n')
-        progress(progbase+(i/stuffnum+0.286)*(nextpb-progbase),"Writing objects")
-    
-        # UV Vectors - Write a POV-Ray array to the output stream
-        outputFileDescriptor.write('  uv_vectors {\n  ')
-        outputFileDescriptor.write('    %s\n  ' % len(obj.texco))
-        for uv in obj.texco:
-            outputFileDescriptor.write('<%s,%s>' % tuple(uv))        
-        outputFileDescriptor.write('\n  }\n\n')
-        progress(progbase+(i/stuffnum+0.428)*(nextpb-progbase),"Writing objects")
-
-        # Faces - Write a POV-Ray array of arrays to the output stream
-        #nTriangles = 0
-        #for f in obj.faces:
-        #    nTriangles += len(f.verts)-2
-        #
-        # TL: Converted to new API. All MH meshes will be quads only
-        #
-        
-        nTriangles = 2*len(obj.fvert)
-
-        outputFileDescriptor.write('  face_indices {\n  ')
-        outputFileDescriptor.write('    %s\n  ' % nTriangles)
-        for fverts in obj.fvert:
-            outputFileDescriptor.write('<%s,%s,%s>' % (fverts[0], fverts[1], fverts[2]))
-            outputFileDescriptor.write('<%s,%s,%s>' % (fverts[2], fverts[3], fverts[0]))
-        outputFileDescriptor.write('\n  }\n\n')
-        progress(progbase+(i/stuffnum+0.714)*(nextpb-progbase),"Writing objects")
-
-
-        # UV Indices for each face - Write a POV-Ray array to the output stream
-        outputFileDescriptor.write('  uv_indices {\n  ')
-        outputFileDescriptor.write('    %s\n  ' % nTriangles)
-        for fuv in obj.fuvs:
-            outputFileDescriptor.write('<%s,%s,%s>' % (fuv[0], fuv[1], fuv[2]))
-            outputFileDescriptor.write('<%s,%s,%s>' % (fuv[2], fuv[3], fuv[0]))
-        outputFileDescriptor.write('\n  }\n')
-
-        # Mesh2 Object - Write the end squiggly bracket for the mesh2 object declaration
-        outputFileDescriptor.write('\n      uv_mapping\n')
-        outputFileDescriptor.write('}\n\n')
-        
-        i += 1.0
-    progbase = nextpb
+    # Write mesh data for the object.
+    povrayWriteMesh2(outputFileDescriptor, stuffs, lambda p: progress(progbase+p*(0.9-progbase),"Writing Objects"))
+    progbase = 0.9
                                             
     # Copy texture definitions to the output file.
     progress(progbase,"Writing Materials")
@@ -1343,7 +723,216 @@ def copyFile(path, outputDirectory):
         except (IOError, os.error), why:
             log.error("Can't copy %s" % str(why))
 
-#--------------------------------------------------------------------------
-#   End TL modications
-#--------------------------------------------------------------------------
+def povrayWriteMesh2(hfile, stuffs, progressCallback = None):
 
+    def progress(prog):
+        if progressCallback == None:
+            gui3d.app.progress(prog)
+        else:
+            progressCallback(prog)
+    progress(0)
+        
+    stuffnum = float(len(stuffs))
+    i = 0.0
+    for stuff in stuffs:
+        obj = stuff.meshInfo.object
+
+        hfile.write('// Mesh2 object definition\n')
+        hfile.write('#declare %s_Mesh2Object = mesh2 {\n' % stuff.name)
+
+        # Vertices
+        hfile.write('  vertex_vectors {\n      %s\n  ' % len(obj.coord))
+        for co in obj.coord:
+            hfile.write('<%s,%s,%s>' % (-co[0],co[1],co[2]))
+        hfile.write('\n  }\n\n')
+        progress((i+0.142)/stuffnum)
+
+        # Normals
+        hfile.write('  normal_vectors {\n      %s\n  ' % len(obj.vnorm))
+        for no in obj.vnorm:
+            hfile.write('<%s,%s,%s>' % (-no[0],no[1],no[2]))
+        hfile.write('\n  }\n\n')
+        progress((i+0.286)/stuffnum)
+    
+        # UV Vectors
+        hfile.write('  uv_vectors {\n      %s\n  ' % len(obj.texco))
+        for uv in obj.texco:
+            hfile.write('<%s,%s>' % tuple(uv))        
+        hfile.write('\n  }\n\n')
+        progress((i+0.428)/stuffnum)
+        
+        nTriangles = 2*len(obj.fvert) # MH faces are quads.
+
+        hfile.write('  face_indices {\n      %s\n  ' % nTriangles)
+        for fverts in obj.fvert:
+            hfile.write('<%s,%s,%s>' % (fverts[0], fverts[1], fverts[2]))
+            hfile.write('<%s,%s,%s>' % (fverts[2], fverts[3], fverts[0]))
+        hfile.write('\n  }\n\n')
+        progress((i+0.714)/stuffnum)
+
+
+        # UV Indices for each face
+        hfile.write('  uv_indices {\n      %s\n  ' % nTriangles)
+        for fuv in obj.fuvs:
+            hfile.write('<%s,%s,%s>' % (fuv[0], fuv[1], fuv[2]))
+            hfile.write('<%s,%s,%s>' % (fuv[2], fuv[3], fuv[0]))
+        hfile.write('\n  }\n')
+
+        # Write the end squiggly bracket for the mesh2 object declaration
+        hfile.write('\n      uv_mapping\n}\n\n')
+        
+        i += 1.0
+        progress(i/stuffnum)
+
+def povrayWriteArray(hfile, stuffs, progressCallback = None):
+
+    def progress(prog):
+        if progressCallback == None:
+            gui3d.app.progress(prog)
+        else:
+            progressCallback(prog)
+    progress(0)
+
+    obj = stuffs[0].object
+    
+    # Vertices
+    hfile.write('#declare MakeHuman_VertexArray = array[%s] {\n  ' % len(obj.coord))
+    for co in obj.coord:
+        hfile.write('<%s,%s,%s>' % (co[0], co[1], co[2]))
+    hfile.write("\n}\n\n")
+
+    # Normals
+    hfile.write('#declare MakeHuman_NormalArray = array[%s] {\n  ' % len(obj.vnorm))
+    for no in obj.vnorm:
+        hfile.write('<%s,%s,%s>' % (no[0], no[1], no[2]))
+    hfile.write("\n}\n\n")
+
+    faces = [f for f in obj.faces if not 'joint-' in f.group.name]
+
+    # UV Vectors
+    hfile.write('#declare MakeHuman_UVArray = array[%s] {\n  ' % len(obj.texco))
+    for uv in obj.texco:
+        
+        hfile.write('<%s,%s>' % (uv[0], uv[1]))
+
+    # hfile.write("\n")
+    hfile.write("\n}\n\n")
+
+    # Faces
+    hfile.write('#declare MakeHuman_FaceArray = array[%s][3] {\n  ' % (len(faces) * 2))
+    for f in faces:
+        hfile.write('{%s,%s,%s}' % (f.verts[0].idx, f.verts[1].idx, f.verts[2].idx))
+        hfile.write('{%s,%s,%s}' % (f.verts[2].idx, f.verts[3].idx, f.verts[0].idx))
+    hfile.write("\n}\n\n")
+
+    # FaceGroups - Write a POV-Ray array to the output stream and build a list of indices
+    # that can be used to cross-reference faces to the Face Groups that they're part of.
+    hfile.write('#declare MakeHuman_FaceGroupArray = array[%s] {\n  ' % obj.faceGroupCount)
+    fgIndex = 0
+    faceGroupIndex = {}
+    for fg in obj.faceGroups:
+        faceGroupIndex[fg.name] = fgIndex
+        hfile.write('  "%s",\n' % fg.name)
+        fgIndex += 1
+    hfile.write("}\n\n")
+
+    # FaceGroupIndex
+    hfile.write('#declare MakeHuman_FaceGroupIndexArray = array[%s] {\n  ' % len(faces))
+    for f in faces:
+        hfile.write('%s,' % faceGroupIndex[f.group.name])
+    hfile.write("\n}\n\n")
+
+    # UV Indices for each face
+    hfile.write('#declare MakeHuman_UVIndexArray = array[%s][3] {\n  ' % (len(faces) * 2))
+    for f in faces:
+        hfile.write('{%s,%s,%s}' % (f.uv[0], f.uv[1], f.uv[2]))
+        hfile.write('{%s,%s,%s}' % (f.uv[2], f.uv[3], f.uv[0]))
+    hfile.write("\n}\n\n")
+
+    # Joint Positions
+    faceGroupExtents = {}
+    for f in obj.faces:
+        if 'joint-' in f.group.name:
+
+      # Compare the components of each vertex to find the min and max values for this faceGroup
+
+            if f.group.name in faceGroupExtents:
+                maxX = max([f.verts[0].co[0], f.verts[1].co[0], f.verts[2].co[0], f.verts[3].co[0], faceGroupExtents[f.group.name][3]])
+                maxY = max([f.verts[0].co[1], f.verts[1].co[1], f.verts[2].co[1], f.verts[3].co[1], faceGroupExtents[f.group.name][4]])
+                maxZ = max([f.verts[0].co[2], f.verts[1].co[2], f.verts[2].co[2], f.verts[3].co[2], faceGroupExtents[f.group.name][5]])
+                minX = min([f.verts[0].co[0], f.verts[1].co[0], f.verts[2].co[0], f.verts[3].co[0], faceGroupExtents[f.group.name][0]])
+                minY = min([f.verts[0].co[1], f.verts[1].co[1], f.verts[2].co[1], f.verts[3].co[1], faceGroupExtents[f.group.name][1]])
+                minZ = min([f.verts[0].co[2], f.verts[1].co[2], f.verts[2].co[2], f.verts[3].co[2], faceGroupExtents[f.group.name][2]])
+            else:
+                maxX = max([f.verts[0].co[0], f.verts[1].co[0], f.verts[2].co[0], f.verts[3].co[0]])
+                maxY = max([f.verts[0].co[1], f.verts[1].co[1], f.verts[2].co[1], f.verts[3].co[1]])
+                maxZ = max([f.verts[0].co[2], f.verts[1].co[2], f.verts[2].co[2], f.verts[3].co[2]])
+                minX = min([f.verts[0].co[0], f.verts[1].co[0], f.verts[2].co[0], f.verts[3].co[0]])
+                minY = min([f.verts[0].co[1], f.verts[1].co[1], f.verts[2].co[1], f.verts[3].co[1]])
+                minZ = min([f.verts[0].co[2], f.verts[1].co[2], f.verts[2].co[2], f.verts[3].co[2]])
+            faceGroupExtents[f.group.name] = [minX, minY, minZ, maxX, maxY, maxZ]
+
+    # Write out the centre position of each joint
+    for fg in obj.faceGroups:
+        if 'joint-' in fg.name:
+            jointVarName = string.replace(fg.name, '-', '_')
+            jointCentreX = (faceGroupExtents[fg.name][0] + faceGroupExtents[fg.name][3]) / 2
+            jointCentreY = (faceGroupExtents[fg.name][1] + faceGroupExtents[fg.name][4]) / 2
+            jointCentreZ = (faceGroupExtents[fg.name][2] + faceGroupExtents[fg.name][5]) / 2
+
+      # jointCentre  = "<"+jointCentreX+","+jointCentreY+","+jointCentreZ+">"
+
+            hfile.write('#declare MakeHuman_%s=<%s,%s,%s>;\n' % (jointVarName, jointCentreX, jointCentreY, jointCentreZ))
+    hfile.write("\n\n")
+
+    #TEMP# Write the rest using Mesh2 format.
+    povrayWriteMesh2(hfile,stuffs[1:])
+
+
+def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
+
+    def progress(prog):
+        if progressCallback == None:
+            gui3d.app.progress(prog)
+        else:
+            progressCallback(prog)
+    progress(0)
+        
+    # calculate resolution of each cannel, according to settings
+    resred = float(settings['SSSA'])
+    resgreen = int(2.0**(10-resred/2))
+    resred = int(2.0**(10-resred))
+    # blue channel
+    lmap = projection.mapLighting(progressCallback = lambda p: progress(0.5*p))
+    lmap = imgop.getChannel(lmap,1)
+    progress(0.55)
+    lmap.save(os.path.join(outDir, 'lighthi.png'))
+    # green channel
+    progress(0.6)
+    lmap = imgop.resized(lmap, resgreen,resgreen)
+    lmap.save(os.path.join(outDir, 'lightmid.png'))
+    # red channel
+    progress(0.8)
+    lmap = imgop.resized(lmap, resred,resred)
+    lmap.save(os.path.join(outDir, 'lightlo.png'))
+    progress(1.0)
+    # create masks for blurred channels, for erasing seams.
+    #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
+    #sssmask = mh.Image(os.path.join(stuffs[0].texture[0], stuffs[0].texture[1]))
+    #sssmask = imgop.getAlpha(sssmask)
+    #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
+    #sssmask = imgop.resized(sssmask,resgreen,resgreen)
+    #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
+    #sssmask.save(os.path.join(outDir, 'maskmid.png'))
+    #sssmask = imgop.resized(sssmask,resred,resred)
+    #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
+    #sssmask.save(os.path.join(outDir, 'masklo.png'))
+    '''
+    # TEST. bump map blurring
+    lmap = mh.Image(os.path.join(outDir, 'bump.png'))
+    lmap = imgop.getChannel(lmap,1)
+    lmap = imgop.blurred(lmap,lmap.width/1024,15)
+    lmap.save(os.path.join(outDir, 'bumpmid1.png'))
+    lmap = imgop.blurred(lmap,2*lmap.width/1024,15)
+    lmap.save(os.path.join(outDir, 'bumplo1.png'))
+    '''
