@@ -71,19 +71,24 @@ def writeMeshFile(human, filepath, stuffs, config):
 
     for stuffIdx, stuff in enumerate(stuffs):
         obj = stuff.meshInfo.object
-        numVerts = len(obj.coord)
+        # Make sure vertex normals are calculated
+        obj.calcFaceNormals()
+        obj.calcVertexNormals()
+        # Calculate rendering data so we can use the unwelded vertices
+        obj.updateIndexBuffer()
+        numVerts = len(obj.r_coord)
         if obj.vertsPerPrimitive == 4:
             # Quads
-            numFaces = len(obj.fvert) * 2
+            numFaces = len(obj.r_faces) * 2
         else:
             # Tris
-            numFaces = len(obj.fvert)
+            numFaces = len(obj.r_faces)
 
         f.write('        <submesh material="%s_%s_%s" usesharedvertices="false" use32bitindexes="false" operationtype="triangle_list">\n' % (formatName(name), stuffIdx, formatName(stuff.name) if formatName(stuff.name) != name else "human"))
 
         # Faces
         f.write('            <faces count="%s">\n' % numFaces)
-        for fv in obj.fvert:
+        for fv in obj.r_faces:
             f.write('                <face v1="%s" v2="%s" v3="%s" />\n' % (fv[0], fv[1], fv[2]))
             if obj.vertsPerPrimitive == 4:
                 f.write('                <face v1="%s" v2="%s" v3="%s" />\n' % (fv[2], fv[3], fv[0]))
@@ -92,9 +97,10 @@ def writeMeshFile(human, filepath, stuffs, config):
         # Vertices
         f.write('            <geometry vertexcount="%s">\n' % numVerts)
         f.write('                <vertexbuffer positions="true" normals="true">\n')
-        for vIdx, co in enumerate(obj.coord):
+        #f.write('                <vertexbuffer positions="true">\n')
+        for vIdx, co in enumerate(obj.r_coord):
             # Note: Ogre3d uses a y-up coordinate system (just like MH)
-            norm = obj.vnorm[vIdx]
+            norm = obj.r_vnorm[vIdx]
             f.write('                    <vertex>\n')
             f.write('                        <position x="%s" y="%s" z="%s" />\n' % (co[0], co[1], co[2]))
             f.write('                        <normal x="%s" y="%s" z="%s" />\n' % (norm[0], norm[1], norm[2]))
@@ -102,12 +108,10 @@ def writeMeshFile(human, filepath, stuffs, config):
         f.write('                </vertexbuffer>\n')
 
         # UV Texture Coordinates
-        uvs = np.zeros(len(obj.coord), dtype=np.uint32)
-        uvs[obj.fvert] = obj.fuvs
         f.write('                <vertexbuffer texture_coord_dimensions_0="2" texture_coords="1">\n')
         for vIdx in xrange(numVerts): 
             if obj.has_uv:
-                u, v = obj.texco[uvs[vIdx]]
+                u, v = obj.r_texco[vIdx]
                 v = 1-v
             else:
                 u, v = 0, 0
@@ -116,7 +120,6 @@ def writeMeshFile(human, filepath, stuffs, config):
             f.write('                    </vertex>\n')
         f.write('                </vertexbuffer>\n')
         f.write('            </geometry>\n')
-        del uvs
 
         # Skeleton bone assignments
         if human.getSkeleton():
@@ -137,7 +140,7 @@ def writeMeshFile(human, filepath, stuffs, config):
                     w = ws[i]
                     f.write('                <vertexboneassignment vertexindex="%s" boneindex="%s" weight="%s" />\n' % (vIdx, bIdx, w))
             f.write('            </boneassignments>\n')
-            f.write('        </submesh>\n')
+        f.write('        </submesh>\n')
 
     f.write('    </submeshes>\n')
     f.write('    <submeshnames>\n')
@@ -201,12 +204,13 @@ def writeMaterialFile(human, filepath, stuffs, config):
             f.write('\n')
         f.write('material %s_%s_%s\n' % (formatName(name), stuffIdx, formatName(stuff.name) if formatName(stuff.name) != name else "human"))
         f.write('{\n')
+        f.write('    receive_shadows on\n\n')
         f.write('    technique\n')
         f.write('    {\n')
         f.write('        pass\n')
         f.write('        {\n')
         f.write('            lighting on\n\n')
-        f.write('            ambient 0.3 0.3 0.3 1\n')
+        f.write('            ambient 0.8 0.8 0.8 1\n')
         f.write('            diffuse 0.8 0.8 0.8 1\n')
         f.write('            specular 0.1 0.1 0.1 1\n')
         f.write('            emissive 0 0 0\n\n')
