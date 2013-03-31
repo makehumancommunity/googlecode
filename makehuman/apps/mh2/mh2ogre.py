@@ -131,14 +131,25 @@ def writeMeshFile(human, filepath, stuffs, config):
                 # Use vertex weights for human body
                 weights = bodyWeights
 
+            # Remap vertex weights to the unwelded vertices of the object (obj.coord to obj.r_coord)
+            originalToUnweldedMap = {}
+            for unweldedIdx, originalIdx in enumerate(obj.vmap):
+                if originalIdx not in originalToUnweldedMap.keys():
+                    originalToUnweldedMap[originalIdx] = []
+                originalToUnweldedMap[originalIdx].append(unweldedIdx)
+
             f.write('            <boneassignments>\n')
             boneNames = [ bone.name for bone in human.getSkeleton().getBones() ]
             for (boneName, (verts,ws)) in weights.items():
                 bIdx = boneNames.index(boneName)
-                for i in xrange(len(verts)):
-                    vIdx = verts[i]
+                for i, vIdx in enumerate(verts):
                     w = ws[i]
-                    f.write('                <vertexboneassignment vertexindex="%s" boneindex="%s" weight="%s" />\n' % (vIdx, bIdx, w))
+                    try:
+                        for r_vIdx in originalToUnweldedMap[vIdx]:
+                            f.write('                <vertexboneassignment vertexindex="%s" boneindex="%s" weight="%s" />\n' % (r_vIdx, bIdx, w))
+                    except:
+                        # unused coord
+                        pass
             f.write('            </boneassignments>\n')
         f.write('        </submesh>\n')
 
