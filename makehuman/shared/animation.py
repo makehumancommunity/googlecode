@@ -123,7 +123,7 @@ class AnimationTrack(object):
 
     def getPlaytime(self):
         """
-        Playtime of animation in seconds.
+        Playtime (duration) of animation in seconds.
         """
         return float(self.nFrames)/self.frameRate
 

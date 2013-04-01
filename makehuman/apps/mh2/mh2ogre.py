@@ -31,6 +31,7 @@ __docformat__ = 'restructuredtext'
 
 import os
 import numpy as np
+import transformations
 import exportutils
 import skeleton
 
@@ -130,6 +131,19 @@ def writeMeshFile(human, filepath, stuffs, config):
             else:
                 # Use vertex weights for human body
                 weights = bodyWeights
+                # Account for vertices that are filtered out
+                if stuff.meshInfo.vertexMapping != None:
+                    filteredVIdxMap = stuff.meshInfo.vertexMapping
+                    weights2 = {}
+                    for (boneName, (verts,ws)) in weights.items():
+                        verts2 = []
+                        ws2 = []
+                        for i, vIdx in enumerate(verts):
+                            if vIdx in filteredVIdxMap:
+                                verts2.append(filteredVIdxMap[vIdx])
+                                ws2.append(ws[i])
+                        weights2[boneName] = (verts2, ws2)
+                    weights = weights2
 
             # Remap vertex weights to the unwelded vertices of the object (obj.coord to obj.r_coord)
             originalToUnweldedMap = {}
@@ -196,6 +210,8 @@ def writeSkeletonFile(human, filepath, config):
 
     # TODO export animations
     f.write('    <animations>\n')
+    for anim in human.animated.getAnimations():
+        writeAnimation(human, f, anim)
     f.write('    </animations>\n')
     f.write('</skeleton>')
     f.close()
@@ -238,6 +254,33 @@ def writeMaterialFile(human, filepath, stuffs, config):
         f.write('    }\n')
         f.write('}\n')
     f.close()
+
+def writeAnimation(human, fp, animationName):
+    anim = human.animated.getAnimation(animationName)
+    fp.write('        <animation name="%s" length="%s">\n' % (anim.name, anim.getPlaytime()))
+    fp.write('            <tracks>\n')
+    for bIdx, bone in enumerate(human.getSkeleton().getBones()):
+        # Note: OgreXMLConverter will optimize out unused (not moving) animation tracks
+        fp.write('                <track bone="%s">\n' % bone.name)
+        fp.write('                    <keyframes>\n')
+        frameTime = 1.0/float(anim.frameRate)
+        for frameIdx in xrange(anim.nFrames):
+            poseMat = anim.getAtFramePos(frameIdx)[bIdx]
+            translation = poseMat[:3,3]
+            angle, axis, _ = transformations.rotation_from_matrix(poseMat)
+            fp.write('                        <keyframe time="%s">\n' % (float(frameIdx) * frameTime))
+            fp.write('                            <translate x="%s" y="%s" z="%s" />\n' % (translation[0], translation[1], translation[2]))
+            # TODO account for scale
+            fp.write('                            <rotate angle="%s">\n' % angle)
+            fp.write('                                <axis x="%s" y="%s" z="%s" />\n' % (axis[0], axis[1], axis[2]))
+            fp.write('                            </rotate>\n')
+            fp.write('                        </keyframe>\n')
+        fp.write('                    </keyframes>\n')
+        fp.write('                </track>\n')
+    fp.write('            </tracks>\n')
+    fp.write('        </animation>\n')
+
+
 
 def formatName(name):
     if name.endswith('.mesh'):

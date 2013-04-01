@@ -279,7 +279,6 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
     if useFaceMask:
         faceMask = numpy.logical_or(faceMask, numpy.logical_not(obj.getFaceMask()))
     killFaces[faceMask] = True
-    print "Kill face 11768: %s" % killFaces[11768]
 
     #verts = obj.fvert[faceMask]
     verts = obj.fvert[numpy.logical_not(faceMask)]
