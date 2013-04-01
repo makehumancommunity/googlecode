@@ -217,6 +217,9 @@ class CMeshInfo:
         self.object = None
         self.weights = {}
         self.shapes = []
+        self.vertexMask = None
+        self.faceMask = None
+        self.vertexMapping = None   # Maps vertex index of original object to the attached filtered object 
 
 
     def fromProxy(self, coords, texVerts, faceVerts, faceUvs, weights, shapes):
