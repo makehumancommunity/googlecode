@@ -52,7 +52,7 @@ class Skeleton(object):
         self.origin = np.zeros(3, dtype=np.float32)   # TODO actually use origin somewhere?
 
         self.bones = {}     # Bone lookup list by name
-        #self.boneList = []  # Breadth-first ordered list of all bones    # TODO
+        self.boneslist = []  # Breadth-first ordered list of all bones
         self.roots = []     # Root bones of this skeleton, a skeleton can have multiple root bones.
 
     def __repr__(self):
@@ -124,6 +124,7 @@ class Skeleton(object):
             self.roots.append(bone)
 
     def build(self):
+        self.__cacheGetBones()
         for bone in self.getBones():
             bone.build()
 
@@ -193,14 +194,15 @@ class Skeleton(object):
             wvec = weights*vec
             coords[verts] += wvec.transpose()
 
-        # TODO maybe transform coords with no weights with identity transform
         return coords
 
     def getBones(self):
         """
         Returns linear list of all bones in breadth-first order.
         """
-        # TODO cache this list (self.boneList)
+        return self.boneslist
+
+    def __cacheGetBones(self):
         from Queue import deque
 
         result = []
@@ -210,7 +212,7 @@ class Skeleton(object):
             bone.index = len(result)
             result.append(bone)
             queue.extend(bone.children)
-        return result
+        self.boneslist = result
 
     def getBone(self, name):
         return self.bones[name]
@@ -331,12 +333,12 @@ class Bone(object):
         self.yvector4 = np.array((0, self.length, 0, 1))
 
         # Update pose matrices
-        self.update()       ## TODO avoid double invokation of update() (document)!!
+        self.update()
         
     def update(self):
         """
         Recalculate global pose matrix ... TODO
-        I think needs to happen after setting pose matrix
+        Needs to happen after setting pose matrix
         Should be called after changing pose (matPose)
         """
         if self.parent:
