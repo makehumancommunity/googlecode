@@ -34,6 +34,7 @@ import numpy as np
 import transformations
 import exportutils
 import skeleton
+import log
 
 def exportOgreMesh(human, filepath, config):
     obj = human.meshData
@@ -256,6 +257,7 @@ def writeMaterialFile(human, filepath, stuffs, config):
     f.close()
 
 def writeAnimation(human, fp, animationName):
+    log.message("Exporting animation %s.", animationName)
     anim = human.animated.getAnimation(animationName)
     fp.write('        <animation name="%s" length="%s">\n' % (anim.name, anim.getPlaytime()))
     fp.write('            <tracks>\n')

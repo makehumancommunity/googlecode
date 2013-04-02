@@ -38,8 +38,9 @@ import numpy.linalg as la
 import aljabr
 import exportutils
 import skeleton
+import log
 
-scale = 1
+scale = 5
 
 def exportMd5(human, filepath, config):
     """
@@ -212,7 +213,8 @@ def exportMd5(human, filepath, config):
                         invbonematrix = la.inv(invbonematrix)
                         relPos = np.ones(4, dtype=np.float32)
                         relPos[:3] = co[:3]
-                        relPos[:3] -= (joints[jointIdx].getRestHeadPos() * scale)
+                        relPos[:3] -= joints[jointIdx].getRestHeadPos()
+                        relPos[:3] *= scale
                         relPos = np.dot(relPos, invbonematrix)
                     else:
                         relPos = co[:3] * scale
@@ -229,6 +231,10 @@ def exportMd5(human, filepath, config):
                 # Note: MD5 has a z-up coordinate system
         f.write('}\n\n')
     f.close()
+
+    if human.getSkeleton():
+        for animName in human.animated.getAnimations():
+            writeAnimation(filepath, human, animName)
 
 def writeBone(f, bone):
     """
@@ -261,3 +267,85 @@ def writeBone(f, bone):
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % (bone.name, parentIndex,
         pos[0], pos[1], pos[2],
         qx, qy, qz))
+
+def writeAnimation(filepath, human, animationName):
+    log.message("Exporting animation %s.", animationName)
+    anim = human.animated.getAnimation(animationName)
+    numJoints = len(human.getSkeleton().getBones()) + 1
+
+    animfilename = os.path.splitext(os.path.basename(filepath))[0]
+    animfilename = animfilename + "_%s.md5anim" % (anim.name)
+    foldername = os.path.dirname(filepath)
+    animfilepath = os.path.join(foldername, animfilename)
+    f = open(animfilepath, 'w')
+    f.write('MD5Version 10\n')
+    f.write('commandline ""\n\n')
+    f.write('numFrames %d\n' % anim.nFrames) 
+    f.write('numJoints %d\n' % numJoints)
+    f.write('frameRate %d\n' % (1/anim.frameRate))
+    f.write('numAnimatedComponents %d\n\n' % (numJoints * 6))
+
+    skel = human.getSkeleton()
+    flags = 63
+    f.write('hierarchy {\n')
+    f.write('\t"origin" -1 %d 0\n' % flags)
+    arrayIdx = 6
+    for bIdx, bone in enumerate(skel.getBones()):
+        #<string:jointName> <int:parentIndex> <int:flags> <int:startIndex>
+        if bone.parent:
+            f.write('\t"%s" %d %d %d\n' % (bone.name, bone.parent.index+1, flags, arrayIdx))
+        else:
+            f.write('\t"%s" %d %d %d\n' % (bone.name, 0, flags, arrayIdx))
+        arrayIdx = arrayIdx + 6
+    f.write('}\n\n')
+
+    f.write('bounds {\n')
+    bounds = human.meshData.calcBBox()
+    # TODO use bounds calculated for every frame
+    for frameIdx in xrange(anim.nFrames):
+        #( vec3:boundMin ) ( vec3:boundMax )
+        f.write('\t( %f %f %f ) ( %f %f %f )\n' % (bounds[0][0], bounds[0][1], bounds[0][2], bounds[1][0], bounds[1][1], bounds[1][2]))
+    f.write('}\n\n')
+
+    f.write('baseframe {\n')
+    f.write('\t( %f %f %f ) ( %f %f %f )\n' % (0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+    bases = []
+    for bone in skel.getBones():
+        #( vec3:position ) ( vec3:orientation )
+        pos = bone.getRestOffset() * scale
+
+        orientationQuat = aljabr.matrix2Quaternion(bone.matRestRelative)
+
+        '''
+        orientationQuat = bone.getRestOrientationQuat() # TODO transform global rest mat when using z-up coordinates
+        '''
+        qx = orientationQuat[0]
+        qy = orientationQuat[1]
+        qz = orientationQuat[2]
+        w = orientationQuat[3]
+        f.write('\t( %f %f %f ) ( %f %f %f )\n' % (pos[0], pos[1], pos[2], qx, qy, qz))
+        bases.append((pos, [qx, qy, qz]))
+    f.write('}\n\n')
+
+    for frameIdx in xrange(anim.nFrames):
+        frame = anim.getAtFramePos(frameIdx)
+        f.write('frame %d {\n' % frameIdx)
+        f.write('\t%f %f %f %f %f %f\n' % (0.0, 0.0, 0.0, 0.0, 0.0, 0.0))  # Transformation for origin joint
+        for bIdx in xrange(numJoints-1):
+            transformationMat = frame[bIdx].copy()
+            pos = transformationMat[:3,3] + bases[bIdx][0]
+            transformationMat[:3,3] = [0.0, 0.0, 0.0]
+            orientationQuat = aljabr.matrix2Quaternion(transformationMat)
+            qx = orientationQuat[0]
+            qy = orientationQuat[1]
+            qz = orientationQuat[2]
+            w = orientationQuat[3]
+            if w > 0:
+                qx = -qx
+                qy = -qy
+                qz = -qz
+            # vec3:position vec3:orientation
+            f.write('\t%f %f %f %f %f %f\n' % (pos[0], pos[1], pos[2], qx, qy, qz))
+        f.write('}\n\n')
+
+    f.close()
