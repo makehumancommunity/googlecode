@@ -182,7 +182,11 @@ class EditingTaskView(gui3d.TaskView):
     def onMouseMoved(self, event):
         self.updatePosition(event.x, event.y)
         human = gui3d.app.selectedHuman
-        x, y, z = gui3d.app.modelCamera.convertToWorld2D(event.x, event.y, human.mesh)
+        picked = gui3d.app.getSelectedFaceGroupAndObject()
+        if picked is None:
+            self.circle.hide()
+        else:
+            self.circle.show()
 
     def scale(self, vector, factor):
         vector = np.array(vector, dtype=np.float32)
