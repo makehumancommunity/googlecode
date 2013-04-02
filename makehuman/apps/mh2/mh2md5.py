@@ -42,8 +42,9 @@ import log
 
 scale = 5
 zUp = True
+feetOnGround = True
 
-ZYRotation = np.array(((1,0,0,0),(0,0,-1,0),(0,1,0,0),(0,0,0,1)))
+ZYRotation = np.array(((1,0,0,0),(0,0,-1,0),(0,1,0,0),(0,0,0,1)), dtype=np.float32)
 
 def exportMd5(human, filepath, config):
     """
@@ -62,7 +63,7 @@ def exportMd5(human, filepath, config):
 
     obj = human.meshData
     config.setHuman(human)
-    config.feetOnGround = True    # TODO translate skeleton with feet-on-ground offset too
+    config.feetOnGround = True    # TODO this only works when exporting MHX mesh (a design error in exportutils)
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
@@ -93,7 +94,7 @@ def exportMd5(human, filepath, config):
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % ('origin', -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
     if human.getSkeleton():
         for bone in human.getSkeleton().getBones():
-            writeBone(f, bone)
+            writeBone(f, bone, human)
     f.write('}\n\n')
 
     for stuffIdx, stuff in enumerate(stuffs):
@@ -192,7 +193,6 @@ def exportMd5(human, filepath, config):
             wCount = wCount + numWeights
 
         # Write faces
-        # TODO account for masked faces
         f.write('\n\tnumtris %d\n' % numFaces)
         fn = 0
         for fv in obj.r_faces:
@@ -235,6 +235,9 @@ def exportMd5(human, filepath, config):
                 # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
                 co = co.copy() * scale
 
+                if feetOnGround:
+                    co[1] += (getFeetOnGroundOffset(human) * scale)
+
                 if zUp:
                     co = co[[0,2,1]] * [1,-1,1]
 
@@ -247,24 +250,26 @@ def exportMd5(human, filepath, config):
         for animName in human.animated.getAnimations():
             writeAnimation(filepath, human, animName)
 
-def writeBone(f, bone):
+def writeBone(f, bone, human):
     """
-  This function writes out information describing one joint in MD5 format. 
-  
-  Parameters
-  ----------
-  
-  f:     
+    This function writes out information describing one joint in MD5 format. 
+
+    Parameters
+    ----------
+
+    f:     
     *file handle*.  The handle of the file being written to.
-  joint:     
+    joint:     
     *Bone object*.  The bone object to be processed by this function call.
-  """
+    """
     if bone.parent:
         parentIndex = bone.parent.index + 1
     else:
         parentIndex = 0 # Refers to the hard-coded root joint
-    # "[boneName]"   [parentIndex] ( [xPos] [yPos] [zPos] ) ( [xOrient] [yOrient] [zOrient] )
     pos = bone.getRestHeadPos() * scale
+    
+    if feetOnGround:
+        pos[1] += (getFeetOnGroundOffset(human) * scale)
 
     if zUp:
         transformationMat = bone.matRestGlobal.copy()
@@ -279,6 +284,7 @@ def writeBone(f, bone):
     qz = orientationQuat[2]
     w = orientationQuat[3]
 
+    # "[boneName]"   [parentIndex] ( [xPos] [yPos] [zPos] ) ( [xOrient] [yOrient] [zOrient] )
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % (bone.name, parentIndex,
         pos[0], pos[1], pos[2],
         qx, qy, qz))
@@ -316,9 +322,12 @@ def writeAnimation(filepath, human, animationName):
 
     f.write('bounds {\n')
     bounds = human.meshData.calcBBox()
+    if feetOnGround:
+        bounds[:][1] += getFeetOnGroundOffset(human)
     if zUp:
         bounds[0] = bounds[0][[0,2,1]] * [1,-1,1]
         bounds[1] = bounds[1][[0,2,1]] * [1,-1,1]
+    bounds = bounds * scale
     # TODO use bounds calculated for every frame
     for frameIdx in xrange(anim.nFrames):
         #( vec3:boundMin ) ( vec3:boundMax )
@@ -330,6 +339,8 @@ def writeAnimation(filepath, human, animationName):
     bases = []
     for bone in skel.getBones():
         pos = bone.getRestOffset() * scale
+        if feetOnGround and not bone.parent:
+            pos[1] += (getFeetOnGroundOffset(human) * scale)
 
         transformationMat = bone.matRestRelative.copy()
         if zUp:
@@ -353,13 +364,14 @@ def writeAnimation(filepath, human, animationName):
         f.write('\t%f %f %f %f %f %f\n' % (0.0, 0.0, 0.0, 0.0, 0.0, 0.0))  # Transformation for origin joint
         for bIdx in xrange(numJoints-1):
             transformationMat = frame[bIdx].copy()
+            pos = transformationMat[:3,3] * scale
             transformationMat[:3,3] = [0.0, 0.0, 0.0]
 
             if zUp:
                 transformationMat = np.dot(ZYRotation, np.dot(transformationMat,la.inv(ZYRotation)))
                 pos = pos[[0,2,1]] * [1,-1,1]
 
-            pos = transformationMat[:3,3] + bases[bIdx][0]
+            pos += bases[bIdx][0]
             orientationQuat = aljabr.matrix2Quaternion(transformationMat)
             qx = orientationQuat[0]
             qy = orientationQuat[1]
@@ -377,3 +389,7 @@ def writeAnimation(filepath, human, animationName):
 
     f.close()
 
+def getFeetOnGroundOffset(human):
+    bBox = human.meshData.calcBBox()
+    dy = bBox[0][1]
+    return -dy
