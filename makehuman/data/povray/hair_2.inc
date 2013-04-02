@@ -3,9 +3,9 @@
     texture {
         pigment_pattern { image_map {png "%%name%%_TPOV.png" interpolate 2} }
         texture_map {
-            [0 pigment { image_map {%%type%% "%%file%%" interpolate 2}} ]
+            [0 pigment { image_map {%%type%% "%%name%%_texture.%%ext%%" interpolate 2}} ]
             [1
-            pigment { image_map {%%type%% "%%file%%" interpolate 2}}           
+            pigment { image_map {%%type%% "%%name%%_texture.%%ext%%" interpolate 2}}           
             normal { bump_map {png "%%name%%_TPOV.png" interpolate 2} %%thin%%}
             finish {
                 specular %%spec%%

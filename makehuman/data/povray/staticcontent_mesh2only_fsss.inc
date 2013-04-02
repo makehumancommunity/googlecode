@@ -22,9 +22,9 @@
 }
 
 // Create the skin material.
-// This texture implements a fake SubSurface Scattering method
+// This texture implements a SubSurface Scattering method
 // using premade lightmaps.  
-#ifndef (MakeHuman_Material)                            
+#ifndef (%%name%%_Material)                            
 
 #declare TEXTURE = 
     texture {
@@ -67,7 +67,7 @@
         }
     }
     texture {
-        pigment { image_map {png "texture.png" filter all 1} }
+        pigment { image_map {png "%%name%%_texture.png" filter all 1} }
         normal  { wrinkles %%wrinkles%% scale 0.0002 }
         finish { 
             specular %%skinoil%%  // Max highlight intensity: 0 -> 1
@@ -81,7 +81,7 @@
     }
 
 
-#declare MakeHuman_Material = material {
+#declare %%name%%_Material = material {
     texture {
         uv_mapping
         TEXTURE

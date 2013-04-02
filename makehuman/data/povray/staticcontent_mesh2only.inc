@@ -24,10 +24,10 @@
 // Assign default values.
 // This texture uses the standard pigment map as a uv-mapped pigment and adds a
 // little disruption to the surface normals.  
-#ifndef (MakeHuman_Material)
+#ifndef (%%name%%_Material)
 
     #declare DIFFUSE = pigment { 
-        image_map { png "texture.png"}
+        image_map { png "%%name%%_texture.png"}
     }
 
     #declare NORMAL = normal {
@@ -46,7 +46,7 @@
     }
 
 //material{
-#declare MakeHuman_Material = material {
+#declare %%name%%_Material = material {
         texture { uv_mapping
                 pigment { DIFFUSE }
                 normal  { NORMAL }

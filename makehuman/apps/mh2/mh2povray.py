@@ -472,7 +472,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     nextpb = 0.1
     progress (progbase,"Parsing data")
     headerFile = 'data/povray/headercontent_mesh2only.inc'
-    staticFile = 'data/povray/staticcontent_mesh2only_fsss.inc' if settings['SSS'] == True else 'data/povray/staticcontent_mesh2only_tl.inc'
+    staticFile = 'data/povray/staticcontent_mesh2only_fsss.inc' if settings['SSS'] else 'data/povray/staticcontent_mesh2only_tl.inc'
     sceneFile = 'data/povray/makehuman_mesh2only_tl.pov'
 
     # Define some additional file locations
@@ -532,7 +532,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     povraySizeData(obj, outputFileDescriptor)
 
     # Collect and prepare all objects.
-    stuffs = exportutils.collect.setupObjects("MakeHuman", gui3d.app.selectedHuman, helpers=False, hidden=False,
+    stuffs = exportutils.collect.setupObjects(getHumanName(), gui3d.app.selectedHuman, helpers=False, hidden=False,
                                             eyebrows=False, lashes=False, subdivide = settings['subdivide'],
                                             progressCallback = lambda p: progress(progbase+(0.15+0.85*p)*(nextpb-progbase),"Analyzing objects"))
     progbase = nextpb
@@ -557,6 +557,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     staticContentLines = string.replace(staticContentLines, '%%skinoil%%', str(settings['skinoil']))    
     staticContentLines = string.replace(staticContentLines, '%%rough%%', str(settings['rough']))    
     staticContentLines = string.replace(staticContentLines, '%%wrinkles%%', str(settings['wrinkles']))    
+    staticContentLines = string.replace(staticContentLines, '%%name%%', stuffs[0].name)    
     outputFileDescriptor.write(staticContentLines)
     outputFileDescriptor.write('\n')
     staticContentFileDescriptor.close()
@@ -599,19 +600,21 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
             "   material {%s_Material} \n" % stuff.name)
         if once:
             outputSceneFileDescriptor.write ("   no_shadow\n")
-            once = False
+            #once = False
         outputSceneFileDescriptor.write ("}  \n")
 
     # Job done, clean up
     outputSceneFileDescriptor.close()
     sceneFileDescriptor.close()
 
-    # Copy the skin texture file into the output directory
     progress(1,"Finishing")
 
+    # Copy the texture files for each item
     for stuff in stuffs:
         if stuff.texture:
-            copyFile(stuff.texture, outputDirectory)
+            copyFile(stuff.texture, os.path.join(outputDirectory,
+                                                 "%s_texture.%s" % (stuff.name,
+                                                                    (stuff.texture[1].split("."))[1])))
         """
         if proxy.normal:
             copyFile(proxy.normal, outputDirectory)
@@ -645,7 +648,7 @@ def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
                 haircodeLines = haircodeFD.read()
             haircodeLines = string.replace (haircodeLines,"%%name%%",stuff.name)
             haircodeLines = string.replace (haircodeLines,"%%type%%",texdata[1])
-            haircodeLines = string.replace (haircodeLines,"%%file%%",texdata[0])
+            haircodeLines = string.replace (haircodeLines,"%%ext%%",(stuff.texture[1].split("."))[1])
             outputFileDescriptor.write(haircodeLines)
             haircodeFD.close()
         else:            
@@ -655,14 +658,16 @@ def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
             texdata = getChannelData(stuff.texture)                        
             if texdata:                
                 outputFileDescriptor.write(
-                        '        pigment { image_map {%s "%s" interpolate 2} }\n' % (texdata[1], texdata[0]))
+                        '        pigment { image_map {%s "%s_texture.%s" interpolate 2} }\n' % (
+                            texdata[1], stuff.name, (stuff.texture[1].split("."))[1]))
             else:
                 outputFileDescriptor.write(
                         '        pigment { rgb <1,1,1> }\n')
             bumpdata = getChannelData(proxy.bump)
             if bumpdata:
                outputFileDescriptor.write(
-                        '        normal { bump_map {%s "%s" interpolate 2} }\n' % (bumpdata[1], bumpdata[0]))
+                        '        normal { bump_map {%s "%s_bump.%s" interpolate 2} }\n' % (
+                            bumpdata[1], stuff.name, (proxy.bump[1].split("."))[1]))
             else:
                 outputFileDescriptor.write(
                         '        normal { wrinkles 0.2 scale 0.0001 }\n')
@@ -936,3 +941,11 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
     lmap = imgop.blurred(lmap,2*lmap.width/1024,15)
     lmap.save(os.path.join(outDir, 'bumplo1.png'))
     '''
+
+def getHumanName():
+    sav = str(gui3d.app.categories['Files'].tasksByName['Save'].fileentry.edit.text())
+    if sav == "":
+        return 'Untitled'
+    else:
+        return (os.path.basename(sav).split("."))[0]
+    
