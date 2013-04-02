@@ -252,6 +252,13 @@ class EditingTaskView(gui3d.TaskView):
         self.verts = None
         self.faces = None
 
+    def onMouseWheel(self, event):
+        value = self.radiusSlider.getValue()
+        value += 0.1 * event.wheelDelta
+        self.radiusSlider.setValue(value)
+        value = self.radiusSlider.getValue()
+        self.radiusSlider.callEvent('onChanging', value)
+
 def load(app):
     category = app.getCategory('Modelling')
     taskview = category.addTask(EditingTaskView(category))

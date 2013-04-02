@@ -272,6 +272,13 @@ class MHApplication(gui3d.Application, mh.Application):
             self.currentTask.callEvent("onMouseExited", event)
 
         @self.selectedHuman.mhEvent
+        def onMouseWheel(event):
+          if self.tool:
+            self.tool.callEvent("onMouseWheel", event)
+          else:
+            self.currentTask.callEvent("onMouseWheel", event)
+
+        @self.selectedHuman.mhEvent
         def onChanging(event):
 
             for category in self.categories.itervalues():

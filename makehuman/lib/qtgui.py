@@ -421,6 +421,7 @@ class Slider(QtGui.QWidget, Widget):
     def setValue(self, value):
         if self._f2i(value) == self.slider.value():
             return
+        value = min(self.max, max(self.min, value))
         self._sync(value)
         self.slider.blockSignals(True)
         self.slider.setValue(self._f2i(value))
