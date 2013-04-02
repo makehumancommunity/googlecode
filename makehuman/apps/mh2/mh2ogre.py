@@ -36,6 +36,8 @@ import exportutils
 import skeleton
 import log
 
+feetOnGround = True
+
 def exportOgreMesh(human, filepath, config):
     obj = human.meshData
     config.setHuman(human)
@@ -101,6 +103,10 @@ def writeMeshFile(human, filepath, stuffs, config):
         f.write('                <vertexbuffer positions="true" normals="true">\n')
         #f.write('                <vertexbuffer positions="true">\n')
         for vIdx, co in enumerate(obj.r_coord):
+            if feetOnGround:
+                co = co.copy()
+                co[1] += getFeetOnGroundOffset(human)
+
             # Note: Ogre3d uses a y-up coordinate system (just like MH)
             norm = obj.r_vnorm[vIdx]
             f.write('                    <vertex>\n')
@@ -195,6 +201,8 @@ def writeSkeletonFile(human, filepath, config):
     f.write('    <bones>\n')
     for bIdx, bone in enumerate(skel.getBones()):
         pos = bone.getRestOffset()
+        if feetOnGround and not bone.parent:
+            pos[1] += getFeetOnGroundOffset(human)
         f.write('        <bone id="%s" name="%s">\n' % (bIdx, bone.name))
         f.write('            <position x="%s" y="%s" z="%s" />\n' % (pos[0], pos[1], pos[2]))
         f.write('            <rotation angle="0">\n')
@@ -289,3 +297,9 @@ def formatName(name):
         return name[:-5]
     else:
         return name
+
+
+def getFeetOnGroundOffset(human):
+    bBox = human.meshData.calcBBox()
+    dy = bBox[0][1]
+    return -dy
