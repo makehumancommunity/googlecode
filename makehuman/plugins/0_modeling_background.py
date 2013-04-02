@@ -213,17 +213,12 @@ class BackgroundChooser(gui3d.TaskView):
         if enable:
             if self.isBackgroundSet():
                 self.setBackgroundImage(self.getCurrentSide())
-
-                # Switch to orthogonal view
-                gui3d.app.modelCamera.switchToOrtho()
                 self.backgroundImageToggle.setChecked(True)
                 mh.redraw()
             else:
                 mh.changeTask('Textures', 'Background')
         else: # Disable
             self.backgroundImage.hide()
-            # Switch to perspective view
-            gui3d.app.modelCamera.switchToPerspective()
             self.backgroundImageToggle.setChecked(False)
             mh.redraw()
 

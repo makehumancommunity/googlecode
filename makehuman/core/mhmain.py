@@ -197,6 +197,7 @@ class MHApplication(gui3d.Application, mh.Application):
         self.theme = None
 
         self.modelCamera = mh.Camera()
+        self.modelCamera.switchToOrtho()
 
         @self.modelCamera.mhEvent
         def onChanged(event):
