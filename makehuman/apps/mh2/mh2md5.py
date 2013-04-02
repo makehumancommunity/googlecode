@@ -208,26 +208,12 @@ def exportMd5(human, filepath, config):
                     # Get vertex position in bone space
                     if joints[jointIdx]:
                         invbonematrix = joints[jointIdx].matRestGlobal.copy()
-                        invbonematrix[:3,3] *= scale
+                        invbonematrix[:3,3] = [0,0,0]
                         invbonematrix = la.inv(invbonematrix)
                         relPos = np.ones(4, dtype=np.float32)
                         relPos[:3] = co[:3]
+                        relPos[:3] -= (joints[jointIdx].getRestHeadPos() * scale)
                         relPos = np.dot(relPos, invbonematrix)
-                        #relPos[:3] -= joints[jointIdx].getRestHeadPos()
-
-
-                        #toBoneSpace = la.inv(joints[jointIdx].matRestGlobal)
-                        #coor[:3] = co[:3]
-                        #relPos = np.dot(toBoneSpace, coor.transpose())
-                        #relPos = relPos * scale
-
-
-                        #q = np.asarray( joints[jointIdx].getRestOrientationQuat() )
-                        #q1 = -q
-                        #q1[3] = q[3]
-                        #c = co - joints[jointIdx].getRestHeadPos()
-                        #relPos = np.asarray(aljabr.quaternionVectorTransform(q1, c), dtype=np.float32)
-                        #relPos = relPos * scale
                     else:
                         relPos = co[:3] * scale
                     # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
@@ -271,7 +257,6 @@ def writeBone(f, bone):
     #    qx = -qx
     #    qy = -qy
     #    qz = -qz
-    #orientationQuat = [0.0, 0.0, 0.0, 1.0]
 
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % (bone.name, parentIndex,
         pos[0], pos[1], pos[2],
