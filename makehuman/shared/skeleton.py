@@ -98,16 +98,20 @@ class Skeleton(object):
         # Assign unweighted vertices to root bone with weight 1
         rootBone = self.roots[0].name
         informed = False
+        if rootBone not in boneWeights.keys():
+            boneWeights[rootBone] = ([], [])
+        else:
+            vs,ws = boneWeights[rootBone]
+            boneWeights[rootBone] = (list(vs), list(ws))
+        vs,ws = boneWeights[rootBone]
         for vIdx, wCount in enumerate(wtot):
             if wCount == 0:
-                if rootBone not in boneWeights.keys():
-                    boneWeights[rootBone] = ([], [])
-                vs,ws = boneWeights[rootBone]
                 vs.append(vIdx)
                 ws.append(1.0)
                 if not informed:
                     log.debug("Adding trivial bone weights to bone %s for unweighted vertices.", rootBone)
                     informed = True
+        boneWeights[rootBone] = (vs, np.asarray(ws, dtype=np.float32))
 
         return boneWeights
 
