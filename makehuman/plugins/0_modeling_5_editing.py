@@ -77,6 +77,7 @@ class EditingTaskView(gui3d.TaskView):
         self.weights = None
         self.verts = None
         self.faces = None
+        self.smoothed = None
 
         self.converter = ValueConverter()
         value = self.converter.displayToData(self.radius)
@@ -91,6 +92,7 @@ class EditingTaskView(gui3d.TaskView):
         self.scaley = self.modeBox.addWidget(gui.RadioButton(modes, "Scale Y"))
         self.scalez = self.modeBox.addWidget(gui.RadioButton(modes, "Scale Z"))
         self.rotate = self.modeBox.addWidget(gui.RadioButton(modes, "Rotate"))
+        self.smooth = self.modeBox.addWidget(gui.RadioButton(modes, "Smooth"))
 
         self.buildCircle()
         self.updateRadius()
@@ -194,6 +196,27 @@ class EditingTaskView(gui3d.TaskView):
         scale = 2 ** (factor * self.weights[:,None])
         return self.center + (ones + vector * scale) * (self.original - self.center)
 
+    def makeSmoothed(self):
+        mesh = gui3d.app.selectedHuman.meshData
+        fvert = mesh.fvert[self.faces,:]
+        edges = np.dstack((fvert, np.roll(fvert, -1, -1)))
+        mid = np.sum(mesh.coord[edges], axis=2) / 2
+        mid = np.concatenate((mid[:,:,None,:], mid[:,:,None,:]), axis=2).reshape((-1,3))
+        evert = edges.reshape((-1))
+        ix = np.argsort(evert)
+        evert = evert[ix]
+        mid = mid[ix]
+        ix, start = np.unique(evert, return_index=True)
+        end = np.hstack((start[1:], len(evert)))
+        count = end - start
+        tvert = {}
+        for i, s, n in zip(ix, start, count):
+            tvert[i] = np.sum(mid[s:s+n,:], axis=0) / n
+        verts = np.empty((len(self.verts), 3), dtype=np.float32)
+        for i, v in enumerate(self.verts):
+            verts[i] = tvert[v]
+        return verts
+
     def onMouseDragged(self, event):
         self.updatePosition(event.x, event.y)
 
@@ -220,6 +243,11 @@ class EditingTaskView(gui3d.TaskView):
             coor += self.center
             delta = coor - self.original
             coord = self.original + self.weights[:,None] * delta
+        elif self.smooth.selected:
+            if self.smoothed is None:
+                self.smoothed = self.makeSmoothed()
+            dist = min(1.0, max(0.0, dist))
+            coord = self.original + self.weights[:,None] * dist * (self.smoothed - self.original)
         else:
             x, y, z = gui3d.app.modelCamera.convertToWorld3D(event.x, event.y, self.depth, human.mesh)
             pos = np.array([x, y, z])
@@ -251,6 +279,7 @@ class EditingTaskView(gui3d.TaskView):
         self.weights = None
         self.verts = None
         self.faces = None
+        self.smoothed = None
 
     def onMouseWheel(self, event):
         value = self.radiusSlider.getValue()
