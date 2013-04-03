@@ -164,14 +164,14 @@ def exportMd5(human, filepath, config):
                 for idx,v in enumerate(verts):
                     try:
                         for r_vIdx in originalToUnweldedMap[v]:
-                            if r_vIdx not in vertWeights.keys():
+                            if r_vIdx not in vertWeights:
                                 vertWeights[r_vIdx] = []
                             vertWeights[r_vIdx].append((jointIdx, ws[idx]))
                     except:
                         # unused coord
                         pass
             for vert in xrange(numVerts):
-                if vert not in vertWeights.keys():
+                if vert not in vertWeights:
                     # Weight vertex completely to origin joint
                     vertWeights[vert] = [(0, 1.0)]
         else:
@@ -218,7 +218,7 @@ def exportMd5(human, filepath, config):
                         relPos[:3] = co[:3]
                         relPos[:3] -= joints[jointIdx].getRestHeadPos()
                         relPos[:3] *= scale
-                        relPos = np.dot(relPos, invbonematrix)
+                        #relPos = np.dot(relPos, invbonematrix)
                     else:
                         relPos = co[:3] * scale
 
@@ -272,17 +272,20 @@ def writeBone(f, bone, human):
         pos[1] += (getFeetOnGroundOffset(human) * scale)
 
     if zUp:
-        transformationMat = bone.matRestGlobal.copy()
-        transformationMat = np.dot(ZYRotation, np.dot(transformationMat,la.inv(ZYRotation)))
-        orientationQuat = aljabr.matrix2Quaternion(transformationMat)
+        #transformationMat = bone.matRestGlobal.copy()
+        #transformationMat = np.dot(ZYRotation, np.dot(transformationMat,la.inv(ZYRotation)))
+        #orientationQuat = aljabr.matrix2Quaternion(transformationMat)
         pos = pos[[0,2,1]] * [1,-1,1]
-    else:
-        orientationQuat = bone.getRestOrientationQuat()
+    #else:
+    #    orientationQuat = bone.getRestOrientationQuat()
 
-    qx = orientationQuat[0]
-    qy = orientationQuat[1]
-    qz = orientationQuat[2]
-    w = orientationQuat[3]
+    #qx = orientationQuat[0]
+    #qy = orientationQuat[1]
+    #qz = orientationQuat[2]
+    #w = orientationQuat[3]
+
+    # TODO currently all bones have a global z-up orientation, maybe orient them along y axis
+    qx = qy = qz = 0.0
 
     # "[boneName]"   [parentIndex] ( [xPos] [yPos] [zPos] ) ( [xOrient] [yOrient] [zOrient] )
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % (bone.name, parentIndex,
@@ -355,7 +358,7 @@ def writeAnimation(filepath, human, animationName):
 
         #( vec3:position ) ( vec3:orientation )
         f.write('\t( %f %f %f ) ( %f %f %f )\n' % (pos[0], pos[1], pos[2], qx, qy, qz))
-        bases.append((pos, [qx, qy, qz]))
+        bases.append((pos, [qx, qy, qz, w]))
     f.write('}\n\n')
 
     for frameIdx in xrange(anim.nFrames):
@@ -370,6 +373,9 @@ def writeAnimation(filepath, human, animationName):
             if zUp:
                 transformationMat = np.dot(ZYRotation, np.dot(transformationMat,la.inv(ZYRotation)))
                 pos = pos[[0,2,1]] * [1,-1,1]
+
+            #baseRot = aljabr.quaternion2Matrix(bases[bIdx][1])
+            #transformationMat = np.dot(transformationMat[:3,:3], baseRot)
 
             pos += bases[bIdx][0]
             orientationQuat = aljabr.matrix2Quaternion(transformationMat)
