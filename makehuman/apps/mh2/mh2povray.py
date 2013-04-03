@@ -53,11 +53,8 @@ import mh2proxy
 import exportutils
 
 def downloadPovRay():
-    
     import webbrowser
     webbrowser.open('http://www.povray.org/download/')
-
-# Create an instance of the Hairgenerator class with a global context.
 
 def povrayExport(obj, app, settings):
     """
@@ -78,7 +75,8 @@ def povrayExport(obj, app, settings):
   
   """
 
-    log.message('POV-Ray Export of object: %s', obj.name)
+    settings['name'] = getHumanName()
+    log.message('POV-Ray Export of object: %s', settings['name'])
   
     camera = app.modelCamera
     resW = app.settings.get('rendering_width', 800)
@@ -90,7 +88,9 @@ def povrayExport(obj, app, settings):
     # application for the changes to take effect.
     reload(mh2povray_ini)
     
-    path = os.path.join(mh.getPath('render'), mh2povray_ini.outputpath)
+    path = os.path.join(mh.getPath('render'),
+                        app.settings.get('povray_render_dir', 'pov_output'),
+                        "%s.inc" % settings['name'])
     
     format = mh2povray_ini.format if settings['source'] == 'ini' else settings['format']
     action = mh2povray_ini.action if settings['source'] == 'ini' else settings['action']
@@ -135,8 +135,7 @@ def povrayExport(obj, app, settings):
         if os.path.isfile(povray_bin):
             # Get POV file name.
             if mh2povray_ini.renderscenefile == '':
-                outputSceneFile = path.replace('.inc', '.pov')
-                baseName = os.path.basename(outputSceneFile)
+                baseName = os.path.basename(path)
             else:
                 baseName = mh2povray_ini.renderscenefile
             # Prepare command line.
@@ -151,7 +150,7 @@ def povrayExport(obj, app, settings):
             except:
                 log.error('Error opening .ini to write parameters.')
                 return
-            iniFD.write('Input_File_Name="%s"\n' % baseName +
+            iniFD.write('Input_File_Name="%s"\n' % settings['name'] +
                         '+W%d +H%d +a%s +am2\n' % (resW, resH, settings['AA']))
             iniFD.close()
 
@@ -293,7 +292,7 @@ def povrayExportArray(obj, camera, resolution, path, settings):
     povraySizeData(obj, outputFileDescriptor)
 
     # Collect and prepare all objects.
-    stuffs = exportutils.collect.setupObjects("MakeHuman", gui3d.app.selectedHuman, helpers=False, hidden=False,
+    stuffs = exportutils.collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False,
                                             eyebrows=False, lashes=False, subdivide = settings['subdivide'])
 
     # Write array data for the object.
@@ -478,7 +477,6 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     # Define some additional file locations
     outputSceneFile = path.replace('.inc', '.pov')
     baseName = os.path.basename(path)
-    nameOnly = string.replace(baseName, '.inc', '')
     underScores = ''.ljust(len(baseName), '-')
     outputDirectory = os.path.dirname(path)
 
@@ -532,7 +530,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     povraySizeData(obj, outputFileDescriptor)
 
     # Collect and prepare all objects.
-    stuffs = exportutils.collect.setupObjects(getHumanName(), gui3d.app.selectedHuman, helpers=False, hidden=False,
+    stuffs = exportutils.collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False,
                                             eyebrows=False, lashes=False, subdivide = settings['subdivide'],
                                             progressCallback = lambda p: progress(progbase+(0.15+0.85*p)*(nextpb-progbase),"Analyzing objects"))
     progbase = nextpb
@@ -583,9 +581,9 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
         log.error('Error opening file to write standard scene file.')
         return 0
     sceneLines = sceneFileDescriptor.read()
-    sceneLines = string.replace(sceneLines, 'xxFileNamexx', nameOnly)
+    sceneLines = string.replace(sceneLines, 'xxFileNamexx', settings['name'])
     sceneLines = string.replace(sceneLines, 'xxUnderScoresxx', underScores)
-    sceneLines = string.replace(sceneLines, 'xxLowercaseFileNamexx', nameOnly.lower())
+    sceneLines = string.replace(sceneLines, 'xxLowercaseFileNamexx', settings['name'].lower())
     outputSceneFileDescriptor.write(sceneLines)
 
     once = True

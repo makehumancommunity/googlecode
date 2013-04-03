@@ -27,15 +27,8 @@ to reload the application.
 
 """
 
-import log
-
-log.message('POV-Ray Export Parameter File')
-
-# The output path defines the standard output directory and the generated include file name.
-# The default directory is pov_output, within the MakeHuman installation directory.
-# The default include file name is makehuman.inc.
-
-outputpath = 'pov_output/makehuman.inc'
+# The default directory is pov_output, within the MakeHuman 'render' path.
+outputdir = 'pov_output'
 
 # The export routine can generate a simple mesh2 object that is quick to render, but
 # quite inflexible, or it can generate an array based format along with various macros
