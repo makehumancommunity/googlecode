@@ -43,7 +43,6 @@ import os
 import string
 import shutil
 import projection
-import mh2povray_ini
 import random
 import mh
 import log
@@ -56,24 +55,19 @@ def downloadPovRay():
     import webbrowser
     webbrowser.open('http://www.povray.org/download/')
 
-def povrayExport(obj, app, settings):
+def povrayExport(app, settings):
     """
-  This function exports data in a format that can be used to reconstruct the humanoid 
-  object in POV-Ray. It supports a range of options that can be specified in the Python 
-  script file mh2povray_ini.py, which is reloaded each time this function is run. This 
-  enables these options to be changed while the MakeHuman application is still running.
-  
-  Parameters
-  ----------
-  
-  obj:
-      *3D object*. The object to export. This should be the humanoid object with
-      uv-mapping data and Face Groups defined.
+    This function exports data in a format that can be used to reconstruct all
+    renderable MakeHuman objects in POV-Ray.
 
-  camera:
-      *Camera object*. The camera to render from 
-  
-  """
+    Parameters
+    ----------
+
+    app:
+      *MHApplication*. MakeHuman's main app class.
+    settings:
+      *Dictionary*. Options passed from the Povray exporter GUI.
+    """
 
     settings['name'] = getHumanName()
     log.message('POV-Ray Export of object: %s', settings['name'])
@@ -82,62 +76,40 @@ def povrayExport(obj, app, settings):
     resW = app.settings.get('rendering_width', 800)
     resH = app.settings.get('rendering_height', 600)
     resolution = (resW,resH)
-
-    # Read settings from an ini file. This reload enables the settings to be
-    # changed dynamically without forcing the user to restart the MH
-    # application for the changes to take effect.
-    reload(mh2povray_ini)
-    
+  
     path = os.path.join(mh.getPath('render'),
                         app.settings.get('povray_render_dir', 'pov_output'),
                         "%s.inc" % settings['name'])
     
-    format = mh2povray_ini.format if settings['source'] == 'ini' else settings['format']
-    action = mh2povray_ini.action if settings['source'] == 'ini' else settings['action']
-    
-    # The ini format option defines whether a simple mesh2 object is to be generated
+    # The format option defines whether a simple mesh2 object is to be generated
     # or the more flexible but slower array and macro combo is to be generated.
-
-    if format == 'array':
-        povrayExportArray(obj, camera, resolution, path, settings)
-    if format == 'mesh2':
-        povrayExportMesh2(obj, camera, resolution, path, settings)
+    if settings['format'] == 'array':
+        povrayExportArray(app.selectedHuman.mesh, camera, resolution, path, settings)
+    if settings['format'] == 'mesh2':
+        povrayExportMesh2(app.selectedHuman.mesh, camera, resolution, path, settings)
 
     outputDirectory = os.path.dirname(path)
-    #
     log.debug('out folder: %s', outputDirectory)
 
-    # The ini action option defines whether or not to attempt to render the file once it's been written.
     povray_bin = (app.settings.get('povray_bin', ''))
    
     # try to use the appropriate binary 
     if os.path.exists(povray_bin):
         exetype = settings['bintype']
-        #
         if exetype == 'win64':
             povray_bin += '/pvengine64.exe'
-        #
         elif exetype == 'win32sse2':
             povray_bin += '/pvengine-sse2.exe'
-        #
         elif exetype == 'win32':
             povray_bin += '/pvengine.exe'
-        #
         elif exetype == 'linux':
             povray_bin += '/povray'
-        #
         log.debug('Povray path: %s', povray_bin)
-        #TODO: what to do if the path is too long? Is there any graphic option in QT to browse for files?
 
     #
-    if action == 'render':
+    if settings['action'] == 'render':
         #
         if os.path.isfile(povray_bin):
-            # Get POV file name.
-            if mh2povray_ini.renderscenefile == '':
-                baseName = os.path.basename(path)
-            else:
-                baseName = mh2povray_ini.renderscenefile
             # Prepare command line.
             if os.name == 'nt':
                 cmdLine = (povray_bin, 'MHRENDER', '/EXIT')
@@ -161,11 +133,7 @@ def povrayExport(obj, app, settings):
         else:
             app.prompt('POV-Ray not found',
                        'You don\'t seem to have POV-Ray installed or the path is incorrect.',
-                       'Download',
-                       'Cancel',
-                       downloadPovRay 
-                       )
-            return
+                       'Download', 'Cancel', downloadPovRay)
 
 
 import threading
