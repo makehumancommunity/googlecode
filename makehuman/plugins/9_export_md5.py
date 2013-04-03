@@ -32,6 +32,7 @@ class MD5Config(Config):
         Config.__init__(self)
         self.selectedOptions(exporter)
         self.useRelPaths = True
+        self.useTexFolder = exporter.useTexFolder
     
 
 class ExporterMD5(Exporter):
@@ -40,9 +41,16 @@ class ExporterMD5(Exporter):
         self.name = "MD5"
         self.filter = "MD5 (*.md5)"
 
+    def build(self, options, taskview):
+        Exporter.build(self, options, taskview)
+        self.hidden.hide()
+        # TODO remove scales option from this exporter
+
     def export(self, human, filename):
         import mh2md5
-        mh2md5.exportMd5(human, filename("md5mesh"), MD5Config(self))
+        cfg = MD5Config(self)
+        cfg.selectedOptions(self)
+        mh2md5.exportMd5(human, filename("md5mesh"), cfg)
 
 def load(app):
     app.addExporter(ExporterMD5())

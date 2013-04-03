@@ -40,11 +40,10 @@ import exportutils
 import skeleton
 import log
 
-scale = 5
-zUp = True
-feetOnGround = True
-
 ZYRotation = np.array(((1,0,0,0),(0,0,-1,0),(0,1,0,0),(0,0,0,1)), dtype=np.float32)
+
+scale = 5  # Override scale setting to a sensible default for doom-style engines
+
 
 def exportMd5(human, filepath, config):
     """
@@ -63,8 +62,11 @@ def exportMd5(human, filepath, config):
 
     obj = human.meshData
     config.setHuman(human)
+    config.zUp = True
     config.feetOnGround = True    # TODO this only works when exporting MHX mesh (a design error in exportutils)
-    config.setupTexFolder(filepath)
+    config.scale = 1
+    if config.useTexFolder:
+        config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
 
@@ -94,7 +96,7 @@ def exportMd5(human, filepath, config):
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % ('origin', -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
     if human.getSkeleton():
         for bone in human.getSkeleton().getBones():
-            writeBone(f, bone, human)
+            writeBone(f, bone, human, config)
     f.write('}\n\n')
 
     for stuffIdx, stuff in enumerate(stuffs):
@@ -116,7 +118,11 @@ def exportMd5(human, filepath, config):
         f.write('mesh {\n')
         if stuff.texture:
             texfolder,texname = stuff.texture
-            f.write('\tshader "%s"\n' % (texname)) # TODO: create the shader file
+            if config.useTexFolder:
+                tex = copyTexture(stuff.texture, human, config)
+                f.write('\tshader "%s"\n' % tex)
+            else:
+                f.write('\tshader "%s"\n' % (texname))
 
         f.write('\n\tnumverts %d\n' % numVerts)
 
@@ -222,7 +228,7 @@ def exportMd5(human, filepath, config):
                     else:
                         relPos = co[:3] * scale
 
-                    if zUp:
+                    if config.zUp:
                         relPos[:3] = relPos[[0,2,1]] * [1,-1,1]
 
                     # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
@@ -235,10 +241,10 @@ def exportMd5(human, filepath, config):
                 # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
                 co = co.copy() * scale
 
-                if feetOnGround:
+                if config.feetOnGround:
                     co[1] += (getFeetOnGroundOffset(human) * scale)
 
-                if zUp:
+                if config.zUp:
                     co = co[[0,2,1]] * [1,-1,1]
 
                 f.write('\tweight %d %d %f ( %f %f %f )\n' % (idx, 0, 1.0, co[0], co[1], co[2]))
@@ -248,9 +254,9 @@ def exportMd5(human, filepath, config):
 
     if human.getSkeleton():
         for animName in human.animated.getAnimations():
-            writeAnimation(filepath, human, animName)
+            writeAnimation(filepath, human, config, animName)
 
-def writeBone(f, bone, human):
+def writeBone(f, bone, human, config):
     """
     This function writes out information describing one joint in MD5 format. 
 
@@ -268,10 +274,10 @@ def writeBone(f, bone, human):
         parentIndex = 0 # Refers to the hard-coded root joint
     pos = bone.getRestHeadPos() * scale
     
-    if feetOnGround:
+    if config.feetOnGround:
         pos[1] += (getFeetOnGroundOffset(human) * scale)
 
-    if zUp:
+    if config.zUp:
         #transformationMat = bone.matRestGlobal.copy()
         #transformationMat = np.dot(ZYRotation, np.dot(transformationMat,la.inv(ZYRotation)))
         #orientationQuat = aljabr.matrix2Quaternion(transformationMat)
@@ -292,7 +298,7 @@ def writeBone(f, bone, human):
         pos[0], pos[1], pos[2],
         qx, qy, qz))
 
-def writeAnimation(filepath, human, animationName):
+def writeAnimation(filepath, human, config, animationName):
     log.message("Exporting animation %s.", animationName)
     anim = human.animated.getAnimation(animationName)
     numJoints = len(human.getSkeleton().getBones()) + 1
@@ -325,9 +331,9 @@ def writeAnimation(filepath, human, animationName):
 
     f.write('bounds {\n')
     bounds = human.meshData.calcBBox()
-    if feetOnGround:
+    if config.feetOnGround:
         bounds[:][1] += getFeetOnGroundOffset(human)
-    if zUp:
+    if config.zUp:
         bounds[0] = bounds[0][[0,2,1]] * [1,-1,1]
         bounds[1] = bounds[1][[0,2,1]] * [1,-1,1]
     bounds = bounds * scale
@@ -342,11 +348,11 @@ def writeAnimation(filepath, human, animationName):
     bases = []
     for bone in skel.getBones():
         pos = bone.getRestOffset() * scale
-        if feetOnGround and not bone.parent:
+        if config.feetOnGround and not bone.parent:
             pos[1] += (getFeetOnGroundOffset(human) * scale)
 
         transformationMat = bone.matRestRelative.copy()
-        if zUp:
+        if config.zUp:
             transformationMat = np.dot(ZYRotation, np.dot(transformationMat,la.inv(ZYRotation)))
             pos = pos[[0,2,1]] * [1,-1,1]
         orientationQuat = aljabr.matrix2Quaternion(transformationMat)
@@ -370,7 +376,7 @@ def writeAnimation(filepath, human, animationName):
             pos = transformationMat[:3,3] * scale
             transformationMat[:3,3] = [0.0, 0.0, 0.0]
 
-            if zUp:
+            if config.zUp:
                 transformationMat = np.dot(ZYRotation, np.dot(transformationMat,la.inv(ZYRotation)))
                 pos = pos[[0,2,1]] * [1,-1,1]
 
@@ -394,6 +400,17 @@ def writeAnimation(filepath, human, animationName):
         f.write('}\n\n')
 
     f.close()
+
+
+def copyTexture(texture, human, config):
+    if not texture:
+        return
+    (folder, texfile) = texture
+
+    # Contrary to what you might expect, this function actually copies the texture to its new location...
+    texpath = config.getTexturePath(texfile, folder, True, human)
+    return texpath
+
 
 def getFeetOnGroundOffset(human):
     bBox = human.meshData.calcBBox()
