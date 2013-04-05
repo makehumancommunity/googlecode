@@ -1056,10 +1056,7 @@ class MHApplication(gui3d.Application, mh.Application):
             return gui3d.app.settings.get('lowspeed', 1)
 
     def zoomCamera(self, amount):
-        if self.modelCamera.projection == 0:
-            self.modelCamera.scale *= (1 + 1.0/50) ** (amount * self.cameraSpeed())
-        else:
-            self.modelCamera.eyeZ += amount * self.cameraSpeed()
+        self.modelCamera.eyeZ += amount * self.cameraSpeed()
         self.redraw()
 
     def rotateAction(self, axis):
@@ -1152,10 +1149,7 @@ class MHApplication(gui3d.Application, mh.Application):
         if gui3d.app.settings.get('invertMouseWheel', False):
             speed *= -1
 
-        if self.modelCamera.projection == 0:
-            self.modelCamera.scale *= 0.995 ** (event.dy * speed)
-        else:
-            self.modelCamera.eyeZ -= 0.05 * event.dy * speed
+        self.modelCamera.eyeZ -= 0.05 * event.dy * speed
 
     def promptAndExit(self):
         if self.modified:

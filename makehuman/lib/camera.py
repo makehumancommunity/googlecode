@@ -50,7 +50,6 @@ class Camera(events3d.EventHandler):
         self._upX = 0.0
         self._upY = 1.0
         self._upZ = 0.0
-        self._scale = 1.0
 
         self.eyeSeparation = 1.0
 
@@ -203,13 +202,12 @@ class Camera(events3d.EventHandler):
     up = property(getUp, setUp)
 
     def getScale(self):
-        return self._scale
+        fov = math.tan(self.fovAngle * 0.5 * math.pi / 180.0)
+        delta = np.array(self.eye) - np.array(self.focus)
+        scale = math.sqrt(np.sum(delta ** 2)) * fov
+        return scale
 
-    def setScale(self, value):
-        self._scale = value
-        self.changed()
-
-    scale = property(getScale, setScale)
+    scale = property(getScale)
 
     def getStereoMode(self):
         return self._stereoMode
@@ -221,12 +219,7 @@ class Camera(events3d.EventHandler):
     stereoMode = property(getStereoMode, setStereoMode)
 
     def switchToOrtho(self):
-        fov = math.tan(self.fovAngle * 0.5 * math.pi / 180.0)
-        delta = np.array(self.eye) - np.array(self.focus)
-        scale = math.sqrt(np.sum(delta ** 2)) * fov
-
         self._projection = 0
-        self._scale = scale
         self._nearPlane = -100.0
         self.changed()
 
