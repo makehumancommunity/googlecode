@@ -125,6 +125,7 @@ class BackgroundChooser(gui3d.TaskView):
 
         self.backgroundImageToggle = gui.Action('background', 'Background', self.toggleBackground, toggle=True)
         gui3d.app.main_toolbar.addAction(self.backgroundImageToggle)
+        gui3d.app.actions.background = self.backgroundImageToggle
 
         self.filechooser = self.addTopWidget(fc.FileChooser(self.backgroundsFolders, ['bmp', 'png', 'tif', 'tiff', 'jpg', 'jpeg', 'clear'], None))
         self.addLeftWidget(self.filechooser.sortBox)
