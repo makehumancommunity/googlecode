@@ -134,6 +134,11 @@ def writeShapeKeys(fp, amt, config, name, proxy):
 
     isHuman = ((not proxy) or proxy.type == 'Proxy')
     isHair = (proxy and proxy.type == 'Hair')
+    useCorrectives = (
+        config.bodyShapes and 
+        config.rigtype == "mhx" and 
+        ((not proxy) or (proxy.type in ['Proxy', 'Clothes']))
+    )
     scale = config.scale
     
     fp.write(
@@ -158,7 +163,7 @@ def writeShapeKeys(fp, amt, config, name, proxy):
         for (pose, shape) in shapeList:
             writeShape(fp, pose, "Sym", shape, -1, 2, proxy, scale)
         
-    if config.bodyShapes and config.rigtype == "mhx" and not isHair:
+    if useCorrectives:
         writeCorrectives(fp, amt, config, rig_shoulder_25.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)
         writeCorrectives(fp, amt, config, rig_leg_25.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)                
         writeCorrectives(fp, amt, config, rig_arm_25.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)                
@@ -178,7 +183,7 @@ def writeShapeKeys(fp, amt, config, name, proxy):
 
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
         
-    if config.bodyShapes and config.rigtype == "mhx" and not isHair:
+    if useCorrectives:
         mhx_drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, amt.name)
         mhx_drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, amt.name)
         mhx_drivers.writeTargetDrivers(fp, rig_arm_25.ElbowTargetDrivers, amt.name)
