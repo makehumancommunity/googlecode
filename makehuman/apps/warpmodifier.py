@@ -264,8 +264,8 @@ class WarpModifier (humanmodifier.SimpleModifier):
         landmarks = theLandMarks()[self.bodypart]
         objectChanged = self.getRefObject(human)
         self.getRefTarget(human, objectChanged)    
-        if self.refTargetVerts and theRefObjectVerts[self.modtype] is not None:
-            shape = warp.warp_target(self.refTargetVerts, theRefObjectVerts[self.modtype], shadowCoords, landmarks)
+        if self.refTargetVerts and _theRefObjectVerts[self.modtype] is not None:
+            shape = warp.warp_target(self.refTargetVerts, _theRefObjectVerts[self.modtype], shadowCoords, landmarks)
         else:
             shape = {}
         log.message("...done")
@@ -390,9 +390,9 @@ class WarpModifier (humanmodifier.SimpleModifier):
         
         
     def getRefObject(self, human):
-        global theRefObjectVerts
+        global _theRefObjectVerts
     
-        if theRefObjectVerts[self.modtype] is not None:
+        if _theRefObjectVerts[self.modtype] is not None:
             return False
         else:
             log.message("Reset warps")
@@ -404,7 +404,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
                     verts = self.getRefObjectVerts(char)
                     if verts is not None:
                         addVerts(refverts, cval, verts)
-            theRefObjectVerts[self.modtype] = refverts                
+            _theRefObjectVerts[self.modtype] = refverts                
             return True
 
 
@@ -503,12 +503,11 @@ def addVerts(targetVerts, cval, verts):
 #----------------------------------------------------------
 
 def clearRefObject():
-    global theRefObjectVerts
-    theRefObjectVerts = {}
+    global _theRefObjectVerts
+    _theRefObjectVerts = {}
     for mtype in theModifierTypes.keys():
-        theRefObjectVerts[mtype] = None
+        _theRefObjectVerts[mtype] = None
     
-_theLandMarks = None
 
 def theLandMarks():
     global _theLandMarks
@@ -535,7 +534,6 @@ def theLandMarks():
 
     return _theLandMarks
 
-_theRefObjects = None
 
 def theRefObjects():
     global _theRefObjects
@@ -565,3 +563,8 @@ def theRefObjects():
                 _theRefObjects[path] = None
 
     return _theRefObjects
+
+
+_theRefObjectVerts = None    
+_theLandMarks = None
+_theRefObjects = None
