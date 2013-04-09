@@ -221,7 +221,10 @@ class Object3D(object):
             return None
         
     def setObject(self, value):
-        self.__object = weakref.ref(value)
+        if value is None:
+            self.__object = None
+        else:
+            self.__object = weakref.ref(value)
     
     object = property(getObject, setObject)
     
