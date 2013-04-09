@@ -174,9 +174,15 @@ class CProxy:
             return self.name        
 
 #
-#    class CMaterial
+#    classes CMaterial, CTexture
 #
 
+class CTexture:
+    def __init__(self, fname):
+        self.file = fname
+        self.types = []
+
+        
 class CMaterial:
     def __init__(self):
         self.name = None
@@ -197,14 +203,7 @@ class CMaterial:
         self.alpha = 1
         
         self.textures = []
-        
-        return
-        
-        
-class CTexture:
-    def __init__(self, fname):
-        self.file = fname
-        self.types = []   
+ 
                 
 #
 #   class CMeshInfo:
@@ -230,7 +229,8 @@ class CMeshInfo:
         for fv in faceVerts:
             if len(fv) != 4:
                 raise NameError("Mesh %s has non-quad faces and can not be handled by MakeHuman" % self.name)
-                
+
+        obj.createFaceGroup("Full Object")
         obj.setFaces(faceVerts, faceUvs)
         self.weights = weights
         self.shapes = shapes

@@ -146,12 +146,6 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
         else:
             progressCallback (prog)
 
-    def getSubdivision(obj,progressCallback=None):
-        if obj.isSubdivided() and not obj.isProxied():
-            return obj.getSubdivisionMesh(False)
-        else:
-            return cks.createSubdivisionObject(obj.getSeedMesh(), progressCallback)
-    
     if not config:
         config = Config()
         config.setHuman(human)
@@ -203,7 +197,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
         texture = stuff.object.mesh.texture
         stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
         if subdivide:
-            subMesh = getSubdivision(stuff.object,  lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
+            subMesh = cks.createSubdivisionObject(stuff.meshInfo.object, lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
             stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
         i += 1.0
 
