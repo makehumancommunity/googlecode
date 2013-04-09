@@ -577,7 +577,10 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
 
     # Copy the texture files for each item
     for stuff in stuffs:
-        if stuff.texture:
+        if stuff.textureImage:
+            stuff.textureImage.save(os.path.join(outputDirectory,
+                                                 "%s_texture.png" % stuff.name))
+        elif stuff.texture:
             copyFile(stuff.texture, os.path.join(outputDirectory,
                                                  "%s_texture.%s" % (stuff.name,
                                                                     (stuff.texture[1].split("."))[1])))

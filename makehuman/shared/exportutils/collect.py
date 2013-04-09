@@ -37,6 +37,7 @@ import export
 import mh2proxy
 import log
 import catmull_clark_subdivision as cks
+import subtextures
 
 from .config import Config
 from . import rig as rigfile
@@ -53,6 +54,7 @@ class CStuff:
         self.boneInfo = None
         self.vertexWeights = None
         self.skinWeights = None
+        self.textureImage = None
         if proxy:
             self.proxy = proxy
             self.type = proxy.type
@@ -189,7 +191,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     progbase = 0.12*(3-2*subdivide)
     progress(progbase)
 
-    # Apply custom textures, and subdivide, if requested.
+    # Apply textures, and subdivide, if requested.
     stuffnum = float(len(stuffs))
     i = 0.0
     for stuff in stuffs:
@@ -197,10 +199,17 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
         texture = stuff.object.mesh.texture
         stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
         if subdivide:
-            subMesh = cks.createSubdivisionObject(stuff.meshInfo.object, lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
+            subMesh = cks.createSubdivisionObject(
+                stuff.meshInfo.object, lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
             stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
         i += 1.0
 
+    # Apply subtextures.
+    stuffs[0].textureImage = mh.Image(os.path.join(stuffs[0].texture[0], stuffs[0].texture[1]))
+    mhstx = mh.G.app.categories['Textures'].tasksByName['Texture'].eyeTexture
+    if mhstx:
+        stuffs[0].textureImage = subtextures.combine(stuffs[0].textureImage, mhstx)
+    
     progress(1)
     return stuffs
 

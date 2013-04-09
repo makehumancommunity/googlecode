@@ -32,6 +32,7 @@ import download
 import gui
 import filechooser as fc
 import log
+import subtextures
 
 class Action(gui3d.Action):
     def __init__(self, name, human):
@@ -247,25 +248,9 @@ class TextureTaskView(gui3d.TaskView):
 
     def setEyes(self, human, mhstx):
         # TODO this will change, for now eyes might only be compatible with the original skin
-        f = open(mhstx, 'rU')
-        try:
-            subTextures = mh.parseINI(f.read(), [("(","["), (")","]")])
-        except:
-            log.warning("setEyes(%s)", mhstx, exc_info=True)
-            f.close()
-            return
-        f.close()
-        
         texture = mh.getTexture(human.getTexture())
-        img = mh.Image(human.getTexture())
-        
-        for subTexture in subTextures:
-            path = os.path.join('data/eyes', subTexture['txt'])
-            subImg = mh.Image(path)
-            x, y = subTexture['dst']
-            img.blit(subImg, x, y)
-            
-        texture.loadSubImage(img, 0, 0)
+        texture.loadSubImage(
+            subtextures.combine(mh.Image(human.getTexture()),mhstx), 0, 0)
         self.eyeTexture = mhstx
 
     def reloadTextureChooser(self):
