@@ -463,7 +463,7 @@ def renderSkin(dst, vertsPerPrimitive, verts, index = None, objectMatrix = None,
     glDepthMask(GL_FALSE)
     glDisable(GL_DEPTH_TEST)
     # glDisable(GL_CULL_FACE)
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
     glPushAttrib(GL_VIEWPORT_BIT)
     glViewport(0, 0, width, height)
