@@ -874,6 +874,7 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
         
     # calculate resolution of each cannel, according to settings
     resred = float(settings['SSSA'])
+    a = resred
     resgreen = int(2.0**(10-resred/2))
     resred = int(2.0**(10-resred))
     # blue channel
@@ -883,11 +884,11 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
     lmap.save(os.path.join(outDir, '%s_sss_bluelmap.png' % stuffs[0].name))
     # green channel
     progress(0.6)
-    lmap = imgop.resized(lmap, resgreen,resgreen)
+    lmap = imgop.blurred(lmap, int(10*a),15)
     lmap.save(os.path.join(outDir, '%s_sss_greenlmap.png' % stuffs[0].name))
     # red channel
     progress(0.8)
-    lmap = imgop.resized(lmap, resred,resred)
+    lmap = imgop.blurred(lmap, int(20*a),15)
     lmap.save(os.path.join(outDir, '%s_sss_redlmap.png' % stuffs[0].name))
     progress(1.0)
     # create masks for blurred channels, for erasing seams.

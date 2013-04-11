@@ -71,12 +71,12 @@ class PovrayTaskView(gui3d.TaskView):
         optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
         self.doSubdivide = optionsBox.addWidget(gui.CheckBox('Subdivide mesh', True))
         self.useSSS = optionsBox.addWidget(gui.CheckBox('Use S.S. Scattering', True))
-        self.SSSA = optionsBox.addWidget(gui.Slider(value=0.3, label="SSS Amount"))
-        self.AA = optionsBox.addWidget(gui.Slider(value=0.4, label="AntiAliasing"))
+        self.SSSA = optionsBox.addWidget(gui.Slider(value=0.7, label="SSS Amount"))
+        self.AA = optionsBox.addWidget(gui.Slider(value=0.5, label="AntiAliasing"))
 
         materialsBox = self.addRightWidget(gui.GroupBox('Materials'))
         self.skinoil = materialsBox.addWidget(gui.Slider(value=0.4, label="Skin oil"))
-        self.rough = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin roughness"))
+        self.rough = materialsBox.addWidget(gui.Slider(value=0.3, label="Skin roughness"))
         self.wrinkles = materialsBox.addWidget(gui.Slider(value=0.2, label="Skin wrinkles"))
         self.hairSpec = materialsBox.addWidget(gui.CheckBox('Hair shine', False))
         self.hspecA = materialsBox.addWidget(gui.Slider(value=0.5, label="Shine strength"))
@@ -126,7 +126,7 @@ class PovrayTaskView(gui3d.TaskView):
                                     'AA': 0.5-0.49*self.AA.getValue(),
                                     'bintype': binary,
                                     'SSS': True if self.useSSS.selected else False,
-                                    'SSSA': 5*self.SSSA.getValue(), # power of 2
+                                    'SSSA': self.SSSA.getValue(), # blur strength
                                     'skinoil': 0.001 *(10**(4*self.skinoil.getValue())), # exponential slider
                                     'rough':0.001 *(10**(2*self.rough.getValue())), # exponential slider
                                     'wrinkles': 0.5*self.wrinkles.getValue(),
