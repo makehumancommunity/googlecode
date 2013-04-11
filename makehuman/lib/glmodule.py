@@ -463,7 +463,6 @@ def renderSkin(dst, vertsPerPrimitive, verts, index = None, objectMatrix = None,
     glDepthMask(GL_FALSE)
     glDisable(GL_DEPTH_TEST)
     # glDisable(GL_CULL_FACE)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
     glPushAttrib(GL_VIEWPORT_BIT)
     glViewport(0, 0, width, height)
@@ -502,7 +501,6 @@ def renderSkin(dst, vertsPerPrimitive, verts, index = None, objectMatrix = None,
 
     glPopAttrib()
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
     glEnable(GL_DEPTH_TEST)
     glDepthMask(GL_TRUE)
 
@@ -516,7 +514,7 @@ def renderSkin(dst, vertsPerPrimitive, verts, index = None, objectMatrix = None,
 
     surface = np.empty((height, width, 4), dtype = np.uint8)
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, surface)
-    surface = Image(data = np.ascontiguousarray(surface[::-1,:,:]))
+    surface = Image(data = np.ascontiguousarray(surface[::-1,:,:3]))
 
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0)
     glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0)
