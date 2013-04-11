@@ -880,15 +880,15 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
     lmap = projection.mapLighting(progressCallback = lambda p: progress(0.5*p))
     lmap = imgop.getChannel(lmap,1)
     progress(0.55)
-    lmap.save(os.path.join(outDir, 'lighthi.png'))
+    lmap.save(os.path.join(outDir, '%s_sss_bluelmap.png' % stuffs[0].name))
     # green channel
     progress(0.6)
     lmap = imgop.resized(lmap, resgreen,resgreen)
-    lmap.save(os.path.join(outDir, 'lightmid.png'))
+    lmap.save(os.path.join(outDir, '%s_sss_greenlmap.png' % stuffs[0].name))
     # red channel
     progress(0.8)
     lmap = imgop.resized(lmap, resred,resred)
-    lmap.save(os.path.join(outDir, 'lightlo.png'))
+    lmap.save(os.path.join(outDir, '%s_sss_redlmap.png' % stuffs[0].name))
     progress(1.0)
     # create masks for blurred channels, for erasing seams.
     #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")

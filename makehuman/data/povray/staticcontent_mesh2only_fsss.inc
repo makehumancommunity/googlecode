@@ -28,7 +28,7 @@
 
 #declare TEXTURE = 
     texture {
-        pigment { image_map {png "lightlo.png" interpolate 2} }
+        pigment { image_map {png "%%name%%_sss_redlmap.png" interpolate 2} }
         normal  { wrinkles %%wrinkles%% scale 0.0002 }
         finish { 
             specular 0
@@ -41,7 +41,7 @@
         }
     }
     texture {
-        pigment { image_map {png "lightmid.png" interpolate 2 transmit all 1/2} }
+        pigment { image_map {png "%%name%%_sss_greenlmap.png" interpolate 2 transmit all 1/2} }
         normal  { wrinkles %%wrinkles%% scale 0.0002 }
         finish { 
             specular 0
@@ -54,7 +54,7 @@
         }
     }
     texture {
-        pigment { image_map {png "lighthi.png" interpolate 2 transmit all 2/3} }
+        pigment { image_map {png "%%name%%_sss_bluelmap.png" interpolate 2 transmit all 2/3} }
         normal  { wrinkles %%wrinkles%% scale 0.0002 }
         finish { 
             specular 0
