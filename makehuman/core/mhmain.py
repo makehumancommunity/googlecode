@@ -110,42 +110,42 @@ class MHApplication(gui3d.Application, mh.Application):
 
         self.shortcuts = {
             # Actions
-            'undo':		(mh.Modifiers.CTRL, mh.Keys.z),
-            'redo':		(mh.Modifiers.CTRL, mh.Keys.y),
-            'modelling':	(mh.Modifiers.CTRL, mh.Keys.m),
-            'save':		(mh.Modifiers.CTRL, mh.Keys.s),
-            'load':		(mh.Modifiers.CTRL, mh.Keys.l),
-            'export':		(mh.Modifiers.CTRL, mh.Keys.e),
-            'rendering':	(mh.Modifiers.CTRL, mh.Keys.r),
-            'help':		(mh.Modifiers.CTRL, mh.Keys.h),
-            'exit':		(mh.Modifiers.CTRL, mh.Keys.q),
-            'stereo':		(mh.Modifiers.CTRL, mh.Keys.w),
-            'wireframe':	(mh.Modifiers.CTRL, mh.Keys.f),
-            'savetgt':		(mh.Modifiers.ALT, mh.Keys.t),
-            'qexport':		(mh.Modifiers.ALT, mh.Keys.e),
-            'smooth':		(mh.Modifiers.ALT, mh.Keys.s),
-            'grab':		(mh.Modifiers.ALT, mh.Keys.g),
-            'profiling':	(mh.Modifiers.ALT, mh.Keys.p),
+            'undo':     (mh.Modifiers.CTRL, mh.Keys.z),
+            'redo':     (mh.Modifiers.CTRL, mh.Keys.y),
+            'modelling':    (mh.Modifiers.CTRL, mh.Keys.m),
+            'save':     (mh.Modifiers.CTRL, mh.Keys.s),
+            'load':     (mh.Modifiers.CTRL, mh.Keys.l),
+            'export':       (mh.Modifiers.CTRL, mh.Keys.e),
+            'rendering':    (mh.Modifiers.CTRL, mh.Keys.r),
+            'help':     (mh.Modifiers.CTRL, mh.Keys.h),
+            'exit':     (mh.Modifiers.CTRL, mh.Keys.q),
+            'stereo':       (mh.Modifiers.CTRL, mh.Keys.w),
+            'wireframe':    (mh.Modifiers.CTRL, mh.Keys.f),
+            'savetgt':      (mh.Modifiers.ALT, mh.Keys.t),
+            'qexport':      (mh.Modifiers.ALT, mh.Keys.e),
+            'smooth':       (mh.Modifiers.ALT, mh.Keys.s),
+            'grab':     (mh.Modifiers.ALT, mh.Keys.g),
+            'profiling':    (mh.Modifiers.ALT, mh.Keys.p),
             # Camera navigation
-            'rotateD':		(0, mh.Keys.N2),
-            'rotateL':		(0, mh.Keys.N4),
-            'rotateR':		(0, mh.Keys.N6),
-            'rotateU':		(0, mh.Keys.N8),
-            'panU':		(0, mh.Keys.UP),
-            'panD':		(0, mh.Keys.DOWN),
-            'panR':		(0, mh.Keys.RIGHT),
-            'panL':		(0, mh.Keys.LEFT),
-            'zoomIn':		(0, mh.Keys.PLUS),
-            'zoomOut':		(0, mh.Keys.MINUS),
-            'front':		(0, mh.Keys.N1),
-            'right':		(0, mh.Keys.N3),
-            'top':		(0, mh.Keys.N7),
-            'back':		(mh.Modifiers.CTRL, mh.Keys.N1),
-            'left':		(mh.Modifiers.CTRL, mh.Keys.N3),
-            'bottom':		(mh.Modifiers.CTRL, mh.Keys.N7),
-            'resetCam':		(0, mh.Keys.PERIOD),
+            'rotateD':      (0, mh.Keys.N2),
+            'rotateL':      (0, mh.Keys.N4),
+            'rotateR':      (0, mh.Keys.N6),
+            'rotateU':      (0, mh.Keys.N8),
+            'panU':     (0, mh.Keys.UP),
+            'panD':     (0, mh.Keys.DOWN),
+            'panR':     (0, mh.Keys.RIGHT),
+            'panL':     (0, mh.Keys.LEFT),
+            'zoomIn':       (0, mh.Keys.PLUS),
+            'zoomOut':      (0, mh.Keys.MINUS),
+            'front':        (0, mh.Keys.N1),
+            'right':        (0, mh.Keys.N3),
+            'top':      (0, mh.Keys.N7),
+            'back':     (mh.Modifiers.CTRL, mh.Keys.N1),
+            'left':     (mh.Modifiers.CTRL, mh.Keys.N3),
+            'bottom':       (mh.Modifiers.CTRL, mh.Keys.N7),
+            'resetCam':     (0, mh.Keys.PERIOD),
             # Version check
-            '_versionSentinel':	(0, 0x87654321)
+            '_versionSentinel': (0, 0x87654321)
         }
 
         self.mouseActions = {
@@ -347,6 +347,13 @@ class MHApplication(gui3d.Application, mh.Application):
 
         # Load plugins not starting with _
         self.pluginsToLoad = glob.glob(os.path.join("plugins/",'[!_]*.py'))
+
+        for fname in os.listdir("plugins/"):
+            if fname[0] != "_":
+                folder = os.path.join("plugins", fname)
+                if os.path.isdir(folder) and ("__init__.py" in os.listdir(folder)):
+                    self.pluginsToLoad.append(folder)
+        
         self.pluginsToLoad.sort()
         self.pluginsToLoad.reverse()
 
@@ -367,7 +374,19 @@ class MHApplication(gui3d.Application, mh.Application):
             name, ext = os.path.splitext(os.path.basename(path))
             if name not in self.settings['excludePlugins']:
                 log.message('Importing plugin %s', name)
-                module = imp.load_source(name, path)
+                #module = imp.load_source(name, path)
+
+                module = None
+                fp, pathname, description = imp.find_module(name, ["plugins/"])
+                try:
+                    module = imp.load_module(name, fp, pathname, description)
+                finally:
+                    if fp:
+                        fp.close()
+                if module is None:
+                    log.message("Could not import plugin %s", name)
+                    return
+                
                 self.modules[name] = module
                 log.message('Imported plugin %s', name)
                 log.message('Loading plugin %s', name)
