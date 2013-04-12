@@ -25,6 +25,9 @@ Definition of the scene class and some of the subclasses it uses.
 from camera import Camera
 import pickle
 
+mhscene_version = 1
+
+
 class Light(object):
     def __init__(self):
         self.pos = (-10.99, 20.0, 20.0)
@@ -51,6 +54,7 @@ class Scene(object):
         self.path = path
         
         hfile = open(self.path, 'rb')
+        filever = pickle.load(hfile)
         self.camera = pickle.load(hfile)
         nlig = pickle.load(hfile)
         self.lights = []
@@ -65,6 +69,7 @@ class Scene(object):
         self.unsaved = False
         
         hfile = open(self.path, 'wb')
+        pickle.dump(mhscene_version, hfile)
         pickle.dump(self.camera, hfile)
         pickle.dump(len(self.lights), hfile)
         for light in self.lights:
