@@ -98,7 +98,7 @@ class Scene(object):
         return self._ambience;
 
     @ambience.setter
-    def ambience(self, value)
+    def ambience(self, value):
         self.unsaved = True
         self._ambience = value
         
