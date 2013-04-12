@@ -162,6 +162,26 @@ class CameraSceneItem(SceneItem):
                 pass
 
 
+class EnvironmentSceneItem(SceneItem):
+    def __init__(self, sceneview):
+        SceneItem.__init__(self, sceneview)
+
+    def makeProps(self):
+        SceneItem.makeProps(self)
+
+        self.widget.addWidget(gui.TextView("Ambience"))
+        self.colbox = self.widget.addWidget(gui.TextEdit(
+            ", ".join([str(x) for x in self.sceneview.scene.ambience])))
+
+        @self.colbox.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                self.sceneview.scene.ambience = tuple([float(x) for x in value.split(",")])
+            except:
+                pass
+            
+     
 class LightSceneItem(SceneItem):
     def __init__(self, sceneview, light, lid):
         self.lightid = lid
@@ -317,7 +337,8 @@ class SceneTaskView(gui3d.TaskView):
         self.adder.showProps()
         self.items.clear()
         self.items = {'Human': HumanSceneItem(self),
-                      'Camera': CameraSceneItem(self)}
+                      'Camera': CameraSceneItem(self),
+                      'Environment': EnvironmentSceneItem(self)}
         i = 0
         for light in self.scene.lights:
             i += 1
