@@ -25,7 +25,7 @@ Definition of the scene class and some of the subclasses it uses.
 from camera import Camera
 import pickle
 
-mhscene_version = 1
+mhscene_version = 2
 
 
 class Light(object):
@@ -43,6 +43,8 @@ class Scene(object):
             self.camera = Camera()
             self.lights = [Light()]
 
+            self._ambience = (0.3, 0.3, 0.3)
+
             self.unsaved = False
             self.path = None
         else:
@@ -56,6 +58,8 @@ class Scene(object):
         hfile = open(self.path, 'rb')
         filever = pickle.load(hfile)
         self.camera = pickle.load(hfile)
+        if filever >= 2:
+            self._ambience = pickle.load(hfile)
         nlig = pickle.load(hfile)
         self.lights = []
         for i in range(nlig):
@@ -71,6 +75,7 @@ class Scene(object):
         hfile = open(self.path, 'wb')
         pickle.dump(mhscene_version, hfile)
         pickle.dump(self.camera, hfile)
+        pickle.dump(self._ambience, hfile)
         pickle.dump(len(self.lights), hfile)
         for light in self.lights:
             pickle.dump(light, hfile)
@@ -87,4 +92,13 @@ class Scene(object):
     def removeLight(self, light):
         self.unsaved = True
         self.lights.remove(light)
+        
+    @property
+    def ambience(self):
+        return self._ambience;
+
+    @ambience.setter
+    def ambience(self, value)
+        self.unsaved = True
+        self._ambience = value
         
