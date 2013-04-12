@@ -554,7 +554,6 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     sceneLines = string.replace(sceneLines, 'xxLowercaseFileNamexx', settings['name'].lower())
     outputSceneFileDescriptor.write(sceneLines)
 
-    once = True
     for stuff in stuffs:
         outputSceneFileDescriptor.write(
             "object { \n" +
@@ -563,11 +562,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
             "   rotate <0, MakeHuman_RotateY, 0> \n" +
             "   rotate <MakeHuman_RotateX, 0, 0> \n" +
             "   translate <MakeHuman_TranslateX, MakeHuman_TranslateY, MakeHuman_TranslateZ> \n" +
-            "   material {%s_Material} \n" % stuff.name)
-        if once:
-            outputSceneFileDescriptor.write ("   no_shadow\n")
-            #once = False
-        outputSceneFileDescriptor.write ("}  \n")
+            "   material {%s_Material} \n}\n" % stuff.name)
 
     # Job done, clean up
     outputSceneFileDescriptor.close()
