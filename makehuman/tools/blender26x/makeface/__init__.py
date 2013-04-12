@@ -24,12 +24,12 @@
 # Coding Standards:    See http://www.makehuman.org/node/165
 
 bl_info = {
-    "name": "Make Face",
+    "name": "Make Face (experimental)",
     "author": "Thomas Larsson",
     "version": "0.1",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Face",
-    "description": "Make MakeHuman Face",
+    "description": "Make MakeHuman Face. Experimental tool, not recommended for end-users.",
     "warning": "",
     'wiki_url': "http://www.makehuman.org/node/223",
     "category": "MakeHuman"}

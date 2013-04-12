@@ -24,12 +24,12 @@
 # Coding Standards:    See http://www.makehuman.org/node/165
 
 bl_info = {
-    "name": "Warp Target",
+    "name": "Warp Target (experimental)",
     "author": "Thomas Larsson",
     "version": "0.2",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Warp Target",
-    "description": "Warp MakeHuman Targets To New Characters",
+    "description": "Warp MakeHuman Targets To New Characters. Experimental tool, not recommended for end-users.",
     "warning": "",
     'wiki_url': "http://www.makehuman.org/node/223",
     "category": "MakeHuman"}

@@ -24,7 +24,7 @@
 # Coding Standards:    See http://www.makehuman.org/node/165
 
 bl_info = {
-    "name": "MakeHuman Utilities",
+    "name": "MakeHuman Utilities (do NOT enable!)",
     "author": "Thomas Larsson",
     "version": "0.2",
     "blender": (2, 6, 5),
