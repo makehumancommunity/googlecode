@@ -35,6 +35,7 @@ class ExportTaskView(gui3d.TaskView):
         gui3d.TaskView.__init__(self, category, 'Export')
 
         self.formats = []
+        self.recentlyShown = None
 
         exportPath = mh.getPath('exports')
 
@@ -160,7 +161,10 @@ class ExportTaskView(gui3d.TaskView):
     def updateGui(self):
         for exporter, radio, options in self.formats:
             if radio.selected:
+                if self.recentlyShown: self.recentlyShown.onHide(self)
                 self.optionsBox.showWidget(options)
+                exporter.onShow(self)
+                self.recentlyShown = exporter
                 break
 
     def onShow(self, event):
@@ -181,6 +185,12 @@ class ExportTaskView(gui3d.TaskView):
         camera.eyeZ = 70
         human.setRotation([0.0, 0.0, 0.0])
 
+        for exporter, radio, _ in self.formats:
+            if radio.selected:
+                self.recentlyShown = exporter
+                exporter.onShow(self)
+                break
+
     def onHide(self, event):
         
         gui3d.TaskView.onHide(self, event)
@@ -192,3 +202,10 @@ class ExportTaskView(gui3d.TaskView):
         camera.eye = self.eye
         camera.focus = self.focus
         human.setRotation(self.rotation)
+
+        for exporter, radio, _ in self.formats:
+            if radio.selected:
+                exporter.onHide(self)
+                break
+        self.recentlyShown = None
+

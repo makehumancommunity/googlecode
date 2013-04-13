@@ -60,3 +60,16 @@ class Exporter(object):
                 check = False
                 buttons.append((button, name))
         return buttons
+
+    def onShow(self, exportTaskView):
+        """
+        This method is called when this exporter is selected and shown in the 
+        export GUI.
+        """
+        pass
+
+    def onHide(self, exportTaskView):
+        """
+        This method is called when this exporter is hidden from the export GUI.
+        """
+        pass
