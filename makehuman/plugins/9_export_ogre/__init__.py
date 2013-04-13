@@ -44,6 +44,16 @@ class ExporterOgre(Exporter):
         import mh2ogre
         mh2ogre.exportOgreMesh(human, filename("mesh.xml"), OgreConfig(self))
 
+    def build(self, options, taskview):
+        self.taskview       = taskview
+        self.useTexFolder   = options.addWidget(gui.CheckBox("Separate texture folder", True))
+        self.eyebrows       = options.addWidget(gui.CheckBox("Eyebrows", True))
+        self.lashes         = options.addWidget(gui.CheckBox("Eyelashes", True))
+        self.helpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
+        self.hidden         = False
+        self.smooth         = False
+        #self.scales         = self.addScales(options)
+
 def load(app):
     app.addExporter(ExporterOgre())
 
