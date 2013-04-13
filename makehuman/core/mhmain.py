@@ -1039,11 +1039,12 @@ class MHApplication(gui3d.Application, mh.Application):
         log.message("Full target exported")
 
     def grabScreen(self):
+        import datetime
         grabPath = mh.getPath('grab')
         if not os.path.exists(grabPath):
             os.makedirs(grabPath)
         # TODO: use bbox to choose grab region
-	grabName = datetime.datetime.now().strftime('grab_%Y-%m-%d_%H:%M.png')
+        grabName = datetime.datetime.now().strftime('grab_%Y-%m-%d_%H:%M:%S.png')
         mh.grabScreen(0, 0, G.windowWidth, G.windowHeight, os.path.join(grabPath, grabName))
 
     def resetHuman(self):
