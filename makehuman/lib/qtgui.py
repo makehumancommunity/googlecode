@@ -832,6 +832,8 @@ class StackedBox(QtGui.QStackedWidget, Widget):
         super(StackedBox, self).__init__()
         Widget.__init__(self)
         self.layout().setAlignment(QtCore.Qt.AlignTop)
+        self.autoResize = False
+        self.connect(self, QtCore.SIGNAL('currentChanged(int)'), self.widgetChanged)
 
     def addWidget(self, widget):
         w = QtGui.QWidget()
@@ -840,6 +842,7 @@ class StackedBox(QtGui.QStackedWidget, Widget):
         layout.addWidget(widget)
         layout.addStretch()
         super(StackedBox, self).addWidget(w)
+        self._updateSize()
         return widget
 
     def removeWidget(self, widget):
@@ -847,9 +850,34 @@ class StackedBox(QtGui.QStackedWidget, Widget):
         super(StackedBox, self).removeWidget(w)
         w.layout().removeWidget(widget)
         w.destroy()
+        self._updateSize()
 
     def showWidget(self, widget):
         self.setCurrentWidget(widget.parentWidget())
+
+    def setAutoResize(self, enabled):
+        """
+        Set to true to enable auto resizing the vertical dimensions of this
+        widget to the height of the currently shown widget.
+        """
+        self.autoResize = enabled
+        self._updateSize()
+
+    def _updateSize(self):
+        if self.autoResize:
+            for i in xrange(self.count()):
+                w = self.widget(i)
+                if w: w.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Ignored)
+            w = self.widget(self.currentIndex())
+            if w: w.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        else:
+            for i in xrange(self.count()):
+                w = self.widget(i)
+                if w: w.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        self.layout().activate()
+
+    def widgetChanged(self, widgetIdx):
+        self._updateSize()
 
 class Dialog(QtGui.QDialog):
     def __init__(self, parent = None):

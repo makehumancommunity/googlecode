@@ -57,6 +57,7 @@ class ExportTaskView(gui3d.TaskView):
         self.empty = True
 
         self.optionsBox = self.addRightWidget(gui.StackedBox())
+        self.optionsBox.setAutoResize(True)
 
         # Scales
         self.scaleBox = self.addRightWidget(gui.GroupBox('Scale units'))
