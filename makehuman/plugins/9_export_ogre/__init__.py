@@ -54,6 +54,14 @@ class ExporterOgre(Exporter):
         self.smooth         = False
         #self.scales         = self.addScales(options)
 
+    def onShow(self, exportTaskView):
+        exportTaskView.encodingBox.hide()
+        exportTaskView.scaleBox.hide()
+
+    def onHide(self, exportTaskView):
+        exportTaskView.encodingBox.show()
+        exportTaskView.scaleBox.show()
+
 def load(app):
     app.addExporter(ExporterOgre())
 

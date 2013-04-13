@@ -42,15 +42,27 @@ class ExporterMD5(Exporter):
         self.filter = "MD5 (*.md5)"
 
     def build(self, options, taskview):
-        Exporter.build(self, options, taskview)
-        self.hidden.hide()
-        # TODO remove scales option from this exporter
+        self.taskview       = taskview
+        self.useTexFolder   = options.addWidget(gui.CheckBox("Separate texture folder", True))
+        self.eyebrows       = options.addWidget(gui.CheckBox("Eyebrows", True))
+        self.lashes         = options.addWidget(gui.CheckBox("Eyelashes", True))
+        self.helpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
+        self.hidden         = False
+        self.smooth         = False
 
     def export(self, human, filename):
         from . import mh2md5
         cfg = MD5Config(self)
         cfg.selectedOptions(self)
         mh2md5.exportMd5(human, filename("md5mesh"), cfg)
+
+    def onShow(self, exportTaskView):
+        exportTaskView.encodingBox.hide()
+        exportTaskView.scaleBox.hide()
+
+    def onHide(self, exportTaskView):
+        exportTaskView.encodingBox.show()
+        exportTaskView.scaleBox.show()
 
 def load(app):
     app.addExporter(ExporterMD5())
