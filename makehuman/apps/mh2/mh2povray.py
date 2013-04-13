@@ -122,7 +122,7 @@ def povrayExport(app, settings):
             except:
                 log.error('Error opening .ini to write parameters.')
                 return
-            iniFD.write('Input_File_Name="%s"\n' % settings['name'] +
+            iniFD.write('Input_File_Name="%s.pov"\n' % settings['name'] +
                         '+W%d +H%d +a%s +am2\n' % (resW, resH, settings['AA']))
             iniFD.close()
 
@@ -524,6 +524,8 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     staticContentLines = string.replace(staticContentLines, '%%rough%%', str(settings['rough']))    
     staticContentLines = string.replace(staticContentLines, '%%wrinkles%%', str(settings['wrinkles']))    
     staticContentLines = string.replace(staticContentLines, '%%name%%', stuffs[0].name)    
+    staticContentLines = string.replace(staticContentLines, '%%ambience%%',
+                                        'rgb <%f,%f,%f>' % settings['scene'].ambience)
     outputFileDescriptor.write(staticContentLines)
     outputFileDescriptor.write('\n')
     staticContentFileDescriptor.close()

@@ -122,6 +122,7 @@ class PovrayTaskView(gui3d.TaskView):
                                    {'source':'gui',         # 'ini' if self.iniButton.selected else 'gui',
                                     'format':'mesh2',       # 'array' if self.arrayButton.selected else 'mesh2',
                                     'action':'render',      # 'export' if self.exportButton.selected else 'render',
+                                    'scene': gui3d.app.categories['Rendering'].tasksByName['Scene'].scene,
                                     'subdivide':True if self.doSubdivide.selected else False,
                                     'AA': 0.5-0.49*self.AA.getValue(),
                                     'bintype': binary,

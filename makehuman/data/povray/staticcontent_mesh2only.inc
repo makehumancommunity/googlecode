@@ -39,7 +39,7 @@
         roughness 0.02203444  // surface roughness: 0.0005 -> 1
         phong 0 phong_size 0  // Phong specular disabled
 
-        ambient 0.01 // rgb <0.00,0.00,0.00>
+        ambient %%ambience%%
         diffuse 0.6
         reflection{0 } conserve_energy
         subsurface {translucency 0.6} //0.8}

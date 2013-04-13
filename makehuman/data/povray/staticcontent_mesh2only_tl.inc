@@ -39,7 +39,7 @@
         roughness %%rough%%  // surface roughness: 0.0005 -> 1
         phong 0 phong_size 0  // Phong specular disabled
 
-        ambient 0.3 // rgb <0.00,0.00,0.00>
+        ambient %%ambience%%
         diffuse 2.0
         reflection{0 }
         conserve_energy

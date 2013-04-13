@@ -43,7 +43,7 @@ class Scene(object):
             self.camera = Camera()
             self.lights = [Light()]
 
-            self._ambience = (0.3, 0.3, 0.3)
+            self._ambience = (0.2, 0.2, 0.2)
 
             self.unsaved = False
             self.path = None

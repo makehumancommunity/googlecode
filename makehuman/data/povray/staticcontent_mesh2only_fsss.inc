@@ -73,7 +73,7 @@
             specular %%skinoil%%  // Max highlight intensity: 0 -> 1
             roughness %%rough%%  // surface roughness: 0.0005 -> 1
             phong 0 phong_size 0  // Phong specular disabled
-            ambient 0
+            ambient %%ambience%%
             diffuse 0
             reflection {0}
             conserve_energy
