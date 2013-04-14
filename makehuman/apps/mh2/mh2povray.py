@@ -49,7 +49,7 @@ import log
 import image_operations as imgop
 import gui3d
 import mh2proxy
-import exportutils
+from exportutils import collect
 
 def downloadPovRay():
     import webbrowser
@@ -69,7 +69,7 @@ def povrayExport(app, settings):
       *Dictionary*. Options passed from the Povray exporter GUI.
     """
 
-    settings['name'] = getHumanName()
+    settings['name'] = string.replace(getHumanName(), " ", "_")
     log.message('POV-Ray Export of object: %s', settings['name'])
   
     camera = app.modelCamera
@@ -260,7 +260,7 @@ def povrayExportArray(obj, camera, resolution, path, settings):
     povraySizeData(obj, outputFileDescriptor)
 
     # Collect and prepare all objects.
-    stuffs = exportutils.collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False,
+    stuffs = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False,
                                             eyebrows=False, lashes=False, subdivide = settings['subdivide'])
 
     # Write array data for the object.
@@ -301,12 +301,9 @@ def povrayExportArray(obj, camera, resolution, path, settings):
     sceneLines = string.replace(sceneLines, 'xxLowercaseFileNamexx', nameOnly.lower())
     outputSceneFileDescriptor.write(sceneLines)
 
-  # Copy the skin texture file into the output directory
+    # Copy the skin texture file into the output directory
+    collect.copy(pigmentMap, os.path.join(outputDirectory, "texture.png"))
 
-    try:
-        shutil.copy(pigmentMap, os.path.join(outputDirectory, "texture.png"))
-    except (IOError, os.error), why:
-        log.error("Can't copy %s" % str(why))
 
   # Copy the makehuman_groupings.inc file into the output directory
 
@@ -343,14 +340,9 @@ def povrayCameraData(camera, resolution, hfile, settings):
     """
 
     hfile.write('// MakeHuman Camera and Viewport Settings. \n')
-    if settings['SSS'] == True:
-        hfile.write('#declare MakeHuman_LightX      = %s;\n' % 11)
-        hfile.write('#declare MakeHuman_LightY      = %s;\n' % 20)
-        hfile.write('#declare MakeHuman_LightZ      = %s;\n' % 20)
-    else:
-        hfile.write('#declare MakeHuman_LightX      = %s;\n' % camera.eyeX)
-        hfile.write('#declare MakeHuman_LightY      = %s;\n' % camera.eyeY)
-        hfile.write('#declare MakeHuman_LightZ      = %s;\n' % camera.eyeZ)
+    hfile.write('#declare MakeHuman_LightX      = %s;\n' % 11)
+    hfile.write('#declare MakeHuman_LightY      = %s;\n' % 20)
+    hfile.write('#declare MakeHuman_LightZ      = %s;\n' % 20)
     hfile.write('#declare MakeHuman_EyeX        = %s;\n' % camera.eyeX)
     hfile.write('#declare MakeHuman_EyeY        = %s;\n' % camera.eyeY)
     hfile.write('#declare MakeHuman_EyeZ        = %s;\n' % camera.eyeZ)
@@ -498,7 +490,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     povraySizeData(obj, outputFileDescriptor)
 
     # Collect and prepare all objects.
-    stuffs = exportutils.collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False,
+    stuffs = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False,
                                             eyebrows=False, lashes=False, subdivide = settings['subdivide'],
                                             progressCallback = lambda p: progress(progbase+(0.15+0.85*p)*(nextpb-progbase),"Analyzing objects"))
     progbase = nextpb
@@ -521,8 +513,34 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
         return 0
     staticContentLines = staticContentFileDescriptor.read()
     staticContentLines = string.replace(staticContentLines, '%%skinoil%%', str(settings['skinoil']))    
-    staticContentLines = string.replace(staticContentLines, '%%rough%%', str(settings['rough']))    
-    staticContentLines = string.replace(staticContentLines, '%%wrinkles%%', str(settings['wrinkles']))    
+    staticContentLines = string.replace(staticContentLines, '%%rough%%', str(settings['rough']))
+    if settings['usebump']:
+        _, imgtype = getChannelData(stuffs[0].bump)
+        staticContentLines = string.replace(staticContentLines, '%%normal%%',
+                                            'bump_map {%s "%s_bump.%s" bump_size %s interpolate 2}' % (
+                                                imgtype, stuffs[0].name,(stuffs[0].bump[1].split("."))[1],str(
+                                                    settings['wrinkles']*(1-0.5*settings['SSS']))))         
+        if settings['SSS']:
+            staticContentLines = string.replace(staticContentLines, '%%bluenormal%%',
+                                                'bump_map {%s "%s_bump.%s" bump_size 3*%s interpolate 2}' % (
+                                                    imgtype, stuffs[0].name,(stuffs[0].bump[1].split("."))[1],str(settings['wrinkles'])))         
+            staticContentLines = string.replace(staticContentLines, '%%greennormal%%',
+                                                'bump_map {png "%s_sss_greenbump.png" bump_size 3*%s interpolate 2}' % (
+                                                    stuffs[0].name, str(settings['wrinkles'])))         
+            staticContentLines = string.replace(staticContentLines, '%%rednormal%%',
+                                                'bump_map {png "%s_sss_redbump.png" bump_size 3*%s interpolate 2}' % (
+                                                    stuffs[0].name, str(settings['wrinkles'])))         
+    else:
+        grainstr = 'wrinkles %s scale 0.0002' % str(settings['wrinkles'])
+        staticContentLines = string.replace(staticContentLines, '%%normal%%',
+                                            'wrinkles %s scale 0.0002' % str(settings['wrinkles']))         
+        if settings['SSS']:
+            staticContentLines = string.replace(staticContentLines, '%%bluenormal%%',
+                                                'wrinkles 3*%s scale 0.0002' % str(settings['wrinkles']))         
+            staticContentLines = string.replace(staticContentLines, '%%greennormal%%',
+                                                'wrinkles 1.5*%s scale 0.0004' % str(settings['wrinkles']))         
+            staticContentLines = string.replace(staticContentLines, '%%rednormal%%',
+                                                'wrinkles 0.75*%s scale 0.0006' % str(settings['wrinkles']))
     staticContentLines = string.replace(staticContentLines, '%%name%%', stuffs[0].name)    
     staticContentLines = string.replace(staticContentLines, '%%ambience%%',
                                         'rgb <%f,%f,%f>' % settings['scene'].ambience)
@@ -578,20 +596,14 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
             stuff.textureImage.save(os.path.join(outputDirectory,
                                                  "%s_texture.png" % stuff.name))
         elif stuff.texture:
-            copyFile(stuff.texture, os.path.join(outputDirectory,
-                                                 "%s_texture.%s" % (stuff.name,
-                                                                    (stuff.texture[1].split("."))[1])))
-        """
-        if proxy.normal:
-            copyFile(proxy.normal, outputDirectory)
-        if proxy.bump:
-            copyFile(proxy.bump, outputDirectory)
-        if proxy.displacement:
-            copyFile(proxy.displacement, outputDirectory)
-        if proxy.transparency:
-            copyFile(proxy.transparency, outputDirectory)
-        """
-
+            collect.copy(stuff.texture, os.path.join(outputDirectory,
+                                                     "%s_texture.%s" % (stuff.name,
+                                                                        (stuff.texture[1].split("."))[1])))
+        if stuff.bump:
+            collect.copy(stuff.bump, os.path.join(outputDirectory,
+                                                  "%s_bump.%s" % (stuff.name,
+                                                                  (stuff.bump[1].split("."))[1])))
+            
     log.message('Sample POV-Ray scene file generated')
     progress(0,"Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
 
@@ -681,19 +693,6 @@ def getChannelData(value):
     else:
         return None
                 
-
-def copyFile(path, outputDirectory):
-    if isinstance(path, tuple):
-        (folder, file) = path
-        path = os.path.join(folder, file)
-    if path:
-        path = os.path.realpath(os.path.expanduser(path))
-        log.debug("Copy %s to %s" % (path, outputDirectory))
-        try:
-            shutil.copy(path, outputDirectory)
-        except (IOError, os.error), why:
-            log.error("Can't copy %s" % str(why))
-
 def povrayWriteMesh2(hfile, stuffs, progressCallback = None):
 
     def progress(prog):
@@ -869,25 +868,31 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
             progressCallback(prog)
     progress(0)
         
+    progbase = 0
+    nextpb = 1 - 0.65*settings['usebump']
     # calculate resolution of each cannel, according to settings
     resred = float(settings['SSSA'])
     a = resred
     resgreen = int(2.0**(10-resred/2))
     resred = int(2.0**(10-resred))
     # blue channel
-    lmap = projection.mapLighting(progressCallback = lambda p: progress(0.5*p))
+    lmap = projection.mapLighting(progressCallback = lambda p: progress(0.3*nextpb*p))
     lmap = imgop.getChannel(lmap,1)
-    progress(0.55)
-    lmap.save(os.path.join(outDir, '%s_sss_bluelmap.png' % stuffs[0].name))
+    black = imgop.Image(data=imgop.numpy.zeros((lmap.height, lmap.width, 1), dtype=imgop.numpy.uint8))
+    imgop.compose([black,black,lmap]).save(
+        os.path.join(outDir, '%s_sss_bluelmap.png' % stuffs[0].name))
     # green channel
-    progress(0.6)
-    lmap = imgop.blurred(lmap, int(10*a),15)
-    lmap.save(os.path.join(outDir, '%s_sss_greenlmap.png' % stuffs[0].name))
+    progress(0.4*nextpb)
+    lmap2 = imgop.blurred(lmap, int(10*a),13)
+    imgop.compose([black,lmap2,black]).save(
+        os.path.join(outDir, '%s_sss_greenlmap.png' % stuffs[0].name))
     # red channel
-    progress(0.8)
-    lmap = imgop.blurred(lmap, int(20*a),15)
-    lmap.save(os.path.join(outDir, '%s_sss_redlmap.png' % stuffs[0].name))
-    progress(1.0)
+    progress(0.7*nextpb)
+    lmap2 = imgop.blurred(lmap2, int(20*a),13)
+    imgop.compose([lmap2,black,black]).save(
+        os.path.join(outDir, '%s_sss_redlmap.png' % stuffs[0].name))
+    progbase = nextpb
+    progress(progbase)
     # create masks for blurred channels, for erasing seams.
     #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
     #sssmask = mh.Image(os.path.join(stuffs[0].texture[0], stuffs[0].texture[1]))
@@ -899,15 +904,16 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
     #sssmask = imgop.resized(sssmask,resred,resred)
     #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
     #sssmask.save(os.path.join(outDir, 'masklo.png'))
-    '''
-    # TEST. bump map blurring
-    lmap = mh.Image(os.path.join(outDir, 'bump.png'))
-    lmap = imgop.getChannel(lmap,1)
-    lmap = imgop.blurred(lmap,lmap.width/1024,15)
-    lmap.save(os.path.join(outDir, 'bumpmid1.png'))
-    lmap = imgop.blurred(lmap,2*lmap.width/1024,15)
-    lmap.save(os.path.join(outDir, 'bumplo1.png'))
-    '''
+    if settings['usebump']:
+        # Export blurred bump maps
+        lmap = imgop.Image(os.path.join(stuffs[0].bump[0], stuffs[0].bump[1]))
+        lmap = imgop.getChannel(lmap,1)
+        lmap = imgop.blurred(lmap, int(float(lmap.width/1024)*5*a), 15)
+        progress(progbase+0.5*(1-progbase))
+        lmap.save(os.path.join(outDir, '%s_sss_greenbump.png' % stuffs[0].name))
+        lmap = imgop.blurred(lmap, int(float(lmap.width/1024)*10*a), 15)
+        lmap.save(os.path.join(outDir, '%s_sss_redbump.png' % stuffs[0].name))
+        progress(1.0)
 
 def getHumanName():
     sav = str(gui3d.app.categories['Files'].tasksByName['Save'].fileentry.edit.text())

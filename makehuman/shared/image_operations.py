@@ -22,14 +22,14 @@ Abstract
 Various image processing operations.
 """
 
-import numpy as np
+import numpy
 from image import Image
 
 
 def resized(img, width, height):
     sw, sh = img.size
-    xmap = np.floor((np.arange(width) + 0.5) * sw / float(width)).astype(int)
-    ymap = np.floor((np.arange(height) + 0.5) * sh / float(height)).astype(int)
+    xmap = numpy.floor((numpy.arange(width) + 0.5) * sw / float(width)).astype(int)
+    ymap = numpy.floor((numpy.arange(height) + 0.5) * sh / float(height)).astype(int)
     return Image(data = img.data[ymap,:][:,xmap])
 
 def blurred(img, level=10, kernelSize=10):
@@ -58,34 +58,34 @@ def blurred(img, level=10, kernelSize=10):
 
     # prepare an 1-D Gaussian convolution kernel
     dist = 21 - level
-    t = np.linspace(-dist, dist, kernelSize)
-    bump = np.exp(-0.1*t**2)
-    bump /= np.trapz(bump) # normalize the integral to 1
+    t = numpy.linspace(-dist, dist, kernelSize)
+    bump = numpy.exp(-0.1*t**2)
+    bump /= numpy.trapz(bump) # normalize the integral to 1
     padSize = int(kernelSize/2)
     paddedShape = (img.data.shape[0] + padSize, img.data.shape[1] + padSize)
 
     # make a 2-D kernel out of it
-    kernel = bump[:,np.newaxis] * bump[np.newaxis,:]
+    kernel = bump[:,numpy.newaxis] * bump[numpy.newaxis,:]
 
     # padded fourier transform, with the same shape as the image
-    kernel_ft = np.fft.fft2(kernel, s=paddedShape, axes=(0, 1))
+    kernel_ft = numpy.fft.fft2(kernel, s=paddedShape, axes=(0, 1))
 
     # convolve
-    img_ft = np.fft.fft2(img.data, s=paddedShape, axes=(0, 1))
-    img2_ft = kernel_ft[:,:,np.newaxis] * img_ft
-    data = np.fft.ifft2(img2_ft, axes=(0, 1)).real
+    img_ft = numpy.fft.fft2(img.data, s=paddedShape, axes=(0, 1))
+    img2_ft = kernel_ft[:,:,numpy.newaxis] * img_ft
+    data = numpy.fft.ifft2(img2_ft, axes=(0, 1)).real
 
     # clip values to range
-    data = np.clip(data, 0, 255)
+    data = numpy.clip(data, 0, 255)
 
     return Image(data = data[padSize:data.shape[0], padSize:data.shape[1], :])
 
 def mix(img1, img2, weight1, weight2 = None):
     if weight2 is None:
         weight2 =  1 - weight1
-    return Image(data = np.around(weight1*img1.data + weight2*img2.data).astype(int))
+    return Image(data = numpy.around(weight1*img1.data + weight2*img2.data).astype(int))
 
-def compose(img, channels):
+def compose(channels):
     # 'channels' is a sequence of Images.
     outch = []
     i = 0
@@ -97,7 +97,7 @@ def compose(img, channels):
                 raise TypeError("Image No. %i has not enough channels" % i)
             outch.append(c.data[:,:,i:i+1])
         i += 1
-    return Image(data = np.dstack(outch))
+    return Image(data = numpy.dstack(outch))
 
 def getAlpha(img):
     return Image(data = img.data[:,:,-1:])

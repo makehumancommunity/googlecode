@@ -47,16 +47,16 @@ from . import rig as rigfile
 #
 
 class CStuff:
-    def __init__(self, name, proxy):
+    def __init__(self, name, proxy = None, obj = None):
         self.name = os.path.basename(name)
-        self.object = None
+        self.proxy = proxy
+        self.object = obj
         self.meshInfo = None
         self.boneInfo = None
         self.vertexWeights = None
         self.skinWeights = None
         self.textureImage = None
         if proxy:
-            self.proxy = proxy
             self.type = proxy.type
             self.material = proxy.material
             self.texture = proxy.texture
@@ -66,21 +66,21 @@ class CStuff:
             self.bump = proxy.bump
             self.displacement = proxy.displacement
         else:                    
-            self.proxy = None
+            if obj:
+                self.texture = obj.mesh.texture
+            else:
+                self.texture = None
             self.type = None
             self.material = None
-            self.texture = ("data/textures", "texture.png") 
-            self.specular = None # ("data/textures", "texture_ref.png") 
+            self.specular = ("data/textures", "texture_ref.png") 
             self.normal = None
             self.transparency = None
-            self.bump = None
+            self.bump = ("data/textures", "bump.png")
             self.displacement = None
 
-            
     #def setObject3dMesh(self, object3d, weights, shapes):
     #    self.meshInfo.setObject3dMesh(object3d, weights, shapes)
         
-
     def __repr__(self):
         return "<CStuff %s %s mat %s tex %s>" % (self.name, self.type, self.material, self.texture)
 
@@ -112,7 +112,7 @@ class CBoneInfo:
        
 
 #
-#   getTargets(config):
+#   readTargets(config):
 #
 
 from .shapekeys import readExpressionUnits
@@ -158,8 +158,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     theMaterials = {}
     
     stuffs = []
-    stuff = CStuff(name, None)
-    stuff.object = human
+    stuff = CStuff(name, obj = human)
 
     if rigfile:
         stuff.boneInfo = getArmatureFromRigFile(rigfile, obj, config.scale)
@@ -230,9 +229,9 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, de
                 if deleteVerts != None:
                     deleteVerts = deleteVerts | proxy.deleteVerts
                 if name:
-                    stuff = CStuff(name, proxy)
+                    stuff = CStuff(name, proxy, pfile.obj)
                 else:
-                    stuff = CStuff(proxy.name, proxy)
+                    stuff = CStuff(proxy.name, proxy, pfile.obj)
                 stuff.boneInfo = theStuff.boneInfo
                 if stuff:
                     if pfile.type == 'Proxy':
@@ -242,7 +241,6 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, de
                     else:
                         stuffname = None
 
-                    stuff.object = pfile.obj
                     stuff.meshInfo = mh2proxy.getMeshInfo(obj, proxy, config, meshInfo.weights, meshInfo.shapes, stuffname)
 
                     stuffs.append(stuff)
@@ -479,3 +477,15 @@ def setStuffSkinWeights(stuff):
         stuff.skinWeights.extend(wts)
     return
     
+def copy(frompath, topath):
+    if isinstance(frompath, tuple):
+        (folder, file) = frompath
+        frompath = os.path.join(folder, file)
+    if frompath:
+        frompath = os.path.realpath(os.path.expanduser(frompath))
+        log.debug("Copy %s to %s" % (frompath, topath))
+        try:
+            shutil.copy(frompath, topath)
+        except (IOError, os.error), why:
+            log.error("Can't copy %s" % str(why))
+

@@ -76,8 +76,9 @@ class PovrayTaskView(gui3d.TaskView):
 
         materialsBox = self.addRightWidget(gui.GroupBox('Materials'))
         self.skinoil = materialsBox.addWidget(gui.Slider(value=0.4, label="Skin oil"))
-        self.rough = materialsBox.addWidget(gui.Slider(value=0.3, label="Skin roughness"))
-        self.wrinkles = materialsBox.addWidget(gui.Slider(value=0.2, label="Skin wrinkles"))
+        self.tension = materialsBox.addWidget(gui.Slider(value=0.7, label="Skin tension"))
+        self.grain = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin graininess"))
+        self.usebump = materialsBox.addWidget(gui.CheckBox('Use bump maps', True))
         self.hairSpec = materialsBox.addWidget(gui.CheckBox('Hair shine', False))
         self.hspecA = materialsBox.addWidget(gui.Slider(value=0.5, label="Shine strength"))
         self.hairThick = materialsBox.addWidget(gui.Slider(value=0.67, label="Hair thickness"))
@@ -129,8 +130,9 @@ class PovrayTaskView(gui3d.TaskView):
                                     'SSS': True if self.useSSS.selected else False,
                                     'SSSA': self.SSSA.getValue(), # blur strength
                                     'skinoil': 0.001 *(10**(4*self.skinoil.getValue())), # exponential slider
-                                    'rough':0.001 *(10**(2*self.rough.getValue())), # exponential slider
-                                    'wrinkles': 0.5*self.wrinkles.getValue(),
+                                    'rough':0.001 *(10**(2*(1-self.tension.getValue()))), # exponential slider
+                                    'wrinkles': 0.5*self.grain.getValue(),
+                                    'usebump': True if self.usebump.selected else False,
                                     'hairSpec':True if self.hairSpec.selected else False,
                                     'hspecA': 0.1*(10**(2*self.hspecA.getValue())), # exponential slider
                                     'hairThin': 5**(2*(1-self.hairThick.getValue()))}) # exponential slider 

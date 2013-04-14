@@ -27,48 +27,48 @@
 #ifndef (%%name%%_Material)                            
 
 #declare TEXTURE = 
-    texture {
+    texture { // Apply high blur to red channel.
         pigment { image_map {png "%%name%%_sss_redlmap.png" interpolate 2} }
-        normal  { wrinkles %%wrinkles%% scale 0.0002 }
+        normal  {%%rednormal%%}
         finish { 
             specular 0
             roughness 0.01
             phong 0 phong_size 0
-            ambient rgb <3,0,0> // Apply high blur to red channel.
-            diffuse 0
+            ambient 0
+            diffuse 3
             reflection {0}
             conserve_energy
         }
     }
-    texture {
+    texture { // Apply medium blur to green channel.
         pigment { image_map {png "%%name%%_sss_greenlmap.png" interpolate 2 transmit all 1/2} }
-        normal  { wrinkles %%wrinkles%% scale 0.0002 }
+        normal  {%%greennormal%%}
         finish { 
             specular 0
             roughness 0.01
             phong 0 phong_size 0
-            ambient rgb <0,3,0> // Apply medium blur to green channel.
-            diffuse 0
+            ambient 0
+            diffuse 3
             reflection {0}
             conserve_energy
         }
     }
-    texture {
+    texture { // Apply no blur to blue channel.
         pigment { image_map {png "%%name%%_sss_bluelmap.png" interpolate 2 transmit all 2/3} }
-        normal  { wrinkles %%wrinkles%% scale 0.0002 }
+        normal  {%%bluenormal%%}
         finish { 
             specular 0
             roughness 0.01
             phong 0 phong_size 0
-            ambient rgb <0,0,3> // Apply no blur to blue channel.
-            diffuse 0
+            ambient 0
+            diffuse 3
             reflection {0}
             conserve_energy
         }
     }
     texture {
         pigment { image_map {png "%%name%%_texture.png" filter all 1} }
-        normal  { wrinkles %%wrinkles%% scale 0.0002 }
+        normal  {%%normal%%}
         finish { 
             specular %%skinoil%%  // Max highlight intensity: 0 -> 1
             roughness %%rough%%  // surface roughness: 0.0005 -> 1
@@ -86,7 +86,6 @@
         uv_mapping
         TEXTURE
     }
-    interior{ior 1.33}
 }
 
 #end
