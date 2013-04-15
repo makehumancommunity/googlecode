@@ -548,34 +548,19 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     outputFileDescriptor.write('\n')
     staticContentFileDescriptor.close()
     
-    # Write items' materials 
     progress(progbase+0.2*(1-progbase),"Writing Materials")
     writeItemsMaterials(outputFileDescriptor, stuffs, settings, outputDirectory)
-             
-    # The POV-Ray include file is complete
     outputFileDescriptor.close()
-    log.message("POV-Ray '#include' file generated.")
 
-    # Copy a sample scene file across to the output directory
     progress(1,"Writing Scene file")
-    try:
-        sceneFileDescriptor = open(sceneFile, 'r')
-    except:
-        log.error('Error opening file to read standard scene file.')
-        return 0
-    try:
-        outputSceneFileDescriptor = open(outputSceneFile, 'w')
-    except:
-        log.error('Error opening file to write standard scene file.')
-        return 0
-    sceneLines = sceneFileDescriptor.read()
-    sceneLines = string.replace(sceneLines, 'xxFileNamexx', settings['name'])
-    sceneLines = string.replace(sceneLines, 'xxUnderScoresxx', underScores)
-    sceneLines = string.replace(sceneLines, 'xxLowercaseFileNamexx', settings['name'].lower())
-    outputSceneFileDescriptor.write(sceneLines)
-
+    hSceneIn = open(sceneFile, 'r')
+    sceneLines = hSceneIn.read()
+    hSceneIn.close()
+    sceneLines = string.replace(sceneLines, '%%name%%', settings['name'])
+    hSceneOut = open(outputSceneFile, 'w')
+    hSceneOut.write(sceneLines)
     for stuff in stuffs:
-        outputSceneFileDescriptor.write(
+        hSceneOut.write(
             "object { \n" +
             "   %s_Mesh2Object \n" % stuff.name +
             "   rotate <0, 0, MakeHuman_RotateZ> \n" +
@@ -583,14 +568,9 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
             "   rotate <MakeHuman_RotateX, 0, 0> \n" +
             "   translate <MakeHuman_TranslateX, MakeHuman_TranslateY, MakeHuman_TranslateZ> \n" +
             "   material {%s_Material} \n}\n" % stuff.name)
+    hSceneOut.close()
 
-    # Job done, clean up
-    outputSceneFileDescriptor.close()
-    sceneFileDescriptor.close()
-
-    progress(1,"Finishing")
-
-    # Copy the texture files for each item
+    progress(1,"Writing textures")
     for stuff in stuffs:
         if stuff.textureImage:
             stuff.textureImage.save(os.path.join(outputDirectory,
@@ -604,7 +584,6 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
                                                   "%s_bump.%s" % (stuff.name,
                                                                   (stuff.bump[1].split("."))[1])))
             
-    log.message('Sample POV-Ray scene file generated')
     progress(0,"Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
 
 def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
