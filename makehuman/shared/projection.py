@@ -333,7 +333,7 @@ def mapLighting(lightpos = (-10.99, 20.0, 20.0), progressCallback = None):
     else:
         return mapLightingSoft(lightpos, progressCallback)
 
-def mapSceneLighting(scn, progressCallback = None)
+def mapSceneLighting(scn, progressCallback = None):
     def progress(prog):
         if (progressCallback is not None):
             progressCallback(prog)
