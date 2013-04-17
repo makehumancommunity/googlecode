@@ -519,7 +519,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
         staticContentLines = string.replace(staticContentLines, '%%normal%%',
                                             'bump_map {%s "%s_bump.%s" bump_size %s interpolate 2}' % (
                                                 imgtype, stuffs[0].name,(stuffs[0].bump[1].split("."))[1],str(
-                                                    settings['wrinkles']*(1-0.5*settings['SSS']))))         
+                                                    settings['wrinkles'])))         
         if settings['SSS']:
             staticContentLines = string.replace(staticContentLines, '%%bluenormal%%',
                                                 'bump_map {%s "%s_bump.%s" bump_size 3*%s interpolate 2}' % (
@@ -542,14 +542,8 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
             staticContentLines = string.replace(staticContentLines, '%%rednormal%%',
                                                 'wrinkles 0.75*%s scale 0.0006' % str(settings['wrinkles']))
     staticContentLines = string.replace(staticContentLines, '%%name%%', stuffs[0].name)    
-    if settings['SSS']:
-        staticContentLines = string.replace(
-            staticContentLines, '%%ambience%%',
-            'rgb <0.5*%f,0.5*%f,0.5*%f>' % settings['scene'].ambience)
-    else:
-        staticContentLines = string.replace(
-            staticContentLines, '%%ambience%%',
-            'rgb <%f,%f,%f>' % settings['scene'].ambience)
+    staticContentLines = string.replace(staticContentLines, '%%ambience%%',
+                                        'rgb <%f,%f,%f>' % settings['scene'].ambience)
     outputFileDescriptor.write(staticContentLines)
     outputFileDescriptor.write('\n')
     staticContentFileDescriptor.close()
@@ -868,35 +862,26 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
         os.path.join(outDir, '%s_sss_bluelmap.png' % stuffs[0].name))
     # green channel
     progress(0.4*nextpb)
-    lmap2 = imgop.blurred(lmap, int(10*a),13)
+    lmap2 = imgop.blurred(lmap, int(10*a),13, lambda p: progress((0.4+0.3*p)*nextpb))
     imgop.compose([black,lmap2,black]).save(
         os.path.join(outDir, '%s_sss_greenlmap.png' % stuffs[0].name))
     # red channel
     progress(0.7*nextpb)
-    lmap2 = imgop.blurred(lmap2, int(20*a),13)
+    lmap2 = imgop.blurred(lmap2, int(20*a),13, lambda p: progress((0.7+0.3*p)*nextpb))
     imgop.compose([lmap2,black,black]).save(
         os.path.join(outDir, '%s_sss_redlmap.png' % stuffs[0].name))
     progbase = nextpb
     progress(progbase)
-    # create masks for blurred channels, for erasing seams.
-    #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
-    #sssmask = mh.Image(os.path.join(stuffs[0].texture[0], stuffs[0].texture[1]))
-    #sssmask = imgop.getAlpha(sssmask)
-    #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
-    #sssmask = imgop.resized(sssmask,resgreen,resgreen)
-    #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
-    #sssmask.save(os.path.join(outDir, 'maskmid.png'))
-    #sssmask = imgop.resized(sssmask,resred,resred)
-    #progress (progbase+0.5*(nextpb-progbase),"Writing lightmaps")
-    #sssmask.save(os.path.join(outDir, 'masklo.png'))
     if settings['usebump']:
         # Export blurred bump maps
         lmap = imgop.Image(os.path.join(stuffs[0].bump[0], stuffs[0].bump[1]))
         lmap = imgop.getChannel(lmap,1)
-        lmap = imgop.blurred(lmap, int(float(lmap.width/1024)*5*a), 15)
+        lmap = imgop.blurred(lmap, int(float(lmap.width/1024)*5*a), 15,
+                             lambda p: progress(progbase+0.5*p*(1-progbase)))
         progress(progbase+0.5*(1-progbase))
         lmap.save(os.path.join(outDir, '%s_sss_greenbump.png' % stuffs[0].name))
-        lmap = imgop.blurred(lmap, int(float(lmap.width/1024)*10*a), 15)
+        lmap = imgop.blurred(lmap, int(float(lmap.width/1024)*10*a), 15,
+                             lambda p: progress(progbase+0.5*p*(1-progbase)))
         lmap.save(os.path.join(outDir, '%s_sss_redbump.png' % stuffs[0].name))
         progress(1.0)
 

@@ -35,7 +35,7 @@
             roughness 0.01
             phong 0 phong_size 0
             ambient 0
-            diffuse 6
+            diffuse 3
             reflection {0}
             conserve_energy
         }
@@ -48,7 +48,7 @@
             roughness 0.01
             phong 0 phong_size 0
             ambient 0
-            diffuse 6
+            diffuse 3
             reflection {0}
             conserve_energy
         }
@@ -61,20 +61,20 @@
             roughness 0.01
             phong 0 phong_size 0
             ambient 0
-            diffuse 6
+            diffuse 3
             reflection {0}
             conserve_energy
         }
     }
     texture {
-        pigment { image_map {png "%%name%%_texture.png" filter all 0.5} }
+        pigment { image_map {png "%%name%%_texture.png" filter all 1} }
         normal  {%%normal%%}
         finish { 
-            specular %%skinoil%%  // Max highlight intensity: 0 -> 1
-            roughness %%rough%%  // surface roughness: 0.0005 -> 1
-            phong 0 phong_size 0  // Phong specular disabled
+            specular %%skinoil%%
+            roughness %%rough%%
+            phong 0 phong_size 0
             ambient %%ambience%%
-            diffuse -1
+            diffuse 0
             reflection {0}
             conserve_energy
         }
