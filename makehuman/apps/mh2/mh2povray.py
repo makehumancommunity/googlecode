@@ -542,8 +542,14 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
             staticContentLines = string.replace(staticContentLines, '%%rednormal%%',
                                                 'wrinkles 0.75*%s scale 0.0006' % str(settings['wrinkles']))
     staticContentLines = string.replace(staticContentLines, '%%name%%', stuffs[0].name)    
-    staticContentLines = string.replace(staticContentLines, '%%ambience%%',
-                                        'rgb <%f,%f,%f>' % settings['scene'].ambience)
+    if settings['SSS']:
+        staticContentLines = string.replace(
+            staticContentLines, '%%ambience%%',
+            'rgb <0.5*%f,0.5*%f,0.5*%f>' % settings['scene'].ambience)
+    else:
+        staticContentLines = string.replace(
+            staticContentLines, '%%ambience%%',
+            'rgb <%f,%f,%f>' % settings['scene'].ambience)
     outputFileDescriptor.write(staticContentLines)
     outputFileDescriptor.write('\n')
     staticContentFileDescriptor.close()
