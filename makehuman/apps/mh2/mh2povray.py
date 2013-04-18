@@ -870,7 +870,8 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
     resgreen = int(2.0**(10-resred/2))
     resred = int(2.0**(10-resred))
     # blue channel
-    lmap = projection.mapLighting(progressCallback = lambda p: progress(0.3*nextpb*p))
+    lmap = projection.mapSceneLighting(
+        settings['scene'],progressCallback = lambda p: progress(0.3*nextpb*p))
     lmap = imgop.getChannel(lmap,1)
     black = imgop.Image(data=imgop.numpy.zeros((lmap.height, lmap.width, 1), dtype=imgop.numpy.uint8))
     imgop.compose([black,black,lmap]).save(
