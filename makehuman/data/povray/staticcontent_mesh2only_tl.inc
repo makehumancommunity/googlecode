@@ -1,25 +1,3 @@
-// Create a camera definition based on the MakeHuman camera settings when this 
-// file was generated. We need to convert between the OpenGL vertical FOV and 
-// the horizontal POV-Ray camera angle. We also need to account for the way 
-// OpenGL reports its camera data, translating before rotating, which further 
-// moves the camera. The x-axis is also reversed to the standard POV-Ray settings.
-#declare MakeHuman_Camera = camera {
-  perspective
-  location <MakeHuman_EyeX, MakeHuman_EyeY, MakeHuman_EyeZ>
-  look_at <MakeHuman_FocusX, MakeHuman_FocusY, MakeHuman_FocusZ>
-  angle 30
-}
-
-// Create a standard light definition based on MakeHuman settings.
-#declare MakeHuman_LightSource = light_source {
-    <MakeHuman_LightX, MakeHuman_LightY, MakeHuman_LightZ>
-    color rgb 1
-    spotlight
-    radius 1000
-    falloff 1000
-    tightness 1
-    point_at < MakeHuman_TranslateX, MakeHuman_TranslateY, MakeHuman_TranslateZ>
-}
 
 // Assign default values.
 // This texture uses the standard pigment map as a uv-mapped pigment and adds a

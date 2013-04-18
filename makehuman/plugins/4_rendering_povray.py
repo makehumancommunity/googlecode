@@ -75,7 +75,7 @@ class PovrayTaskView(gui3d.TaskView):
         self.SSSA = optionsBox.addWidget(gui.Slider(value=0.7, label="SSS Amount"))
 
         materialsBox = self.addRightWidget(gui.GroupBox('Materials'))
-        self.skinoil = materialsBox.addWidget(gui.Slider(value=0.4, label="Skin oil"))
+        self.skinoil = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin oil"))
         self.moist = materialsBox.addWidget(gui.Slider(value=0.7, label="Moisturization"))
         self.tension = materialsBox.addWidget(gui.Slider(value=0.7, label="Skin tension"))
         self.grain = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin graininess"))

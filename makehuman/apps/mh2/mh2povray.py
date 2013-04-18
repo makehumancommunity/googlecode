@@ -351,11 +351,28 @@ def povrayCameraData(camera, resolution, hfile, settings):
     hfile.write('#declare MakeHuman_FocusZ      = %s;\n' % camera.focusZ)
     hfile.write('#declare MakeHuman_ImageHeight = %s;\n' % resolution[1])
     hfile.write('#declare MakeHuman_ImageWidth  = %s;\n' % resolution[0])
-    hfile.write('''
+    hfile.write('\n\n')
 
-''')
+def povrayWriteCamera(hfile):
+    hfile.write("camera {\n  perspective\n")
+    hfile.write("  location <MakeHuman_EyeX, MakeHuman_EyeY, MakeHuman_EyeZ>\n")
+    hfile.write("  look_at <MakeHuman_FocusX, MakeHuman_FocusY, MakeHuman_FocusZ>\n")
+    hfile.write("  angle 30\n}\n\n")
 
-
+def povrayWriteLights(scene, hfile):
+    def invx(pos):
+        return (-pos[0],pos[1],pos[2])
+    hflig = open('data/povray/lights.inc','r')
+    for light in scene.lights:
+        liglines = hflig.read()
+        liglines = string.replace(liglines, '%%pos%%', '<%f,%f,%f>' % invx(light.pos))
+        liglines = string.replace(liglines, '%%color%%', '<%f,%f,%f>' % light.color)
+        liglines = string.replace(liglines, '%%focus%%', '<%f,%f,%f>' % invx(light.focus))
+        liglines = string.replace(liglines, '%%fov%%', str(light.fov))
+        liglines = string.replace(liglines, '%%att%%', str(light.attenuation))
+        hfile.write(liglines)
+    hflig.close()
+        
 def povraySizeData(obj, hfile):
     """
   This function outputs standard object dimension data common to all POV-Ray 
@@ -432,7 +449,6 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     progress (progbase,"Parsing data")
     headerFile = 'data/povray/headercontent_mesh2only.inc'
     staticFile = 'data/povray/staticcontent_mesh2only_fsss.inc' if settings['SSS'] else 'data/povray/staticcontent_mesh2only_tl.inc'
-    sceneFile = 'data/povray/makehuman_mesh2only_tl.pov'
 
     # Define some additional file locations
     outputSceneFile = path.replace('.inc', '.pov')
@@ -506,6 +522,8 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
                                             
     # Copy texture definitions to the output file.
     progress(progbase,"Writing Materials")
+    povrayWriteCamera(outputFileDescriptor)
+    povrayWriteLights(settings['scene'], outputFileDescriptor)
     try:
         staticContentFileDescriptor = open(staticFile, 'r')
     except:
@@ -554,12 +572,8 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     outputFileDescriptor.close()
 
     progress(1,"Writing Scene file")
-    hSceneIn = open(sceneFile, 'r')
-    sceneLines = hSceneIn.read()
-    hSceneIn.close()
-    sceneLines = string.replace(sceneLines, '%%name%%', settings['name'])
     hSceneOut = open(outputSceneFile, 'w')
-    hSceneOut.write(sceneLines)
+    hSceneOut.write('#include "%s.inc"\n\n' % settings['name'])
     for stuff in stuffs:
         hSceneOut.write(
             "object { \n" +
