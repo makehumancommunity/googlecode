@@ -70,15 +70,15 @@ class PovrayTaskView(gui3d.TaskView):
         # Options box
         optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
         self.doSubdivide = optionsBox.addWidget(gui.CheckBox('Subdivide mesh', True))
+        self.usebump = optionsBox.addWidget(gui.CheckBox('Use bump maps', True))
         self.useSSS = optionsBox.addWidget(gui.CheckBox('Use S.S. Scattering', True))
         self.SSSA = optionsBox.addWidget(gui.Slider(value=0.7, label="SSS Amount"))
-        self.AA = optionsBox.addWidget(gui.Slider(value=0.5, label="AntiAliasing"))
 
         materialsBox = self.addRightWidget(gui.GroupBox('Materials'))
         self.skinoil = materialsBox.addWidget(gui.Slider(value=0.4, label="Skin oil"))
+        self.moist = materialsBox.addWidget(gui.Slider(value=0.7, label="Moisturization"))
         self.tension = materialsBox.addWidget(gui.Slider(value=0.7, label="Skin tension"))
         self.grain = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin graininess"))
-        self.usebump = materialsBox.addWidget(gui.CheckBox('Use bump maps', True))
         self.hairSpec = materialsBox.addWidget(gui.CheckBox('Hair shine', False))
         self.hspecA = materialsBox.addWidget(gui.Slider(value=0.5, label="Shine strength"))
         self.hairThick = materialsBox.addWidget(gui.Slider(value=0.67, label="Hair thickness"))
@@ -125,11 +125,12 @@ class PovrayTaskView(gui3d.TaskView):
                                     'action':'render',      # 'export' if self.exportButton.selected else 'render',
                                     'scene': gui3d.app.categories['Rendering'].tasksByName['Scene'].scene,
                                     'subdivide':True if self.doSubdivide.selected else False,
-                                    'AA': 0.5-0.49*self.AA.getValue(),
+                                    'AA': 0.5-0.49*gui3d.app.settings.get('rendering_AA', 0.5),
                                     'bintype': binary,
                                     'SSS': True if self.useSSS.selected else False,
                                     'SSSA': self.SSSA.getValue(), # blur strength
                                     'skinoil': 0.001 *(10**(4*self.skinoil.getValue())), # exponential slider
+                                    'moist': self.moist.getValue(), # percentage
                                     'rough':0.001 *(10**(2*(1-self.tension.getValue()))), # exponential slider
                                     'wrinkles': 0.5*self.grain.getValue(),
                                     'usebump': True if self.usebump.selected else False,

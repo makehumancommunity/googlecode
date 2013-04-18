@@ -26,28 +26,46 @@
 // little disruption to the surface normals.  
 #ifndef (%%name%%_Material)
 
-    #declare DIFFUSE = pigment { 
-        image_map { png "%%name%%_texture.png"}
+#declare TEXTURE =
+    texture {
+        pigment {rgb 1}
+        finish {
+            specular 0
+            roughness 1
+            phong 0 phong_size 0
+            ambient %%ambience%%
+            diffuse 1
+        }
     }
-
-    #declare NORMAL = normal {%%normal%%}
- 
-    #declare FINISH = finish { 
-        specular %%skinoil%%  // Max highlight intensity: 0 -> 1
-        roughness %%rough%%   // surface roughness: 0.0005 -> 1
-        phong 0 phong_size 0  // Phong specular disabled
-
-        ambient %%ambience%%
-        diffuse 1.0
-        reflection {0}
-        conserve_energy
+    texture {
+        pigment {rgbf 1}
+        normal {%%normal%%}
+        finish {
+            specular %%edss%%
+            roughness 2*%%rough%%
+            phong 0 phong_size 0
+            ambient 0
+            diffuse 0
+        }
+    }
+    texture {
+        pigment {image_map {png "%%name%%_texture.png" filter all 1}}
+        normal {%%normal%%}
+        finish { 
+            specular %%spec%%
+            roughness %%rough%%
+            phong 0 phong_size 0
+            ambient 0
+            diffuse 0
+            reflection {0}
+            conserve_energy
+        }
     }
 
 #declare %%name%%_Material = material {
-    texture { uv_mapping
-            pigment { DIFFUSE }
-            normal  { NORMAL }
-            finish  { FINISH }
+    texture {
+        uv_mapping
+        TEXTURE
     }
 }
 

@@ -44,8 +44,8 @@
         pigment { image_map {png "%%name%%_sss_greenlmap.png" interpolate 2 transmit all 1/2} }
         normal  {%%greennormal%%}
         finish { 
-            specular 0
-            roughness 0.01
+            specular 3*%%edss%%
+            roughness 2*%%rough%%
             phong 0 phong_size 0
             ambient 0
             diffuse 3
@@ -70,7 +70,7 @@
         pigment { image_map {png "%%name%%_texture.png" filter all 1} }
         normal  {%%normal%%}
         finish { 
-            specular %%skinoil%%
+            specular %%spec%%
             roughness %%rough%%
             phong 0 phong_size 0
             ambient %%ambience%%

@@ -512,7 +512,8 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
         log.error('Error opening file to read static content.')
         return 0
     staticContentLines = staticContentFileDescriptor.read()
-    staticContentLines = string.replace(staticContentLines, '%%skinoil%%', str(settings['skinoil']))    
+    staticContentLines = string.replace(staticContentLines, '%%spec%%', str(settings['skinoil']*settings['moist']))    
+    staticContentLines = string.replace(staticContentLines, '%%edss%%', str(settings['skinoil']*(1-settings['moist'])))
     staticContentLines = string.replace(staticContentLines, '%%rough%%', str(settings['rough']))
     if settings['usebump']:
         _, imgtype = getChannelData(stuffs[0].bump)
@@ -881,7 +882,7 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
         progress(progbase+0.5*(1-progbase))
         lmap.save(os.path.join(outDir, '%s_sss_greenbump.png' % stuffs[0].name))
         lmap = imgop.blurred(lmap, int(float(lmap.width/1024)*10*a), 15,
-                             lambda p: progress(progbase+0.5*p*(1-progbase)))
+                             lambda p: progress(progbase+(0.5+0.5*p)*(1-progbase)))
         lmap.save(os.path.join(outDir, '%s_sss_redbump.png' % stuffs[0].name))
         progress(1.0)
 

@@ -65,6 +65,10 @@ class OutputSceneItem(SceneItem):
     def resHeight(self):
         return gui3d.app.settings.get('rendering_height', 600)
 
+    @property
+    def AA(self):
+        return gui3d.app.settings.get('rendering_AA', 0.5)
+
     @resWidth.setter
     def resWidth(self, value = None):
         gui3d.app.settings['rendering_width'] = 0 if not value else int(value)
@@ -73,11 +77,17 @@ class OutputSceneItem(SceneItem):
     def resHeight(self, value = None):
         gui3d.app.settings['rendering_height'] = 0 if not value else int(value)
 
+    @AA.setter
+    def AA(self, value = None):
+        gui3d.app.settings['rendering_AA'] = 0.5 if not value else float(value)
+
     def makeProps(self):
         SceneItem.makeProps(self)
         self.widget.addWidget(gui.TextView("Resolution"))
         self.resBox = self.widget.addWidget(gui.TextEdit(
             "x".join([str(self.resWidth), str(self.resHeight)])))
+        self.AAslider = self.widget.addWidget(gui.Slider(
+            value=self.AA, label="AntiAliasing"))
 
         @self.resBox.mhEvent
         def onChange(value):
@@ -89,7 +99,11 @@ class OutputSceneItem(SceneItem):
             except: # The user hasn't typed the value correctly yet.
                 pass
 
+        @self.AAslider.mhEvent
+        def onChange(value):
+            self.AA = value
 
+            
 class SceneItemAdder(SceneItem):
     # Virtual scene item for adding scene items.
     def __init__(self, sceneview):
