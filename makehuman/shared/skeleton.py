@@ -219,6 +219,7 @@ class Skeleton(object):
         Returns a list of all joints defining the bone positions (minus end 
         effectors for leaf bones). The names are the same as the corresponding
         bones in this skeleton.
+        List is in depth-first order (usually the order of joints in a BVH file)
         """
         return self._retrieveJointNames(self.roots[0])
 
@@ -413,6 +414,18 @@ class Bone(object):
         else:
             roll = 2*math.atan2(qy, qw);
         return roll
+
+    def getName(self):
+        return self.name
+
+    def hasParent(self):
+        return self.parent != None
+
+    def isRoot(self):
+        return not self.hasParent()
+
+    def hasChildren(self):
+        return len(self.children) > 0
 
     def setToRestPose(self):   # used to be zeroTransformation()
         """

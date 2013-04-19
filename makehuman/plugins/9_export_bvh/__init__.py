@@ -23,7 +23,7 @@ BVH exporter.
 Supports exporting of selected skeleton and animations in BVH format.
 """
 
-import mh2bvh    # TODO move most of this module into shared/bvh.py
+import bvh
 
 from export import Exporter
 from exportutils.config import Config
@@ -58,17 +58,20 @@ class ExporterBVH(Exporter):
             gui3d.app.prompt('Error', 'You did not select a skeleton from the library.', 'OK')
             return
 
+        skel = human.getSkeleton()
+
         if self.exportAnimations and len(human.animated.getAnimations()) > 0:
             baseFilename = os.path.splitext(filename("bvh"))[0]
             for animName in human.animated.getAnimations():
                 fn = baseFilename + "_%s.bvh" % animName
                 log.message("Exporting file %s.", fn)
-                mh2bvh.exportSkeleton(fn, False)
-                mh2bvh.exportAnimation(fn, animName)
+                bvhData = bvh.createFromSkeleton(skel, human.animated.getAnimation(animName))
+                bvhData.writeToFile(fn)
         else:
             fn = filename("bvh")
             log.message("Exporting file %s.", fn)
-            mh2bvh.exportSkeleton(fn, True)
+            bvhData = bvh.createFromSkeleton(skel)
+            bvhData.writeToFile(fn)
 
     def onShow(self, exportTaskView):
         exportTaskView.encodingBox.hide()

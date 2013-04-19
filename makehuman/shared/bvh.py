@@ -227,6 +227,119 @@ class BVH():
         for joint in self.getJoints():
             joint.calculateFrames()     # TODO we don't need to calculate pose matrices for end effectors
 
+    def fromSkeleton(self, skel, animationTrack = None):
+        """
+        Construct a BVH object from a skeleton structure and optionally an 
+        animation track. If no animation track is specified, a dummy animation
+        of one frame will be added.
+        NOTE: Make sure that the skeleton has only one root.
+        """
+
+        # Traverse skeleton joints in depth-first order
+        for jointName in skel.getJointNames():
+            bone = skel.getBone(jointName)
+            if bone.parent:
+                joint = self.addJoint(bone.parent.name, jointName)
+                joint.channels = ["Zrotation", "Xrotation", "Yrotation"]
+            else:
+                joint = self.addRootJoint(bone.name)
+                joint.channels = ["Xposition", "Yposition", "Zposition", "Zrotation", "Xrotation", "Yrotation"]
+    
+            offset = bone.getRestOffset()
+            self.__calcPosition(joint, offset)
+            if not bone.hasChildren():
+                endJoint = self.addJoint(jointName, 'End effector')
+                offset = bone.getRestTailPos() - bone.getRestHeadPos()
+                self.__calcPosition(endJoint, offset)
+
+        self.__cacheGetJoints()
+        nonEndJoints = [ joint for joint in self.getJoints() if not joint.isEndConnector() ]
+
+        if animationTrack:
+            self.frameCount = animationTrack.nFrames
+            self.frameTime = 1.0/animationTrack.frameRate
+
+            jointToBoneIdx = {}
+            for joint in nonEndJoints:
+                jointToBoneIdx[joint.name] = skel.getBone(joint.name).index
+
+            for fIdx in xrange(animationTrack.nFrames):
+                offset = fIdx * animationTrack.nBones
+                for jIdx,joint in enumerate(nonEndJoints):
+                    bIdx = jointToBoneIdx[joint.name]
+                    poseMat = animationTrack.data[offset + bIdx]
+                    if len(joint.channels) == 6:
+                        # Add transformation
+                        tx, ty, tz = poseMat[:3,3]
+                        joint.frames.extend([tx, ty, tz])
+                    ay,ax,az = tm.euler_from_matrix(poseMat, "syxz")
+                    joint.frames.extend([az/D, ax/D, ay/D])
+        else:
+            # Add bogus animation with one frame
+            self.frameCount = 1
+            self.frameTime = 1.0
+            for jIdx,joint in enumerate(nonEndJoints):
+                if len(joint.channels) == 6:
+                    # Add transformation
+                    joint.frames.extend([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+                else:
+                    joint.frames.extend([0.0, 0.0, 0.0])
+
+        for joint in self.getJoints():
+            joint.calculateFrames()
+
+    def writeToFile(self, filename):
+        """
+        Write this BVH structure to a file.
+        """
+        f = open(filename, 'w')
+
+        # Write structure
+        f.write('HIERARCHY\n')
+        self._writeJoint(f, self.rootJoint, 0)
+
+        # Write animation
+        f.write('MOTION\n')
+        f.write('Frames: %s\n' % self.frameCount)
+        f.write('Frame Time: %f\n' % self.frameTime)
+
+        allJoints = [joint for joint in self.getJointsBVHOrder() if not joint.isEndConnector()]
+        jointsData = [joint.matrixPoses for joint in allJoints]
+        nJoints = len(jointsData)
+        nFrames = len(jointsData[0])
+        totalChannels = sum([len(joint.channels) for joint in allJoints])
+
+        for fIdx in xrange(self.frameCount):
+            frameData = []
+            for joint in allJoints:
+                offset = fIdx * len(joint.channels)
+                frameData.extend(joint.frames[offset:offset + len(joint.channels)])
+            frameData = [str(fl) for fl in frameData]
+            f.write('%s\n' % " ".join(frameData))
+        f.close()
+
+    def _writeJoint(self, f, joint, ident):
+        if joint.name == "End effector":
+            offset = joint.offset
+            f.write('\t' * (ident + 1) + 'End Site\n')
+            f.write('\t' * (ident + 1) + '{\n')
+            f.write('\t' * (ident + 2) + "OFFSET	%s	%s	%s\n" % (offset[0], offset[1], offset[2]))
+            f.write('\t' * (ident + 1) + '}\n')
+        else:
+            if joint.isRoot():
+                f.write('ROOT ' + joint.name + '\n')
+                f.write('{\n')
+            else:
+                f.write('\t' * ident + 'JOINT ' + joint.name + '\n')
+                f.write('\t' * ident + '{\n')
+            offset = joint.offset
+            f.write('\t' * (ident + 1) + "OFFSET	%f  %f  %f\n" % (offset[0], offset[1], offset[2]))
+            f.write('\t' * (ident + 1) + 'CHANNELS %s %s\n' % (len(joint.channels), " ".join(joint.channels)))
+
+            for child in joint.children:
+                self._writeJoint(f, child, ident + 1)
+            f.write('\t' * ident + '}\n')
+
     def __expectKeyword(self, keyword, fp):
         line = fp.readline()
         words = line.split()
@@ -470,4 +583,9 @@ def load(filename, convertFromZUp = False):
     result = BVH()
     result.convertFromZUp = convertFromZUp
     result.fromFile(filename)
+    return result
+
+def createFromSkeleton(skel, animationTrack = None):
+    result = BVH()
+    result.fromSkeleton(skel, animationTrack)
     return result
