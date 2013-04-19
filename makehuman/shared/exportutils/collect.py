@@ -27,7 +27,6 @@ TODO
 import module3d
 import mh
 import files3d
-import mh2bvh
 import os
 import time
 import numpy
