@@ -22,6 +22,7 @@ Abstract
 TODO
 """
 
+import gui3d
 import gui
 from export import Exporter
 from exportutils.config import Config
@@ -33,6 +34,18 @@ class MD5Config(Config):
         self.selectedOptions(exporter)
         self.useRelPaths = True
         self.useTexFolder = exporter.useTexFolder
+
+    def selectedOptions(self, exporter):
+        self.encoding           = "ascii"
+        self.useTexFolder       = exporter.useTexFolder.selected
+        self.eyebrows           = exporter.eyebrows.selected
+        self.lashes             = exporter.lashes.selected
+        self.helpers            = exporter.helpers.selected
+        #self.scale,self.unit    = exporter.taskview.getScale()
+        self.hidden         = False
+        self.smooth = self.subdivide = gui3d.app.selectedHuman.isSubdivided()
+        
+        return self
     
 
 class ExporterMD5(Exporter):
@@ -47,8 +60,6 @@ class ExporterMD5(Exporter):
         self.eyebrows       = options.addWidget(gui.CheckBox("Eyebrows", True))
         self.lashes         = options.addWidget(gui.CheckBox("Eyelashes", True))
         self.helpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
-        self.hidden         = False
-        self.smooth         = False
 
     def export(self, human, filename):
         from . import mh2md5

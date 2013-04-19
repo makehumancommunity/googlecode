@@ -22,6 +22,7 @@ Abstract
 Exporter plugin for the Ogre3d mesh format.
 """
 
+import gui3d
 import gui
 from export import Exporter
 from exportutils.config import Config
@@ -32,7 +33,17 @@ class OgreConfig(Config):
         Config.__init__(self)
         self.selectedOptions(exporter)
         self.useRelPaths = True
-    
+
+    def selectedOptions(self, exporter):
+        self.encoding           = "utf-8"
+        self.useTexFolder       = exporter.useTexFolder.selected
+        self.eyebrows           = exporter.eyebrows.selected
+        self.lashes             = exporter.lashes.selected
+        self.helpers            = exporter.helpers.selected
+        #self.scale,self.unit    = exporter.taskview.getScale()
+        self.subdivide          = gui3d.app.selectedHuman.isSubdivided()
+        
+        return self
 
 class ExporterOgre(Exporter):
     def __init__(self):
