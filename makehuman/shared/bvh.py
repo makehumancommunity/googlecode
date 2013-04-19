@@ -43,7 +43,8 @@ class BVH():
     """
     def __init__(self):
         self.joints = {}    # Lookup dict to find joints by name
-        self.bvhJoints = [] # List of joints in the order in which they were defined in the BVH file (important for MOTION data parsing) 
+        self.bvhJoints = [] # List of joints in the order in which they were defined in the BVH file (important for MOTION data parsing)
+        self.jointslist = []    # Cached breadth-first list of all joints
         self.rootJoint = None   # TODO we assume only one root joint. Useful to allow multiple? (BVH spec allows multiple roots in theory)
 
         self.frameTime = -1
@@ -167,11 +168,7 @@ class BVH():
     def getJoint(self, name):
         return self.joints[name]
 
-    def getJoints(self):
-        # TODO cache this list?
-        """
-        Returns linear list of all joints in breadth-first order.
-        """
+    def __cacheGetJoints(self):
         from Queue import deque
 
         result = []
@@ -180,7 +177,13 @@ class BVH():
             joint = queue.popleft()
             result.append(joint)
             queue.extend(joint.children)
-        return result
+        self.jointslist = result
+        
+    def getJoints(self):
+        """
+        Returns linear list of all joints in breadth-first order.
+        """
+        return self.jointslist
 
     def getJointsBVHOrder(self):
         """
@@ -217,6 +220,8 @@ class BVH():
             data = [float(word) for word in words]
             for joint in self.getJointsBVHOrder():
                 data = self.__processChannelData(joint, data)
+
+        self.__cacheGetJoints()
 
         # Transform frame data into transformation matrices for all joints
         for joint in self.getJoints():
