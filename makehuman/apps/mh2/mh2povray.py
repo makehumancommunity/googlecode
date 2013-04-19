@@ -365,7 +365,7 @@ def povrayWriteLights(scene, hfile):
     hflig = open('data/povray/lights.inc','r')
     for light in scene.lights:
         liglines = hflig.read()
-        liglines = string.replace(liglines, '%%pos%%', '<%f,%f,%f>' % invx(light.pos))
+        liglines = string.replace(liglines, '%%pos%%', '<%f,%f,%f>' % invx(light.position))
         liglines = string.replace(liglines, '%%color%%', '<%f,%f,%f>' % light.color)
         liglines = string.replace(liglines, '%%focus%%', '<%f,%f,%f>' % invx(light.focus))
         liglines = string.replace(liglines, '%%fov%%', str(light.fov))

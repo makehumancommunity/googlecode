@@ -44,13 +44,48 @@ class SceneItem(object):
         self.sceneview.propsBox.showWidget(self.widget)
         self.sceneview.activeItem = self
 
+    def update(self):
+        pass
+
     def __del__(self):
         self.widget.destroy()
         
 
 class HumanSceneItem(SceneItem):
     def __init__(self, sceneview):
+        self.human = sceneview.scene.human
         SceneItem.__init__(self, sceneview)
+
+    def makeProps(self):
+        SceneItem.makeProps(self)
+        
+        self.widget.addWidget(gui.TextView("Position"))
+        self.posbox = self.widget.addWidget(gui.TextEdit(
+            ", ".join([str(x) for x in self.human.position])))
+        
+        self.widget.addWidget(gui.TextView("Rotation"))
+        self.rotbox = self.widget.addWidget(gui.TextEdit(
+            ", ".join([str(x) for x in self.human.rotation])))
+
+        @self.posbox.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                self.human.position = tuple([float(x) for x in value.split(",")])
+            except: # The user hasn't typed the value correctly yet.
+                pass
+
+        @self.rotbox.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                self.human.rotation = tuple([float(x) for x in value.split(",")])
+            except:
+                pass
+
+    def update(self):
+        self.posbox.setText(", ".join([str(x) for x in self.human.position]))
+        self.rotbox.setText(", ".join([str(x) for x in self.human.rotation]))
 
 
 class OutputSceneItem(SceneItem):
@@ -127,11 +162,6 @@ class CameraSceneItem(SceneItem):
     def makeProps(self):
         SceneItem.makeProps(self)
 
-        ''' Not working as expected.
-        self.useMHCam = self.widget.addWidget(
-            gui.Button('Use current view'))
-        '''
-
         self.widget.addWidget(gui.TextView("Position"))
         self.posbox = self.widget.addWidget(gui.TextEdit(
             ", ".join([str(x) for x in self.camera.eye])))
@@ -142,14 +172,6 @@ class CameraSceneItem(SceneItem):
         
         self.widget.addWidget(gui.TextView("Field Of View"))
         self.fov = self.widget.addWidget(gui.TextEdit(str(self.camera.fovAngle)))
-
-        '''
-        @self.useMHCam.mhEvent
-        def onClicked(event):
-            self.camera.eye = gui3d.app.modelCamera.eye
-            self.camera.focus = gui3d.app.modelCamera.focus
-            self.camera.fovAngle = gui3d.app.modelCamera.fovAngle
-        '''
 
         @self.posbox.mhEvent
         def onChange(value):
@@ -174,6 +196,11 @@ class CameraSceneItem(SceneItem):
                 self.camera.fovAngle = float(value)
             except:
                 pass
+
+    def update(self):
+        self.posbox.setText(", ".join([str(x) for x in self.camera.eye]))
+        self.focbox.setText(", ".join([str(x) for x in self.camera.focus]))
+        self.fov.setText(str(self.camera.fovAngle))
 
 
 class EnvironmentSceneItem(SceneItem):
@@ -207,7 +234,7 @@ class LightSceneItem(SceneItem):
         
         self.widget.addWidget(gui.TextView("Position"))
         self.posbox = self.widget.addWidget(gui.TextEdit(
-            ", ".join([str(x) for x in self.light.pos])))
+            ", ".join([str(x) for x in self.light.position])))
         
         self.widget.addWidget(gui.TextView("Focus"))
         self.focbox = self.widget.addWidget(gui.TextEdit(
@@ -230,7 +257,7 @@ class LightSceneItem(SceneItem):
         def onChange(value):
             try:
                 value = value.replace(" ", "")
-                self.light.pos = tuple([float(x) for x in value.split(",")])
+                self.light.position = tuple([float(x) for x in value.split(",")])
             except: # The user hasn't typed the value correctly yet.
                 pass
 
@@ -283,6 +310,8 @@ class SceneTaskView(gui3d.TaskView):
         self.saveAsButton = sceneBox.addWidget(gui.Button('Save As...'), 2, 0)
         self.closeButton = sceneBox.addWidget(gui.Button('Close'), 2, 1)
 
+        self.dontRefresh = False
+
         itemBox = self.addLeftWidget(gui.GroupBox('Items'))
         self.itemList = itemBox.addWidget(gui.ListView())
         self.itemList.setSizePolicy(gui.SizePolicy.Ignored, gui.SizePolicy.Preferred)
@@ -304,6 +333,10 @@ class SceneTaskView(gui3d.TaskView):
             if filename:
                 self.scene.load(filename)
                 self.readScene()
+
+        @self.scene.mhEvent
+        def onChanged(scene):
+            self.refreshScene()
 
         @self.loadButton.mhEvent
         def onClicked(event):
@@ -361,8 +394,41 @@ class SceneTaskView(gui3d.TaskView):
         for item in self.items.values():
             self.propsBox.addWidget(item.widget)
         self.itemList.setData(self.items.keys()[::-1])
+        self.refreshScene()
+
+    def refreshScene(self):
+        if (self.dontRefresh):
+            return
+        self.storeCamera(self.scene.camera, gui3d.app.modelCamera)
+        gui3d.app.selectedHuman.setPosition(self.scene.human.position)
+        gui3d.app.selectedHuman.setRotation(self.scene.human.rotation)
         self.updateFileTitle()
 
+    def update(self):
+        self.storeCamera(gui3d.app.modelCamera, self.scene.camera)
+        self.scene.human.position = gui3d.app.selectedHuman.getPosition()
+        self.scene.human.rotation = gui3d.app.selectedHuman.getRotation()
+        self.updateItems()
+        self.updateFileTitle()
+        
+    def updateItems(self):
+        for item in self.items.values():
+            item.update()
+        
+    def onMouseDown(self, event):
+        self.dontRefresh = True
+        
+    def onMouseUp(self, event):
+        self.dontRefresh = False
+        
+    def onMouseDragged(self, event):
+        gui3d.TaskView.onMouseDragged(self, event)
+        self.update()
+
+    def onMouseWheel(self, event):
+        gui3d.TaskView.onMouseWheel(self, event)
+        self.update()
+        
     def updateFileTitle(self):
         if self.scene.path is None:
             lbltxt = '<New scene>'
@@ -371,13 +437,40 @@ class SceneTaskView(gui3d.TaskView):
         if self.scene.unsaved:
             lbltxt += '*'
         self.fnlbl.setText(lbltxt)
+
+    def storeCamera(self, fromCamera = None, toCamera = None):
+        if (fromCamera is None):    # Pop.
+            toCamera.eye = self.storedCamEye
+            toCamera.focus = self.storedCamFocus
+            toCamera.fovAngle = self.storedCamFov
+        elif (toCamera is None):    # Push.
+            self.storedCamEye = fromCamera.eye
+            self.storedCamFocus = fromCamera.focus
+            self.storedCamFov = fromCamera.fovAngle
+        else:
+            toCamera.eye = fromCamera.eye
+            toCamera.focus = fromCamera.focus
+            toCamera.fovAngle = fromCamera.fovAngle        
         
+    def storeHuman(self, human):
+        self.storedHumanPos = human.getPosition()
+        self.storedHumanRot = human.getRotation()
+        
+    def restoreHuman(self, human):
+        human.setPosition(self.storedHumanPos)
+        human.setRotation(self.storedHumanRot)
+
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
         gui3d.app.status('Scene Editor')
+        self.storeCamera(gui3d.app.modelCamera)
+        self.storeHuman(gui3d.app.selectedHuman)
+        self.refreshScene()
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
+        self.storeCamera(None, gui3d.app.modelCamera)
+        self.restoreHuman(gui3d.app.selectedHuman)
         gui3d.app.saveSettings()
         gui3d.app.statusPersist('')
 
