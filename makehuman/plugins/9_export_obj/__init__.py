@@ -44,16 +44,11 @@ class ExporterOBJ(Exporter):
     def build(self, options, taskview):
         Exporter.build(self, options, taskview)
         self.useNormals = options.addWidget(gui.CheckBox("Normals", False))
-        self.skeleton  = options.addWidget(gui.CheckBox("Skeleton", True))
 
     def export(self, human, filename):
         from . import mh2obj
-        import mh2bvh
 
         mh2obj.exportObj(human, filename("obj"), ObjConfig(self))
-
-        if self.skeleton.selected:
-            mh2bvh.exportSkeleton(human.meshData, filename("bvh", True))
 
 def load(app):
     app.addExporter(ExporterOBJ())
