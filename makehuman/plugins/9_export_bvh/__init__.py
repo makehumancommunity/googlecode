@@ -33,7 +33,7 @@ import log
 
 import os
 
-# TODO add options such as scale and z-up, feetonground, etc
+# TODO add options such as z-up, feetonground, etc
 
 class BvhConfig(Config):
 
@@ -41,6 +41,11 @@ class BvhConfig(Config):
         Config.__init__(self)
         self.selectedOptions(exporter)
         self.useRelPaths = True
+
+    def selectedOptions(self, exporter):
+        self.encoding           = "ascii"
+        self.scale,self.unit    = exporter.taskview.getScale()
+        return self
     
 class ExporterBVH(Exporter):
     def __init__(self):
@@ -59,6 +64,7 @@ class ExporterBVH(Exporter):
             return
 
         skel = human.getSkeleton()
+        cfg = BvhConfig(self)
 
         if self.exportAnimations and len(human.animated.getAnimations()) > 0:
             baseFilename = os.path.splitext(filename("bvh"))[0]
@@ -66,16 +72,20 @@ class ExporterBVH(Exporter):
                 fn = baseFilename + "_%s.bvh" % animName
                 log.message("Exporting file %s.", fn)
                 bvhData = bvh.createFromSkeleton(skel, human.animated.getAnimation(animName))
+                if cfg.scale != 1:
+                    bvhData.scale(cfg.scale)
                 bvhData.writeToFile(fn)
         else:
             fn = filename("bvh")
             log.message("Exporting file %s.", fn)
             bvhData = bvh.createFromSkeleton(skel)
+            if cfg.scale != 1:
+                bvhData.scale(cfg.scale)
             bvhData.writeToFile(fn)
 
     def onShow(self, exportTaskView):
         exportTaskView.encodingBox.hide()
-        exportTaskView.scaleBox.hide()
+        #exportTaskView.scaleBox.hide()
 
     def onHide(self, exportTaskView):
         exportTaskView.encodingBox.show()
