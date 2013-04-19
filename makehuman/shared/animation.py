@@ -42,9 +42,9 @@ class AnimationTrack(object):
         poseData    np.array((n,4,4), dtype=np.float32)
             as a list of 4x4 pose matrices
             with n = nBones*nFrames
-            pose matrices should be ordered per bone - per frame
-            eg: poseData = [ B0P0, B1P0, B2P0, B0P1, B1P1, B2P1]
-                with each BxPy a 4x4 pose matrix for one bone in one frame
+            pose matrices should be ordered per frame - per bone
+            eg: poseData = [ B0F0, B1F0, B2F0, B0F1, B1F1, B2F1]
+                with each BxFy a 4x4 pose matrix for one bone in one frame
                 with x the bone index, and y the frame index
             Bones should always appear in the same order and are usually
             ordered in breadth-first fashion.

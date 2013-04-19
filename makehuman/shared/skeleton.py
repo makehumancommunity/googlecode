@@ -214,6 +214,20 @@ class Skeleton(object):
             queue.extend(bone.children)
         self.boneslist = result
 
+    def getJointNames(self):
+        """
+        Returns a list of all joints defining the bone positions (minus end 
+        effectors for leaf bones). The names are the same as the corresponding
+        bones in this skeleton.
+        """
+        return self._retrieveJointNames(self.roots[0])
+
+    def _retrieveJointNames(self, parentBone):
+        result = [parentBone.name]
+        for child in parentBone.children:
+            result.extend(self._retrieveJointNames(child))
+        return result
+
     def getBone(self, name):
         return self.bones[name]
 
@@ -661,7 +675,9 @@ def loadJointsMapping(rigName, skel):
     Returns mapping of skeleton bones to reference rig bone names.
     Return format is a breadth-first ordered list with for each bone in the
     skeleton respectively a reference bone name. Entries can be None if no
-    mapping to a bone exists. 
+    mapping to a bone exists.
+    This reference rig to skeleton mapping assumes both rigs have the same rest
+    pose.
     """
     import os
 

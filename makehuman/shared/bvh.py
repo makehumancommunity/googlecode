@@ -388,7 +388,6 @@ class BVHJoint():
 
             if channel == "Xposition":
                 rXs = self.frames[chanIdx:dataLen:nChannels]
-                
             elif channel == "Yposition":
                 rYs = self.frames[chanIdx:dataLen:nChannels]
             elif channel == "Zposition":

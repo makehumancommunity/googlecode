@@ -10,7 +10,7 @@ Export anatomical and pose data as Biovision motion capture data in BVH format.
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Manuel Bastioni
+**Authors:**           Manuel Bastioni, Jonas Hauquier
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
@@ -34,8 +34,10 @@ Requires:
 __docformat__ = 'restructuredtext'
 
 import gui3d
+import bvh
+import transformations as tm
 
-def exportSkeleton(obj, filename):
+def exportSkeleton(filename, addEmptyAnimation=True):
     """
     This function exports joint information describing the structure of the 
     MakeHuman humanoid mesh object in Biovision BVH format. 
@@ -43,8 +45,6 @@ def exportSkeleton(obj, filename):
     Parameters
     ----------
    
-    obj:     
-      *Object3D*.  The object whose information is to be used for the export.
     filename:     
       *string*.  The filename of the file to export the object to.
     """
@@ -55,8 +55,8 @@ def exportSkeleton(obj, filename):
 
 
     # Write bvh file
-    skeleton = human.getSkeleton()
-    root = skeleton.roots[0]  # we assume a skeleton with only one root
+    skel = human.getSkeleton()
+    root = skel.roots[0]  # we assume a skeleton with only one root
 
     f = open(filename, 'w')
     f.write('HIERARCHY\n')
@@ -68,16 +68,17 @@ def exportSkeleton(obj, filename):
     for bone in root.children:
         writeBone(f, bone, 1)
     f.write('}\n')
-    f.write('MOTION\n')
-    f.write('Frames:    1\n')
-    f.write('Frame Time: 0.0\n')
-    position = root.getRestHeadPos()
-    f.write(" %f  %f  %f" %(position[0],position[1],position[2]) )
-    #for i in xrange(skeleton.endEffectors):
-    #  f.write(" 0.0000 0.0000 0.0000")
-    f.write("\n")
-    f.close()
 
+    if addEmptyAnimation:
+        f.write('MOTION\n')
+        f.write('Frames:    1\n')
+        f.write('Frame Time: 0.0\n')
+        position = root.getRestHeadPos()
+        f.write("%f  %f  %f" %(position[0],position[1],position[2]) )
+        for i in xrange(len(skel.getJointNames())):
+            f.write(" %f %f %f" %(0.0, 0.0, 0.0))
+        f.write("\n")
+    f.close()
 
 def writeBone(f, bone, ident):
     """
@@ -109,3 +110,31 @@ def writeBone(f, bone, ident):
         f.write('\t' * (ident + 2) + "OFFSET	%s	%s	%s\n" % (offset[0], offset[1], offset[2]))
         f.write('\t' * (ident + 1) + '}\n')
     f.write('\t' * ident + '}\n')
+
+def exportAnimation(filename, animationName):
+    human = gui3d.app.selectedHuman
+    skel = human.getSkeleton()
+    animationTrack = human.animated.getAnimation(animationName)
+    D = bvh.D
+
+    f = open(filename, 'a')
+    f.write('MOTION\n')
+    f.write('Frames: %s\n' % animationTrack.nFrames)
+    f.write('Frame Time: %f\n' % (1.0/animationTrack.frameRate))
+    joints = skel.getJointNames()
+    jointToBoneIdx = {}
+    for joint in joints:
+        jointToBoneIdx[joint] = skel.getBone(joint).index
+
+    for fIdx in xrange(animationTrack.nFrames):
+        offset = fIdx * animationTrack.nBones
+        for jIdx,joint in enumerate(joints):
+            bIdx = jointToBoneIdx[joint]
+            poseMat = animationTrack.data[offset + bIdx]
+            if jIdx == 0:
+                tx, ty, tz = poseMat[:3,3]
+                f.write('%f %f %f ' % (tx, ty, tz))
+            ay,ax,az = tm.euler_from_matrix(poseMat, "syxz")
+            f.write('%f %f %f ' % (az/D, ax/D, ay/D))
+        f.write('\n')
+    f.close()
