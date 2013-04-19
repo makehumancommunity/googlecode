@@ -147,12 +147,15 @@ class ExportTaskView(gui3d.TaskView):
 
 
     def addExporter(self, exporter):
-        radio = self.boxes[exporter.group].addWidget(gui.RadioButton(self.exportBodyGroup, exporter.name, self.empty and exporter.group == "mesh"))
+        checked = self.empty and exporter.group == "mesh"
+        radio = self.boxes[exporter.group].addWidget(gui.RadioButton(self.exportBodyGroup, exporter.name, checked))
         options = self.optionsBox.addWidget(gui.GroupBox('Options'))
         exporter.build(options, self)
         if exporter.group == "mesh":
             self.empty = False
         self.formats.append((exporter, radio, options))
+        if checked:
+            self.updateGui()
 
         @radio.mhEvent
         def onClicked(event):
