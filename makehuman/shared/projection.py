@@ -70,6 +70,9 @@ class ColorShader(Shader):
         return np.sum(self.colors[i][None,None,:,:] * uvw[...,[1,2,0]][:,:,:,None], axis=2)
 
 def RasterizeTriangles(dst, coords, shader, progress = None):
+    """
+    Software rasterizer.
+    """
     delta = coords - coords[:,[1,2,0],:]
     perp = np.concatenate((delta[:,:,1,None], -delta[:,:,0,None]), axis=-1)
     dist = np.sum(perp[:,0,:] * delta[:,2,:], axis=-1)
@@ -243,7 +246,7 @@ def fixSeams(img):
 
 def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), progressCallback = None):
     """
-    Create a lightmap for the selected human.
+    Create a lightmap for the selected human (software renderer).
     """
 
     mesh = gui3d.app.selectedHuman.mesh
@@ -292,7 +295,7 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), progressCallback = None):
 
 def mapLightingGL(lightpos = (-10.99, 20.0, 20.0)):
     """
-    Create a lightmap for the selected human.
+    Create a lightmap for the selected human (hardware accelerated).
     """
 
     mesh = gui3d.app.selectedHuman.mesh
@@ -328,12 +331,20 @@ def mapLightingGL(lightpos = (-10.99, 20.0, 20.0)):
     return dstImg
 
 def mapLighting(lightpos = (-10.99, 20.0, 20.0), progressCallback = None):
+    """
+    Bake lightmap for human from one light.
+    Uses OpenGL hardware acceleration if the necessary OGL features are
+    available, otherwise uses a slower software rasterizer.
+    """
     if mh.hasRenderSkin():
         return mapLightingGL(lightpos)
     else:
         return mapLightingSoft(lightpos, progressCallback)
 
 def mapSceneLighting(scn, progressCallback = None):
+    """
+    Create a lightmap for a scene with one or multiple lights.
+    """
     def progress(prog):
         if (progressCallback is not None):
             progressCallback(prog)
@@ -410,7 +421,8 @@ def rasterizeVLines(dstImg, edges, delta, progress = None):
 
 def mapUVSoft():
     """
-    Project the UV map topology of the selected human mesh onto a texture.
+    Project the UV map topology of the selected human mesh onto a texture 
+    (software rasterizer).
     """
 
     mesh = gui3d.app.selectedHuman.mesh
@@ -463,7 +475,8 @@ def mapUVSoft():
 
 def mapUVGL():
     """
-    Project the UV map topology of the selected human mesh onto a texture.
+    Project the UV map topology of the selected human mesh onto a texture 
+    (hardware accelerated).
     """
 
     mesh = gui3d.app.selectedHuman.mesh
@@ -497,6 +510,11 @@ def mapUVGL():
     return dstImg.convert(3)
 
 def mapUV():
+    """
+    Project the UV map topology of the selected human mesh onto a texture.
+    Uses OpenGL hardware acceleration if the necessary OGL features are
+    available, otherwise uses a slower software rasterizer.
+    """
     if mh.hasRenderSkin():
         return mapUVGL()
     else:
