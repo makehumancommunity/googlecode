@@ -310,7 +310,8 @@ class SceneTaskView(gui3d.TaskView):
         self.saveAsButton = sceneBox.addWidget(gui.Button('Save As...'), 2, 0)
         self.closeButton = sceneBox.addWidget(gui.Button('Close'), 2, 1)
 
-        self.dontRefresh = False
+        self.dontRefresh = True
+        self.isShown = False
 
         itemBox = self.addLeftWidget(gui.GroupBox('Items'))
         self.itemList = itemBox.addWidget(gui.ListView())
@@ -405,28 +406,31 @@ class SceneTaskView(gui3d.TaskView):
         self.updateFileTitle()
 
     def update(self):
-        self.storeCamera(gui3d.app.modelCamera, self.scene.camera)
-        self.scene.human.position = gui3d.app.selectedHuman.getPosition()
-        self.scene.human.rotation = gui3d.app.selectedHuman.getRotation()
-        self.updateItems()
-        self.updateFileTitle()
+        if (self.isShown):
+            self.dontRefresh = True
+            self.storeCamera(gui3d.app.modelCamera, self.scene.camera)
+            self.scene.human.position = gui3d.app.selectedHuman.getPosition()
+            self.scene.human.rotation = gui3d.app.selectedHuman.getRotation()
+            self.updateItems()
+            self.dontRefresh = False
+            self.updateFileTitle()
         
     def updateItems(self):
         for item in self.items.values():
             item.update()
         
-    def onMouseDown(self, event):
-        self.dontRefresh = True
-        
-    def onMouseUp(self, event):
-        self.dontRefresh = False
-        
-    def onMouseDragged(self, event):
-        gui3d.TaskView.onMouseDragged(self, event)
+    def onHumanTranslated(self, event):
         self.update()
 
+    def onHumanRotated(self, event):
+        self.update()
+        
     def onMouseWheel(self, event):
         gui3d.TaskView.onMouseWheel(self, event)
+        self.update()
+
+    def onMouseDragged(self, event):
+        gui3d.TaskView.onMouseDragged(self, event)
         self.update()
         
     def updateFileTitle(self):
@@ -462,12 +466,16 @@ class SceneTaskView(gui3d.TaskView):
 
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
+        self.dontRefresh = False
         gui3d.app.status('Scene Editor')
         self.storeCamera(gui3d.app.modelCamera)
         self.storeHuman(gui3d.app.selectedHuman)
         self.refreshScene()
+        self.isShown = True     # Do this last.
 
     def onHide(self, event):
+        self.isShown = False    # Do this first.
+        self.dontRefresh = True
         gui3d.TaskView.onHide(self, event)
         self.storeCamera(None, gui3d.app.modelCamera)
         self.restoreHuman(gui3d.app.selectedHuman)
