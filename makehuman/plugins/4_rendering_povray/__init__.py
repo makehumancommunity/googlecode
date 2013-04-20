@@ -26,7 +26,7 @@ import sys
 import os
 
 # We need this for rendering
-import mh2povray
+from . import mh2povray
 
 # We need this for gui controls
 import gui3d
