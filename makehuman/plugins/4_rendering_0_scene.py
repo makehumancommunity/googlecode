@@ -302,7 +302,7 @@ class LightSceneItem(SceneItem):
 class SceneTaskView(gui3d.TaskView):
 
     def __init__(self, category):
-        gui3d.TaskView.__init__(self, category, 'Scene')
+        super(SceneTaskView, self).__init__(category, 'Scene')
         sceneBox = self.addLeftWidget(gui.GroupBox('Scene'))
         self.fnlbl = sceneBox.addWidget(gui.TextView('<New scene>'))
         self.saveButton = sceneBox.addWidget(gui.Button('Save'), 1, 0)
@@ -380,6 +380,24 @@ class SceneTaskView(gui3d.TaskView):
         @self.addButton.mhEvent
         def onClicked(event):
             self.adder.showProps()
+
+        @category.mhEvent
+        def onShow(event):
+            self.dontRefresh = False
+            gui3d.app.status('Scene Editor')
+            self.storeCamera(gui3d.app.modelCamera)
+            self.storeHuman(gui3d.app.selectedHuman)
+            self.refreshScene()
+            self.isShown = True     # Do this last.
+
+        @category.mhEvent
+        def onHide(event):
+            self.isShown = False    # Do this first.
+            self.dontRefresh = True
+            self.storeCamera(None, gui3d.app.modelCamera)
+            self.restoreHuman(gui3d.app.selectedHuman)
+            gui3d.app.saveSettings()
+            gui3d.app.statusPersist('')
 
     def readScene(self):
         self.adder.showProps()
@@ -463,24 +481,6 @@ class SceneTaskView(gui3d.TaskView):
     def restoreHuman(self, human):
         human.setPosition(self.storedHumanPos)
         human.setRotation(self.storedHumanRot)
-
-    def onShow(self, event):
-        gui3d.TaskView.onShow(self, event)
-        self.dontRefresh = False
-        gui3d.app.status('Scene Editor')
-        self.storeCamera(gui3d.app.modelCamera)
-        self.storeHuman(gui3d.app.selectedHuman)
-        self.refreshScene()
-        self.isShown = True     # Do this last.
-
-    def onHide(self, event):
-        self.isShown = False    # Do this first.
-        self.dontRefresh = True
-        gui3d.TaskView.onHide(self, event)
-        self.storeCamera(None, gui3d.app.modelCamera)
-        self.restoreHuman(gui3d.app.selectedHuman)
-        gui3d.app.saveSettings()
-        gui3d.app.statusPersist('')
 
 
 def load(app):

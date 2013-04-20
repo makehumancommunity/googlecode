@@ -318,50 +318,13 @@ def povrayExportArray(obj, camera, resolution, path, settings):
     sceneFileDescriptor.close()
     log.message('Sample POV-Ray scene file generated.')
 
-'''
-# Part of Chris' legacy. Note this funny code when using SSS:
-if SSS:
-    faces = [f for f in faces 
-             if not 'eye-cornea' in f.group.name  # for fix black eyes
-             and not 'eyebrown' in f.group.name
-             and not 'lash' in f.group.name]
-'''
-
-def povrayCameraData(camera, resolution, hfile, settings):
-    """
-    This function outputs standard camera data common to all POV-Ray format exports. 
-
-    camera:
-        Camera - A MH camera to render from.
-    resolution:
-        (int, int) - Resolution of output image.
-    hfile:
-        file descriptor - The file to which the camera settings need to be written. 
-    """
-
-    hfile.write('// MakeHuman Camera and Viewport Settings. \n')
-    hfile.write('#declare MakeHuman_LightX      = %s;\n' % 11)
-    hfile.write('#declare MakeHuman_LightY      = %s;\n' % 20)
-    hfile.write('#declare MakeHuman_LightZ      = %s;\n' % 20)
-    hfile.write('#declare MakeHuman_EyeX        = %s;\n' % camera.eyeX)
-    hfile.write('#declare MakeHuman_EyeY        = %s;\n' % camera.eyeY)
-    hfile.write('#declare MakeHuman_EyeZ        = %s;\n' % camera.eyeZ)
-    hfile.write('#declare MakeHuman_FocusX      = %s;\n' % camera.focusX)
-    hfile.write('#declare MakeHuman_FocusY      = %s;\n' % camera.focusY)
-    hfile.write('#declare MakeHuman_FocusZ      = %s;\n' % camera.focusZ)
-    hfile.write('#declare MakeHuman_ImageHeight = %s;\n' % resolution[1])
-    hfile.write('#declare MakeHuman_ImageWidth  = %s;\n' % resolution[0])
-    hfile.write('\n\n')
-
-def povrayWriteCamera(hfile):
+def povrayWriteCamera(scene, hfile):
     hfile.write("camera {\n  perspective\n")
-    hfile.write("  location <MakeHuman_EyeX, MakeHuman_EyeY, MakeHuman_EyeZ>\n")
-    hfile.write("  look_at <MakeHuman_FocusX, MakeHuman_FocusY, MakeHuman_FocusZ>\n")
-    hfile.write("  angle 30\n}\n\n")
+    hfile.write("  location <%f,%f,%f>\n" % invx(scene.camera.eye))
+    hfile.write("  look_at <%f,%f,%f>\n" % invx(scene.camera.focus))
+    hfile.write("  angle %f\n}\n\n" % scene.camera.fovAngle)
 
 def povrayWriteLights(scene, hfile):
-    def invx(pos):
-        return (-pos[0],pos[1],pos[2])
     hflig = open('data/povray/lights.inc','r')
     for light in scene.lights:
         liglines = hflig.read()
@@ -372,7 +335,22 @@ def povrayWriteLights(scene, hfile):
         liglines = string.replace(liglines, '%%att%%', str(light.attenuation))
         hfile.write(liglines)
     hflig.close()
-        
+
+def povrayWriteScene(stuffs, scene, file):
+    hfile = open(file, 'w')
+    hfile.write('#include "%s.inc"\n\n' % stuffs[0].name)
+    humanRot = scene.human.rotation
+    for stuff in stuffs:
+        hfile.write(
+            "object { \n" +
+            "   %s_Mesh2Object \n" % stuff.name +
+            "   rotate <0,0,%f> \n" % humanRot[2] +
+            "   rotate <0,%f,0> \n" % -humanRot[1] +
+            "   rotate <%f,0,0> \n" % humanRot[0] +
+            "   translate <%f,%f,%f> \n" % invx(scene.human.position) +
+            "   material {%s_Material} \n}\n" % stuff.name)
+    hfile.close()
+
 def povraySizeData(obj, hfile):
     """
   This function outputs standard object dimension data common to all POV-Ray 
@@ -445,9 +423,8 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
 
     # Certain blocks of SDL are mostly static and can be copied directly from reference
     # files into the output files.
-    nextpb = 0.1
+    nextpb = 0.6 - 0.4 * bool(settings['SSS'])
     progress (progbase,"Parsing data")
-    headerFile = 'data/povray/headercontent_mesh2only.inc'
     staticFile = 'data/povray/staticcontent_mesh2only_fsss.inc' if settings['SSS'] else 'data/povray/staticcontent_mesh2only_tl.inc'
 
     # Define some additional file locations
@@ -463,52 +440,21 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
         except:
             log.error('Error creating export directory.')
             return 0
-    progbase = nextpb
     
     # Open the output file in Write mode
-    nextpb = 0.6 - 0.2 * bool(settings['SSS'])
-    progress(progbase,"Writing code")
     try:
         outputFileDescriptor = open(path, 'w')
     except:
         log.error('Error opening file to write data: %s', path)
         return 0
 
-    # Write the file name into the top of the comment block that starts the file.
-    outputFileDescriptor.write('// %s\n' % baseName)
-    outputFileDescriptor.write('// %s\n' % underScores)
-
-    # Copy the header file SDL straight across to the output file
-    try:
-        headerFileDescriptor = open(headerFile, 'r')
-    except:
-        log.error('Error opening header file for reading: %s', headerFile)
-        return 0
-    headerLines = headerFileDescriptor.read()
-    outputFileDescriptor.write(headerLines)
-    outputFileDescriptor.write("\n\n")
-    headerFileDescriptor.close()
-
-    progress (progbase+0.05*(nextpb-progbase),"Writing code")
-    # Write camera's position and settings.
-    povrayCameraData(camera, resolution, outputFileDescriptor, settings)
-    
-    # Write object's position and rotation.
-    outputFileDescriptor.write('#declare MakeHuman_TranslateX      = %s;\n' % -obj.x)
-    outputFileDescriptor.write('#declare MakeHuman_TranslateY      = %s;\n' % obj.y)
-    outputFileDescriptor.write('#declare MakeHuman_TranslateZ      = %s;\n\n' % obj.z)
-    outputFileDescriptor.write('#declare MakeHuman_RotateX         = %s;\n' % obj.rx)
-    outputFileDescriptor.write('#declare MakeHuman_RotateY         = %s;\n' % -obj.ry)
-    outputFileDescriptor.write('#declare MakeHuman_RotateZ         = %s;\n\n' % obj.rz)
-
-    progress (progbase+0.1*(nextpb-progbase),"Writing code")
     # Write sizes to make size ratios available.
     povraySizeData(obj, outputFileDescriptor)
 
     # Collect and prepare all objects.
     stuffs = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False,
                                             eyebrows=False, lashes=False, subdivide = settings['subdivide'],
-                                            progressCallback = lambda p: progress(progbase+(0.15+0.85*p)*(nextpb-progbase),"Analyzing objects"))
+                                            progressCallback = lambda p: progress(progbase+p*(nextpb-progbase),"Analyzing objects"))
     progbase = nextpb
 
     # If SSS is enabled, render the lightmaps.
@@ -522,7 +468,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
                                             
     # Copy texture definitions to the output file.
     progress(progbase,"Writing Materials")
-    povrayWriteCamera(outputFileDescriptor)
+    povrayWriteCamera(settings['scene'], outputFileDescriptor)
     povrayWriteLights(settings['scene'], outputFileDescriptor)
     try:
         staticContentFileDescriptor = open(staticFile, 'r')
@@ -571,21 +517,10 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     writeItemsMaterials(outputFileDescriptor, stuffs, settings, outputDirectory)
     outputFileDescriptor.close()
 
-    progress(1,"Writing Scene file")
-    hSceneOut = open(outputSceneFile, 'w')
-    hSceneOut.write('#include "%s.inc"\n\n' % settings['name'])
-    for stuff in stuffs:
-        hSceneOut.write(
-            "object { \n" +
-            "   %s_Mesh2Object \n" % stuff.name +
-            "   rotate <0, 0, MakeHuman_RotateZ> \n" +
-            "   rotate <0, MakeHuman_RotateY, 0> \n" +
-            "   rotate <MakeHuman_RotateX, 0, 0> \n" +
-            "   translate <MakeHuman_TranslateX, MakeHuman_TranslateY, MakeHuman_TranslateZ> \n" +
-            "   material {%s_Material} \n}\n" % stuff.name)
-    hSceneOut.close()
+    progress(0.95,"Writing Scene file")
+    povrayWriteScene(stuffs, settings['scene'], outputSceneFile)
 
-    progress(1,"Writing textures")
+    progress(0.95,"Writing textures")
     for stuff in stuffs:
         if stuff.textureImage:
             stuff.textureImage.save(os.path.join(outputDirectory,
@@ -599,7 +534,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
                                                   "%s_bump.%s" % (stuff.name,
                                                                   (stuff.bump[1].split("."))[1])))
             
-    progress(0,"Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
+    progress(1,"Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
 
 def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
     for stuff in stuffs[1:]:
@@ -649,7 +584,6 @@ def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
                                 "            phong 0 phong_size 0 \n" +
                                 "            ambient 0.1\n" +
                                 "            diffuse 0.9\n" +
-                                "            reflection {0}\n" +
                                 "            conserve_energy\n" +
                                 "        }\n" +
                                 "    }\n\n" +
@@ -657,8 +591,7 @@ def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
                                 "    texture {\n" +
                                 "        uv_mapping\n" +
                                 "        %s_Texture\n" % stuff.name +
-                                "    }\n"
-                                "    interior {ior 1.33}\n" +
+                                "    }\n" +
                                 "}\n\n" +
                                 "#end\n")
 
@@ -907,4 +840,8 @@ def getHumanName():
         return 'Untitled'
     else:
         return (os.path.basename(sav).split("."))[0]
+
+def invx(pos):
+    return (-pos[0],pos[1],pos[2])
+
     
