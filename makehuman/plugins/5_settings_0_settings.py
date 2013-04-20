@@ -115,6 +115,10 @@ class SettingsTaskView(gui3d.TaskView):
         libraryBox = self.addLeftWidget(gui.GroupBox('Library behavior'))
         self.jumpToModelling = libraryBox.addWidget(gui.CheckBox("To Modelling after choice",
             gui3d.app.settings.get('jumpToModelling', True)))
+
+        preloadBox = self.addLeftWidget(gui.GroupBox('Preloading'))
+        self.preload = preloadBox.addWidget(gui.CheckBox("Preload macro targets",
+            gui3d.app.settings.get('preloadTargets', False)))
         
         themes = []
         themesBox = self.themesBox = self.addRightWidget(gui.GroupBox('Theme'))
@@ -202,7 +206,11 @@ class SettingsTaskView(gui3d.TaskView):
         @self.jumpToModelling.mhEvent
         def onClicked(event):
             gui3d.app.settings['jumpToModelling'] = self.jumpToModelling.selected
-                
+
+        @self.preload.mhEvent
+        def onClicked(event):
+            gui3d.app.settings['preloadTargets'] = self.preload.selected
+
     def setShader(self, path):
             gui3d.app.selectedHuman.mesh.setShader(path)
     

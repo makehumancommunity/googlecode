@@ -168,7 +168,8 @@ class MHApplication(gui3d.Application, mh.Application):
             'excludePlugins':[],
             'rtl': False,
             'sliderImages': False,
-            'guiTheme': 'default'
+            'guiTheme': 'default',
+            'preloadTargets': False
         }
 
         self.fonts = {}
@@ -424,6 +425,14 @@ class MHApplication(gui3d.Application, mh.Application):
         self.progress(1.0)
         # self.progressBar.hide()
 
+    def loadMacroTargets(self):
+        keys = ('macrodetails', 'universal', 'stature')
+        import targets
+        for i in xrange(3):
+            key = keys[:i+1]
+            for target in targets.getTargets().groups[key]:
+                algos3d.getTarget(self.selectedHuman.meshData, target.path)
+
     def loadFinish(self):
 
         self.selectedHuman.applyAllTargets(gui3d.app.progress)
@@ -467,6 +476,10 @@ class MHApplication(gui3d.Application, mh.Application):
 
         log.message('Applying targets')
         self.loadFinish()
+
+        if self.settings.get('preloadTargets', False):
+            log.message('Loading macro targets')
+            self.loadMacroTargets()
 
         log.message('Loading done')
         log.message('')
