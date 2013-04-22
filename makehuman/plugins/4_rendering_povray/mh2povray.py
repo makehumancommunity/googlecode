@@ -145,15 +145,16 @@ class POVRender(threading.Thread):
         self.args = args
         self.cwd = os.path.dirname(path)
         self.path = os.path.normpath(path)
+        self.viewer = gui3d.app.getCategory('Rendering').getTaskByName('Viewer')
+        mh.changeTask('Rendering', 'Viewer')
+        gui3d.app.statusPersist('POV - Ray is currently rendering.')
         threading.Thread.__init__(self)
         self.start()
 
     def run(self):
         subprocess.call(self.args, cwd = self.cwd)
-        task = gui3d.app.getCategory('Rendering').getTaskByName('Viewer')
-        task.setImage(self.path)
-        log.debug("Going to open image viewer")
-        gui3d.app.changeTask('Rendering', 'Viewer')
+        mh.callAsync(self.viewer.setImage, self.path)
+        mh.callAsync(gui3d.app.statusPersist, 'Rendering complete')
         
 
 def povrayExportArray(obj, camera, resolution, path, settings):
