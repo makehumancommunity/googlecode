@@ -27,7 +27,7 @@ import os
 
 # We need this for rendering
 
-import mh2mitsuba
+from .import mh2mitsuba
 
 # We need this for gui controls
 

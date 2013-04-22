@@ -31,7 +31,7 @@ import os
 import string
 import shutil
 import subprocess
-import mh2mitsuba_ini
+from . import mh2mitsuba_ini
 import random
 import mh
 from os.path import basename
