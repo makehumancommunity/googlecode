@@ -1423,3 +1423,12 @@ class TableView(QtGui.QTableWidget, Widget):
 
     def getItemData(self, row, col):
         return self.item(row, col).getUserData()
+
+class ImageView(QtGui.QLabel, Widget):
+    def __init__(self):
+        super(ImageView, self).__init__()
+        Widget.__init__(self)
+        self.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+
+    def setImage(self, path):
+        self.setPixmap(QtGui.QPixmap(path))
