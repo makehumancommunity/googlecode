@@ -98,6 +98,7 @@ class MitsubaTaskView(gui3d.TaskView):
 
 
 def load(app):
+    return  # Plugin disabled until we find a new maintainer
     category = app.getCategory('Rendering')
     taskview = category.addTask(MitsubaTaskView(category))
 

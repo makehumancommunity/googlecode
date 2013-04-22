@@ -137,6 +137,7 @@ class AqsisTaskView(gui3d.TaskView):
         webbrowser.open('http://www.aqsis.org/')
 
 def load(app):
+    return  # Plugin disabled until we find a new maintainer
     category = app.getCategory('Rendering')
     taskview = category.addTask(AqsisTaskView(category))
 
