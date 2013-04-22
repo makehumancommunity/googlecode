@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
+""" 
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Glynn Clements
+**Authors:**           ...none yet
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
@@ -19,33 +19,26 @@
 Abstract
 --------
 
-TODO
+Scene library.
 """
 
-import os
-import numpy as np
-
-import gui3d
-import mh
 import gui
-import algos3d
-from core import G
-import log
+import gui3d
 
-class ViewerTaskView(gui3d.TaskView):
+import os
+import scene
+
+class SceneLibraryTaskView(gui3d.TaskView):
     def __init__(self, category):
-        super(ViewerTaskView, self).__init__(category, 'Viewer')
-        self.image = self.addTopWidget(gui.ImageView())
+        gui3d.TaskView.__init__(self, category, 'Scene')
+        self.scene = scene.Scene()
 
-    def setImage(self, path):
-        self.image.setImage(path)
-
+                
 def load(app):
     category = app.getCategory('Rendering')
-    taskview = ViewerTaskView(category)
-    taskview.sortOrder = 20.0
+    taskview = SceneLibraryTaskView(category)
+    taskview.sortOrder = 1.0
     category.addTask(taskview)
 
 def unload(app):
     pass
-

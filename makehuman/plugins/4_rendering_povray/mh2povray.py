@@ -150,15 +150,11 @@ class POVRender(threading.Thread):
 
     def run(self):
         subprocess.call(self.args, cwd = self.cwd)
-        # Try to open an image viewer
-        if os.name == 'nt': # Windows
-            os.startfile (self.path)
-        elif sys.platform == 'darwin': # Mac
-            import findertools
-            findertools.launch(self.path)
-        elif os.name == 'posix': # Linux
-            subprocess.call(['xdg-open', self.path])
-
+        task = gui3d.app.getCategory('Rendering').getTaskByName('Viewer')
+        task.setImage(self.path)
+        log.debug("Going to open image viewer")
+        gui3d.app.changeTask('Rendering', 'Viewer')
+        
 
 def povrayExportArray(obj, camera, resolution, path, settings):
     """
@@ -318,11 +314,11 @@ def povrayExportArray(obj, camera, resolution, path, settings):
     sceneFileDescriptor.close()
     log.message('Sample POV-Ray scene file generated.')
 
-def povrayWriteCamera(scene, hfile):
+def povrayWriteCamera(camera, hfile):
     hfile.write("camera {\n  perspective\n")
-    hfile.write("  location <%f,%f,%f>\n" % invx(scene.camera.eye))
-    hfile.write("  look_at <%f,%f,%f>\n" % invx(scene.camera.focus))
-    hfile.write("  angle %f\n}\n\n" % scene.camera.fovAngle)
+    hfile.write("  location <%f,%f,%f>\n" % invx(camera.eye))
+    hfile.write("  look_at <%f,%f,%f>\n" % invx(camera.focus))
+    hfile.write("  angle %f\n}\n\n" % camera.fovAngle)
 
 def povrayWriteLights(scene, hfile):
     hflig = open('data/povray/lights.inc','r')
@@ -336,10 +332,10 @@ def povrayWriteLights(scene, hfile):
         hfile.write(liglines)
     hflig.close()
 
-def povrayWriteScene(stuffs, scene, file):
+def povrayWriteScene(stuffs, file):
     hfile = open(file, 'w')
     hfile.write('#include "%s.inc"\n\n' % stuffs[0].name)
-    humanRot = scene.human.rotation
+    humanRot = gui3d.app.selectedHuman.getRotation()
     for stuff in stuffs:
         hfile.write(
             "object { \n" +
@@ -347,7 +343,7 @@ def povrayWriteScene(stuffs, scene, file):
             "   rotate <0,0,%f> \n" % humanRot[2] +
             "   rotate <0,%f,0> \n" % -humanRot[1] +
             "   rotate <%f,0,0> \n" % humanRot[0] +
-            "   translate <%f,%f,%f> \n" % invx(scene.human.position) +
+            "   translate <%f,%f,%f> \n" % invx(gui3d.app.selectedHuman.getPosition()) +
             "   material {%s_Material} \n}\n" % stuff.name)
     hfile.close()
 
@@ -468,7 +464,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
                                             
     # Copy texture definitions to the output file.
     progress(progbase,"Writing Materials")
-    povrayWriteCamera(settings['scene'], outputFileDescriptor)
+    povrayWriteCamera(gui3d.app.modelCamera, outputFileDescriptor)
     povrayWriteLights(settings['scene'], outputFileDescriptor)
     try:
         staticContentFileDescriptor = open(staticFile, 'r')
@@ -508,7 +504,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
                                                 'wrinkles 0.75*%s scale 0.0006' % str(settings['wrinkles']))
     staticContentLines = string.replace(staticContentLines, '%%name%%', stuffs[0].name)    
     staticContentLines = string.replace(staticContentLines, '%%ambience%%',
-                                        'rgb <%f,%f,%f>' % settings['scene'].ambience)
+                                        'rgb <%f,%f,%f>' % settings['scene'].environment.ambience)
     outputFileDescriptor.write(staticContentLines)
     outputFileDescriptor.write('\n')
     staticContentFileDescriptor.close()
@@ -518,7 +514,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     outputFileDescriptor.close()
 
     progress(0.95,"Writing Scene file")
-    povrayWriteScene(stuffs, settings['scene'], outputSceneFile)
+    povrayWriteScene(stuffs, outputSceneFile)
 
     progress(0.95,"Writing textures")
     for stuff in stuffs:

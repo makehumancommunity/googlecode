@@ -74,8 +74,14 @@ class PovrayTaskView(gui3d.TaskView):
         self.useSSS = optionsBox.addWidget(gui.CheckBox('Use S.S. Scattering', True))
         self.SSSA = optionsBox.addWidget(gui.Slider(value=0.7, label="SSS Amount"))
 
+        settingsBox = self.addLeftWidget(gui.GroupBox('Settings'))
+        settingsBox.addWidget(gui.TextView("Resolution"))
+        self.resBox = settingsBox.addWidget(gui.TextEdit(
+            "x".join([str(self.resWidth), str(self.resHeight)])))
+        self.AA = settingsBox.addWidget(gui.Slider(value=0.5, label="AntiAliasing"))
+
         materialsBox = self.addRightWidget(gui.GroupBox('Materials'))
-        self.skinoil = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin oil"))
+        self.skinoil = materialsBox.addWidget(gui.Slider(value=0.45, label="Skin oil"))
         self.moist = materialsBox.addWidget(gui.Slider(value=0.7, label="Moisturization"))
         self.tension = materialsBox.addWidget(gui.Slider(value=0.7, label="Skin tension"))
         self.grain = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin graininess"))
@@ -99,6 +105,16 @@ class PovrayTaskView(gui3d.TaskView):
         #self.exportandrenderButton = optionsBox.addWidget(gui.RadioButton(action , 'Export and render'))
         self.renderButton = optionsBox.addWidget(gui.Button('Render'))
         
+        @self.resBox.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                res = [int(x) for x in value.split("x")]
+                self.resWidth = res[0]
+                self.resHeight = res[1]
+            except: # The user hasn't typed the value correctly yet.
+                pass
+
         #        
         @self.renderButton.mhEvent
         def onClicked(event):            
@@ -119,13 +135,14 @@ class PovrayTaskView(gui3d.TaskView):
             if sys.platform == 'linux2':
                 binary = 'linux'
             #
+            from scene import Scene
             mh2povray.povrayExport(gui3d.app,
                                    {'source':'gui',         # 'ini' if self.iniButton.selected else 'gui',
                                     'format':'mesh2',       # 'array' if self.arrayButton.selected else 'mesh2',
                                     'action':'render',      # 'export' if self.exportButton.selected else 'render',
-                                    'scene': gui3d.app.categories['Rendering'].tasksByName['Scene'].scene,
+                                    'scene': gui3d.app.getCategory('Rendering').getTaskByName('Scene').scene,
                                     'subdivide':True if self.doSubdivide.selected else False,
-                                    'AA': 0.5-0.49*gui3d.app.settings.get('rendering_AA', 0.5),
+                                    'AA': 0.5-0.49*self.AA.getValue(),
                                     'bintype': binary,
                                     'SSS': True if self.useSSS.selected else False,
                                     'SSSA': self.SSSA.getValue(), # blur strength
@@ -138,21 +155,32 @@ class PovrayTaskView(gui3d.TaskView):
                                     'hspecA': 0.1*(10**(2*self.hspecA.getValue())), # exponential slider
                                     'hairThin': 5**(2*(1-self.hairThick.getValue()))}) # exponential slider 
 
+    @property
+    def resWidth(self):
+        return gui3d.app.settings.get('rendering_width', 800)
+
+    @property
+    def resHeight(self):
+        return gui3d.app.settings.get('rendering_height', 600)
+
+    @resWidth.setter
+    def resWidth(self, value = None):
+        gui3d.app.settings['rendering_width'] = 0 if not value else int(value)
+
+    @resHeight.setter
+    def resHeight(self, value = None):
+        gui3d.app.settings['rendering_height'] = 0 if not value else int(value)
+
     def onShow(self, event):
         self.renderButton.setFocus()
         gui3d.TaskView.onShow(self, event)
 
-# This method is called when the plugin is loaded into makehuman
-# The app reference is passed so that a plugin can attach a new category, task, or other GUI elements
-
 
 def load(app):
     category = app.getCategory('Rendering')
-    taskview = category.addTask(PovrayTaskView(category))
-
-# This method is called when the plugin is unloaded from makehuman
-# At the moment this is not used, but in the future it will remove the added GUI elements
-
+    taskview = PovrayTaskView(category)
+    taskview.sortOrder = 2.0
+    category.addTask(taskview)
 
 def unload(app):
     pass
