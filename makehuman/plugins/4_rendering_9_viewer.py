@@ -19,25 +19,39 @@
 Abstract
 --------
 
-TODO
+Image viewer plugin .
+Useful for showing the rendering results.
+It can also be used to view other MH related image files,
+like textures, bump maps etc.
 """
 
 import os
-import numpy as np
+import shutil
 
+import gui
 import gui3d
 import mh
-import gui
-import algos3d
-from core import G
 import log
 
 class ViewerTaskView(gui3d.TaskView):
     def __init__(self, category):
         super(ViewerTaskView, self).__init__(category, 'Viewer')
         self.image = self.addTopWidget(gui.ImageView())
+        self.path = None
 
+        tools = self.addLeftWidget(gui.GroupBox('Tools'))
+        self.saveBtn = tools.addWidget(gui.Button('Save As...'))
+
+        @self.saveBtn.mhEvent
+        def onClicked(event):
+            if not self.path:
+                return
+            filename = mh.getSaveFileName(self.path, 'All files (*.*)')
+            if filename:
+                shutil.copy(self.path, filename)
+                
     def setImage(self, path):
+        self.path = path
         self.image.setImage(path)
 
 def load(app):

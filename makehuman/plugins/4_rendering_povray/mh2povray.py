@@ -153,8 +153,8 @@ class POVRender(threading.Thread):
 
     def run(self):
         subprocess.call(self.args, cwd = self.cwd)
-        mh.callAsync(self.viewer.setImage, self.path)
-        mh.callAsync(gui3d.app.statusPersist, 'Rendering complete')
+        mh.callAsyncThread(self.viewer.setImage, self.path)
+        mh.callAsyncThread(gui3d.app.statusPersist, 'Rendering complete')
         
 
 def povrayExportArray(obj, camera, resolution, path, settings):
