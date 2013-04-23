@@ -693,7 +693,7 @@ def fitTarget(context):
         else:
             raise NameError("Object %s has no associated mhclo file. Cannot fit" % ob.name)
             return
-    if False and ob.MhAffectOnly != 'All':
+    if ob.MhAffectOnly != 'All':
         first,last = settings.affectedVerts[ob.MhAffectOnly]
         mh.proxy.update(ob.active_shape_key.data, ob.active_shape_key.data, skipBefore=first, skipAfter=last)
     else:
