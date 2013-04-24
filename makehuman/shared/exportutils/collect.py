@@ -204,7 +204,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
 
     # Apply subtextures.
     stuffs[0].textureImage = mh.Image(os.path.join(stuffs[0].texture[0], stuffs[0].texture[1]))
-    mhstx = mh.G.app.categories['Textures'].tasksByName['Texture'].eyeTexture
+    mhstx = mh.G.app.getCategory('Textures').getTaskByName('Texture').eyeTexture
     if mhstx:
         stuffs[0].textureImage = subtextures.combine(stuffs[0].textureImage, mhstx)
     

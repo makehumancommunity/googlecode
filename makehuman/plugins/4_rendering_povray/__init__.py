@@ -85,9 +85,10 @@ class PovrayTaskView(gui3d.TaskView):
         self.moist = materialsBox.addWidget(gui.Slider(value=0.7, label="Moisturization"))
         self.tension = materialsBox.addWidget(gui.Slider(value=0.7, label="Skin tension"))
         self.grain = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin graininess"))
-        self.hairSpec = materialsBox.addWidget(gui.CheckBox('Hair shine', False))
-        self.hspecA = materialsBox.addWidget(gui.Slider(value=0.5, label="Shine strength"))
-        self.hairThick = materialsBox.addWidget(gui.Slider(value=0.67, label="Hair thickness"))
+        self.hairShine = materialsBox.addWidget(gui.CheckBox('Hair shine', False))
+        self.hairSpec = materialsBox.addWidget(gui.Slider(value=0.75, label="Shine strength"))
+        self.hairRough = materialsBox.addWidget(gui.Slider(value=0.4, label="Shine coverage"))
+        self.hairHard = materialsBox.addWidget(gui.Slider(value=0.5, label="Hair hardness"))
 
         # box
         #optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
@@ -151,9 +152,10 @@ class PovrayTaskView(gui3d.TaskView):
                                     'rough':0.001 *(10**(2*(1-self.tension.getValue()))), # exponential slider
                                     'wrinkles': 0.5*self.grain.getValue(),
                                     'usebump': True if self.usebump.selected else False,
-                                    'hairSpec':True if self.hairSpec.selected else False,
-                                    'hspecA': 0.1*(10**(2*self.hspecA.getValue())), # exponential slider
-                                    'hairThin': 5**(2*(1-self.hairThick.getValue()))}) # exponential slider 
+                                    'hairShine':True if self.hairShine.selected else False,
+                                    'hairSpec': 0.7*self.hairSpec.getValue(),
+                                    'hairRough': (0.7*self.hairRough.getValue())**2,
+                                    'hairHard': 0.01*10**(4*self.hairHard.getValue())}) # exponential slider 
 
     @property
     def resWidth(self):

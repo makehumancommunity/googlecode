@@ -48,7 +48,6 @@ import mh
 import log
 import image_operations as imgop
 import gui3d
-import mh2proxy
 from exportutils import collect
 
 def downloadPovRay():
@@ -147,14 +146,14 @@ class POVRender(threading.Thread):
         self.path = os.path.normpath(path)
         self.viewer = gui3d.app.getCategory('Rendering').getTaskByName('Viewer')
         mh.changeTask('Rendering', 'Viewer')
-        gui3d.app.statusPersist('POV - Ray is currently rendering.')
+        gui3d.app.status('POV - Ray is currently rendering.')
         threading.Thread.__init__(self)
         self.start()
 
     def run(self):
         subprocess.call(self.args, cwd = self.cwd)
         mh.callAsyncThread(self.viewer.setImage, self.path)
-        mh.callAsyncThread(gui3d.app.statusPersist, 'Rendering complete')
+        mh.callAsyncThread(gui3d.app.status, 'Rendering complete')
         
 
 def povrayExportArray(obj, camera, resolution, path, settings):
@@ -535,31 +534,42 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
 
 def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
     for stuff in stuffs[1:]:
-        proxy = stuff.proxy
-        if proxy.type == 'Hair':
-            texdata = getChannelData(stuff.texture)                        
-            if settings['hairSpec'] == True:
+        texdata = getChannelData(stuff.texture)
+        bumpdata = getChannelData(stuff.bump)
+        if stuff.type == 'Hair':
+            if settings['hairShine']:
                 # Export transparency map.
                 hairtex = mh.Image(path = os.path.join(stuff.texture[0],stuff.texture[1]))
                 hairalpha = imgop.getAlpha(hairtex)
-                hairalpha.save(path = os.path.join(outDir,"%s_TPOV.png" % stuff.name))
-                haircodeFD = open ("data/povray/hair_2.inc",'r')
-                haircodeLines = haircodeFD.read()
-                haircodeLines = string.replace (haircodeLines,"%%spec%%",str(settings['hspecA']))
-                haircodeLines = string.replace (haircodeLines,"%%thin%%",str(settings['hairThin']))
+                hairalpha.save(path = os.path.join(outDir,"%s_alpha.png" % stuff.name))
+                hhairfile = open ("data/povray/hair_2.inc",'r')
+                hairlines = hhairfile.read()
+                hairlines = hairlines.replace ("%%spec%%",str(settings['hairSpec']))
+                hairlines = hairlines.replace ("%%hard%%",str(settings['hairHard']))
+                hairlines = hairlines.replace ("%%rough%%",str(settings['hairRough']))
             else:
-                haircodeFD = open ("data/povray/hair_0.inc",'r')
-                haircodeLines = haircodeFD.read()
-            haircodeLines = string.replace (haircodeLines,"%%name%%",stuff.name)
-            haircodeLines = string.replace (haircodeLines,"%%type%%",texdata[1])
-            haircodeLines = string.replace (haircodeLines,"%%ext%%",(stuff.texture[1].split("."))[1])
-            outputFileDescriptor.write(haircodeLines)
-            haircodeFD.close()
+                hhairfile = open ("data/povray/hair_0.inc",'r')
+                hairlines = hhairfile.read()
+            hhairfile.close()
+            hairlines = hairlines.replace (
+                "%%ambience%%", 'rgb <%f,%f,%f>' %
+                settings['scene'].environment.ambience)
+            hairlines = hairlines.replace ("%%name%%",stuff.name)
+            hairlines = hairlines.replace (
+                "%%texture%%", '%s "%s_texture.%s"' %
+                (texdata[1], stuff.name, stuff.texture[1].split(".")[1]))
+            if bumpdata:
+                hairlines = hairlines.replace (
+                    "%%bumpmap%%", '%s "%s_bump.%s"' %
+                    (bumpdata[1], stuff.name, stuff.bump[1].split(".")[1]))
+            elif settings['hairSpec']:
+                hairlines = hairlines.replace (
+                    "%%bumpmap%%", 'png "%s_alpha.png"' % stuff.name)
+            outputFileDescriptor.write(hairlines)
         else:            
             outputFileDescriptor.write("#ifndef (%s_Material)\n" % stuff.name +
                                        "#declare %s_Texture =\n" % stuff.name +
-                                       "    texture {\n")
-            texdata = getChannelData(stuff.texture)                        
+                                       "    texture {\n")                        
             if texdata:                
                 outputFileDescriptor.write(
                         '        pigment { image_map {%s "%s_texture.%s" interpolate 2} }\n' % (
@@ -567,11 +577,10 @@ def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
             else:
                 outputFileDescriptor.write(
                         '        pigment { rgb <1,1,1> }\n')
-            bumpdata = getChannelData(proxy.bump)
             if bumpdata:
                outputFileDescriptor.write(
                         '        normal { bump_map {%s "%s_bump.%s" interpolate 2} }\n' % (
-                            bumpdata[1], stuff.name, (proxy.bump[1].split("."))[1]))
+                            bumpdata[1], stuff.name, (stuff.bump[1].split("."))[1]))
             else:
                 outputFileDescriptor.write(
                         '        normal { wrinkles 0.2 scale 0.0001 }\n')
