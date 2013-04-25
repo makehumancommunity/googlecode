@@ -59,7 +59,7 @@ class HairTaskView(gui3d.TaskView):
         #self.filechooser = self.addTopWidget(fc.FileChooser([hairDir , 'data/hairstyles'], 'mhclo', 'thumb', 'data/hairstyles/notfound.thumb'))
         #self.addLeftWidget(self.filechooser.sortBox)
 
-        self.filechooser = self.addRightWidget(fc.ListFileChooser([hairDir , 'data/hairstyles'], 'mhclo'))
+        self.filechooser = self.addRightWidget(fc.ListFileChooser([hairDir , 'data/hairstyles'], 'mhclo', 'Hair'))
         #self.filechooser.setMaximumWidth(200)
         #self.filechooser.resize(200,600)
         self.filechooser.refresh()
@@ -78,8 +78,6 @@ class HairTaskView(gui3d.TaskView):
                 self,
                 oldFile,
                 filename))
-            if gui3d.app.settings.get('jumpToModelling', True):
-                mh.changeCategory('Modelling')
 
     def setHair(self, human, mhclo):
 
