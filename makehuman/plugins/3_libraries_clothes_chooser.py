@@ -8,7 +8,7 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Marc Flerackers
+**Authors:**           Marc Flerackers, Jonas Hauquier, Thomas Larsson
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
@@ -47,18 +47,23 @@ KnownTags = [
 ]
 
 class ClothesAction(gui3d.Action):
-    def __init__(self, name, human, library, mhcloFile):
+    def __init__(self, name, human, library, mhcloFile, add):
         super(ClothesAction, self).__init__(name)
         self.human = human
         self.library = library
         self.mhclo = mhcloFile
+        self.add = add
 
     def do(self):
-        self.library.setClothes(self.human, self.mhclo)
+        if not self.library.highlightedPiece or (self.library.highlightedPiece and self.library.highlightedPiece.file != self.mhclo):
+            self.library.setClothes(self.human, self.mhclo)
+        self.library.cache[self.mhclo].toggleEnabled = self.add
         return True
 
     def undo(self):
-        self.library.setClothes(self.human, self.mhclo)
+        if not self.library.highlightedPiece or (self.library.highlightedPiece and self.library.highlightedPiece.file != self.mhclo):
+            self.library.setClothes(self.human, self.mhclo)
+        self.library.cache[self.mhclo].toggleEnabled = not self.add
         return True
 
 #
@@ -74,31 +79,61 @@ class ClothesTaskView(gui3d.TaskView):
 
         self.taggedClothes = {}
         self.clothesList = []
+        self.highlightedPiece = None
+
+        self.cache = {}
+        self.meshCache = {}
+        self.fcLoaded = False
         
         gui3d.TaskView.__init__(self, category, 'Clothes')
         if not os.path.exists(self.userClothes):
             os.makedirs(self.userClothes)
-        self.filechooser = self.addTopWidget(fc.FileChooser([self.systemClothes, self.userClothes], 'mhclo', 'thumb', 'data/clothes/notfound.thumb'))
-        self.addLeftWidget(self.filechooser.sortBox)
-        self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
+        #self.filechooser = self.addTopWidget(fc.FileChooser([self.systemClothes, self.userClothes], 'mhclo', 'thumb', 'data/clothes/notfound.thumb'))
+        #self.addLeftWidget(self.filechooser.sortBox)
+        self.filechooser = self.addRightWidget(fc.ListFileChooser([self.systemClothes, self.userClothes], 'mhclo', 'Clothes', True))
+        #self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
         self.mediaSync = None
 
         self.originalHumanMask = gui3d.app.selectedHuman.meshData.getFaceMask().copy()
 
         @self.filechooser.mhEvent
+        def onFileHighlighted(filename):
+            if self.highlightedPiece:
+                if self.highlightedPiece and self.highlightedPiece.file == filename:
+                    return
+                if not self.highlightedPiece.toggleEnabled:
+                    # Remove previously highlighted clothes
+                    self.setClothes(gui3d.app.selectedHuman, self.highlightedPiece.file)
+
+            if filename in self.cache and self.cache[filename].toggleEnabled:
+                self.highlightedPiece = self.cache[filename]
+                return
+
+            # Add highlighted clothes
+            self.setClothes(gui3d.app.selectedHuman, filename)
+            self.highlightedPiece = self.cache[filename]
+
+        @self.filechooser.mhEvent
         def onFileSelected(filename):
-            gui3d.app.do(ClothesAction("Change clothing piece",
+            gui3d.app.do(ClothesAction("Add clothing piece",
                 gui3d.app.selectedHuman,
                 self,
-                filename))
-            if gui3d.app.settings.get('jumpToModelling', True):
-                mh.changeCategory('Modelling')
+                filename,
+                True))
 
-        @self.update.mhEvent
-        def onClicked(event):
-            self.syncMedia()
+        @self.filechooser.mhEvent
+        def onFileDeselected(filename):
+            gui3d.app.do(ClothesAction("Remove clothing piece",
+                gui3d.app.selectedHuman,
+                self,
+                filename,
+                False))
 
-        self.optionsBox = self.addRightWidget(gui.GroupBox('Options'))
+        #@self.update.mhEvent
+        #def onClicked(event):
+        #    self.syncMedia()
+
+        self.optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
         self.faceHidingTggl = self.optionsBox.addWidget(gui.ToggleButton("Hide faces under clothes"))
         @self.faceHidingTggl.mhEvent
         def onClicked(event):
@@ -116,8 +151,14 @@ class ClothesTaskView(gui3d.TaskView):
             self.updateFaceMasks(self.faceHidingTggl.selected)
             return
 
-        proxy = mh2proxy.readProxyFile(human.meshData, filepath)
-        proxy.type = 'Clothes'
+        if filepath not in self.cache:
+            proxy = mh2proxy.readProxyFile(human.meshData, filepath)
+            proxy.type = 'Clothes'
+            self.cache[filepath] = proxy
+            proxy.toggleEnabled = False
+        else:
+            proxy = self.cache[filepath]
+
         if not proxy:
             return
 
@@ -184,7 +225,11 @@ class ClothesTaskView(gui3d.TaskView):
             log.message("Removed clothing %s %s", proxy.name, uuid)
             return
 
-        mesh = files3d.loadMesh(obj)
+        if obj not in self.meshCache:
+            mesh = files3d.loadMesh(obj)
+            self.meshCache[obj] = mesh
+        else:
+            mesh = self.meshCache[obj]
         if not mesh:
             log.error("Could not load mesh for clothing object %s", proxy.name)
             return
@@ -335,16 +380,26 @@ class ClothesTaskView(gui3d.TaskView):
 
     def onShow(self, event):
         # When the task gets shown, set the focus to the file chooser
-        gui3d.app.selectedHuman.hide()
         gui3d.TaskView.onShow(self, event)
+        if not self.fcLoaded:
+            self.filechooser.refresh()
+            self.fcLoaded = True
         self.filechooser.setFocus()
+        highlighted = self.filechooser.getHighlightedItem()
+        if highlighted:
+            if highlighted not in self.cache or not self.cache[highlighted].toggleEnabled:
+                self.setClothes(gui3d.app.selectedHuman, highlighted)
+            self.highlightedPiece = self.cache[highlighted]
         
         #if not os.path.isdir(self.userClothes) or not len([filename for filename in os.listdir(self.userClothes) if filename.lower().endswith('mhclo')]):    
         #    gui3d.app.prompt('No user clothes found', 'You don\'t seem to have any user clothes, download them from the makehuman media repository?\nNote: this can take some time depending on your connection speed.', 'Yes', 'No', self.syncMedia)
 
     def onHide(self, event):
-        gui3d.app.selectedHuman.show()
         gui3d.TaskView.onHide(self, event)
+        if self.highlightedPiece and not self.highlightedPiece.toggleEnabled:
+            # Remove highlighted clothes
+            self.setClothes(gui3d.app.selectedHuman, self.highlightedPiece.file)
+        self.highlightedPiece = None
         
     def onHumanChanging(self, event):
         
@@ -358,6 +413,10 @@ class ClothesTaskView(gui3d.TaskView):
                 del human.clothesProxies[uuid]
             self.clothesList = []
             human.activeClothing = None
+            self.filechooser.deselectAll()
+            self.highlightedPiece = None
+            for _,proxy in self.cache.items():
+                proxy.toggleEnabled = False
             self.updateFaceMasks(self.faceHidingTggl.selected)
             # self.clothesButton.setTexture('data/clothes/clear.png')
 
