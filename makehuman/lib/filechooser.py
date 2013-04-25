@@ -400,6 +400,9 @@ class FileChooser(FileChooserBase):
         locationLbl = "  |  ".join(self.paths)
         self.location.setText(os.path.abspath(locationLbl))
 
+    def onShow(self, event):
+        self.refresh()
+
 # TODO IconListFileChooser (with FileChooserRectangles as items)
 
 # TODO allow setting a clear or none item at the top
