@@ -163,7 +163,9 @@ class ClothesTaskView(gui3d.TaskView):
             return
 
         uuid = proxy.getUuid()
-        
+
+        # TODO costumes should go in a separate library
+        '''
         # For loading costumes (sets of individual clothes)
         if proxy.clothings:
             t = 0
@@ -204,7 +206,8 @@ class ClothesTaskView(gui3d.TaskView):
                 else:
                     clo.mesh.setTransparentPrimitives(0)
             return
-            
+        '''
+
         #folder = os.path.dirname(filepath)
         (folder, name) = proxy.obj_file
         obj = os.path.join(folder, name)
