@@ -191,7 +191,13 @@ class GroupBox(QtGui.QGroupBox, Widget):
 
     @property
     def children(self):
-        return list(self.layout.itemAt(i).widget() for i in xrange(self.layout.count()))
+        return list(self.layout.itemAt(i).widget() for i in xrange(self.count()))
+
+    def count(self):
+        return self.layout.count()
+
+    def itemAt(self, idx):
+        return self.layout.itemAt(idx)
 
 # PyQt doesn't implement QProxyStyle so we have to do all this ...
 
@@ -528,15 +534,44 @@ class RadioButton(QtGui.QRadioButton, ButtonBase):
                 return radio
 
 class ListItem(QtGui.QListWidgetItem):
+    def __init__(self, label):
+        super(ListItem, self).__init__(getLanguageString(label))
+        self.__hasCheckbox = False
+
+    @property
+    def hasCheckbox(self):
+        return self.__hasCheckbox
+
     def setUserData(self, data):
         self.setData(QtCore.Qt.UserRole, data)
 
     def getUserData(self):
         return self.data(QtCore.Qt.UserRole).toPyObject()
 
+    def setText(self, text):
+        text = getLanguageString(text)
+        super(ListItem, self).setText(text)
+
     @property
     def text(self):
         return unicode(super(ListItem, self).text())
+
+    def enableCheckbox(self):
+        self.__hasCheckbox = True
+        self.setFlags(self.flags() | QtCore.Qt.ItemIsUserCheckable)
+        self.setCheckState(QtCore.Qt.Unchecked)
+        self.checkedState = False
+
+    def _clicked(self, owner):
+        if self.hasCheckbox:
+            if self.checkState() != self.checkedState:
+                self.checkedState = self.checkState()
+                if self.checkState():
+                    owner.callEvent('onItemChecked', self)
+                else:
+                    owner.callEvent('onItemUnchecked', self)
+                return True
+        return False
 
 class ListView(QtGui.QListWidget, Widget):
     def __init__(self):
@@ -549,6 +584,8 @@ class ListView(QtGui.QListWidget, Widget):
         self.callEvent('onActivate', item)
 
     def _clicked(self, item):
+        if item._clicked(self):
+            return
         self.callEvent('onClicked', item)
 
     def onActivate(self, event):
@@ -569,14 +606,21 @@ class ListView(QtGui.QListWidget, Widget):
             cls._brushes[color] = QtGui.QBrush(QtGui.QColor(color))
         return cls._brushes[color]
 
-    def addItem(self, text, color = None, data = None):
+    def addItem(self, text, color = None, data = None, checkbox = False):
         item = ListItem(self)
         item.setText(text)
         if color is not None:
             item.setForeground(self.getBrush(color))
         if data is not None:
             item.setUserData(data)
+        if checkbox:
+            item.enableCheckbox()
         super(ListView, self).addItem(item)
+        return item
+
+    def addItemObject(self, item):
+        super(ListView, self).addItem(item)
+        return item
 
     def getSelectedItem(self):
         items = self.selectedItems()
@@ -597,6 +641,15 @@ class ListView(QtGui.QListWidget, Widget):
         self.setSelectionMode(QtGui.QAbstractItemView.ContiguousSelection
                               if allow else
                               QtGui.QAbstractItemView.SingleSelection)
+
+    def getItems(self):
+        return [ self.item(row) for row in xrange(self.count()) ]
+
+    def clearSelection(self):
+        super(ListView, self).clearSelection()
+        for item in self.getItems():
+            item.setCheckState(False)
+            
 
 class TextView(QtGui.QLabel, Widget):
     def __init__(self, label = ''):

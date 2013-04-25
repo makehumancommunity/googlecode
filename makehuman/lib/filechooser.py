@@ -10,7 +10,7 @@ Qt filechooser widget.
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Glynn Clements
+**Authors:**           Glynn Clements, Jonas Hauquier
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
@@ -210,78 +210,50 @@ class FileSortRadioButton(gui.RadioButton):
         self.chooser.sortBy = self.field
         self.chooser.refresh()
 
-class FileChooser(QtGui.QWidget, gui.Widget):
-    """
-    A FileChooser widget. This widget can be used to let the user choose an existing file.
-    
-    :param path: The path from which the recursive search is started.
-    :type path: str
-    :param extension: The extension(s) of the files to display.
-    :type extension: str or list
-    :param previewExtension: The extension of the preview for the files. None if the file itself is to be used.
-    :type previewExtension: str or None
-    :param notFoundImage: The full filepath of the image to be used in case the preview is not found.
-    :type notFoundImage: str or None
-    :param sort: A file sorting instance which will be used to provide sorting of the found files.
-    :type sort: FileSort
-    """
-    
-    def __init__(self, path, extension, previewExtensions='bmp', notFoundImage=None, sort=FileSort()):
-        super(FileChooser, self).__init__()
+class FileHandler():
+    def __init__(self):
+        pass
+
+    def refresh(self, files):
+        pass
+
+    def getSelection(self, item):
+        pass
+
+    def setFileChooser(self, fileChooser):
+        self.fileChooser = fileChooser
+
+class FileChooserBase(QtGui.QWidget, gui.Widget):
+
+    def __init__(self, path, extension, sort = FileSort()):
+        super(FileChooserBase, self).__init__()
         gui.Widget.__init__(self)
 
-        self.paths = None
+        self.setPaths(path)
         self.extension = extension
-        self.setPreviewExtensions(previewExtensions)
+        self.previewExtensions = None
+        self.notFoundImage = None
 
         self.sort = sort
-        self.selection = ''
-        self.childY = {}
-        self.notFoundImage = notFoundImage
         self.sortBy = self.sort.fields()[0]
-        self.sortgroup = []
 
-        self.layout = QtGui.QGridLayout(self)
+        self.loadHandler = None
 
-        self.sortBox = gui.GroupBox('Sort')
-        self.layout.addWidget(self.sortBox, 0, 0)
-        self.layout.setRowStretch(0, 0)
-        self.layout.setColumnStretch(0, 0)
+    def createSortBox(self):
+        sortBox = gui.GroupBox('Sort')
 
-        self.layout.addWidget(QtGui.QWidget(), 1, 0)
-
-        self.files_sc = QtGui.QScrollArea()
-        self.files_sc.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.files_sc.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.layout.addWidget(self.files_sc, 0, 1, 2, -1)
-        self.layout.setRowStretch(1, 1)
-        self.layout.setColumnStretch(1, 1)
-
-        self.files = QtGui.QWidget()
-        self.files_sc.installEventFilter(self)
-        self.files_sc.setWidget(self.files)
-        self.files_sc.setWidgetResizable(True)
-        self.children = FlowLayout(self.files)
-        self.children.setSizeConstraint(QtGui.QLayout.SetMinimumSize)
-
-        self.location = gui.TextView('')
-        self.layout.addWidget(self.location, 2, 0, 1, -1)
-        self.layout.setRowStretch(2, 0)
-
-        self.refreshButton = self.sortBox.addWidget(gui.Button('Refresh'))
+        self.refreshButton = sortBox.addWidget(gui.Button('Refresh'))
         for i, field in enumerate(self.sort.fields()):
-            self.sortBox.addWidget(FileSortRadioButton(self, self.sortgroup, i == 0, field))
-
-        self.setPaths(path)
+            sortBox.addWidget(FileSortRadioButton(self, self.sortgroup, i == 0, field))
 
         @self.refreshButton.mhEvent
         def onClicked(value):
             self.refresh()
 
+        return sortBox
+
     def setPaths(self, value):
         self.paths = value if isinstance(value, list) else [value]
-        locationLbl = "  |  ".join(self.paths)
-        self.location.setText(os.path.abspath(locationLbl))
 
     def setPreviewExtensions(self, value):
         if not value:
@@ -333,21 +305,184 @@ class FileChooser(QtGui.QWidget, gui.Widget):
                         if f.lower().endswith('.' + ext):
                             yield os.path.join(root, f)
 
-    def refresh(self):
+    def clearList(self):
         for i in xrange(self.children.count()):
             child = self.children.itemAt(0)
             self.children.removeItem(child)
             child.widget().hide()
             child.widget().destroy()
 
-        # Create icons
-        for file in self.sort.sort(self.sortBy, list(self.search())):
-            label = os.path.basename(file)
-            if isinstance(self.extension, str):
-                label = os.path.splitext(label)[0]
-            self.children.addWidget(FileChooserRectangle(self, file, label, self.getPreview(file)))
+    def refresh(self):
+        self.clearList()
+
+        files = self.sort.sort(self.sortBy, list(self.search()))
+        if self.loadHandler:
+            self.loadHandler.refresh(files)
+        else:
+            # Create icons
+            for file in files:
+                label = os.path.basename(file)
+                if isinstance(self.extension, str):
+                    label = os.path.splitext(label)[0]
+                self.addItem(file, label, self.getPreview(file))
 
         mh.redraw()
 
+    def setFileLoadHandler(self, loadHandler):
+        self.loadHandler = loadHandler
+
+    def addItem(self, file, label, preview, tags = []):
+        return None
+
     def onShow(self, event):
-        self.refresh()
+        pass
+
+class FileChooser(FileChooserBase):
+    """
+    A FileChooser widget. This widget can be used to let the user choose an existing file.
+    
+    :param path: The path from which the recursive search is started.
+    :type path: str
+    :param extension: The extension(s) of the files to display.
+    :type extension: str or list
+    :param previewExtension: The extension of the preview for the files. None if the file itself is to be used.
+    :type previewExtension: str or None
+    :param notFoundImage: The full filepath of the image to be used in case the preview is not found.
+    :type notFoundImage: str or None
+    :param sort: A file sorting instance which will be used to provide sorting of the found files.
+    :type sort: FileSort
+    """
+    
+    def __init__(self, path, extension, previewExtensions='bmp', notFoundImage=None, sort=FileSort()):
+        self.location = gui.TextView('')
+        super(FileChooser, self).__init__(path, extension, sort)
+
+        self.setPreviewExtensions(previewExtensions)
+
+        self.selection = ''
+        self.childY = {}
+        self.notFoundImage = notFoundImage
+        self.sortgroup = []
+
+        self.layout = QtGui.QGridLayout(self)
+
+        self.sortBox = self.createSortBox()
+        self.layout.addWidget(self.sortBox, 0, 0)
+        self.layout.setRowStretch(0, 0)
+        self.layout.setColumnStretch(0, 0)
+
+        self.layout.addWidget(QtGui.QWidget(), 1, 0)
+
+        self.files_sc = QtGui.QScrollArea()
+        self.files_sc.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.files_sc.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.layout.addWidget(self.files_sc, 0, 1, 2, -1)
+        self.layout.setRowStretch(1, 1)
+        self.layout.setColumnStretch(1, 1)
+
+        self.files = QtGui.QWidget()
+        self.files_sc.installEventFilter(self)
+        self.files_sc.setWidget(self.files)
+        self.files_sc.setWidgetResizable(True)
+        self.children = FlowLayout(self.files)
+        self.children.setSizeConstraint(QtGui.QLayout.SetMinimumSize)
+
+        self.layout.addWidget(self.location, 2, 0, 1, -1)
+        self.layout.setRowStretch(2, 0)
+
+    def addItem(self, file, label, preview):
+        item = FileChooserRectangle(self, file, label, preview)
+        self.children.addWidget(item)
+        return item
+
+    def setPaths(self, value):
+        super(FileChooser, self).setPaths(value)
+        locationLbl = "  |  ".join(self.paths)
+        self.location.setText(os.path.abspath(locationLbl))
+
+# TODO IconListFileChooser (with FileChooserRectangles as items)
+
+# TODO allow setting a clear or none item at the top
+
+class ListFileChooser(FileChooserBase):
+
+    def __init__(self, path, extension, name="File chooser" , multiSelect=False, sort=FileSort()):
+        super(ListFileChooser, self).__init__(path, extension, sort)
+        self.listItems = []
+        self.multiSelect = multiSelect
+
+        self.layout = QtGui.QGridLayout(self)
+
+        #self.mainBox = gui.GroupBox(name)
+        self.children = gui.ListView()
+        #self.layout.addWidget(self.mainBox)
+        #self.mainBox.addWidget(self.children)
+        self.layout.addWidget(self.children)
+
+        self.children.viewport().setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Ignored)
+        #self.children.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Ignored)
+        #self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Ignored)
+
+        # TODO
+        self.children.resize(200,550)
+
+        # Remove frame and background color from list widget (native theme)
+        self.children.setFrameShape(QtGui.QFrame.NoFrame)
+        palette = QtGui.QPalette()
+        palette.setColor(QtGui.QPalette.Base, QtGui.QColor(255,255,255,0))
+        self.children.setPalette(palette)
+
+        @self.children.mhEvent
+        def onClicked(item):
+            if self.multiSelect:
+                self.callEvent('onFileHighlighted', item.file)
+            else:
+                self.callEvent('onFileSelected', item.file)
+
+        @self.children.mhEvent
+        def onItemChecked(item):
+            self.callEvent('onFileSelected', item.file)
+
+        @self.children.mhEvent
+        def onItemUnchecked(item):
+            self.callEvent('onFileDeselected', item.file)
+
+    def addItem(self, file, label, preview):
+        item = gui.ListItem(label)
+        if self.multiSelect:
+            item.enableCheckbox()
+        item.file = file
+        item.preview = preview
+        item.untranslatedLabel = label
+        return self.children.addItemObject(item)
+
+    def getHighlightedItem(self):
+        items = self.children.selectedItems()
+        if len(items) > 0:
+            if self.loadHandler:
+                return self.loadHandler.getSelection(items[0])
+            else:
+                return items[0].file
+        else:
+            return None
+
+    def getSelectedItem(self):
+        return self.getHighlightedItem()
+
+    def getSelectedItems(self):
+        if self.multiSelect:
+            if self.loadHandler:
+                return [self.loadHandler.getSelection(item) for item in self.children.getItems() if item.checkState()]
+            else:
+                return [item.file for item in self.children.getItems() if item.checkState()]
+        else:
+            return [self.getHighlightedItem()]
+
+    def deselectAll(self):
+        self.children.clearSelection()
+
+    def clearList(self):
+        self.children.clear()
+
+    def setFocus(self):
+        self.children.setFocus()
