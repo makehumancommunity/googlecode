@@ -220,6 +220,12 @@ class FileHandler():
     def getSelection(self, item):
         pass
 
+    def isHighlighted(self, listItem, item):
+        return False
+
+    def isSelected(self, listItem, items):
+        return False
+
     def setFileChooser(self, fileChooser):
         self.fileChooser = fileChooser
 
@@ -421,12 +427,26 @@ class ListFileChooser(FileChooserBase):
         self.layout.addWidget(self.mainBox)
         self.mainBox.addWidget(self.children)
 
-        self.children.viewport().setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Ignored)
+        #self.children.viewport().setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Ignored)
+        #self.children.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Preferred)
+        #self.children.viewport().setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Preferred)
+
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.children.sizePolicy().hasHeightForWidth())
+        self.children.setSizePolicy(sizePolicy)
+        self.children.viewport().setSizePolicy(sizePolicy)
+
+        self.setSizePolicy(sizePolicy)
+        self.mainBox.setSizePolicy(sizePolicy)
+
+
         #self.children.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Ignored)
         #self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Ignored)
 
         # TODO
-        self.children.resize(200,550)
+        self.children.resize(500,550)
 
         # Remove frame and background color from list widget (native theme)
         self.children.setFrameShape(QtGui.QFrame.NoFrame)
@@ -474,11 +494,54 @@ class ListFileChooser(FileChooserBase):
     def getSelectedItems(self):
         if self.multiSelect:
             if self.loadHandler:
-                return [self.loadHandler.getSelection(item) for item in self.children.getItems() if item.checkState()]
+                return [self.loadHandler.getSelection(item) for item in self.children.getItems() if item.isChecked()]
             else:
-                return [item.file for item in self.children.getItems() if item.checkState()]
+                return [item.file for item in self.children.getItems() if item.isChecked()]
         else:
             return [self.getHighlightedItem()]
+
+    def setSelection(self, item):
+        if self.multiSelect:
+            return
+
+        self.deselectAll()
+
+        if self.loadHandler:
+            for listItem in self.children.getItems():
+                if self.loadHandler.isSelected(listItem, [item]):
+                    self.children.setCurrentItem(listItem)
+                    return
+        else:
+            for listItem in self.children.getItems():
+                if listItem.file == item:
+                    self.children.setCurrentItem(listItem)
+                    return
+
+    def setSelections(self, items):
+        if not self.multiSelect:
+            return
+
+        if self.loadHandler:
+            for listItem in self.children.getItems():
+                listItem.setChecked( self.loadHandler.isSelected(listItem, items) )
+        else:
+            for listItem in self.children.getItems():
+                listItem.setChecked( listItem.file in items )
+
+    def setHighlightedItem(self, item):
+        if isinstance(item, list) and len(item) > 0:
+            if self.loadHandler:
+                for listItem in self.children.getItems():
+                    if self.loadHandler.isHighlighted(listItem, item):
+                        self.children.setCurrentItem(listItem)
+                        return
+            else:
+                for listItem in self.children.getItems():
+                    if listItem.file == item:
+                        self.children.setCurrentItem(listItem)
+                        return
+        else:
+            self.children.setCurrentItem(None)
 
     def deselectAll(self):
         self.children.clearSelection()

@@ -257,7 +257,9 @@ class ClothesTaskView(gui3d.TaskView):
         human.clothesProxies[uuid] = proxy
         human.activeClothing = uuid
         self.clothesList.append(uuid)
-        
+
+        # TODO Disabled until conflict with new filechooser is sorted out
+        '''
         for tag in proxy.tags:
             tag = tag.lower()
             # Allow only one piece of clothing per known tag
@@ -286,6 +288,7 @@ class ClothesTaskView(gui3d.TaskView):
                         newUuids.append(oldUuid)
                 newUuids.append(uuid)
                 self.taggedClothes[tag] = newUuids
+        '''
 
         self.adaptClothesToHuman(human)
         clo.setSubdivided(human.isSubdivided())
