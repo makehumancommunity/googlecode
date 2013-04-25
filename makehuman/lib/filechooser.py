@@ -416,11 +416,10 @@ class ListFileChooser(FileChooserBase):
 
         self.layout = QtGui.QGridLayout(self)
 
-        #self.mainBox = gui.GroupBox(name)
+        self.mainBox = gui.GroupBox(name)
         self.children = gui.ListView()
-        #self.layout.addWidget(self.mainBox)
-        #self.mainBox.addWidget(self.children)
-        self.layout.addWidget(self.children)
+        self.layout.addWidget(self.mainBox)
+        self.mainBox.addWidget(self.children)
 
         self.children.viewport().setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Ignored)
         #self.children.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Ignored)
