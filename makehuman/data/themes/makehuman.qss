@@ -532,3 +532,7 @@ FileChooser > QWidget {
 FileChooserRectangle {
     margin: 2px 2px;
 }
+
+ListFileChooser ListView {
+    background-color: transparent;
+}
