@@ -8,7 +8,7 @@
             roughness 1
             phong 0 phong_size 0 
             ambient %%ambience%%
-            diffuse 1
+            diffuse 1 - %%spec%%
             conserve_energy
         }
     }

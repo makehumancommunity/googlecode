@@ -86,7 +86,7 @@ class PovrayTaskView(gui3d.TaskView):
         self.tension = materialsBox.addWidget(gui.Slider(value=0.7, label="Skin tension"))
         self.grain = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin graininess"))
         self.hairShine = materialsBox.addWidget(gui.CheckBox('Hair shine', False))
-        self.hairSpec = materialsBox.addWidget(gui.Slider(value=0.75, label="Shine strength"))
+        self.hairSpec = materialsBox.addWidget(gui.Slider(value=0.45, label="Shine strength"))
         self.hairRough = materialsBox.addWidget(gui.Slider(value=0.4, label="Shine coverage"))
         self.hairHard = materialsBox.addWidget(gui.Slider(value=0.5, label="Hair hardness"))
 
@@ -153,7 +153,7 @@ class PovrayTaskView(gui3d.TaskView):
                                     'wrinkles': 0.5*self.grain.getValue(),
                                     'usebump': True if self.usebump.selected else False,
                                     'hairShine':True if self.hairShine.selected else False,
-                                    'hairSpec': 0.7*self.hairSpec.getValue(),
+                                    'hairSpec': self.hairSpec.getValue(),
                                     'hairRough': (0.7*self.hairRough.getValue())**2,
                                     'hairHard': 0.01*10**(4*self.hairHard.getValue())}) # exponential slider 
 
