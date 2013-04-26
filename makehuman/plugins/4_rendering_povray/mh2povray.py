@@ -49,6 +49,7 @@ import log
 import image_operations as imgop
 import gui3d
 from exportutils import collect
+import subprocess
 
 def downloadPovRay():
     import webbrowser
@@ -105,9 +106,18 @@ def povrayExport(app, settings):
             povray_bin += '/povray'
         log.debug('Povray path: %s', povray_bin)
 
-    #
+
+    povwatchApp = None
+    povwatchPath = ""
+    povwatchTimer = 0
+    def povwatch():
+        if povwatchApp.poll() is not None:
+            mh.changeTask('Rendering', 'Viewer')
+            gui3d.app.getCategory('Rendering').getTaskByName('Viewer').setImage(povwatchPath)
+            gui3d.app.statusPersist('Rendering complete')
+            mh.removeTimer(povwatchTimer)
+
     if settings['action'] == 'render':
-        #
         if os.path.isfile(povray_bin):
             # Prepare command line.
             if os.name == 'nt':
@@ -116,45 +126,20 @@ def povrayExport(app, settings):
                 cmdLine = (povray_bin, 'MHRENDER')
                 
             # Pass parameters by writing an .ini file.
-            try:
-                iniFD = open(os.path.join(outputDirectory, 'MHRENDER.ini'), 'w')
-            except:
-                log.error('Error opening .ini to write parameters.')
-                return
+            iniFD = open(os.path.join(outputDirectory, 'MHRENDER.ini'), 'w')
             iniFD.write('Input_File_Name="%s.pov"\n' % settings['name'] +
                         '+W%d +H%d +a%s +am2\n' % (resW, resH, settings['AA']))
             iniFD.close()
 
-            # Run Pov-Ray in a separate thread.
-            POVRender (cmdLine,path.replace('.inc','.png'))
-            
-        #
+            povwatchApp = subprocess.Popen(cmdLine, cwd = os.path.dirname(path))
+            gui3d.app.statusPersist('POV - Ray is rendering.')
+            povwatchPath = path.replace('.inc','.png')
+            povwatchTimer = mh.addTimer(1000, lambda: povwatch())
+
         else:
             app.prompt('POV-Ray not found',
                        'You don\'t seem to have POV-Ray installed or the path is incorrect.',
-                       'Download', 'Cancel', downloadPovRay)
-
-
-import threading
-import subprocess
-import sys
-
-class POVRender(threading.Thread):
-    def __init__(self, args, path):
-        self.args = args
-        self.cwd = os.path.dirname(path)
-        self.path = os.path.normpath(path)
-        self.viewer = gui3d.app.getCategory('Rendering').getTaskByName('Viewer')
-        mh.changeTask('Rendering', 'Viewer')
-        gui3d.app.status('POV - Ray is currently rendering.')
-        threading.Thread.__init__(self)
-        self.start()
-
-    def run(self):
-        subprocess.call(self.args, cwd = self.cwd)
-        mh.callAsyncThread(self.viewer.setImage, self.path)
-        mh.callAsyncThread(gui3d.app.status, 'Rendering complete')
-        
+                       'Download', 'Cancel', downloadPovRay)        
 
 def povrayExportArray(obj, camera, resolution, path, settings):
     """
@@ -803,26 +788,25 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
         
     progbase = 0
     nextpb = 1 - 0.65*settings['usebump']
-    # calculate resolution of each cannel, according to settings
-    resred = float(settings['SSSA'])
-    a = resred
-    resgreen = int(2.0**(10-resred/2))
-    resred = int(2.0**(10-resred))
-    # blue channel
+    # get lightmap
     lmap = projection.mapSceneLighting(
         settings['scene'],progressCallback = lambda p: progress(0.3*nextpb*p))
     lmap = imgop.getChannel(lmap,1)
+    # prepare channels
     black = imgop.Image(data=imgop.numpy.zeros((lmap.height, lmap.width, 1), dtype=imgop.numpy.uint8))
+    # calculate blur level of each cannel, according to settings
+    sssa = float(settings['SSSA'])
+    # blue channel
     imgop.compose([black,black,lmap]).save(
         os.path.join(outDir, '%s_sss_bluelmap.png' % stuffs[0].name))
     # green channel
     progress(0.4*nextpb)
-    lmap2 = imgop.blurred(lmap, int(10*a),13, lambda p: progress((0.4+0.3*p)*nextpb))
+    lmap2 = imgop.blurred(lmap, int(10*sssa),13, lambda p: progress((0.4+0.3*p)*nextpb))
     imgop.compose([black,lmap2,black]).save(
         os.path.join(outDir, '%s_sss_greenlmap.png' % stuffs[0].name))
     # red channel
     progress(0.7*nextpb)
-    lmap2 = imgop.blurred(lmap2, int(20*a),13, lambda p: progress((0.7+0.3*p)*nextpb))
+    lmap2 = imgop.blurred(lmap2, int(20*sssa),13, lambda p: progress((0.7+0.3*p)*nextpb))
     imgop.compose([lmap2,black,black]).save(
         os.path.join(outDir, '%s_sss_redlmap.png' % stuffs[0].name))
     progbase = nextpb
@@ -831,11 +815,11 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
         # Export blurred bump maps
         lmap = imgop.Image(os.path.join(stuffs[0].bump[0], stuffs[0].bump[1]))
         lmap = imgop.getChannel(lmap,1)
-        lmap = imgop.blurred(lmap, int(float(lmap.width/1024)*5*a), 15,
+        lmap = imgop.blurred(lmap, int(float(lmap.width/1024)*5*sssa), 15,
                              lambda p: progress(progbase+0.5*p*(1-progbase)))
         progress(progbase+0.5*(1-progbase))
         lmap.save(os.path.join(outDir, '%s_sss_greenbump.png' % stuffs[0].name))
-        lmap = imgop.blurred(lmap, int(float(lmap.width/1024)*10*a), 15,
+        lmap = imgop.blurred(lmap, int(float(lmap.width/1024)*10*sssa), 15,
                              lambda p: progress(progbase+(0.5+0.5*p)*(1-progbase)))
         lmap.save(os.path.join(outDir, '%s_sss_redbump.png' % stuffs[0].name))
         progress(1.0)
