@@ -58,7 +58,10 @@ class SceneObject(object):
         if (self._scene is not None):
             self._scene.changed(modified)
        
-            
+    def getAttributes(self):
+        return self._attributes
+
+    
 class Light(SceneObject):
     def __init__(self, scene = None):
         SceneObject.__init__(
@@ -68,15 +71,18 @@ class Light(SceneObject):
              'focus': (0.0, 0.0, 0.0),
              'color': (1.0, 1.0, 1.0),
              'fov': 180.0,
-             'attenuation': 0.0}) 
+             'attenuation': 0.0,
+             'areaLights': 1,
+             'areaLightRadius': 0.0})
 
 
 class Environment(SceneObject):
     def __init__(self, scene = None):
         SceneObject.__init__(
             self, scene,
-            attributes = {
-                'ambience': (0.1, 0.1, 0.1)})
+            attributes =
+            {'ambience': (0.1, 0.1, 0.1),
+             'skybox': None})
 
 
 class Scene(events3d.EventHandler):
