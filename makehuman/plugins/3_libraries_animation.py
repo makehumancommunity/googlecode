@@ -65,6 +65,24 @@ class Animation(object):
         folder = os.path.dirname(self.collection.path)
         return os.path.join(folder, self.bvh)
 
+    def getAnimationTrackName(self):
+        return getAnimationTrackName(self.collection.uuid, self.name)
+
+    def getAnimationTrack(self):
+        """
+        Retrieve animation track for this animation, cached in human.animated,
+        or loads and caches it if it does not exist.
+        """
+        human = gui3d.app.selectedHuman
+        if human.animated.hasAnimation(self.getAnimationTrackName()):
+            return human.animated.getAnimation(self.getAnimationTrackName())
+        else:
+            animationTrack = loadAnimationTrack(self)
+            if not animationTrack:
+                return None
+            human.animated.addAnimation(animationTrack)
+            return animationTrack
+
 class MhAnimLoader(filechooser.FileHandler):
 
     def __init__(self, animationChooser):
@@ -234,58 +252,7 @@ class AnimationLibrary(gui3d.TaskView):
             return
 
         self.selectAnimation(anim)
-
-    def loadBVH(self, anim):
-        """
-        Load animation from a BVH file.
-        """
-        if "z_is_up" in anim.options:
-            swapYZ = True
-        else:
-            swapYZ = False
-
-        log.debug("Loading BVH %s", anim.getPath())
-
-        # Load BVH data
-        bvhRig = bvh.load(anim.getPath(), swapYZ)
-        if anim.collection.scale != 1.0:
-            # Scale rig
-            bvhRig.scale(scale)
-            # Scale is only useful when using the joint locations of the BVH rig
-            # or when drawing the BVH rig.
-
-        if self.human.getSkeleton().name == anim.collection.rig:
-            # Skeleton and joint rig in BVH match, do a straight mapping of the
-            # motion:
-
-            # Load animation data from BVH file and add it to AnimatedMesh
-            # This is a list that references a joint name in the BVH for each 
-            # bone in the skeleton (breadth-first order):
-            jointToBoneMap = [bone.name for bone in self.human.getSkeleton().getBones()]
-            animTrack = bvhRig.createAnimationTrack(jointToBoneMap, getAnimationTrackName(anim.collection.uuid, anim.name))
-            gui3d.app.statusPersist("")
-        else:
-            # Skeleton and joint rig in BVH are not the same, retarget/remap
-            # the motion data:
-
-            try:
-                jointToBoneMap = skeleton.loadJointsMapping(self.human.getSkeleton().name, self.human.getSkeleton())
-                # TODO this only works if the BVH file contains only reference rig bone names (as is the case with rigid and soft1 rigs), else you need to do a second map
-            except:
-                gui3d.app.statusPersist("Cannot apply motion on the selected skeleton %s because there is no target mapping file for it.", self.human.getSkeleton().name)
-                return None
-
-            animTrack = bvhRig.createAnimationTrack(jointToBoneMap, getAnimationTrackName(anim.collection.uuid, anim.name))
-
-        log.debug("Created animation track for %s rig.", self.human.getSkeleton().name)
-
-        animTrack.interpolationType = 1 if self.interpolate else 0
-
-        log.debug("Frames: %s", animTrack.nFrames)
-        log.debug("Playtime: %s", animTrack.getPlaytime())
-
-        return animTrack
-
+    
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
 
@@ -448,18 +415,18 @@ class AnimationLibrary(gui3d.TaskView):
         if self.filechooser.getHighlightedItem() != (anim.collection.uuid, anim.name):
             self.filechooser.setHighlightedItem((anim.collection.uuid, anim.name))
 
-        if not self.human.animated.hasAnimation(getAnimationTrackName(anim.collection.uuid, anim.name)):
+        if not self.human.animated.hasAnimation(anim.getAnimationTrackName()):
             # Load animation track (containing the actual animation data)
             # Actually loading the BVH is only necessary when previewing the
             # animation or exporting when the human is exported
-            animationTrack = self.loadBVH(anim)
+            animationTrack = loadAnimationTrack(anim)
             if not animationTrack:
                 return
             self.human.animated.addAnimation(animationTrack)
 
         self.anim = anim
-        self.human.animated.setActiveAnimation(getAnimationTrackName(anim.collection.uuid, anim.name))
-        self.animTrack = self.human.animated.getAnimation(getAnimationTrackName(anim.collection.uuid, anim.name))
+        self.human.animated.setActiveAnimation(anim.getAnimationTrackName())
+        self.animTrack = self.human.animated.getAnimation(anim.getAnimationTrackName())
         log.debug("Setting animation to %s", anim.name)
 
         self.human.animated.setAnimateInPlace(self.animateInPlaceTggl.selected)
@@ -686,3 +653,55 @@ def readAnimCollectionFile(filename):
 
 def getAnimationTrackName(collectionUuid, animationName):
     return "%s_%s" % (collectionUuid, animationName)
+
+def loadAnimationTrack(anim):
+    """
+    Load animation from a BVH file specified by anim.
+    """
+    if "z_is_up" in anim.options:
+        swapYZ = True
+    else:
+        swapYZ = False
+
+    human = gui3d.app.selectedHuman
+
+    log.debug("Loading BVH %s", anim.getPath())
+
+    # Load BVH data
+    bvhRig = bvh.load(anim.getPath(), swapYZ)
+    if anim.collection.scale != 1.0:
+        # Scale rig
+        bvhRig.scale(scale)
+        # Scale is only useful when using the joint locations of the BVH rig
+        # or when drawing the BVH rig.
+
+    if human.getSkeleton().name == anim.collection.rig:
+        # Skeleton and joint rig in BVH match, do a straight mapping of the
+        # motion:
+
+        # Load animation data from BVH file and add it to AnimatedMesh
+        # This is a list that references a joint name in the BVH for each 
+        # bone in the skeleton (breadth-first order):
+        jointToBoneMap = [bone.name for bone in human.getSkeleton().getBones()]
+        animTrack = bvhRig.createAnimationTrack(jointToBoneMap, anim.getAnimationTrackName())
+        gui3d.app.statusPersist("")
+    else:
+        # Skeleton and joint rig in BVH are not the same, retarget/remap
+        # the motion data:
+
+        try:
+            jointToBoneMap = skeleton.loadJointsMapping(human.getSkeleton().name, human.getSkeleton())
+            # TODO this only works if the BVH file contains only reference rig bone names (as is the case with rigid and soft1 rigs), else you need to do a second map
+        except:
+            gui3d.app.statusPersist("Cannot apply motion on the selected skeleton %s because there is no target mapping file for it.", human.getSkeleton().name)
+            return None
+
+        animTrack = bvhRig.createAnimationTrack(jointToBoneMap, anim.getAnimationTrackName())
+
+    log.debug("Created animation track for %s rig.", human.getSkeleton().name)
+
+    log.debug("Frames: %s", animTrack.nFrames)
+    log.debug("Playtime: %s", animTrack.getPlaytime())
+
+    return animTrack
+
