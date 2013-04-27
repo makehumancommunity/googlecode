@@ -576,17 +576,17 @@ class ListFileChooser(FileChooserBase):
         @self.children.mhEvent
         def onClicked(item):
             if self.multiSelect:
-                self.callEvent('onFileHighlighted', item.file)
+                self.callEvent('onFileHighlighted', self.loadHandler.getSelection(item))
             else:
-                self.callEvent('onFileSelected', item.file)
+                self.callEvent('onFileSelected', self.loadHandler.getSelection(item))
 
         @self.children.mhEvent
         def onItemChecked(item):
-            self.callEvent('onFileSelected', item.file)
+            self.callEvent('onFileSelected', self.loadHandler.getSelection(item))
 
         @self.children.mhEvent
         def onItemUnchecked(item):
-            self.callEvent('onFileDeselected', item.file)
+            self.callEvent('onFileDeselected', self.loadHandler.getSelection(item))
 
     def setVerticalScrollingEnabled(self, enabled):
             self.children.setVerticalScrollingEnabled(enabled)
