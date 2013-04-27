@@ -210,6 +210,76 @@ class FileSortRadioButton(gui.RadioButton):
         self.chooser.sortBy = self.field
         self.chooser.refresh()
 
+class TagFilter(gui.GroupBox):
+    def __init__(self):
+        super(TagFilter, self).__init__('Tag filter')
+        self.tags = set()
+        self.selectedTags = set()
+        self.tagToggles = []
+        
+    def setTags(self, tags):
+        self.clearAll()
+        for tag in tags:
+            self.addTag(tag)
+
+    # TODO case insensitive tags
+    def addTag(self, tag):
+        if tag in self.tags:
+            return
+
+        self.tags.add(tag)
+        toggle = self.addWidget(gui.ToggleButton(tag))
+        toggle.tag = tag
+
+        @toggle.mhEvent
+        def onClicked(event):
+            self.setTagState(toggle.tag, toggle.selected)
+
+    def addTags(self, tags):
+        for tag in tags:
+            self.addTag(tag)
+
+    def setTagState(self, tag, enabled):
+        if tag not in self.tags:
+            return
+
+        if enabled:
+            self.selectedTags.add(tag)
+        else:
+            self.selectedTags.remove(tag)
+
+        self.callEvent('onTagsChanged', self.selectedTags)
+
+    def clearAll(self):
+        for tggl in self.tagToggles:
+            tggl.hide()
+            tggl.destroy()
+        self.tagToggles = []
+        self.selectedTags.clear()
+        self.tags.clear()
+
+    def getSelectedTags(self):
+        return self.selectedTags
+
+    def getTags(self):
+        return self.tags
+
+    def filterActive(self):
+        return len(self.getSelectedTags()) > 0
+
+    def filter(self, items):
+        if not self.filterActive():
+            for item in items:
+                item.setHidden(False)
+            return
+
+        for item in items:
+            #if len(self.selectedTags.intersection(file.tags)) > 0:  # OR
+            if len(self.selectedTags.intersection(item.tags)) == len(self.selectedTags):  # AND
+                item.setHidden(False)
+            else:
+                item.setHidden(True)
+
 class FileHandler():
     def __init__(self):
         pass
@@ -220,10 +290,13 @@ class FileHandler():
     def getSelection(self, item):
         pass
 
-    def isHighlighted(self, listItem, item):
+    def matchesItem(self, listItem, item):
         return False
 
-    def isSelected(self, listItem, items):
+    def matchesItems(self, listItem, items):
+        return False
+
+    def isFiltered(self, listItem, tags):
         return False
 
     def setFileChooser(self, fileChooser):
@@ -242,8 +315,10 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
 
         self.sort = sort
         self.sortBy = self.sort.fields()[0]
+        self.sortgroup = []
 
         self.loadHandler = None
+        self.tagFilter = None
 
     def createSortBox(self):
         sortBox = gui.GroupBox('Sort')
@@ -257,6 +332,14 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
             self.refresh()
 
         return sortBox
+
+    def createTagFilter(self):
+        self.tagFilter = TagFilter()
+        @self.tagFilter.mhEvent
+        def onTagsChanged(selectedTags):
+            self.applyTagFilter()
+
+        return self.tagFilter
 
     def setPaths(self, value):
         self.paths = value if isinstance(value, list) else [value]
@@ -332,12 +415,48 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
                     label = os.path.splitext(label)[0]
                 self.addItem(file, label, self.getPreview(file))
 
+        self.applyTagFilter()
+
         mh.redraw()
+
+    def applyTagFilter(self):
+        if not self.tagFilter:
+            return
+        self.tagFilter.filter(self.children.getItems())
+
+    def _getListItem(self, item):
+        if self.loadHandler:
+            for listItem in self.children.getItems():
+                if self.loadHandler.matchesItem(listItem, item):
+                    return listItem
+        else:
+            for listItem in self.children.getItems():
+                if listItem.file == item:
+                    return listItem
+        return None
+
+    def addTags(self, item, tags):
+        listItem = self._getListItem(item)
+        if listItem:
+            listItem.tags = listItem.tags.union(tags)
+
+    def setTags(self, item, tags):
+        listItem = self._getListItem(item)
+        if listItem:
+            listItem.tags = tags
+        
+    def getAllTags(self):
+        tags = set()
+        for listItem in self.children.getItems():
+            tags = tags.union(listItem.tags)
+        return tags
 
     def setFileLoadHandler(self, loadHandler):
         self.loadHandler = loadHandler
 
     def addItem(self, file, label, preview, tags = []):
+        if self.tagFilter:
+            self.tagFilter.addTags(tags)
         return None
 
     def onShow(self, event):
@@ -368,7 +487,6 @@ class FileChooser(FileChooserBase):
         self.selection = ''
         self.childY = {}
         self.notFoundImage = notFoundImage
-        self.sortgroup = []
 
         self.layout = QtGui.QGridLayout(self)
 
@@ -396,9 +514,11 @@ class FileChooser(FileChooserBase):
         self.layout.addWidget(self.location, 2, 0, 1, -1)
         self.layout.setRowStretch(2, 0)
 
-    def addItem(self, file, label, preview):
+    def addItem(self, file, label, preview, tags=[]):
         item = FileChooserRectangle(self, file, label, preview)
+        item.tags = tags
         self.children.addWidget(item)
+        super(FileChooser, self).addItem(file, label, preview, tags)
         return item
 
     def setPaths(self, value):
@@ -457,13 +577,25 @@ class ListFileChooser(FileChooserBase):
     def setVerticalScrollingEnabled(self, enabled):
             self.children.setVerticalScrollingEnabled(enabled)
 
-    def addItem(self, file, label, preview):
+    def createSortBox(self):
+        self.sortBox = super(ListFileChooser, self).createSortBox()
+        if self.multiSelect:
+            deselectAllBtn = self.sortBox.addWidget(gui.Button('Deselect all'))
+            @deselectAllBtn.mhEvent
+            def onClicked(value):
+                self.deselectAll()
+        return self.sortBox
+
+    def addItem(self, file, label, preview, tags=[]):
         item = gui.ListItem(label)
         if self.multiSelect:
             item.enableCheckbox()
         item.file = file
         item.preview = preview
         item.untranslatedLabel = label
+        tags = ['Tag1', 'Tag2', 'Tag3']
+        item.tags = tags
+        super(ListFileChooser, self).addItem(file, label, preview, tags)
         return self.children.addItemObject(item)
 
     def getHighlightedItem(self):
@@ -496,7 +628,7 @@ class ListFileChooser(FileChooserBase):
 
         if self.loadHandler:
             for listItem in self.children.getItems():
-                if self.loadHandler.isSelected(listItem, [item]):
+                if self.loadHandler.matchesItem(listItem, item):
                     self.children.setCurrentItem(listItem)
                     return
         else:
@@ -511,7 +643,7 @@ class ListFileChooser(FileChooserBase):
 
         if self.loadHandler:
             for listItem in self.children.getItems():
-                listItem.setChecked( self.loadHandler.isSelected(listItem, items) )
+                listItem.setChecked( self.loadHandler.matchesItems(listItem, items) )
         else:
             for listItem in self.children.getItems():
                 listItem.setChecked( listItem.file in items )
@@ -520,7 +652,7 @@ class ListFileChooser(FileChooserBase):
         if isinstance(item, list) and len(item) > 0:
             if self.loadHandler:
                 for listItem in self.children.getItems():
-                    if self.loadHandler.isHighlighted(listItem, item):
+                    if self.loadHandler.matchesItem(listItem, item):
                         self.children.setCurrentItem(listItem)
                         return
             else:
