@@ -316,6 +316,8 @@ class MhcloFileLoader(FileHandler):
         import exportutils.config
         for file in files:
             label = os.path.basename(file)
+            if self.fileChooser.multiSelect and label == "clear.mhclo":
+                continue
             if isinstance(self.fileChooser.extension, str):
                 label = os.path.splitext(label)[0]
             if not file in self.__tagsCache:
@@ -433,6 +435,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         self.applyTagFilter()
 
         mh.redraw()
+        self.callEvent('onRefresh', self)
 
     def applyTagFilter(self):
         if not self.tagFilter:
