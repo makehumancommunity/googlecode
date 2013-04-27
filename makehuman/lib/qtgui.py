@@ -588,6 +588,7 @@ class ListView(QtGui.QListWidget, Widget):
     def __init__(self):
         super(ListView, self).__init__()
         Widget.__init__(self)
+        self._vertical_scrolling = True
         self.connect(self, QtCore.SIGNAL('itemActivated(QListWidgetItem *)'), self._activate)
         self.connect(self, QtCore.SIGNAL('itemClicked(QListWidgetItem *)'), self._clicked)
 
@@ -610,6 +611,29 @@ class ListView(QtGui.QListWidget, Widget):
         for item in items:
             self.addItem(item)
 
+    def setVerticalScrollingEnabled(self, enabled):
+        self._vertical_scrolling = enabled
+        if enabled:
+            self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        else:
+            self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.updateGeometry()
+
+    def sizeHint(self):
+        if self._vertical_scrolling:
+            return super(ListView, self).sizeHint()
+        else:
+            rows = self.model().rowCount()
+            if rows > 0:
+                rowHeight = self.sizeHintForRow(0)
+            else:
+                rowHeight = 0
+            height = (rowHeight * rows)
+
+            size = super(ListView,self).sizeHint()
+            size.setHeight(height)
+            return size
+
     _brushes = {}
     @classmethod
     def getBrush(cls, color):
@@ -627,10 +651,14 @@ class ListView(QtGui.QListWidget, Widget):
         if checkbox:
             item.enableCheckbox()
         super(ListView, self).addItem(item)
+        if not self._vertical_scrolling:
+            self.updateGeometry()
         return item
 
     def addItemObject(self, item):
         super(ListView, self).addItem(item)
+        if not self._vertical_scrolling:
+            self.updateGeometry()
         return item
 
     def getSelectedItem(self):

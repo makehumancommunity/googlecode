@@ -410,43 +410,28 @@ class FileChooser(FileChooserBase):
         self.refresh()
 
 # TODO IconListFileChooser (with FileChooserRectangles as items)
-
 # TODO allow setting a clear or none item at the top
 
 class ListFileChooser(FileChooserBase):
 
-    def __init__(self, path, extension, name="File chooser" , multiSelect=False, sort=FileSort()):
+    def __init__(self, path, extension, name="File chooser" , multiSelect=False, verticalScrolling=False, sort=FileSort()):
         super(ListFileChooser, self).__init__(path, extension, sort)
         self.listItems = []
         self.multiSelect = multiSelect
 
         self.layout = QtGui.QGridLayout(self)
-
         self.mainBox = gui.GroupBox(name)
         self.children = gui.ListView()
         self.layout.addWidget(self.mainBox)
         self.mainBox.addWidget(self.children)
 
-        #self.children.viewport().setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Ignored)
-        #self.children.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Preferred)
-        #self.children.viewport().setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Preferred)
+        self.layout.setSpacing(0)
+        self.layout.setContentsMargins(0,0,0,0)
 
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.children.sizePolicy().hasHeightForWidth())
-        self.children.setSizePolicy(sizePolicy)
-        self.children.viewport().setSizePolicy(sizePolicy)
+        self.children.setSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.MinimumExpanding)
+        self.children.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-        self.setSizePolicy(sizePolicy)
-        self.mainBox.setSizePolicy(sizePolicy)
-
-
-        #self.children.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Ignored)
-        #self.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Ignored)
-
-        # TODO
-        self.children.resize(500,550)
+        self.children.setVerticalScrollingEnabled(verticalScrolling)
 
         # Remove frame and background color from list widget (native theme)
         self.children.setFrameShape(QtGui.QFrame.NoFrame)
@@ -468,6 +453,9 @@ class ListFileChooser(FileChooserBase):
         @self.children.mhEvent
         def onItemUnchecked(item):
             self.callEvent('onFileDeselected', item.file)
+
+    def setVerticalScrollingEnabled(self, enabled):
+            self.children.setVerticalScrollingEnabled(enabled)
 
     def addItem(self, file, label, preview):
         item = gui.ListItem(label)
