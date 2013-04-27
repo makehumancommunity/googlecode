@@ -46,6 +46,8 @@ KnownTags = [
     "hat"
 ]
 
+# TODO we dont have an undo highlight event in filechooser
+
 class ClothesAction(gui3d.Action):
     def __init__(self, name, human, library, mhcloFile, add):
         super(ClothesAction, self).__init__(name)
@@ -65,6 +67,21 @@ class ClothesAction(gui3d.Action):
             self.library.setClothes(self.human, self.mhclo)
         self.library.cache[self.mhclo].toggleEnabled = not self.add
         return True
+
+
+class MhcloFileLoader(fc.FileHandler):
+
+    def refresh(self, files):
+        """
+        Load tags from mhclo file.
+        """
+        for file in files:
+            label = os.path.basename(file)
+            if isinstance(self.fileChooser.extension, str):
+                label = os.path.splitext(label)[0]
+            tags = exportutils.config.scanFileForTags(file)
+            self.fileChooser.addItem(file, label, self.fileChooser.getPreview(file), tags)
+
 
 #
 #   Clothes
@@ -89,8 +106,10 @@ class ClothesTaskView(gui3d.TaskView):
         if not os.path.exists(self.userClothes):
             os.makedirs(self.userClothes)
         #self.filechooser = self.addTopWidget(fc.FileChooser([self.systemClothes, self.userClothes], 'mhclo', 'thumb', 'data/clothes/notfound.thumb'))
-        #self.addLeftWidget(self.filechooser.sortBox)
         self.filechooser = self.addRightWidget(fc.ListFileChooser([self.systemClothes, self.userClothes], 'mhclo', 'Clothes', True))
+        self.filechooser.setFileLoadHandler(MhcloFileLoader())
+        self.addLeftWidget(self.filechooser.createSortBox())
+        self.addLeftWidget(self.filechooser.createTagFilter())
         #self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
         self.mediaSync = None
 
