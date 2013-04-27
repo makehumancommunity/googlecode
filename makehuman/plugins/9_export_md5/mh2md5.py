@@ -253,9 +253,8 @@ def exportMd5(human, filepath, config):
     f.close()
 
     if human.getSkeleton() and hasattr(human, 'animations'):
-        return:
         for anim in human.animations:
-            writeAnimation(filepath, human, config, anim)
+            writeAnimation(filepath, human, config, anim.getAnimationTrack())
 
 def writeBone(f, bone, human, config):
     """
@@ -299,20 +298,20 @@ def writeBone(f, bone, human, config):
         pos[0], pos[1], pos[2],
         qx, qy, qz))
 
-def writeAnimation(filepath, human, config, anim):
-    log.message("Exporting animation %s.", anim.name)
+def writeAnimation(filepath, human, config, animTrack):
+    log.message("Exporting animation %s.", animTrack.name)
     numJoints = len(human.getSkeleton().getBones()) + 1
 
     animfilename = os.path.splitext(os.path.basename(filepath))[0]
-    animfilename = animfilename + "_%s.md5anim" % (anim.name)
+    animfilename = animfilename + "_%s.md5anim" % (animTrack.name)
     foldername = os.path.dirname(filepath)
     animfilepath = os.path.join(foldername, animfilename)
     f = open(animfilepath, 'w')
     f.write('MD5Version 10\n')
     f.write('commandline ""\n\n')
-    f.write('numFrames %d\n' % anim.nFrames) 
+    f.write('numFrames %d\n' % animTrack.nFrames) 
     f.write('numJoints %d\n' % numJoints)
-    f.write('frameRate %d\n' % int(anim.frameRate))
+    f.write('frameRate %d\n' % int(animTrack.frameRate))
     f.write('numAnimatedComponents %d\n\n' % (numJoints * 6))
 
     skel = human.getSkeleton()
@@ -338,7 +337,7 @@ def writeAnimation(filepath, human, config, anim):
         bounds[1] = bounds[1][[0,2,1]] * [1,-1,1]
     bounds = bounds * scale
     # TODO use bounds calculated for every frame
-    for frameIdx in xrange(anim.nFrames):
+    for frameIdx in xrange(animTrack.nFrames):
         #( vec3:boundMin ) ( vec3:boundMax )
         f.write('\t( %f %f %f ) ( %f %f %f )\n' % (bounds[0][0], bounds[0][1], bounds[0][2], bounds[1][0], bounds[1][1], bounds[1][2]))
     f.write('}\n\n')
@@ -367,8 +366,8 @@ def writeAnimation(filepath, human, config, anim):
         bases.append((pos, [qx, qy, qz, w]))
     f.write('}\n\n')
 
-    for frameIdx in xrange(anim.nFrames):
-        frame = anim.getAtFramePos(frameIdx)
+    for frameIdx in xrange(animTrack.nFrames):
+        frame = animTrack.getAtFramePos(frameIdx)
         f.write('frame %d {\n' % frameIdx)
         f.write('\t%f %f %f %f %f %f\n' % (0.0, 0.0, 0.0, 0.0, 0.0, 0.0))  # Transformation for origin joint
         for bIdx in xrange(numJoints-1):

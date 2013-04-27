@@ -221,7 +221,7 @@ def writeSkeletonFile(human, filepath, config):
         return
     f.write('    <animations>\n')
     for anim in human.animations:
-        writeAnimation(human, f, anim)
+        writeAnimation(human, f, anim.getAnimationTrack())
     f.write('    </animations>\n')
     f.write('</skeleton>')
     f.close()
@@ -265,17 +265,17 @@ def writeMaterialFile(human, filepath, stuffs, config):
         f.write('}\n')
     f.close()
 
-def writeAnimation(human, fp, anim):
-    log.message("Exporting animation %s.", anim.name)
-    fp.write('        <animation name="%s" length="%s">\n' % (anim.name, anim.getPlaytime()))
+def writeAnimation(human, fp, animTrack):
+    log.message("Exporting animation %s.", animTrack.name)
+    fp.write('        <animation name="%s" length="%s">\n' % (animTrack.name, animTrack.getPlaytime()))
     fp.write('            <tracks>\n')
     for bIdx, bone in enumerate(human.getSkeleton().getBones()):
         # Note: OgreXMLConverter will optimize out unused (not moving) animation tracks
         fp.write('                <track bone="%s">\n' % bone.name)
         fp.write('                    <keyframes>\n')
-        frameTime = 1.0/float(anim.frameRate)
-        for frameIdx in xrange(anim.nFrames):
-            poseMat = anim.getAtFramePos(frameIdx)[bIdx]
+        frameTime = 1.0/float(animTrack.frameRate)
+        for frameIdx in xrange(animTrack.nFrames):
+            poseMat = animTrack.getAtFramePos(frameIdx)[bIdx]
             translation = poseMat[:3,3]
             angle, axis, _ = transformations.rotation_from_matrix(poseMat)
             fp.write('                        <keyframe time="%s">\n' % (float(frameIdx) * frameTime))
