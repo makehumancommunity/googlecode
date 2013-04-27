@@ -439,7 +439,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
 
     # Collect and prepare all objects.
     stuffs = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False,
-                                            eyebrows=False, lashes=False, subdivide = settings['subdivide'],
+                                            eyebrows=False, lashes=True, subdivide = settings['subdivide'],
                                             progressCallback = lambda p: progress(progbase+p*(nextpb-progbase),"Analyzing objects"))
     progbase = nextpb
 
@@ -451,87 +451,98 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     # Write mesh data for the object.
     povrayWriteMesh2(outputFileDescriptor, stuffs, lambda p: progress(progbase+p*(0.9-progbase),"Writing Objects"))
     progbase = 0.9
+    nextpb = 0.95
                                             
     # Copy texture definitions to the output file.
     progress(progbase,"Writing Materials")
     povrayWriteCamera(gui3d.app.modelCamera, outputFileDescriptor)
     povrayWriteLights(settings['scene'], outputFileDescriptor)
-    try:
-        staticContentFileDescriptor = open(staticFile, 'r')
-    except:
-        log.error('Error opening file to read static content.')
-        return 0
-    staticContentLines = staticContentFileDescriptor.read()
-    staticContentLines = string.replace(staticContentLines, '%%spec%%', str(settings['skinoil']*settings['moist']))    
-    staticContentLines = string.replace(staticContentLines, '%%edss%%', str(settings['skinoil']*(1-settings['moist'])))
-    staticContentLines = string.replace(staticContentLines, '%%rough%%', str(settings['rough']))
+    hmatfile = open(staticFile, 'r')
+    matlines = hmatfile.read()
+    hmatfile.close()
+    matlines = matlines.replace('%%spec%%', str(settings['skinoil']*settings['moist']))    
+    matlines = matlines.replace('%%edss%%', str(settings['skinoil']*(1-settings['moist'])))
+    matlines = matlines.replace('%%rough%%', str(settings['rough']))
     if settings['usebump']:
         _, imgtype = getChannelData(stuffs[0].bump)
-        staticContentLines = string.replace(staticContentLines, '%%normal%%',
-                                            'bump_map {%s "%s_bump.%s" bump_size %s interpolate 2}' % (
-                                                imgtype, stuffs[0].name,(stuffs[0].bump[1].split("."))[1],str(
-                                                    settings['wrinkles'])))         
+        matlines = matlines.replace(
+            '%%normal%%','bump_map {%s "%s_bump.%s" bump_size %s interpolate 2}' % (
+                imgtype, stuffs[0].name,(stuffs[0].bump[1].split("."))[1],str(
+                    settings['wrinkles'])))         
         if settings['SSS']:
-            staticContentLines = string.replace(staticContentLines, '%%bluenormal%%',
-                                                'bump_map {%s "%s_bump.%s" bump_size 3*%s interpolate 2}' % (
-                                                    imgtype, stuffs[0].name,(stuffs[0].bump[1].split("."))[1],str(settings['wrinkles'])))         
-            staticContentLines = string.replace(staticContentLines, '%%greennormal%%',
-                                                'bump_map {png "%s_sss_greenbump.png" bump_size 3*%s interpolate 2}' % (
-                                                    stuffs[0].name, str(settings['wrinkles'])))         
-            staticContentLines = string.replace(staticContentLines, '%%rednormal%%',
-                                                'bump_map {png "%s_sss_redbump.png" bump_size 3*%s interpolate 2}' % (
-                                                    stuffs[0].name, str(settings['wrinkles'])))         
+            matlines = matlines.replace(
+                '%%bluenormal%%','bump_map {%s "%s_bump.%s" bump_size 3*%s interpolate 2}' % (
+                    imgtype, stuffs[0].name,(stuffs[0].bump[1].split("."))[1],str(settings['wrinkles'])))         
+            matlines = matlines.replace(
+                '%%greennormal%%','bump_map {png "%s_sss_greenbump.png" bump_size 3*%s interpolate 2}' % (
+                    stuffs[0].name, str(settings['wrinkles'])))         
+            matlines = matlines.replace(
+                '%%rednormal%%','bump_map {png "%s_sss_redbump.png" bump_size 3*%s interpolate 2}' % (
+                    stuffs[0].name, str(settings['wrinkles'])))         
     else:
-        grainstr = 'wrinkles %s scale 0.0002' % str(settings['wrinkles'])
-        staticContentLines = string.replace(staticContentLines, '%%normal%%',
-                                            'wrinkles %s scale 0.0002' % str(settings['wrinkles']))         
+        matlines = matlines.replace(
+            '%%normal%%','wrinkles %s scale 0.0002' % str(settings['wrinkles']))         
         if settings['SSS']:
-            staticContentLines = string.replace(staticContentLines, '%%bluenormal%%',
-                                                'wrinkles 3*%s scale 0.0002' % str(settings['wrinkles']))         
-            staticContentLines = string.replace(staticContentLines, '%%greennormal%%',
-                                                'wrinkles 1.5*%s scale 0.0004' % str(settings['wrinkles']))         
-            staticContentLines = string.replace(staticContentLines, '%%rednormal%%',
-                                                'wrinkles 0.75*%s scale 0.0006' % str(settings['wrinkles']))
-    staticContentLines = string.replace(staticContentLines, '%%name%%', stuffs[0].name)    
-    staticContentLines = string.replace(staticContentLines, '%%ambience%%',
-                                        'rgb <%f,%f,%f>' % settings['scene'].environment.ambience)
-    outputFileDescriptor.write(staticContentLines)
+            matlines = matlines.replace(
+                '%%bluenormal%%','wrinkles 3*%s scale 0.0002' % str(settings['wrinkles']))         
+            matlines = matlines.replace(
+                '%%greennormal%%','wrinkles 1.5*%s scale 0.0004' % str(settings['wrinkles']))         
+            matlines = matlines.replace(
+                '%%rednormal%%','wrinkles 0.75*%s scale 0.0006' % str(settings['wrinkles']))
+    matlines = matlines.replace('%%name%%', stuffs[0].name)    
+    matlines = matlines.replace(
+        '%%ambience%%','rgb <%f,%f,%f>' % settings['scene'].environment.ambience)
+    outputFileDescriptor.write(matlines)
     outputFileDescriptor.write('\n')
-    staticContentFileDescriptor.close()
     
-    progress(progbase+0.2*(1-progbase),"Writing Materials")
+    progress(progbase+0.65*(nextpb-progbase),"Writing Materials")
     writeItemsMaterials(outputFileDescriptor, stuffs, settings, outputDirectory)
     outputFileDescriptor.close()
 
-    progress(0.95,"Writing Scene file")
+    # Write .pov scene file.
     povrayWriteScene(stuffs, outputSceneFile)
+    progbase = nextpb
 
-    progress(0.95,"Writing textures")
-    for stuff in stuffs:
-        if stuff.textureImage:
-            stuff.textureImage.save(os.path.join(outputDirectory,
-                                                 "%s_texture.png" % stuff.name))
-        elif stuff.texture:
-            collect.copy(stuff.texture, os.path.join(outputDirectory,
-                                                     "%s_texture.%s" % (stuff.name,
-                                                                        (stuff.texture[1].split("."))[1])))
-        if stuff.bump:
-            collect.copy(stuff.bump, os.path.join(outputDirectory,
-                                                  "%s_bump.%s" % (stuff.name,
-                                                                  (stuff.bump[1].split("."))[1])))
-            
+    nextpb = 1.0
+    writeTextures(stuffs, outputDirectory, lambda p: progress(progbase+p*(nextpb-progbase),"Writing Textures"))
+    
     progress(1,"Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
 
+def writeTextures(stuffs, outDir, progressCallback = None):
+    def progress(prog):
+        if progressCallback == None:
+            gui3d.app.progress(prog)
+        else:
+            progressCallback(prog)
+    progress(0)
+    
+    i = 0.0
+    stuffnum = float(len(stuffs))
+    for stuff in stuffs:
+        if stuff.textureImage:
+            teximg = stuff.textureImage
+        elif stuff.texture:
+            teximg = mh.Image(path = collect.getpath(stuff.texture))
+        # Export diffuse texture, with subtextures.
+        teximg.save(os.path.join(
+            outDir,"%s_texture.png" % stuff.name))
+        progress((i+0.5)/stuffnum)
+        # Export transparency map.
+        imgop.getAlpha(teximg).save(path = os.path.join(outDir,"%s_alpha.png" % stuff.name))
+        # Export bump map.
+        if stuff.bump:
+            collect.copy(stuff.bump, os.path.join(
+                outDir, "%s_bump.%s" % (stuff.name,(
+                    stuff.bump[1].split("."))[1])))
+        i += 1.0
+        progress(i/stuffnum)
+        
 def writeItemsMaterials(outputFileDescriptor, stuffs, settings, outDir):
     for stuff in stuffs[1:]:
         texdata = getChannelData(stuff.texture)
         bumpdata = getChannelData(stuff.bump)
         if stuff.type == 'Hair':
             if settings['hairShine']:
-                # Export transparency map.
-                hairtex = mh.Image(path = os.path.join(stuff.texture[0],stuff.texture[1]))
-                hairalpha = imgop.getAlpha(hairtex)
-                hairalpha.save(path = os.path.join(outDir,"%s_alpha.png" % stuff.name))
                 hhairfile = open ("data/povray/hair_2.inc",'r')
                 hairlines = hhairfile.read()
                 hairlines = hairlines.replace ("%%spec%%",str(settings['hairSpec']))
@@ -625,8 +636,8 @@ def povrayWriteMesh2(hfile, stuffs, progressCallback = None):
             progressCallback(prog)
     progress(0)
         
-    stuffnum = float(len(stuffs))
     i = 0.0
+    stuffnum = float(len(stuffs))
     for stuff in stuffs:
         obj = stuff.meshInfo.object
 

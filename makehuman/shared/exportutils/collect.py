@@ -475,14 +475,19 @@ def setStuffSkinWeights(stuff):
             wn += 1
         stuff.skinWeights.extend(wts)
     return
-    
+
+def getpath(path):
+    if isinstance(path, tuple):
+        (folder, file) = path
+        path = os.path.join(folder, file)
+    if path:
+        return os.path.realpath(os.path.expanduser(path))
+    else:
+        return None
+            
 def copy(frompath, topath):
-    if isinstance(frompath, tuple):
-        (folder, file) = frompath
-        frompath = os.path.join(folder, file)
+    frompath = getpath(frompath)
     if frompath:
-        frompath = os.path.realpath(os.path.expanduser(frompath))
-        log.debug("Copy %s to %s" % (frompath, topath))
         try:
             shutil.copy(frompath, topath)
         except (IOError, os.error), why:

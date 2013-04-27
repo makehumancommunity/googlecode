@@ -4,7 +4,7 @@
 // little disruption to the surface normals.  
 #ifndef (%%name%%_Material)
 
-#declare TEXTURE =
+#declare %%name%%_Texture =
     texture {
         pigment {rgb 1}
         finish {
@@ -43,7 +43,11 @@
 #declare %%name%%_Material = material {
     texture {
         uv_mapping
-        TEXTURE
+        pigment_pattern {image_map {png "%%name%%_alpha.png" interpolate 2}}
+        texture_map {
+            [0 pigment {color transmit 1.0}]
+            [1 %%name%%_Texture]
+        }
     }
 }
 

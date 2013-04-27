@@ -4,7 +4,7 @@
 // using premade lightmaps.  
 #ifndef (%%name%%_Material)                            
 
-#declare TEXTURE = 
+#declare %%name%%_Texture = 
     texture { // Apply high blur to red channel.
         pigment { image_map {png "%%name%%_sss_redlmap.png" interpolate 2} }
         normal  {%%rednormal%%}
@@ -62,7 +62,11 @@
 #declare %%name%%_Material = material {
     texture {
         uv_mapping
-        TEXTURE
+        pigment_pattern {image_map {png "%%name%%_alpha.png" interpolate 2}}
+        texture_map {
+            [0 pigment {color transmit 1.0}]
+            [1 %%name%%_Texture]
+        }
     }
 }
 

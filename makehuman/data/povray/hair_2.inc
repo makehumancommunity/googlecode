@@ -42,7 +42,7 @@
 
 #declare %%name%%_Texture =
     texture {
-        pigment_pattern { image_map {png "%%name%%_alpha.png" interpolate 2} }
+        pigment_pattern {image_map {png "%%name%%_alpha.png" interpolate 2}}
         texture_map {
             [0 %%name%%_hairtex0]
             [1 %%name%%_hairtex1]    
