@@ -217,9 +217,10 @@ def writeSkeletonFile(human, filepath, config):
             f.write('        <boneparent bone="%s" parent="%s" />\n' % (bone.name, bone.parent.name))
     f.write('    </bonehierarchy>\n')
 
-    # TODO export animations
+    if not hasattr(human, 'animations'):
+        return
     f.write('    <animations>\n')
-    for anim in human.animated.getAnimations():
+    for anim in human.animations:
         writeAnimation(human, f, anim)
     f.write('    </animations>\n')
     f.write('</skeleton>')
@@ -264,9 +265,8 @@ def writeMaterialFile(human, filepath, stuffs, config):
         f.write('}\n')
     f.close()
 
-def writeAnimation(human, fp, animationName):
-    log.message("Exporting animation %s.", animationName)
-    anim = human.animated.getAnimation(animationName)
+def writeAnimation(human, fp, anim):
+    log.message("Exporting animation %s.", anim.name)
     fp.write('        <animation name="%s" length="%s">\n' % (anim.name, anim.getPlaytime()))
     fp.write('            <tracks>\n')
     for bIdx, bone in enumerate(human.getSkeleton().getBones()):

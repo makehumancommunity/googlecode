@@ -252,9 +252,10 @@ def exportMd5(human, filepath, config):
         f.write('}\n\n')
     f.close()
 
-    if human.getSkeleton():
-        for animName in human.animated.getAnimations():
-            writeAnimation(filepath, human, config, animName)
+    if human.getSkeleton() and hasattr(human, 'animations'):
+        return:
+        for anim in human.animations:
+            writeAnimation(filepath, human, config, anim)
 
 def writeBone(f, bone, human, config):
     """
@@ -298,9 +299,8 @@ def writeBone(f, bone, human, config):
         pos[0], pos[1], pos[2],
         qx, qy, qz))
 
-def writeAnimation(filepath, human, config, animationName):
-    log.message("Exporting animation %s.", animationName)
-    anim = human.animated.getAnimation(animationName)
+def writeAnimation(filepath, human, config, anim):
+    log.message("Exporting animation %s.", anim.name)
     numJoints = len(human.getSkeleton().getBones()) + 1
 
     animfilename = os.path.splitext(os.path.basename(filepath))[0]
