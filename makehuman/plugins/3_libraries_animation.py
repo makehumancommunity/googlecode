@@ -37,6 +37,7 @@ import bvh
 import skeleton
 import skeleton_drawing
 import animation
+import filechooser
 
 
 class AnimationCollection(object):
@@ -63,6 +64,38 @@ class Animation(object):
     def getPath(self):
         folder = os.path.dirname(self.collection.path)
         return os.path.join(folder, self.bvh)
+
+class MhAnimLoader(filechooser.FileHandler):
+
+    def __init__(self, animationChooser):
+        self.animationChooser = animationChooser
+
+    def refresh(self, files):
+        self.animationChooser.clearAnimations()
+
+        for filename in files:
+            mhAnim = readAnimCollectionFile(filename)
+            if mhAnim:
+                for ani in mhAnim.animations:
+                    # Add entry to animation chooser
+                    item = self.fileChooser.addItem(file, ani.name, None, mhAnim.tags)
+                    item.animId = (mhAnim.uuid, ani.name)
+                # Add entry to animation chooser task
+                self.animationChooser.addAnimationCollection(mhAnim)
+            else:
+                log.debug("Failed to parse mhanim file %s", filename)
+
+    def getSelection(self, item):
+        print 'getting selecting for %s' % item
+        print item.animId
+        return item.animId
+
+    def matchesItem(self, listItem, item):
+        return listItem.animId == item
+
+    def matchesItems(self, listItem, items):
+        return listItem.animId in items
+
 
 class AnimationLibrary(gui3d.TaskView):
 
@@ -98,6 +131,9 @@ class AnimationLibrary(gui3d.TaskView):
 
         # Stores all selected animations and makes them available globally
         self.human.animations = []
+
+        if not hasattr(self.human, 'animated'):
+            self.human.animated = None
 
         self.timer = None
         self.currFrame = 0
@@ -138,78 +174,60 @@ class AnimationLibrary(gui3d.TaskView):
 
         self.createPlaybackControl()
 
-        self.animationSelector = []
-        self.animationsBox = self.addRightWidget(gui.GroupBox('Animations'))
+        self.filechooser = self.addRightWidget(filechooser.ListFileChooser(self.animPaths, self.extension, 'Animations', True))
 
-        self.tagsBox = self.addLeftWidget(gui.GroupBox('Tags'))
-        self.tagSelector = []
+        self.filechooser.setFileLoadHandler(MhAnimLoader(self))
+        self.addLeftWidget(self.filechooser.createSortBox())
+        self.addLeftWidget(self.filechooser.createTagFilter())
+        #self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
+        self.mediaSync = None
 
-    def reloadAnimations(self):
+        @self.filechooser.mhEvent
+        def onFileHighlighted(animId):
+            print animId
+            collectionUuid, animName = animId
+            self.anim = self.getAnimation(collectionUuid, animName)
+            self.highlightAnimation(self.anim)
+            self.startPlayback()
+
+        @self.filechooser.mhEvent
+        def onFileSelected(animId):
+            collectionUuid, animName = animId
+            anim = self.getAnimation(collectionUuid, animName)
+            self.selectAnimation(anim)
+            # TODO action
+
+        @self.filechooser.mhEvent
+        def onFileDeselected(animId):
+            collectionUuid, animName = animId
+            anim = self.getAnimation(collectionUuid, animName)
+            self.deselectAnimation(anim)
+
+        self.filechooser.refresh()
+
+    def clearAnimations(self):
         # Clear up old animations cache
         self.animations = []
         self.anim = None
         self.animTrack = None
-        for radioBtn in self.animationSelector:
-            radioBtn.hide()
-            radioBtn.destroy()
-        self.animationSelector = []
         if self.human.animated:
             self.human.animated.removeAnimations()
 
-        for tgglBtn in self.tagSelector:
-            tgglBtn.hide()
-            tgglBtn.destroy()
-        self.tagSelector = []
+    def addAnimationCollection(self, mhAnim):
+        self.collections[mhAnim.uuid] = mhAnim
+        self.tags = self.tags.union(mhAnim.tags)
+        for anim in mhAnim.animations:
+            self.animations.append(anim)
 
-        # Reload animations list
-        self.animations = self.getAnimations()
-
-        for anim in self.animations:
-            if anim.collection.uuid not in self.collections.keys():
-                self.collections[anim.collection.uuid] = anim.collection
-
-        # Create a list of all animations in the GUI
-        self.tags = set()
-        for anim in self.animations:
-            radioBtn = self.animationsBox.addWidget(gui.RadioButton(self.animationSelector, anim.name, selected=len(self.animationSelector) == 0))
-            radioBtn.anim = anim
-
-            @radioBtn.mhEvent
-            def onClicked(event):
-                for rdio in self.animationSelector:
-                    if rdio.selected:
-                        self.highlightAnimation(rdio.anim)
-
-        for collection in self.collections.values():
-            self.tags = self.tags.union(collection.tags)
-
-        # Create tag list in GUI
-        for tag in self.tags:
-            btn = self.tagsBox.addWidget(gui.ToggleButton(tag))
-            btn.tag = tag
-            self.tagSelector.append(btn)
-            btn.setSelected(True)
-
-            @btn.mhEvent
-            def onClicked(event):
-                self.filterBySelectedTags()
-
-        self.highlightAnimation(self.animationSelector[0].anim)
-
-    def filterBySelectedTags(self):
-        tags = self.getSelectedTags()
-        for radioBtn in self.animationSelector:
-            if tags.intersection(radioBtn.anim.collection.tags):
-                radioBtn.show()
-            else:
-                radioBtn.hide()
-
-    def getSelectedTags(self):
-        tags = set()
-        for tgglBtn in self.tagSelector:
-            if tgglBtn.selected:
-                tags.add(tgglBtn.tag)
-        return tags
+    def getAnimation(self, uuid, animName):
+        if not uuid in self.collections:
+            log.error('No animation collection with UUID %s loaded.', uuid)
+            return None
+        collection = self.collections[uuid]
+        anim = collection.getAnimation(animName)
+        if not anim:
+            log.error('No animation with name %s loaded in collection %s (%s).', animName, collection.path, uuid)
+        return anim
 
     def loadAnimation(self, uuid, animName):
         if not human.getSkeleton():
@@ -217,32 +235,12 @@ class AnimationLibrary(gui3d.TaskView):
             gui3d.app.statusPersist("Error: cannot load animations when no skeleton is selected.")
             return
 
-        # Cache all animation collection files
-        if len(self.animations) == 0:
-            self.reloadAnimations()
-
-        if not uuid in self.collections.keys():
+        anim = self.getAnimation(uuid, animName)
+        if not anim:
+            log.error('Failed to load animation.')
             return
 
-        collection = self.collections[uuid]
-        anim = collection.getAnimation(animName)
-
-        self.chooseAnimation(anim)
-
-    def getAnimations(self):
-        """
-        Find and parse all animation collection files.
-        """
-        animations = []
-
-        mhAnimFiles = searchFiles(self.animPaths, [self.extension])
-        for filename in mhAnimFiles:
-            mhAnim = readAnimCollectionFile(filename)
-            if mhAnim:
-                animations.extend( mhAnim.animations )
-            else:
-                log.debug("Failed to parse mhanim file %s", filename)
-        return animations
+        self.selectAnimation(anim)
 
     def loadBVH(self, anim):
         """
@@ -355,6 +353,8 @@ class AnimationLibrary(gui3d.TaskView):
             self.highlightAnimation(self.animations[0])
             self.startPlayback()
 
+        self.printAnimationsStatus()
+
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
 
@@ -439,20 +439,31 @@ class AnimationLibrary(gui3d.TaskView):
         self.stopPlayback()
         self.human.animated.setToRestPose()
 
-    def chooseAnimation(self, anim):
+    def selectAnimation(self, anim):
         if not anim in self.human.animations:
             self.animations.append(anim)
+        self.printAnimationsStatus()
+
+    def deselectAnimation(self, anim):
+        try:
+            self.animations.remove(anim)
+        except:
+            pass
+        self.printAnimationsStatus()
+        
+    def printAnimationsStatus(self):
+        nAnimations = len(self.animations)
+        if nAnimations == 1:
+            gui3d.app.statusPersist('1 animation selected')
+        else:
+            gui3d.app.statusPersist('%s animations selected' % nAnimations)
 
     def highlightAnimation(self, anim):
         self.stopPlayback()
         if not self.human.getSkeleton():
             return
 
-        for rdio in self.animationSelector:
-            if rdio.anim == anim:
-                rdio.setSelected(True)
-            else:
-                rdio.setSelected(False)
+        self.filechooser.setHighlightedItem((anim.collection.uuid, anim.name))
 
         if not self.human.animated.hasAnimation(getAnimationTrackName(anim.collection.uuid, anim.name)):
             # Load animation track (containing the actual animation data)
@@ -692,14 +703,3 @@ def readAnimCollectionFile(filename):
 
 def getAnimationTrackName(collectionUuid, animationName):
     return "%s_%s" % (collectionUuid, animationName)
-
-def searchFiles(paths, extensions):
-    # TODO move this method somewhere to a shared module?
-    for path in paths:
-        for root, dirs, files in os.walk(path):
-            for f in files:
-                ext = os.path.splitext(f)[1][1:].lower()
-                if ext in extensions:
-                    if f.lower().endswith('.' + ext):
-                        yield os.path.join(root, f)
-
