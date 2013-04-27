@@ -270,6 +270,18 @@ def scanFileForUuid(path):
             break
     fp.close()
     return None
-                       
-    
 
+def scanFileForTags(path):
+    tags = set()
+    fp = open(path)
+    for line in fp:
+        words = line.split()
+        if len(words) == 0:
+            continue
+        elif words[0] == '#':
+            if words[1] == "tag":
+                tags.add(words[2])
+        else:
+            break
+    fp.close()
+    return tags
