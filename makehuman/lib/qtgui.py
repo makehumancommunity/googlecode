@@ -569,9 +569,10 @@ class ListItem(QtGui.QListWidgetItem):
             self.setCheckState(QtCore.Qt.Checked)
         else:
             self.setCheckState(QtCore.Qt.Unchecked)
+        self.checkedState = self.checkState()
 
     def isChecked(self):
-        return self.hasCheckBox and self.checkState() != QtCore.Qt.Unchecked
+        return self.hasCheckbox and self.checkState() != QtCore.Qt.Unchecked
 
     def _clicked(self, owner):
         if self.hasCheckbox:
@@ -685,10 +686,15 @@ class ListView(QtGui.QListWidget, Widget):
         return [ self.item(row) for row in xrange(self.count()) ]
 
     def clearSelection(self):
+        selected = self.selectedItems()
         super(ListView, self).clearSelection()
+        for item in selected:
+            self.callEvent('onClicked', item)
+
         for item in self.getItems():
-            item.setChecked(False)
-            
+            if item.isChecked():
+                item.setChecked(False)
+                self.callEvent('onItemUnchecked', item)
 
 class TextView(QtGui.QLabel, Widget):
     def __init__(self, label = ''):
