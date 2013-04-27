@@ -69,20 +69,6 @@ class ClothesAction(gui3d.Action):
         return True
 
 
-class MhcloFileLoader(fc.FileHandler):
-
-    def refresh(self, files):
-        """
-        Load tags from mhclo file.
-        """
-        for file in files:
-            label = os.path.basename(file)
-            if isinstance(self.fileChooser.extension, str):
-                label = os.path.splitext(label)[0]
-            tags = exportutils.config.scanFileForTags(file)
-            self.fileChooser.addItem(file, label, self.fileChooser.getPreview(file), tags)
-
-
 #
 #   Clothes
 #
@@ -107,7 +93,7 @@ class ClothesTaskView(gui3d.TaskView):
             os.makedirs(self.userClothes)
         #self.filechooser = self.addTopWidget(fc.FileChooser([self.systemClothes, self.userClothes], 'mhclo', 'thumb', 'data/clothes/notfound.thumb'))
         self.filechooser = self.addRightWidget(fc.ListFileChooser([self.systemClothes, self.userClothes], 'mhclo', 'Clothes', True))
-        self.filechooser.setFileLoadHandler(MhcloFileLoader())
+        self.filechooser.setFileLoadHandler(fc.MhcloFileLoader())
         self.addLeftWidget(self.filechooser.createSortBox())
         self.addLeftWidget(self.filechooser.createTagFilter())
         #self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))

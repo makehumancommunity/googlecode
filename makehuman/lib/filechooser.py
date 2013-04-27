@@ -280,7 +280,7 @@ class TagFilter(gui.GroupBox):
             else:
                 item.setHidden(True)
 
-class FileHandler():
+class FileHandler(object):
     def __init__(self):
         self.fileChooser = None
 
@@ -302,6 +302,28 @@ class FileHandler():
 
     def setFileChooser(self, fileChooser):
         self.fileChooser = fileChooser
+
+class MhcloFileLoader(FileHandler):
+
+    def __init__(self):
+        super(MhcloFileLoader, self).__init__()
+        self.__tagsCache = {}
+
+    def refresh(self, files):
+        """
+        Load tags from mhclo file.
+        """
+        import exportutils.config
+        for file in files:
+            label = os.path.basename(file)
+            if isinstance(self.fileChooser.extension, str):
+                label = os.path.splitext(label)[0]
+            if not file in self.__tagsCache:
+                tags = exportutils.config.scanFileForTags(file)
+                self.__tagsCache[file] = tags
+            else:
+                tags = self.__tagsCache[file]
+            self.fileChooser.addItem(file, label, self.fileChooser.getPreview(file), tags)
 
 class FileChooserBase(QtGui.QWidget, gui.Widget):
 
