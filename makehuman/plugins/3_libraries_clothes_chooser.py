@@ -99,8 +99,6 @@ class ClothesTaskView(gui3d.TaskView):
         #self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
         self.mediaSync = None
 
-        self.originalHumanMask = gui3d.app.selectedHuman.meshData.getFaceMask().copy()
-
         @self.filechooser.mhEvent
         def onFileHighlighted(filename):
             if self.highlightedPiece:
@@ -138,6 +136,7 @@ class ClothesTaskView(gui3d.TaskView):
         #def onClicked(event):
         #    self.syncMedia()
 
+        self.originalHumanMask = gui3d.app.selectedHuman.meshData.getFaceMask().copy()
         self.optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
         self.faceHidingTggl = self.optionsBox.addWidget(gui.ToggleButton("Hide faces under clothes"))
         @self.faceHidingTggl.mhEvent
