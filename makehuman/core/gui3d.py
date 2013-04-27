@@ -220,6 +220,7 @@ class Object(events3d.EventHandler):
             self.mesh.setVisibility(0)
             self.mesh = self.__proxyMesh
             self.mesh.setVisibility(1)
+            self.__proxyMesh.setSolid(self.__seedMesh.solid)
             
     def getSubdivisionMesh(self, update=True, progressCallback=None):
         """
