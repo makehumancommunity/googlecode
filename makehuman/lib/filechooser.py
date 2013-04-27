@@ -282,22 +282,23 @@ class TagFilter(gui.GroupBox):
 
 class FileHandler():
     def __init__(self):
-        pass
+        self.fileChooser = None
 
     def refresh(self, files):
-        pass
+        for file in files:
+            label = os.path.basename(file)
+            if isinstance(self.fileChooser.extension, str):
+                label = os.path.splitext(label)[0]
+            self.fileChooser.addItem(file, label, self.fileChooser.getPreview(file))
 
     def getSelection(self, item):
-        pass
+        return item.file
 
     def matchesItem(self, listItem, item):
-        return False
+        return listItem.file == item
 
     def matchesItems(self, listItem, items):
-        return False
-
-    def isFiltered(self, listItem, tags):
-        return False
+        return listItem.file in items
 
     def setFileChooser(self, fileChooser):
         self.fileChooser = fileChooser
@@ -317,7 +318,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         self.sortBy = self.sort.fields()[0]
         self.sortgroup = []
 
-        self.loadHandler = None
+        self.setFileLoadHandler(FileHandler())
         self.tagFilter = None
 
     def createSortBox(self):
@@ -405,15 +406,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         self.clearList()
 
         files = self.sort.sort(self.sortBy, list(self.search()))
-        if self.loadHandler:
-            self.loadHandler.refresh(files)
-        else:
-            # Create icons
-            for file in files:
-                label = os.path.basename(file)
-                if isinstance(self.extension, str):
-                    label = os.path.splitext(label)[0]
-                self.addItem(file, label, self.getPreview(file))
+        self.loadHandler.refresh(files)
 
         self.applyTagFilter()
 
@@ -425,14 +418,9 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         self.tagFilter.filter(self.children.getItems())
 
     def _getListItem(self, item):
-        if self.loadHandler:
-            for listItem in self.children.getItems():
-                if self.loadHandler.matchesItem(listItem, item):
-                    return listItem
-        else:
-            for listItem in self.children.getItems():
-                if listItem.file == item:
-                    return listItem
+        for listItem in self.children.getItems():
+            if self.loadHandler.matchesItem(listItem, item):
+                return listItem
         return None
 
     def addTags(self, item, tags):
@@ -452,6 +440,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         return tags
 
     def setFileLoadHandler(self, loadHandler):
+        loadHandler.setFileChooser(self)
         self.loadHandler = loadHandler
 
     def addItem(self, file, label, preview, tags = []):
@@ -593,7 +582,6 @@ class ListFileChooser(FileChooserBase):
         item.file = file
         item.preview = preview
         item.untranslatedLabel = label
-        tags = ['Tag1', 'Tag2', 'Tag3']
         item.tags = tags
         super(ListFileChooser, self).addItem(file, label, preview, tags)
         return self.children.addItemObject(item)
@@ -601,10 +589,7 @@ class ListFileChooser(FileChooserBase):
     def getHighlightedItem(self):
         items = self.children.selectedItems()
         if len(items) > 0:
-            if self.loadHandler:
-                return self.loadHandler.getSelection(items[0])
-            else:
-                return items[0].file
+            return self.loadHandler.getSelection(items[0])
         else:
             return None
 
@@ -613,10 +598,7 @@ class ListFileChooser(FileChooserBase):
 
     def getSelectedItems(self):
         if self.multiSelect:
-            if self.loadHandler:
-                return [self.loadHandler.getSelection(item) for item in self.children.getItems() if item.isChecked()]
-            else:
-                return [item.file for item in self.children.getItems() if item.isChecked()]
+            return [self.loadHandler.getSelection(item) for item in self.children.getItems() if item.isChecked()]
         else:
             return [self.getHighlightedItem()]
 
@@ -626,40 +608,24 @@ class ListFileChooser(FileChooserBase):
 
         self.deselectAll()
 
-        if self.loadHandler:
-            for listItem in self.children.getItems():
-                if self.loadHandler.matchesItem(listItem, item):
-                    self.children.setCurrentItem(listItem)
-                    return
-        else:
-            for listItem in self.children.getItems():
-                if listItem.file == item:
-                    self.children.setCurrentItem(listItem)
-                    return
+        for listItem in self.children.getItems():
+            if self.loadHandler.matchesItem(listItem, item):
+                self.children.setCurrentItem(listItem)
+                return
 
     def setSelections(self, items):
         if not self.multiSelect:
             return
 
-        if self.loadHandler:
-            for listItem in self.children.getItems():
-                listItem.setChecked( self.loadHandler.matchesItems(listItem, items) )
-        else:
-            for listItem in self.children.getItems():
-                listItem.setChecked( listItem.file in items )
+        for listItem in self.children.getItems():
+            listItem.setChecked( self.loadHandler.matchesItems(listItem, items) )
 
     def setHighlightedItem(self, item):
         if isinstance(item, list) and len(item) > 0:
-            if self.loadHandler:
-                for listItem in self.children.getItems():
-                    if self.loadHandler.matchesItem(listItem, item):
-                        self.children.setCurrentItem(listItem)
-                        return
-            else:
-                for listItem in self.children.getItems():
-                    if listItem.file == item:
-                        self.children.setCurrentItem(listItem)
-                        return
+            for listItem in self.children.getItems():
+                if self.loadHandler.matchesItem(listItem, item):
+                    self.children.setCurrentItem(listItem)
+                    return
         else:
             self.children.setCurrentItem(None)
 
