@@ -86,8 +86,6 @@ class MhAnimLoader(filechooser.FileHandler):
                 log.debug("Failed to parse mhanim file %s", filename)
 
     def getSelection(self, item):
-        print 'getting selecting for %s' % item
-        print item.animId
         return item.animId
 
     def matchesItem(self, listItem, item):
@@ -184,7 +182,6 @@ class AnimationLibrary(gui3d.TaskView):
 
         @self.filechooser.mhEvent
         def onFileHighlighted(animId):
-            print animId
             collectionUuid, animName = animId
             self.anim = self.getAnimation(collectionUuid, animName)
             self.highlightAnimation(self.anim)
@@ -206,8 +203,6 @@ class AnimationLibrary(gui3d.TaskView):
         self.filechooser.refresh()
 
     def clearAnimations(self):
-        # Clear up old animations cache
-        self.animations = []
         self.anim = None
         self.animTrack = None
         if self.human.animated:
@@ -216,8 +211,6 @@ class AnimationLibrary(gui3d.TaskView):
     def addAnimationCollection(self, mhAnim):
         self.collections[mhAnim.uuid] = mhAnim
         self.tags = self.tags.union(mhAnim.tags)
-        for anim in mhAnim.animations:
-            self.animations.append(anim)
 
     def getAnimation(self, uuid, animName):
         if not uuid in self.collections:
@@ -340,17 +333,9 @@ class AnimationLibrary(gui3d.TaskView):
 
         self.frameSlider.setValue(0)
 
-        # Only load mhanim files at first time or when "Reload" button is pressed
-        if len(self.animations) == 0:
-            self.reloadAnimations()
-
         if self.anim:
             # Start playing previously highlighted animation
             self.highlightAnimation(self.anim)
-            self.startPlayback()
-        elif len(self.animations) > 0:
-            # Start playing first animation
-            self.highlightAnimation(self.animations[0])
             self.startPlayback()
 
         self.printAnimationsStatus()
@@ -441,18 +426,18 @@ class AnimationLibrary(gui3d.TaskView):
 
     def selectAnimation(self, anim):
         if not anim in self.human.animations:
-            self.animations.append(anim)
+            self.human.animations.append(anim)
         self.printAnimationsStatus()
 
     def deselectAnimation(self, anim):
         try:
-            self.animations.remove(anim)
+            self.human.animations.remove(anim)
         except:
             pass
         self.printAnimationsStatus()
         
     def printAnimationsStatus(self):
-        nAnimations = len(self.animations)
+        nAnimations = len(self.human.animations)
         if nAnimations == 1:
             gui3d.app.statusPersist('1 animation selected')
         else:
@@ -463,7 +448,8 @@ class AnimationLibrary(gui3d.TaskView):
         if not self.human.getSkeleton():
             return
 
-        self.filechooser.setHighlightedItem((anim.collection.uuid, anim.name))
+        if self.filechooser.getHighlightedItem() != (anim.collection.uuid, anim.name):
+            self.filechooser.setHighlightedItem((anim.collection.uuid, anim.name))
 
         if not self.human.animated.hasAnimation(getAnimationTrackName(anim.collection.uuid, anim.name)):
             # Load animation track (containing the actual animation data)
