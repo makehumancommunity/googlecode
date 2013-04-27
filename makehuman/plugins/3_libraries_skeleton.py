@@ -150,14 +150,16 @@ class SkeletonLibrary(gui3d.TaskView):
         self.infoBox = self.addRightWidget(gui.GroupBox('Rig info'))
         self.boneCountLbl = self.infoBox.addWidget(gui.TextView('Bones: '))
         self.descrLbl = self.infoBox.addWidget(gui.TextView('Description: '))
+        self.descrLbl.setSizePolicy(gui.QtGui.QSizePolicy.Ignored, gui.QtGui.QSizePolicy.MinimumExpanding)
+        self.descrLbl.setWordWrap(True)
 
         self.rigDescriptions = { 
-            "soft1":       "Soft skinned rig\nSimple version of the MHX\nreference rig containing\n only its deforming bones.",
-            "xonotic":     "Rig compatible\nwith the open-source game\nXonotic.",
-            "second_life": "Rig compatible\nwith Second Life.",
-            "game":        "A simple rig\nwith a minimal amount of \nbones. Has limited\nexpressivity in hands\nand face.",
-            "humanik":     "Rig compatible\nwith the HumanIK software.",
-            "rigid":       "Same as soft1\na simple version of the MHX\nreference rig, but with\nrigid weighting.",
+            "soft1":       "Soft skinned rig. Simple version of the MHX reference rig containing only its deforming bones.",
+            "xonotic":     "Rig compatible with the open-source game Xonotic.",
+            "second_life": "Rig compatible with Second Life.",
+            "game":        "A simple rig with a minimal amount of bones. Has limited expressivity in hands and face.",
+            "humanik":     "Rig compatible with the HumanIK software.",
+            "rigid":       "Same as soft1 a simple version of the MHX reference rig, but with rigid weighting.",
         }
 
     def onShow(self, event):
@@ -510,7 +512,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
     def saveHandler(self, human, file):
         if human.getSkeleton():
-            file.write('skeleton %s\n' % os.path.basename(human.getSkeleton().file))
+            file.write('skeleton %s ' % os.path.basename(human.getSkeleton().file))
 
 
 def load(app):
