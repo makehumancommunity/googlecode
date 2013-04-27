@@ -24,11 +24,14 @@ Allows a selection of skeletons which can be exported with the MH character.
 Skeletons are used for skeletal animation (skinning) and posing.
 """
 
+# TODO add sort by number of bones
+
 import gui3d
 import mh
 import gui
 import module3d
 import log
+import filechooser as fc
 
 import skeleton
 import skeleton_drawing
@@ -108,6 +111,26 @@ class SkeletonLibrary(gui3d.TaskView):
 
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
 
+        self.filechooser = self.addRightWidget(fc.ListFileChooser(self.rigPaths, self.extension, 'Skeleton rig'))
+        self.addLeftWidget(self.filechooser.createSortBox())
+
+        @self.filechooser.mhEvent
+        def onFileSelected(filename):
+            if self.human.getSkeleton():
+                oldSkelFile = self.human.getSkeleton().file
+            else:
+                oldSkelFile = None
+            gui3d.app.do(SkeletonAction("Change skeleton",
+                                        self,
+                                        oldSkelFile,
+                                        filename))
+
+        @self.filechooser.mhEvent
+        def onRefresh(fileChooser):
+            fileChooser.addItem(os.path.join(self.rigPaths[0], 'clear.rig'), 'No skeleton', None)
+
+        self.filechooser.refresh()
+
         displayBox = self.addLeftWidget(gui.GroupBox('Display'))
         self.showHumanTggl = displayBox.addWidget(gui.ToggleButton("Show human"))
         @self.showHumanTggl.mhEvent
@@ -141,16 +164,13 @@ class SkeletonLibrary(gui3d.TaskView):
                 self.clearBoneWeights()
         self.showWeightsTggl.setSelected(True)
 
-        self.rigBox = self.addRightWidget(gui.GroupBox('Skeleton rig'))
-        self.rigSelector = []
-
         self.boneBox = self.addLeftWidget(gui.GroupBox('Bones'))
         self.boneSelector = []
 
         self.infoBox = self.addRightWidget(gui.GroupBox('Rig info'))
         self.boneCountLbl = self.infoBox.addWidget(gui.TextView('Bones: '))
         self.descrLbl = self.infoBox.addWidget(gui.TextView('Description: '))
-        self.descrLbl.setSizePolicy(gui.QtGui.QSizePolicy.Ignored, gui.QtGui.QSizePolicy.MinimumExpanding)
+        self.descrLbl.setSizePolicy(gui.QtGui.QSizePolicy.Ignored, gui.QtGui.QSizePolicy.Preferred)
         self.descrLbl.setWordWrap(True)
 
         self.rigDescriptions = { 
@@ -206,38 +226,6 @@ class SkeletonLibrary(gui3d.TaskView):
         # Reset smooth setting
         self.human.setSubdivided(self.oldSmoothValue)
 
-    def reloadSkeletonChooser(self):
-        # Remove old radio buttons
-        for radioBtn in self.rigSelector:
-            radioBtn.hide()
-            radioBtn.destroy()
-        self.rigSelector = []
-
-        # Retrieve all .rig files
-        files = searchFiles(self.rigPaths, [self.extension])
-
-        radioBtn = self.rigBox.addWidget(gui.RadioButton(self.rigSelector, "No skeleton", selected=not self.human.getSkeleton()))
-        radioBtn.rigFile = None
-        for rigFile in files:
-            rigName = os.path.splitext(os.path.basename(rigFile))[0]
-            active = bool(self.human.getSkeleton() and self.human.getSkeleton().file == rigFile)
-            radioBtn = self.rigBox.addWidget(gui.RadioButton(self.rigSelector, rigName, selected=active))
-            radioBtn.rigFile = rigFile
-
-        for radioBtn in self.rigSelector:
-            @radioBtn.mhEvent
-            def onClicked(event):
-                for rdio in self.rigSelector:
-                    if rdio.selected:
-                        if self.human.getSkeleton():
-                            oldSkelFile = self.human.getSkeleton().file
-                        else:
-                            oldSkelFile = None
-                        gui3d.app.do(SkeletonAction("Change skeleton",
-                                                    self,
-                                                    oldSkelFile,
-                                                    rdio.rigFile))
-
     def chooseSkeleton(self, filename):
         """
         Load skeleton from rig definition in a .rig file.
@@ -249,7 +237,7 @@ class SkeletonLibrary(gui3d.TaskView):
         except:
             pass
 
-        if not filename:
+        if not filename or os.path.basename(filename) == 'clear.rig':
             # Unload current skeleton
             self.human._skeleton = None
             self.human.animated = None
@@ -536,14 +524,3 @@ def setColorForFaceGroup(mesh, fgName, color):
     mesh.color[mesh.getVerticesForGroups([fgName])] = color[None,:]
     mesh.markCoords(colr=True)
     mesh.sync_color()
-
-def searchFiles(paths, extensions):
-    # TODO move this method somewhere to a shared module?
-    for path in paths:
-        for root, dirs, files in os.walk(path):
-            for f in files:
-                ext = os.path.splitext(f)[1][1:].lower()
-                if ext in extensions:
-                    if f.lower().endswith('.' + ext):
-                        yield os.path.join(root, f)
-
