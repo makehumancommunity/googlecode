@@ -40,19 +40,15 @@
         }
     }
 
-#declare %%name%%_Texture =
+
+#declare %%name%%_Material = material {
     texture {
+        uv_mapping
         pigment_pattern {image_map {png "%%name%%_alpha.png" interpolate 2}}
         texture_map {
             [0 %%name%%_hairtex0]
             [1 %%name%%_hairtex1]    
         }
-    }            
-
-#declare %%name%%_Material = material {
-    texture {
-        uv_mapping
-        %%name%%_Texture
     }
 }
 #end   
