@@ -200,7 +200,7 @@ class SkeletonLibrary(gui3d.TaskView):
         if not self.jointsObj:
             self.drawJointHelpers()
 
-        self.reloadSkeletonChooser()
+        self.filechooser.refresh()
 
         # Make sure skeleton is updated when human has changed
         self.human.getSkeleton()
