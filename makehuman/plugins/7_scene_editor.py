@@ -20,6 +20,11 @@ Abstract
 --------
 
 Scene editor plugin.
+
+This editor can create, load, edit and save .mhscene files,
+and has tools to alter the scene's characteristics,
+like lights and ambience, that are defined in the scene class.
+
 """
 
 import mh
@@ -113,6 +118,13 @@ class LightSceneItem(SceneItem):
         self.widget.addWidget(gui.TextView("Attenuation"))
         self.att = self.widget.addWidget(gui.TextEdit(str(self.light.attenuation)))
 
+        self.soft = self.widget.addWidget(gui.CheckBox("Soft light", self.light.areaLights > 1))
+        self.widget.addWidget(gui.TextView("Softness"))
+        self.size = self.widget.addWidget(gui.TextEdit(str(self.light.areaLightSize)))
+
+        self.widget.addWidget(gui.TextView("Samples"))
+        self.samples = self.widget.addWidget(gui.TextEdit(str(self.light.areaLights)))
+
         self.removebtn = self.widget.addWidget(
             gui.Button('Remove light ' + str(self.lightid)))
 
@@ -156,6 +168,39 @@ class LightSceneItem(SceneItem):
             except:
                 pass
 
+        @self.soft.mhEvent
+        def onClicked(event):
+            try:
+                if self.soft.checkState() and self.light.areaLights <= 1:
+                    self.light.areaLights = 2
+                    self.samples.setText(str(2))
+                elif self.soft.checkState() == 0 and self.light.areaLights > 1:
+                    self.light.areaLights = 1
+                    self.samples.setText(str(1))
+            except:
+                pass
+
+        @self.size.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                self.light.attenuation = float(value)
+            except:
+                pass
+
+        @self.samples.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                alights = int(value)
+                self.light.areaLights = alights
+                if alights>1:
+                    self.soft.setCheckState(2)
+                else:
+                    self.soft.setCheckState(0)
+            except:
+                pass
+            
         @self.removebtn.mhEvent
         def onClicked(event):
             self.sceneview.scene.removeLight(self.light)

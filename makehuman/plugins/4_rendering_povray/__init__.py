@@ -119,26 +119,21 @@ class PovrayTaskView(gui3d.TaskView):
         #        
         @self.renderButton.mhEvent
         def onClicked(event):            
-            
             reload(mh2povray)  # Avoid having to close and reopen MH for every coding change (can be removed once testing is complete)
             # it is necessary to put this code here, so that it is executed with the 'renderButton.event'
             if os.name == 'nt':
                 #
                 if os.environ['PROCESSOR_ARCHITECTURE'] == "x86":
                     binary = 'win32'
-                    #
                     if self.win32sse2Button.selected:
                         binary = 'win32sse2'
-                #
                 else:
                     binary = 'win64'
             # for Ubuntu.. atm
             if sys.platform == 'linux2':
                 binary = 'linux'
             #
-            from scene import Scene
-            mh2povray.povrayExport(gui3d.app,
-                                   {'source':'gui',         # 'ini' if self.iniButton.selected else 'gui',
+            mh2povray.povrayExport({'source':'gui',         # 'ini' if self.iniButton.selected else 'gui',
                                     'format':'mesh2',       # 'array' if self.arrayButton.selected else 'mesh2',
                                     'action':'render',      # 'export' if self.exportButton.selected else 'render',
                                     'scene': gui3d.app.getCategory('Rendering').getTaskByName('Scene').scene,

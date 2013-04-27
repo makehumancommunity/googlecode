@@ -8,5 +8,6 @@ light_source {
     fade_distance 1
     fade_power %%att%%
     point_at %%focus%%
+    %%arealight%%
 }
 

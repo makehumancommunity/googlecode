@@ -32,10 +32,9 @@ variable and texture definitions that are written into a POV-Ray include file. A
 scene file is also written to the output directory containing a range of examples 
 illustrating the use of the include file.
 
-The content of the generated files follows naming conventions intended to make it simple
-to adjust to be compliant with the standards for the POV-Ray Object Collection. All 
-identifiers start with 'MakeHuman\_'. You can easily perform a global change on this
-prefix so that you end up with your own unique prefix.
+The filenames and object names exported are based on the human's current name,
+which is the name that was used when saving the MHM model. In case it's unsaved,
+the exported files use 'untitled'.
 
 """
 
@@ -55,7 +54,7 @@ def downloadPovRay():
     import webbrowser
     webbrowser.open('http://www.povray.org/download/')
 
-def povrayExport(app, settings):
+def povrayExport(settings):
     """
     This function exports data in a format that can be used to reconstruct all
     renderable MakeHuman objects in POV-Ray.
@@ -63,8 +62,6 @@ def povrayExport(app, settings):
     Parameters
     ----------
 
-    app:
-      *MHApplication*. MakeHuman's main app class.
     settings:
       *Dictionary*. Options passed from the Povray exporter GUI.
     """
@@ -72,26 +69,26 @@ def povrayExport(app, settings):
     settings['name'] = string.replace(getHumanName(), " ", "_")
     log.message('POV-Ray Export of object: %s', settings['name'])
   
-    camera = app.modelCamera
-    resW = app.settings.get('rendering_width', 800)
-    resH = app.settings.get('rendering_height', 600)
+    camera = gui3d.app.modelCamera
+    resW = gui3d.app.settings.get('rendering_width', 800)
+    resH = gui3d.app.settings.get('rendering_height', 600)
     resolution = (resW,resH)
   
     path = os.path.join(mh.getPath('render'),
-                        app.settings.get('povray_render_dir', 'pov_output'),
+                        gui3d.app.settings.get('povray_render_dir', 'pov_output'),
                         "%s.inc" % settings['name'])
     
     # The format option defines whether a simple mesh2 object is to be generated
     # or the more flexible but slower array and macro combo is to be generated.
     if settings['format'] == 'array':
-        povrayExportArray(app.selectedHuman.mesh, camera, resolution, path, settings)
+        povrayExportArray(gui3d.app.selectedHuman.mesh, camera, resolution, path, settings)
     if settings['format'] == 'mesh2':
-        povrayExportMesh2(app.selectedHuman.mesh, camera, resolution, path, settings)
+        povrayExportMesh2(gui3d.app.selectedHuman.mesh, camera, resolution, path, settings)
 
     outputDirectory = os.path.dirname(path)
     log.debug('out folder: %s', outputDirectory)
 
-    povray_bin = (app.settings.get('povray_bin', ''))
+    povray_bin = (gui3d.app.settings.get('povray_bin', ''))
    
     # try to use the appropriate binary 
     if os.path.exists(povray_bin):
@@ -137,9 +134,10 @@ def povrayExport(app, settings):
             povwatchTimer = mh.addTimer(1000, lambda: povwatch())
 
         else:
-            app.prompt('POV-Ray not found',
-                       'You don\'t seem to have POV-Ray installed or the path is incorrect.',
-                       'Download', 'Cancel', downloadPovRay)        
+            gui3d.app.prompt(
+                'POV-Ray not found',
+                'You don\'t seem to have POV-Ray installed or the path is incorrect.',
+                'Download', 'Cancel', downloadPovRay)        
 
 def povrayExportArray(obj, camera, resolution, path, settings):
     """
@@ -309,11 +307,18 @@ def povrayWriteLights(scene, hfile):
     hflig = open('data/povray/lights.inc','r')
     for light in scene.lights:
         liglines = hflig.read()
-        liglines = string.replace(liglines, '%%pos%%', '<%f,%f,%f>' % invx(light.position))
-        liglines = string.replace(liglines, '%%color%%', '<%f,%f,%f>' % light.color)
-        liglines = string.replace(liglines, '%%focus%%', '<%f,%f,%f>' % invx(light.focus))
-        liglines = string.replace(liglines, '%%fov%%', str(light.fov))
-        liglines = string.replace(liglines, '%%att%%', str(light.attenuation))
+        liglines = liglines.replace('%%pos%%', '<%f,%f,%f>' % invx(light.position))
+        liglines = liglines.replace('%%color%%', '<%f,%f,%f>' % light.color)
+        liglines = liglines.replace('%%focus%%', '<%f,%f,%f>' % invx(light.focus))
+        liglines = liglines.replace('%%fov%%', str(light.fov))
+        liglines = liglines.replace('%%att%%', str(light.attenuation))
+        if light.areaLights < 2:
+            liglines = liglines.replace('%%arealight%%', '')
+        else:
+            liglines = liglines.replace(
+                '%%arealight%%', 'area_light\n    ' +
+                '<{0},0,0>, <0,{0},0>, {1}, {1}\n    '.format(light.areaLightSize, light.areaLights) +
+                'adaptive 1\n    jitter circular orient\n')
         hfile.write(liglines)
     hflig.close()
 

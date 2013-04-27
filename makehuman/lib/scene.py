@@ -73,7 +73,7 @@ class Light(SceneObject):
              'fov': 180.0,
              'attenuation': 0.0,
              'areaLights': 1,
-             'areaLightRadius': 0.0})
+             'areaLightSize': 4.0})
 
 
 class Environment(SceneObject):
