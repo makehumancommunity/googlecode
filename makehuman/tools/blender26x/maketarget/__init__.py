@@ -195,7 +195,7 @@ class MakeTargetPanel(bpy.types.Panel):
                 else:
                     layout.label("Affect Only:")
                     layout.prop(ob, "MhAffectOnly", expand=True)
-                    layout.operator("mh.delete_irrelevant")  
+                    #layout.operator("mh.delete_irrelevant")  
                 
 
         if rig and rig.type == 'ARMATURE':

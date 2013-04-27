@@ -365,7 +365,7 @@ def doSaveTarget(context, filepath):
     (fname,ext) = os.path.splitext(filepath)
     filepath = fname + ".target"
     print("Saving target %s to %s" % (ob, filepath))
-    if ob.MhAffectOnly != 'All':
+    if False and ob.MhMeshVertsDeleted and ob.MhAffectOnly != 'All':
         first,last = settings.affectedVerts[ob.MhAffectOnly]
         before,after = readLines(filepath, first,last)
         fp = open(filepath, "w", encoding="utf-8", newline="\n")  
