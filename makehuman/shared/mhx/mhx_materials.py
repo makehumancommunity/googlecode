@@ -31,7 +31,7 @@ from . import mhx_drivers
 def writeMaterials(fp, amt, config):
     
     if amt.human.uvset:
-        writeMultiMaterials(fp, amt)
+        writeMultiMaterials(fp, amt, config)
         return
     
     fp.write("""    
