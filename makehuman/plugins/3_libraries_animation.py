@@ -279,9 +279,6 @@ class AnimationLibrary(gui3d.TaskView):
 
         log.debug("Created animation track for %s rig.", self.human.getSkeleton().name)
 
-        # Sparsify data to test out interpolation
-        log.debug("sparsifying anim with framerate %s to %s", animTrack.frameRate, 10)
-        animTrack.sparsify(10)
         animTrack.interpolationType = 1 if self.interpolate else 0
 
         log.debug("Frames: %s", animTrack.nFrames)
