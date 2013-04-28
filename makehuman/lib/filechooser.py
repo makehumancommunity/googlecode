@@ -610,7 +610,6 @@ class ListFileChooser(FileChooserBase):
             item.enableCheckbox()
         item.file = file
         item.preview = preview
-        item.untranslatedLabel = label
         item.tags = tags
         super(ListFileChooser, self).addItem(file, label, preview, tags)
         return self.children.addItemObject(item)
@@ -701,3 +700,18 @@ class ListFileChooser(FileChooserBase):
                 self.setHighlightedItem(highLighted)
             elif len(selections) > 0:
                 self.setSelection(selections[0])
+
+class IconListFileChooser(ListFileChooser):
+    def __init__(self, path, extension, previewExtensions='bmp', notFoundImage=None, name="File chooser" , multiSelect=False, verticalScrolling=False, sort=FileSort()):
+        super(IconListFileChooser, self).__init__(path, extension, name, multiSelect, verticalScrolling, sort)
+        self.setPreviewExtensions(previewExtensions)
+        self.notFoundImage = notFoundImage
+        #self.children.setIconSize(QtCore.QSize(50,50))
+
+    def addItem(self, file, label, preview, tags=[]):
+        item = super(IconListFileChooser, self).addItem(file, label, preview, tags)
+        item.setIcon(QtGui.QIcon(preview))
+        return item
+
+    def setIconSize(self, width, height):
+        self.children.setIconSize(QtCore.QSize(width, height))

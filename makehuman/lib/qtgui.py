@@ -535,7 +535,7 @@ class RadioButton(QtGui.QRadioButton, ButtonBase):
 
 class ListItem(QtGui.QListWidgetItem):
     def __init__(self, label):
-        super(ListItem, self).__init__(getLanguageString(label))
+        super(ListItem, self).__init__(label)
         self.__hasCheckbox = False
 
     @property
@@ -549,7 +549,6 @@ class ListItem(QtGui.QListWidgetItem):
         return self.data(QtCore.Qt.UserRole).toPyObject()
 
     def setText(self, text):
-        text = getLanguageString(text)
         super(ListItem, self).setText(text)
 
     @property
@@ -643,7 +642,7 @@ class ListView(QtGui.QListWidget, Widget):
         return cls._brushes[color]
 
     def addItem(self, text, color = None, data = None, checkbox = False):
-        item = ListItem(self)
+        item = ListItem(text)
         item.setText(text)
         if color is not None:
             item.setForeground(self.getBrush(color))

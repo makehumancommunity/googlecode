@@ -57,7 +57,7 @@ class HairTaskView(gui3d.TaskView):
         if not os.path.exists(hairDir):
             os.makedirs(hairDir)
         #self.filechooser = self.addTopWidget(fc.FileChooser([hairDir , 'data/hairstyles'], 'mhclo', 'thumb', 'data/hairstyles/notfound.thumb'))
-        self.filechooser = self.addRightWidget(fc.ListFileChooser([hairDir , 'data/hairstyles'], 'mhclo', 'Hair'))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser([hairDir , 'data/hairstyles'], 'mhclo', 'thumb', 'data/hairstyles/notfound.thumb', 'Hair'))
         self.addLeftWidget(self.filechooser.createSortBox())
         self.filechooser.refresh()
 
