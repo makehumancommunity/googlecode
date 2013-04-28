@@ -113,9 +113,11 @@ class TextureTaskView(gui3d.TaskView):
         self.activeClothing = None
         self.eyeTexture = None
 
-        self.filechooser = self.addTopWidget(fc.FileChooser(self.userSkins, 'png', ['thumb', 'png'], 'data/skins/notfound.thumb'))
-        #self.filechooser = self.addTopWidget(fc.FileChooser([self.systemSkins, self.userSkins], 'png', 'thumb', 'data/skins/notfound.thumb'))
-        self.addLeftWidget(self.filechooser.sortBox)
+        #self.filechooser = self.addTopWidget(fc.FileChooser(self.userSkins, 'png', ['thumb', 'png'], 'data/skins/notfound.thumb'))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.userSkins, 'png', ['thumb', 'png'], 'data/skins/notfound.thumb', 'Texture'))
+        self.filechooser.setIconSize(50,50)
+        self.addLeftWidget(self.filechooser.createSortBox())
+
         self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
         self.mediaSync = None
         self.mediaSync2 = None
@@ -143,15 +145,12 @@ class TextureTaskView(gui3d.TaskView):
                         self.getClothesTexture(uuid),
                         filename))
 
-            if gui3d.app.settings.get('jumpToModelling', True):
-                mh.changeCategory('Modelling')
-            
         @self.update.mhEvent
         def onClicked(event):
             self.syncMedia()
 
         self.objectSelector = []
-        self.humanBox = self.addRightWidget(gui.GroupBox('Human'))
+        self.humanBox = self.addLeftWidget(gui.GroupBox('Human'))
         self.skinRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Skin", selected=True))
         self.hairRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Hair", selected=False))
         self.eyesRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Eyes", selected=False))
@@ -171,7 +170,7 @@ class TextureTaskView(gui3d.TaskView):
             if self.eyesRadio.selected:
                 self.reloadTextureChooser()
 
-        self.clothesBox = self.addRightWidget(gui.GroupBox('Clothes'))
+        self.clothesBox = self.addLeftWidget(gui.GroupBox('Clothes'))
         self.clothesSelections = []
 
 
@@ -180,7 +179,6 @@ class TextureTaskView(gui3d.TaskView):
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
         human = gui3d.app.selectedHuman
-        human.hide()
 
         self.skinRadio.setChecked(True)
         self.reloadTextureChooser()
@@ -288,7 +286,6 @@ class TextureTaskView(gui3d.TaskView):
         self.filechooser.setFocus()
 
     def onHide(self, event):
-        gui3d.app.selectedHuman.show()
         gui3d.TaskView.onHide(self, event)
         
     def onHumanChanging(self, event):
