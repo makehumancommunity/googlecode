@@ -260,7 +260,7 @@ class TextureTaskView(gui3d.TaskView):
 
         selectedTex = None
         if self.skinRadio.selected:
-            self.textures = [self.systemSkins, self.userSkins]
+            self.textures = [self.systemSkins, self.userSkins, os.path.join('data', 'textures')]
             selectedTex = human.getTexture()
         elif self.hairRadio.selected:
             proxy = human.hairProxy
