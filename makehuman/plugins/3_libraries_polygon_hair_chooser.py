@@ -78,6 +78,7 @@ class HairTaskView(gui3d.TaskView):
                 filename))
 
     def setHair(self, human, mhclo):
+        self.filechooser.selectItem(mhclo)
 
         if human.hairObj:
             gui3d.app.removeObject(human.hairObj)
@@ -151,6 +152,7 @@ class HairTaskView(gui3d.TaskView):
                 #human.hairObj.mesh.clear()
                 human.hairObj = None
                 human.hairProxy = None
+            self.filechooser.deselectAll()
         
     def onHumanChanged(self, event):
         

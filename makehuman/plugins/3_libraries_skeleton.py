@@ -246,6 +246,7 @@ class SkeletonLibrary(gui3d.TaskView):
                 gui3d.app.removeObject(self.skelObj)
                 self.skelObj = None
                 self.skelMesh = None
+            self.filechooser.deselectAll()
             self.selectedBone = None
             self.reloadBoneExplorer()
             self.boneCountLbl.setText("Bones: ")
@@ -259,6 +260,8 @@ class SkeletonLibrary(gui3d.TaskView):
         self.human._skeleton.file = filename
         self.human._skeleton.dirty = False   # Flag used for deferred updating
         self.human._skeleton._library = self  # Temporary member, used for rebuilding skeleton
+
+        self.filechooser.selectItem(filename)
 
         # Created an AnimatedMesh object to manage the skeletal animation on the
         # human mesh and optionally additional meshes.
@@ -497,6 +500,10 @@ class SkeletonLibrary(gui3d.TaskView):
                     self.chooseSkeleton(skelPath)
                     return
             log.warn("Could not load rig %s, file does not exist." % skelFile)
+
+        # Make sure no skeleton is drawn
+        if self.skelObj:
+            self.skelObj.hide()
 
     def saveHandler(self, human, file):
         if human.getSkeleton():

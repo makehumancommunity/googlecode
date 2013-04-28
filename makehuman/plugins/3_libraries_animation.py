@@ -281,6 +281,8 @@ class AnimationLibrary(gui3d.TaskView):
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
 
+        self.filechooser.refresh()
+
         if not self.human.getSkeleton():
             gui3d.app.statusPersist("No skeleton selected. Please select a skeleton rig from the Skeleton library first.")
             return
@@ -474,7 +476,7 @@ class AnimationLibrary(gui3d.TaskView):
         self.startPlayback()
 
     def onFrameChanged(self):
-        if not self.anim:
+        if not self.anim or not hasattr(self.human, 'animated') or not self.human.animated:
             return
         if self.perFramePlayback:
             frame = self.currFrame + 1
@@ -583,16 +585,6 @@ class AnimationLibrary(gui3d.TaskView):
                 return
             self.selectAnimation(anim)
 
-            '''
-            mhanim = exportutils.config.getExistingProxyFile(None, uuid, "animations")
-            if not mhanim:
-                log.notice("Animation %s (%s) does not exist. Skipping.", animName, uuid)
-                return
-            self.loadAnimation(human, mhanim, animName)
-            '''
-
-            #self.loadAnimation(uuid, animName)        
-
     def saveHandler(self, human, file):
         if self.human.animated and self.human.getSkeleton():
             for anim in self.human.animations:
@@ -613,6 +605,7 @@ class AnimationLibrary(gui3d.TaskView):
             human.animations = []
             self.anim = None
             self.animTrack = None
+            self.filechooser.deselectAll()
 
     def onMouseEntered(self, event):
         pass

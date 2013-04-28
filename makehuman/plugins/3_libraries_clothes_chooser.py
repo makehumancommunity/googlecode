@@ -59,12 +59,20 @@ class ClothesAction(gui3d.Action):
     def do(self):
         if not self.library.highlightedPiece or (self.library.highlightedPiece and self.library.highlightedPiece.file != self.mhclo):
             self.library.setClothes(self.human, self.mhclo)
+        if self.add:
+            self.filechooser.selectItem(mhcloFile)
+        else:
+            self.filechooser.deselectItem(mhcloFile)
         self.library.cache[self.mhclo].toggleEnabled = self.add
         return True
 
     def undo(self):
         if not self.library.highlightedPiece or (self.library.highlightedPiece and self.library.highlightedPiece.file != self.mhclo):
             self.library.setClothes(self.human, self.mhclo)
+        if self.add:
+            self.filechooser.deselectItem(mhcloFile)
+        else:
+            self.filechooser.selectItem(mhcloFile)
         self.library.cache[self.mhclo].toggleEnabled = not self.add
         return True
 
@@ -229,6 +237,7 @@ class ClothesTaskView(gui3d.TaskView):
             proxy = human.clothesProxies[uuid]
             del human.clothesProxies[uuid]
             self.updateFaceMasks(self.faceHidingTggl.selected)
+            self.filechooser.deselectItem(proxy.file)
             log.message("Removed clothing %s %s", proxy.name, uuid)
             return
 
@@ -445,6 +454,7 @@ class ClothesTaskView(gui3d.TaskView):
             log.notice("%s does not exist. Skipping.", values[1])
         else:            
             self.setClothes(human, mhclo)
+            self.filechooser.selectItem(mhclo)
         
     def saveHandler(self, human, file):
         

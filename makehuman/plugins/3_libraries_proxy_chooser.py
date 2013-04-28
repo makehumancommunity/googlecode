@@ -112,6 +112,7 @@ class ProxyTaskView(gui3d.TaskView):
                 mh.changeCategory('Modelling')
         
     def setProxy(self, human, filename):
+        self.filechooser.selectItem(filename)
 
         if os.path.basename(filename) == "clear.proxy":
             human.setProxy(None)
@@ -136,6 +137,7 @@ class ProxyTaskView(gui3d.TaskView):
         if event.change == 'reset':
             log.message('deleting proxy')
             human.setProxy(None)
+            self.filechooser.deselectAll()
             
     def onHumanChanged(self, event):
         
