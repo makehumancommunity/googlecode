@@ -240,7 +240,7 @@ class AnimationLibrary(gui3d.TaskView):
             anim = self.getAnimation(collectionUuid, animName)
             gui3d.app.do(AnimationAction("Remove animation",
                                         self,
-                                        True,
+                                        False,
                                         anim))
 
         self.filechooser.refresh()
@@ -416,6 +416,8 @@ class AnimationLibrary(gui3d.TaskView):
     def selectAnimation(self, anim):
         if not anim in self.human.animations:
             self.human.animations.append(anim)
+
+        self.filechooser.selectItem( (anim.collection.uuid, anim.name) )
         self.printAnimationsStatus()
 
     def deselectAnimation(self, anim):
@@ -423,6 +425,8 @@ class AnimationLibrary(gui3d.TaskView):
             self.human.animations.remove(anim)
         except:
             pass
+
+        self.filechooser.deselectItem( (anim.collection.uuid, anim.name) )
         self.printAnimationsStatus()
         
     def printAnimationsStatus(self):
@@ -573,6 +577,12 @@ class AnimationLibrary(gui3d.TaskView):
             uuid = values[1]
             animName = values[2]
 
+            anim = self.getAnimation(uuid, animName)
+            if not anim:
+                log.error("Failed to load animation %s (%s).", anim.name, anim.collection.uuid)
+                return
+            self.selectAnimation(anim)
+
             '''
             mhanim = exportutils.config.getExistingProxyFile(None, uuid, "animations")
             if not mhanim:
@@ -581,7 +591,7 @@ class AnimationLibrary(gui3d.TaskView):
             self.loadAnimation(human, mhanim, animName)
             '''
 
-            self.loadAnimation(uuid, animName)        
+            #self.loadAnimation(uuid, animName)        
 
     def saveHandler(self, human, file):
         if self.human.animated and self.human.getSkeleton():
