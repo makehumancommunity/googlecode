@@ -626,6 +626,7 @@ class ListView(QtGui.QListWidget, Widget):
             rows = self.model().rowCount()
             if rows > 0:
                 rowHeight = self.sizeHintForRow(0)
+                rowHeight = max(rowHeight, self.iconSize().height())
             else:
                 rowHeight = 0
             height = (rowHeight * rows)

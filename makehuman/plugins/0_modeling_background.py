@@ -131,7 +131,7 @@ class BackgroundChooser(gui3d.TaskView):
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.backgroundsFolders, self.extensions, None))
         #self.addLeftWidget(self.filechooser.sortBox)
         self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.backgroundsFolders, self.extensions, None, None, 'Background'))
-        self.filechooser.setIconSize(100,100)
+        self.filechooser.setIconSize(50,50)
 
         self.backgroundBox = self.addLeftWidget(gui.GroupBox('Side'))
         self.bgSettingsBox = self.addLeftWidget(gui.GroupBox('Background settings'))
