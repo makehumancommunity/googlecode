@@ -85,6 +85,8 @@ class SkeletonLibrary(gui3d.TaskView):
         self.systemRigs = os.path.join('data', 'rigs')
         self.userRigs = os.path.join(mh.getPath(''), 'data', 'rigs')
         self.rigPaths = [self.userRigs, self.systemRigs]
+        if not os.path.exists(self.userRigs):
+            os.makedirs(self.userRigs)
         self.extension = "rig"
 
         self.human = gui3d.app.selectedHuman

@@ -141,6 +141,8 @@ class AnimationLibrary(gui3d.TaskView):
         self.systemAnims = os.path.join('data', 'animations')
         self.userAnims = os.path.join(mh.getPath(''), 'data', 'animations')
         self.animPaths = [self.userAnims, self.systemAnims]
+        if not os.path.exists(self.userAnims):
+            os.makedirs(self.userAnims)
         self.extension = "mhanim"
 
         # Test config param

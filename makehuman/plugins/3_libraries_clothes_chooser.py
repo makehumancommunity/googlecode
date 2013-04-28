@@ -99,9 +99,10 @@ class ClothesTaskView(gui3d.TaskView):
         gui3d.TaskView.__init__(self, category, 'Clothes')
         if not os.path.exists(self.userClothes):
             os.makedirs(self.userClothes)
-        #self.filechooser = self.addTopWidget(fc.FileChooser([self.systemClothes, self.userClothes], 'mhclo', 'thumb', 'data/clothes/notfound.thumb'))
-        #self.filechooser = self.addRightWidget(fc.ListFileChooser([self.systemClothes, self.userClothes], 'mhclo', 'Clothes', True))
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser([self.systemClothes, self.userClothes], 'mhclo', 'thumb', 'data/hairstyles/notfound.thumb', 'Clothes', True))
+        self.paths = [self.systemClothes, self.userClothes]
+        #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhclo', 'thumb', 'data/clothes/notfound.thumb'))
+        #self.filechooser = self.addRightWidget(fc.ListFileChooser(self.paths, 'mhclo', 'Clothes', True))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhclo', 'thumb', 'data/clothes/notfound.thumb', 'Clothes', True))
         self.filechooser.setFileLoadHandler(fc.MhcloFileLoader())
         self.addLeftWidget(self.filechooser.createSortBox())
         self.addLeftWidget(self.filechooser.createTagFilter())

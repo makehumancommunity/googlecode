@@ -91,8 +91,15 @@ class ProxyTaskView(gui3d.TaskView):
     def __init__(self, category):
         
         gui3d.TaskView.__init__(self, category, 'Proxies')
-        #self.filechooser = self.addTopWidget(fc.FileChooser('data/proxymeshes', 'proxy', 'thumb', 'data/proxymeshes/notfound.thumb', sort=ProxyFileSort()))
-        self.filechooser = self.addRightWidget(fc.ListFileChooser('data/proxymeshes', 'proxy', 'Proxy', sort=ProxyFileSort()))
+        self.installDir = 'data/proxymeshes'
+        self.userDir = os.path.join(mh.getPath(''), 'data', 'proxymeshes')
+        if not os.path.exists(self.userDir):
+            os.makedirs(self.userDir)
+        self.paths = [self.userDir , self.installDir]
+        #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'proxy', 'thumb', 'data/proxymeshes/notfound.thumb', sort=ProxyFileSort()))
+        #self.filechooser = self.addRightWidget(fc.ListFileChooser(self.paths, 'proxy', 'Proxy', sort=ProxyFileSort()))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'proxy', 'thumb', 'data/proxymeshes/notfound.thumb', 'Proxy'))
+        self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
         self.filechooser.refresh()
 
