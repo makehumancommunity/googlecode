@@ -289,6 +289,7 @@ class TextureTaskView(gui3d.TaskView):
         self.filechooser.setPaths(self.textures)
         self.filechooser.refresh()
         if selectedTex:
+            selectedTex = os.path.relpath(selectedTex)
             self.filechooser.selectItem(selectedTex)
         self.filechooser.setFocus()
 
