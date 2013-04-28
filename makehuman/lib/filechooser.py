@@ -704,11 +704,19 @@ class IconListFileChooser(ListFileChooser):
         super(IconListFileChooser, self).__init__(path, extension, name, multiSelect, verticalScrolling, sort)
         self.setPreviewExtensions(previewExtensions)
         self.notFoundImage = notFoundImage
+        self._iconCache = {}
         #self.children.setIconSize(QtCore.QSize(50,50))
 
     def addItem(self, file, label, preview, tags=[]):
         item = super(IconListFileChooser, self).addItem(file, label, preview, tags)
-        item.setIcon(QtGui.QIcon(preview))
+        if preview not in self._iconCache:
+            pixmap = QtGui.QPixmap(preview)
+            size = pixmap.size()
+            if size.width() > 128 or size.height() > 128:
+                pixmap = pixmap.scaled(128, 128, QtCore.Qt.KeepAspectRatio)
+            self._iconCache[preview] = QtGui.QIcon(pixmap)
+        icon = self._iconCache[preview]
+        item.setIcon(icon)
         return item
 
     def setIconSize(self, width, height):
