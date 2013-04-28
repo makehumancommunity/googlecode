@@ -184,6 +184,8 @@ class ProfilingTaskView(gui3d.TaskView):
         self.save.setEnabled(True)
 
     def saveStats(self, path):
+        if not path:
+            return
         with open(path, 'w') as f:
             pstats.Stats(self.profile, stream=f).strip_dirs().sort_stats(-1).print_stats()
 
