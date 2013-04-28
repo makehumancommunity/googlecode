@@ -486,7 +486,7 @@ QRadioButton::indicator:checked, QRadioButton::indicator:unchecked{
     border-radius: 6px;
 }
 
-QRadioButton::indicator:checked
+QRadioButton::indicator:checked, QListView::indicator:checked
 {
     background-color: qradialgradient(
         cx: 0.5, cy: 0.5,
@@ -497,7 +497,7 @@ QRadioButton::indicator:checked
     );
 }
 
-QCheckBox::indicator{
+QCheckBox::indicator, QListView::indicator{
     color: #b1b1b1;
     background-color: #323232;
     border: 1px solid #b1b1b1;
@@ -510,7 +510,7 @@ QRadioButton::indicator
     border-radius: 6px;
 }
 
-QRadioButton::indicator:hover, QCheckBox::indicator:hover
+QRadioButton::indicator:hover, QCheckBox::indicator:hover, QListView::indicator:hover
 {
     border: 1px solid #ffaa00;
 }
@@ -520,7 +520,7 @@ QCheckBox::indicator:checked
     image:url(data/themes/makehuman/images/checkbox-orange.png);
 }
 
-QCheckBox::indicator:disabled, QRadioButton::indicator:disabled
+QCheckBox::indicator:disabled, QRadioButton::indicator:disabled, QListView::indicator:disabled
 {
     border: 1px solid #444;
 }
@@ -536,3 +536,11 @@ FileChooserRectangle {
 ListFileChooser ListView {
     background-color: transparent;
 }
+
+QListView::indicator
+{
+    border-radius: 8px;
+    width: 15px;
+    height: 15px;
+}
+
