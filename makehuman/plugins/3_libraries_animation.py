@@ -245,8 +245,6 @@ class AnimationLibrary(gui3d.TaskView):
                                         False,
                                         anim))
 
-        self.filechooser.refresh()
-
     def clearAnimations(self):
         self.anim = None
         self.animTrack = None
@@ -282,8 +280,6 @@ class AnimationLibrary(gui3d.TaskView):
     
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
-
-        self.filechooser.refresh()
 
         if not self.human.getSkeleton():
             gui3d.app.statusPersist("No skeleton selected. Please select a skeleton rig from the Skeleton library first.")

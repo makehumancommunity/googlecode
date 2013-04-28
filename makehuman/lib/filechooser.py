@@ -474,7 +474,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         return None
 
     def onShow(self, event):
-        pass
+        self.refresh()
 
 class FileChooser(FileChooserBase):
     """
@@ -539,9 +539,6 @@ class FileChooser(FileChooserBase):
         super(FileChooser, self).setPaths(value)
         locationLbl = "  |  ".join(self.paths)
         self.location.setText(os.path.abspath(locationLbl))
-
-    def onShow(self, event):
-        self.refresh()
 
 # TODO IconListFileChooser (with FileChooserRectangles as items)
 # TODO allow setting a clear or none item at the top

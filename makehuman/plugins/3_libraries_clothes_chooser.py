@@ -94,7 +94,6 @@ class ClothesTaskView(gui3d.TaskView):
 
         self.cache = {}
         self.meshCache = {}
-        self.fcLoaded = False
         
         gui3d.TaskView.__init__(self, category, 'Clothes')
         if not os.path.exists(self.userClothes):
@@ -402,9 +401,6 @@ class ClothesTaskView(gui3d.TaskView):
     def onShow(self, event):
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
-        if not self.fcLoaded:
-            self.filechooser.refresh()
-            self.fcLoaded = True
         self.filechooser.setFocus()
         highlighted = self.filechooser.getHighlightedItem()
         if highlighted:

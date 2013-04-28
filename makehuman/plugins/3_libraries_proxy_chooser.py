@@ -101,7 +101,6 @@ class ProxyTaskView(gui3d.TaskView):
         self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'proxy', 'thumb', 'data/proxymeshes/notfound.thumb', 'Proxy'))
         self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
-        self.filechooser.refresh()
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):

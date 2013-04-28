@@ -259,7 +259,7 @@ class TextureTaskView(gui3d.TaskView):
         if 'data/eyes' in self.filechooser.paths:
             self.filechooser.setPreviewExtensions(['thumb', 'png'])
             self.filechooser.extension = 'png'
-            
+
         if self.skinRadio.selected:
             self.textures = [self.systemSkins, self.userSkins]
         elif self.hairRadio.selected:

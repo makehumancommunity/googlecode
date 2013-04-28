@@ -96,6 +96,7 @@ class BackgroundChooser(gui3d.TaskView):
 
         self.backgroundsFolders = [ os.path.join('data', 'backgrounds'),
                                     self.backgroundsFolder ]
+        self.extensions = ['bmp', 'png', 'tif', 'tiff', 'jpg', 'jpeg', 'clear']
 
         self.texture = mh.Texture()
 
@@ -127,11 +128,13 @@ class BackgroundChooser(gui3d.TaskView):
         gui3d.app.main_toolbar.addAction(self.backgroundImageToggle)
         gui3d.app.actions.background = self.backgroundImageToggle
 
-        self.filechooser = self.addTopWidget(fc.FileChooser(self.backgroundsFolders, ['bmp', 'png', 'tif', 'tiff', 'jpg', 'jpeg', 'clear'], None))
-        self.addLeftWidget(self.filechooser.sortBox)
+        #self.filechooser = self.addTopWidget(fc.FileChooser(self.backgroundsFolders, self.extensions, None))
+        #self.addLeftWidget(self.filechooser.sortBox)
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.backgroundsFolders, self.extensions, None, None, 'Background'))
+        self.filechooser.setIconSize(100,100)
 
-        self.backgroundBox = self.addRightWidget(gui.GroupBox('Side'))
-        self.bgSettingsBox = self.addRightWidget(gui.GroupBox('Background settings'))
+        self.backgroundBox = self.addLeftWidget(gui.GroupBox('Side'))
+        self.bgSettingsBox = self.addLeftWidget(gui.GroupBox('Background settings'))
 
         self.radioButtonGroup = []
         for side in ['front', 'back', 'left', 'right', 'top', 'bottom', 'other']: 
