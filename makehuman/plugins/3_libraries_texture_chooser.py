@@ -258,11 +258,14 @@ class TextureTaskView(gui3d.TaskView):
             self.filechooser.setPreviewExtensions(['thumb', 'png'])
             self.filechooser.extension = 'png'
 
+        selectedTex = None
         if self.skinRadio.selected:
             self.textures = [self.systemSkins, self.userSkins]
+            selectedTex = human.getTexture()
         elif self.hairRadio.selected:
             proxy = human.hairProxy
             self.textures = [os.path.dirname(proxy.file)]
+            selectedTex = hairObj.getTexture()
         elif self.eyesRadio.selected:
             self.filechooser.setPreviewExtensions('png')
             self.filechooser.extension = 'mhstx'
@@ -272,7 +275,8 @@ class TextureTaskView(gui3d.TaskView):
                 uuid = self.activeClothing
                 clo = human.clothesObjs[uuid]
                 filepath = human.clothesProxies[uuid].file
-                self.textures = [os.path.dirname(filepath)] + self.defaultTextures            
+                self.textures = [os.path.dirname(filepath)] + self.defaultTextures
+                selectedTex = clo.getTexture()
             else:
                 # TODO maybe dont show anything?
                 self.textures = self.defaultTextures            
@@ -281,8 +285,11 @@ class TextureTaskView(gui3d.TaskView):
                 log.debug("fc %s %s %s added", filec, filec.children.count(), str(filec.files))
 
         # Reload filechooser
+        self.filechooser.deselectAll()
         self.filechooser.setPaths(self.textures)
         self.filechooser.refresh()
+        if selectedTex:
+            self.filechooser.selectItem(selectedTex)
         self.filechooser.setFocus()
 
     def onHide(self, event):
