@@ -686,15 +686,13 @@ class ListView(QtGui.QListWidget, Widget):
         return [ self.item(row) for row in xrange(self.count()) ]
 
     def clearSelection(self):
-        selected = self.selectedItems()
         super(ListView, self).clearSelection()
-        for item in selected:
-            self.callEvent('onClicked', item)
 
         for item in self.getItems():
             if item.isChecked():
                 item.setChecked(False)
-                self.callEvent('onItemUnchecked', item)
+
+	self.callEvent('onClearSelection', None)
 
 class TextView(QtGui.QLabel, Widget):
     def __init__(self, label = ''):
