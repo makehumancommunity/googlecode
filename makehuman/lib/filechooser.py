@@ -588,6 +588,10 @@ class ListFileChooser(FileChooserBase):
         def onItemUnchecked(item):
             self.callEvent('onFileDeselected', self.loadHandler.getSelection(item))
 
+        @self.children.mhEvent
+        def onClearSelection(value):
+            self.callEvent('onDeselectAll', None)
+
     def setVerticalScrollingEnabled(self, enabled):
             self.children.setVerticalScrollingEnabled(enabled)
 
