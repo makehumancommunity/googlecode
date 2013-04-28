@@ -426,7 +426,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
             child.widget().hide()
             child.widget().destroy()
 
-    def refresh(self):
+    def refresh(self, keepSelections=True):
         self.clearList()
 
         files = self.sort.sort(self.sortBy, list(self.search()))
@@ -664,7 +664,7 @@ class ListFileChooser(FileChooserBase):
             listItem.setChecked( self.loadHandler.matchesItems(listItem, items) )
 
     def setHighlightedItem(self, item):
-        if isinstance(item, list) and len(item) > 0:
+        if item != None:
             for listItem in self.children.getItems():
                 if self.loadHandler.matchesItem(listItem, item):
                     self.children.setCurrentItem(listItem)
@@ -680,3 +680,20 @@ class ListFileChooser(FileChooserBase):
 
     def setFocus(self):
         self.children.setFocus()
+
+    def refresh(self, keepSelections=True):
+        if keepSelections:
+            selections = self.getSelectedItems()
+            if self.multiSelect:
+                highLighted = self.getHighlightedItem()
+        else:
+            self.deselectAll()
+
+        super(ListFileChooser, self).refresh()
+
+        if keepSelections:
+            if self.multiSelect:
+                self.setSelections(selections)
+                self.setHighlightedItem(highLighted)
+            elif len(selections) > 0:
+                self.setSelection(selections[0])
