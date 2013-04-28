@@ -441,6 +441,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         if not self.tagFilter:
             return
         self.tagFilter.filter(self.children.getItems())
+        self.children.updateGeometry()
 
     def _getListItem(self, item):
         for listItem in self.children.getItems():

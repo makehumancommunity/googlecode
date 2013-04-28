@@ -619,11 +619,14 @@ class ListView(QtGui.QListWidget, Widget):
             self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.updateGeometry()
 
+    def rowCount(self):
+        return len( [item for item in self.getItems() if not item.isHidden()] )
+
     def sizeHint(self):
         if self._vertical_scrolling:
             return super(ListView, self).sizeHint()
         else:
-            rows = self.model().rowCount()
+            rows = self.rowCount()
             if rows > 0:
                 rowHeight = self.sizeHintForRow(0)
                 rowHeight = max(rowHeight, self.iconSize().height())
