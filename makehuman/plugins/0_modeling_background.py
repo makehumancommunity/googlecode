@@ -174,8 +174,6 @@ class BackgroundChooser(gui3d.TaskView):
 
             if self.sides[side]:
                 gui3d.app.selectedHuman.setRotation(self.sides[side])
-            mh.changeTask('Textures', 'Projection')
-            #mh.changeCategory('Modelling')
             mh.redraw()
 
     def getSelectedSideCheckbox(self):
@@ -254,7 +252,6 @@ class BackgroundChooser(gui3d.TaskView):
     def onShow(self, event):
 
         gui3d.TaskView.onShow(self, event)
-        gui3d.app.selectedHuman.hide()
         text = language.language.getLanguageString(u'Images which are placed in %s will show up here.') % self.backgroundsFolder
         gui3d.app.prompt('Info', text, 'OK', helpId='backgroundHelp')
         gui3d.app.statusPersist(text)
@@ -266,7 +263,6 @@ class BackgroundChooser(gui3d.TaskView):
 
         gui3d.app.statusPersist('')
         gui3d.TaskView.onHide(self, event)
-        gui3d.app.selectedHuman.show()
 
     def onHumanTranslated(self, event):
         self.backgroundImage.setPosition(gui3d.app.selectedHuman.getPosition()) # TODO other Z offset?

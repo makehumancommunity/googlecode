@@ -104,6 +104,7 @@ class ClothesTaskView(gui3d.TaskView):
         self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhclo', 'thumb', 'data/clothes/notfound.thumb', 'Clothes', True))
         self.filechooser.setFileLoadHandler(fc.MhcloFileLoader())
         self.addLeftWidget(self.filechooser.createSortBox())
+        self.optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
         self.addLeftWidget(self.filechooser.createTagFilter())
         #self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
         self.mediaSync = None
@@ -146,7 +147,6 @@ class ClothesTaskView(gui3d.TaskView):
         #    self.syncMedia()
 
         self.originalHumanMask = gui3d.app.selectedHuman.meshData.getFaceMask().copy()
-        self.optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
         self.faceHidingTggl = self.optionsBox.addWidget(gui.ToggleButton("Hide faces under clothes"))
         @self.faceHidingTggl.mhEvent
         def onClicked(event):
