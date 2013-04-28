@@ -95,6 +95,7 @@ class UvTaskView(gui3d.TaskView):
 
 
 def load(app):
+    return  # Disabled, UVs will not be chosen explicitly in the future
     category = app.getCategory('Textures')
     taskview = UvTaskView(category)
     taskview.sortOrder = 9
