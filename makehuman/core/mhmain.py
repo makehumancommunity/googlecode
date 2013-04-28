@@ -1199,7 +1199,7 @@ class MHApplication(gui3d.Application, mh.Application):
         else:
             profiler.stop()
             log.notice('profiling stopped')
-            mh.changeTask('Develop', 'Profile')
+            mh.changeTask('Utilities', 'Profile')
 
     def createActions(self):
         self.actions = gui.Actions()

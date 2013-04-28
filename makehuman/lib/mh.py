@@ -53,6 +53,8 @@ def changeCategory(category):
     G.app.mainwin.tabs.changeTab(category)
 
 def changeTask(category, task):
+    if not G.app.mainwin.tabs.findTab(category):
+        return
     changeCategory(category)
     G.app.mainwin.tabs.findTab(category).child.changeTab(task)
 
