@@ -167,7 +167,7 @@ class MHApplication(gui3d.Application, mh.Application):
             'language':'english',
             'excludePlugins':[],
             'rtl': False,
-            'sliderImages': False,
+            'sliderImages': True,
             'guiTheme': 'default',
             'preloadTargets': False
         }
