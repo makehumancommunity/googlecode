@@ -45,6 +45,7 @@ import projection
 import random
 import mh
 import log
+import numpy
 import image_operations as imgop
 import gui3d
 from exportutils import collect
@@ -70,9 +71,8 @@ def povrayExport(settings):
     log.message('POV-Ray Export of object: %s', settings['name'])
   
     camera = gui3d.app.modelCamera
-    resW = gui3d.app.settings.get('rendering_width', 800)
-    resH = gui3d.app.settings.get('rendering_height', 600)
-    resolution = (resW,resH)
+    settings['resw'] = gui3d.app.settings.get('rendering_width', 800)
+    settings['resh'] = gui3d.app.settings.get('rendering_height', 600)
   
     path = os.path.join(mh.getPath('render'),
                         gui3d.app.settings.get('povray_render_dir', 'pov_output'),
@@ -81,9 +81,9 @@ def povrayExport(settings):
     # The format option defines whether a simple mesh2 object is to be generated
     # or the more flexible but slower array and macro combo is to be generated.
     if settings['format'] == 'array':
-        povrayExportArray(gui3d.app.selectedHuman.mesh, camera, resolution, path, settings)
+        povrayExportArray(gui3d.app.selectedHuman.mesh, camera, path, settings)
     if settings['format'] == 'mesh2':
-        povrayExportMesh2(gui3d.app.selectedHuman.mesh, camera, resolution, path, settings)
+        povrayExportMesh2(gui3d.app.selectedHuman.mesh, camera, path, settings)
 
     outputDirectory = os.path.dirname(path)
     log.debug('out folder: %s', outputDirectory)
@@ -125,7 +125,8 @@ def povrayExport(settings):
             # Pass parameters by writing an .ini file.
             iniFD = open(os.path.join(outputDirectory, 'MHRENDER.ini'), 'w')
             iniFD.write('Input_File_Name="%s.pov"\n' % settings['name'] +
-                        '+W%d +H%d +a%s +am2\n' % (resW, resH, settings['AA']))
+                        '+W%d +H%d +a%s +am2\n' %
+                        (settings['resw'], settings['resh'], settings['AA']))
             iniFD.close()
 
             povwatchApp = subprocess.Popen(cmdLine, cwd = os.path.dirname(path))
@@ -139,34 +140,34 @@ def povrayExport(settings):
                 'You don\'t seem to have POV-Ray installed or the path is incorrect.',
                 'Download', 'Cancel', downloadPovRay)        
 
-def povrayExportArray(obj, camera, resolution, path, settings):
+def povrayExportArray(obj, camera, path, settings):
     """
-  This function exports data in the form of arrays of data the can be used to 
-  reconstruct a humanoid object using some very simple POV-Ray macros. These macros 
-  can build this data into a variety of different POV-Ray objects, including a
-  mesh2 object that represents the human figure much as it was displayed in MakeHuman. 
+    This function exports data in the form of arrays of data the can be used to 
+    reconstruct a humanoid object using some very simple POV-Ray macros. These macros 
+    can build this data into a variety of different POV-Ray objects, including a
+    mesh2 object that represents the human figure much as it was displayed in MakeHuman. 
 
-  These macros can also generate a union of spheres at the vertices and a union of 
-  cylinders that follow the edges of the mesh. A parameter on the mesh2 macro can be 
-  used to generate a slightly inflated or deflated mesh. 
+    These macros can also generate a union of spheres at the vertices and a union of 
+    cylinders that follow the edges of the mesh. A parameter on the mesh2 macro can be 
+    used to generate a slightly inflated or deflated mesh. 
 
-  The generated output file always starts with a standard header, is followed by a set 
-  of array definitions containing the object data and is ended by a standard set of 
-  POV-Ray object definitions. 
-  
-  Parameters
-  ----------
-  
-  obj:
+    The generated output file always starts with a standard header, is followed by a set 
+    of array definitions containing the object data and is ended by a standard set of 
+    POV-Ray object definitions. 
+
+    Parameters
+    ----------
+
+    obj:
       *3D object*. The object to export. This should be the humanoid object with
       uv-mapping data and Face Groups defined.
-  
-  camera:
+
+    camera:
       *Camera object*. The camera to render from. 
-  
-  path:
+
+    path:
       *string*. The file system path to the output files that need to be generated. 
-  """
+    """
 
   # Certain files and blocks of SDL are mostly static and can be copied directly
   # from reference files into the generated output directories or files.
@@ -297,13 +298,15 @@ def povrayExportArray(obj, camera, resolution, path, settings):
     sceneFileDescriptor.close()
     log.message('Sample POV-Ray scene file generated.')
 
-def povrayWriteCamera(camera, hfile):
-    hfile.write("camera {\n  perspective\n")
+def writeCamera(hfile, camera, settings):
+    hfile.write("camera {\n  orthographic\n")
     hfile.write("  location <%f,%f,%f>\n" % invx(camera.eye))
-    hfile.write("  look_at <%f,%f,%f>\n" % invx(camera.focus))
-    hfile.write("  angle %f\n}\n\n" % camera.fovAngle)
+    hfile.write("  up <0,1,0>\n  right <%f,0,0>\n" %
+                (float(settings['resw'])/float(settings['resh'])))
+    hfile.write("  angle %f\n" % camera.fovAngle)
+    hfile.write("  look_at <%f,%f,%f>\n}\n\n" % invx(camera.focus))
 
-def povrayWriteLights(scene, hfile):
+def writeLights(scene, hfile):
     hflig = open('data/povray/lights.inc','r')
     for light in scene.lights:
         liglines = hflig.read()
@@ -322,63 +325,58 @@ def povrayWriteLights(scene, hfile):
         hfile.write(liglines)
     hflig.close()
 
-def povrayWriteScene(stuffs, file):
+def writeScene(file, stuffs, settings):
     hfile = open(file, 'w')
     hfile.write('#include "%s.inc"\n\n' % stuffs[0].name)
-    humanRot = gui3d.app.selectedHuman.getRotation()
+    writeCamera(hfile, gui3d.app.modelCamera, settings)
     for stuff in stuffs:
         hfile.write(
             "object { \n" +
             "   %s_Mesh2Object \n" % stuff.name +
-            "   rotate <0,0,%f> \n" % humanRot[2] +
-            "   rotate <0,%f,0> \n" % -humanRot[1] +
-            "   rotate <%f,0,0> \n" % humanRot[0] +
-            "   translate <%f,%f,%f> \n" % invx(gui3d.app.selectedHuman.getPosition()) +
+            "   rotate <0,0,%s_rz> \n" % settings['name'] +
+            "   rotate <0,%s_ry,0> \n" % settings['name'] +
+            "   rotate <%s_rx,0,0> \n" % settings['name'] +
+            "   translate <{0}_x,{0}_y,{0}_z> \n".format(settings['name']) +
             "   material {%s_Material} \n}\n" % stuff.name)
     hfile.close()
 
-def povraySizeData(obj, hfile):
+def writeConstants(hfile, settings):
     """
-  This function outputs standard object dimension data common to all POV-Ray 
-  format exports. 
+    This function outputs constants of the model's position and dimensions.
+    """
+    human = gui3d.app.selectedHuman
+    humanPos = invx(human.getPosition())
+    humanRot = human.getRotation()
 
-  Parameters
-  ----------
-  
-  obj:
-      *3D object*. The object to export. This should be the humanoid object with
-      uv-mapping data and Face Groups defined.
-  
-  hfile:
-      *file descriptor*. The file to which the camera settings need to be written. 
-  """
-
+    hfile.write('// Figure position and rotation.\n')
+    hfile.write('#declare %s_x = %f;\n' % (settings['name'], humanPos[0]))
+    hfile.write('#declare %s_y = %f;\n' % (settings['name'], humanPos[1]))
+    hfile.write('#declare %s_z = %f;\n' % (settings['name'], humanPos[2]))
+    hfile.write('#declare %s_rx = %f;\n' % (settings['name'], humanRot[0]))
+    hfile.write('#declare %s_ry = %f;\n' % (settings['name'],-humanRot[1]))
+    hfile.write('#declare %s_rz = %f;\n\n' % (settings['name'], humanRot[2]))
     maxX = 0
     maxY = 0
     maxZ = 0
     minX = 0
     minY = 0
     minZ = 0
-    for co in obj.coord:
+    for co in human.mesh.coord:
         maxX = max(maxX, co[0])
         maxY = max(maxY, co[1])
         maxZ = max(maxZ, co[2])
         minX = min(minX, co[0])
         minY = min(minY, co[1])
         minZ = min(minZ, co[2])
-    hfile.write('// Figure Dimensions. \n')
+    hfile.write('// Figure Dimensions.\n')
     hfile.write('#declare MakeHuman_MaxExtent = < %s, %s, %s>;\n' % (maxX, maxY, maxZ))
     hfile.write('#declare MakeHuman_MinExtent = < %s, %s, %s>;\n' % (minX, minY, minZ))
     hfile.write('#declare MakeHuman_Center    = < %s, %s, %s>;\n' % ((maxX + minX) / 2, (maxY + minY) / 2, (maxZ + minZ) / 2))
     hfile.write('#declare MakeHuman_Width     = %s;\n' % (maxX - minX))
     hfile.write('#declare MakeHuman_Height    = %s;\n' % (maxY - minY))
-    hfile.write('#declare MakeHuman_Depth     = %s;\n' % (maxZ - minZ))
-    hfile.write('''
+    hfile.write('#declare MakeHuman_Depth     = %s;\n\n' % (maxZ - minZ))
 
-''')
-
-
-def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback = None):
+def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     """
     This function exports data in the form of a mesh2 humanoid object. The POV-Ray 
     file generated is fairly inflexible, but is highly efficient. 
@@ -434,8 +432,8 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
         log.error('Error opening file to write data: %s', path)
         return 0
 
-    # Write sizes to make size ratios available.
-    povraySizeData(obj, outputFileDescriptor)
+    # Write position and dimension constants.
+    writeConstants(outputFileDescriptor, settings)
 
     # Collect and prepare all objects.
     stuffs = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False,
@@ -455,8 +453,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
                                             
     # Copy texture definitions to the output file.
     progress(progbase,"Writing Materials")
-    povrayWriteCamera(gui3d.app.modelCamera, outputFileDescriptor)
-    povrayWriteLights(settings['scene'], outputFileDescriptor)
+    writeLights(settings['scene'], outputFileDescriptor)
     hmatfile = open(staticFile, 'r')
     matlines = hmatfile.read()
     hmatfile.close()
@@ -500,7 +497,7 @@ def povrayExportMesh2(obj, camera, resolution, path, settings, progressCallback 
     outputFileDescriptor.close()
 
     # Write .pov scene file.
-    povrayWriteScene(stuffs, outputSceneFile)
+    writeScene(outputSceneFile, stuffs, settings)
     progbase = nextpb
 
     nextpb = 1.0
