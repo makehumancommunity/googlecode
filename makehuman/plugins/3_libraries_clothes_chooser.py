@@ -60,9 +60,9 @@ class ClothesAction(gui3d.Action):
         if not self.library.highlightedPiece or (self.library.highlightedPiece and self.library.highlightedPiece.file != self.mhclo):
             self.library.setClothes(self.human, self.mhclo)
         if self.add:
-            self.filechooser.selectItem(mhcloFile)
+            self.library.filechooser.selectItem(self.mhclo)
         else:
-            self.filechooser.deselectItem(mhcloFile)
+            self.library.filechooser.deselectItem(self.mhclo)
         self.library.cache[self.mhclo].toggleEnabled = self.add
         return True
 
@@ -70,9 +70,9 @@ class ClothesAction(gui3d.Action):
         if not self.library.highlightedPiece or (self.library.highlightedPiece and self.library.highlightedPiece.file != self.mhclo):
             self.library.setClothes(self.human, self.mhclo)
         if self.add:
-            self.filechooser.deselectItem(mhcloFile)
+            self.library.filechooser.deselectItem(self.mhclo)
         else:
-            self.filechooser.selectItem(mhcloFile)
+            self.library.filechooser.selectItem(self.mhclo)
         self.library.cache[self.mhclo].toggleEnabled = not self.add
         return True
 
