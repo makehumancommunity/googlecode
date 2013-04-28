@@ -39,6 +39,26 @@ import skeleton_drawing
 import animation
 import filechooser
 
+class AnimationAction(gui3d.Action):
+    def __init__(self, name, library, add, anim):
+        super(AnimationAction, self).__init__(name)
+        self.library = library
+        self.add = add
+        self.anim = anim
+
+    def do(self):
+        if self.add:
+            self.library.selectAnimation(self.anim)
+        else:
+            self.library.deselectAnimation(self.anim)
+        return True
+
+    def undo(self):
+        if self.add:
+            self.library.deselectAnimation(self.anim)
+        else:
+            self.library.selectAnimation(self.anim)
+        return True
 
 class AnimationCollection(object):
     def __init__(self, path):
@@ -209,14 +229,19 @@ class AnimationLibrary(gui3d.TaskView):
         def onFileSelected(animId):
             collectionUuid, animName = animId
             anim = self.getAnimation(collectionUuid, animName)
-            self.selectAnimation(anim)
-            # TODO action
+            gui3d.app.do(AnimationAction("Add animation",
+                                        self,
+                                        True,
+                                        anim))
 
         @self.filechooser.mhEvent
         def onFileDeselected(animId):
             collectionUuid, animName = animId
             anim = self.getAnimation(collectionUuid, animName)
-            self.deselectAnimation(anim)
+            gui3d.app.do(AnimationAction("Remove animation",
+                                        self,
+                                        True,
+                                        anim))
 
         self.filechooser.refresh()
 
