@@ -108,8 +108,6 @@ class ProxyTaskView(gui3d.TaskView):
                 self,
                 oldFile,
                 filename))
-            if gui3d.app.settings.get('jumpToModelling', True):
-                mh.changeCategory('Modelling')
         
     def setProxy(self, human, filename):
         self.filechooser.selectItem(filename)
