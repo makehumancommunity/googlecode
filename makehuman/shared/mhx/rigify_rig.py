@@ -42,11 +42,11 @@ RigifyJoints = [
 	('hand.L_tail',				'vo', [5828, -0.011030, 0.028660, 0.123099]),
 	('palm.01.L_head',			'vo', [14066, 0.034900, 0.039546, 0.000400]),
 	('palm.01.L_tail',			'vo', [14083, -0.000280, 0.022316, 0.002200]),
-	('finger_index.01.L_tail',		'vo', [14104, -0.022520, 0.001425, 0.001101]),
-	('finger_index.02.L_tail',		'vo', [14147, 0.000730, 0.001850, 0.022200]),
-	('finger_index.03.L_tail',		'vo', [5983, -0.001150, -0.000974, 0.004100]),
-	('UP-index.L_head',			'vo', [5970, -0.002509, 0.017725, -0.003098]),
-	('UP-index.L_tail',			'vo', [5974, -0.018059, 0.013850, 0.005477]),
+	('f_index.01.L_tail',		'vo', [14104, -0.022520, 0.001425, 0.001101]),
+	('f_index.02.L_tail',		'vo', [14147, 0.000730, 0.001850, 0.022200]),
+	('f_index.03.L_tail',		'vo', [5983, -0.001150, -0.000974, 0.004100]),
+	('UP-chest.L_head',			'vo', [5970, -0.002509, 0.017725, -0.003098]),
+	('UP-chest.L_tail',			'vo', [5974, -0.018059, 0.013850, 0.005477]),
 	('thumb.01.L_head',			'vo', [14063, 0.001850, -0.000648, -0.069699]),
 	('thumb.01.L_tail',			'vo', [14071, 0.001850, 0.030284, 0.003000]),
 	('thumb.02.L_tail',			'vo', [14075, 0.002460, -0.000420, 0.022000]),
@@ -55,23 +55,23 @@ RigifyJoints = [
 	('UP-thumb.L_tail',			'vo', [3278, 0.012813, -0.000641, 0.023400]),
 	('palm.02.L_head',			'vo', [15262, 0.000540, -0.001400, -0.012600]),
 	('palm.02.L_tail',			'vo', [14088, 0.022500, -0.003545, 0.001700]),
-	('finger_middle.01.L_tail',		'vo', [14114, -0.000050, -0.017878, -0.005500]),
-	('finger_middle.02.L_tail',		'vo', [14144, -0.001630, -0.017451, -0.003300]),
-	('finger_middle.03.L_tail',		'vo', [5779, 0.000220, 0.001039, -0.003900]),
+	('f_middle.01.L_tail',		'vo', [14114, -0.000050, -0.017878, -0.005500]),
+	('f_middle.02.L_tail',		'vo', [14144, -0.001630, -0.017451, -0.003300]),
+	('f_middle.03.L_tail',		'vo', [5779, 0.000220, 0.001039, -0.003900]),
 	('UP-middle.L_head',			'vo', [2662, -0.011609, -0.020000, -0.002546]),
 	('UP-middle.L_tail',			'vo', [5790, -0.012938, 0.004046, -0.005461]),
 	('palm.03.L_head',			'vo', [15269, 0.017020, -0.074860, 0.014100]),
 	('palm.03.L_tail',			'vo', [14093, 0.005150, 0.004920, 0.016100]),
-	('finger_ring.01.L_tail',		'vo', [14120, -0.003170, -0.020780, 0.000600]),
-	('finger_ring.02.L_tail',		'vo', [14134, -0.019600, 0.003470, -0.001000]),
-	('finger_ring.03.L_tail',		'vo', [6150, 0.007140, 0.007310, -0.001301]),
+	('f_ring.01.L_tail',		'vo', [14120, -0.003170, -0.020780, 0.000600]),
+	('f_ring.02.L_tail',		'vo', [14134, -0.019600, 0.003470, -0.001000]),
+	('f_ring.03.L_tail',		'vo', [6150, 0.007140, 0.007310, -0.001301]),
 	('UP-ring.L_head',			'vo', [6131, -0.005683, 0.001401, -0.007302]),
 	('UP-ring.L_tail',			'vo', [6135, 0.001684, 0.002308, -0.002637]),
 	('palm.04.L_head',			'vo', [15272, -0.029640, 0.002860, -0.005500]),
 	('palm.04.L_tail',			'vo', [14099, -0.004290, 0.003780, 0.028700]),
-	('finger_pinky.01.L_tail',		'vo', [14121, 0.003247, 0.003190, -0.000827]),
-	('finger_pinky.02.L_tail',		'vo', [14127, 0.001214, 0.000980, -0.003234]),
-	('finger_pinky.03.L_tail',		'vo', [6467, 0.004090, 0.000360, -0.015600]),
+	('f_pinky.01.L_tail',		'vo', [14121, 0.003247, 0.003190, -0.000827]),
+	('f_pinky.02.L_tail',		'vo', [14127, 0.001214, 0.000980, -0.003234]),
+	('f_pinky.03.L_tail',		'vo', [6467, 0.004090, 0.000360, -0.015600]),
 	('UP-pinky.L_head',			'vo', [6479, 0.002017, -0.001622, -0.000694]),
 	('UP-pinky.L_tail',			'vo', [6475, 0.000692, 0.001181, -0.004421]),
 	('UP-arm.L_head',			'vo', [3012, -0.008317, -0.002296, 0.005117]),
@@ -85,11 +85,11 @@ RigifyJoints = [
 	('hand.R_tail',				'vo', [9713, 0.011030, 0.028660, 0.123099]),
 	('palm.01.R_head',			'vo', [14476, -0.034900, 0.039546, 0.000400]),
 	('palm.01.R_tail',			'vo', [14459, 0.000280, 0.022316, 0.002200]),
-	('finger_index.01.R_tail',		'vo', [14438, 0.022520, 0.001425, 0.001101]),
-	('finger_index.02.R_tail',		'vo', [14395, -0.000730, 0.001850, 0.022200]),
-	('finger_index.03.R_tail',		'vo', [9585, 0.001150, -0.000974, 0.004100]),
-	('UP-index.R_head',			'vo', [9598, 0.002509, 0.017725, -0.003098]),
-	('UP-index.R_tail',			'vo', [9594, 0.018059, 0.013850, 0.005477]),
+	('f_index.01.R_tail',		'vo', [14438, 0.022520, 0.001425, 0.001101]),
+	('f_index.02.R_tail',		'vo', [14395, -0.000730, 0.001850, 0.022200]),
+	('f_index.03.R_tail',		'vo', [9585, 0.001150, -0.000974, 0.004100]),
+	('UP-chest.R_head',			'vo', [9598, 0.002509, 0.017725, -0.003098]),
+	('UP-chest.R_tail',			'vo', [9594, 0.018059, 0.013850, 0.005477]),
 	('thumb.01.R_head',			'vo', [14479, -0.001850, -0.000648, -0.069699]),
 	('thumb.01.R_tail',			'vo', [14471, -0.001850, 0.030284, 0.003000]),
 	('thumb.02.R_tail',			'vo', [14467, -0.002460, -0.000420, 0.022000]),
@@ -98,23 +98,23 @@ RigifyJoints = [
 	('UP-thumb.R_tail',			'vo', [10473, -0.012813, -0.000641, 0.023400]),
 	('palm.02.R_head',			'vo', [15135, -0.000540, -0.001400, -0.012600]),
 	('palm.02.R_tail',			'vo', [14454, -0.022500, -0.003545, 0.001700]),
-	('finger_middle.01.R_tail',		'vo', [14428, 0.000050, -0.017878, -0.005500]),
-	('finger_middle.02.R_tail',		'vo', [14398, 0.001630, -0.017451, -0.003300]),
-	('finger_middle.03.R_tail',		'vo', [9762, -0.000220, 0.001039, -0.003900]),
+	('f_middle.01.R_tail',		'vo', [14428, 0.000050, -0.017878, -0.005500]),
+	('f_middle.02.R_tail',		'vo', [14398, 0.001630, -0.017451, -0.003300]),
+	('f_middle.03.R_tail',		'vo', [9762, -0.000220, 0.001039, -0.003900]),
 	('UP-middle.R_head',			'vo', [10948, 0.011609, -0.020000, -0.002546]),
 	('UP-middle.R_tail',			'vo', [9751, 0.012938, 0.004046, -0.005461]),
 	('palm.03.R_head',			'vo', [15128, -0.017020, -0.074860, 0.014100]),
 	('palm.03.R_tail',			'vo', [14449, -0.005150, 0.004920, 0.016100]),
-	('finger_ring.01.R_tail',		'vo', [14422, 0.003170, -0.020780, 0.000600]),
-	('finger_ring.02.R_tail',		'vo', [14408, 0.019600, 0.003470, -0.001000]),
-	('finger_ring.03.R_tail',		'vo', [9418, -0.007140, 0.007310, -0.001301]),
+	('f_ring.01.R_tail',		'vo', [14422, 0.003170, -0.020780, 0.000600]),
+	('f_ring.02.R_tail',		'vo', [14408, 0.019600, 0.003470, -0.001000]),
+	('f_ring.03.R_tail',		'vo', [9418, -0.007140, 0.007310, -0.001301]),
 	('UP-ring.R_head',			'vo', [9437, 0.005683, 0.001401, -0.007302]),
 	('UP-ring.R_tail',			'vo', [9433, -0.001684, 0.002308, -0.002637]),
 	('palm.04.R_head',			'vo', [15125, 0.029640, 0.002860, -0.005500]),
 	('palm.04.R_tail',			'vo', [14443, 0.004290, 0.003780, 0.028700]),
-	('finger_pinky.01.R_tail',		'vo', [14421, -0.003247, 0.003190, -0.000827]),
-	('finger_pinky.02.R_tail',		'vo', [14415, -0.001214, 0.000980, -0.003234]),
-	('finger_pinky.03.R_tail',		'vo', [9101, -0.004090, 0.000360, -0.015600]),
+	('f_pinky.01.R_tail',		'vo', [14421, -0.003247, 0.003190, -0.000827]),
+	('f_pinky.02.R_tail',		'vo', [14415, -0.001214, 0.000980, -0.003234]),
+	('f_pinky.03.R_tail',		'vo', [9101, -0.004090, 0.000360, -0.015600]),
 	('UP-pinky.R_head',			'vo', [9089, -0.002017, -0.001622, -0.000694]),
 	('UP-pinky.R_tail',			'vo', [9093, -0.000692, 0.001181, -0.004421]),
 	('UP-arm.R_head',			'vo', [10714, 0.008317, -0.002296, 0.005117]),
@@ -167,7 +167,7 @@ RigifyJoints = [
 RigifyHeadsTails = [
 	('hips',			'hips_head', 'hips_tail'),
 	('spine',			'hips_tail', 'spine_tail'),
-	('ribs',			'spine_tail', 'ribs_tail'),
+	('chest',			'spine_tail', 'ribs_tail'),
 	('neck',			'ribs_tail', 'neck_tail'),
 	('head',			'neck_tail', 'head_tail'),
 	('shoulder.L',			'shoulder.L_head', 'shoulder.L_tail'),
@@ -175,28 +175,28 @@ RigifyHeadsTails = [
 	('forearm.L',			'upper_arm.L_tail', 'forearm.L_tail'),
 	('hand.L',			'forearm.L_tail', 'hand.L_tail'),
 	('palm.01.L',			'palm.01.L_head', 'palm.01.L_tail'),
-	('finger_index.01.L',		'palm.01.L_tail', 'finger_index.01.L_tail'),
-	('finger_index.02.L',		'finger_index.01.L_tail', 'finger_index.02.L_tail'),
-	('finger_index.03.L',		'finger_index.02.L_tail', 'finger_index.03.L_tail'),
-	('UP-index.L',			'UP-index.L_head', 'UP-index.L_tail'),
+	('f_index.01.L',		'palm.01.L_tail', 'f_index.01.L_tail'),
+	('f_index.02.L',		'f_index.01.L_tail', 'f_index.02.L_tail'),
+	('f_index.03.L',		'f_index.02.L_tail', 'f_index.03.L_tail'),
+	('UP-chest.L',			'UP-chest.L_head', 'UP-chest.L_tail'),
 	('thumb.01.L',			'thumb.01.L_head', 'thumb.01.L_tail'),
 	('thumb.02.L',			'thumb.01.L_tail', 'thumb.02.L_tail'),
 	('thumb.03.L',			'thumb.02.L_tail', 'thumb.03.L_tail'),
 	('UP-thumb.L',			'UP-thumb.L_head', 'UP-thumb.L_tail'),
 	('palm.02.L',			'palm.02.L_head', 'palm.02.L_tail'),
-	('finger_middle.01.L',		'palm.02.L_tail', 'finger_middle.01.L_tail'),
-	('finger_middle.02.L',		'finger_middle.01.L_tail', 'finger_middle.02.L_tail'),
-	('finger_middle.03.L',		'finger_middle.02.L_tail', 'finger_middle.03.L_tail'),
+	('f_middle.01.L',		'palm.02.L_tail', 'f_middle.01.L_tail'),
+	('f_middle.02.L',		'f_middle.01.L_tail', 'f_middle.02.L_tail'),
+	('f_middle.03.L',		'f_middle.02.L_tail', 'f_middle.03.L_tail'),
 	('UP-middle.L',			'UP-middle.L_head', 'UP-middle.L_tail'),
 	('palm.03.L',			'palm.03.L_head', 'palm.03.L_tail'),
-	('finger_ring.01.L',		'palm.03.L_tail', 'finger_ring.01.L_tail'),
-	('finger_ring.02.L',		'finger_ring.01.L_tail', 'finger_ring.02.L_tail'),
-	('finger_ring.03.L',		'finger_ring.02.L_tail', 'finger_ring.03.L_tail'),
+	('f_ring.01.L',		'palm.03.L_tail', 'f_ring.01.L_tail'),
+	('f_ring.02.L',		'f_ring.01.L_tail', 'f_ring.02.L_tail'),
+	('f_ring.03.L',		'f_ring.02.L_tail', 'f_ring.03.L_tail'),
 	('UP-ring.L',			'UP-ring.L_head', 'UP-ring.L_tail'),
 	('palm.04.L',			'palm.04.L_head', 'palm.04.L_tail'),
-	('finger_pinky.01.L',		'palm.04.L_tail', 'finger_pinky.01.L_tail'),
-	('finger_pinky.02.L',		'finger_pinky.01.L_tail', 'finger_pinky.02.L_tail'),
-	('finger_pinky.03.L',		'finger_pinky.02.L_tail', 'finger_pinky.03.L_tail'),
+	('f_pinky.01.L',		'palm.04.L_tail', 'f_pinky.01.L_tail'),
+	('f_pinky.02.L',		'f_pinky.01.L_tail', 'f_pinky.02.L_tail'),
+	('f_pinky.03.L',		'f_pinky.02.L_tail', 'f_pinky.03.L_tail'),
 	('UP-pinky.L',			'UP-pinky.L_head', 'UP-pinky.L_tail'),
 	('DEF-elbow-fan.L',			'upper_arm.L_tail', 'forearm.L_tail'),
 	('UP-arm.L',			'UP-arm.L_head', 'UP-arm.L_tail'),
@@ -206,28 +206,28 @@ RigifyHeadsTails = [
 	('forearm.R',			'upper_arm.R_tail', 'forearm.R_tail'),
 	('hand.R',			'forearm.R_tail', 'hand.R_tail'),
 	('palm.01.R',			'palm.01.R_head', 'palm.01.R_tail'),
-	('finger_index.01.R',		'palm.01.R_tail', 'finger_index.01.R_tail'),
-	('finger_index.02.R',		'finger_index.01.R_tail', 'finger_index.02.R_tail'),
-	('finger_index.03.R',		'finger_index.02.R_tail', 'finger_index.03.R_tail'),
-	('UP-index.R',			'UP-index.R_head', 'UP-index.R_tail'),
+	('f_index.01.R',		'palm.01.R_tail', 'f_index.01.R_tail'),
+	('f_index.02.R',		'f_index.01.R_tail', 'f_index.02.R_tail'),
+	('f_index.03.R',		'f_index.02.R_tail', 'f_index.03.R_tail'),
+	('UP-chest.R',			'UP-chest.R_head', 'UP-chest.R_tail'),
 	('thumb.01.R',			'thumb.01.R_head', 'thumb.01.R_tail'),
 	('thumb.02.R',			'thumb.01.R_tail', 'thumb.02.R_tail'),
 	('thumb.03.R',			'thumb.02.R_tail', 'thumb.03.R_tail'),
 	('UP-thumb.R',			'UP-thumb.R_head', 'UP-thumb.R_tail'),
 	('palm.02.R',			'palm.02.R_head', 'palm.02.R_tail'),
-	('finger_middle.01.R',		'palm.02.R_tail', 'finger_middle.01.R_tail'),
-	('finger_middle.02.R',		'finger_middle.01.R_tail', 'finger_middle.02.R_tail'),
-	('finger_middle.03.R',		'finger_middle.02.R_tail', 'finger_middle.03.R_tail'),
+	('f_middle.01.R',		'palm.02.R_tail', 'f_middle.01.R_tail'),
+	('f_middle.02.R',		'f_middle.01.R_tail', 'f_middle.02.R_tail'),
+	('f_middle.03.R',		'f_middle.02.R_tail', 'f_middle.03.R_tail'),
 	('UP-middle.R',			'UP-middle.R_head', 'UP-middle.R_tail'),
 	('palm.03.R',			'palm.03.R_head', 'palm.03.R_tail'),
-	('finger_ring.01.R',		'palm.03.R_tail', 'finger_ring.01.R_tail'),
-	('finger_ring.02.R',		'finger_ring.01.R_tail', 'finger_ring.02.R_tail'),
-	('finger_ring.03.R',		'finger_ring.02.R_tail', 'finger_ring.03.R_tail'),
+	('f_ring.01.R',		'palm.03.R_tail', 'f_ring.01.R_tail'),
+	('f_ring.02.R',		'f_ring.01.R_tail', 'f_ring.02.R_tail'),
+	('f_ring.03.R',		'f_ring.02.R_tail', 'f_ring.03.R_tail'),
 	('UP-ring.R',			'UP-ring.R_head', 'UP-ring.R_tail'),
 	('palm.04.R',			'palm.04.R_head', 'palm.04.R_tail'),
-	('finger_pinky.01.R',		'palm.04.R_tail', 'finger_pinky.01.R_tail'),
-	('finger_pinky.02.R',		'finger_pinky.01.R_tail', 'finger_pinky.02.R_tail'),
-	('finger_pinky.03.R',		'finger_pinky.02.R_tail', 'finger_pinky.03.R_tail'),
+	('f_pinky.01.R',		'palm.04.R_tail', 'f_pinky.01.R_tail'),
+	('f_pinky.02.R',		'f_pinky.01.R_tail', 'f_pinky.02.R_tail'),
+	('f_pinky.03.R',		'f_pinky.02.R_tail', 'f_pinky.03.R_tail'),
 	('UP-pinky.R',			'UP-pinky.R_head', 'UP-pinky.R_tail'),
 	('DEF-elbow-fan.R',			'upper_arm.R_tail', 'forearm.R_tail'),
 	('UP-arm.R',			'UP-arm.R_head', 'UP-arm.R_tail'),
@@ -273,82 +273,82 @@ RigifyHeadsTails = [
 RigifyArmature = [
 	('hips',			0.0, None, F_DEF, 0x1, (1,1,1) ),
 	('spine',			0.0, 'hips', F_DEF+F_CON, 0x1, (1,1,1) ),
-	('ribs',			0.0, 'spine', F_DEF+F_CON, 0x1, (1,1,1) ),
-	('neck',			0.0, 'ribs', F_DEF, 0x4, (1,1,1) ),
+	('chest',			0.0, 'spine', F_DEF+F_CON, 0x1, (1,1,1) ),
+	('neck',			0.0, 'chest', F_DEF, 0x4, (1,1,1) ),
 	('head',			0.0, 'neck', F_DEF+F_CON, 0x4, (1,1,1) ),
-	('shoulder.L',			-0.0743, 'ribs', F_DEF, 0x1, (1,1,1) ),
+	('shoulder.L',			-0.0743, 'chest', F_DEF, 0x1, (1,1,1) ),
 	('upper_arm.L',			1.75, 'shoulder.L', F_DEF, 0x40, (1,1,1) ),
 	('forearm.L',			1.57, 'upper_arm.L', F_DEF+F_CON, 0x40, (1,1,1) ),
 	('hand.L',			3, 'forearm.L', F_DEF+F_CON, 0x40, (1,1,1) ),
 	('palm.01.L',			2.78, 'hand.L', F_DEF, 0x10, (1,1,1) ),
-	('finger_index.01.L',		-2.94, 'palm.01.L', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_index.02.L',		-2.96, 'finger_index.01.L', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_index.03.L',		-2.95, 'finger_index.02.L', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('UP-index.L',			-2.89, 'finger_index.01.L', 0, 0x10, (1,1,1) ),
+	('f_index.01.L',		-2.94, 'palm.01.L', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_index.02.L',		-2.96, 'f_index.01.L', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_index.03.L',		-2.95, 'f_index.02.L', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('UP-chest.L',			-2.89, 'f_index.01.L', 0, 0x10, (1,1,1) ),
 	('thumb.01.L',			-1.41, 'palm.01.L', F_DEF, 0x10, (1,1,1) ),
 	('thumb.02.L',			-1.59, 'thumb.01.L', F_DEF+F_CON, 0x10, (1,1,1) ),
 	('thumb.03.L',			-1.5, 'thumb.02.L', F_DEF+F_CON, 0x10, (1,1,1) ),
 	('UP-thumb.L',			-1.59, 'thumb.01.L', 0, 0x10, (1,1,1) ),
 	('palm.02.L',			2.83, 'hand.L', F_DEF, 0x10, (1,1,1) ),
-	('finger_middle.01.L',		-3.11, 'palm.02.L', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_middle.02.L',		-3.07, 'finger_middle.01.L', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_middle.03.L',		-3.11, 'finger_middle.02.L', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('UP-middle.L',			-2.99, 'finger_middle.01.L', 0, 0x10, (1,1,1) ),
+	('f_middle.01.L',		-3.11, 'palm.02.L', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_middle.02.L',		-3.07, 'f_middle.01.L', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_middle.03.L',		-3.11, 'f_middle.02.L', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('UP-middle.L',			-2.99, 'f_middle.01.L', 0, 0x10, (1,1,1) ),
 	('palm.03.L',			2.96, 'hand.L', F_DEF, 0x10, (1,1,1) ),
-	('finger_ring.01.L',		3.04, 'palm.03.L', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_ring.02.L',		3.08, 'finger_ring.01.L', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_ring.03.L',		2.97, 'finger_ring.02.L', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('UP-ring.L',			-3.11, 'finger_ring.01.L', 0, 0x10, (1,1,1) ),
+	('f_ring.01.L',		3.04, 'palm.03.L', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_ring.02.L',		3.08, 'f_ring.01.L', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_ring.03.L',		2.97, 'f_ring.02.L', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('UP-ring.L',			-3.11, 'f_ring.01.L', 0, 0x10, (1,1,1) ),
 	('palm.04.L',			-3.12, 'hand.L', F_DEF, 0x10, (1,1,1) ),
-	('finger_pinky.01.L',		2.95, 'palm.04.L', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_pinky.02.L',		2.98, 'finger_pinky.01.L', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_pinky.03.L',		2.98, 'finger_pinky.02.L', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('UP-pinky.L',			3.08, 'finger_pinky.01.L', 0, 0x10, (1,1,1) ),
+	('f_pinky.01.L',		2.95, 'palm.04.L', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_pinky.02.L',		2.98, 'f_pinky.01.L', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_pinky.03.L',		2.98, 'f_pinky.02.L', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('UP-pinky.L',			3.08, 'f_pinky.01.L', 0, 0x10, (1,1,1) ),
 	('DEF-elbow-fan.L',		1.57, 'upper_arm.L', F_DEF+F_CON, 0x40, (1,1,1) ),
 	('UP-arm.L',			0.027, 'upper_arm.L', 0, 0x100, (1,1,1) ),
 	('MCH-deltoid_target.L',	-0.277, 'shoulder.L', 0, 0x40, (1,1,1) ),
-	('shoulder.R',			0.0743, 'ribs', F_DEF, 0x1, (1,1,1) ),
+	('shoulder.R',			0.0743, 'chest', F_DEF, 0x1, (1,1,1) ),
 	('upper_arm.R',			-1.75, 'shoulder.R', F_DEF, 0x40, (1,1,1) ),
 	('forearm.R',			-1.57, 'upper_arm.R', F_DEF+F_CON, 0x40, (1,1,1) ),
 	('hand.R',			-3, 'forearm.R', F_DEF+F_CON, 0x100, (1,1,1) ),
 	('palm.01.R',			-2.78, 'hand.R', F_DEF, 0x10, (1,1,1) ),
-	('finger_index.01.R',		2.94, 'palm.01.R', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_index.02.R',		2.96, 'finger_index.01.R', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_index.03.R',		2.95, 'finger_index.02.R', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('UP-index.R',			2.89, 'finger_index.01.R', 0, 0x10, (1,1,1) ),
+	('f_index.01.R',		2.94, 'palm.01.R', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_index.02.R',		2.96, 'f_index.01.R', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_index.03.R',		2.95, 'f_index.02.R', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('UP-chest.R',			2.89, 'f_index.01.R', 0, 0x10, (1,1,1) ),
 	('thumb.01.R',			1.41, 'palm.01.R', F_DEF, 0x10, (1,1,1) ),
 	('thumb.02.R',			1.59, 'thumb.01.R', F_DEF+F_CON, 0x10, (1,1,1) ),
 	('thumb.03.R',			1.5, 'thumb.02.R', F_DEF+F_CON, 0x10, (1,1,1) ),
 	('UP-thumb.R',			1.59, 'thumb.01.R', 0, 0x10, (1,1,1) ),
 	('palm.02.R',			-2.83, 'hand.R', F_DEF, 0x10, (1,1,1) ),
-	('finger_middle.01.R',		3.11, 'palm.02.R', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_middle.02.R',		3.07, 'finger_middle.01.R', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_middle.03.R',		3.11, 'finger_middle.02.R', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('UP-middle.R',			2.99, 'finger_middle.01.R', 0, 0x10, (1,1,1) ),
+	('f_middle.01.R',		3.11, 'palm.02.R', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_middle.02.R',		3.07, 'f_middle.01.R', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_middle.03.R',		3.11, 'f_middle.02.R', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('UP-middle.R',			2.99, 'f_middle.01.R', 0, 0x10, (1,1,1) ),
 	('palm.03.R',			-2.96, 'hand.R', F_DEF, 0x10, (1,1,1) ),
-	('finger_ring.01.R',		-3.04, 'palm.03.R', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_ring.02.R',		-3.08, 'finger_ring.01.R', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_ring.03.R',		-2.97, 'finger_ring.02.R', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('UP-ring.R',			3.11, 'finger_ring.01.R', 0, 0x10, (1,1,1) ),
+	('f_ring.01.R',		-3.04, 'palm.03.R', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_ring.02.R',		-3.08, 'f_ring.01.R', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_ring.03.R',		-2.97, 'f_ring.02.R', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('UP-ring.R',			3.11, 'f_ring.01.R', 0, 0x10, (1,1,1) ),
 	('palm.04.R',			3.12, 'hand.R', F_DEF, 0x10, (1,1,1) ),
-	('finger_pinky.01.R',		-2.95, 'palm.04.R', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_pinky.02.R',		-2.98, 'finger_pinky.01.R', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('finger_pinky.03.R',		-2.98, 'finger_pinky.02.R', F_DEF+F_CON, 0x10, (1,1,1) ),
-	('UP-pinky.R',			-3.08, 'finger_pinky.01.R', 0, 0x10, (1,1,1) ),
+	('f_pinky.01.R',		-2.95, 'palm.04.R', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_pinky.02.R',		-2.98, 'f_pinky.01.R', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('f_pinky.03.R',		-2.98, 'f_pinky.02.R', F_DEF+F_CON, 0x10, (1,1,1) ),
+	('UP-pinky.R',			-3.08, 'f_pinky.01.R', 0, 0x10, (1,1,1) ),
 	('DEF-elbow-fan.R',		-1.57, 'upper_arm.R', F_DEF+F_CON, 0x40, (1,1,1) ),
 	('UP-arm.R',			-0.027, 'upper_arm.R', 0, 0x100, (1,1,1) ),
 	('MCH-deltoid_target.R',	0.277, 'shoulder.R', 0, 0x40, (1,1,1) ),
-	('DEF-pect1.L',			0.0, 'ribs', F_DEF, 0x1, (1,1,1) ),
-	('DEF-pect1.R',			0.0, 'ribs', F_DEF, 0x1, (1,1,1) ),
-	('DEF-pect2.L',			0.02, 'ribs', F_DEF, 0x1, (1,1,1) ),
-	('DEF-pect2.R',			-0.02, 'ribs', F_DEF, 0x1, (1,1,1) ),
-	('DEF-lat.L',			-0.0554, 'ribs', F_DEF, 0x1, (1,1,1) ),
-	('DEF-lat.R',			0.0554, 'ribs', F_DEF, 0x1, (1,1,1) ),
-	('DEF-trap.L',			0.0, 'ribs', F_DEF, 0x1, (1,1,1) ),
-	('DEF-trap.R',			0.0, 'ribs', F_DEF, 0x1, (1,1,1) ),
-	('DEF-deltoid.L',		-0.102, 'ribs', F_DEF, 0x1, (1,1,1) ),
-	('DEF-deltoid.R',		0.102, 'ribs', F_DEF, 0x1, (1,1,1) ),
-	('DEF-breast',			0.0, 'ribs', F_DEF, 0x1, (1,1,1) ),
+	('DEF-pect1.L',			0.0, 'chest', F_DEF, 0x1, (1,1,1) ),
+	('DEF-pect1.R',			0.0, 'chest', F_DEF, 0x1, (1,1,1) ),
+	('DEF-pect2.L',			0.02, 'chest', F_DEF, 0x1, (1,1,1) ),
+	('DEF-pect2.R',			-0.02, 'chest', F_DEF, 0x1, (1,1,1) ),
+	('DEF-lat.L',			-0.0554, 'chest', F_DEF, 0x1, (1,1,1) ),
+	('DEF-lat.R',			0.0554, 'chest', F_DEF, 0x1, (1,1,1) ),
+	('DEF-trap.L',			0.0, 'chest', F_DEF, 0x1, (1,1,1) ),
+	('DEF-trap.R',			0.0, 'chest', F_DEF, 0x1, (1,1,1) ),
+	('DEF-deltoid.L',		-0.102, 'chest', F_DEF, 0x1, (1,1,1) ),
+	('DEF-deltoid.R',		0.102, 'chest', F_DEF, 0x1, (1,1,1) ),
+	('DEF-breast',			0.0, 'chest', F_DEF, 0x1, (1,1,1) ),
 	('DEF-stomach',			0.0, 'DEF-breast', F_DEF+F_CON+F_NOROT, 0x1, (1,1,1) ),
 	('MCH-breast_target',		0.0, 'spine', F_CON, 0x1, (1,1,1) ),
 	('thigh.L',			0.0, 'hips', F_DEF, 0x400, (1,1,1) ),
@@ -384,7 +384,7 @@ def RigifyWritePoses(fp, amt):
 
 	addPoseBone(fp, amt, 'spine', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'ribs', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'chest', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'neck', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
@@ -400,13 +400,13 @@ def RigifyWritePoses(fp, amt):
 
 	addPoseBone(fp, amt, 'palm.01.L', None, None, (1,1,1), (0,1,1), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_index.01.L', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_index.01.L', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_index.02.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_index.02.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_index.03.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_index.03.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'UP-index.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'UP-chest.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'thumb.01.L', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
@@ -418,31 +418,31 @@ def RigifyWritePoses(fp, amt):
 
 	addPoseBone(fp, amt, 'palm.02.L', None, None, (1,1,1), (0,1,1), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_middle.01.L', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_middle.01.L', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_middle.02.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_middle.02.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_middle.03.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_middle.03.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'UP-middle.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'palm.03.L', None, None, (1,1,1), (0,1,1), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_ring.01.L', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_ring.01.L', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_ring.02.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_ring.02.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_ring.03.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_ring.03.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'UP-ring.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'palm.04.L', None, None, (1,1,1), (0,1,1), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_pinky.01.L', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_pinky.01.L', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_pinky.02.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_pinky.02.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_pinky.03.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_pinky.03.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'UP-pinky.L', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
@@ -463,13 +463,13 @@ def RigifyWritePoses(fp, amt):
 
 	addPoseBone(fp, amt, 'palm.01.R', None, None, (0,0,0), (0,1,1), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_index.01.R', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_index.01.R', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_index.02.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_index.02.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_index.03.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_index.03.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'UP-index.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'UP-chest.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'thumb.01.R', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
@@ -481,31 +481,31 @@ def RigifyWritePoses(fp, amt):
 
 	addPoseBone(fp, amt, 'palm.02.R', None, None, (0,0,0), (0,1,1), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_middle.01.R', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_middle.01.R', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_middle.02.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_middle.02.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_middle.03.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_middle.03.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'UP-middle.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'palm.03.R', None, None, (0,0,0), (0,1,1), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_ring.01.R', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_ring.01.R', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_ring.02.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_ring.02.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_ring.03.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_ring.03.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'UP-ring.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'palm.04.R', None, None, (0,0,0), (0,1,1), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_pinky.01.R', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_pinky.01.R', None, None, (1,1,1), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_pinky.02.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_pinky.02.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
-	addPoseBone(fp, amt, 'finger_pinky.03.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
+	addPoseBone(fp, amt, 'f_pinky.03.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
 	addPoseBone(fp, amt, 'UP-pinky.R', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4, [])
 
@@ -547,7 +547,7 @@ def RigifyWritePoses(fp, amt):
 		[('StretchTo', 0, 1, ['Stretch_To', 'MCH-deltoid_target.R', 1, 1])])
 
 	addPoseBone(fp, amt, 'MCH-breast_target', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4,
-		[('CopyRot', 0+C_OW_LOCAL+C_TG_LOCAL, 0.5, ['Copy_Rotation', 'ribs', (1,1,1), (0,0,0), False])])
+		[('CopyRot', 0+C_OW_LOCAL+C_TG_LOCAL, 0.5, ['Copy_Rotation', 'chest', (1,1,1), (0,0,0), False])])
 
 	addPoseBone(fp, amt, 'DEF-breast', None, None, (0,0,0), (0,0,0), (0,0,0), (1,1,1), P_LKROT4,
 		[('StretchTo', 0, 1, ['Stretch_To', 'MCH-breast_target', 1, 1])])
