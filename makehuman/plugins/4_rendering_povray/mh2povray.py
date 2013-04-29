@@ -308,8 +308,10 @@ def writeCamera(hfile, camera, settings):
 
 def writeLights(scene, hfile):
     hflig = open('data/povray/lights.inc','r')
+    ligfilebuffer = hflig.read()
+    hflig.close()
     for light in scene.lights:
-        liglines = hflig.read()
+        liglines = ligfilebuffer
         liglines = liglines.replace('%%pos%%', '<%f,%f,%f>' % invx(light.position))
         liglines = liglines.replace('%%color%%', '<%f,%f,%f>' % light.color)
         liglines = liglines.replace('%%focus%%', '<%f,%f,%f>' % invx(light.focus))
@@ -323,7 +325,6 @@ def writeLights(scene, hfile):
                 '<{0},0,0>, <0,{0},0>, {1}, {1}\n    '.format(light.areaLightSize, light.areaLights) +
                 'adaptive 1\n    jitter circular orient\n')
         hfile.write(liglines)
-    hflig.close()
 
 def writeScene(file, stuffs, settings):
     hfile = open(file, 'w')
