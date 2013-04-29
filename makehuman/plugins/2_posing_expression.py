@@ -34,6 +34,7 @@ import filechooser as fc
 import log
 
 class GroupBoxRadioButton(gui.RadioButton):
+
     def __init__(self, task, group, label, groupBox, selected=False):
         super(GroupBoxRadioButton, self).__init__(group, label, selected)
         self.groupBox = groupBox
@@ -97,13 +98,10 @@ class ExpressionTaskView(gui3d.TaskView):
         # self.groupBoxes[0].show()
   
     def hideAllBoxes(self):
-        
         for box in self.groupBoxes:
-            
             box.hide()
 
     def onShow(self, event):
-
         gui3d.TaskView.onShow(self, event)
         for slider in self.sliders:
             slider.update()
@@ -117,7 +115,6 @@ class ExpressionTaskView(gui3d.TaskView):
             slider.update()
                 
     def loadHandler(self, human, values):
-        
         modifier = self.modifiers.get(values[1], None)
         if modifier:
             value = float(values[2])
@@ -125,7 +122,6 @@ class ExpressionTaskView(gui3d.TaskView):
             modifier.updateValue(human, value)  # Force recompilation
        
     def saveHandler(self, human, file):
-        
         for name, modifier in self.modifiers.iteritems():
             value = modifier.getValue(human)
             if value:
@@ -133,7 +129,6 @@ class ExpressionTaskView(gui3d.TaskView):
 
 
     def resetExpressions(self, include):
-
         human = gui3d.app.selectedHuman
 
         log.message("resetExpressions %s", include)
@@ -151,30 +146,24 @@ class ExpressionTaskView(gui3d.TaskView):
                     
 
     def loadExpression(self, filename, include):
-
         human = gui3d.app.selectedHuman
         posemode.enterPoseMode()
         self.resetExpressions(include)
 
         f = open(filename, 'r')
-
         for data in f.readlines():
-
             lineData = data.split()
-
             if len(lineData) > 0 and not lineData[0] == '#':
-
                 if lineData[0] == 'expression':
-                    
                     modifier = self.modifiers.get(lineData[1], None)
-                    
                     if modifier:
-
                         value = float(lineData[2])
                         modifier.setValue(human, value)
                         modifier.updateValue(human, value)  # Force recompilation
+        gui3d.app.setFaceCamera()
 
 class ExpressionAction(gui3d.Action):
+
     def __init__(self, human, filename, taskView, include):
         super(ExpressionAction, self).__init__('Load expression')
         self.human = human
@@ -208,7 +197,6 @@ class ExpressionAction(gui3d.Action):
 class MhmLoadTaskView(gui3d.TaskView):
 
     def __init__(self, category, mhmTaskView, mhmLabel, folder):
-
         gui3d.TaskView.__init__(self, category, mhmLabel, label=mhmLabel)
 
         self.mhmTaskView = mhmTaskView
@@ -216,42 +204,37 @@ class MhmLoadTaskView(gui3d.TaskView):
 
         self.globalMhmPath = os.path.join('data', folder)
         self.mhmPath = os.path.join(mh.getPath(''), 'data', folder)
+        self.paths = [self.globalMhmPath, self.mhmPath]
 
         if not os.path.exists(self.mhmPath):
             os.makedirs(self.mhmPath)
 
-        self.filechooser = self.addTopWidget(fc.FileChooser([self.globalMhmPath, self.mhmPath], 'mhm', 'thumb'))
-        self.addLeftWidget(self.filechooser.sortBox)
+        #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhm', 'thumb'))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhm', 'thumb', 'data/notfound.thumb', 'Expression'))
+        self.filechooser.setIconSize(50,50)
+        self.addLeftWidget(self.filechooser.createSortBox())
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
-
             gui3d.app.do(ExpressionAction(gui3d.app.selectedHuman, filename, self.mhmTaskView, self.include))
-            
-            mh.changeTask('Pose/Animate', 'Expression tuning')
 
     def onShow(self, event):
-
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
-        gui3d.app.selectedHuman.hide()
         self.filechooser.setFocus()
 
     def onHide(self, event):
-        gui3d.app.selectedHuman.show()
         gui3d.TaskView.onHide(self, event)
 
 class ExpressionLoadTaskView(MhmLoadTaskView):
 
     def __init__(self, category, expressionTaskView):
-    
         MhmLoadTaskView.__init__(self, category, expressionTaskView, 'Expression', 'expressions')
 
 
 class VisemeLoadTaskView(MhmLoadTaskView):
 
     def __init__(self, category, visemeTaskView):
-    
         MhmLoadTaskView.__init__(self, category, visemeTaskView, 'Visemes', 'visemes')
         
         self.include = []
@@ -260,8 +243,7 @@ class VisemeLoadTaskView(MhmLoadTaskView):
                 for name in names:
                     self.include.append("mouth-" + name)
                 break
-                        
-        
+
 
 # This method is called when the plugin is loaded into makehuman
 # The app reference is passed so that a plugin can attach a new category, task, or other GUI elements
@@ -283,6 +265,7 @@ def load(app):
     visemeView = VisemeLoadTaskView(category, expressionTuning)
     visemeView.sortOrder = 9
     category.addTask(visemeView)
+
 
 # This method is called when the plugin is unloaded from makehuman
 # At the moment this is not used, but in the future it will remove the added GUI elements
