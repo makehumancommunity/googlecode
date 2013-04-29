@@ -66,14 +66,18 @@ class PoseLoadTaskView(gui3d.TaskView):
 
         self.systemPoses = os.path.join('data', 'poses')
         self.userPoses = os.path.join(mh.getPath(''), 'data', 'poses')
+        self.paths = [self.systemPoses, self.userPoses]
 
         self.dirty = False
         
         gui3d.TaskView.__init__(self, category, 'Poses')
         if not os.path.exists(self.userPoses):
             os.makedirs(self.userPoses)
-        self.filechooser = self.addTopWidget(fc.FileChooser([self.systemPoses, self.userPoses], 'mhp', 'thumb', 'data/clothes/notfound.thumb'))
-        self.addLeftWidget(self.filechooser.sortBox)
+        #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhp', 'thumb', 'data/notfound.thumb'))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhp', 'thumb', 'data/notfound.thumb', 'Pose'))
+        self.filechooser.setIconSize(50,50)
+        self.addLeftWidget(self.filechooser.createSortBox())
+
         self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
         self.mediaSync = None
 
@@ -147,12 +151,10 @@ class PoseLoadTaskView(gui3d.TaskView):
 
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
-        gui3d.app.selectedHuman.hide()
         self.filechooser.setFocus()
 
 
     def onHide(self, event):
-        gui3d.app.selectedHuman.show()
         gui3d.TaskView.onHide(self, event)
                 
     def onHumanChanging(self, event):
