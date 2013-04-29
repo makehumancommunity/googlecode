@@ -171,6 +171,7 @@ class ExportArmature(CArmature):
         self.customShapes = {}
         self.poseInfo = {}
         self.gizmos = None
+        self.boneLayers = "00000001"
 
         self.boneGroups = []
         self.recalcRoll = []              
@@ -516,6 +517,9 @@ end Object
         #fp.write("  DefProp Bool Mhh%s False Control_%s_visibility ;\n" % (name, name))
         return
 
+    def dynamicLocations(self):
+        pass
+        
 
 #-------------------------------------------------------------------------------        
 #   MHX armature
@@ -528,6 +532,7 @@ class MhxArmature(ExportArmature):
     
         ExportArmature. __init__(self, name, human, config)
         self.rigtype = 'mhx'
+        self.boneLayers = "0068056b"
 
         self.boneGroups = [
             ('Master', 'THEME13'),
@@ -811,6 +816,7 @@ class RigifyArmature(ExportArmature):
         
         ExportArmature. __init__(self, name, human, config)
         self.rigtype = 'rigify'
+        self.boneLayers = "80005555"
 
         self.vertexGroupFiles = ["head", "rigify"]
         self.gizmos = (gizmos_panel.asString() + gizmos_rigify.asString())

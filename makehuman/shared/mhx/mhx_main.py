@@ -154,7 +154,7 @@ def writeGroups(fp, amt):
 
 """)
     fp.write(
-        "PostProcess %sMesh %s 0000003f 00080000 0068056b 0000c000 ;\n" % (amt.name, amt.name) + 
+        "PostProcess %sMesh %s 0000003f 00080000 %s 0000c000 ;\n" % (amt.name, amt.name, amt.boneLayers) + 
         "Group %s\n"  % amt.name +
         "  Objects\n" +
         "    ob %s ;\n" % amt.name +

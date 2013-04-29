@@ -1,9 +1,9 @@
 Name:		Rigify
 
 Bones:
-    torso	Root
+    hips	Root
     spine	Spine1
-    ribs	Spine3
+    chest	Spine3
     neck	Neck
     head	Head
     hips	Hips
