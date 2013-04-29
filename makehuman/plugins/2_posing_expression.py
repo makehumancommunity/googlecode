@@ -210,7 +210,7 @@ class MhmLoadTaskView(gui3d.TaskView):
             os.makedirs(self.mhmPath)
 
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhm', 'thumb'))
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhm', 'thumb', 'data/notfound.thumb', 'Expression'))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhm', 'thumb', 'data/notfound.thumb', mhmLabel))
         self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
 
