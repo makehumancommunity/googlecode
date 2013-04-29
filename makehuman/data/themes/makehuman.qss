@@ -1,6 +1,28 @@
 /**
- * MakeHuman theme for Qt
+**Project Name:**      MakeHuman
+
+**Product Home Page:** http://www.makehuman.org/
+
+**Code Home Page:**    http://code.google.com/p/makehuman/
+
+**Authors:**           Jonas Hauquier
+
+**Copyright(c):**      MakeHuman Team 2001-2013
+
+**Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
+
+**Coding Standards:**  See http://www.makehuman.org/node/165
+
+Abstract
+--------
+
+MakeHuman theme for Qt
+
+
+With thanks to LoneWolf at tech-artists.org for offering a good base to start
+from.
 **/
+
 
 QToolTip
 {
@@ -542,5 +564,17 @@ QListView::indicator
     border-radius: 8px;
     width: 15px;
     height: 15px;
+}
+
+QTreeView::branch {
+    background-color: #636363;
+}
+
+QTreeView::branch:open:has-children {
+    image: url(data/themes/makehuman/images/branch-open.png);
+}
+
+QTreeView::branch:closed:has-children {
+    image: url(data/themes/makehuman/images/branch-closed.png);
 }
 
