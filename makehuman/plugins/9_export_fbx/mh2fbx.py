@@ -56,7 +56,6 @@ def exportFbx(human, filepath, config):
         rigfile=rigfile, 
         rawTargets=rawTargets,
         helpers=config.helpers, 
-        hidden=config.hidden, 
         eyebrows=config.eyebrows, 
         lashes=config.lashes)
 

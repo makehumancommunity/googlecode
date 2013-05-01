@@ -52,7 +52,6 @@ def exportOgreMesh(human, filepath, config):
         human,
         config=config,
         helpers=config.helpers, 
-        hidden=config.hidden, 
         eyebrows=config.eyebrows, 
         lashes=config.lashes,
         subdivide=config.subdivide)

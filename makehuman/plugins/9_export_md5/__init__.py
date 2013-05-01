@@ -42,7 +42,6 @@ class MD5Config(Config):
         self.lashes             = exporter.lashes.selected
         self.helpers            = exporter.helpers.selected
         #self.scale,self.unit    = exporter.taskview.getScale()
-        self.hidden         = False
         self.smooth = self.subdivide = gui3d.app.selectedHuman.isSubdivided()
         
         return self

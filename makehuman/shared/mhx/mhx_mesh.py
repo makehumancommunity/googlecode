@@ -211,15 +211,9 @@ def writeFaceNumbers(fp, amt, config):
         for fn,mtl in obj.materials.items():
             fmats[fn] = MaterialNumbers[mtl]
             
-        if config.hidden:
-            deleteVerts = None
-            deleteGroups = []
-        else:
-            deleteGroups = []
-            deleteVerts = numpy.zeros(len(obj.coord), bool)
-            for proxy in amt.proxies.values():
-                deleteGroups += proxy.deleteGroups
-                deleteVerts = deleteVerts | proxy.deleteVerts
+        # TODO use facemask set on module3d instead (cant we reuse filterMesh from collect module?)
+        deleteVerts = None
+        deleteGroups = []
 
         for fg in obj.faceGroups: 
             fmask = obj.getFaceMaskForGroups([fg.name])

@@ -80,7 +80,6 @@ def exportDae(human, name, fp, config):
         rigfile=rigfile, 
         rawTargets = rawTargets,
         helpers=config.helpers, 
-        hidden=config.hidden, 
         eyebrows=config.eyebrows, 
         lashes=config.lashes)
     mainStuff = stuffs[0]        

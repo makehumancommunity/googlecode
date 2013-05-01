@@ -39,9 +39,7 @@ class Config:
         self.eyebrows           = True
         self.lashes             = True
         self.helpers            = False
-        self.hidden             = True
         self.scale,self.unit    = 1.0, "decimeter"
-        self.subdivide          = False        
 
         self.useNormals         = False
         self.useRelPaths        = True
@@ -61,13 +59,20 @@ class Config:
         self.eyebrows           = exporter.eyebrows.selected
         self.lashes             = exporter.lashes.selected
         self.helpers            = exporter.helpers.selected
-        self.hidden             = exporter.hidden.selected
         self.scale,self.unit    = exporter.taskview.getScale()
-        self.subdivide          = exporter.smooth.selected
         
         return self
+
+
+    @property
+    def subdivide(self):
+        if not self.human:
+            log.warning('No human set in config, disabled subdivision for export.')
+            return False
+        else:
+            return self.human.isSubdivided()
     
-    
+
     def setHuman(self, human):
         """
         Set the human object for this config.

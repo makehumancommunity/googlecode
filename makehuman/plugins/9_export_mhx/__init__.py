@@ -35,7 +35,6 @@ class MhxConfig(Config):
         self.scale,self.unit =  exporter.taskview.getScale()
         self.useRelPaths =      True
         self.helpers =          True
-        self.hidden =           exporter.hidden.selected
         self.encoding =         exporter.taskview.getEncoding()
         
         self.useMasks =         exporter.masks.selected
@@ -66,7 +65,6 @@ class ExporterMHX(Exporter):
         #Exporter.build(self, options, taskview)
         self.taskview       = taskview        
         self.useTexFolder   = options.addWidget(gui.CheckBox("Separate folder", True))
-        self.hidden         = options.addWidget(gui.CheckBox("Keep hidden faces", True))
         
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
         self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))

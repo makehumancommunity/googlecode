@@ -138,7 +138,7 @@ def readTargets(human, config):
 #   setupObjects
 #
 
-def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=False, hidden=True, eyebrows=True, lashes=True, subdivide = False, progressCallback=None):
+def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=False, hidden=False, eyebrows=True, lashes=True, subdivide = False, progressCallback=None):
     global theStuff, theTextures, theTexFiles, theMaterials
 
     def progress(prog):
@@ -169,10 +169,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
 
     theStuff = stuff
     deleteGroups = []
-    if hidden:
-        deleteVerts = None
-    else:
-        deleteVerts = numpy.zeros(len(obj.coord), bool)
+    deleteVerts = None  # Don't load deleteVerts from proxies directly, we use the facemask set in the gui module3d
     _,deleteVerts = setupProxies('Clothes', None, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
     _,deleteVerts = setupProxies('Hair', None, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
     foundProxy,deleteVerts = setupProxies('Proxy', name, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
@@ -184,7 +181,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
             else:
                 stuff.meshInfo = meshInfo.fromProxy(config.scale*obj.coord, obj.texco, obj.fvert, obj.fuvs, meshInfo.weights, meshInfo.shapes)
         else:
-            stuff.meshInfo = filterMesh(meshInfo, config.scale, deleteGroups, deleteVerts, eyebrows, lashes, True)
+            stuff.meshInfo = filterMesh(meshInfo, config.scale, deleteGroups, deleteVerts, eyebrows, lashes, not hidden)
         stuffs = [stuff] + stuffs
     progbase = 0.12*(3-2*subdivide)
     progress(progbase)
@@ -216,6 +213,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
 #
 
 def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts):
+    # TODO document that this method does not only return values, it also modifies some of the passed parameters (deleteGroups and stuffs, deleteVerts is modified only if it is not None)
     global theStuff
     
     foundProxy = False    
@@ -250,6 +248,10 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, de
 #
 
 def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, useFaceMask = False):
+    """
+    Filter out vertices and faces from the mesh that are not desired for exporting.
+    """
+    # TODO scaling does not belong in a filter method
     obj = meshInfo.object
 
     killUvs = numpy.zeros(len(obj.texco), bool)
@@ -277,6 +279,7 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
 
     faceMask = obj.getFaceMaskForGroups(killGroups)
     if useFaceMask:
+        # Apply the facemask set on the module3d object (the one used for rendering within MH)
         faceMask = numpy.logical_or(faceMask, numpy.logical_not(obj.getFaceMask()))
     killFaces[faceMask] = True
 

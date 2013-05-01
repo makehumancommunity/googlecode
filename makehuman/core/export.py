@@ -37,8 +37,8 @@ class Exporter(object):
         self.eyebrows       = options.addWidget(gui.CheckBox("Eyebrows", True))
         self.lashes         = options.addWidget(gui.CheckBox("Eyelashes", True))
         self.helpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
-        self.hidden         = options.addWidget(gui.CheckBox("Keep hidden faces", True))
-        self.smooth         = options.addWidget(gui.CheckBox("Subdivide", False))
+        #self.hidden         = options.addWidget(gui.CheckBox("Keep hidden faces", True))
+        #self.smooth         = options.addWidget(gui.CheckBox("Subdivide", False))
         #self.scales         = self.addScales(options)
 
     def export(self, human, filename):

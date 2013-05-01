@@ -62,7 +62,6 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
         human,
         config=config,
         helpers=config.helpers, 
-        hidden=config.hidden, 
         eyebrows=config.eyebrows, 
         lashes=config.lashes,
         subdivide=config.subdivide)
@@ -117,7 +116,6 @@ def exportStlBinary(human, filename, config, exportJoints = False):
         human,
         config=config,
         helpers=config.helpers, 
-        hidden=config.hidden, 
         eyebrows=config.eyebrows, 
         lashes=config.lashes,
         subdivide=config.subdivide)
