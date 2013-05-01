@@ -33,12 +33,11 @@ class ExporterSkel(Exporter):
         self.filter = "Skeleton (*.skel)"
 
     def build(self, options, taskview):
-        self.exportSmooth = options.addWidget(gui.CheckBox("Subdivide", False))
+        pass
 
     def export(self, human, filename):
         from . import mh2skel
-        mesh = human.getSubdivisionMesh() if self.exportSmooth.selected else human.meshData
-        mh2skel.exportSkel(mesh, filename("skel"))
+        mh2skel.exportSkel(filename("skel"))
 
 def load(app):
     app.addExporter(ExporterSkel())

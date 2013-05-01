@@ -45,13 +45,9 @@ class ExporterSTL(Exporter):
         stlOptions = []
         self.stlAscii = options.addWidget(gui.RadioButton(stlOptions,  "Ascii", selected=True))
         self.stlBinary = options.addWidget(gui.RadioButton(stlOptions, "Binary"))
-        self.stlSmooth = options.addWidget(gui.CheckBox("Subdivide", False))
 
     def export(self, human, filename):
         from . import mh2stl
-
-        # TL: subdivision is taken care of in exportutils
-        #mesh = human.getSubdivisionMesh() if self.stlSmooth.selected else human.meshData
 
         if self.stlAscii.selected:
             mh2stl.exportStlAscii(human, filename("stl"), STLConfig(self))

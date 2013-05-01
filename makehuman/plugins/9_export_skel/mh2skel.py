@@ -24,7 +24,7 @@ TODO
 
 import gui3d
 
-def exportSkel(obj, filename):
+def exportSkel(filename):
 
     human = gui3d.app.selectedHuman
     if not human.getSkeleton():
