@@ -101,6 +101,13 @@ class ExporterMHX(Exporter):
         else:
             return rigtype
 
+    def onShow(self, task):
+        if not self.getRigType():
+            self.libraryRig.setChecked(False)
+            self.mhx.setChecked(True)
+
+        self.libraryRig.setEnabled(bool(super(ExporterMHX, self).getRigType()))
+
 
     def export(self, human, filename):
         import mhx
