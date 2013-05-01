@@ -29,7 +29,7 @@ from exportutils.config import Config
 
 class MhxConfig(Config):
 
-    def __init__(self, rigtype, exporter):
+    def __init__(self, exporter):
         Config.__init__(self)
         self.useTexFolder =     exporter.useTexFolder.selected
         self.scale,self.unit =  exporter.taskview.getScale()
@@ -47,7 +47,11 @@ class MhxConfig(Config):
         self.advancedSpine =    exporter.advancedSpine.selected
         self.maleRig =          exporter.maleRig.selected
         self.clothesRig =       exporter.clothesRig.selected
-        self.rigtype =          rigtype
+        self.rigtype =          exporter.getRigType()
+        # MHX export does not support exporting without rig
+        # If no rig selected (from library): default to MHX rig
+        if not self.rigtype:
+            self.rigtype = "mhx"
         
         # Used by mhx exporter
         self.customShapeFiles = []        
@@ -78,20 +82,30 @@ class ExporterMHX(Exporter):
         self.maleRig        = options.addWidget(gui.CheckBox("Male rig", False))
 
         rigtypes = []
+        self.libraryRig     = options.addWidget(gui.RadioButton(rigtypes, "Use rig from library", True))
         self.mhx            = options.addWidget(gui.RadioButton(rigtypes, "Use mhx rig", True))
         self.rigify         = options.addWidget(gui.RadioButton(rigtypes, "Use rigify rig", False))
-        addedRigs           = self.addRigs(options, rigtypes)
-        self.rigtypes       = [(self.mhx, "mhx"), (self.rigify, "rigify")] + addedRigs
+        self.rigtypes       = [(self.mhx, "mhx"), (self.rigify, "rigify"), (self.libraryRig, None)]
+
+
+    def getRigType(self):
+        for (button, rigtype) in self.rigtypes:
+            if button.selected:
+                break
+
+        if not button.selected:
+            return None
+
+        if not rigtype:
+            return super(ExporterMHX, self).getRigType()
+        else:
+            return rigtype
 
 
     def export(self, human, filename):
         import mhx
 
-        for (button, rigtype) in self.rigtypes:
-            if button.selected:
-                break
-
-        mhx.mhx_main.exportMhx(human, filename("mhx"), MhxConfig(rigtype, self))
+        mhx.mhx_main.exportMhx(human, filename("mhx"), MhxConfig(self))
 
 
 def load(app):

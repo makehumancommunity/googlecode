@@ -34,7 +34,11 @@ class FbxConfig(Config):
         self.selectedOptions(exporter)
         
         self.useRelPaths     = False
-        self.rigtype         = rigtype
+        self.rigtype = exporter.getRigType()
+        # FBX export does not support exporting without rig
+        # If no rig selected (from library): default to soft1 rig
+        if not self.rigtype:
+            self.rigtype = "soft1"
         self.expressions     = exporter.expressions.selected
         self.useCustomShapes = exporter.useCustomShapes.selected
         
@@ -54,15 +58,11 @@ class ExporterFBX(Exporter):
         Exporter.build(self, options, taskview)
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
         self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
-        self.rigtypes        = self.addRigs(options)
 
     def export(self, human, filename):
         from . import mh2fbx
 
-        for (button, rigtype) in self.rigtypes:
-            if button.selected:
-                break
-        mh2fbx.exportFbx(human, filename("fbx"), FbxConfig(rigtype, self))
+        mh2fbx.exportFbx(human, filename("fbx"), FbxConfig(self))
 
 def load(app):
     app.addExporter(ExporterFBX())

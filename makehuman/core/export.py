@@ -24,6 +24,7 @@ TODO
 
 import os
 import gui
+import gui3d
 import log
 
 
@@ -43,23 +44,15 @@ class Exporter(object):
 
     def export(self, human, filename):
         raise NotImplementedError()
-        
-    def addRigs(self, options, rigs = None):
-        path = "data/rigs"
-        if not os.path.exists(path):
-            log.message("Did not find directory %s", path)
-            return []
 
-        check = rigs is None
-        buttons = []
-        rigs = rigs if rigs is not None else []
-        for fname in os.listdir(path):
-            (name, ext) = os.path.splitext(fname)
-            if ext == ".rig":
-                button = options.addWidget(gui.RadioButton(rigs, "Use %s rig" % name, check))
-                check = False
-                buttons.append((button, name))
-        return buttons
+    def getRigType(self):
+        if not hasattr(gui3d.app.selectedHuman, "getSkeleton"):
+            return None
+        skel = gui3d.app.selectedHuman.getSkeleton()
+        if skel:
+            return skel.name
+        else:
+            return None
 
     def onShow(self, exportTaskView):
         """

@@ -28,12 +28,16 @@ from exportutils.config import Config
 
 
 class DaeConfig(Config):
-    def __init__(self, rigtype, exporter):
+    def __init__(self, exporter):
         Config.__init__(self)
         self.selectedOptions(exporter)
         
         self.useRelPaths = True
-        self.rigtype =   rigtype
+        self.rigtype =   exporter.getRigType()
+        # Collada exporter does not support exporting without rig, so default
+        # to soft1 rig when no rig specified in the skeleton library
+        if not self.rigtype:
+            self.rigtype = "soft1"
         self.useNormals = exporter.useNormals.selected
         self.rotate90X = exporter.rotate90X.selected
         self.rotate90Z = exporter.rotate90Z.selected
@@ -51,21 +55,15 @@ class ExporterCollada(Exporter):
     def build(self, options, taskview):
         Exporter.build(self, options, taskview)
         self.useNormals = options.addWidget(gui.CheckBox("Normals", False))
-        self.rotate90X = options.addWidget(gui.CheckBox("Rotate 90 X", False))
-        self.rotate90Z = options.addWidget(gui.CheckBox("Rotate 90 Z", False))
+        self.rotate90X = options.addWidget(gui.CheckBox("Z up (Rotate 90 X)", False))
+        self.rotate90Z = options.addWidget(gui.CheckBox("Face X (Rotate 90 Z)", False))
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
         self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
-        self.rigtypes = self.addRigs(options)
-
 
     def export(self, human, filename):
         from .mh2collada import exportCollada
 
-        for (button, rigtype) in self.rigtypes:
-            if button.selected:
-                break                
-
-        exportCollada(human, filename("dae"), DaeConfig(rigtype, self))
+        exportCollada(human, filename("dae"), DaeConfig(self))
 
 
 def load(app):
