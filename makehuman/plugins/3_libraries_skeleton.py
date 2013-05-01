@@ -129,7 +129,10 @@ class SkeletonLibrary(gui3d.TaskView):
 
         @self.filechooser.mhEvent
         def onRefresh(fileChooser):
-            fileChooser.addItem(os.path.join(self.rigPaths[0], 'clear.rig'), 'No skeleton', None)
+            noSkelPath = os.path.join(self.rigPaths[0], 'clear.rig')
+            fileChooser.addItem(noSkelPath, 'No skeleton', None)
+            if not self.human.getSkeleton():
+                self.filechooser.selectItem(noSkelPath)
 
         self.filechooser.refresh()
 
@@ -253,6 +256,7 @@ class SkeletonLibrary(gui3d.TaskView):
             self.reloadBoneExplorer()
             self.boneCountLbl.setText("Bones: ")
             self.descrLbl.setText("Description: ")
+            self.filechooser.selectItem(os.path.join(self.rigPaths[0], 'clear.rig'))
             return
 
         # Load skeleton definition from .rig file
