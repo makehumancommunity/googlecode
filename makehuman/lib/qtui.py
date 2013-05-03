@@ -341,8 +341,11 @@ class CategoryPanel(QtGui.QWidget, qtgui.Widget):
     def removeWidget(self, widget):
         self.layout.removeWidget(widget)
 
+def getQtVersionString():
+    return str(QtCore.qVersion())
+
 def getQtVersion():
-    return [ int(versionNb) for versionNb in str(QtCore.qVersion()).split(".") ]
+    return [ int(versionNb) for versionNb in getQtVersionString().split(".") ]
 
 class Frame(QtGui.QMainWindow):
     title = "MakeHuman"

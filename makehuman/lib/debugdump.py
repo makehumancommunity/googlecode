@@ -92,6 +92,9 @@ class DebugDump(object):
 
         import numpy
         self.write("NUMPY.VERSION: %s", numpy.__version__)
+
+        from qtui import getQtVersionString
+        self.write("PYQT.VERSION: %s", getQtVersionString())
         self.close()
 
     def appendGL(self):
