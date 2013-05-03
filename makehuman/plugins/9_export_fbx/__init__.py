@@ -29,7 +29,7 @@ from exportutils.config import Config
 
 class FbxConfig(Config):
 
-    def __init__(self, rigtype, exporter):
+    def __init__(self, exporter):
         Config.__init__(self)
         self.selectedOptions(exporter)
         
