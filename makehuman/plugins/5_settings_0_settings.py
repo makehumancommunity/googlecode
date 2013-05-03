@@ -112,10 +112,6 @@ class SettingsTaskView(gui3d.TaskView):
         metric = unitBox.addWidget(gui.RadioButton(modes, 'Metric', gui3d.app.settings.get('units', 'metric') == 'metric'))
         imperial = unitBox.addWidget(gui.RadioButton(modes, 'Imperial', gui3d.app.settings.get('units', 'metric') == 'imperial'))
 
-        libraryBox = self.addLeftWidget(gui.GroupBox('Library behavior'))
-        self.jumpToModelling = libraryBox.addWidget(gui.CheckBox("To Modelling after choice",
-            gui3d.app.settings.get('jumpToModelling', True)))
-
         preloadBox = self.addLeftWidget(gui.GroupBox('Preloading'))
         self.preload = preloadBox.addWidget(gui.CheckBox("Preload macro targets",
             gui3d.app.settings.get('preloadTargets', False)))
@@ -202,10 +198,6 @@ class SettingsTaskView(gui3d.TaskView):
         @imperial.mhEvent
         def onClicked(event):
             gui3d.app.settings['units'] = 'imperial'
-
-        @self.jumpToModelling.mhEvent
-        def onClicked(event):
-            gui3d.app.settings['jumpToModelling'] = self.jumpToModelling.selected
 
         @self.preload.mhEvent
         def onClicked(event):
