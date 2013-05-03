@@ -168,6 +168,9 @@ class BVH():
     def getJoint(self, name):
         return self.joints[name]
 
+    def containsJoint(self, name):
+        return name in self.joints
+
     def __cacheGetJoints(self):
         from Queue import deque
 
