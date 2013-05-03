@@ -59,6 +59,7 @@ class HairTaskView(gui3d.TaskView):
         self.paths = [hairDir , 'data/hairstyles']
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhclo', 'thumb', 'data/hairstyles/notfound.thumb'))
         self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhclo', 'thumb', 'data/hairstyles/notfound.thumb', 'Hair'))
+        self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
 
         self.oHeadCentroid = [0.0, 7.436, 0.03 + 0.577]

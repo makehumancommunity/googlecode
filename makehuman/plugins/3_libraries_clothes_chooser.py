@@ -102,6 +102,7 @@ class ClothesTaskView(gui3d.TaskView):
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhclo', 'thumb', 'data/clothes/notfound.thumb'))
         #self.filechooser = self.addRightWidget(fc.ListFileChooser(self.paths, 'mhclo', 'Clothes', True))
         self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhclo', 'thumb', 'data/clothes/notfound.thumb', 'Clothes', True))
+        self.filechooser.setIconSize(50,50)
         self.filechooser.setFileLoadHandler(fc.MhcloFileLoader())
         self.optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
         self.addLeftWidget(self.filechooser.createSortBox())
