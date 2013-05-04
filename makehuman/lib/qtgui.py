@@ -1064,7 +1064,7 @@ class FileEntryView(QtGui.QWidget, Widget):
         self.layout.setColumnStretch(0, 0)
 
         self.edit = QtGui.QLineEdit()
-        self.edit.setValidator(QtGui.QRegExpValidator(QtCore.QRegExp(r'[^\/:*?"<>|]*')))
+        self.edit.setValidator(QtGui.QRegExpValidator(QtCore.QRegExp(r'[^\/:*?"<>|]*'), None))
         self.layout.addWidget(self.edit, 0, 1)
         self.layout.setColumnStretch(1, 1)
 
