@@ -51,7 +51,7 @@ def exportObj(human, filepath, config=None):
     
     fp = open(filepath, 'w')
     mtlfile = "%s.mtl" % os.path.splitext(filepath)[0]
-    mtlfile = mtlfile.encode(config.encoding, errors='replace')
+    mtlfile = mtlfile.encode(config.encoding, 'replace')
     fp.write(
         "# MakeHuman exported OBJ\n" +
         "# www.makehuman.org\n\n" +

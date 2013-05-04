@@ -197,7 +197,7 @@ class Config:
     def goodName(self, name):
         string = name.replace(" ", "_").replace("-","_").lower()
         try:
-           return string.encode(encoding=self.encoding, errors='replace')
+           return string.encode(self.encoding, 'replace')
         except UnicodeEncodeError:
             log.message("%s cannot encode this file path. Try a different encoding" % self.encoding)
             return string
