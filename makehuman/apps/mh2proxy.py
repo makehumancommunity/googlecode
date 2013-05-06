@@ -810,12 +810,12 @@ def fixProxyVGroup(vgroup):
 
 
 def getProxyShapes(rawShapes, proxy, scale):
-    if not rawShapes or proxy.type != 'Proxy':
+    if (not rawShapes) or (proxy.type not in ['Proxy', 'Clothes']):
         return []
     shapes = []
     for (key, rawShape) in rawShapes:
         shape = []
-        for (v,dr) in rawShape.items():
+        for (v,dr) in rawShape.items():    
             (dx,dy,dz) = dr
             try:
                 vlist = proxy.vertWeights[v]
@@ -823,8 +823,9 @@ def getProxyShapes(rawShapes, proxy, scale):
                 vlist = []
             for (pv, w) in vlist:
                 shape.append((pv, scale*w*dx, scale*w*dy, scale*w*dz))
-        fixedShape = fixProxyShape(shape)
-        shapes.append((key,fixedShape))
+        if shape != []:
+            fixedShape = fixProxyShape(shape)
+            shapes.append((key,fixedShape))
     return shapes
 
 

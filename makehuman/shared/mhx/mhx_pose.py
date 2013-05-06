@@ -112,22 +112,28 @@ def writeCorrectives(fp, amt, config, drivers, folder, landmarks, proxy, t0, t1)
         writeShape(fp, pose, lr, shape, 0, 1, proxy, config.scale)
     
 
-def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
+def writeShapeHeader(fp, pose, lr, min, max):
     fp.write(
         "ShapeKey %s %s True\n" % (pose, lr) +
         "  slider_min %.3g ;\n" % min +
         "  slider_max %.3g ;\n" % max)
+
+
+def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
     if proxy:
         pshapes = mh2proxy.getProxyShapes([("shape",shape)], proxy, scale)
-        name,pshape = pshapes[0]
-        print pshape
-        for (pv, dr) in pshape.items():
-            (dx, dy, dz) = dr
-            fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (pv, dx, -dz, dy))
+        writeShapeHeader(fp, pose, lr, min, max)        
+        if len(pshapes) > 0:
+            name,pshape = pshapes[0]
+            for (pv, dr) in pshape.items():
+                (dx, dy, dz) = dr
+                fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (pv, dx, -dz, dy))
+        fp.write("end ShapeKey\n")
     else:
+        writeShapeHeader(fp, pose, lr, min, max)        
         for (vn, dr) in shape.items():
            fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (vn, scale*dr[0], -scale*dr[2], scale*dr[1]))
-    fp.write("end ShapeKey\n")
+        fp.write("end ShapeKey\n")
 
 
 def writeShapeKeys(fp, amt, config, name, proxy):
