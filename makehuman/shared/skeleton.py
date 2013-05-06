@@ -478,6 +478,7 @@ class Bone(object):
         local coordinates.
         Axis should be 0, 1 or 2 for rotation around x, y or z axis.
         """
+        # TODO non-existing class CBone
         mat = tm.rotation_matrix(angle*D, CBone.Axes[axis])
         if rotWorld:
             mat = np.dot(mat, self.matPoseGlobal)        
@@ -683,18 +684,9 @@ def getProxyWeights(proxy, humanWeights, mesh):
     return boneWeights
 
 # TODO code replication is not nice...
-def loadJointsMapping(rigName, skel):
-    """
-    Returns mapping of skeleton bones to reference rig bone names.
-    Return format is a breadth-first ordered list with for each bone in the
-    skeleton respectively a reference bone name. Entries can be None if no
-    mapping to a bone exists.
-    This reference rig to skeleton mapping assumes both rigs have the same rest
-    pose.
-    """
+def loadTargetMapping(rigName):
     import os
 
-    os.path.join
     path = os.path.join("tools/blender26x/mh_mocap_tool/target_rigs/", "%s.trg" % rigName)
     if not os.path.isfile(path):
         raise RuntimeError("File %s with skeleton rig mapping does not exist.", path)
@@ -732,9 +724,124 @@ def loadJointsMapping(rigName, skel):
     boneMap = {}
     for (skelBone, refBone) in bones:
         boneMap[skelBone] = refBone
+    return boneMap
 
+def loadJointsMapping(rigName, skel):
+    """
+    Returns mapping of skeleton bones to reference rig bone names.
+    Return format is a breadth-first ordered list with for each bone in the
+    skeleton respectively a reference bone name. Entries can be None if no
+    mapping to a bone exists.
+    This reference rig to skeleton mapping assumes both rigs have the same rest
+    pose.
+    """
+    boneMap = loadTargetMapping(rigName, skel)
+    # TODO add compensation rotation (retarget to target rig)
     return [boneMap[bone.name] if bone.name in boneMap.keys() else None  for bone in skel.getBones()]
 
 def nameOrNone(string):
     return string if string != "None" else None
 
+def loadSourceMapping(srcName):
+    import os
+
+    path = os.path.join("tools/blender26x/mh_mocap_tool/source_rigs/", "%s.src" % srcName)
+    if not os.path.isfile(path):
+        raise RuntimeError("File %s with skeleton source rig mapping does not exist.", path)
+
+    log.message("Read source file %s", path)
+    sourceMapping = {}
+    fp = open(path, "r")
+    status = 0    
+    for line in fp:
+        words = line.split()
+        if len(words) > 0:
+            key = words[0].lower()
+            if key[0] == "#":
+                continue
+            elif key == "name:":
+                name = words[1]
+            elif key == "armature:":
+                status = 1
+            elif len(words) < 3:
+                log.warning("Ignored illegal line %s", line)
+            elif status == 1:
+                for n in range(1,len(words)-2):
+                    key += "_" + words[n]
+                srcBone = nameOrNone(words[-2])
+                if srcBone:
+                    sourceMapping[srcBone] = (canonicalSrcName(key), float(words[-1]))
+    fp.close()
+    return sourceMapping
+
+def canonicalSrcName(string):
+    return string.lower().replace(' ','_').replace('-','_')
+
+def __getRotation(bone, sourceMapping, targetMapping):
+    """
+    Hack to fix the fact that .src definition files ignore the rotation of the
+    parent bones, requiring each bone to be rotated completely indepentent from
+    its parent. This is not the case here.
+    """
+    if bone:
+        if targetMapping:
+            if bone.name in targetMapping:
+                refBone = targetMapping[bone.name]
+            else:
+                refBone = None
+        else:
+            refBone = bone.name
+        if refBone and refBone in sourceMapping:
+            _, rot = sourceMapping[refBone]
+            return rot
+    return 0.0
+        
+def getRetargetMapping(sourceRig, targetRig, skel):
+    import os
+
+    sourceMapping = None
+    targetMapping = None
+    result = []
+
+    # Load source to reference rig mapping
+    if sourceRig:
+        sourceMapping = loadSourceMapping(sourceRig)
+
+    # Remap from reference rig to target rig
+    if targetRig and targetRig != "soft1" and targetRig != "rigid" and targetRig != "mhx":
+        targetMapping = loadTargetMapping(targetRig)
+
+    # Combine source and target mappings
+    if sourceMapping and targetMapping:
+        for bone in skel.getBones():
+            if bone.name in targetMapping:
+                refBone = targetMapping[bone.name]
+                if refBone and refBone in sourceMapping:
+                    srcBone, rotate = sourceMapping[refBone]
+                    rotate = rotate - __getRotation(bone.parent, sourceMapping, targetMapping)
+                    result.append( (srcBone, rotate) )
+                else:
+                    result.append( (refBone, 0.0) )
+            else:
+                result.append( (None, 0.0) )
+    # Only remap from reference rig to custom rig
+    elif targetMapping:
+        for bone in skel.getBones():
+            if bone.name in targetMapping:
+                result.append( (targetMapping[bone.name], 0.0) )
+            else:
+                result.append( (None, 0.0) )
+    # Only remap source rig to reference rig
+    elif sourceMapping:
+        for bone in skel.getBones():
+            if bone.name in sourceMapping:
+                srcBone, rot = sourceMapping[bone.name]
+                rot = rot - __getRotation(bone.parent, sourceMapping, None)
+                result.append( (srcBone, rot) )
+            else:
+                result.append( (None, 0.0) )
+    # No remapping, return trivial 1-1 mapping
+    else:
+        return [(bone.name, 0.0) for bone in skel.getBones()]
+
+    return result

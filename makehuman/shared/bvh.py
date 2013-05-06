@@ -123,6 +123,8 @@ class BVH():
         skel.update()
         return skel
 
+    # TODO guess source armature from a BVH rig
+
     def createAnimationTrack(self, jointsOrder = None, name="BVHMotion"):
         """
         Create an animation track from the motion stored in this BHV file.
@@ -135,12 +137,35 @@ class BVH():
             import re
             # Remove the tail from duplicate bone names
             for idx,jName in enumerate(jointsOrder):
+                # Joint mappings can contain a rotation compensation
+                if isinstance(jName, tuple):
+                    jName, _ = jName
                 if not jName:
                     continue
                 r = re.search("(.*)_\d+$",jName)
                 if r:
                     jointsOrder[idx] = r.group(1)
-            jointsData = [self.getJoint(jointName).matrixPoses if jointName else np.tile(np.identity(4), nFrames).transpose().reshape((nFrames,4,4)) for jointName in jointsOrder]
+
+            jointsData = []
+            for jointName in jointsOrder:
+                if isinstance(jointName, tuple):
+                    jointName, angle = jointName
+                else:
+                    angle = 0.0
+                if jointName:
+                    poseMats = self.getJointByCanonicalName(jointName).matrixPoses.copy()
+                    if angle != 0.0:
+                        # Rotate around global Z axis
+                        rot = tm.rotation_matrix(-angle*D, [0,0,1])
+                        # Roll around global Y axis (this is a limitation)
+                        roll = tm.rotation_matrix(angle*D, [0,1,0])
+                        for i in xrange(nFrames):
+                            # TODO make into numpy loop
+                            poseMats[i] = np.dot(poseMats[i], rot)
+                            poseMats[i] = np.dot(poseMats[i], roll)
+                    jointsData.append(poseMats)
+                else:
+                    jointsData.append(np.tile(np.identity(4), nFrames).transpose().reshape((nFrames,4,4)))
 
         nJoints = len(jointsData)
         nFrames = len(jointsData[0])
@@ -167,6 +192,13 @@ class BVH():
 
     def getJoint(self, name):
         return self.joints[name]
+
+    def getJointByCanonicalName(self, canonicalName):
+        canonicalName = canonicalName.lower().replace(' ','_').replace('-','_')
+        for jointName in [ name for name in self.joints.keys()]:
+            if canonicalName == jointName.lower().replace(' ','_').replace('-','_'):
+                return self.getJoint(jointName)
+        return None
 
     def containsJoint(self, name):
         return name in self.joints
