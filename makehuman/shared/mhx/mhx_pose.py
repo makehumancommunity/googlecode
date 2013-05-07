@@ -101,6 +101,7 @@ def proxyShapes(typ, test, amt, config, fp):
         
 
 def writeCorrectives(fp, amt, config, drivers, folder, landmarks, proxy, t0, t1):  
+    empties = []
     try:
         shapeList = amt.loadedShapes[folder]
     except KeyError:
@@ -109,7 +110,10 @@ def writeCorrectives(fp, amt, config, drivers, folder, landmarks, proxy, t0, t1)
         shapeList = exportutils.shapekeys.readCorrectives(drivers, amt.human, folder, landmarks, t0, t1)
         amt.loadedShapes[folder] = shapeList
     for (shape, pose, lr) in shapeList:
-        writeShape(fp, pose, lr, shape, 0, 1, proxy, config.scale)
+        empty = writeShape(fp, pose, lr, shape, 0, 1, proxy, config.scale)
+        if empty:
+            empties.append(pose)
+    return empties            
     
 
 def writeShapeHeader(fp, pose, lr, min, max):
@@ -122,18 +126,22 @@ def writeShapeHeader(fp, pose, lr, min, max):
 def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
     if proxy:
         pshapes = mh2proxy.getProxyShapes([("shape",shape)], proxy, scale)
-        writeShapeHeader(fp, pose, lr, min, max)        
         if len(pshapes) > 0:
             name,pshape = pshapes[0]
-            for (pv, dr) in pshape.items():
-                (dx, dy, dz) = dr
-                fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (pv, dx, -dz, dy))
-        fp.write("end ShapeKey\n")
+            if len(pshape.keys()) > 0:
+                writeShapeHeader(fp, pose, lr, min, max)        
+                for (pv, dr) in pshape.items():
+                    (dx, dy, dz) = dr
+                    fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (pv, dx, -dz, dy))
+                fp.write("end ShapeKey\n")
+                return False          
     else:
         writeShapeHeader(fp, pose, lr, min, max)        
         for (vn, dr) in shape.items():
            fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (vn, scale*dr[0], -scale*dr[2], scale*dr[1]))
         fp.write("end ShapeKey\n")
+        return False
+    return True
 
 
 def writeShapeKeys(fp, amt, config, name, proxy):
@@ -170,10 +178,10 @@ def writeShapeKeys(fp, amt, config, name, proxy):
             writeShape(fp, pose, "Sym", shape, -1, 2, proxy, scale)
         
     if useCorrectives:
-        writeCorrectives(fp, amt, config, rig_shoulder_25.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)
-        writeCorrectives(fp, amt, config, rig_leg_25.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)                
-        writeCorrectives(fp, amt, config, rig_arm_25.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)                
-        writeCorrectives(fp, amt, config, rig_leg_25.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)                
+        shoulder = writeCorrectives(fp, amt, config, rig_shoulder_25.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)
+        hips = writeCorrectives(fp, amt, config, rig_leg_25.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)                
+        elbow = writeCorrectives(fp, amt, config, rig_arm_25.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)                
+        knee = writeCorrectives(fp, amt, config, rig_leg_25.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)                
 
     if isHuman:
         for path,name in config.customShapeFiles:
@@ -190,10 +198,10 @@ def writeShapeKeys(fp, amt, config, name, proxy):
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
         
     if useCorrectives:
-        mhx_drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, amt.name)
-        mhx_drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, amt.name)
-        mhx_drivers.writeTargetDrivers(fp, rig_arm_25.ElbowTargetDrivers, amt.name)
-        mhx_drivers.writeTargetDrivers(fp, rig_leg_25.KneeTargetDrivers, amt.name)
+        mhx_drivers.writeTargetDrivers(fp, rig_shoulder_25.ShoulderTargetDrivers, amt.name, shoulder)
+        mhx_drivers.writeTargetDrivers(fp, rig_leg_25.HipTargetDrivers, amt.name, hips)
+        mhx_drivers.writeTargetDrivers(fp, rig_arm_25.ElbowTargetDrivers, amt.name, elbow)
+        mhx_drivers.writeTargetDrivers(fp, rig_leg_25.KneeTargetDrivers, amt.name, knee)
 
         mhx_drivers.writeRotDiffDrivers(fp, rig_arm_25.ArmShapeDrivers, proxy)
         mhx_drivers.writeRotDiffDrivers(fp, rig_leg_25.LegShapeDrivers, proxy)

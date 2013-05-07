@@ -239,11 +239,13 @@ def writeShapeDrivers(fp, amt, drivers, proxy):
     return driverList
 
 
-def writeTargetDrivers(fp, drivers, rig):
+def writeTargetDrivers(fp, drivers, rig, empties):
     driverList = []
     coeffs = [(0,0),(1,1)]
     for (fname, lr, expr, vars) in drivers:
-        if lr:
+        if fname in empties:
+            continue
+        elif lr:
             for suffix in ["_L", "_R"]:
                 drvVars = []        
                 n = 0
