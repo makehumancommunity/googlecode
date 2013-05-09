@@ -109,7 +109,7 @@ def exportObjFile(path, groupsAsMaterials, context):
     for v in me.vertices:
         fp.write("vn %.4f %.4f %.4f\n" % (v.normal[0], v.normal[2], -v.normal[1]))
         
-    info =  (-1, None)
+    info =  (-2, None)
     if me.uv_textures:
         (uvFaceVerts, texVerts, nTexVerts) = setupTexVerts(me, faces)
         for vtn in range(nTexVerts):
@@ -134,6 +134,7 @@ def exportObjFile(path, groupsAsMaterials, context):
     fp.close()
     print("%s written" % path)
     return
+
 
 def writeNewGroup(fp, f, info, me, ob, groupsAsMaterials):            
     (gnum, mname) = info
@@ -160,24 +161,27 @@ def writeNewGroup(fp, f, info, me, ob, groupsAsMaterials):
                     nhits[grp.group] += 1
                 except:
                     nhits[grp.group] = 1
+
         gn = -1
         nverts = len(f.vertices)
         for (gn1,n) in nhits.items():
             if n == nverts:
                 gn = gn1
                 break
-        if gn < 0:
-            raise NameError("Did not find group for face %d" % f.index)
+
         if gn != gnum:            
             mat = me.materials[f.material_index]
             if mname != mat.name:
                 mname = mat.name
-                fp.write("usemtl %s\n" % mname)
+                #fp.write("usemtl %s\n" % mname)
             gnum = gn  
-            for vgrp in ob.vertex_groups:
-                if vgrp.index == gnum:                    
-                    fp.write("g %s\n" % vgrp.name)
-                    break
+            if gnum < 0:
+                fp.write("g body\n")
+            else:
+                for vgrp in ob.vertex_groups:
+                    if vgrp.index == gnum:                    
+                        fp.write("g %s\n" % vgrp.name)
+                        break
             info = (gnum, mname)
     return info       
 

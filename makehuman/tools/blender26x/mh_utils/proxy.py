@@ -39,6 +39,9 @@ class CRefVert:
     def __init__(self, index):
         self.index = index
         
+    def __repr__(self):
+        return ("<CRefVert %s\n    %s\n    %s>" % (self.verts, self.weights, self.offsets))
+        
     def fromSingle(self, vn):
         self.verts = (vn,vn,vn)
         self.weights = (1,0,0)

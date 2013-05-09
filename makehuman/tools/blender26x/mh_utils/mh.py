@@ -45,7 +45,7 @@ class CSettings:
             self.nBodyVerts     = self.vertices["Body"][1]
             self.nBodyFaces     = 14812           
 
-        elif version == "alpha8":
+        elif version == "alpha8a":
             self.vertices = {
                 "Body"      : (0, 13380),
                 "Tongue"    : (13380, 13606),
@@ -63,7 +63,26 @@ class CSettings:
             self.clothesVerts   = (self.vertices["Tights"][0], self.vertices["Skirt"][1])
             self.nTotalVerts    = 19174
             self.nBodyVerts     = self.vertices["Body"][1]
-            self.nBodyFaces     = 14812
+            self.nBodyFaces     = 13606
+
+        elif version == "alpha8b":
+            self.vertices = {
+                "Body"      : (0, 13380),
+                "Tongue"    : (13380, 13606),
+                "Joints"    : (13606, 14598),
+                "Eyes"      : (14598, 14742),
+                "EyeLashes" : (14742, 14992),
+                "LoTeeth"   : (14992, 15060),
+                "UpTeeth"   : (15060, 15128),
+                "Penis"     : (15128, 15328),
+                "Tights"    : (15328, 18002),
+                "Skirt"     : (18002, 18722),
+                "Hair"      : (18722, 19150),
+            }
+            self.clothesVerts   = (self.vertices["Tights"][0], self.vertices["Skirt"][1])
+            self.nTotalVerts    = 19158
+            self.nBodyVerts     = self.vertices["Body"][1]
+            self.nBodyFaces     = 13606
 
 
 #----------------------------------------------------------
