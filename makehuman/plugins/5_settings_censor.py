@@ -150,6 +150,7 @@ class CensorTaskView(gui3d.TaskView):
         self.updateCensor()
 
 def load(app):
+    return  # Disabled because currently not working
     category = app.getCategory('Settings')
     taskview = category.addTask(CensorTaskView(category))
 
