@@ -201,7 +201,7 @@ def loadTarget(filepath, context, irrelevant=[], offset=0):
     nverts = len(ob.data.vertices)
     for line in fp:
         words = line.split()
-        if len(words) == 0:
+        if len(words) == 0 or words[0][0] == '#':
             pass
         else:
             index = int(words[0])
