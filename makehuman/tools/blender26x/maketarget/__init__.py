@@ -26,7 +26,7 @@
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.09",
+    "version": "1.10",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -84,7 +84,7 @@ class ConvertTargetPanel(bpy.types.Panel):
         layout.prop(scn, "MhSourceTarget", text="")
         layout.operator("mh.convert_target")
         
-        return
+        #return
 
         #layout.separator()
         #layout.label("Clothes Conversion")
@@ -97,6 +97,7 @@ class ConvertTargetPanel(bpy.types.Panel):
         layout.operator("mh.set_source_vgroup")
         layout.prop(scn, "MhSourceVGroup", text="")
         layout.operator("mh.convert_vgroup")
+        layout.operator("mh.convert_vgroup_dir")
 
 #----------------------------------------------------------
 #   class MakeTargetPanel(bpy.types.Panel):
