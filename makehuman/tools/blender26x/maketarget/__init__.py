@@ -84,7 +84,7 @@ class ConvertTargetPanel(bpy.types.Panel):
         layout.prop(scn, "MhSourceTarget", text="")
         layout.operator("mh.convert_target")
         
-        #return
+        return
 
         #layout.separator()
         #layout.label("Clothes Conversion")
