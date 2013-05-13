@@ -489,7 +489,7 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
                 '%%rednormal%%','wrinkles 0.75*%s scale 0.0006' % str(settings['wrinkles']))
     matlines = matlines.replace('%%name%%', stuffs[0].name)    
     matlines = matlines.replace(
-        '%%ambience%%','rgb <%f,%f,%f>' % settings['scene'].environment.ambience)
+        '%%ambience%%','<%f,%f,%f>' % settings['scene'].environment.ambience)
     outputFileDescriptor.write(matlines)
     outputFileDescriptor.write('\n')
     
@@ -564,7 +564,7 @@ def writeItemsMaterials(hfile, stuffs, settings, outDir):
         hinfile.close()
         inlines = inlines.replace ("%%name%%",stuff.name)
         inlines = inlines.replace (
-            "%%ambience%%", 'rgb <%f,%f,%f>' %
+            "%%ambience%%", '<%f,%f,%f>' %
             settings['scene'].environment.ambience)
         if stuff.type == 'Hair':
             if settings['hairShine']:
