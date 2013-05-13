@@ -72,7 +72,7 @@ class VIEW3D_OT_PrintVnumsToFileButton(bpy.types.Operator):
     def execute(self, context):
         ob = context.object
         scn = context.scene
-        path = os.path.expanduser(scn['MhxVertexGroupFile'])
+        path = os.path.expanduser(scn.MhxVertexGroupFile)
         fp = open(path, "w")
         fp.write("  [")
         for v in ob.data.vertices:
@@ -92,7 +92,7 @@ class VIEW3D_OT_ReadVNumsButton(bpy.types.Operator):
     def execute(self, context):
         scn = context.scene
         ob = context.object
-        path = os.path.expanduser(scn['MhxVertexGroupFile'])
+        path = os.path.expanduser(scn.MhxVertexGroupFile)
         fp = open(path, "rU")
         for line in fp:
             try:
@@ -1029,7 +1029,7 @@ class VIEW3D_OT_RecoverDiamondsButton(bpy.types.Operator):
 
 def sortVertexGroups(ob):
     rig = ob.parent
-    if not rig:
+    if True or not rig:
         return ob.vertex_groups
 
     roots = []
@@ -1055,8 +1055,8 @@ def sortBoneVGroups(bone, ob):
         
 def exportVertexGroups(context):
     scn = context.scene
-    filePath = scn['MhxVertexGroupFile']
-    exportAllVerts = not scn['MhxExportSelectedOnly']
+    filePath = scn.MhxVertexGroupFile
+    exportAllVerts = not scn.MhxExportSelectedOnly
     fileName = os.path.expanduser(filePath)
     fp = open(fileName, "w")
     ob = context.object
@@ -1084,6 +1084,41 @@ class VIEW3D_OT_ExportVertexGroupsButton(bpy.types.Operator):
         exportVertexGroups(context)
         return{'FINISHED'}    
 
+
+def exportLeftRight(context):
+    scn = context.scene
+    filePath = scn.MhxVertexGroupFile
+    fileName = os.path.expanduser(filePath)
+    fp = open(fileName, "w")
+    ob = context.object
+    eps = 0.07
+    left = []
+    right = []
+    for v in ob.data.vertices:
+        if v.co[0] > eps:
+            left.append((v.index, 1.0))
+        elif v.co[0] < -eps:
+            right.append((v.index, 1.0))
+        else:
+            w = (v.co[0] + eps)/(2*eps)
+            left.append((v.index, w))
+            right.append((v.index, 1-w))
+    exportList(context, left, "Left", fp)
+    exportList(context, right, "Right", fp)
+    fp.close()
+    print("Left-right vertex groups exported to %s" % fileName)
+    return
+
+            
+class VIEW3D_OT_ExportLeftRightButton(bpy.types.Operator):
+    bl_idname = "mhw.export_left_right"
+    bl_label = "Export Left/Right Vertex Groups"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        exportLeftRight(context)
+        return{'FINISHED'}    
+
 #
 #    exportSumGroups(context):
 #    exportListAsVertexGroup(weights, name, fp):
@@ -1091,7 +1126,7 @@ class VIEW3D_OT_ExportVertexGroupsButton(bpy.types.Operator):
 #
 
 def exportSumGroups(context):
-    filePath = context.scene['MhxVertexGroupFile']
+    filePath = context.scene.MhxVertexGroupFile
     fileName = os.path.expanduser(filePath)
     fp = open(fileName, "w")
     ob = context.object
@@ -1120,8 +1155,8 @@ def exportList(context, weights, name, fp):
     if len(weights) == 0:
         return
     scn = context.scene
-    offset = scn['MhxVertexOffset']        
-    if scn['MhxExportAsWeightFile']:
+    offset = scn.MhxVertexOffset        
+    if scn.MhxExportAsWeightFile:
         if len(weights) > 0:
             fp.write("\n# weights %s\n" % name)
             for (vn,w) in weights:
@@ -1151,7 +1186,7 @@ class VIEW3D_OT_ExportSumGroupsButton(bpy.types.Operator):
 
 def exportShapeKeys(context):
     scn = context.scene
-    filePath = context.scene['MhxVertexGroupFile']
+    filePath = context.scene.MhxVertexGroupFile
     fileName = os.path.expanduser(filePath)
     fp = open(fileName, "w")
     ob = context.object
@@ -1192,7 +1227,7 @@ class VIEW3D_OT_ExportShapeKeysButton(bpy.types.Operator):
 
 def listVertPairs(context):
     scn = context.scene
-    filePath = scn['MhxVertexGroupFile']
+    filePath = scn.MhxVertexGroupFile
     fileName = os.path.expanduser(filePath)
     print("Open %s" % fileName)
     fp = open(fileName, "w")
@@ -1970,6 +2005,7 @@ class MhxWeightToolsPanel(bpy.types.Panel):
         row.prop(scn, 'MhxExportSelectedOnly', text="Selected Only")
         row.prop(scn, 'MhxVertexOffset', text="Offset")
         layout.operator("mhw.export_vertex_groups")    
+        layout.operator("mhw.export_left_right")    
         layout.operator("mhw.export_sum_groups")    
         layout.operator("mhw.print_vnums_to_file")
         layout.operator("mhw.read_vnums_from_file")
