@@ -1546,3 +1546,16 @@ class ImageView(QtGui.QLabel, Widget):
         if w > size.width() or h > size.height():
             pixmap = pixmap.scaled(size.width(), size.height(), QtCore.Qt.KeepAspectRatio)
         self.setPixmap(pixmap)
+
+    def save(self, fname):
+        if self._pixmap:
+            self._pixmap.save (fname)
+
+    def mousePressEvent(self, event):
+        self.mdown = event.pos()
+        self.mdownrect = self.pixmap.rect()
+        
+    def mouseMoveEvent(self, event):
+        self.pixmap.scroll(event.pos.x()-self.mdown.x(),
+                           event.pos.y()-self.mdown.y(),
+                           self.mdownrect, shownarea)                          

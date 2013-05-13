@@ -32,11 +32,11 @@ def resized(img, width, height):
     ymap = numpy.floor((numpy.arange(height) + 0.5) * sh / float(height)).astype(int)
     return Image(data = img.data[ymap,:][:,xmap])
 
-def blurred(img, level=10, kernelSize=10, progressCallback=None):
+def blurred(img, level=10.0, kernelSize = 15, progressCallback=None):
     """
     Apply a gaussian blur on the specified image. Returns a new blurred image.
-    Level is the level of blurring and should be an integer between 0 and 20.
-    KernelSize is the size of the kernel used for convolution, and dictates the
+    level is the level of blurring and can be any float.
+    kernelSize is the size of the kernel used for convolution, and dictates the
     number of samples used, requiring longer processing for higher values.
     KernelSize should be a value between 5 and 30
 
@@ -52,12 +52,6 @@ def blurred(img, level=10, kernelSize=10, progressCallback=None):
             pass
     progress(0)
 
-    level = int(level)
-    if level > 20:
-        level = 20
-    elif level < 0:
-        level = 0
-
     kernelSize = int(kernelSize)
     if kernelSize < 5:
         kernelSize = 5
@@ -65,9 +59,8 @@ def blurred(img, level=10, kernelSize=10, progressCallback=None):
         kernelSize = 30
 
     # prepare an 1-D Gaussian convolution kernel
-    dist = 21 - level
-    t = numpy.linspace(-dist, dist, kernelSize)
-    bump = numpy.exp(-0.1*t**2)
+    t = numpy.linspace(-20, 20, kernelSize)
+    bump = numpy.exp(-0.1*(t/level)**2)
     bump /= numpy.trapz(bump) # normalize the integral to 1
     padSize = int(kernelSize/2)
     paddedShape = (img.data.shape[0] + padSize, img.data.shape[1] + padSize)

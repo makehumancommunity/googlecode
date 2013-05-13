@@ -72,7 +72,7 @@ class PovrayTaskView(gui3d.TaskView):
         self.doSubdivide = optionsBox.addWidget(gui.CheckBox('Subdivide mesh', True))
         self.usebump = optionsBox.addWidget(gui.CheckBox('Use bump maps', True))
         self.useSSS = optionsBox.addWidget(gui.CheckBox('Use S.S. Scattering', True))
-        self.SSSA = optionsBox.addWidget(gui.Slider(value=0.7, label="SSS Amount"))
+        self.SSSA = optionsBox.addWidget(gui.Slider(value=0.5, label="SSS Amount"))
 
         settingsBox = self.addLeftWidget(gui.GroupBox('Settings'))
         settingsBox.addWidget(gui.TextView("Resolution"))
@@ -81,7 +81,7 @@ class PovrayTaskView(gui3d.TaskView):
         self.AA = settingsBox.addWidget(gui.Slider(value=0.5, label="AntiAliasing"))
 
         materialsBox = self.addRightWidget(gui.GroupBox('Materials'))
-        self.skinoil = materialsBox.addWidget(gui.Slider(value=0.45, label="Skin oil"))
+        self.skinoil = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin oil"))
         self.moist = materialsBox.addWidget(gui.Slider(value=0.7, label="Moisturization"))
         self.tension = materialsBox.addWidget(gui.Slider(value=0.7, label="Skin tension"))
         self.grain = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin graininess"))

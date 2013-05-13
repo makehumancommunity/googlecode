@@ -40,6 +40,7 @@ class ViewerTaskView(gui3d.TaskView):
         self.path = None
 
         tools = self.addLeftWidget(gui.GroupBox('Tools'))
+        self.refrBtn = tools.addWidget(gui.Button('Refresh'))
         self.saveBtn = tools.addWidget(gui.Button('Save As...'))
 
         @self.saveBtn.mhEvent
@@ -48,7 +49,13 @@ class ViewerTaskView(gui3d.TaskView):
                 return
             filename = mh.getSaveFileName(self.path, 'All files (*.*)')
             if filename:
-                shutil.copy(self.path, filename)
+                self.image.save(filename)
+
+        @self.refrBtn.mhEvent
+        def onClicked(event):
+            if not self.path:
+                return
+            self.image.setImage(self.path)
                 
     def setImage(self, path):
         self.path = path
