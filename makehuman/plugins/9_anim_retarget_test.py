@@ -35,6 +35,9 @@ class AnimTestView(gui3d.TaskView):
 
         self.human = gui3d.app.selectedHuman
         self.firstTime = True
+
+        self.skelObj = None
+        self.bvhObj = None
         
     def doFirstTime(self):
         # Load BVH source rig and animation
