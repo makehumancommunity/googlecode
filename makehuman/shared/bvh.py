@@ -57,6 +57,11 @@ class BVH():
         return self.rootJoint
 
     def addJoint(self, parentName, name):
+        origName = name
+        i = 1
+        while name in self.joints.keys():
+            name = "%s_%s" % (origName, i)
+            i = i+1
         parent = self.getJoint(parentName)
         joint = self.__addJoint(name)
         parent.addChild(joint)
@@ -164,12 +169,12 @@ class BVH():
                                 # TODO make into numpy loop
                                 poseMats[i] = np.dot(poseMats[i], rot)
                                 poseMats[i] = np.dot(poseMats[i], roll)
-                    else:
+                    else:   # Compensation (angle) is a transformation matrix
+                        # Compensate animation frames
                         for i in xrange(nFrames):
                             # TODO make into numpy loop
-                            #poseMats[i] = np.dot(np.dot(angle, poseMats[i]), angle.transpose())
-                            #poseMats[i] = np.dot(angle, poseMats[i])
-                            poseMats[i] = np.dot(angle, np.dot(poseMats[i], la.inv(angle)))
+                            poseMats[i] = np.mat(poseMats[i]) * np.mat(angle)
+                            #poseMats[i] = np.mat(angle) # Test compensated rest pose
                     jointsData.append(poseMats)
                 else:
                     jointsData.append(animation.emptyTrack(nFrames))
@@ -180,21 +185,6 @@ class BVH():
         # Interweave joints animation data, per frame with joints in breadth-first order
         animData = np.hstack(jointsData).reshape(nJoints*nFrames,4,4)
         framerate = 1.0/self.frameTime
-
-        '''
-        # DEBUG joint > bone mapping
-        if skel:
-            print "Joint > Bone animation mapping"
-            bones = skel.getBones()
-            if jointsOrder == None:
-                jointsOrder = [joint.name for joint in self.getJoints()]
-            for i in range(len(jointsOrder)):
-                if i < len(bones):
-                    bone = bones[i].name
-                else:
-                    bone = ""
-                print "%s > %s" % (jointsOrder[i], bone)
-        '''
         return animation.AnimationTrack(name, animData, nFrames, framerate)
 
     def getJoint(self, name):
@@ -269,25 +259,54 @@ class BVH():
         for joint in self.getJoints():
             joint.calculateFrames()     # TODO we don't need to calculate pose matrices for end effectors
 
-    def fromSkeleton(self, skel, animationTrack = None):
+    def fromSkeleton(self, skel, animationTrack = None, dummyJoints = True):
         """
         Construct a BVH object from a skeleton structure and optionally an 
         animation track. If no animation track is specified, a dummy animation
         of one frame will be added.
+        If dummyJoints is true (the default) then extra dummy joints will be
+        introduced when bones are not directly connected, but have their head
+        position offset from their parent bone tail. This often happens when
+        multiple bones are attached to one parent bones, for example in the
+        shoulder, hip and hand areas.
+        When dummyJoints is set to false, for each bone in the skeeton, exactly
+        one BVH joint will be created. How this is interpreted depends on the
+        tool importing the BVH file. Some create only a bone between the parent
+        and its first child joint, and create empty offsets to the other childs.
+        Other tools create one bone, with the tail position being the average
+        of all the child joints. Dummy joints are introduced to prevent 
+        ambiguities between tools. Dummy joints carry the same name as the bone
+        they parent, with "__" prepended.
+
         NOTE: Make sure that the skeleton has only one root.
         """
 
         # Traverse skeleton joints in depth-first order
         for jointName in skel.getJointNames():
             bone = skel.getBone(jointName)
+            if dummyJoints and bone.parent and \
+               (bone.getRestHeadPos() != bone.parent.getRestTailPos()).any():
+                # Introduce a dummy joint to cover the offset between two not-
+                # connected bones
+                joint = self.addJoint(bone.parent.name, "__"+jointName)
+                joint.channels = ["Zrotation", "Xrotation", "Yrotation"]
+                parentName = joint.name
+
+                offset = bone.parent.getRestTailPos() - bone.parent.getRestHeadPos()
+                self.__calcPosition(joint, offset)
+                offset = bone.getRestHeadPos() -  bone.parent.getRestTailPos()
+            else:
+                parentName = bone.parent.name if bone.parent else None
+                offset = bone.getRestOffset()
+
             if bone.parent:
-                joint = self.addJoint(bone.parent.name, jointName)
+                joint = self.addJoint(parentName, jointName)
                 joint.channels = ["Zrotation", "Xrotation", "Yrotation"]
             else:
+                # Root bones have translation channels
                 joint = self.addRootJoint(bone.name)
                 joint.channels = ["Xposition", "Yposition", "Zposition", "Zrotation", "Xrotation", "Yrotation"]
     
-            offset = bone.getRestOffset()
             self.__calcPosition(joint, offset)
             if not bone.hasChildren():
                 endJoint = self.addJoint(jointName, 'End effector')
@@ -303,13 +322,20 @@ class BVH():
 
             jointToBoneIdx = {}
             for joint in nonEndJoints:
-                jointToBoneIdx[joint.name] = skel.getBone(joint.name).index
+                if skel.containsBone(joint.name):
+                    jointToBoneIdx[joint.name] = skel.getBone(joint.name).index
+                else:
+                    jointToBoneIdx[joint.name] = -1
 
             for fIdx in xrange(animationTrack.nFrames):
                 offset = fIdx * animationTrack.nBones
                 for jIdx,joint in enumerate(nonEndJoints):
                     bIdx = jointToBoneIdx[joint.name]
-                    poseMat = animationTrack.data[offset + bIdx]
+                    if bIdx < 0:
+                        poseMat = np.identity(4, dtype=np.float32)
+                    else:
+                        poseMat = animationTrack.data[offset + bIdx]
+
                     if len(joint.channels) == 6:
                         # Add transformation
                         tx, ty, tz = poseMat[:3,3]
