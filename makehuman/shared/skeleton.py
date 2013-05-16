@@ -691,7 +691,6 @@ def getProxyWeights(proxy, humanWeights, mesh):
 
     return boneWeights
 
-__referenceRig = None       # TODO this cache is not refreshed if human changes
 # TODO code replication is not nice...
 def loadTargetMapping(rigName, skel):
     """
@@ -702,18 +701,11 @@ def loadTargetMapping(rigName, skel):
     This reference rig to skeleton mapping assumes both rigs have the same rest
     pose.
     """
-    global __referenceRig
     import os
 
     path = os.path.join("tools/blender26x/mh_mocap_tool/target_rigs/", "%s.trg" % rigName)
     if not os.path.isfile(path):
         raise RuntimeError("File %s with skeleton rig mapping does not exist.", path)
-
-    if not __referenceRig:
-        from core import G
-        filename = os.path.join('data', 'rigs', 'soft1.rig')
-        __referenceRig, _ = loadRig(filename, G.app.selectedHuman.meshData)
-        print [bone.name for bone in __referenceRig.getBones()]
 
     fp = open(path, "r")
     status = 0
@@ -746,23 +738,8 @@ def loadTargetMapping(rigName, skel):
     #return (name, bones,renames,ikbones)
 
     boneMap = {}
-    print [bone.name for bone in __referenceRig.getBones()]
-    print [bone.name for bone in skel.getBones()]
     for (skelBone, refBone) in bones:
-        # Determine compensation orientation between source (ref) and target bone
-        tgtBone = skel.getBone(skelBone)
-        refBone = __referenceRig.getBone(refBone)
-        rotA = refBone.matRestRelative.copy()
-        rotB = tgtBone.matRestRelative.copy()
-        # Rotation only
-        rotA[:3,3] = 0
-        rotB[:3,3] = 0
-        rotation = np.dot(rotA, la.inv(rotB))
-        #rotation = np.dot(rotA.transpose(), rotB)
-        boneMap[skelBone] = (refBone.name, rotation)
-        '''
         boneMap[skelBone] = refBone
-        '''
     return boneMap
 
 def loadTargetJointsMapping(rigName, skel):
@@ -846,7 +823,7 @@ def getRetargetMapping(sourceRig, targetRig, skel):
     if sourceMapping and targetMapping:
         for bone in skel.getBones():
             if bone.name in targetMapping:
-                refBone = targetMapping[bone.name]  # TODO add rotation
+                refBone = targetMapping[bone.name]
                 if refBone and refBone in sourceMapping:
                     srcBone, rotate = sourceMapping[refBone]
                     rotate = rotate - __getRotation(bone.parent, sourceMapping, targetMapping)
@@ -859,9 +836,9 @@ def getRetargetMapping(sourceRig, targetRig, skel):
     elif targetMapping:
         for bone in skel.getBones():
             if bone.name in targetMapping:
-                result.append( targetMapping[bone.name] )
+                result.append( (targetMapping[bone.name], 0.0) )
             else:
-                result.append( (None, np.identity(4, dtype=np.float32)) )
+                result.append( (None, 0.0) )
     # Only remap source rig to reference rig
     elif sourceMapping:
         for bone in skel.getBones():
@@ -875,4 +852,75 @@ def getRetargetMapping(sourceRig, targetRig, skel):
     else:
         return [(bone.name, 0.0) for bone in skel.getBones()]
 
+    return result
+
+def getRestPoseCompensation(srcSkel, tgtSkel, boneMapping, excludedTgtBones = ["Root", "Hips", "Spine1", "Spine2", "Spine3"]):
+    """
+    Determine compensation orientations for all bones of a target skeleton
+    to be able to map motion from the specified source skeleton to the target
+    skeleton, if their rest poses (or bone angles in rest pose) differ. 
+    The result will be the given boneMapping, as a list of tuples with a
+    compensation transformation matrix as second item in each tuple.
+    This matrix should be multiplied with each frame for the intended bone, so
+    that the animation on srcSkel can be transferred to tgtSkel.
+    ExcludedTgtBones is a list of target bone names that should be excluded
+    from the process (not compensated for). Usually this is done with the spine
+    bones (you could consider removing "Hips" from the list, though).
+    """
+    import animation
+
+    result = []
+
+    # Determine pose to place target rig in the same rest pose as src rig
+    pose = animation.emptyPose(tgtSkel.getBoneCount())
+
+    for bIdx, tgtBone in enumerate(tgtSkel.getBones()):
+        boneMap = boneMapping[bIdx]
+        if isinstance(boneMap, tuple):
+            srcName, _ = boneMap
+        else:
+            srcName = boneMap
+
+        result.append( (srcName, np.mat(np.identity(4))) )
+
+        if not srcName:
+            continue
+        srcBone = srcSkel.getBone(srcName)
+        srcGlobalOrient = srcBone.matRestGlobal.copy()
+        srcGlobalOrient[:3,3] = 0.0  # No translation, only rotation
+        tgtGlobalOrient = np.mat(tgtBone.matPoseGlobal.copy()) # Depends on pose compensation of parent bones
+        tgtGlobalOrient[:3,3] = 0.0
+
+        if srcBone.length == 0:
+            # Safeguard because this always leads to wrong pointing target bones
+            # I have no idea why, but for some reason the skeleton created from the BVH 
+            # has some zero-sized bones (this is probably a bug)
+            log.message("skipping zero-length (source) bone %s", srcBone.name)
+            continue
+
+        if tgtBone.length == 0:
+            log.message("skipping zero-length (target) bone %s", tgtBone.name)
+            continue
+
+        # Never compensate for spine bones, as this ususally deforms the mesh heavily
+        if tgtBone.name in excludedTgtBones:
+            log.message("Skipping non-compensated bone %s", tgtBone.name)
+            continue
+
+        log.message("compensating %s", tgtBone.name)
+        log.debug(str(srcGlobalOrient))
+        log.debug(str(tgtGlobalOrient))
+
+        diff = np.mat(la.inv(tgtGlobalOrient)) * srcGlobalOrient
+        # Rotation only
+        diff[:3,3] = 0.0
+        diffPose = tgtGlobalOrient * diff * np.mat(la.inv(tgtGlobalOrient))
+        log.debug(str(diffPose))
+
+        result[bIdx] = (srcName, diffPose)
+
+        # Set pose that orients target bone in the same orientation as the source bone in rest
+        tgtBone.matPose = np.mat(la.inv(tgtBone.matRestGlobal)) * diffPose * np.mat(tgtBone.matRestGlobal)
+
+        tgtSkel.update()   # Update skeleton after each modification of a bone
     return result

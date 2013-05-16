@@ -714,15 +714,24 @@ def loadAnimationTrack(anim):
     else:
         # Skeleton and joint rig in BVH are not the same, retarget/remap
         # the motion data:
-        gui3d.app.statusPersist("Currently, animation are only working with soft1 rig, please choose the soft1 rig from the skeleton chooser.")
-        return None
-
         if not os.path.isfile("tools/blender26x/mh_mocap_tool/target_rigs/%s.trg" % human.getSkeleton().name):
             gui3d.app.statusPersist("Cannot apply motion on the selected skeleton %s because there is no target mapping file for it.", human.getSkeleton().name)
             return None
 
-        jointToBoneMap = skeleton.loadJointsMapping(human.getSkeleton().name, human.getSkeleton())
+        #animTrack = bvhRig.createAnimationTrack(jointToBoneMap, anim.getAnimationTrackName())
+
+        # Load source skeleton of animation for remapping
+        srcSkel, _ = skeleton.loadRig(os.path.join('data', 'rigs', '%s.rig' % anim.collection.rig), human.meshData)
+        tgtSkel = human.getSkeleton()
+        # Load mapping from reference rig to target rig
+        # TODO this only works if anim.collection.rig == soft1! We cannot do reverse target mappings
+        jointToBoneMap = skeleton.getRetargetMapping(None, human.getSkeleton().name, human.getSkeleton())
+        # We dont use the compensation angles from the retarget map, instead we calculate the difference between reference and target rig ourselves
+        excludeFromCompensation = ["Root", "Spine1", "Spine2", "Spine3"]
+        # TODO cache mappings and compensation angles
+        jointToBoneMap = skeleton.getRestPoseCompensation(srcSkel, tgtSkel, jointToBoneMap)
         animTrack = bvhRig.createAnimationTrack(jointToBoneMap, anim.getAnimationTrackName())
+        gui3d.app.statusPersist("")
 
     log.debug("Created animation track for %s rig.", human.getSkeleton().name)
     log.debug("Frames: %s", animTrack.nFrames)
