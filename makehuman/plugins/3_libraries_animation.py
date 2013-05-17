@@ -741,7 +741,6 @@ def loadAnimationTrack(anim):
             jointToBoneMap = skeleton.getRetargetMapping(None, human.getSkeleton().name, human.getSkeleton())
             # We dont use the compensation angles from the retarget map, instead we calculate the difference between reference and target rig ourselves
             excludeFromCompensation = ["Root", "Spine1", "Spine2", "Spine3"]
-            # TODO cache mappings and compensation angles
             jointToBoneMap = skeleton.getRestPoseCompensation(srcSkel, tgtSkel, jointToBoneMap)
             _jointMappingCache[cacheName] = jointToBoneMap
 
