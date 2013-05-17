@@ -39,6 +39,8 @@ import skeleton_drawing
 import animation
 import filechooser
 
+_jointMappingCache = {}
+
 class AnimationAction(gui3d.Action):
     def __init__(self, name, library, add, anim):
         super(AnimationAction, self).__init__(name)
@@ -597,7 +599,10 @@ class AnimationLibrary(gui3d.TaskView):
             self.skelObj.setPosition(gui3d.app.selectedHuman.getPosition())
 
     def onHumanChanging(self, event):
+        global _jointMappingCache
+
         human = event.human
+        _jointMappingCache = {}
         if event.change == 'reset':
             self.stopPlayback()
             human.animations = []
@@ -684,6 +689,8 @@ def loadAnimationTrack(anim):
     """
     Load animation from a BVH file specified by anim.
     """
+    global _jointMappingCache
+
     if "z_is_up" in anim.options:
         swapYZ = True
     else:
@@ -721,15 +728,23 @@ def loadAnimationTrack(anim):
         #animTrack = bvhRig.createAnimationTrack(jointToBoneMap, anim.getAnimationTrackName())
 
         # Load source skeleton of animation for remapping
-        srcSkel, _ = skeleton.loadRig(os.path.join('data', 'rigs', '%s.rig' % anim.collection.rig), human.meshData)
-        tgtSkel = human.getSkeleton()
-        # Load mapping from reference rig to target rig
-        # TODO this only works if anim.collection.rig == soft1! We cannot do reverse target mappings
-        jointToBoneMap = skeleton.getRetargetMapping(None, human.getSkeleton().name, human.getSkeleton())
-        # We dont use the compensation angles from the retarget map, instead we calculate the difference between reference and target rig ourselves
-        excludeFromCompensation = ["Root", "Spine1", "Spine2", "Spine3"]
-        # TODO cache mappings and compensation angles
-        jointToBoneMap = skeleton.getRestPoseCompensation(srcSkel, tgtSkel, jointToBoneMap)
+        cacheName = anim.collection.rig + "_" + human.getSkeleton().name
+        if cacheName in _jointMappingCache:
+            # Load from cache
+            jointToBoneMap = _jointMappingCache[cacheName]
+        else:
+            # Create and cache mapping
+            srcSkel, _ = skeleton.loadRig(os.path.join('data', 'rigs', '%s.rig' % anim.collection.rig), human.meshData)
+            tgtSkel = human.getSkeleton()
+            # Load mapping from reference rig to target rig
+            # TODO this only works if anim.collection.rig == soft1! We cannot do reverse target mappings
+            jointToBoneMap = skeleton.getRetargetMapping(None, human.getSkeleton().name, human.getSkeleton())
+            # We dont use the compensation angles from the retarget map, instead we calculate the difference between reference and target rig ourselves
+            excludeFromCompensation = ["Root", "Spine1", "Spine2", "Spine3"]
+            # TODO cache mappings and compensation angles
+            jointToBoneMap = skeleton.getRestPoseCompensation(srcSkel, tgtSkel, jointToBoneMap)
+            _jointMappingCache[cacheName] = jointToBoneMap
+
         animTrack = bvhRig.createAnimationTrack(jointToBoneMap, anim.getAnimationTrackName())
         gui3d.app.statusPersist("")
 
