@@ -725,8 +725,6 @@ def loadAnimationTrack(anim):
             gui3d.app.statusPersist("Cannot apply motion on the selected skeleton %s because there is no target mapping file for it.", human.getSkeleton().name)
             return None
 
-        #animTrack = bvhRig.createAnimationTrack(jointToBoneMap, anim.getAnimationTrackName())
-
         # Load source skeleton of animation for remapping
         cacheName = anim.collection.rig + "_" + human.getSkeleton().name
         if cacheName in _jointMappingCache:
@@ -741,7 +739,7 @@ def loadAnimationTrack(anim):
             jointToBoneMap = skeleton.getRetargetMapping(None, human.getSkeleton().name, human.getSkeleton())
             # We dont use the compensation angles from the retarget map, instead we calculate the difference between reference and target rig ourselves
             excludeFromCompensation = ["Root", "Spine1", "Spine2", "Spine3"]
-            jointToBoneMap = skeleton.getRestPoseCompensation(srcSkel, tgtSkel, jointToBoneMap)
+            jointToBoneMap = skeleton.getRestPoseCompensation(srcSkel, tgtSkel, jointToBoneMap, excludeFromCompensation)
             _jointMappingCache[cacheName] = jointToBoneMap
 
         animTrack = bvhRig.createAnimationTrack(jointToBoneMap, anim.getAnimationTrackName())
