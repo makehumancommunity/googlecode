@@ -866,6 +866,7 @@ def getRestPoseCompensation(srcSkel, tgtSkel, boneMapping, excludedTgtBones = ["
     ExcludedTgtBones is a list of target bone names that should be excluded
     from the process (not compensated for). Usually this is done with the spine
     bones (you could consider removing "Hips" from the list, though).
+    The target skeleton will be set to its rest pose.
     """
     import animation
 
@@ -873,6 +874,8 @@ def getRestPoseCompensation(srcSkel, tgtSkel, boneMapping, excludedTgtBones = ["
 
     # Determine pose to place target rig in the same rest pose as src rig
     pose = animation.emptyPose(tgtSkel.getBoneCount())
+
+    tgtSkel.setToRestPose()
 
     for bIdx, tgtBone in enumerate(tgtSkel.getBones()):
         boneMap = boneMapping[bIdx]
