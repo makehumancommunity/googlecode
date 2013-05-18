@@ -118,18 +118,19 @@ def exportObjFile(path, groupsAsMaterials, context):
         for f in orderedFaces:
             info = writeNewGroup(fp, f,info, me, ob, groupsAsMaterials)
             uvVerts = uvFaceVerts[f.index]
-            fp.write("f ")
+            faceLine = []
             for n,v in enumerate(f.vertices):
                 (vt, uv) = uvVerts[n]
-                fp.write("%d/%d " % (v+1, vt+1))
-            fp.write("\n")
+                faceLine.append("%d/%d" % (v+1, vt+1))
+            fp.write("f "+ (" ".join(faceLine)) +"\n")
     else:
         for f in orderedFaces:
             info = writeNewGroup(fp, f, info, me, ob, groupsAsMaterials)
             fp.write("f ")
+            faceLine = []
             for vn in f.vertices:
-                fp.write("%d " % (vn+1))
-            fp.write("\n")
+                faceLine.append("%d" % (vn+1))
+            fp.write("f "+ (" ".join(faceLine)) +"\n")
 
     fp.close()
     print("%s written" % path)
