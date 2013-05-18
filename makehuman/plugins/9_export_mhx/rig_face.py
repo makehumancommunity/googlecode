@@ -22,7 +22,6 @@ Abstract
 Face bone definitions 
 """
 
-from collections import OrderedDict
 from .flags import *
 from . import posebone
 from posebone import addPoseBone
@@ -38,45 +37,45 @@ Joints = [
 
 eyeOffs = (0,0,0.3)
 
-HeadsTails = [
-    ('jaw',                  'mouth', 'jaw'),
-    ('tongue_base',           'tongue-1', 'tongue-2'),
-    ('tongue_mid',            'tongue-2', 'tongue-3'),
-    ('tongue_tip',            'tongue-3', 'tongue-4'),
+HeadsTails = {
+    'jaw' :             ('mouth', 'jaw'),
+    'tongue_base' :     ('tongue-1', 'tongue-2'),
+    'tongue_mid' :      ('tongue-2', 'tongue-3'),
+    'tongue_tip' :      ('tongue-3', 'tongue-4'),
 
-    ('eye.R',                'r-eye', ('r-eye', eyeOffs)),
-    ('eye_parent.R',          'r-eye', ('r-eye', eyeOffs)),
-    ('up_lid.R',           'r-eye', 'r-upperlid'),
-    ('lo_lid.R',           'r-eye', 'r-lowerlid'),
-    
-    ('eye.L',                'l-eye', ('l-eye', eyeOffs)),
-    ('eye_parent.L',          'l-eye', ('l-eye', eyeOffs)),
-    ('up_lid.L',           'l-eye', 'l-upperlid'),
-    ('lo_lid.L',           'l-eye', 'l-lowerlid'),
+    'eye.R' :           ('r-eye', ('r-eye', eyeOffs)),
+    'eye_parent.R' :    ('r-eye', ('r-eye', eyeOffs)),
+    'up_lid.R' :        ('r-eye', 'r-upperlid'),
+    'lo_lid.R' :        ('r-eye', 'r-lowerlid'),
+   
+    'eye.L' :           ('l-eye', ('l-eye', eyeOffs)),
+    'eye_parent.L' :    ('l-eye', ('l-eye', eyeOffs)),
+    'up_lid.L' :        ('l-eye', 'l-upperlid'),
+    'lo_lid.L' :        ('l-eye', 'l-lowerlid'),
 
-    ('eyes',                 'eyes', ('eyes', (0,0,1))),
-    ('gaze',                 'gaze', ('gaze', (0,0,1))),
-    ('gaze_parent',           'head', 'head-2'),
-]
+    'eyes' :            ('eyes', ('eyes', (0,0,1))),
+    'gaze' :            ('gaze', ('gaze', (0,0,1))),
+    'gaze_parent' :     ('head', 'head-2'),
+}
 
 
-Armature = OrderedDict([
-    ('jaw',              (0, 'head', F_DEF, L_HEAD, NoBB)),
-    ('tongue_base',       (0, 'jaw', F_DEF, L_HEAD, NoBB)),
-    ('tongue_mid',        (0, 'tongue_base', F_DEF, L_HEAD, NoBB)),
-    ('tongue_tip',        (0, 'tongue_mid', F_DEF, L_HEAD, NoBB)),
-    ('gaze_parent',       (0, None, 0, L_HELP, NoBB)),
-    ('gaze',             (180*D, 'gaze_parent', 0, L_HEAD, NoBB)),
-    ('eyes',             (0, 'head', 0, L_HELP, NoBB)),
-    ('eye_parent.R',      (0, 'head', 0, L_HELP, NoBB)),
-    ('eye_parent.L',      (0, 'head', 0, L_HELP, NoBB)),
-    ('eye.R',            (0, 'eye_parent.R', F_DEF, L_HEAD, NoBB)),
-    ('eye.L',            (0, 'eye_parent.L', F_DEF, L_HEAD, NoBB)),
-    ('up_lid.R',       (0.279253, 'head', F_DEF, L_HEAD, NoBB)),
-    ('lo_lid.R',       (0, 'head', F_DEF, L_HEAD, NoBB)),
-    ('up_lid.L',       (-0.279253, 'head', F_DEF, L_HEAD, NoBB)),
-    ('lo_lid.L',       (0, 'head', F_DEF, L_HEAD, NoBB)),
-])
+Armature = {
+    'jaw' :             (0, 'head', F_DEF, L_HEAD),
+    'tongue_base' :     (0, 'jaw', F_DEF, L_HEAD),
+    'tongue_mid' :      (0, 'tongue_base', F_DEF, L_HEAD),
+    'tongue_tip' :      (0, 'tongue_mid', F_DEF, L_HEAD),
+    'gaze_parent' :     (0, None, 0, L_HELP),
+    'gaze' :            (180*D, 'gaze_parent', 0, L_HEAD),
+    'eyes' :            (0, 'head', 0, L_HELP),
+    'eye_parent.R' :    (0, 'head', 0, L_HELP),
+    'eye_parent.L' :    (0, 'head', 0, L_HELP),
+    'eye.R' :           (0, 'eye_parent.R', F_DEF, L_HEAD),
+    'eye.L' :           (0, 'eye_parent.L', F_DEF, L_HEAD),
+    'up_lid.R' :        (0.279253, 'head', F_DEF, L_HEAD),
+    'lo_lid.R' :        (0, 'head', F_DEF, L_HEAD),
+    'up_lid.L' :        (-0.279253, 'head', F_DEF, L_HEAD),
+    'lo_lid.L' :        (0, 'head', F_DEF, L_HEAD),
+}
 
 
 CustomShapes = {
@@ -112,6 +111,7 @@ Constraints = {
 #
 
 def DeformDrivers(fp, amt):
+    return []
     lidBones = [
     ('DEF_up_lid.L', 'PUpLid_L', (0, 40*D)),
     ('DEF_lo_lid.L', 'PLoLid_L', (0, 20*D)),
@@ -130,9 +130,7 @@ def DeformDrivers(fp, amt):
 #   (Bone, Name, Props, Expr)
 #
 
-PropDrivers = []
-
-SoftPropDrivers = [
+PropDrivers = [
     ('gaze_parent', 'head', ['GazeFollowsHead'], 'x1'),
 ]
 

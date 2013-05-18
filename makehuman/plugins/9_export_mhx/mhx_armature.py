@@ -169,6 +169,7 @@ class ExportArmature(CArmature):
         self.boneLayers = "00000001"
 
         self.bones = OrderedDict()
+        self.bbones = {}
         self.boneGroups = []
         self.rotationLimits = {}
         self.customShapes = {}
@@ -192,7 +193,8 @@ class ExportArmature(CArmature):
             self.setupJoints()       
             self.moveOriginToFloor()
             self.dynamicLocations()
-            for (bone, head, tail) in self.headsTails:
+            for bone in self.bones.keys():
+                head,tail = self.headsTails[bone]
                 self.rigHeads[bone] = self.findLocation(head)
                 self.rigTails[bone] = self.findLocation(tail)
         else:
@@ -330,7 +332,7 @@ class ExportArmature(CArmature):
 
     def writeEditBones(self, fp):        
         for bone,data in self.bones.items():
-            (roll, parent, flags, layers, bbone) = data
+            (roll, parent, flags, layers) = data
             conn = (flags & F_CON != 0)
             deform = (flags & F_DEF != 0)
             restr = (flags & F_RES != 0)
@@ -369,8 +371,8 @@ class ExportArmature(CArmature):
             if 1 and (flags & F_HID):
                 fp.write("    hide True ; \n")
     
-            if bbone:
-                (bin, bout, bseg) = bbone
+            if 0 and self.bbones[bone]:
+                (bin, bout, bseg) = self.bbones[bone]
                 fp.write(
                     "    bbone_in %d ; \n" % (bin) +
                     "    bbone_out %d ; \n" % (bout) +
@@ -614,12 +616,12 @@ class MhxArmature(ExportArmature):
             rig_face.Joints
         )            
         
-        self.headsTails = (
-            rig_bones.HeadsTails +
-            rig_muscle.HeadsTails +
-            rig_mhx.HeadsTails +
+        self.headsTails = mergeDicts([
+            rig_bones.HeadsTails,
+            rig_muscle.HeadsTails,
+            rig_mhx.HeadsTails,
             rig_face.HeadsTails
-        )
+        ])
 
         self.constraints = mergeDicts([
             rig_bones.Constraints,
@@ -644,18 +646,9 @@ class MhxArmature(ExportArmature):
         
         self.parents = rig_mhx.Parents
         
-        splitBones = ["forearm"]
-        
-        ikChains = {
-            "upper_arm" : L_LARMIK,
-            "forearm" : (2, L_LARMIK, "wrist", "elbow.pt"),
-            "thigh" : L_LLEGIK,
-            "shin" : (2, L_LLEGIK, "ankle", "knee.pt")
-        }
-        
         generic = mergeDicts([rig_bones.Armature, rig_face.Armature])
         bones = mergeDicts([
-            self.addDeformBones(generic, splitBones, ikChains),
+            self.addDeformBones(generic, rig_mhx.SplitBones, rig_mhx.IkChains),
             rig_muscle.Armature,
             rig_mhx.Armature,
             rig_face.Armature,
@@ -703,29 +696,36 @@ class MhxArmature(ExportArmature):
     def addDeformBones(self, boneInfo, splitBones, ikChains):
         bones = {}
         for bone,data in boneInfo.items():
-            (roll, parent, flags, layers, bbone) = data
-            head,tail = self.getHeadTail(bone)
-            flags &= ~F_DEF
+            (roll, parent, flags, layers) = data
+            headTail = self.headsTails[bone]
             base,ext = self.splitBoneName(bone)
-            data = (roll, parent, flags, L_HELP, NoBB)
+            nodef = flags & ~F_DEF
+            data = (roll, parent, nodef, L_HELP)
             parent = safeGet(self.parents, bone, parent)
 
             if base in ikChains.keys():      
                 value = ikChains[base]
                 fkbone = base + ".fk" + ext
                 ikbone = base + ".ik" + ext
-                self.headsTails.append((fkbone, head, tail))
-                self.headsTails.append((ikbone, head, tail))
+                self.headsTails[fkbone] = headTail
+                self.headsTails[ikbone] = headTail
                 
-                if isinstance(value, int):
+                try:
+                    layer,cnsname = value
+                    simple = True
+                except:
+                    count, layer, cnsname, target, pole, poleAngle, rang = value
+                    simple = False
+                
+                if simple:
                     if ext == ".R":
-                        value <<= 16
+                        layer <<= 16
                     bones[bone] = data
-                    bones[fkbone] = (roll, parent, flags, value<<1, NoBB)
-                    bones[ikbone] = (roll, parent, flags, value, NoBB)
+                    bones[fkbone] = (roll, parent, nodef, layer<<1)
+                    bones[ikbone] = (roll, parent, nodef, layer)
                     self.constraints[bone] = [
-                        copyTransform(fkbone), 
-                        copyTransform(ikbone, 0)
+                        copyTransform(fkbone, cnsname+"FK"), 
+                        copyTransform(ikbone, cnsname+"IK", 0)
                     ]
                     
                 elif isinstance(value, tuple):
@@ -737,32 +737,27 @@ class MhxArmature(ExportArmature):
                         pext = "." + words[1]                
                     fkParent = pbase + ".fk" + pext
                     ikParent = pbase + ".ik" + pext
-                    count, layer, target, pole = value
                     if ext == ".R":
                         layer <<= 16
+                        poleAngle = rang
                     bones[bone] = data
-                    bones[fkbone] = (roll, fkParent, flags, layer<<1, NoBB)
-                    bones[ikbone] = (roll, ikParent, flags, layer, NoBB)
+                    bones[fkbone] = (roll, fkParent, nodef, layer<<1)
+                    bones[ikbone] = (roll, ikParent, nodef, layer)
                     self.constraints[bone] = [
-                        copyTransform(fkbone), 
-                        copyTransform(ikbone, 0)
-                    ]                 
-                    fkTarget = target + ".fk" + ext
+                        copyTransform(fkbone, cnsname+"FK"), 
+                        copyTransform(ikbone, cnsname+"IK", 0)
+                    ]        
                     ikTarget = target + ".ik" + ext
-                    self.constraints[target+ext] = [
-                        copyTransform(fkTarget),
-                        copyTransform(ikTarget, 0)
-                    ]
-                    poleAngle = 0
                     poleTarget = pole + ".ik" + ext
                     self.constraints[ikbone] = [
                         ('IK', 0, 1, ['IK', ikTarget, count, (poleAngle, poleTarget), (True, False,False)])
                     ]                        
 
             else:
-                bones[bone] = (roll, parent, flags, layers, NoBB)
+                bones[bone] = (roll, parent, nodef, layers)
 
             if flags & F_DEF == 0:
+                print "Skip", bone
                 continue
                 
             if parent:
@@ -771,31 +766,43 @@ class MhxArmature(ExportArmature):
                     defParent = "DEF-"+pbase+".3"+pext
                 else:
                     try:
-                        boneInfo[parent]
-                        defParent = "DEF-"+parent
+                        parInfo = boneInfo[parent]
                     except KeyError:
+                        parInfo = None                        
+                    if parInfo and (parInfo[2] & F_DEF):
+                        defParent = "DEF-"+parent
+                    else:
                         defParent = parent
             else:
                 defParent = None             
                 
-            if base in splitBones: 
+            if base in splitBones.keys(): 
                 defname1 = "DEF-"+base+".1"+ext
                 defname2 = "DEF-"+base+".2"+ext
                 defname3 = "DEF-"+base+".3"+ext
-                self.headsTails += [
-                    (defname1, head, ((0.667,head),(0.333,tail))),
-                    (defname2, ((0.667,head),(0.333,tail)), ((0.333,head),(0.667,tail))),
-                    (defname3, ((0.333,head),(0.667,tail)), tail)
+                head,tail = headTail
+                self.headsTails[defname1] = (head, ((0.667,head),(0.333,tail)))
+                self.headsTails[defname2] = (((0.667,head),(0.333,tail)), ((0.333,head),(0.667,tail)))
+                self.headsTails[defname3] = (((0.333,head),(0.667,tail)), tail)
+                bones[defname1] = (roll, defParent, F_DEF+F_CON, L_DEF)
+                bones[defname3] = (roll, bone, F_DEF, L_DEF)
+                bones[defname2] = (roll, defParent, F_DEF, L_DEF)
+                fkbone = base + ".fk" + ext
+                ikbone = base + ".ik" + ext
+                child = splitBones[base]
+                self.constraints[defname1] = [
+                    ('IK', 0, 1, ['IK', child+ext, 1, None, (True, False,True)])
                 ]
-                bones[defname1] = (roll, defParent, F_DEF, L_DEF, bbone)
-                bones[defname2] = (roll, defname1, F_DEF, L_DEF, bbone)
-                bones[defname3] = (roll, defname2, F_DEF, L_DEF, bbone)
-
+                self.constraints[defname2] = [
+                    ('CopyLoc', 0, 1, ["CopyLoc", defname1, (1,1,1), (0,0,0), 1, False]),
+                    ('CopyRot', 0, 1, [defname1, defname1, (1,1,1), (0,0,0), False]),
+                    ('CopyRot', 0, 0.5, [bone, bone, (1,1,1), (0,0,0), False])
+                ]
             else:
                 defname = "DEF-"+bone
-                self.headsTails.append((defname, head, tail))
-                bones[defname] = (roll, defParent, F_DEF, L_DEF, bbone)
-                self.constraints[defname] = [copyTransform(bone)]
+                self.headsTails[defname] = headTail
+                bones[defname] = (roll, defParent, F_DEF, L_DEF)
+                self.constraints[defname] = [copyTransform(bone, bone)]
 
         return bones           
         
@@ -821,36 +828,22 @@ class MhxArmature(ExportArmature):
 
 
     def writeDrivers(self, fp):
-        return
         driverList = (
-            mhx_drivers.writePropDrivers(fp, self, rig_arm.PropDrivers, "", "Mha") +
-            mhx_drivers.writePropDrivers(fp, self, rig_arm.PropLRDrivers, "_L", "Mha") +
-            mhx_drivers.writePropDrivers(fp, self, rig_arm.PropLRDrivers, "_R", "Mha") +
-            mhx_drivers.writePropDrivers(fp, self, rig_arm.SoftPropLRDrivers, "_L", "Mha") +
-            mhx_drivers.writePropDrivers(fp, self, rig_arm.SoftPropLRDrivers, "_R", "Mha") +
-            #writeScriptedBoneDrivers(fp, rig_leg.BoneDrivers) +
-            mhx_drivers.writePropDrivers(fp, self, rig_leg.PropDrivers, "", "Mha") +
-            mhx_drivers.writePropDrivers(fp, self, rig_leg.PropLRDrivers, "_L", "Mha") +
-            mhx_drivers.writePropDrivers(fp, self, rig_leg.PropLRDrivers, "_R", "Mha") +
-            mhx_drivers.writePropDrivers(fp, self, rig_leg.SoftPropLRDrivers, "_L", "Mha") +
-            mhx_drivers.writePropDrivers(fp, self, rig_leg.SoftPropLRDrivers, "_R", "Mha")
-            #mhx_drivers.writePropDrivers(fp, self, rig_body.PropDrivers, "", "Mha")
+            #mhx_drivers.writePropDrivers(fp, self, rig_mhx.PropDrivers, "", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_mhx.PropLRDrivers, "L", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_mhx.PropLRDrivers, "R", "Mha") +
+            mhx_drivers.writePropDrivers(fp, self, rig_face.PropDrivers, "", "Mha") +
+            mhx_drivers.writeDrivers(fp, True, rig_face.DeformDrivers(fp, self))            
         )
+        return driverList
+
         if self.config.advancedSpine:
             driverList += mhx_drivers.writePropDrivers(fp, self, rig_body.PropDriversAdvanced, "", "Mha") 
-        driverList += (
-            mhx_drivers.writePropDrivers(fp, self, rig_face.PropDrivers, "", "Mha") +
-            mhx_drivers.writePropDrivers(fp, self, rig_face.SoftPropDrivers, "", "Mha")
-        )
         fingDrivers = rig_finger.getPropDrivers()
         driverList += (
             mhx_drivers.writePropDrivers(fp, self, fingDrivers, "_L", "Mha") +
-            mhx_drivers.writePropDrivers(fp, self, fingDrivers, "_R", "Mha") +
-            mhx_drivers.writeMuscleDrivers(fp, rig_arm.DeformDrivers, self.name) +
-            mhx_drivers.writeMuscleDrivers(fp, rig_leg.DeformDrivers, self.name)
+            mhx_drivers.writePropDrivers(fp, self, fingDrivers, "_R", "Mha")
         )
-        faceDrivers = rig_face.DeformDrivers(fp, self)
-        driverList += mhx_drivers.writeDrivers(fp, True, faceDrivers)
         return driverList
     
 
@@ -970,16 +963,16 @@ class MhxArmature(ExportArmature):
 """)        
 
 #-------------------------------------------------------------------------------        
-#   Rigify armature
+#   Basic armature
 #-------------------------------------------------------------------------------        
 
-class RigifyArmature(ExportArmature):
+class BasicArmature(ExportArmature):
 
     def __init__(self, name, human, config):   
         import gizmos_panel, gizmos_rigify
         
         ExportArmature. __init__(self, name, human, config)
-        self.rigtype = 'rigify'
+        self.rigtype = 'basic'
         self.boneLayers = "80005555"
 
         self.vertexGroupFiles = ["head", "rigify"]
@@ -995,11 +988,11 @@ class RigifyArmature(ExportArmature):
             rig_face.Joints
         )
         
-        self.headsTails = (
-            rig_bones.HeadsTails +
-            rig_muscle.HeadsTails +
+        self.headsTails = mergeDicts([
+            rig_bones.HeadsTails,
+            rig_muscle.HeadsTails,
             rig_face.HeadsTails
-        )
+        ])
 
         bones = mergeDicts([
             rig_bones.Armature,
@@ -1026,7 +1019,7 @@ class RigifyArmature(ExportArmature):
             rig_face.CustomShapes
         ])
 
-        self.objectProps = rig_bones.ObjectProps + [("MhxRig", '"Rigify"')]
+        self.objectProps = rig_bones.ObjectProps
         self.armatureProps = rig_bones.ArmatureProps
         
 
@@ -1035,6 +1028,15 @@ class RigifyArmature(ExportArmature):
         mhx_drivers.writePropDrivers(fp, self, rig_face.PropDrivers, "", "Mha")
         mhx_drivers.writePropDrivers(fp, self, rig_face.SoftPropDrivers, "", "Mha")
         return []
+
+
+class RigifyArmature(BasicArmature):
+
+    def __init__(self, name, human, config):   
+        BasicArmature. __init__(self, name, human, config)
+        self.rigtype = 'rigify'
+        self.objectProps += [("MhxRig", '"Rigify"')]
+        
 
 #-------------------------------------------------------------------------------        
 #   Utilities
@@ -1055,8 +1057,8 @@ def safeGet(dict, key, default):
         return default
        
 
-def copyTransform(target, inf=1):
-    return ('CopyTrans', 0, inf, ['CopyTrans', target, 0])
+def copyTransform(target, cnsname, inf=1):
+    return ('CopyTrans', 0, inf, [cnsname, target, 0])
 
 
        

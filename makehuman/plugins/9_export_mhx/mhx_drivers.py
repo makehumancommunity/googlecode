@@ -184,10 +184,16 @@ def writePropDrivers(fp, amt, drivers, suffix, prefix):
         drvVars = []
         n = 1
         for prop in props:
-            drvVars.append( ("x%d" % n, 'SINGLE_PROP', [('OBJECT', amt.name, '["%s%s%s"]' % (prefix,prop,suffix))]) )
+            if suffix:
+                datapath = '["%s%s_%s"]' % (prefix, prop, suffix)
+            else:
+                datapath = '["%s%s"]' % (prefix, prop)
+            drvVars.append( ("x%d" % n, 'SINGLE_PROP', [('OBJECT', amt.name, datapath)]) )
             n += 1
+        if suffix:
+            bone = "%s.%s" % (bone, suffix)
         drv = writeDriver(fp, True, ('SCRIPTED', expr), "",
-            "pose.bones[\"%s%s\"].constraints[\"%s\"].influence" % (bone, suffix, cns), 
+            "pose.bones[\"%s\"].constraints[\"%s\"].influence" % (bone, cns), 
             -1, (0,1), drvVars)
         driverList.append(drv)
     return driverList
