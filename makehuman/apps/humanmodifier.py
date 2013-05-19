@@ -358,9 +358,9 @@ class GenericModifier(BaseModifier):
 
     _variables = [
         'female', 'male',
-        'child', 'young', 'old',
-        'flaccid', 'averageTone', 'muscle',
-        'light', 'averageWeight', 'heavy',
+        'baby', 'young', 'old',
+        'minmuscle', 'averagemuscle', 'maxmuscle',
+        'minweight', 'averageweight', 'maxweight',
         'dwarf', 'giant',
         'cup1', 'cup2',
         'firmness0', 'firmness1',

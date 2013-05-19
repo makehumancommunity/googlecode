@@ -199,8 +199,8 @@ class Human(gui3d.Object):
 
     def _setAgeVals(self):
         self.oldVal = max(0.0, self.age * 2 - 1)
-        self.childVal = max(0.0, 1 - self.age * 2)
-        self.youngVal = 1 - (self.oldVal + self.childVal)
+        self.babyVal = max(0.0, 1 - self.age * 2)
+        self.youngVal = 1 - (self.oldVal + self.babyVal)
 
     def setWeight(self, weight):
         """
@@ -225,9 +225,9 @@ class Human(gui3d.Object):
         return self.weight
 
     def _setWeightVals(self):
-        self.heavyVal = max(0.0, self.weight * 2 - 1)
-        self.lightVal = max(0.0, 1 - self.weight * 2)
-        self.averageWeightVal = 1 - (self.heavyVal + self.lightVal)
+        self.maxweightVal = max(0.0, self.weight * 2 - 1)
+        self.minweightVal = max(0.0, 1 - self.weight * 2)
+        self.averageweightVal = 1 - (self.maxweightVal + self.minweightVal)
 
     def setMuscle(self, muscle):
         """
@@ -252,9 +252,9 @@ class Human(gui3d.Object):
         return self.muscle
 
     def _setMuscleVals(self):
-        self.muscleVal = max(0.0, self.muscle * 2 - 1)
-        self.flaccidVal = max(0.0, 1 - self.muscle * 2)
-        self.averageToneVal = 1 - (self.muscleVal + self.flaccidVal)
+        self.maxmuscleVal = max(0.0, self.muscle * 2 - 1)
+        self.minmuscleVal = max(0.0, 1 - self.muscle * 2)
+        self.averagemuscleVal = 1 - (self.maxmuscleVal + self.minmuscleVal)
 
     def setHeight(self, height):
         height = min(max(height, 0.0), 1.0)

@@ -29,10 +29,10 @@ import zipfile
 class Component(object):
     _cat_data = [
         ('gender',   ['male', 'female']),
-        ('age',      ['child', 'young', 'old']),
+        ('age',      ['baby', 'young', 'old']),
         ('race',     ['caucasian', 'asian', 'african']),
-        ('tone',     ['muscle', 'averageTone', 'flaccid']),
-        ('weight',   ['light', 'averageWeight', 'heavy']),
+        ('muscle',   ['maxmuscle', 'averagemuscle', 'minmuscle']),
+        ('weight',   ['minweight', 'averageweight', 'maxweight']),
         ('height',   ['dwarf', 'giant']),
         ('cup',      ['cup1', 'cup2']),
         ('firmness', ['firmness0', 'firmness1'])
@@ -85,10 +85,10 @@ class Component(object):
             if category not in self.data:
                 self.data[category] = None
         if self.key in [['macrodetails', 'universal'], ['breast']]:
-            if self.data['tone'] is None:
-                self.data['tone'] = 'averageTone'
+            if self.data['muscle'] is None:
+                self.data['muscle'] = 'averagemuscle'
             if self.data['weight'] is None:
-                self.data['weight'] = 'averageWeight'
+                self.data['weight'] = 'averageweight'
 
 class Targets(object):
     def __init__(self, root):
@@ -105,8 +105,8 @@ class Targets(object):
                     return False
             return True
         if name == 'female_young':
-            for gender_age in ("male_child", "male_young", "male_old",
-                               "female_child", "female_old"):
+            for gender_age in ("male_baby", "male_young", "male_old",
+                               "female_baby", "female_old"):
                     if gender_age in dirs:
                         return False
             return True
