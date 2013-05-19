@@ -25,13 +25,13 @@ Deform joint definitions
 DeformJoints = [
 	# Spine
 	('pelvis',			'j', 'pelvis'),
-	('spine4',			'j', 'spine4'),
-	('spine3',			'j', 'spine3'),
-	('spine2',			'j', 'spine2'),
-	('spine1',			'j', 'spine1'),
+	('spine-4',			'j', 'spine-4'),
+	('spine-3',			'j', 'spine-3'),
+	('spine-2',			'j', 'spine-2'),
+	('spine-1',			'j', 'spine-1'),
 	('neck',			'j', 'neck'),
 	('head',			'j', 'head'),
-	('head2',			'j', 'head2'),
+	('head-2',			'j', 'head-2'),
 
 	# Head
 

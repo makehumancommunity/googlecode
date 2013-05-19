@@ -28,10 +28,10 @@ from . import posebone
 from posebone import addPoseBone
 
 BodyJoints = [
-    ('root-tail',      'o', ('spine3', [0,-1,0])),
+    ('root-tail',      'o', ('spine-3', [0,-1,0])),
     ('hips-tail',      'o', ('pelvis', [0,-1,0])),
     ('mid-uplegs',     'l', ((0.5, 'l-upper-leg'), (0.5, 'r-upper-leg'))),
-    ('spine-pt',       'o', ('spine2', [0,0,-10])),
+    ('spine-pt',       'o', ('spine-2', [0,0,-10])),
 
     ('r-breast',       'vl', ((0.4, 3559), (0.6, 2944))),
     ('r-tit',          'v', 3718),
@@ -68,40 +68,40 @@ if MuscleBones:
 BodyHeadsTails = [
     ('MasterFloor',    'floor', ('floor', zunit)),
 
-    ('Root',           'root-tail', 'spine3'),
+    ('Root',           'root-tail', 'spine-3'),
     ('Shoulders',      'neck', ('neck', [0,-1,0])),
 
     # Up spine
-    ('Pelvis',         'root-tail', 'spine3'),
-    ('Hips',           'spine3', 'root-tail'),
-    ('Spine1',         'spine3', 'spine2'),
-    ('Spine2',         'spine2', 'spine1'),
-    ('Spine3',         'spine1', 'neck'),
+    ('Pelvis',         'root-tail', 'spine-3'),
+    ('Hips',           'spine-3', 'root-tail'),
+    ('Spine1',         'spine-3', 'spine-2'),
+    ('Spine2',         'spine-2', 'spine-1'),
+    ('Spine3',         'spine-1', 'neck'),
     ('Neck',           'neck', 'neck2'),
     ('Head',           'neck2', 'head-end'),
 
     ('SpinePT',        'spine-pt', ('spine-pt', yunit)),
-    ('SpineLinkPT',    'spine2', 'spine-pt'),
+    ('SpineLinkPT',    'spine-2', 'spine-pt'),
 
     # Down spine    
-    ('DownRoot',       'root-tail', 'spine3'),
-    ('DownHips',       'spine3', 'root-tail'),
-    ('DownSpine1',     'spine2', 'spine3'),
-    ('DownSpine2',     'spine1', 'spine2'),
-    ('DownSpine3',     'neck', 'spine1'),
+    ('DownRoot',       'root-tail', 'spine-3'),
+    ('DownHips',       'spine-3', 'root-tail'),
+    ('DownSpine1',     'spine-2', 'spine-3'),
+    ('DownSpine2',     'spine-1', 'spine-2'),
+    ('DownSpine3',     'neck', 'spine-1'),
     ('DownNeck',       'neck', 'neck2'),
     
     ('DownPT0',        ('root-tail', [0,0,-1]), ('root-tail', [0,0.5,-1])),
-    ('DownPT1',        ('spine3', [0,0,-1]), ('spine3', [0,0.5,-1])),
-    ('DownPT2',        ('spine2', [0,0,-1]), ('spine2', [0,0.5,-1])),
-    ('DownPT3',        ('spine1', [0,0,-1]), ('spine1', [0,0.5,-1])),
+    ('DownPT1',        ('spine-3', [0,0,-1]), ('spine-3', [0,0.5,-1])),
+    ('DownPT2',        ('spine-2', [0,0,-1]), ('spine-2', [0,0.5,-1])),
+    ('DownPT3',        ('spine-1', [0,0,-1]), ('spine-1', [0,0.5,-1])),
 
     # Deform spine
-    ('DfmPelvis',      'root-tail', 'spine3'),
-    ('DfmHips',        'spine3', 'root-tail'),
-    ('DfmSpine1',      'spine3', 'spine2'),
-    ('DfmSpine2',      'spine2', 'spine1'),
-    ('DfmSpine3',      'spine1', 'neck'),
+    ('DfmPelvis',      'root-tail', 'spine-3'),
+    ('DfmHips',        'spine-3', 'root-tail'),
+    ('DfmSpine1',      'spine-3', 'spine-2'),
+    ('DfmSpine2',      'spine-2', 'spine-1'),
+    ('DfmSpine3',      'spine-1', 'neck'),
     ('DfmNeck',        'neck', 'neck2'),
     ('DfmHead',        'neck2', 'head-end'),
 
@@ -533,7 +533,7 @@ BodyShapes = [
 #
 
 BodyShapeKeyScale = {
-    'Breathe'            : ('spine1', 'neck', 1.89623),
+    'Breathe'            : ('spine-1', 'neck', 1.89623),
 }
 
 BodySpines = [
