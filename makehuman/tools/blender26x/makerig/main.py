@@ -262,7 +262,7 @@ def exportRigFile(context):
     checkObjectOK(ob, context)
     (rigpath, rigfile) = getFileName(rig, context, "rig")
     print("Open", rigfile)
-    fp = open(rigfile, mode="w", encoding="utf-8")
+    fp = open(rigfile, mode="w", encoding="utf-8", newline="\n")
     scn = context.scene
     fp.write(
         "# author %s\n" % scn.MRAuthor +
