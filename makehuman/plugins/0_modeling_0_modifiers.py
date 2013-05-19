@@ -521,7 +521,7 @@ class MacroTaskView(ModifierTaskView):
         ('Macro', 'macrodetails', [
             ('Gender', None, 'Gender', 'noSetCamera'),
             ('Age', None, 'Age', 'noSetCamera'),
-            ('Tone', 'universal', 'Muscle', 'noSetCamera'),
+            ('Muscle', 'universal', 'Muscle', 'noSetCamera'),
             ('Weight', 'universal', 'Weight', 'noSetCamera'),
             ('Height', 'universal-stature', 'Height', 'noSetCamera'),
             ('African', None, 'African', 'noSetCamera'),
