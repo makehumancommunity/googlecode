@@ -5,8 +5,8 @@
 # locations
   master_head voffset 15317 0.0927 0.003 0.003596
   master_tail voffset 15402 0.2988 0.7437 -1.591
-  spine1_head voffset 14271 0.0708 -0.00415 0.002489
-  spine1_tail voffset 15317 0.0927 0.003 -0.000684
+  spine-1_head voffset 14271 0.0708 -0.00415 0.002489
+  spine-1_tail voffset 15317 0.0927 0.003 -0.000684
   hip_L_tail voffset 14166 0.07398 -0.0004501 0.004952
   upperleg_L_tailRaw voffset 14174 0.000811 0.00514 0.07215
   lowerleg_L_tail voffset 14176 -0.08215 -0.00432 0.00518
@@ -14,9 +14,9 @@
   hip_R_tail voffset 14376 -0.07398 -0.0004501 0.004952
   upperleg_R_tailRaw voffset 14368 -0.000811 0.00514 0.07215
   lowerleg_R_tail voffset 14366 0.08215 -0.00432 0.00518
-  spine2_tail voffset 14043 -0.006096 -0.007 0.0913
-  spine3_tail voffset 14049 -0.006096 -0.005199 0.0881
-  spine4_tail voffset 14037 -4.424e-21 0.0117 0.0007
+  spine-2_tail voffset 14043 -0.006096 -0.007 0.0913
+  spine-3_tail voffset 14049 -0.006096 -0.005199 0.0881
+  spine-4_tail voffset 14037 -4.424e-21 0.0117 0.0007
   neck_tail voffset 14031 -0.006096 -0.0539 -0.00098
   head_tail voffset 8225 -0.006096 0.0082 -0.00717
   shoulder_L_tail voffset 14158 -0.06378 -0.008 0.00385
@@ -85,19 +85,19 @@
 
 # bones
  master master_head master_tail 1.05 - -nc 
- spine1 spine1_head spine1_tail 0 master -nc 
- hip_L spine1_head hip_L_tail 0 spine1 -nc 
+ spine-1 spine-1_head spine-1_tail 0 master -nc 
+ hip_L spine-1_head hip_L_tail 0 spine-1 -nc 
  upperleg_L hip_L_tail upperleg_L_tail 3.14 hip_L 
  lowerleg_L upperleg_L_tail lowerleg_L_tail 3.14 upperleg_L -ik foot_L 2 1.000 
- hip_R hip_R_head hip_R_tail 0 spine1 -nc 
+ hip_R hip_R_head hip_R_tail 0 spine-1 -nc 
  upperleg_R hip_R_tail upperleg_R_tail 3.14 hip_R 
  lowerleg_R upperleg_R_tail lowerleg_R_tail 3.14 upperleg_R -ik foot_R 2 1.000 
- spine2 spine1_tail spine2_tail 3.14 spine1 
- spine3 spine2_tail spine3_tail 3.14 spine2 
- spine4 spine3_tail spine4_tail 3.14 spine3 
- neck spine4_tail neck_tail 3.14 spine4 
+ spine-2 spine-1_tail spine-2_tail 3.14 spine-1 
+ spine-3 spine-2_tail spine-3_tail 3.14 spine-2 
+ spine-4 spine-3_tail spine-4_tail 3.14 spine-3 
+ neck spine-4_tail neck_tail 3.14 spine-4 
  head neck_tail head_tail 3.14 neck -nc 
- shoulder_L spine4_tail shoulder_L_tail 0 spine4 
+ shoulder_L spine-4_tail shoulder_L_tail 0 spine-4 
  upperarm_L shoulder_L_tail upperarm_L_tail 0 shoulder_L -nc 
  forearm_L upperarm_L_tail forearm_L_tail 0 upperarm_L 
  hand_L forearm_L_tail hand_L_tail 0 forearm_L 
@@ -116,7 +116,7 @@
  thumb_1_L thumb_1_L_head thumb_1_L_tail 0 hand_L -nc 
  thumb_2_L thumb_1_L_tail thumb_2_L_tail 0 thumb_1_L 
  thumb_3_L thumb_2_L_tail thumb_3_L_tail 0 thumb_2_L 
- shoulder_R spine4_tail shoulder_R_tail 0 spine4 
+ shoulder_R spine-4_tail shoulder_R_tail 0 spine-4 
  upperarm_R shoulder_R_tail upperarm_R_tail 0 shoulder_R -nc 
  forearm_R upperarm_R_tail forearm_R_tail 0 upperarm_R 
  hand_R forearm_R_tail hand_R_tail 0 forearm_R 
@@ -6575,7 +6575,7 @@
   11046 0.583
   11047 0.488
 
-# weights spine1
+# weights spine-1
   2113 0.0916
   2114 0.344
   2115 0.306
@@ -8459,7 +8459,7 @@
   18496 0.141
   18497 0.24
 
-# weights spine3
+# weights spine-3
   2113 0.171
   2114 0.0153
   2115 0.0064
@@ -11104,7 +11104,7 @@
   17568 0.00697
   17598 0.0164
 
-# weights spine4
+# weights spine-4
   2543 0.974
   2544 0.968
   2545 0.962
@@ -21362,7 +21362,7 @@
   10946 0.953
   10947 0.978
 
-# weights spine2
+# weights spine-2
   2113 0.665
   2114 0.439
   2115 0.516
