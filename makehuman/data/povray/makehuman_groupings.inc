@@ -88,9 +88,9 @@
   "joint-r-knee",
   "joint-r-shoulder",
   "joint-r-upper-leg",
-  "joint-spine1",
-  "joint-spine2",
-  "joint-spine3",
+  "joint-spine-1",
+  "joint-spine-2",
+  "joint-spine-3",
 }
 
 #declare MakeHuman_LeftFingerGroup = array[15] {
