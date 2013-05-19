@@ -22,11 +22,8 @@ Abstract
 Bone definitions for Rigify rig
 """
 
-from collections import OrderedDict
 from .flags import *
 from .rig_joints import *
-from . import posebone
-from posebone import addPoseBone
 
 Joints = [
     ('l-heel',              'v', 12820),
@@ -38,14 +35,19 @@ Joints = [
 
     ('l-hand-end',          'j', 'l-finger-3-1'),
     ('r-hand-end',          'j', 'r-finger-3-1'),
+
+    ('pubis',               'vl', ((0.9, 4341), (0.1, 4250))),
 ]
 
 
 HeadsTails = {
-    'hips' :               ('pelvis', 'spine-1'),
-    'spine' :              ('spine-1', 'spine-2'),
-    'spine-1' :            ('spine-2', 'spine-3'),
-    'chest' :              ('spine-3', 'neck'),
+    'pelvis' :             ('spine-4', 'pelvis'),
+    'tail' :               ('pelvis', 'pubis'),
+    
+    'hips' :               ('spine-4', 'spine-3'),
+    'spine' :              ('spine-3', 'spine-2'),
+    'chest' :              ('spine-2', 'spine-1'),
+    'chest-1' :            ('spine-1', 'neck'),
     'neck' :               ('neck', 'head'),
     'head' :               ('head', 'head-2'),
 
@@ -107,14 +109,14 @@ HeadsTails = {
     'f_pinky.02.R' :       ('r-finger-5-2', 'r-finger-5-3'),
     'f_pinky.03.R' :       ('r-finger-5-3', 'r-finger-5-4'),
 
-    'thigh.L' :            ('l-upperleg', 'l-knee'),
+    'thigh.L' :            ('l-upper-leg', 'l-knee'),
     'shin.L' :             ('l-knee', 'l-ankle'),
     'foot.L' :             ('l-ankle', 'l-foot-1'),
     'toe.L' :              ('l-foot-1', 'l-foot-2'),
     'heel.L' :             ('l-ankle', 'l-heel'),
     'heel.02.L' :          ('l-ball-1', 'l-ball-2'),
 
-    'thigh.R' :            ('r-upperleg', 'r-knee'),
+    'thigh.R' :            ('r-upper-leg', 'r-knee'),
     'shin.R' :             ('r-knee', 'r-ankle'),
     'foot.R' :             ('r-ankle', 'r-foot-1'),
     'toe.R' :              ('r-foot-1', 'r-foot-2'),
@@ -123,19 +125,22 @@ HeadsTails = {
 }
 
 Armature = {
-    'hips' :               (0, None, F_DEF, L_UPSPNFK),
+    'hips' :               (0, 'root', F_DEF+F_CON, L_UPSPNFK),
+    'pelvis' :             (0, 'root', F_DEF+F_CON, L_UPSPNFK),
+    'tail' :               (0, 'root', F_DEF, L_MSCL),
+
     'spine' :              (0, 'hips', F_DEF+F_CON, L_UPSPNFK),
-    'spine-1' :            (0, 'spine', F_DEF+F_CON, L_UPSPNFK),
-    'chest' :              (0, 'spine-1', F_DEF+F_CON, L_UPSPNFK),
-    'neck' :               (0, 'chest', F_DEF+F_CON, L_UPSPNFK),
+    'chest' :              (0, 'spine', F_DEF+F_CON, L_UPSPNFK),
+    'chest-1' :            (0, 'chest', F_DEF+F_CON, L_UPSPNFK),
+    'neck' :               (0, 'chest-1', F_DEF+F_CON, L_UPSPNFK),
     'head' :               (0, 'neck', F_DEF+F_CON, L_UPSPNFK),
 
-    'shoulder.L' :         (0, 'chest', F_DEF, L_LARMFK),
+    'shoulder.L' :         (0, 'chest-1', F_DEF, L_LARMFK),
     'upper_arm.L' :        (45*D, 'shoulder.L', F_DEF, L_LARMFK),
     'forearm.L' :          (131*D, 'upper_arm.L', F_DEF+F_CON, L_LARMFK),
     'hand.L' :             (-120*D, 'forearm.L', F_DEF+F_CON, L_LARMFK),
 
-    'shoulder.R' :         (0, 'chest', F_DEF, L_RARMFK),
+    'shoulder.R' :         (0, 'chest-1', F_DEF, L_RARMFK),
     'upper_arm.R' :        (-45*D, 'shoulder.R', F_DEF, L_RARMFK),
     'forearm.R' :          (-131*D, 'upper_arm.R', F_DEF+F_CON, L_RARMFK),
     'hand.R' :             (120*D, 'forearm.R', F_DEF+F_CON, L_RARMFK),
@@ -188,14 +193,14 @@ Armature = {
     'f_pinky.02.R' :       (99*D, 'f_pinky.01.R', F_DEF+F_CON, L_RHANDFK),
     'f_pinky.03.R' :       (90*D, 'f_pinky.02.R', F_DEF+F_CON, L_RHANDFK),
 
-    'thigh.L' :            (-10*D, 'hips', F_DEF, L_LLEGFK),
+    'thigh.L' :            (-10*D, 'pelvis', F_DEF, L_LLEGFK),
     'shin.L' :             (-7*D, 'thigh.L', F_DEF+F_CON, L_LLEGFK),
     'foot.L' :             (-31*D, 'shin.L', F_DEF+F_CON, L_LLEGFK),
     'toe.L' :              (-36*D, 'foot.L', F_DEF+F_CON, L_LLEGFK),
     'heel.L' :             (180*D, 'shin.L', F_CON, L_HELP2),
     'heel.02.L' :          (0, 'heel.L', 0, L_HELP2),
 
-    'thigh.R' :            (10*D, 'hips', F_DEF, L_RLEGFK),
+    'thigh.R' :            (10*D, 'pelvis', F_DEF, L_RLEGFK),
     'shin.R' :             (7*D, 'thigh.R', F_DEF+F_CON, L_RLEGFK),
     'foot.R' :             (31*D, 'shin.R', F_DEF+F_CON, L_RLEGFK),
     'toe.R' :              (36*D, 'foot.R', F_DEF+F_CON, L_RLEGFK),
@@ -204,9 +209,9 @@ Armature = {
 }
 
 RotationLimits = {
+    'pelvis' :          (-50*D,40*D, -45*D,45*D, -16*D,16*D),
     'hips' :            (-50*D,40*D, -45*D,45*D, -16*D,16*D),
     'spine' :           (-60*D,90*D, -60*D,60*D, -60*D,60*D),
-    'spine-1' :         (-90*D,70*D, -20*D,20*D, -50*D,50*D),
     'chest' :           (-20*D,20*D, 0,0, -20*D,20*D),
     'neck' :            (-60*D,40*D, -45*D,45*D, -60*D,60*D),
 
@@ -230,9 +235,9 @@ RotationLimits = {
 }
 
 CustomShapes = {
-    'hips' :            'GZM_Crown',
+    'pelvis' :          'GZM_CircleHips',
+    'hips' :            'GZM_CircleSpine',
     'spine' :           'GZM_CircleSpine',
-    'spine-1' :         'GZM_CircleSpine',
     'chest' :           'GZM_CircleChest',
     'neck' :            'GZM_Neck',
     'head' :            'GZM_Head',

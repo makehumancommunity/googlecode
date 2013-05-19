@@ -71,6 +71,8 @@ def exportMhx(human, filepath, config):
         
     if config.rigtype == 'mhx':
         amt = mhx_armature.MhxArmature(name, human, config)
+    elif config.rigtype == 'basic':
+        amt = mhx_armature.BasicArmature(name, human, config)
     elif config.rigtype == 'rigify':
         amt = mhx_armature.RigifyArmature(name, human, config)
     else:

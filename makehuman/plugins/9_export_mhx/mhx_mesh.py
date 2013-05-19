@@ -218,19 +218,17 @@ def writeFaceNumbers(fp, amt, config):
         for fg in obj.faceGroups: 
             fmask = obj.getFaceMaskForGroups([fg.name])
             if mh2proxy.deleteGroup(fg.name, deleteGroups):
-                fmats[fmask] = 6
-            elif "joint" in fg.name:
                 fmats[fmask] = 4
+            elif fg.name[0:6] == "joint-":
+                fmats[fmask] = 2
             elif fg.name == "helper-tights":                    
-                fmats[fmask] = 5
-            elif fg.name == "helper-skirt":                    
-                fmats[fmask] = 7
-            elif fg.name[0:7] == "helper-":                    
-                fmats[fmask] = 6
-            elif ("tongue" in fg.name):
-                fmats[fmask] = 1
-            elif ("eyebrown" in fg.name) or ("lash" in fg.name):
                 fmats[fmask] = 3
+            elif fg.name == "helper-hair":                    
+                fmats[fmask] = 6
+            elif fg.name == "helper-skirt":                    
+                fmats[fmask] = 5
+            elif fg.name[0:7] == "helper-":  
+                fmats[fmask] = 4
                     
         if deleteVerts != None:
             for fn,fverts in enumerate(obj.fvert):
@@ -265,7 +263,8 @@ def writeBaseMaterials(fp, amt):
 "  Material %sInvisio ;\n" % amt.name +
 "  Material %sRed ;\n" % amt.name +
 "  Material %sGreen ;\n" % amt.name +
-"  Material %sBlue ;\n" % amt.name
+"  Material %sBlue ;\n" % amt.name +
+"  Material %sYellow ;\n" % amt.name
 )
     
 
@@ -293,24 +292,24 @@ def writeVertexGroups(fp, amt, config, proxy):
         writeRigWeights(fp, weights)
     else:
         for file in amt.vertexGroupFiles:
-            copyVertexGroups(file, fp, proxy)
+            copyVertexGroups(file, fp, amt, proxy)
             
     #for path in config.customvertexgroups:
     #    print("    %s" % path)
-    #    copyVertexGroups(path, fp, proxy)    
+    #    copyVertexGroups(path, fp, amt, proxy)    
 
     if config.cage and not (proxy and proxy.cage):
         fp.write("#if toggle&T_Cage\n")
-        copyVertexGroups("cage", fp, proxy)    
+        copyVertexGroups("cage", fp, amt, proxy)    
         fp.write("#endif\n")
 
-    copyVertexGroups("leftright", fp, proxy)    
-    copyVertexGroups("tight-leftright", fp, proxy)    
-    copyVertexGroups("skirt-leftright", fp, proxy)    
+    copyVertexGroups("leftright", fp, amt, proxy)    
+    copyVertexGroups("tight-leftright", fp, amt, proxy)    
+    copyVertexGroups("skirt-leftright", fp, amt, proxy)    
     return
 
 
-def getVertexGroups(name, vgroups):
+def getVertexGroups(amt, name, vgroups):
     file = os.path.join("plugins/9_export_mhx/vertexgroups", name + ".vgrp")
     fp = open(file, "rU")
     vgroupList = []
@@ -328,12 +327,12 @@ def getVertexGroups(name, vgroups):
             vgroupList.append((name, vgroup))
         else:
             vgroup.append((int(words[0]), float(words[1])))
-    fp.close()            
-    return vgroupList            
+    fp.close()  
+    return amt.renameVertexGroups(vgroupList)
 
 
-def copyVertexGroups(name, fp, proxy):
-    vgroupList = getVertexGroups(name, {})
+def copyVertexGroups(name, fp, amt, proxy):
+    vgroupList = getVertexGroups(amt, name, {})
     if not proxy:
         for (name, weights) in vgroupList:
             fp.write("  VertexGroup %s\n" % name)

@@ -223,40 +223,5 @@ Object GZM_Face MESH GZM_Face
   parent Refer Object CustomShapes ;
 end Object
 
-# ----------------------------- MESH --------------------- # 
-
-Mesh GZM_Jaw GZM_Jaw 
-  Verts
-    v 0.529 0.764 -0.325 ;
-    v 0.666 0.259 -0.067 ;
-    v 0.584 0.677 0.169 ;
-    v 0.023 1.154 0.097 ;
-    v -0.615 0.713 0.203 ;
-    v -0.697 0.295 -0.033 ;
-    v -0.482 0.764 -0.325 ;
-    v 0.023 1.048 -0.439 ;
-  end Verts
-  Edges
-    e 4 5 ;
-    e 5 6 ;
-    e 6 7 ;
-    e 0 7 ;
-    e 0 1 ;
-    e 1 2 ;
-    e 2 3 ;
-    e 3 4 ;
-  end Edges
-end Mesh
-
-Object GZM_Jaw MESH GZM_Jaw
-  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;
-    Modifier Subsurf SUBSURF
-      levels 2 ;
-      render_levels 2 ;
-      subdivision_type 'CATMULL_CLARK' ;
-      use_subsurf_uv True ;
-    end Modifier
-  parent Refer Object CustomShapes ;
-end Object
 
 """)

@@ -498,7 +498,7 @@ class CDampedTrackConstraint(CConstraint):
             "    Constraint %s DAMPED_TRACK True\n" % self.name +
             "      target Refer Object %s ;\n" % (amt.name) +
             "      subtarget '%s' ;\n" % self.subtar +
-            "      head_tail %d ;\n" % self.headtail +
+            "      head_tail %.3g ;\n" % self.headtail +
             "      track_axis '%s' ;\n" % self.track)
         CConstraint.write25(self, amt, fp)
 

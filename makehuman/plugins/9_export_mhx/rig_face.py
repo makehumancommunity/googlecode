@@ -45,13 +45,13 @@ HeadsTails = {
 
     'eye.R' :           ('r-eye', ('r-eye', eyeOffs)),
     'eye_parent.R' :    ('r-eye', ('r-eye', eyeOffs)),
-    'up_lid.R' :        ('r-eye', 'r-upperlid'),
-    'lo_lid.R' :        ('r-eye', 'r-lowerlid'),
+    'uplid.R' :         ('r-eye', 'r-upperlid'),
+    'lolid.R' :         ('r-eye', 'r-lowerlid'),
    
     'eye.L' :           ('l-eye', ('l-eye', eyeOffs)),
     'eye_parent.L' :    ('l-eye', ('l-eye', eyeOffs)),
-    'up_lid.L' :        ('l-eye', 'l-upperlid'),
-    'lo_lid.L' :        ('l-eye', 'l-lowerlid'),
+    'uplid.L' :         ('l-eye', 'l-upperlid'),
+    'lolid.L' :         ('l-eye', 'l-lowerlid'),
 
     'eyes' :            ('eyes', ('eyes', (0,0,1))),
     'gaze' :            ('gaze', ('gaze', (0,0,1))),
@@ -71,10 +71,10 @@ Armature = {
     'eye_parent.L' :    (0, 'head', 0, L_HELP),
     'eye.R' :           (0, 'eye_parent.R', F_DEF, L_HEAD),
     'eye.L' :           (0, 'eye_parent.L', F_DEF, L_HEAD),
-    'up_lid.R' :        (0.279253, 'head', F_DEF, L_HEAD),
-    'lo_lid.R' :        (0, 'head', F_DEF, L_HEAD),
-    'up_lid.L' :        (-0.279253, 'head', F_DEF, L_HEAD),
-    'lo_lid.L' :        (0, 'head', F_DEF, L_HEAD),
+    'uplid.R' :         (0.279253, 'head', F_DEF, L_HEAD),
+    'lolid.R' :         (0, 'head', F_DEF, L_HEAD),
+    'uplid.L' :         (-0.279253, 'head', F_DEF, L_HEAD),
+    'lolid.L' :         (0, 'head', F_DEF, L_HEAD),
 }
 
 
@@ -113,10 +113,10 @@ Constraints = {
 def DeformDrivers(fp, amt):
     return []
     lidBones = [
-    ('DEF_up_lid.L', 'PUpLid_L', (0, 40*D)),
-    ('DEF_lo_lid.L', 'PLoLid_L', (0, 20*D)),
-    ('DEF_up_lid.R', 'PUpLid_R', (0, 40*D)),
-    ('DEF_lo_lid.R', 'PLoLid_R', (0, 20*D)),
+    ('DEF_uplid.L', 'PUpLid_L', (0, 40*D)),
+    ('DEF_lolid.L', 'PLoLid_L', (0, 20*D)),
+    ('DEF_uplid.R', 'PUpLid_R', (0, 40*D)),
+    ('DEF_lolid.R', 'PLoLid_R', (0, 20*D)),
     ]
 
     drivers = []

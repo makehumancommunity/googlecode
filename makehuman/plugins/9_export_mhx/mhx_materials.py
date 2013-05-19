@@ -192,6 +192,7 @@ end Texture
     writeSimpleMaterial(fp, "Red", amt, (1,0,0))
     writeSimpleMaterial(fp, "Green", amt, (0,1,0))
     writeSimpleMaterial(fp, "Blue", amt, (0,0,1))
+    writeSimpleMaterial(fp, "Yellow", amt, (1,1,0))
     return
     
 #-------------------------------------------------------------------------------        
