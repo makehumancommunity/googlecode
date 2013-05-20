@@ -19,7 +19,7 @@
 Abstract
 --------
 
-Master bone
+Hip bones for basic and mhx rigs
 """
 
 from .flags import *
@@ -28,16 +28,13 @@ from .rig_joints import *
 Joints = []
 
 HeadsTails = {
-    'master' :              ('ground', ('ground', (0,0,-1))),
-    'root' :                (('spine-4', (0,-1,0)), 'spine-4'),    
+    'master' :             ('ground', ('ground', (0,0,-1))),
 }
 
 Armature = {
-    'master' :              (0, None, F_WIR, L_MAIN),
-    'root' :                (0, 'master', F_WIR, L_MAIN+L_UPSPNFK),
+    'master' :             (0, None, F_WIR, L_MAIN),
 }
 
 CustomShapes = {
     'master' :          'GZM_Root',
-    'root' :            'GZM_Crown',
 }

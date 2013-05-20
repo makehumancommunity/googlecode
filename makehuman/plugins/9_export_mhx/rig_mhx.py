@@ -28,11 +28,6 @@ from posebone import addPoseBone
 
 
 Joints = [
-    ('l-midfoot',           'l', ((0.5, 'l-ankle'), (0.5, 'l-foot-1'))),
-    ('l-midtoe',            'l', ((0.5, 'l-foot-1'), (0.5, 'l-foot-2'))),
-    ('r-midfoot',           'l', ((0.5, 'r-ankle'), (0.5, 'r-foot-1'))),
-    ('r-midtoe',            'l', ((0.5, 'r-foot-1'), (0.5, 'r-foot-2'))),
-
     ('l-heel0',             'v', 12815),
     ('l-heel',              'l', ((-2.5,'l-foot-2'), (3.5,'l-foot-1'))),
     ('r-heel0',             'v', 6218),
@@ -50,8 +45,8 @@ Joints = [
 HeadsTails = {
     # Leg
     
-    'leg_root.L' :      ('l-upperleg', ('l-upperleg', ysmall)),
-    'leg_root.R' :      ('r-upperleg', ('r-upperleg', ysmall)),
+    'hip.L' :      ('l-upper-leg', ('l-upper-leg', ysmall)),
+    'hip.R' :      ('r-upper-leg', ('r-upper-leg', ysmall)),
     
     'ankle.L' :         ('l-ankle', 'l-ankle-tip'),
     'ankle.ik.L' :      ('l-ankle', 'l-ankle-tip'),
@@ -101,12 +96,12 @@ HeadsTails = {
 
 """
     # Directions    
-    ('DirUpLegFwd.L' :    ('l-upperleg', ('l-upperleg', (0,0,1))),
-    ('DirUpLegFwd.R' :    ('r-upperleg', ('r-upperleg', (0,0,1))),
-    ('DirUpLegBack.L' :   ('l-upperleg', ('l-upperleg', (0,0,-1))),
-    ('DirUpLegBack.R' :   ('r-upperleg', ('r-upperleg', (0,0,-1))),
-    ('DirUpLegOut.L' :    ('l-upperleg', ('l-upperleg', (1,0,0))),
-    ('DirUpLegOut.R' :    ('r-upperleg', ('r-upperleg', (-1,0,0))),
+    ('DirUpLegFwd.L' :    ('l-upper-leg', ('l-upper-leg', (0,0,1))),
+    ('DirUpLegFwd.R' :    ('r-upper-leg', ('r-upper-leg', (0,0,1))),
+    ('DirUpLegBack.L' :   ('l-upper-leg', ('l-upper-leg', (0,0,-1))),
+    ('DirUpLegBack.R' :   ('r-upper-leg', ('r-upper-leg', (0,0,-1))),
+    ('DirUpLegOut.L' :    ('l-upper-leg', ('l-upper-leg', (1,0,0))),
+    ('DirUpLegOut.R' :    ('r-upper-leg', ('r-upper-leg', (-1,0,0))),
 
     ('DirKneeBack.L' :    ('l-knee', ('l-knee', (0,0,-1))),
     ('DirKneeBack.R' :    ('r-knee', ('r-knee', (0,0,-1))),
@@ -119,14 +114,14 @@ Armature = {
     
     # Leg
     
-    'leg_root.L' :     (0, 'hip.L', F_WIR, L_TWEAK),
+    'hip.L' :          (0, 'hips', F_WIR, L_TWEAK),
     'leg.ik.L' :       (0, None, F_WIR, L_LLEGIK),
     'toe.rev.L' :      (0, 'leg.ik.L', F_WIR, L_LLEGIK),
     'foot.rev.L' :     (0, 'toe.rev.L', F_WIR, L_LLEGIK),
     'ankle.L' :        (0, None, F_WIR, L_LEXTRA),
     'ankle.ik.L' :     (0, 'foot.rev.L', 0, L_HELP2),
 
-    'leg_root.R' :     (0, 'hip.R', F_WIR, L_TWEAK),
+    'hip.R' :          (0, 'hips', F_WIR, L_TWEAK),
     'leg.ik.R' :       (0, None, F_WIR, L_RLEGIK),
     'toe.rev.R' :      (0, 'leg.ik.R', F_WIR, L_RLEGIK),
     'foot.rev.R' :     (0, 'toe.rev.R', F_WIR, L_RLEGIK),
@@ -164,12 +159,12 @@ Armature = {
 """
 
     # Directions
-    ('DirUpLegFwd.L',       180*D, 'leg_root.L', 0, L_HELP),
-    ('DirUpLegFwd.R',       180*D, 'leg_root.R', 0, L_HELP),
-    ('DirUpLegBack.L',      0*D, 'leg_root.L', 0, L_HELP),
-    ('DirUpLegBack.R',      0*D, 'leg_root.R', 0, L_HELP),
-    ('DirUpLegOut.L',       -90*D, 'leg_root.L', 0, L_HELP), 
-    ('DirUpLegOut.R',       90*D, 'leg_root.R', 0, L_HELP),
+    ('DirUpLegFwd.L',       180*D, 'hip.L', 0, L_HELP),
+    ('DirUpLegFwd.R',       180*D, 'hip.R', 0, L_HELP),
+    ('DirUpLegBack.L',      0*D, 'hip.L', 0, L_HELP),
+    ('DirUpLegBack.R',      0*D, 'hip.R', 0, L_HELP),
+    ('DirUpLegOut.L',       -90*D, 'hip.L', 0, L_HELP), 
+    ('DirUpLegOut.R',       90*D, 'hip.R', 0, L_HELP),
 
     ('DirKneeBack.L',       0*D, 'thigh.L', 0, L_HELP),
     ('DirKneeBack.R',       0*D, 'thigh.R', 0, L_HELP),
@@ -180,8 +175,8 @@ Armature = {
 Parents = {
     'upper_arm.L' :     'arm_hinge.L',
     'upper_arm.R' :     'arm_hinge.R',
-    'thigh.L' :         'leg_root.L',
-    'thigh.R' :         'leg_root.R',    
+    'thigh.L' :         'hip.L',
+    'thigh.R' :         'hip.R',    
 }
 
 
@@ -195,12 +190,10 @@ RotationLimits = {
 }
 
 CustomShapes = {
-    'master' :          'GZM_Root',
-
     # Leg
     
-    'leg_root.L' :      'GZM_Ball025',
-    'leg_root.R' :      'GZM_Ball025',
+    'hip.L' :           'GZM_Ball025',
+    'hip.R' :           'GZM_Ball025',
     'foot.rev.L' :      'GZM_RevFoot',
     'foot.rev.R' :      'GZM_RevFoot',
     'toe.rev.L' :       'GZM_RevToe',
@@ -220,10 +213,6 @@ CustomShapes = {
     'elbow.pt.ik.R' :   'GZM_Cube025',
 }
 
-SplitBones = {
-    "forearm" :     "hand",
-}
-        
 IkChains = {
     "upper_arm" :   (L_LARMIK, "Arm"),
     "forearm" :     (2, L_LARMIK, "Arm", "wrist", "elbow.pt", 175*D, 5*D),

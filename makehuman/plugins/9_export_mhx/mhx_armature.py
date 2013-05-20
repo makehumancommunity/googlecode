@@ -150,7 +150,7 @@ def setupCustomShapes(fp):
     setupCube(fp, "GZM_Cube01", 0.1, 0)
     setupCube(fp, "GZM_Cube025", 0.25, 0)
     setupCube(fp, "GZM_Cube05", 0.5, 0)
-    setupCube(fp, "GZM_EndCube01", 0.1, 1)
+    setupCube(fp, "GZM_EndCube025", 0.25, 1)
     setupCube(fp, "GZM_Chest", (0.7,0.25,0.5), (0,0.5,0.35))
     setupCube(fp, "GZM_Root", (1.25,0.5,1.0), 1)
     return
@@ -170,7 +170,10 @@ class ExportArmature(CArmature):
         self.master = None
         self.parents = {}
         self.boneLayers = "00000001"
+
         self.useDeformBones = False
+        self.useDeformNames = False
+        self.useSplitBones = False
         self.splitBones = {}
 
         self.bones = OrderedDict()
@@ -193,6 +196,30 @@ class ExportArmature(CArmature):
         return math.sqrt(np.dot(vec,vec))
         
         
+    def createBones(self, bones):
+        config = self.config
+        if config.skirtRig == "own":
+            self.joints += rig_skirt.Joints
+            self.headsTails += rig_skirt.HeadsTails
+            self.boneDefs += rig_skirt.Armature        
+
+        if config.maleRig:
+            self.boneDefs += rig_body.MaleArmature        
+
+        if self.config.facepanel:            
+            self.joints += rig_panel.Joints
+            self.headsTails += rig_panel.HeadsTails
+            self.boneDefs += rig_panel.Armature
+
+        if False and config.custom:
+            (custJoints, custHeadsTails, custArmature, self.customProps) = exportutils.custom.setupCustomRig(config)
+            self.joints += custJoints
+            self.headsTails += custHeadsTails
+            self.boneDefs += custArmature
+        
+        self.sortBones(bones)        
+        
+
     def addIkChains(self, boneInfo, bones, ikChains):
         for bone,data in boneInfo.items():
             (roll, parent, flags, layers) = data
@@ -257,10 +284,12 @@ class ExportArmature(CArmature):
 
 
     def addDeformBones(self, boneInfo, bones):
+        if not (self.useDeformBones or self.useSplitBones):
+            return
+            
         for bone,data in boneInfo.items():
             (roll, parent, flags, layers) = data
             if flags & F_DEF == 0:
-                print "Skip", bone
                 continue
             headTail = self.headsTails[bone]
             base,ext = splitBoneName(bone)
@@ -268,8 +297,9 @@ class ExportArmature(CArmature):
                 
             if parent and self.useDeformBones:
                 pbase, pext = splitBoneName(parent)
-                if pbase in self.splitBones:
-                    defParent = "DEF-"+pbase+".3"+pext
+                if pbase in self.splitBones.keys():
+                    npieces = self.splitBones[pbase][0]
+                    defParent = "DEF-" + pbase + ".0" + str(npieces) + pext
                 else:
                     try:
                         parInfo = boneInfo[parent]
@@ -282,28 +312,34 @@ class ExportArmature(CArmature):
             else:
                 defParent = parent             
                 
-            if base in self.splitBones.keys(): 
-                defname1 = "DEF-"+base+".1"+ext
-                defname2 = "DEF-"+base+".2"+ext
-                defname3 = "DEF-"+base+".3"+ext
+            if self.useSplitBones and (base in self.splitBones.keys()): 
+                defname1 = "DEF-"+base+".01"+ext
+                defname2 = "DEF-"+base+".02"+ext
+                defname3 = "DEF-"+base+".03"+ext
                 head,tail = headTail
-                self.headsTails[defname1] = (head, ((0.667,head),(0.333,tail)))
-                self.headsTails[defname2] = (((0.667,head),(0.333,tail)), ((0.333,head),(0.667,tail)))
-                self.headsTails[defname3] = (((0.333,head),(0.667,tail)), tail)
-                bones[defname1] = (roll, defParent, F_DEF+F_CON, L_DEF)
-                bones[defname3] = (roll, bone, F_DEF, L_DEF)
-                bones[defname2] = (roll, defParent, F_DEF, L_DEF)
                 fkbone = base + ".fk" + ext
                 ikbone = base + ".ik" + ext
-                child = self.splitBones[base]
+                npieces,target = self.splitBones[base]
                 self.constraints[defname1] = [
-                    ('IK', 0, 1, ['IK', child+ext, 1, None, (True, False,True)])
+                    ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)])
                 ]
-                self.constraints[defname2] = [
-                    ('CopyLoc', 0, 1, ["CopyLoc", defname1, (1,1,1), (0,0,0), 1, False]),
-                    ('CopyRot', 0, 1, [defname1, defname1, (1,1,1), (0,0,0), False]),
-                    ('CopyRot', 0, 0.5, [bone, bone, (1,1,1), (0,0,0), False])
-                ]
+                if npieces == 2:
+                    self.headsTails[defname1] = (head, ((0.5,head),(0.5,tail)))
+                    self.headsTails[defname2] = (((0.5,head),(0.5,tail)), tail)
+                    bones[defname1] = (roll, defParent, F_DEF+F_CON, L_DEF)
+                    bones[defname2] = (roll, bone, F_DEF, L_DEF)
+                elif npieces == 3:
+                    self.headsTails[defname1] = (head, ((0.667,head),(0.333,tail)))
+                    self.headsTails[defname2] = (((0.667,head),(0.333,tail)), ((0.333,head),(0.667,tail)))
+                    self.headsTails[defname3] = (((0.333,head),(0.667,tail)), tail)
+                    bones[defname1] = (roll, defParent, F_DEF+F_CON, L_DEF)
+                    bones[defname3] = (roll, bone, F_DEF, L_DEF)
+                    bones[defname2] = (roll, defParent, F_DEF, L_DEF)
+                    self.constraints[defname2] = [
+                        ('CopyLoc', 0, 1, ["CopyLoc", defname1, (1,1,1), (0,0,0), 1, False]),
+                        ('CopyRot', 0, 1, [defname1, defname1, (1,1,1), (0,0,0), False]),
+                        ('CopyRot', 0, 0.5, [bone, bone, (1,1,1), (0,0,0), False])
+                    ]
 
             elif self.useDeformBones:
                 defname = "DEF-"+bone
@@ -315,21 +351,25 @@ class ExportArmature(CArmature):
  
 
     def renameVertexGroups(self, vgroups):
-        if self.useDeformBones:
+        if self.useDeformNames:
             ngroups = []
             for bone,vgroup in vgroups:
                 base = splitBoneName(bone)[0]
                 if base in self.splitBones.keys():
                     self.splitVertexGroup(bone, vgroup, ngroups)
+                elif not self.useSplitBones:
+                    defname = "DEF-"+bone
+                    ngroups.append((defname,vgroup))
                 else:
                     defname = "DEF-"+bone
                     try:
-                        bones[defname]
+                        self.bones[defname]
                         ngroups.append((defname,vgroup))
                     except KeyError:
                         ngroups.append((bone,vgroup))
             return ngroups
-        elif self.splitBones:
+            
+        elif self.useSplitBones:
             ngroups = []
             for bone,vgroup in vgroups:
                 base = splitBoneName(bone)[0]
@@ -338,15 +378,14 @@ class ExportArmature(CArmature):
                 else:
                     ngroups.append((bone,vgroup))
             return ngroups
+            
         else:
             return vgroups
 
 
     def splitVertexGroup(self, bone, vgroup, ngroups):
         base,ext = splitBoneName(bone)
-        defname1 = "DEF-"+base+".1"+ext
-        defname2 = "DEF-"+base+".2"+ext
-        defname3 = "DEF-"+base+".3"+ext
+        npieces,target = self.splitBones[base]
         hname,tname = self.headsTails[bone]
         head = self.locations[hname]
         tail = self.locations[tname]
@@ -354,39 +393,44 @@ class ExportArmature(CArmature):
         vec0 = tail - head
         vec = vec0/np.dot(vec0,vec0)
         
+        defname1 = "DEF-"+base+".01"+ext
+        defname2 = "DEF-"+base+".02"+ext
+        defname3 = "DEF-"+base+".03"+ext
         vgroup1 = []
         vgroup2 = []
         vgroup3 = []
-        for vn,w in vgroup:
-            y = self.mesh.coord[vn] - orig
-            x = np.dot(vec,y)
-            if False:
-                print(bone, vn)
-                print(self.mesh.coord[vn])
-                print(orig)
-                print(head)
-                print(tail)
-                print(vec0)
-                print(vec)
-                print(x)
-                print(y)
-                halt
-            if x < 0:
-                vgroup1.append((vn,w))
-            elif x < 0.5:
-                vgroup1.append((vn, (1-2*x)*w))
-                vgroup2.append((vn, (2*x)*w))
-            elif x < 1:
-                vgroup2.append((vn, (2-2*x)*w))
-                vgroup3.append((vn, (2*x-1)*w))
-            else:
-                vgroup3.append((vn,w))
-        
-        ngroups += [(defname1,vgroup1), (defname2,vgroup2), (defname3,vgroup3)]
+        if npieces == 2:
+            for vn,w in vgroup:
+                y = self.mesh.coord[vn] - orig
+                x = np.dot(vec,y)
+                if x < 0:
+                    vgroup1.append((vn,w))
+                elif x < 0.5:
+                    vgroup1.append((vn, (1-x)*w))
+                    vgroup2.append((vn, x*w))
+                else:
+                    vgroup2.append((vn,w))
+            ngroups += [(defname1,vgroup1), (defname2,vgroup2)]
+        elif npieces == 3:
+            for vn,w in vgroup:
+                y = self.mesh.coord[vn] - orig
+                x = np.dot(vec,y)
+                if x < 0:
+                    vgroup1.append((vn,w))
+                elif x < 0.5:
+                    vgroup1.append((vn, (1-2*x)*w))
+                    vgroup2.append((vn, (2*x)*w))
+                elif x < 1:
+                    vgroup2.append((vn, (2-2*x)*w))
+                    vgroup3.append((vn, (2*x-1)*w))
+                else:
+                    vgroup3.append((vn,w))        
+            ngroups += [(defname1,vgroup1), (defname2,vgroup2), (defname3,vgroup3)]
         
     
     def setup(self):
         if self.rigtype in ["mhx", "basic", "rigify"]:
+            self.createBones({})
             self.setupJoints()       
             self.moveOriginToFloor()
             self.dynamicLocations()
@@ -395,7 +439,7 @@ class ExportArmature(CArmature):
                 self.rigHeads[bone] = self.findLocation(head)
                 self.rigTails[bone] = self.findLocation(tail)
         else:
-            self.joints += rig_joints.DeformJoints + rig_joints.FloorJoints
+            self.joints += rig_joints.Joints #+ rig_joints.FloorJoints
             self.setupJoints()
             self.moveOriginToFloor()
             amtpkg.rigdefs.CArmature.setup(self)
@@ -481,7 +525,7 @@ class ExportArmature(CArmature):
     
     def moveOriginToFloor(self):
         if self.config.feetOnGround:
-            self.origin = self.locations['floor']
+            self.origin = self.locations['ground']
             for key in self.locations.keys():
                 self.locations[key] = self.locations[key] - self.origin
         else:
@@ -785,7 +829,11 @@ class MhxArmature(ExportArmature):
         self.rigtype = 'mhx'
         self.boneLayers = "0068056b"
         self.useDeformBones = True
-        self.splitBones = rig_mhx.SplitBones
+        self.useDeformNames = True
+        self.useSplitBones = True
+        self.splitBones = {
+            "forearm" :     (3, "hand"),
+        }
 
         self.boneGroups = [
             ('Master', 'THEME13'),
@@ -801,9 +849,8 @@ class MhxArmature(ExportArmature):
         self.armatureProps = []
         self.headName = 'head'
         self.master = 'master'
-        self.preservevolume = False
         
-        self.vertexGroupFiles = ["head", "bones", "palm", "tight"]
+        self.vertexGroupFiles = ["head", "basic"]
         if config.skirtRig == "own":
             self.vertexGroupFiles.append("skirt-rigged")    
         elif config.skirtRig == "inh":
@@ -813,8 +860,7 @@ class MhxArmature(ExportArmature):
             self.vertexGroupFiles.append( "male" )
                                                         
         self.joints = (
-            rig_joints.DeformJoints +
-            rig_joints.FloorJoints +
+            rig_joints.Joints +
             rig_master.Joints +
             rig_bones.Joints +
             rig_muscle.Joints +
@@ -853,38 +899,19 @@ class MhxArmature(ExportArmature):
         ])
         
         self.parents = rig_mhx.Parents
+
         
-        generic = mergeDicts([rig_bones.Armature, rig_face.Armature])
-        bones = {}
+    def createBones(self, bones):
+        generic = mergeDicts([rig_master.Armature, rig_bones.Armature, rig_face.Armature])
+        addBones(rig_master.Armature, bones)
         addBones(rig_bones.Armature, bones)
         self.addDeformBones(generic, bones),
         addBones(rig_muscle.Armature, bones)
         addBones(rig_mhx.Armature, bones)
-        self.addIkChains(self, rig_bones.Armature, bones, rig_mhx.IkChains)
+        self.addIkChains(generic, bones, rig_mhx.IkChains)
         addBones(rig_face.Armature, bones)
-        sortBones(bones)
-        
-        return
+        ExportArmature.createBones(self, bones)
 
-        if config.skirtRig == "own":
-            self.joints += rig_skirt.Joints
-            self.headsTails += rig_skirt.HeadsTails
-            self.boneDefs += rig_skirt.Armature        
-
-        if config.maleRig:
-            self.boneDefs += rig_body.MaleArmature        
-
-        if self.config.facepanel:            
-            self.joints += rig_panel.Joints
-            self.headsTails += rig_panel.HeadsTails
-            self.boneDefs += rig_panel.Armature
-
-        if False and config.custom:
-            (custJoints, custHeadsTails, custArmature, self.customProps) = exportutils.custom.setupCustomRig(config)
-            self.joints += custJoints
-            self.headsTails += custHeadsTails
-            self.boneDefs += custArmature
-        
 
     def dynamicLocations(self):
         return
@@ -1058,13 +1085,16 @@ class BasicArmature(ExportArmature):
         self.gizmos = gizmos_general.asString()
         self.master = 'master'
         self.headName = 'head'
-        self.preservevolume = True
         self.useDeformBones = False
-        self.splitBones = rig_mhx.SplitBones
-            
+        self.useDeformNames = False
+        self.useSplitBones = True
+        self.splitBones = {
+            "forearm" :     (3, "hand"),
+        }
+
         self.joints = (
-            rig_master.DeformJoints +
-            rig_joints.FloorJoints +
+            rig_joints.Joints +
+            rig_master.Joints +
             rig_bones.Joints +
             rig_bones.Joints +
             rig_muscle.Joints +
@@ -1097,17 +1127,18 @@ class BasicArmature(ExportArmature):
             rig_face.CustomShapes
         ])
 
-        bones = {}
+        self.objectProps = rig_bones.ObjectProps
+        self.armatureProps = rig_bones.ArmatureProps
+        
+    
+    def createBones(self, bones):
         addBones(rig_master.Armature, bones)
         addBones(rig_bones.Armature, bones)
         self.addDeformBones(rig_bones.Armature, bones),
         addBones(rig_muscle.Armature, bones)
         addBones(rig_face.Armature, bones)
-        self.sortBones(bones)
-        
-        self.objectProps = rig_bones.ObjectProps
-        self.armatureProps = rig_bones.ArmatureProps
-        
+        ExportArmature.createBones(self, bones)
+            
 
     def writeDrivers(self, fp):
         rig_face.DeformDrivers(fp, self)        
@@ -1116,21 +1147,60 @@ class BasicArmature(ExportArmature):
         return []
 
 
-class RigifyArmature(BasicArmature):
+class RigifyArmature(ExportArmature):
 
     def __init__(self, name, human, config):   
-        BasicArmature. __init__(self, name, human, config)
+        ExportArmature. __init__(self, name, human, config)
         self.rigtype = 'rigify'
+        self.vertexGroupFiles = ["head", "basic"]
         self.master = None
-        self.useCustomShapes = False
-        self.objectProps += [("MhxRig", '"Rigify"')]
         self.gizmos = None
+        self.boneLayers = "08a80caa"
+        self.headName = 'head'
+
+        self.useDeformBones = False
+        self.useDeformNames = True
+        self.useSplitBones = False
+        self.splitBones = {
+            "upper_arm" :   (2, "forearm"),
+            "forearm" :     (2, "hand"),
+            "thigh" :       (2, "shin"),
+            "shin" :        (2, "foot"),
+        }
+
+        self.joints = (
+            rig_joints.Joints +
+            rig_bones.Joints +
+            rig_muscle.Joints +
+            rig_face.Joints
+        )
         
-        bones = {}
+        self.headsTails = mergeDicts([
+            rig_bones.HeadsTails,
+            rig_muscle.HeadsTails,
+            rig_face.HeadsTails
+        ])
+
+        self.constraints = mergeDicts([
+            rig_bones.Constraints,
+            rig_muscle.Constraints,
+            rig_face.Constraints
+        ])
+
+        self.objectProps = rig_bones.ObjectProps + [("MhxRig", '"Rigify"')]
+        self.armatureProps = rig_bones.ArmatureProps
+
+        self.boneGroups = []
+        self.rotationLimits = {}
+        self.customShapes = {}
+        self.constraints = {}
+                
+
+    def createBones(self, bones):
         addBones(rig_bones.Armature, bones)
         addBones(rig_muscle.Armature, bones)
         addBones(rig_face.Armature, bones)
-        self.sortBones(bones)
+        ExportArmature.createBones(self, bones)
         
         
 #-------------------------------------------------------------------------------        

@@ -41,10 +41,7 @@ Joints = [
 
 
 HeadsTails = {
-    'pelvis' :             ('spine-4', 'pelvis'),
-    'tail' :               ('pelvis', 'pubis'),
-    
-    'hips' :               ('spine-4', 'spine-3'),
+    'hips' :               ('pelvis', 'spine-3'),
     'spine' :              ('spine-3', 'spine-2'),
     'chest' :              ('spine-2', 'spine-1'),
     'chest-1' :            ('spine-1', 'neck'),
@@ -125,13 +122,10 @@ HeadsTails = {
 }
 
 Armature = {
-    'hips' :               (0, 'root', F_DEF+F_CON, L_UPSPNFK),
-    'pelvis' :             (0, 'root', F_DEF+F_CON, L_UPSPNFK),
-    'tail' :               (0, 'root', F_DEF, L_MSCL),
-
+    'hips' :               (0, None, F_DEF, L_UPSPNFK),
     'spine' :              (0, 'hips', F_DEF+F_CON, L_UPSPNFK),
     'chest' :              (0, 'spine', F_DEF+F_CON, L_UPSPNFK),
-    'chest-1' :            (0, 'chest', F_DEF+F_CON, L_UPSPNFK),
+    'chest-1' :            (0, 'chest', F_DEF+F_CON, L_TWEAK),
     'neck' :               (0, 'chest-1', F_DEF+F_CON, L_UPSPNFK),
     'head' :               (0, 'neck', F_DEF+F_CON, L_UPSPNFK),
 
@@ -193,14 +187,14 @@ Armature = {
     'f_pinky.02.R' :       (99*D, 'f_pinky.01.R', F_DEF+F_CON, L_RHANDFK),
     'f_pinky.03.R' :       (90*D, 'f_pinky.02.R', F_DEF+F_CON, L_RHANDFK),
 
-    'thigh.L' :            (-10*D, 'pelvis', F_DEF, L_LLEGFK),
+    'thigh.L' :            (-10*D, 'hips', F_DEF, L_LLEGFK),
     'shin.L' :             (-7*D, 'thigh.L', F_DEF+F_CON, L_LLEGFK),
     'foot.L' :             (-31*D, 'shin.L', F_DEF+F_CON, L_LLEGFK),
     'toe.L' :              (-36*D, 'foot.L', F_DEF+F_CON, L_LLEGFK),
     'heel.L' :             (180*D, 'shin.L', F_CON, L_HELP2),
     'heel.02.L' :          (0, 'heel.L', 0, L_HELP2),
 
-    'thigh.R' :            (10*D, 'pelvis', F_DEF, L_RLEGFK),
+    'thigh.R' :            (10*D, 'hips', F_DEF, L_RLEGFK),
     'shin.R' :             (7*D, 'thigh.R', F_DEF+F_CON, L_RLEGFK),
     'foot.R' :             (31*D, 'shin.R', F_DEF+F_CON, L_RLEGFK),
     'toe.R' :              (36*D, 'foot.R', F_DEF+F_CON, L_RLEGFK),
@@ -235,8 +229,7 @@ RotationLimits = {
 }
 
 CustomShapes = {
-    'pelvis' :          'GZM_CircleHips',
-    'hips' :            'GZM_CircleSpine',
+    'hips' :            'GZM_Crown',
     'spine' :           'GZM_CircleSpine',
     'chest' :           'GZM_CircleChest',
     'neck' :            'GZM_Neck',

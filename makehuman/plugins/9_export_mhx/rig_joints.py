@@ -22,7 +22,7 @@ Abstract
 Deform joint definitions
 """
 
-DeformJoints = [
+Joints = [
     ('ground',          'j', 'ground'),
     
     # Spine
@@ -159,7 +159,7 @@ DeformJoints = [
     ('r-toe-5-3',           'j', 'r-toe-5-3'),
 
 ]
-
+"""
 FloorJoints = [
     ('l-toe-1-1',      'j', 'l-toe-1-1'),
     ('r-toe-1-1',      'j', 'r-toe-1-1'),
@@ -167,3 +167,4 @@ FloorJoints = [
     ('floor',          'o', ('mid-feet', [0,-0.3,0])),
 ]
 
+"""

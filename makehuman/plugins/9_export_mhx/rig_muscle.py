@@ -37,9 +37,14 @@ FemorisGoal     = 0.162
 SoleusLength    = 0.4
 
 Joints = [
-    ('plexus',              'v', 4070),
-    ('l-pect-1',            'v', 10730),
-    ('r-pect-1',            'v', 4078),
+    ('plexus',              'vl', ((0.9, 1892), (0.1, 3960))),
+    ('l-breast-2',          'v', 8458),
+    ('r-breast-2',          'v', 1786),
+    ('l-breast-1',          'vl', ((0.8, 8458), (0.2, 10610))),
+    ('r-breast-1',          'vl', ((0.8, 1786), (0.2, 3955))),
+
+    ('l-pect-1',            'vl', ((0.9, 8458), (0.1, 10610))),
+    ('r-pect-1',            'vl', ((0.9, 1786), (0.1, 3955))),
     
     ('l-plat-1',            'v', 7587),
     ('r-plat-1',            'v', 885),
@@ -53,11 +58,12 @@ Joints = [
 
     ('l-scapula-1',         'vl', ((0.25, 8070), (0.75, 8238))),
     ('r-scapula-1',         'vl', ((0.25, 1378), (0.75, 1560))),
-    ('l-scapula-2',         'l', ((0.5, 'l-scapula-1'), (0.5, 'spine-2'))),
-    ('r-scapula-2',         'l', ((0.5, 'r-scapula-1'), (0.5, 'spine-2'))),
+    #('chest-mid',           'l', ((0.5, 'spine-2'), (0.5, 'neck'))),
+    ('l-scapula-2',         'l', ((0.5, 'l-scapula-1'), (0.5, 'spine-1'))),
+    ('r-scapula-2',         'l', ((0.5, 'r-scapula-1'), (0.5, 'spine-1'))),
 
-    ('l-lat-2',             'l', ((1-LatDorsiLength, 'spine-2'), (LatDorsiLength, 'l-scapula'))),
-    ('r-lat-2',             'l', ((1-LatDorsiLength, 'spine-2'), (LatDorsiLength, 'r-scapula'))),
+    ('l-lat-2',             'l', ((1-LatDorsiLength, 'spine-3'), (LatDorsiLength, 'l-scapula'))),
+    ('r-lat-2',             'l', ((1-LatDorsiLength, 'spine-3'), (LatDorsiLength, 'r-scapula'))),
 
     ('l-biceps-1',          'l', ((0.5, 'l-shoulder'), (0.5, 'l-elbow'))),
     ('r-biceps-1',          'l', ((0.5, 'r-shoulder'), (0.5, 'r-elbow'))),
@@ -82,7 +88,6 @@ Joints = [
     ('l-brac-2',            'l', ((1-BracLength, 'l-brac-1'), (BracLength, 'l-brac-3'))),
     ('r-brac-2',            'l', ((1-BracLength, 'r-brac-1'), (BracLength, 'r-brac-3'))),
 
-    ('pubis',               'vl', ((0.9, 4341), (0.1, 4250))),
     ('l-hipside',           'vl', ((0.9, 10909), (0.1, 4279))),
     ('r-hipside',           'vl', ((0.1, 10909), (0.9, 4279))),
     ('l-hip',               'vl', ((0.9, 10778), (0.1, 4135))),
@@ -112,10 +117,15 @@ Joints = [
 ]
 
 HeadsTails = {
+    'pubis' :              ('pubis', 'spine-3'),    
     'ribcage.L' :          ('plexus', 'l-pect-1'),
     'ribcage.R' :          ('plexus', 'r-pect-1'),
+    'stomach' :            ('plexus', 'pubis'),
+    'breast.L' :           ('l-breast-1', 'l-breast-2'),
+    'breast.R' :           ('r-breast-1', 'r-breast-2'),
     'pectoralis.L' :       ('l-pect-1', 'l-scapula'),
     'pectoralis.R' :       ('r-pect-1', 'r-scapula'),
+    
     'platysma.L' :         ('l-plat-1', 'l-plat-2'),
     'platysma.R' :         ('r-plat-1', 'r-plat-2'),
     'trapezius.L' :        ('l-trap-1', 'l-trap-2'),
@@ -124,8 +134,8 @@ HeadsTails = {
     'trap_goal.R' :        ('r-shoulder', 'r-trap-2'),
     'scapula.L' :          ('l-scapula-1', 'l-scapula-2'),
     'scapula.R' :          ('r-scapula-1', 'r-scapula-2'),
-    'lat_dorsi.L' :        ('spine-2', 'l-lat-2'),
-    'lat_dorsi.R' :        ('spine-2', 'r-lat-2'),
+    'lat_dorsi.L' :        ('spine-3', 'l-lat-2'),
+    'lat_dorsi.R' :        ('spine-3', 'r-lat-2'),
     'deltoid.L' :          ('l-scapula', 'l-shoulder'),
     'deltoid.R' :          ('r-scapula', 'r-shoulder'),
 
@@ -143,13 +153,12 @@ HeadsTails = {
     'forearmhook.L' :      ('l-brac-3', 'l-pron-2'),
     'forearmhook.R' :      ('r-brac-3', 'r-pron-2'),
     
-    'tail' :               ('pelvis', 'pubis'),
     'hipside.L' :          ('pubis', 'l-hipside'),
     'hip.L' :              ('pelvis', 'l-hip'),
     'hipside.R' :          ('pubis', 'r-hipside'),
     'hip.R' :              ('pelvis', 'r-hip'),
-    'gluteus.L' :          ('l-upperleg', 'l-gluteus'),
-    'gluteus.R' :          ('r-upperleg', 'r-gluteus'),
+    'gluteus.L' :          ('l-upper-leg', 'l-gluteus'),
+    'gluteus.R' :          ('r-upper-leg', 'r-gluteus'),
     
     'quadriceps.L' :       ('l-quadriceps', 'l-hipside'),
     'quadriceps.R' :       ('r-quadriceps', 'r-hipside'),
@@ -165,45 +174,50 @@ HeadsTails = {
 
 
 Armature = {
-    'ribcage.L' :          (0, 'chest', F_DEF, L_MSCL),
-    'pectoralis.L' :       (173*D, 'ribcage.L', F_DEF+F_CON, L_MSCL),
+    'pubis' :              (0, 'hips', F_DEF, L_TWEAK),
+
+    #'ribcage.L' :         (0, 'chest-1', F_DEF, L_MSCL),
+    #'ribcage.R' :         (0, 'chest-1', F_DEF, L_MSCL),
+    'breast.L' :           (0, 'chest-1', F_WIR+F_DEF, L_TWEAK),
+    'breast.R' :           (0, 'chest-1', F_WIR+F_DEF, L_TWEAK),
+    'stomach' :            (0, 'chest-1',  F_DEF, L_MSCL),
+
+    'pectoralis.L' :       (173*D, 'chest-1', F_DEF, L_MSCL),
     'platysma.L' :         (-153*D, 'neck', F_DEF, L_MSCL),
-    'trapezius.L' :        (176*D, 'chest', F_DEF+F_CON, L_MSCL),
+    'trapezius.L' :        (176*D, 'chest-1', F_DEF+F_CON, L_MSCL),
     'trap_goal.L' :        (0, 'shoulder.L', F_CON, L_MSCL),
-    'lat_dorsi.L' :        (74*D, 'chest', F_DEF, L_MSCL),
+    'lat_dorsi.L' :        (74*D, 'chest-1', F_DEF, L_MSCL),
     'deltoid.L' :          (0, 'shoulder.L', F_CON+F_DEF, L_MSCL),
     'scapula.L' :          (-24*D, 'shoulder.L', F_DEF, L_MSCL),
 
-    'ribcage.R' :          (0, 'chest', F_DEF, L_MSCL),
-    'pectoralis.R' :       (-173*D, 'ribcage.R', F_DEF+F_CON, L_MSCL),
+    'pectoralis.R' :       (-173*D, 'chest-1', F_DEF, L_MSCL),
     'platysma.R' :         (153*D, 'neck', F_DEF, L_MSCL),
-    'trapezius.R' :        (-176*D, 'chest', F_DEF+F_CON, L_MSCL),
+    'trapezius.R' :        (-176*D, 'chest-1', F_DEF+F_CON, L_MSCL),
     'trap_goal.R' :        (0, 'shoulder.R', F_CON, L_MSCL),
-    'lat_dorsi.R' :        (-74*D, 'chest', F_DEF, L_MSCL),
+    'lat_dorsi.R' :        (-74*D, 'chest-1', F_DEF, L_MSCL),
     'deltoid.R' :          (0, 'shoulder.R', F_CON+F_DEF, L_MSCL),
     'scapula.R' :          (24*D, 'shoulder.R', F_DEF, L_MSCL),
 
     'biceps.L' :           (91*D, 'upper_arm.L', F_DEF, L_MSCL),
     'triceps.L' :          (-101*D, 'upper_arm.L', F_DEF, L_MSCL),
-    'trg_elbow.L' :        (-105*D, 'upper_arm.L', F_DEF+F_CON, L_MSCL),
-    'pronator.L' :         (10*D, 'trg_elbow.L', F_DEF+F_CON, L_MSCL),
-    'brachioradialis.L' :  (74*D, 'forearm.L', F_DEF, L_MSCL),
-    'forearmhook.L' :      (0, 'hand.L',0, L_MSCL),
+    #'trg_elbow.L' :        (-105*D, 'upper_arm.L', F_DEF+F_CON, L_MSCL),
+    #'pronator.L' :         (10*D, 'trg_elbow.L', F_DEF+F_CON, L_MSCL),
+    #'brachioradialis.L' :  (74*D, 'forearm.L', F_DEF, L_MSCL),
+    #'forearmhook.L' :      (0, 'hand.L',0, L_MSCL),
     
     'biceps.R' :           (-91*D, 'upper_arm.R', F_DEF, L_MSCL),
     'triceps.R' :          (101*D, 'upper_arm.R', F_DEF, L_MSCL),
-    'trg_elbow.R' :        (105*D, 'upper_arm.R', F_DEF+F_CON, L_MSCL),
-    'pronator.R' :         (-10*D, 'trg_elbow.R', F_DEF+F_CON, L_MSCL),
-    'brachioradialis.R' :  (-74*D, 'forearm.R', F_DEF, L_MSCL),
-    'forearmhook.R' :      (0, 'hand.R',0, L_MSCL),
+    #'trg_elbow.R' :        (105*D, 'upper_arm.R', F_DEF+F_CON, L_MSCL),
+    #'pronator.R' :         (-10*D, 'trg_elbow.R', F_DEF+F_CON, L_MSCL),
+    #'brachioradialis.R' :  (-74*D, 'forearm.R', F_DEF, L_MSCL),
+    #'forearmhook.R' :      (0, 'hand.R',0, L_MSCL),
     
-    'tail' :               (0, 'hips', F_DEF, L_MSCL),
-    'hipside.L' :          (0, 'tail', F_DEF+F_CON, L_MSCL),
-    'hip.L' :              (0, 'tail', F_DEF, L_MSCL),
-    'gluteus.L' :          (0, 'hips', F_DEF, L_MSCL),
-    'hipside.R' :          (0, 'tail', F_DEF+F_CON, L_MSCL),
-    'hip.R' :              (0, 'tail', F_DEF, L_MSCL),
-    'gluteus.R' :          (0, 'hips', F_DEF, L_MSCL),
+    'hipside.L' :          (0, 'hips', 0, L_HELP),
+    #'hip.L' :              (0, 'pelvis', F_DEF, L_MSCL),
+    #'gluteus.L' :          (0, 'root', F_DEF, L_MSCL),
+    'hipside.R' :          (0, 'hips', 0, L_HELP),
+    #'hip.R' :              (0, 'pelvis', F_DEF, L_MSCL),
+    #'gluteus.R' :          (0, 'root', F_DEF, L_MSCL),
     
     'quadriceps.L' :       (-8*D, 'thigh.L', F_DEF, L_MSCL),
     'femoris.L' :          (-177*D, 'thigh.L', F_DEF, L_MSCL),
@@ -218,11 +232,28 @@ Armature = {
     'sole.R' :             (0, 'foot.R', 0, L_MSCL),
 }
 
-CustomShapes = {}
+CustomShapes = {
+    'pubis' :       'GZM_Cube025',
+    'breast.L' :    'GZM_EndCube025',
+    'breast.R' :    'GZM_EndCube025',
+}
 
 RotationLimits = {}
 
 Constraints = {
+    'pubis' : [
+        ('StretchTo', C_VOLXZ, 1, 
+            ['Stretch_To', 'hips', 1, 1, ('pubis', 'spine-3')])
+        ],
+
+    'stomach' : [
+        ('StretchTo', C_VOLXZ, 1, 
+            ['Stretch_To', 'pubis', 0, 1, ('plexus', 'pubis')])
+        ],
+
+
+    # Left side
+    
     'pectoralis.L' : [
         ('StretchTo', C_VOLXZ, 1, 
             ['Stretch_To', 'shoulder.L', 1, 1, ('l-pect-1', 'l-scapula')])
@@ -239,13 +270,13 @@ Constraints = {
         ],
 
     'scapula.L' : [
-        ('TrackTo', C_LOCAL, 1, 
-            ['Track_To', 'chest', 1, 'TRACK_Y', 'UP_Z', False])
+        ('TrackTo', 0, 1, 
+            ['Chest', 'chest-1', 0, 'TRACK_Y', 'UP_Z', False])
         ],
 
     'lat_dorsi.L' : [
         ('StretchTo', C_VOLXZ, 1, 
-            ['Stretch_To', 'shoulder.L', 1, 1, ('spine-2', 'l-scapula')])
+            ['Stretch_To', 'shoulder.L', 1, 1, ('spine-3', 'l-scapula')])
         ],
 
     'deltoid.L' : [
@@ -288,7 +319,7 @@ Constraints = {
         ],
 
     'quadriceps.L' : [
-        ('StretchTo', C_VOLXZ, 1, 
+        ('StretchTo', 0, 1, 
             ['Stretch_To', 'hipside.L', 1, 5, ('l-quadriceps', 'l-hipside')])
         ],
 
@@ -309,4 +340,94 @@ Constraints = {
         ('StretchTo', C_VOLX, 1, 
             ['Stretch_To', 'sole.L', 1, 1, ('l-soleus-1', 'l-heel')])
         ],
+
+    # Right side
+    
+    'pectoralis.R' : [
+        ('StretchTo', C_VOLXZ, 1, 
+            ['Stretch_To', 'shoulder.R', 1, 1, ('r-pect-1', 'r-scapula')])
+        ],
+
+    'platysma.R' : [
+        ('StretchTo', C_VOLXZ, 1, 
+            ['Stretch_To', 'shoulder.R', 0, 1, ('r-plat-1', 'r-clavicle')])
+        ],
+
+    'trapezius.R' : [
+        ('StretchTo', C_VOLZ, 1, 
+            ['Stretch_To', 'trap_goal.R', 1, 1])
+        ],
+
+    'scapula.R' : [
+        ('TrackTo', 0, 1, 
+            ['Chest', 'chest-1', 0, 'TRACK_Y', 'UP_Z', False])
+        ],
+
+    'lat_dorsi.R' : [
+        ('StretchTo', C_VOLXZ, 1, 
+            ['Stretch_To', 'shoulder.R', 1, 1, ('spine-3', 'r-scapula')])
+        ],
+
+    'deltoid.R' : [
+        ('StretchTo', C_VOLXZ, 1, 
+            ['Stretch_To', 'upper_arm.R', 0, 1, ('r-scapula', 'r-shoulder')])
+        ],
+
+    'biceps.R' : [
+        ('Transform', C_LOCAL, 1, 
+            ['Transform', 'forearm.R', 
+                'ROTATION', (0,0,0), (90,0,0), 
+                ('X','X','X'),
+                'SCALE', (1,1,1), (1.3,1.4,1.3)])
+        ],
+
+    'triceps.R' : [
+        ('Transform', C_LOCAL, 1, 
+            ['Transform', 'forearm.R', 
+                'ROTATION', (0,0,0), (90,0,0), 
+                ('X','X','X'),
+                'SCALE', (1,1,1), (1.3,0.8,1.3)])
+        ],
+
+    'trg_elbow.R' : [
+        ('Transform', C_LOCAL, 1, 
+            ['Transform', 'forearm.R', 
+                'ROTATION', (0,0,0), (90,0,0), 
+                ('X','X','X'),
+                'ROTATION', (0,0,0), (29,0,0)])
+        ],
+
+    'pronator.R' : [
+        ('StretchTo', C_VOLXZ, 1, 
+            ['Stretch_To', 'forearmhook.R', 0, 1, ('r-brac-1', 'r-brac-3')])
+        ],
+
+    'brachioradialis.R' : [
+        ('StretchTo', C_VOLXZ, 1, 
+            ['Stretch_To', 'forearmhook.R', 1, 1])
+        ],
+
+    'quadriceps.R' : [
+        ('StretchTo', 0, 1, 
+            ['Stretch_To', 'hipside.R', 1, 5, ('r-quadriceps', 'r-hipside')])
+        ],
+
+    'femoris.R' : [
+        ('StretchTo', C_VOLXZ, 1, 
+            ['Stretch_To', 'shin.R', FemorisGoal, 1, ('r-fem-1', 'r-fem-3')])
+        ],
+
+    'trg_knee.R' : [
+        ('Transform', C_LOCAL, 1, 
+            ['Transform', 'shin.R', 
+                'ROTATION', (0,0,0), (90,0,0), 
+                ('X','X','X'),
+                'SCALE', (1,1,1), (1.3,1.4,1.3)])
+        ],
+
+    'soleus.R' : [
+        ('StretchTo', C_VOLX, 1, 
+            ['Stretch_To', 'sole.R', 1, 1, ('r-soleus-1', 'r-heel')])
+        ],
 }
+
