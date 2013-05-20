@@ -29,7 +29,7 @@ import zipfile
 class Component(object):
     _cat_data = [
         ('gender',   ['male', 'female']),
-        ('age',      ['baby', 'young', 'old']),
+        ('age',      ['baby', 'child', 'young', 'old']),
         ('race',     ['caucasian', 'asian', 'african']),
         ('muscle',   ['maxmuscle', 'averagemuscle', 'minmuscle']),
         ('weight',   ['minweight', 'averageweight', 'maxweight']),
@@ -124,6 +124,7 @@ class Targets(object):
             item = base.clone()
             if not self.is_fake(name, xdirs):
                 parts = name.replace('_','-').replace('.','-').split('-')
+                # TODO still needed?
                 if root.endswith('macrodetails') and parts[0] == 'neutral':
                     parts[0] = 'caucasian'
                 for part in parts[:-1]:
@@ -208,6 +209,7 @@ class Targets(object):
             item = base.clone()
             if not self.is_fake(name, xdirs):
                 parts = name.replace('_','-').replace('.','-').split('-')
+                # TODO still needed?
                 if root[-1].endswith('macrodetails') and parts[0] == 'neutral':
                     parts[0] = 'caucasian'
                 for part in parts[:-1]:
@@ -225,6 +227,7 @@ class Targets(object):
 
     def walk(self, root, base):
         try:
+            # Load cached targets from .npz file
             self.buildTree()
             self.walk_zip(root.split('/'), base)
         except StandardError:

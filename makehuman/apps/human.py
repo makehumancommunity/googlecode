@@ -176,8 +176,8 @@ class Human(gui3d.Object):
 
     def setAge(self, age):
         """
-        Sets the age of the model. 0 if 12 years old, 1 is 70. To set a particular age in years, use the
-        formula age_value = (age_in_years - 12) / (70 - 12).
+        Sets the age of the model. 0 for 0 years old, 1 is 70. To set a 
+        particular age in years, use the formula age_value = age_in_years / 70.
 
         Parameters
         ----------
@@ -186,7 +186,6 @@ class Human(gui3d.Object):
             *float*. An amount, usually between 0 and 1, specifying how much
             of the attribute to apply.
         """
-
         age = min(max(age, 0.0), 1.0)
         if self.age == age:
             return
@@ -198,9 +197,56 @@ class Human(gui3d.Object):
         return self.age
 
     def _setAgeVals(self):
-        self.oldVal = max(0.0, self.age * 2 - 1)
-        self.babyVal = max(0.0, 1 - self.age * 2)
-        self.youngVal = 1 - (self.oldVal + self.babyVal)
+        """
+        Old system (A7):
+        ----------------
+
+        12y        25y       70y
+        child     young      old
+        |----------|---------|
+        0         0.5        1  = age [0, 1]
+
+        2*age -1
+                  1 -2*age
+                            1- old+child (child > 0 <=> old == 0)
+
+        val ^
+          1 | child\ /\ /old
+            |       /  /
+            | young/ \/ \young
+            ____________________> age
+            0                   1
+        """        
+        #self.oldVal = max(0.0, self.age * 2 - 1)
+        #self.childVal = max(0.0, 1 - self.age * 2)
+        #self.youngVal = 1 - (self.oldVal + self.childVal)
+
+        """
+        New system (A8):
+        ----------------
+
+        0y       12y       25y            90y
+        baby    child     young           old
+        |---------|---------|--------------|
+        0        0.25      0.5             1  = age [0, 1]
+
+        val ^     child young     old
+          1 |baby\ / \ /   \    /
+            |     \   \      /  
+            |    / \ / \  /    \ young
+            ______________________________> age
+               0   0.25 0.5      1
+        """
+        if self.age < 0.5:
+            self.oldVal = 0.0
+            self.babyVal = max(0.0, 1 - self.age * 4)
+            self.youngVal = max(0.0, self.age * 4 - 1)
+            self.childVal = max(0.0, min(1.0, 4 * self.age) - self.youngVal)
+        else:
+            self.childVal = 0.0
+            self.babyVal = 0.0
+            self.oldVal = max(0.0, self.age * 2 - 1)
+            self.youngVal = 1 - self.oldVal
 
     def setWeight(self, weight):
         """
@@ -366,6 +412,8 @@ class Human(gui3d.Object):
             self.africanVal *= scale
             
     def setDetail(self, name, value):
+        # Debug macro targets
+        print "Set detail %s to %s" % (name, value)
         if value:
             self.targetsDetailStack[name] = value
         elif name in self.targetsDetailStack:

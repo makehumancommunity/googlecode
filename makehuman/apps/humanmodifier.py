@@ -42,9 +42,10 @@ import targets
 
 # Age
 # -
-# child		1.0	0.0	0.0
-# young		0.0	1.0	0.0
-# old		0.0	0.0	1.0
+# baby      1.0 0.0 0.0 0.0
+# child		0.0	1.0	0.0 0.0
+# young		0.0	0.0	1.0 0.0
+# old		0.0	0.0	0.0 1.0
 
 # Weight
 # -
@@ -210,7 +211,6 @@ class BaseModifier(object):
         self.eventType = 'modifier'
         
     def setValue(self, human, value):
-    
         value = self.clampValue(value)
         factors = self.getFactors(human, value)
         human.warpNeedReset = True
@@ -219,7 +219,6 @@ class BaseModifier(object):
             human.setDetail(target[0], value * reduce(operator.mul, [factors[factor] for factor in target[1]]))
             
     def getValue(self, human):
-        
         return sum([human.getDetail(target[0]) for target in self.targets])
 
     def buildLists(self):
@@ -358,7 +357,7 @@ class GenericModifier(BaseModifier):
 
     _variables = [
         'female', 'male',
-        'baby', 'young', 'old',
+        'baby', 'child', 'young', 'old',
         'minmuscle', 'averagemuscle', 'maxmuscle',
         'minweight', 'averageweight', 'maxweight',
         'dwarf', 'giant',
