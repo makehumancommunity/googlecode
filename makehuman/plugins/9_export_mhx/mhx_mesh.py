@@ -303,9 +303,6 @@ def writeVertexGroups(fp, amt, config, proxy):
         copyVertexGroups("cage", fp, amt, proxy)    
         fp.write("#endif\n")
 
-    copyVertexGroups("leftright", fp, amt, proxy)    
-    copyVertexGroups("tight-leftright", fp, amt, proxy)    
-    copyVertexGroups("skirt-leftright", fp, amt, proxy)    
     return
 
 

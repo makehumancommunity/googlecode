@@ -42,11 +42,11 @@ class MhxConfig(Config):
         self.facepanel =        exporter.facepanel.selected
         self.bodyShapes =       exporter.bodyShapes.selected
         self.useCustomShapes =  exporter.useCustomShapes.selected
-        self.cage =             exporter.cage.selected
+        self.cage =             False # exporter.cage.selected
         self.feetOnGround =     exporter.feetOnGround.selected
-        self.advancedSpine =    exporter.advancedSpine.selected
-        self.maleRig =          exporter.maleRig.selected
-        self.clothesRig =       exporter.clothesRig.selected
+        self.advancedSpine =    False # exporter.advancedSpine.selected
+        self.maleRig =          False # exporter.maleRig.selected
+        self.clothesRig =       False # exporter.clothesRig.selected
         self.rigtype =          exporter.getRigType()
         # MHX export does not support exporting without rig
         # If no rig selected (from library): default to MHX rig
@@ -76,16 +76,17 @@ class ExporterMHX(Exporter):
         self.bodyShapes     = options.addWidget(gui.CheckBox("Body shapes", False))
         self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
         self.masks          = options.addWidget(gui.CheckBox("Clothes masks", False))
-        self.clothesRig     = options.addWidget(gui.CheckBox("Clothes rig", False))
-        self.cage           = options.addWidget(gui.CheckBox("Cage", False))
-        self.advancedSpine  = options.addWidget(gui.CheckBox("Advanced spine", False))
-        self.maleRig        = options.addWidget(gui.CheckBox("Male rig", False))
+        #self.clothesRig     = options.addWidget(gui.CheckBox("Clothes rig", False))
+        #self.cage           = options.addWidget(gui.CheckBox("Cage", False))
+        #self.advancedSpine  = options.addWidget(gui.CheckBox("Advanced spine", False))
+        #self.maleRig        = options.addWidget(gui.CheckBox("Male rig", False))
 
         rigtypes = []
         self.libraryRig     = options.addWidget(gui.RadioButton(rigtypes, "Use rig from library", True))
-        self.mhx            = options.addWidget(gui.RadioButton(rigtypes, "Use mhx rig", True))
+        self.basic          = options.addWidget(gui.RadioButton(rigtypes, "Use basic rig", True))
+        self.mhx            = options.addWidget(gui.RadioButton(rigtypes, "Use mhx rig", False))
         self.rigify         = options.addWidget(gui.RadioButton(rigtypes, "Use rigify rig", False))
-        self.rigtypes       = [(self.mhx, "mhx"), (self.rigify, "rigify"), (self.libraryRig, None)]
+        self.rigtypes       = [(self.basic, "basic"), (self.mhx, "mhx"), (self.rigify, "rigify"), (self.libraryRig, None)]
 
 
     def getRigType(self):
@@ -110,8 +111,8 @@ class ExporterMHX(Exporter):
 
 
     def export(self, human, filename):
-        #from . import mhx_main
-        from mhx import mhx_main
+        from . import mhx_main
+        #from mhx import mhx_main
         mhx_main.exportMhx(human, filename("mhx"), MhxConfig(self))
 
 

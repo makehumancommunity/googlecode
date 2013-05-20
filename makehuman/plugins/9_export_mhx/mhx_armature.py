@@ -197,7 +197,8 @@ class ExportArmature(CArmature):
         
         
     def createBones(self, bones):
-        config = self.config
+    	"""
+        config = self.config        
         if config.skirtRig == "own":
             self.joints += rig_skirt.Joints
             self.headsTails += rig_skirt.HeadsTails
@@ -216,8 +217,9 @@ class ExportArmature(CArmature):
             self.joints += custJoints
             self.headsTails += custHeadsTails
             self.boneDefs += custArmature
-        
+        """
         self.sortBones(bones)        
+        self.vertexGroupFiles += ["leftright"]        
         
 
     def addIkChains(self, boneInfo, bones, ikChains):
@@ -851,6 +853,7 @@ class MhxArmature(ExportArmature):
         self.master = 'master'
         
         self.vertexGroupFiles = ["head", "basic"]
+        """
         if config.skirtRig == "own":
             self.vertexGroupFiles.append("skirt-rigged")    
         elif config.skirtRig == "inh":
@@ -858,7 +861,8 @@ class MhxArmature(ExportArmature):
 
         if config.maleRig:
             self.vertexGroupFiles.append( "male" )
-                                                        
+        """
+        
         self.joints = (
             rig_joints.Joints +
             rig_master.Joints +
