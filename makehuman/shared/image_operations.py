@@ -89,9 +89,8 @@ def blurred(img, level=10.0, kernelSize = 15, progressCallback=None):
 def mix(img1, img2, weight1, weight2 = None):
     if weight2 is None:
         weight2 =  1 - weight1
-    return Image(data = numpy.around(
-        weight1*img1.data.astype(float)
-        + weight2*img2.data.astype(float)).astype(int))
+    return Image(data = numpy.asarray(numpy.around(weight1*img1.data.astype(float) +
+                                   weight2*img2.data.astype(float)).astype(int), dtype = numpy.uint8))
 
 def clipped (img):
     return Image(data = numpy.clip(img.data,0,255))
