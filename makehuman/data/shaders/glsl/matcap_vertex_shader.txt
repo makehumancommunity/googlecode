@@ -1,0 +1,20 @@
+#version 120
+
+/**
+ * MatCap (captured material) shader.
+ * Has the effect of a specular material, shaded relative to the camera without
+ * lights.
+ * The normal is used as UV coordinates of the matcap texture, which is a
+ * spherically shaped mapping of colors for all angles that normals can face in
+ * the half sphere facing the camera.
+**/
+
+// Output
+varying vec3 vNormal;
+
+
+void main() {
+    gl_Position = ftransform();
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    vNormal  = normalize(gl_NormalMatrix * gl_Normal);
+}

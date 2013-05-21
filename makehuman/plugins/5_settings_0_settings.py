@@ -84,6 +84,7 @@ class SettingsTaskView(gui3d.TaskView):
         self.shaderNo = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "No shader", True))
         self.shaderPhong = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Phong shader"))
         self.shaderToon = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Toon shader"))
+        self.shaderMatCap = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "MatCap shader"))
         #self.shaderSkin = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Skin shader"))
 
         from shader import Shader
@@ -158,6 +159,12 @@ class SettingsTaskView(gui3d.TaskView):
         @self.shaderToon.mhEvent
         def onClicked(event):
             self.setShader("data/shaders/glsl/toon")
+
+        @self.shaderMatCap.mhEvent
+        def onClicked(event):
+            self.setShader("data/shaders/glsl/matcap")
+            human = gui3d.app.selectedHuman
+            human.setTexture('data/matcaps/skinmat.png')
             
         #@self.shaderSkin.mhEvent
         #def onClicked(event):
