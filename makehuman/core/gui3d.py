@@ -209,6 +209,10 @@ class Object(events3d.EventHandler):
             for attr in ('x', 'y', 'z', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz',
                          'visibility', 'shadeless', 'pickable', 'cameraMode', 'texture'):
                 setattr(self.__proxyMesh, attr, getattr(self.mesh, attr))
+
+            for (param, val) in self.__seedMesh.shaderParameters.items():
+                self.__proxyMesh.setShaderParameter(param, val)
+            self.__proxyMesh.setShader(self.__seedMesh.shader)
             
             self.__proxyMesh.object = self.mesh.object
             
@@ -585,9 +589,15 @@ class Category(View):
         if task.name in self.tasksByName:
             raise KeyError('A task with this name already exists', task.name)
         if task.sortOrder == None:
-            task.sortOrder = int(max([t.sortOrder for t in self.tasks]) + 1) if len(self.tasks) > 0 else 0
+            orders = [t.sortOrder for t in self.tasks]
+            o = 0
+            while o in orders:
+                o = o +1
+            task.sortOrder = o
+
         self.tasks.append(task)
         self.tasks.sort(key = lambda t: t.sortOrder)
+
         self.tasksByName[task.name] = task
         self.addView(task)
         if self.tabs is not None:
@@ -709,9 +719,11 @@ class Application(events3d.EventHandler):
             raise RuntimeError('The category is already attached')
 
         if sortOrder == None:
-            categories = self.categories.values()
-            categories.sort(key = lambda c: c.sortOrder)
-            sortOrder = int(max([c.sortOrder for c in categories]) + 1) if len(categories) > 0 else 0
+            orders = [c.sortOrder for c in self.categories.values()]
+            o = 0
+            while o in orders:
+                o = o +1
+            sortOrder = o
 
         category.sortOrder = sortOrder
         self.categories[category.name] = category

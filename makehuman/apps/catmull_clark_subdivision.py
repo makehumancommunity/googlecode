@@ -52,6 +52,10 @@ class SubdivisionObject(Object3D):
         self.priority = object.priority
         self.cull = object.cull
 
+        for (param, val) in object.shaderParameters.items():
+            self.setShaderParameter(param, val)
+        self.setShader(object.shader)
+
     def create(self, progressCallback):
         total = 19
         now = [time.time()]
@@ -371,3 +375,7 @@ def updateSubdivisionObject(object, progressCallback=None):
     object.update()
     object.calcNormals()
     object.sync_all()
+
+    for (param, val) in object.object.mesh.shaderParameters.items():
+            object.setShaderParameter(param, val)
+    object.setShader(object.object.mesh.shader)
