@@ -150,7 +150,7 @@ class SettingsTaskView(gui3d.TaskView):
         @self.shaderNo.mhEvent
         def onClicked(event):
             human = gui3d.app.selectedHuman
-            human.mesh.setShader(None)
+            human.setShader(None)
             
         @self.shaderPhong.mhEvent
         def onClicked(event):
@@ -164,7 +164,7 @@ class SettingsTaskView(gui3d.TaskView):
         def onClicked(event):
             human = gui3d.app.selectedHuman
             if "matcapTexture" not in human.meshData.shaderParameters:
-                human.mesh.setShaderParameter("matcapTexture", "data/matcaps/skinmat.png")
+                human.setShaderParameter("matcapTexture", "data/matcaps/skinmat.png")
             self.setShader("data/shaders/glsl/matcap")
             
         #@self.shaderSkin.mhEvent
@@ -212,7 +212,7 @@ class SettingsTaskView(gui3d.TaskView):
             gui3d.app.settings['preloadTargets'] = self.preload.selected
 
     def setShader(self, path):
-            gui3d.app.selectedHuman.mesh.setShader(path)
+            gui3d.app.selectedHuman.setShader(path)
     
     def onShow(self, event):
     

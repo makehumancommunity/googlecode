@@ -148,6 +148,30 @@ class Human(gui3d.Object):
             if obj:
                 obj.setSubdivided(*args, **kwargs)
 
+    def setShader(self, path):
+        """
+        Make sure the seed mesh is updated as well, so that visual appearence
+        of the mesh remains consistent during dragging of target sliders.
+        Because while dragging sliders, the original seed mesh is shown.
+        """
+        self.mesh.setShader(path)
+        if self.isSubdivided() or self.isProxied():
+            # Update seed mesh
+            self.getSeedMesh().setShader(path)
+
+    def setShaderParameter(self, name, value):
+        """
+        This method updates the shader parameters for the currently shown human
+        mesh, but also that of the original seed mesh if it is subdivided or
+        proxied. Use this method when you want to stream in shader parameters
+        while sliders are being moved, because while dragging only the seed mesh
+        is shown.
+        """
+        self.mesh.setShaderParameter(name, value)
+        if self.isSubdivided() or self.isProxied():
+            # Update seed mesh
+            self.getSeedMesh().setShaderParameter(name, value)
+
     def setGender(self, gender):
         """
         Sets the gender of the model. 0 is female, 1 is male.

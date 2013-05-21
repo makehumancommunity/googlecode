@@ -59,7 +59,7 @@ class MatcapTextureChooserTaskView(gui3d.TaskView):
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
-            self.human.mesh.setShaderParameter("matcapTexture", filename)
+            self.human.setShaderParameter("matcapTexture", filename)
             self.image.setImage(filename)
 
     def onShow(self, event):
@@ -76,7 +76,7 @@ class MatcapTextureChooserTaskView(gui3d.TaskView):
             if event.change == "caucasian" or event.change == "african" or \
               event.change == "asian":
                 img = self.getEthnicityBlendMaterial()
-                self.human.mesh.setShaderParameter("matcapTexture", img)
+                self.human.setShaderParameter("matcapTexture", img)
 
     def getEthnicityBlendMaterial(self):
         caucasianWeight = self.human.getCaucasian()
