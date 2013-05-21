@@ -67,17 +67,8 @@ def exportMhx(human, filepath, config):
 
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
-    fp = open(filepath, 'w')
-        
-    if config.rigtype == 'mhx':
-        amt = mhx_armature.MhxArmature(name, human, config)
-    elif config.rigtype == 'basic':
-        amt = mhx_armature.BasicArmature(name, human, config)
-    elif config.rigtype == 'rigify':
-        amt = mhx_armature.RigifyArmature(name, human, config)
-    else:
-        amt = mhx_armature.ExportArmature(name, human, config)
-    
+    amt = mhx_armature.getArmature(name, human, config)
+    fp = open(filepath, 'w')    
     fp.write(
         "# MakeHuman exported MHX\n" +
         "# www.makeinfo.human.org\n" +
@@ -95,12 +86,7 @@ def exportMhx(human, filepath, config):
             "  error 'This MHX file does not contain a cage. Unselect the Cage import option.' ;\n" +
             "#endif\n")
 
-    fp.write(
-        "NoScale True ;\n" +
-        "Object CustomShapes EMPTY None\n" +
-        "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
-        "end Object\n\n")
-
+    fp.write("NoScale True ;\n")    
     amt.setupCustomShapes(fp)
         
     gui3d.app.progress(0.1, text="Exporting armature")
