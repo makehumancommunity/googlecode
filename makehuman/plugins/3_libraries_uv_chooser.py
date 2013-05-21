@@ -28,6 +28,7 @@ import mh
 import mh2proxy
 import filechooser as fc
 import log
+import numpy as np
 
 class UvTaskView(gui3d.TaskView):
     
@@ -50,12 +51,29 @@ class UvTaskView(gui3d.TaskView):
             mh.changeCategory('Modelling')
         
     def setUv(self, human, filename):
-
         if filename is None:
             human.uvset = None
         else:
             human.uvset = mh2proxy.CUvSet(filename)
             human.uvset.read(human, filename)
+
+        if not human.uvset:
+            return
+
+        faceMask = human.meshData.getFaceMask()
+        faceGroups = human.meshData.group
+
+        human.meshData._materials = []
+        if len(human.uvset.materials) == 0:
+            human.meshData.createMaterial('Default')
+        else:
+            for mat in human.uvset.materials:
+                human.meshData.createMaterial(mat.name)
+
+        human.meshData.setUVs(human.uvset.texVerts)
+        human.meshData.setFaces(human.meshData.fvert, np.asarray(human.uvset.texFaces, dtype=np.uint32)-1, faceGroups, human.uvset.faceMaterials)
+        human.meshData.changeFaceMask(faceMask)
+        human.meshData.updateIndexBuffer()
 
     def onShow(self, event):
         # When the task gets shown, set the focus to the file chooser
