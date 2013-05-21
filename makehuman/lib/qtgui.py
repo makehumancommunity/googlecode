@@ -1526,21 +1526,34 @@ class ImageView(QtGui.QLabel, Widget):
     def __init__(self):
         super(ImageView, self).__init__()
         Widget.__init__(self)
-        self.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-        self.setSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored)
+        self.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
         self.setMinimumSize(50,50)
+        self.setSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.MinimumExpanding)
+        #self.setScaledContents(True)
         self._pixmap = None
 
     def setImage(self, path):
         self._pixmap = QtGui.QPixmap(path)
+        self.adjustSize()
         self.updateGeometry()
+        self.refreshImage()
+
+    def sizeHint(self):
+        if not self._pixmap:
+            return super(ImageView, self).sizeHint()
+        return self._pixmap.size()
 
     def resizeEvent(self, event):
+        self.refreshImage(event.size())
+        
+    def refreshImage(self, size = None):
         if not self._pixmap:
             return
 
+        if not size:
+            size = self.sizeHint()
+
         pixmap = self._pixmap
-        size = event.size()
         w = pixmap.width()
         h = pixmap.height()
         if w > size.width() or h > size.height():
