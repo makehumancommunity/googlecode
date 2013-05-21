@@ -8,7 +8,7 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Manuel Bastioni, Marc Flerackers
+**Authors:**           Manuel Bastioni, Marc Flerackers, Jonas Hauquier
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
@@ -162,9 +162,10 @@ class SettingsTaskView(gui3d.TaskView):
 
         @self.shaderMatCap.mhEvent
         def onClicked(event):
-            self.setShader("data/shaders/glsl/matcap")
             human = gui3d.app.selectedHuman
-            human.mesh.setShaderParameter("matcapTexture", "data/matcaps/skinmat.png")
+            if "matcapTexture" not in human.meshData.shaderParameters:
+                human.mesh.setShaderParameter("matcapTexture", "data/matcaps/skinmat.png")
+            self.setShader("data/shaders/glsl/matcap")
             
         #@self.shaderSkin.mhEvent
         #def onClicked(event):
