@@ -612,11 +612,12 @@ def printMhcloUvLayers(fp, pob, scn, hasObj):
             meFaces = getFaces(me)
             for f in meFaces:
                 uvVerts = uvFaceVerts[f.index]
+                uvLine = []
                 for n,v in enumerate(f.vertices):
                     (vt, uv) = uvVerts[n]
-                    fp.write("%d " % vt)
+                    uvLine.append("%d" % vt)
                     #fp.write("(%.3f %.3f) " % (uv[0], uv[1]))
-                fp.write("\n")
+                fp.write((" ".join(uvLine)) +"\n")
     return
 
 
