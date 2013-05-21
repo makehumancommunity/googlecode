@@ -281,15 +281,32 @@ class Object(events3d.EventHandler):
             
         if flag:
             self.mesh.setVisibility(0)
+            originalMesh = self.mesh
             self.mesh = self.getSubdivisionMesh(update, progressCallback)
             self.mesh.setVisibility(1)
+
+            # Copy shader parameters
+            for (param, val) in originalMesh.shaderParameters.items():
+                self.mesh.setShaderParameter(param, val)
+            self.mesh.setShader(originalMesh.shader)
+
         else:
+            originalMesh = self.__seedMesh if self.mesh == self.__subdivisionMesh else self.__proxyMesh
+            for (param, val) in self.mesh.shaderParameters.items():
+                originalMesh.setShaderParameter(param, val)
+            originalMesh.setShader(self.mesh.shader)
+
             self.mesh.setVisibility(0)
-            self.mesh = self.__seedMesh if self.mesh == self.__subdivisionMesh else self.__proxyMesh
+            self.mesh = originalMesh
             if update:
                 self.mesh.calcNormals()
                 self.mesh.update()
             self.mesh.setVisibility(1)
+
+            # Copy shader parameters
+            for (param, val) in object.object.mesh.shaderParameters.items():
+                object.setShaderParameter(param, val)
+            object.setShader(object.object.mesh.shader)
             
     def updateSubdivisionMesh(self):
     
