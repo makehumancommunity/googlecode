@@ -10,7 +10,7 @@
 **/
 
 // Matcap texture
-uniform sampler2D matcap;
+uniform sampler2D matcapTexture;
 
 // Inputs
 varying vec3 vNormal;
@@ -20,7 +20,7 @@ vec3 diffuse;
 
 
 void main() {
-    diffuse = texture2D(matcap, vec2(vNormal.xyz * vec3(0.495) + vec3(0.5))).rgb;
+    diffuse = texture2D(matcapTexture, vec2(vNormal.xyz * vec3(0.495) + vec3(0.5))).rgb;
     gl_FragColor.rgb = diffuse;
     gl_FragColor.a = 1.0;
 }

@@ -164,7 +164,7 @@ class SettingsTaskView(gui3d.TaskView):
         def onClicked(event):
             self.setShader("data/shaders/glsl/matcap")
             human = gui3d.app.selectedHuman
-            human.setTexture('data/matcaps/skinmat.png')
+            human.mesh.setShaderParameter("matcapTexture", "data/matcaps/skinmat.png")
             
         #@self.shaderSkin.mhEvent
         #def onClicked(event):
