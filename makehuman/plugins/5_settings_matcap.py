@@ -46,14 +46,19 @@ class MatcapTextureChooserTaskView(gui3d.TaskView):
         self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
 
+        previewBox = self.addLeftWidget(gui.GroupBox("MatCap texture"))
+        self.image = previewBox.addWidget(gui.ImageView())
+
         @self.filechooser.mhEvent
         def onFileSelected(filename):
             self.human.mesh.setShaderParameter("matcapTexture", filename)
+            self.image.setImage(filename)
 
     def onShow(self, event):
         if "matcapTexture" in self.human.meshData.shaderParameters:
             current = self.human.meshData.shaderParameters["matcapTexture"]
             self.filechooser.selectItem(os.path.relpath(current))
+            self.image.setImage(current)
 
 def load(app):
     category = app.getCategory('Settings')
