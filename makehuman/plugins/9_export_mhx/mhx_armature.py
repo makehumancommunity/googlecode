@@ -24,6 +24,7 @@ MHX armature
 
 import math
 import numpy as np
+import transformations as tm
 from collections import OrderedDict
 import mh2proxy
 import exportutils
@@ -173,6 +174,7 @@ class ExportArmature(CArmature):
 
     def __init__(self, name, human, config):    
         CArmature. __init__(self, name, human, config)
+        self.rigRolls = {}
         self.customShapeFiles = []
         self.customShapes = {}
         self.poseInfo = {}
@@ -259,8 +261,8 @@ class ExportArmature(CArmature):
                     if ext == ".R":
                         layer <<= 16
                     bones[bone] = data
-                    bones[fkbone] = (roll, parent, nodef, layer<<1)
-                    bones[ikbone] = (roll, parent, nodef, layer)
+                    bones[fkbone] = (bone, parent, nodef, layer<<1)
+                    bones[ikbone] = (bone, parent, nodef, layer)
                     self.constraints[bone] = [
                         copyTransform(fkbone, cnsname+"FK"), 
                         copyTransform(ikbone, cnsname+"IK", 0)
@@ -279,8 +281,8 @@ class ExportArmature(CArmature):
                         layer <<= 16
                         poleAngle = rang
                     bones[bone] = data
-                    bones[fkbone] = (roll, fkParent, nodef, layer<<1)
-                    bones[ikbone] = (roll, ikParent, nodef, layer)
+                    bones[fkbone] = (bone, fkParent, nodef, layer<<1)
+                    bones[ikbone] = (bone, ikParent, nodef, layer)
                     self.constraints[bone] = [
                         copyTransform(fkbone, cnsname+"FK"), 
                         copyTransform(ikbone, cnsname+"IK", 0)
@@ -342,9 +344,9 @@ class ExportArmature(CArmature):
                     self.headsTails[defname1] = (head, ((0.667,head),(0.333,tail)))
                     self.headsTails[defname2] = (((0.667,head),(0.333,tail)), ((0.333,head),(0.667,tail)))
                     self.headsTails[defname3] = (((0.333,head),(0.667,tail)), tail)
-                    bones[defname1] = (roll, defParent, F_DEF+F_CON, L_DEF)
-                    bones[defname3] = (roll, bone, F_DEF, L_DEF)
-                    bones[defname2] = (roll, defParent, F_DEF, L_DEF)
+                    bones[defname1] = (bone, defParent, F_DEF+F_CON, L_DEF)
+                    bones[defname3] = (bone, bone, F_DEF, L_DEF)
+                    bones[defname2] = (bone, defParent, F_DEF, L_DEF)
                     self.constraints[defname2] = [
                         ('CopyLoc', 0, 1, ["CopyLoc", defname1, (1,1,1), (0,0,0), 1, False]),
                         ('CopyRot', 0, 1, [defname1, defname1, (1,1,1), (0,0,0), False]),
@@ -354,7 +356,7 @@ class ExportArmature(CArmature):
             elif self.useDeformBones:
                 defname = "DEF-"+bone
                 self.headsTails[defname] = headTail
-                bones[defname] = (roll, defParent, F_DEF, L_DEF)
+                bones[defname] = (bone, defParent, F_DEF, L_DEF)
                 self.constraints[defname] = [copyTransform(bone, bone)]
                 
         return bones           
@@ -443,10 +445,20 @@ class ExportArmature(CArmature):
             self.setupJoints()       
             self.moveOriginToFloor()
             self.dynamicLocations()
+
             for bone in self.bones.keys():
                 head,tail = self.headsTails[bone]
                 self.rigHeads[bone] = self.findLocation(head)
                 self.rigTails[bone] = self.findLocation(tail)
+
+            for bone in self.bones.keys():
+                (roll, parent, flags, layers) = self.bones[bone]
+                if roll == AUTO:
+                    print(bone, parent)
+                    self.rigRolls[bone] = computeRoll(self.rigHeads[parent], self.rigHeads[bone], self.rigTails[bone])
+                else:
+                    self.rigRolls[bone] = roll
+                
         else:
             self.joints += rig_joints.Joints #+ rig_joints.FloorJoints
             self.setupJoints()
@@ -587,7 +599,7 @@ class ExportArmature(CArmature):
 
     def writeEditBones(self, fp):        
         for bone,data in self.bones.items():
-            (roll, parent, flags, layers) = data
+            (_roll, parent, flags, layers) = data
             conn = (flags & F_CON != 0)
             deform = (flags & F_DEF != 0)
             restr = (flags & F_RES != 0)
@@ -603,6 +615,7 @@ class ExportArmature(CArmature):
             fp.write("    head  %.6g %.6g %.6g  ;\n" % (x,-z,y))
             (x, y, z) = scale*self.rigTails[bone]
             fp.write("    tail %.6g %.6g %.6g  ;\n" % (x,-z,y))
+
             if type(parent) == tuple:
                 (soft, hard) = parent
                 if hard:
@@ -617,8 +630,13 @@ class ExportArmature(CArmature):
                         "#endif\n")
             elif parent:
                 fp.write("    parent Refer Bone %s ; \n" % (parent))
+                
+            roll = self.rigRolls[bone]
+            if isinstance(roll, str):
+                roll = self.rigRolls[roll]
+                
             fp.write(
-                "    roll %.6g ; \n" % (roll)+
+                "    roll %.6g ; \n" % (roll) +
                 "    use_connect %s ; \n" % (conn) +
                 "    use_deform %s ; \n" % (deform) +
                 "    show_wire %s ; \n" % (wire))
@@ -674,19 +692,19 @@ class ExportArmature(CArmature):
         roots = []
         for bone in bones.keys():
             children[bone] = []
-        for bone,data in bones.items():
-            parent = data[1]
+        for bone in bones.keys():
+            (roll, parent, flags, layers) = bones[bone]
             if parent:
                 children[parent].append(bone)
             elif self.master:
                 if bone == self.master:
                     roots.append(bone)
                 else:
-                    (roll, parent, flags, layers) = data
                     bones[bone] = (roll, self.master, flags, layers)
                     children[self.master].append(bone)
             else:
                 roots.append(bone)
+                
         for root in roots:            
             self.sortBones1(root, bones, children)
 
@@ -833,6 +851,50 @@ end Object
 #-------------------------------------------------------------------------------        
 #   Utilities
 #-------------------------------------------------------------------------------        
+
+def computeRoll(p1, p2, p3):
+    # Unit vectors along bones
+    pvec = p2-p1
+    pvec = pvec/math.sqrt(np.dot(pvec,pvec))
+    yvec = p3-p2
+    yvec = yvec/math.sqrt(np.dot(yvec,yvec))
+    
+    # Unit normal in z direction
+    xvec = np.cross(yvec,pvec)
+    xlen = math.sqrt(np.dot(xvec,xvec))
+    if xlen < 1e-3:
+        return 0
+    xvec = xvec/xlen
+    
+    # Unit vector in x direction
+    zvec = np.cross(xvec,yvec)
+    zlen = math.sqrt(np.dot(zvec,zvec))
+    if zlen < 1e-3:
+        return 0
+    zvec = zvec/zlen
+    
+    # Bone matrix
+    print "  a", p1
+    print "  b", p2
+    print "  c", p3
+    print "  v", pvec
+    print "  x", xvec
+    print "  y", yvec
+    print "  z", zvec
+    mat = np.array((xvec,yvec,zvec)).transpose()
+    print "   ", mat
+    print "  d", np.linalg.det(mat)
+    quat = tm.quaternion_from_matrix(mat)
+    print "  q", quat
+    if abs(quat[0]) < 1e-4:
+        roll = math.pi
+    else:
+        roll = -2*math.atan(quat[2]/quat[0])
+    print " r", roll, roll/D
+    return roll
+    
+    
+
 
 def splitBoneName(bone):
     words = bone.rsplit(".", 1)

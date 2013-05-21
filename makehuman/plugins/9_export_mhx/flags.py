@@ -40,6 +40,8 @@ NoBB = (1,1,1)
 NoBB = None
 bbMarg = 0.05
 
+AUTO = 10000
+
 #
 #    Bone layers
 #
