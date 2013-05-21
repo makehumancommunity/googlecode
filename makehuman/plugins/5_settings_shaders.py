@@ -182,6 +182,7 @@ class TextureValue(gui.BrowseButton):
         return self._path
 
 def load(app):
+    return  # Do not load: not working
     category = app.getCategory('Settings')
     taskview = category.addTask(ShaderTaskView(category))
 
