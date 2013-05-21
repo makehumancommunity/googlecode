@@ -158,7 +158,20 @@ _textureCache = {}
 def getTexture(path, cache=None):
     texture = None
     cache = cache or _textureCache
-    
+
+    if isinstance(path, Image):
+        img = path
+        if hasattr(img, 'cachePath'):
+            if img.cachePath in cache:
+                texture = cache[img.cachePath]
+                return texture
+        import time
+        texture = Texture(img)
+        texture.modified = time.time()
+        img.cachePath = texture.modified
+        cache[img.cachePath] = texture
+        return texture
+
     if path in cache:
         texture = cache[path]
         if texture is False:
