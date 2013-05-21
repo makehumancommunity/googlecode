@@ -679,6 +679,7 @@ class CUvSet:
         nFaces = len(human.meshData.fvert)                
         self.faceMaterials = numpy.zeros(nFaces, int)
         fn = 0
+        mn = 0
         for line in self.faceNumbers:
             words = line.split()
             if len(words) < 2:
