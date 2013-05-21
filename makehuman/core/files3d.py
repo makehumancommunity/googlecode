@@ -140,6 +140,9 @@ def loadBinaryMesh(obj, path):
     log.debug('loadBinaryMesh: unpacked materials')
 
 def loadTextMesh(obj, path):
+    """
+    Parse and load a Wavefront OBJ file as mesh.
+    """
     log.debug('loadTextMesh: begin')
     objFile = open(path)
 
