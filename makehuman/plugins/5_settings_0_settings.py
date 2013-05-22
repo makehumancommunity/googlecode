@@ -84,7 +84,7 @@ class SettingsTaskView(gui3d.TaskView):
         self.shaderNo = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "No shader", True))
         self.shaderPhong = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Phong shader"))
         self.shaderToon = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Toon shader"))
-        self.shaderMatCap = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "MatCap shader"))
+        self.shaderLitSphere = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "LitSphere shader"))
         #self.shaderSkin = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Skin shader"))
 
         from shader import Shader
@@ -160,12 +160,12 @@ class SettingsTaskView(gui3d.TaskView):
         def onClicked(event):
             self.setShader("data/shaders/glsl/toon")
 
-        @self.shaderMatCap.mhEvent
+        @self.shaderLitSphere.mhEvent
         def onClicked(event):
             human = gui3d.app.selectedHuman
-            if "matcapTexture" not in human.meshData.shaderParameters:
-                human.setShaderParameter("matcapTexture", "data/matcaps/skinmat.png")
-            self.setShader("data/shaders/glsl/matcap")
+            if "litsphereTexture" not in human.meshData.shaderParameters:
+                human.setShaderParameter("litsphereTexture", "data/litspheres/skinmat.png")
+            self.setShader("data/shaders/glsl/litsphere")
             
         #@self.shaderSkin.mhEvent
         #def onClicked(event):
