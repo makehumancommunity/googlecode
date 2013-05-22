@@ -121,6 +121,20 @@ HeadsTails = {
     'heel.02.R' :          ('r-ball-1', 'r-ball-2'),
 }
 
+Planes = {
+    "PlaneArm.L" :         ('l-shoulder', 'l-elbow', 'l-hand'),
+    "PlaneIndex.L" :       ('l-finger-2-1', 'l-finger-2-2', 'l-finger-2-3'),
+    "PlaneMiddle.L" :      ('l-finger-3-1', 'l-finger-3-2', 'l-finger-3-3'),
+    "PlaneRing.L" :        ('l-finger-4-1', 'l-finger-4-2', 'l-finger-4-3'),
+    "PlanePinky.L" :       ('l-finger-5-1', 'l-finger-5-2', 'l-finger-5-3'),
+
+    "PlaneArm.R" :         ('l-shoulder', 'l-elbow', 'l-hand'),
+    "PlaneIndex.R" :       ('l-finger-2-1', 'l-finger-2-2', 'l-finger-2-3'),
+    "PlaneMiddle.R" :      ('l-finger-3-1', 'l-finger-3-2', 'l-finger-3-3'),
+    "PlaneRing.R" :        ('l-finger-4-1', 'l-finger-4-2', 'l-finger-4-3'),
+    "PlanePinky.R" :       ('l-finger-5-1', 'l-finger-5-2', 'l-finger-5-3'),
+}
+
 Armature = {
     'hips' :               (0, None, F_DEF, L_UPSPNFK),
     'spine' :              (0, 'hips', F_DEF+F_CON, L_UPSPNFK),
@@ -131,8 +145,8 @@ Armature = {
 
     'shoulder.L' :         (0, 'chest-1', F_DEF, L_LARMFK),
     'upper_arm.L' :        (45*D, 'shoulder.L', F_DEF, L_LARMFK),
-    'forearm.L' :          (131*D, 'upper_arm.L', F_DEF+F_CON, L_LARMFK),
-    'hand.L' :             (-120*D, 'forearm.L', F_DEF+F_CON, L_LARMFK),
+    'forearm.L' :          ("PlaneArm.L", 'upper_arm.L', F_DEF+F_CON, L_LARMFK),
+    'hand.L' :             ("PlaneArm.L", 'forearm.L', F_DEF+F_CON, L_LARMFK),
 
     'shoulder.R' :         (0, 'chest-1', F_DEF, L_RARMFK),
     'upper_arm.R' :        (-45*D, 'shoulder.R', F_DEF, L_RARMFK),
@@ -140,9 +154,9 @@ Armature = {
     'hand.R' :             (120*D, 'forearm.R', F_DEF+F_CON, L_RARMFK),
 
     'palm.01.L' :          (-143*D, 'hand.L', F_DEF, L_LPALM),
-    'f_index.01.L' :       (-82*D, 'palm.01.L', F_DEF+F_CON, L_LHANDFK),
-    'f_index.02.L' :       (-65*D, 'f_index.01.L', F_DEF+F_CON, L_LHANDFK),
-    'f_index.03.L' :       (-56*D, 'f_index.02.L', F_DEF+F_CON, L_LHANDFK),
+    'f_index.01.L' :       ("PlaneIndex.L", 'palm.01.L', F_DEF+F_CON, L_LHANDFK),
+    'f_index.02.L' :       ("PlaneIndex.L", 'f_index.01.L', F_DEF+F_CON, L_LHANDFK),
+    'f_index.03.L' :       ("PlaneIndex.L", 'f_index.02.L', F_DEF+F_CON, L_LHANDFK),
 
     'palm.01.R' :          (143*D, 'hand.R', F_DEF, L_RPALM),
     'f_index.01.R' :       (82*D, 'palm.01.R', F_DEF+F_CON, L_RHANDFK),
@@ -158,9 +172,9 @@ Armature = {
     'thumb.03.R' :         (-55*D, 'thumb.02.R', F_DEF+F_CON, L_RHANDFK),
 
     'palm.02.L' :          (-153*D, 'hand.L', F_DEF, L_LPALM),
-    'f_middle.01.L' :      (-110*D, 'palm.02.L', F_DEF+F_CON, L_LHANDFK),
-    'f_middle.02.L' :      (-93*D, 'f_middle.01.L', F_DEF+F_CON, L_LHANDFK),
-    'f_middle.03.L' :      (-89*D, 'f_middle.02.L', F_DEF+F_CON, L_LHANDFK),
+    'f_middle.01.L' :      ("PlaneMiddle.L", 'palm.02.L', F_DEF+F_CON, L_LHANDFK),
+    'f_middle.02.L' :      ("PlaneMiddle.L", 'f_middle.01.L', F_DEF+F_CON, L_LHANDFK),
+    'f_middle.03.L' :      ("PlaneMiddle.L", 'f_middle.02.L', F_DEF+F_CON, L_LHANDFK),
     
     'palm.02.R' :          (153*D, 'hand.R', F_DEF, L_RPALM),
     'f_middle.01.R' :      (110*D, 'palm.02.R', F_DEF+F_CON, L_RHANDFK),
@@ -168,9 +182,9 @@ Armature = {
     'f_middle.03.R' :      (89*D, 'f_middle.02.R', F_DEF+F_CON, L_RHANDFK),
     
     'palm.03.L' :          (-161*D, 'hand.L', F_DEF, L_LPALM),
-    'f_ring.01.L' :        (-107*D, 'palm.03.L', F_DEF+F_CON, L_LHANDFK),
-    'f_ring.02.L' :        (-98*D, 'f_ring.01.L', F_DEF+F_CON, L_LHANDFK),
-    'f_ring.03.L' :        (-83*D, 'f_ring.02.L', F_DEF+F_CON, L_LHANDFK),
+    'f_ring.01.L' :        ("PlaneRing.L", 'palm.03.L', F_DEF+F_CON, L_LHANDFK),
+    'f_ring.02.L' :        ("PlaneRing.L", 'f_ring.01.L', F_DEF+F_CON, L_LHANDFK),
+    'f_ring.03.L' :        ("PlaneRing.L", 'f_ring.02.L', F_DEF+F_CON, L_LHANDFK),
     
     'palm.03.R' :          (161*D, 'hand.R', F_DEF, L_RPALM),
     'f_ring.01.R' :        (107*D, 'palm.03.R', F_DEF+F_CON, L_RHANDFK),
@@ -178,9 +192,9 @@ Armature = {
     'f_ring.03.R' :        (83*D, 'f_ring.02.R', F_DEF+F_CON, L_RHANDFK),
     
     'palm.04.L' :          (-144*D, 'hand.L', F_DEF, L_LPALM),
-    'f_pinky.01.L' :       (-103*D, 'palm.04.L', F_DEF+F_CON, L_LHANDFK),
-    'f_pinky.02.L' :       (-99*D, 'f_pinky.01.L', F_DEF+F_CON, L_LHANDFK),
-    'f_pinky.03.L' :       (-90*D, 'f_pinky.02.L', F_DEF+F_CON, L_LHANDFK),
+    'f_pinky.01.L' :       ("PlanePinky.L", 'palm.04.L', F_DEF+F_CON, L_LHANDFK),
+    'f_pinky.02.L' :       ("PlanePinky.L", 'f_pinky.01.L', F_DEF+F_CON, L_LHANDFK),
+    'f_pinky.03.L' :       ("PlanePinky.L", 'f_pinky.02.L', F_DEF+F_CON, L_LHANDFK),
 
     'palm.04.R' :          (144*D, 'hand.R', F_DEF, L_RPALM),
     'f_pinky.01.R' :       (103*D, 'palm.04.R', F_DEF+F_CON, L_RHANDFK),

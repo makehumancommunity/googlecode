@@ -81,8 +81,7 @@ NoScale False ;
     oy = amt.origin[1]
     oz = amt.origin[2]
     scale = config.scale
-    for refVert in proxy.refVerts:
-        (x,y,z) = refVert.getCoord()
+    for x,y,z in proxy.getCoords():
         fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(x-ox), scale*(-z+oz), scale*(y-oy)))
   
     fp.write("""

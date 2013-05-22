@@ -170,22 +170,30 @@ class CProxy:
         self.textures = []
         return
         
+
     def __repr__(self):
         return ("<CProxy %s %s %s %s>" % (self.name, self.type, self.file, self.uuid))
         
-    def update(self, obj):
+
+    def getCoords(self):        
         if self.basemesh in ["alpha_7", "alpha7"]:
             global _A7converter
             if _A7converter is None:                
                 _A7converter = readProxyFile(gui3d.app.selectedHuman.meshData, "data/3dobjs/a7_converter.proxy")
             print "Converting clothes with", _A7converter
-            coords = [refVert.getConvertedCoord(_A7converter) for refVert in self.refVerts]        
+            return [refVert.getConvertedCoord(_A7converter) for refVert in self.refVerts]        
         elif self.basemesh == "alpha_8":
-            coords = [refVert.getCoord() for refVert in self.refVerts]
+            return [refVert.getCoord() for refVert in self.refVerts]
         else:
             raise NameError("Unknown basemesh for mhclo file: %s" % self.basemesh)
+
+
+    def update(self, obj):
+        coords = self.getCoords()
         obj.changeCoords(coords)      
-        
+
+     
+
     def getUuid(self):
         if self.uuid:
             return self.uuid
@@ -240,8 +248,10 @@ class CMeshInfo:
         self.vertexMapping = None   # Maps vertex index of original object to the attached filtered object 
 
 
-    def fromProxy(self, coords, texVerts, faceVerts, faceUvs, weights, shapes):
+    def fromProxy(self, coords, texVerts, faceVerts, faceUvs, weights, shapes, scale=1.0):
         obj = self.object = module3d.Object3D(self.name)
+        if scale != 1.0:
+            coords = [scale*co for co in coords]
         obj.setCoords(coords)
         obj.setUVs(texVerts)
         
@@ -769,7 +779,7 @@ def newTexVert(first, words, proxy):
 
 def getMeshInfo(obj, proxy, config, rawWeights, rawShapes, rigname):
     if proxy:
-        coords = [config.scale*refVert.getCoord() for refVert in proxy.refVerts]
+        coords = proxy.getCoords()
         faceVerts = [[v for v in f] for (f,g) in proxy.faces]
         
         if proxy.texVerts:
@@ -783,7 +793,7 @@ def getMeshInfo(obj, proxy, config, rawWeights, rawShapes, rigname):
 
         weights = getProxyWeights(rawWeights, proxy)
         shapes = getProxyShapes(rawShapes, proxy, config.scale)
-        meshInfo = CMeshInfo(proxy.name).fromProxy(coords, texVerts, faceVerts, texFaces, weights, shapes)
+        meshInfo = CMeshInfo(proxy.name).fromProxy(coords, texVerts, faceVerts, texFaces, weights, shapes, scale=config.scale)
 
     else:
         meshInfo = CMeshInfo(obj.name).fromObject(obj, rawWeights, rawShapes)

@@ -179,7 +179,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
             if config.scale == 1.0:
                 stuff.meshInfo = meshInfo
             else:
-                stuff.meshInfo = meshInfo.fromProxy(config.scale*obj.coord, obj.texco, obj.fvert, obj.fuvs, meshInfo.weights, meshInfo.shapes)
+                stuff.meshInfo = meshInfo.fromProxy(obj.coord, obj.texco, obj.fvert, obj.fuvs, meshInfo.weights, meshInfo.shapes)
         else:
             stuff.meshInfo = filterMesh(meshInfo, config.scale, deleteGroups, deleteVerts, eyebrows, lashes, not hidden)
         stuffs = [stuff] + stuffs
@@ -304,7 +304,7 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
     coords = []
     for m,co in enumerate(obj.coord):
         if not killVerts[m]:
-            coords.append(scale*co)
+            coords.append(co)
             newVerts[m] = n
             n += 1
     
@@ -348,7 +348,7 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
                     morphs2[newVerts[v1]] = scale*dx
             shapes.append((name, morphs2))
 
-    meshInfo.fromProxy(coords, texVerts, faceVerts, faceUvs, weights, shapes)
+    meshInfo.fromProxy(coords, texVerts, faceVerts, faceUvs, weights, shapes, scale=scale)
     meshInfo.vertexMask = numpy.logical_not(killVerts)
     meshInfo.vertexMapping = newVerts
     meshInfo.faceMask = numpy.logical_not(faceMask)

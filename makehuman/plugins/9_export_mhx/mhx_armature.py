@@ -37,6 +37,7 @@ from . import posebone
 from . import mhx_drivers
 from . import mhx_constraints
 from . import rig_joints
+from . import rig_bones
     
 #-------------------------------------------------------------------------------        
 #   Armature selector
@@ -189,6 +190,7 @@ class ExportArmature(CArmature):
         self.splitBones = {}
 
         self.bones = OrderedDict()
+        self.planes = rig_bones.Planes
         self.bbones = {}
         self.boneGroups = []
         self.rotationLimits = {}
@@ -451,11 +453,19 @@ class ExportArmature(CArmature):
                 self.rigHeads[bone] = self.findLocation(head)
                 self.rigTails[bone] = self.findLocation(tail)
 
+            normals = {}
             for bone in self.bones.keys():
                 (roll, parent, flags, layers) = self.bones[bone]
-                if roll == AUTO:
-                    print(bone, parent)
-                    self.rigRolls[bone] = computeRoll(self.rigHeads[parent], self.rigHeads[bone], self.rigTails[bone])
+                if isinstance(roll, str) and roll[0:5] == "Plane":
+                    print bone, parent, roll
+                    try:
+                        normal = normals[roll]
+                    except KeyError:
+                        normal = None
+                    if normal is None:
+                        j1,j2,j3 = self.planes[roll]
+                        normal = normals[roll] = self.computeNormal(j1, j2, j3)
+                    self.rigRolls[bone] = self.computeRoll(normal, bone)
                 else:
                     self.rigRolls[bone] = roll
                 
@@ -468,16 +478,63 @@ class ExportArmature(CArmature):
         if self.config.clothesRig:
             for proxy in self.proxies.values():
                 if proxy.rig:
-                    coord = []
-                    for refVert in proxy.refVerts:
-                        coord.append(refVert.getCoord())
+                    coord = proxy.getCoords()
                     (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, amt.mesh, coord=coord) 
                     proxy.weights = self.prefixWeights(weights, proxy.name)
                     appendRigBones(boneList, proxy.name, L_CLO, body, amt)
         
 
+    def computeNormal(self, j1, j2, j3):
+        p1 = self.locations[j1]
+        p2 = self.locations[j2]
+        p3 = self.locations[j3]
+        print "  ", j1, j2, j3
+        pvec = getUnitVector(p2-p1)
+        yvec = getUnitVector(p3-p2)
+        if pvec is None or yvec is None:
+            return None
+        else:
+            return getUnitVector(np.cross(yvec, pvec))
+    
 
-    def setupJoints (self):
+    def computeRoll(self, normal, bone):
+        if normal is None:
+            return 0
+
+        p1 = self.rigHeads[bone]
+        p2 = self.rigTails[bone]
+        xvec = normal
+        yvec = getUnitVector(p2-p1)
+        xy = np.dot(xvec,yvec)
+        if abs(xy) > 1e-4:
+            print "  Corr", p2, xy
+        p2 = self.rigTails[bone] = p2 - xy*xvec
+        yvec = getUnitVector(yvec-xy*xvec)
+        zvec = getUnitVector(np.cross(xvec, yvec))
+        if zvec is None:
+            mat = None
+        else:
+            print "  x", xvec
+            print "  y", yvec
+            print "  z", zvec
+            print "  x.y", np.dot(xvec,yvec)
+            mat = np.array((xvec,zvec,-yvec))
+            
+        #print " mat", mat
+        #print "  d", np.linalg.det(mat)
+        quat = tm.quaternion_from_matrix(mat)
+        print "  q", quat
+        if abs(quat[0]) < 1e-4:
+            roll = math.pi
+        else:
+            roll = - 2*math.atan(quat[2]/quat[0])
+        if roll > math.pi:
+            roll -= 2*math.pi
+        print "  r", roll/D
+        return roll
+        
+        
+    def setupJoints (self):    
         """
         Evaluate symbolic expressions for joint locations and store them in self.locations.
         Joint locations are specified symbolically in the *Joints list in the beginning of the
@@ -852,48 +909,12 @@ end Object
 #   Utilities
 #-------------------------------------------------------------------------------        
 
-def computeRoll(p1, p2, p3):
-    # Unit vectors along bones
-    pvec = p2-p1
-    pvec = pvec/math.sqrt(np.dot(pvec,pvec))
-    yvec = p3-p2
-    yvec = yvec/math.sqrt(np.dot(yvec,yvec))
-    
-    # Unit normal in z direction
-    xvec = np.cross(yvec,pvec)
-    xlen = math.sqrt(np.dot(xvec,xvec))
-    if xlen < 1e-3:
-        return 0
-    xvec = xvec/xlen
-    
-    # Unit vector in x direction
-    zvec = np.cross(xvec,yvec)
-    zlen = math.sqrt(np.dot(zvec,zvec))
-    if zlen < 1e-3:
-        return 0
-    zvec = zvec/zlen
-    
-    # Bone matrix
-    print "  a", p1
-    print "  b", p2
-    print "  c", p3
-    print "  v", pvec
-    print "  x", xvec
-    print "  y", yvec
-    print "  z", zvec
-    mat = np.array((xvec,yvec,zvec)).transpose()
-    print "   ", mat
-    print "  d", np.linalg.det(mat)
-    quat = tm.quaternion_from_matrix(mat)
-    print "  q", quat
-    if abs(quat[0]) < 1e-4:
-        roll = math.pi
+def getUnitVector(vec):
+    length = math.sqrt(np.dot(vec,vec))
+    if length > 1e-6:
+        return vec/length
     else:
-        roll = -2*math.atan(quat[2]/quat[0])
-    print " r", roll, roll/D
-    return roll
-    
-    
+        return None
 
 
 def splitBoneName(bone):

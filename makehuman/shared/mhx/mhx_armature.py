@@ -200,10 +200,8 @@ class ExportArmature(CArmature):
         if self.config.clothesRig:
             for proxy in self.proxies.values():
                 if proxy.rig:
-                    coord = []
-                    for refVert in proxy.refVerts:
-                        coord.append(refVert.getCoord())
-                    (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, amt.mesh, coord=coord) 
+                    coords = proxy.getCoords()
+                    (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, amt.mesh, coord=coords) 
                     proxy.weights = self.prefixWeights(weights, proxy.name)
                     appendRigBones(boneList, proxy.name, L_CLO, body, amt)
         

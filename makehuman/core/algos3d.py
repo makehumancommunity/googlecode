@@ -179,6 +179,7 @@ class Target:
         logger.debug('loaded target %s', name)
 
     def apply(self, obj, morphFactor, update=True, calcNormals=True, faceGroupToUpdateName=None, scale=(1.0,1.0,1.0)):
+        return True
         self.morphFactor = morphFactor                
 
         if len(self.verts):

@@ -22,6 +22,8 @@ Abstract
 MHX materials
 """
 
+import os
+import log
 from . import mhx_drivers
 
 #-------------------------------------------------------------------------------        
