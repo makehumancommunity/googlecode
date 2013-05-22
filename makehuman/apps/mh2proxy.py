@@ -25,9 +25,11 @@ TODO
 import os
 import numpy
 import module3d
+import gui3d
 import exportutils
 import log
 
+_A7converter = None
 
 class CProxyRefVert:
 
@@ -92,6 +94,14 @@ class CProxyRefVert:
         v0 = self._parent.coord[rv0]
         v1 = self._parent.coord[rv1]
         v2 = self._parent.coord[rv2]
+        w0,w1,w2 = self._weights
+        return (w0*v0 + w1*v1 + w2*v2 + self._scale*self._offset)
+
+    def getConvertedCoord(self, converter):
+        rv0,rv1,rv2 = self._verts
+        v0 = converter.refVerts[rv0].getCoord()
+        v1 = converter.refVerts[rv1].getCoord()
+        v2 = converter.refVerts[rv2].getCoord()
         w0,w1,w2 = self._weights
         return (w0*v0 + w1*v1 + w2*v2 + self._scale*self._offset)
 
@@ -164,7 +174,16 @@ class CProxy:
         return ("<CProxy %s %s %s %s>" % (self.name, self.type, self.file, self.uuid))
         
     def update(self, obj):
-        coords = [refVert.getCoord() for refVert in self.refVerts]
+        if self.basemesh in ["alpha_7", "alpha7"]:
+            global _A7converter
+            if _A7converter is None:                
+                _A7converter = readProxyFile(gui3d.app.selectedHuman.meshData, "data/3dobjs/a7_converter.proxy")
+            print "Converting clothes with", _A7converter
+            coords = [refVert.getConvertedCoord(_A7converter) for refVert in self.refVerts]        
+        elif self.basemesh == "alpha_8":
+            coords = [refVert.getCoord() for refVert in self.refVerts]
+        else:
+            raise NameError("Unknown basemesh for mhclo file: %s" % self.basemesh)
         obj.changeCoords(coords)      
         
     def getUuid(self):
