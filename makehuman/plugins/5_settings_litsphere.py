@@ -59,8 +59,11 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
-            self.human.setShaderParameter("litsphereTexture", filename)
-            self.image.setImage(filename)
+            if filename == "data/litspheres/adaptive_skin_tone.png":
+                self.updateAdaptiveSkin()
+            else:
+                self.human.setShaderParameter("litsphereTexture", filename)
+                self.image.setImage(filename)
 
     def onShow(self, event):
         if "litsphereTexture" in self.human.meshData.shaderParameters:
@@ -72,11 +75,14 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
         if "litsphereTexture" not in self.human.meshData.shaderParameters:
             return
         current = self.human.meshData.shaderParameters["litsphereTexture"]
-        if current == "data/litspheres/skinmat.png" or isinstance(current, image.Image):
+        if current == "data/litspheres/adaptive_skin_tone.png" or isinstance(current, image.Image):
             if event.change == "caucasian" or event.change == "african" or \
               event.change == "asian":
-                img = self.getEthnicityBlendMaterial()
-                self.human.setShaderParameter("litsphereTexture", img)
+                self.updateAdaptiveSkin()
+
+    def updateAdaptiveSkin(self):
+        img = self.getEthnicityBlendMaterial()
+        self.human.setShaderParameter("litsphereTexture", img)
 
     def getEthnicityBlendMaterial(self):
         caucasianWeight = self.human.getCaucasian()
@@ -104,6 +110,9 @@ def load(app):
     taskview = LitSphereTextureChooserTaskView(category)
     taskview.sortOrder = 10
     category.addTask(taskview)
+
+    # Set default litsphere mat at startup
+    taskview.updateAdaptiveSkin()
 
 def unload(app):
     pass

@@ -164,7 +164,7 @@ class SettingsTaskView(gui3d.TaskView):
         def onClicked(event):
             human = gui3d.app.selectedHuman
             if "litsphereTexture" not in human.meshData.shaderParameters:
-                human.setShaderParameter("litsphereTexture", "data/litspheres/skinmat.png")
+                human.setShaderParameter("litsphereTexture", "data/litspheres/adaptive_skin_tone.png")
             self.setShader("data/shaders/glsl/litsphere")
             
         #@self.shaderSkin.mhEvent
