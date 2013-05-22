@@ -297,7 +297,7 @@ class Human(gui3d.Object):
         if self.age < 0.5:
             self.oldVal = 0.0
             self.babyVal = max(0.0, 1 - self.age * 5.333)  # 1/0.1875 = 5.333
-            self.youngVal = max(0.0, self.age * 5.333 - 1)
+            self.youngVal = max(0.0, (self.age-0.1875) * 3.2) # 1/(0.5-0.1875) = 3.2
             self.childVal = max(0.0, min(1.0, 5.333 * self.age) - self.youngVal)
         else:
             self.childVal = 0.0
