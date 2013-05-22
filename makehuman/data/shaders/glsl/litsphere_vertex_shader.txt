@@ -12,9 +12,14 @@
 // Output
 varying vec3 vNormal;
 
+#define DIFFUSE
 
 void main() {
     gl_Position = ftransform();
     gl_TexCoord[0] = gl_MultiTexCoord0;
     vNormal  = normalize(gl_NormalMatrix * gl_Normal);
+
+    #ifdef DIFFUSE
+        gl_TexCoord[0] = gl_MultiTexCoord0;
+    #endif
 }

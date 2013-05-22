@@ -9,6 +9,12 @@
  * the half sphere facing the camera.
 **/
 
+#define DIFFUSE
+
+#ifdef DIFFUSE
+    uniform sampler2D diffuseTexture;
+#endif
+
 // Lit Sphere texture
 uniform sampler2D litsphereTexture;
 
@@ -21,6 +27,12 @@ vec3 diffuse;
 
 void main() {
     diffuse = texture2D(litsphereTexture, vec2(vNormal.xyz * vec3(0.495) + vec3(0.5))).rgb;
-    gl_FragColor.rgb = diffuse;
+
+    #ifdef DIFFUSE
+        gl_FragColor.rgb = diffuse * texture2D(diffuseTexture, gl_TexCoord[0].xy).rgb;
+    #else
+        gl_FragColor.rgb = diffuse;
+    #endif
+
     gl_FragColor.a = 1.0;
 }
