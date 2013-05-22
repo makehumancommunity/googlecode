@@ -556,15 +556,11 @@ class MacroTaskView(ModifierTaskView):
         else:
             gender = gui3d.app.getLanguageString('%.2f%% female, %.2f%% male') % ((1.0 - human.getGender()) * 100, human.getGender() * 100)
         
-        if human.getAge() < 0.5:
-            age = 12 + ((25 - 12) * 2) * human.getAge()
-        else:
-            age = 25 + ((70 - 25) * 2) * (human.getAge() - 0.5)
-        
+        age = human.getAgeYears()
         muscle = (human.getMuscle() * 100.0)
         weight = (50 + (150 - 50) * human.getWeight())
         coords = human.meshData.getCoords([8223,12361,13155])
-        height = 10 * max(coords[0][1] - coords[1][1], coords[0][1] - coords[2][1])
+        height = human.getHeightCm()
         if gui3d.app.settings['units'] == 'metric':
             units = 'cm'
         else:

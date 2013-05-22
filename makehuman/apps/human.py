@@ -37,6 +37,10 @@ class Human(gui3d.Object):
     def __init__(self, mesh, hairObj=None):
 
         gui3d.Object.__init__(self, [0, 0, 0], mesh, True)
+
+        self.MIN_AGE = 1.0
+        self.MAX_AGE = 90.0
+        self.MID_AGE = 25.0
         
         self.warpsNeedReset = True
         self.armature = None
@@ -192,6 +196,10 @@ class Human(gui3d.Object):
         self.callEvent('onChanging', events3d.HumanEvent(self, 'gender'))
 
     def getGender(self):
+        """
+        The gender of this human as a float between 0 and 1.
+        0 for completely female, 1 for fully male.
+        """
         return self.gender
 
     def _setGenderVals(self):
@@ -218,7 +226,32 @@ class Human(gui3d.Object):
         self.callEvent('onChanging', events3d.HumanEvent(self, 'age'))
 
     def getAge(self):
+        """
+        Age of this human as a float between 0 and 1.
+        """
         return self.age
+
+    def getAgeYears(self):
+        """
+        Return the approximate age of the human in years.
+        """
+        if self.getAge() < 0.5:
+            return self.MIN_AGE + ((self.MID_AGE - self.MIN_AGE) * 2) * self.getAge()
+        else:
+            return self.MID_AGE + ((self.MAX_AGE - self.MID_AGE) * 2) * (self.getAge() - 0.5)
+
+    def setAgeYears(self, ageYears):
+        """
+        Set age in amount of years.
+        """
+        ageYears = float(ageYears)
+        if ageYears < self.MIN_AGE or ageYears > self.MAX_AGE:
+            raise RuntimeError("Invalid age specified, should be minimum %s and maximum %s." % (MIN_AGE, MAX_AGE))
+        if ageYears < self.MID_AGE:
+            age = (ageYears - self.MIN_AGE) / ((self.MID_AGE - self.MIN_AGE) * 2)
+        else:
+            age = ( (ageYears - self.MID_AGE) / ((self.MAX_AGE - self.MID_AGE) * 2) ) + 0.5
+        self.setAge(age)
 
     def _setAgeVals(self):
         """
@@ -249,23 +282,23 @@ class Human(gui3d.Object):
         New system (A8):
         ----------------
 
-        0y       12y       25y            90y
+        1y       10y       25y            90y
         baby    child     young           old
         |---------|---------|--------------|
-        0        0.25      0.5             1  = age [0, 1]
+        0      0.1875      0.5             1  = age [0, 1]
 
         val ^     child young     old
           1 |baby\ / \ /   \    /
             |     \   \      /  
             |    / \ / \  /    \ young
             ______________________________> age
-               0   0.25 0.5      1
+               0  0.1875 0.5      1
         """
         if self.age < 0.5:
             self.oldVal = 0.0
-            self.babyVal = max(0.0, 1 - self.age * 4)
-            self.youngVal = max(0.0, self.age * 4 - 1)
-            self.childVal = max(0.0, min(1.0, 4 * self.age) - self.youngVal)
+            self.babyVal = max(0.0, 1 - self.age * 5.333)  # 1/0.1875 = 5.333
+            self.youngVal = max(0.0, self.age * 5.333 - 1)
+            self.childVal = max(0.0, min(1.0, 5.333 * self.age) - self.youngVal)
         else:
             self.childVal = 0.0
             self.babyVal = 0.0
@@ -336,6 +369,13 @@ class Human(gui3d.Object):
 
     def getHeight(self):
         return self.height
+
+    def getHeightCm(self):
+        """
+        The height in cm.
+        """
+        bBox = self.mesh.calcBBox()
+        return 10*(bBox[1][1]-bBox[0][1])
 
     def _setHeightVals(self):
         self.dwarfVal = max(0.0, 1 - self.height * 2)
