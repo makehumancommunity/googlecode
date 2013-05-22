@@ -255,30 +255,6 @@ class Human(gui3d.Object):
 
     def _setAgeVals(self):
         """
-        Old system (A7):
-        ----------------
-
-        12y        25y       70y
-        child     young      old
-        |----------|---------|
-        0         0.5        1  = age [0, 1]
-
-        2*age -1
-                  1 -2*age
-                            1- old+child (child > 0 <=> old == 0)
-
-        val ^
-          1 | child\ /\ /old
-            |       /  /
-            | young/ \/ \young
-            ____________________> age
-            0                   1
-        """        
-        #self.oldVal = max(0.0, self.age * 2 - 1)
-        #self.childVal = max(0.0, 1 - self.age * 2)
-        #self.youngVal = 1 - (self.oldVal + self.childVal)
-
-        """
         New system (A8):
         ----------------
 
@@ -476,8 +452,6 @@ class Human(gui3d.Object):
             self.africanVal *= scale
             
     def setDetail(self, name, value):
-        # Debug macro targets
-        print "Set detail %s to %s" % (name, value)
         if value:
             self.targetsDetailStack[name] = value
         elif name in self.targetsDetailStack:
