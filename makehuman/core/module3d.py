@@ -672,6 +672,8 @@ class Object3D(object):
         self.shaderParameters[name] = value
 
     def addShaderDefine(self, defineStr):
+        if defineStr in self.shaderDefines:
+            return
         self.shaderDefines.append(defineStr)
         self.shaderDefines.sort()   # This is important for shader caching
         self.shaderChanged = True
