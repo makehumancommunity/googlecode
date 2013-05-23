@@ -42,6 +42,7 @@ def writeMesh(fp, amt, config):
     oy = amt.origin[1]
     oz = amt.origin[2]
     scale = config.scale
+    print("WM", scale)
     for co in amt.mesh.coord:
         fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(co[0]-ox), scale*(-co[2]+oz), scale*(co[1]-oy)))
   

@@ -512,7 +512,7 @@ class ExportArmature(CArmature):
         yvec = getUnitVector(yvec-xy*xvec)
         zvec = getUnitVector(np.cross(xvec, yvec))
         if zvec is None:
-            mat = None
+            return 0
         else:
             print "  x", xvec
             print "  y", yvec
@@ -520,6 +520,8 @@ class ExportArmature(CArmature):
             print "  x.y", np.dot(xvec,yvec)
             mat = np.array((xvec,zvec,-yvec))
             
+        print(mat)
+        checkOrthogonal(mat)
         #print " mat", mat
         #print "  d", np.linalg.det(mat)
         quat = tm.quaternion_from_matrix(mat)
@@ -541,6 +543,7 @@ class ExportArmature(CArmature):
         rig_*.py files (e.g. ArmJoints in rig_arm.py). 
         """
         
+        scale = self.config.scale
         for (key, typ, data) in self.joints:
             if typ == 'j':
                 loc = mh2proxy.calcJointPos(self.mesh, data)
@@ -554,12 +557,12 @@ class ExportArmature(CArmature):
             elif typ == 'vo':
                 v = int(data[0])
                 offset = np.array((float(data[1]), float(data[3]), -float(data[2])))
-                self.locations[key] = self.mesh.coord[v] + offset
+                self.locations[key] = (self.mesh.coord[v] + offset)
             elif typ == 'vl':
                 ((k1, v1), (k2, v2)) = data
                 loc1 = self.mesh.coord[int(v1)]
                 loc2 = self.mesh.coord[int(v2)]
-                self.locations[key] = k1*loc1 + k2*loc2
+                self.locations[key] = (k1*loc1 + k2*loc2)
             elif typ == 'f':
                 (raw, head, tail, offs) = data
                 rloc = self.locations[raw]
@@ -959,5 +962,17 @@ def safeGet(dict, key, default):
 def copyTransform(target, cnsname, inf=1):
     return ('CopyTrans', 0, inf, [cnsname, target, 0])
 
+
+def checkOrthogonal(mat):
+    prod = np.dot(mat, mat.transpose())
+    diff = prod - np.identity(3,float)
+    sum = 0
+    for i in range(3):
+        for j in range(3):
+            if abs(diff[i,j]) > 1e-5:
+                raise NameError("Not ortho: diff[%d,%d] = %g\n%s\n\%s" % (i, j, diff[i,j], mat, prod))
+    return True
+
+   
 
        
