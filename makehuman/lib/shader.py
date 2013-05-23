@@ -231,7 +231,7 @@ class Shader(object):
             cls._supported = bool(glCreateProgram)
         return cls._supported
 
-    def __init__(self, path):
+    def __init__(self, path, defines = []):
         if not self.supported():
             raise RuntimeError("No shader support detected")
 
@@ -244,6 +244,7 @@ class Shader(object):
         self.shaderId = None
         self.modified = None
         self.uniforms = None
+        self.defines = defines
 
         self.initShader()
 
@@ -254,9 +255,15 @@ class Shader(object):
             pass
 
     @staticmethod
-    def createShader(file, type):
+    def createShader(file, type, defines = []):
         with open(file, 'rU') as f:
             source = f.read()
+        if defines:
+            # Add #define instructions for shader preprocessor to enable extra
+            # shader features at compile time
+            firstComments, code = Shader.splitVersionDeclaration(source)
+            defineLines = "\n".join([ "#define " + define for define in defines])
+            source = "\n".join([firstComments, defineLines, code])
         shader = glCreateShader(type)
         glShaderSource(shader, source)
         glCompileShader(shader)
@@ -265,6 +272,32 @@ class Shader(object):
             log.error("Error compiling shader: %s", logmsg)
             return None
         return shader
+
+    @staticmethod
+    def splitVersionDeclaration(sourceStr):
+        """
+        Split source string in part that contains the #version declaration,
+        that should occur before any instructions (only comments can preceed),
+        and the rest of the shader code.
+        Define statements can be inserted between the two split strings.
+        This is to ensure that any #version statements remain the first
+        instruction in the shader source, conform with the GLSL spec.
+        If no #version statement is found, the full source will be in the second
+        string, allowing #define statements to be inserted at the top of the 
+        source.
+        NOTE: For this to work correctly, #version effectively needs to be the
+        first instruction in the shader source, but this is usually enforced by
+        the GLSL compiler anyway.
+        Returns a tuple of two strings.
+        """
+        if "#version" in sourceStr:
+            lines = sourceStr.split("\n")
+            for lIdx,line in enumerate(lines):
+                # Determine line where #version occurs
+                if line.strip().startswith("#version"):
+                    return "\n".join(lines[:lIdx+1]), "\n".join(lines[lIdx+1:])
+        # Else don't split source
+        return "", sourceStr
 
     def delete(self):
         if self.vertexId:
@@ -285,15 +318,15 @@ class Shader(object):
         self.shaderId = glCreateProgram()
 
         if os.path.isfile(vertexSource):
-            self.vertexId = self.createShader(vertexSource, GL_VERTEX_SHADER)
+            self.vertexId = self.createShader(vertexSource, GL_VERTEX_SHADER, self.defines)
             glAttachShader(self.shaderId, self.vertexId)
 
         if os.path.isfile(geometrySource) and 'GL_GEOMETRY_SHADER' in globals():
-            self.geometryId = self.createShader(geometrySource, GL_GEOMETRY_SHADER)
+            self.geometryId = self.createShader(geometrySource, GL_GEOMETRY_SHADER, self.defines)
             glAttachShader(self.shaderId, self.geometryId)
 
         if os.path.isfile(fragmentSource):
-            self.fragmentId = self.createShader(fragmentSource, GL_FRAGMENT_SHADER)
+            self.fragmentId = self.createShader(fragmentSource, GL_FRAGMENT_SHADER, self.defines)
             glAttachShader(self.shaderId, self.fragmentId)
 
         glLinkProgram(self.shaderId)
@@ -334,7 +367,7 @@ class Shader(object):
 
 _shaderCache = {}
 
-def getShader(path, cache=None):
+def getShader(path, defines=[], cache=None):
     shader = None
     cache = cache or _shaderCache
 
@@ -348,28 +381,32 @@ def getShader(path, cache=None):
 
     mtime = max(os.path.getmtime(p) for p in paths)
 
-    if path in cache:
-        shader = cache[path]
+    cacheName = path
+    if defines:
+        cacheName = cacheName + "@" + "|".join(defines)
+
+    if cacheName in cache:
+        shader = cache[cacheName]
         if shader is False:
             return shader
 
         if mtime >= shader.modified:
-            log.message('reloading %s', path)
+            log.message('reloading %s', cacheName)
             try:
                 shader.initShader()
                 shader.modified = mtime
             except RuntimeError, text:
-                log.error("Error loading shader %s", path, exc_info=True)
+                log.error("Error loading shader %s", cacheName, exc_info=True)
                 shader = False
     else:
         try:
-            shader = Shader(path)
+            shader = Shader(path, defines)
             shader.modified = mtime
         except RuntimeError, text:
             log.error("Error loading shader %s", path, exc_info=True)
             shader = False
 
-    cache[path] = shader
+    cache[cacheName] = shader
     return shader
     
 def reloadShaders():

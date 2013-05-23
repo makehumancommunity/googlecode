@@ -163,12 +163,13 @@ class Object3D(object):
             self._shaderObj = None
         if self._shaderObj is False:
             return None
-        if self._shaderObj is None:
+        if self._shaderObj is None or self.parent.shaderChanged:
             self._shaderPath = self.parent.shader
             if self._shaderPath is None:
                 self._shaderObj = None
             else:
-                self._shaderObj = shader.getShader(self._shaderPath)
+                self._shaderObj = shader.getShader(self._shaderPath, self.parent.shaderDefines)
+            self.parent.shaderChanged = False
         if self._shaderObj is False:
             return None
         return self._shaderObj

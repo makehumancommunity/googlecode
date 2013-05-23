@@ -94,7 +94,9 @@ class Object3D(object):
         self.pickable = True
         self.texture = None
         self.shader = None
+        self.shaderChanged = False
         self.shaderParameters = {}
+        self.shaderDefines = []
         self.shadeless = False
         self.depthless = False
         self.solid = True
@@ -663,11 +665,23 @@ class Object3D(object):
         :param shader: The path to a pair of shader files.
         :type shader: string
         """
-
         self.shader = shader
+        self.shaderChanged = True
 
     def setShaderParameter(self, name, value):
         self.shaderParameters[name] = value
+
+    def addShaderDefine(self, defineStr):
+        self.shaderDefines.append(defineStr)
+        self.shaderChanged = True
+
+    def removeShaderDefine(self, defineStr):
+        self.shaderDefines.remove(defineStr)
+        self.shaderChanged = True
+
+    def clearShaderDefines(self):
+        self.shaderDefines = []
+        self.shaderChanged = True
 
     def setShadeless(self, shadeless):
         """
