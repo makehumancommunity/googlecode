@@ -383,6 +383,7 @@ def getShader(path, defines=[], cache=None):
 
     cacheName = path
     if defines:
+        # It's important that the defines are sorted alfpabetically here
         cacheName = cacheName + "@" + "|".join(defines)
 
     if cacheName in cache:

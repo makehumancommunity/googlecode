@@ -673,6 +673,7 @@ class Object3D(object):
 
     def addShaderDefine(self, defineStr):
         self.shaderDefines.append(defineStr)
+        self.shaderDefines.sort()   # This is important for shader caching
         self.shaderChanged = True
 
     def removeShaderDefine(self, defineStr):
