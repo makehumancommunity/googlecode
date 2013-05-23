@@ -69,7 +69,7 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
-            if os.path.samefile(filename, "data/litspheres/adaptive_skin_tone.png"):
+            if os.path.abspath(filename) == os.path.abspath("data/litspheres/adaptive_skin_tone.png"):
                 self.updateAdaptiveSkin()
             else:
                 self.human.setShaderParameter("litsphereTexture", filename)
@@ -88,7 +88,7 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
         if "litsphereTexture" not in self.human.meshData.shaderParameters:
             return
         current = self.human.meshData.shaderParameters["litsphereTexture"]
-        if isinstance(current, image.Image) or os.path.samefile(current, "data/litspheres/adaptive_skin_tone.png"):
+        if isinstance(current, image.Image) or os.path.abspath(current) == os.path.abspath("data/litspheres/adaptive_skin_tone.png"):
             if event.change == "caucasian" or event.change == "african" or \
               event.change == "asian":
                 self.updateAdaptiveSkin()
