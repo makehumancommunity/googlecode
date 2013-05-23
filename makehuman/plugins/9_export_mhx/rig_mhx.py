@@ -92,6 +92,20 @@ HeadsTails = {
     'elbow.pt.ik.R' :   ('r-elbow-pt', ('r-elbow-pt', ysmall)),
     'elbow.pt.fk.R' :   ('r-elbow-pt', ('r-elbow-pt', ysmall)),
     'elbow.link.R' :    ('r-elbow', 'r-elbow-pt'),
+    
+    # Finger
+
+    'thumb.L' :         ('l-finger-1-2', 'l-finger-1-4'),
+    'index.L' :         ('l-finger-2-1', 'l-finger-2-4'),
+    'middle.L' :        ('l-finger-3-1', 'l-finger-3-4'),
+    'ring.L' :          ('l-finger-4-1', 'l-finger-4-4'),
+    'pinky.L' :         ('l-finger-5-1', 'l-finger-5-4'),
+
+    'thumb.R' :         ('r-finger-1-2', 'r-finger-1-4'),
+    'index.R' :         ('r-finger-2-1', 'r-finger-2-4'),
+    'middle.R' :        ('r-finger-3-1', 'r-finger-3-4'),
+    'ring.R' :          ('r-finger-4-1', 'r-finger-4-4'),
+    'pinky.R' :         ('r-finger-5-1', 'r-finger-5-4'),    
 }
 
 """
@@ -154,6 +168,20 @@ Armature = {
     'elbow.pt.ik.R' :  (0, 'shoulder.R', F_WIR, L_RARMIK+L_REXTRA),
     'elbow.pt.fk.R' :  (0, 'upper_arm.R', 0, L_HELP2),
     'elbow.link.R' :   (0, 'upper_arm.ik.R', F_RES, L_RARMIK+L_REXTRA),
+
+    # Finger
+    
+    'thumb.L' :        ('thumb.02.L', 'thumb.01.L', F_WIR, L_LHANDIK),
+    'index.L' :        ('f_index.01.L', 'palm.01.L', F_WIR, L_LHANDIK),
+    'middle.L' :       ('f_middle.01.L', 'palm.02.L', F_WIR, L_LHANDIK),
+    'ring.L' :         ('f_ring.01.L', 'palm.03.L', F_WIR, L_LHANDIK),
+    'pinky.L' :        ('f_pinky.01.L', 'palm.04.L', F_WIR, L_LHANDIK),
+
+    'thumb.R' :        ('thumb.02.R', 'thumb.01.R', F_WIR, L_RHANDIK),
+    'index.R' :        ('f_index.01.R', 'palm.01.R', F_WIR, L_RHANDIK),
+    'middle.R' :       ('f_middle.01.R', 'palm.02.R', F_WIR, L_RHANDIK),
+    'ring.R' :         ('f_ring.01.R', 'palm.03.R', F_WIR, L_RHANDIK),
+    'pinky.R' :        ('f_pinky.01.R', 'palm.04.R', F_WIR, L_RHANDIK),
 }
 
 """
@@ -211,6 +239,20 @@ CustomShapes = {
     'wrist.R' :         'GZM_Ball025',
     'elbow.pt.ik.L' :   'GZM_Cube025',
     'elbow.pt.ik.R' :   'GZM_Cube025',
+    
+    # Finger
+    
+    'thumb.L' :         'GZM_Knuckle',
+    'index.L' :         'GZM_Knuckle',
+    'middle.L' :        'GZM_Knuckle',
+    'ring.L' :          'GZM_Knuckle',
+    'pinky.L' :         'GZM_Knuckle',
+    
+    'thumb.R' :         'GZM_Knuckle',
+    'index.R' :         'GZM_Knuckle',
+    'middle.R' :        'GZM_Knuckle',
+    'ring.R' :          'GZM_Knuckle',
+    'pinky.R' :         'GZM_Knuckle',
 }
 
 IkChains = {
@@ -293,6 +335,46 @@ Constraints = {
         ('StretchTo', 0, 1, ['Stretch', 'elbow.pt.ik.R', 0, 1, 3.0])
         ],
 
+    # Finger
+    
+     'thumb.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'thumb.L', (1,0,0), (0,0,0), True])],
+     'thumb.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'thumb.L', (1,0,0), (0,0,0), True])],
+ 
+     'f_index.01.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.L', (1,0,0), (0,0,0), True])],
+     'f_index.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.L', (1,0,1), (0,0,0), True])],
+     'f_index.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.L', (1,0,1), (0,0,0), True])],
+ 
+     'f_middle.01.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.L', (1,0,0), (0,0,0), True])],
+     'f_middle.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.L', (1,0,1), (0,0,0), True])],
+     'f_middle.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.L', (1,0,1), (0,0,0), True])],
+ 
+     'f_ring.01.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.L', (1,0,0), (0,0,0), True])],
+     'f_ring.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.L', (1,0,1), (0,0,0), True])],
+     'f_ring.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.L', (1,0,1), (0,0,0), True])],
+ 
+     'f_pinky.01.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.L', (1,0,0), (0,0,0), True])],
+     'f_pinky.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.L', (1,0,1), (0,0,0), True])],
+     'f_pinky.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.L', (1,0,1), (0,0,0), True])],
+    
+     'thumb.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'thumb.R', (1,0,0), (0,0,0), True])],
+     'thumb.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'thumb.R', (1,0,0), (0,0,0), True])],
+ 
+     'f_index.01.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.R', (1,0,0), (0,0,0), True])],
+     'f_index.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.R', (1,0,1), (0,0,0), True])],
+     'f_index.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.R', (1,0,1), (0,0,0), True])],
+ 
+     'f_middle.01.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.R', (1,0,0), (0,0,0), True])],
+     'f_middle.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.R', (1,0,1), (0,0,0), True])],
+     'f_middle.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.R', (1,0,1), (0,0,0), True])],
+ 
+     'f_ring.01.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.R', (1,0,0), (0,0,0), True])],
+     'f_ring.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.R', (1,0,1), (0,0,0), True])],
+     'f_ring.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.R', (1,0,1), (0,0,0), True])],
+ 
+     'f_pinky.01.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.R', (1,0,0), (0,0,0), True])],
+     'f_pinky.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.R', (1,0,1), (0,0,0), True])],
+     'f_pinky.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.R', (1,0,1), (0,0,0), True])],
+
 }
 
 
@@ -302,6 +384,9 @@ Constraints = {
 #
 
 PropLRDrivers = [
+
+    # Leg
+    
     ('thigh', 'LegIK', ['LegIk'], 'x1'),
     ('thigh', 'LegFK', ['LegIk'], '1-x1'),
     ('shin', 'LegIK', ['LegIk'], 'x1'),
@@ -311,6 +396,8 @@ PropLRDrivers = [
     ('toe', 'RevIK', ['LegIk', 'LegIkToAnkle'], 'x1*(1-x2)'),
     ('ankle.ik', 'Foot', ['LegIkToAnkle'], '1-x1'),
     ('ankle.ik', 'Ankle', ['LegIkToAnkle'], 'x1'),
+    
+    # Arm
     
     #('shoulder', 'Elbow', ['ElbowPlant'], 'x1'),
     ('arm_socket', 'Hinge', ['ArmHinge'], '1-x1'),
@@ -325,6 +412,22 @@ PropLRDrivers = [
     ('hand', 'WristRot', ['ArmIk', 'HandFollowsWrist'], 'x1*x2'),
     #('HlpLoArm', 'WristRot', ['ArmIk', 'HandFollowsWrist'], 'x1*x2'),
     
+    # Finger
+    
+    ('thumb.02', 'Rot', ['FingerControl'], 'x1'),
+    ('thumb.03', 'Rot', ['FingerControl'], 'x1'),
+    ('f_index.01', 'Rot', ['FingerControl'], 'x1'),
+    ('f_index.02', 'Rot', ['FingerControl'], 'x1'),
+    ('f_index.03', 'Rot', ['FingerControl'], 'x1'),
+    ('f_middle.01', 'Rot', ['FingerControl'], 'x1'),
+    ('f_middle.02', 'Rot', ['FingerControl'], 'x1'),
+    ('f_middle.03', 'Rot', ['FingerControl'], 'x1'),
+    ('f_ring.01', 'Rot', ['FingerControl'], 'x1'),
+    ('f_ring.02', 'Rot', ['FingerControl'], 'x1'),
+    ('f_ring.03', 'Rot', ['FingerControl'], 'x1'),
+    ('f_pinky.01', 'Rot', ['FingerControl'], 'x1'),
+    ('f_pinky.02', 'Rot', ['FingerControl'], 'x1'),
+    ('f_pinky.03', 'Rot', ['FingerControl'], 'x1'),
 ]
 
 SoftPropLRDrivers = [
