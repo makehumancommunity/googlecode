@@ -9,8 +9,6 @@
  * the half sphere facing the camera.
 **/
 
-#define DIFFUSE
-
 #ifdef DIFFUSE
     uniform sampler2D diffuseTexture;
 #endif

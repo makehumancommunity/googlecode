@@ -54,6 +54,16 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
         self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
 
+        settingsBox = self.addLeftWidget(gui.GroupBox("Shader settings"))
+        self.diffuseChk = settingsBox.addWidget(gui.CheckBox("Diffuse texture", False))
+
+        @self.diffuseChk.mhEvent
+        def onClicked(event):
+            if self.diffuseChk.selected:
+                self.human.mesh.addShaderDefine('DIFFUSE')
+            else:
+                self.human.mesh.removeShaderDefine('DIFFUSE')
+
         previewBox = self.addLeftWidget(gui.GroupBox("LitSphere texture"))
         self.image = previewBox.addWidget(gui.ImageView())
 
@@ -68,8 +78,11 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
     def onShow(self, event):
         if "litsphereTexture" in self.human.meshData.shaderParameters:
             current = self.human.meshData.shaderParameters["litsphereTexture"]
+            if isinstance(current, image.Image):
+                current = "data/litspheres/adaptive_skin_tone.png"
             self.filechooser.selectItem(os.path.relpath(current))
             self.image.setImage(current)
+        self.diffuseChk.setChecked("DIFFUSE" in self.human.mesh.shaderDefines)
 
     def onHumanChanging(self, event):
         if "litsphereTexture" not in self.human.meshData.shaderParameters:
