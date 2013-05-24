@@ -245,6 +245,7 @@ class Shader(object):
         self.modified = None
         self.uniforms = None
         self.defines = defines
+        self.vertexTangentAttrId = None
 
         self.initShader()
 
@@ -335,6 +336,8 @@ class Shader(object):
             self.delete()
             return
 
+        self.vertexTangentAttrId = glGetAttribLocation(self.shaderId, 'tangent')
+
         self.uniforms = None
         self.updateUniforms()
 
@@ -364,6 +367,9 @@ class Shader(object):
             value = params.get(uniform.name)
             if value is not None:
                 uniform.set(value)
+
+    def requiresVertexTangent(self):
+        return self.vertexTangentAttrId != -1
 
 _shaderCache = {}
 

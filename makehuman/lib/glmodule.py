@@ -297,6 +297,10 @@ def drawMesh(obj):
     if obj.shader and obj.solid and Shader.supported():
         glUseProgram(obj.shader)
 
+        # Set custom attributes
+        if obj.shader.requiresVertexTangent():
+            glVertexAttribPointer(obj.shader.vertexTangentAttrId, 3, GL_FLOAT, GL_TRUE, 0, obj.tangents)
+
         # This should be optimized, since we only need to do it when it's changed
         # Validation should also only be done when it is set
         if obj.shaderParameters:
