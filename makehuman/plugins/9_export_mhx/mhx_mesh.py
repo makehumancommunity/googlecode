@@ -292,8 +292,8 @@ def writeVertexGroups(fp, amt, config, proxy):
             weights = amt.vertexWeights                    
         writeRigWeights(fp, weights)
     else:
-        for file in amt.vertexGroupFiles:
-            copyVertexGroups(file, fp, amt, proxy)
+        vgroups = amt.getVertexGroups()
+        copyVertexGroups(fp, vgroups, proxy)
             
     #for path in config.customvertexgroups:
     #    print("    %s" % path)
@@ -307,39 +307,15 @@ def writeVertexGroups(fp, amt, config, proxy):
     return
 
 
-def getVertexGroups(amt, name, vgroups):
-    #file = os.path.join("shared/armature/vertexgroups", name + ".vgrp")
-    file = name + ".vgrp"
-    fp = open(file, "rU")
-    vgroupList = []
-    for line in fp:
-        words = line.split()
-        if len(words) < 2:
-            continue
-        elif words[1] == "weights":
-            name = words[2]
-            try:
-                vgroup = vgroups[name]
-            except KeyError:
-                vgroup = []
-                vgroups[name] = vgroup 
-            vgroupList.append((name, vgroup))
-        else:
-            vgroup.append((int(words[0]), float(words[1])))
-    fp.close()  
-    return amt.renameVertexGroups(vgroupList)
-
-
-def copyVertexGroups(name, fp, amt, proxy):
-    vgroupList = getVertexGroups(amt, name, {})
+def copyVertexGroups(fp, vgroups, proxy):
     if not proxy:
-        for (name, weights) in vgroupList:
+        for (name, weights) in vgroups.items():
             fp.write("  VertexGroup %s\n" % name)
             for (v,wt) in weights:
                 fp.write("    wv %d %.4g ;\n" % (v,wt))
             fp.write("  end VertexGroup\n\n")
     else:
-        for (name, weights) in vgroupList:
+        for (name, weights) in vgroups.items():
             pgroup = []
             for (v,wt) in weights:
                 try:

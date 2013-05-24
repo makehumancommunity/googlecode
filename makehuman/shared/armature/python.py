@@ -230,38 +230,62 @@ class PythonArmature(CArmature):
                 
         return bones           
  
+    
+    def getVertexGroups(self):
+        vgroupList = []
+        for file in self.vertexGroupFiles:
+            vgroups = {}
+            #file = os.path.join("shared/armature/vertexgroups", name + ".vgrp")
+            file = file + ".vgrp"
+            fp = open(file, "rU")
+            vgroupList = []
+            for line in fp:
+                words = line.split()
+                if len(words) < 2:
+                    continue
+                elif words[1] == "weights":
+                    name = words[2]
+                    try:
+                        vgroup = vgroups[name]
+                    except KeyError:
+                        vgroup = []
+                        vgroups[name] = vgroup 
+                    vgroupList.append((name, vgroup))
+                else:
+                    vgroup.append((int(words[0]), float(words[1])))
+            fp.close()  
 
-    def renameVertexGroups(self, vgroups):
+        ngroups = OrderedDict([])
+        
         if self.useDeformNames:
-            ngroups = []
-            for bone,vgroup in vgroups:
+            for bone,vgroup in vgroupList:
                 base = splitBoneName(bone)[0]
                 if base in self.splitBones.keys():
                     self.splitVertexGroup(bone, vgroup, ngroups)
                 elif not self.useSplitBones:
                     defname = "DEF-"+bone
-                    ngroups.append((defname,vgroup))
+                    ngroups[defname] = vgroup
                 else:
                     defname = "DEF-"+bone
                     try:
                         self.bones[defname]
-                        ngroups.append((defname,vgroup))
+                        ngroups[defname] = vgroup
                     except KeyError:
-                        ngroups.append((bone,vgroup))
-            return ngroups
+                        ngroups[bone] = vgroup
             
         elif self.useSplitBones:
-            ngroups = []
-            for bone,vgroup in vgroups:
+            for bone,vgroup in vgroupList:
                 base = splitBoneName(bone)[0]
                 if base in self.splitBones.keys():
                     self.splitVertexGroup(bone, vgroup, ngroups)
                 else:
-                    ngroups.append((bone,vgroup))
-            return ngroups
+                    ngroups[bone] = vgroup
             
         else:
-            return vgroups
+            for bone,vgroup in vgroupList:
+                ngroups[bone] = vgroup
+
+        return ngroups
 
 
     def splitVertexGroup(self, bone, vgroup, ngroups):
@@ -290,7 +314,8 @@ class PythonArmature(CArmature):
                     vgroup2.append((vn, x*w))
                 else:
                     vgroup2.append((vn,w))
-            ngroups += [(defname1,vgroup1), (defname2,vgroup2)]
+            ngroups[defname1] = vgroup1
+            ngroups[defname2] = vgroup2
         elif npieces == 3:
             for vn,w in vgroup:
                 y = self.mesh.coord[vn] - orig
@@ -305,7 +330,9 @@ class PythonArmature(CArmature):
                     vgroup3.append((vn, (2*x-1)*w))
                 else:
                     vgroup3.append((vn,w))        
-            ngroups += [(defname1,vgroup1), (defname2,vgroup2), (defname3,vgroup3)]
+            ngroups[defname1] = vgroup1
+            ngroups[defname2] = vgroup2
+            ngroups[defname3] = vgroup3
         
     
     def setup(self):

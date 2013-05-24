@@ -37,7 +37,7 @@ class DaeConfig(Config):
         # Collada exporter does not support exporting without rig, so default
         # to soft1 rig when no rig specified in the skeleton library
         if not self.rigtype:
-            self.rigtype = "soft1"
+            self.rigtype = "basic"
         self.useNormals = exporter.useNormals.selected
         self.rotate90X = exporter.rotate90X.selected
         self.rotate90Z = exporter.rotate90Z.selected
@@ -59,6 +59,12 @@ class ExporterCollada(Exporter):
         self.rotate90Z = options.addWidget(gui.CheckBox("Face X (Rotate 90 Z)", False))
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
         self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
+
+        rigtypes = []
+        self.libraryRig     = options.addWidget(gui.RadioButton(rigtypes, "Use rig from library", True))
+        self.basic          = options.addWidget(gui.RadioButton(rigtypes, "Use basic rig", True))
+        self.rigtypes       = [(self.basic, "basic"), (self.libraryRig, None)]
+
 
     def export(self, human, filename):
         from .mh2collada import exportCollada

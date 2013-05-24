@@ -37,6 +37,7 @@ class BasicArmature(PythonArmature):
         PythonArmature. __init__(self, name, human, config)
         self.rigtype = "basic"
         self.boneLayers = "08a80caa"
+        self.root = "hips"
 
         self.vertexGroupFiles = [
             PythonVertexGroupDirectory + "head", 

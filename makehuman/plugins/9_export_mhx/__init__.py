@@ -42,11 +42,8 @@ class MhxConfig(Config):
         self.facepanel =        exporter.facepanel.selected
         self.bodyShapes =       exporter.bodyShapes.selected
         self.useCustomShapes =  exporter.useCustomShapes.selected
-        self.cage =             False # exporter.cage.selected
         self.feetOnGround =     exporter.feetOnGround.selected
         self.advancedSpine =    False # exporter.advancedSpine.selected
-        self.maleRig =          False # exporter.maleRig.selected
-        self.clothesRig =       False # exporter.clothesRig.selected
         self.rigtype =          exporter.getRigType()
         # MHX export does not support exporting without rig
         # If no rig selected (from library): default to MHX rig

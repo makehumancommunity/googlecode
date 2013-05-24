@@ -52,6 +52,10 @@ class Config:
         self.customPrefix       = ""
         self.human              = None
 
+        self.cage =             False
+        self.maleRig =          False
+        self.clothesRig =       False
+
 
     def selectedOptions(self, exporter):
         self.encoding           = exporter.taskview.getEncoding()
@@ -60,7 +64,12 @@ class Config:
         self.lashes             = exporter.lashes.selected
         self.helpers            = exporter.helpers.selected
         self.scale,self.unit    = exporter.taskview.getScale()
+        return self
         
+        self.cage =             exporter.cage.selected
+        self.maleRig =          exporter.maleRig.selected
+        self.clothesRig =       eexporter.clothesRig.selected
+
         return self
 
 

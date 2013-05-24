@@ -31,9 +31,6 @@ import log
 import numpy as np
 import numpy.linalg as la
 import transformations as tm
-
-import exportutils
-from exportutils.config import Config
     
 #-------------------------------------------------------------------------------        
 #   These flags are the same as in mhx.flags
@@ -95,6 +92,7 @@ class CArmature:
     
     
     def setup(self):
+        import exportutils
         rigfile = "data/rigs/%s.rig" % self.config.rigtype
         (self.locations, boneList, self.vertexWeights) = exportutils.rig.readRigFile(rigfile, self.mesh, locations=self.locations)        
 
@@ -947,7 +945,8 @@ def checkPoints(vec1, vec2):
     
 
 def createPoseRig(human, rigtype):
-    config = Config()
+    import exportutils
+    config = exportutils.config.Config()
     config.feetOnGround = False
     config.rigtype = rigtype
     config.setHuman(human)
