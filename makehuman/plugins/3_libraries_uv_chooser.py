@@ -30,81 +30,66 @@ import filechooser as fc
 import log
 import numpy as np
 
+class UVMapAction(gui3d.Action):
+    def __init__(self, name, human, before, after):
+        super(UVMapAction, self).__init__(name)
+        self.human = human
+        self.before = before
+        self.after = after
+
+    def do(self):
+        self.human.setUVMap(self.after)
+        return True
+
+    def undo(self):
+        self.human.setUVMap(self.before)
+        return True
+
+
 class UvTaskView(gui3d.TaskView):
-    
+
     def __init__(self, category):
-        
         gui3d.TaskView.__init__(self, category, 'UV')
         uvDir = os.path.join(mh.getPath(''), 'data', 'uvs')
         if not os.path.exists(uvDir):
             os.makedirs(uvDir)
-        self.filechooser = self.addTopWidget(fc.FileChooser([uvDir , 'data/uvs'], 'mhuv', 'png', 'data/uvs/notfound.thumb'))
-        self.addLeftWidget(self.filechooser.sortBox)
+        self.filechooser = self.addRightWidget( \
+        fc.IconListFileChooser([uvDir , 'data/uvs'], 'mhuv', ['thumb', 'png'], 'data/uvs/notfound.thumb', 'UV Map'))
+        self.addLeftWidget(self.filechooser.createSortBox())
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
-            
-            if os.path.basename(filename) == "clear.mhuv":
-                filename = None            
-            self.setUv(gui3d.app.selectedHuman, filename)
-
-            mh.changeCategory('Modelling')
-        
-    def setUv(self, human, filename):
-        if filename is None:
-            human.uvset = None
-        else:
-            human.uvset = mh2proxy.CUvSet(filename)
-            human.uvset.read(human, filename)
-
-        if not human.uvset:
-            return
-
-        faceMask = human.meshData.getFaceMask()
-        faceGroups = human.meshData.group
-
-        human.meshData._materials = []
-        if len(human.uvset.materials) == 0:
-            human.meshData.createMaterial('Default')
-        else:
-            for mat in human.uvset.materials:
-                human.meshData.createMaterial(mat.name)
-
-        human.meshData.setUVs(human.uvset.texVerts)
-        human.meshData.setFaces(human.meshData.fvert, np.asarray(human.uvset.texFaces, dtype=np.uint32)-1, faceGroups, human.uvset.faceMaterials)
-        human.meshData.changeFaceMask(faceMask)
-        human.meshData.updateIndexBuffer()
+            if os.path.basename(filename) == "default.mhuv":
+                filename = None
+            gui3d.app.do(UVMapAction("Changing UV map",
+                                     gui3d.app.selectedHuman,
+                                     gui3d.app.selectedHuman.mesh.material.uvMap,
+                                     filename))
 
     def onShow(self, event):
         # When the task gets shown, set the focus to the file chooser
-        gui3d.app.selectedHuman.hide()
         gui3d.TaskView.onShow(self, event)
         self.filechooser.setFocus()
 
     def onHide(self, event):
-        gui3d.app.selectedHuman.show()
         gui3d.TaskView.onHide(self, event)
         
     def onHumanChanging(self, event):
-        
         human = event.human
         if event.change == 'reset':
-            self.setUv(human, None)
+            human.setUVMap(None)
             
     def onHumanChanged(self, event):
-        
         human = event.human
 
     def loadHandler(self, human, values):
-
         mhuv = values[1]
         if not os.path.exists(os.path.realpath(mhuv)):
             log.notice('UvTaskView.loadHandler: %s does not exist. Skipping.', mhuv)
             return
-        self.setUv(human, mhuv)
+        human.setUVMap(mhuv)
         
     def saveHandler(self, human, file):
-
         if human.uvset:
             file.write('uvset %s\n' % human.uvset.filename)
 
@@ -113,7 +98,7 @@ class UvTaskView(gui3d.TaskView):
 
 
 def load(app):
-    return  # Disabled, UVs will not be chosen explicitly in the future
+    #return  # Disabled, UVs will not be chosen explicitly in the future
     category = app.getCategory('Textures')
     taskview = UvTaskView(category)
     taskview.sortOrder = 9
