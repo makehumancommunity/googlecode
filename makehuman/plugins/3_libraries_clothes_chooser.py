@@ -252,11 +252,11 @@ class ClothesTaskView(gui3d.TaskView):
             log.error("Could not load mesh for clothing object %s", proxy.name)
             return
         if proxy.texture:
-            (dir, name) = proxy.texture
-            tex = os.path.join(folder, name)
-            if not os.path.exists(tex):
-                tex = os.path.join(self.systemClothes, "textures", name)
-            mesh.setTexture(tex)
+            mesh.setTexture( self.getClothesTexture(proxy.texture) )
+        if proxy.normal:
+            mesh.material.normalTexture = self.getClothesTexture(proxy.normal)
+        if proxy.displacement:
+            mesh.material.displacementTexture = self.getClothesTexture(proxy.displacement)
         
         clo = gui3d.app.addObject(gui3d.Object(human.getPosition(), mesh))
         clo.setRotation(human.getRotation())
@@ -475,6 +475,14 @@ class ClothesTaskView(gui3d.TaskView):
     def syncMediaFinished(self):
         
         self.mediaSync = None
+
+
+    def getClothesTexture(self, relativePath):
+        (folder, name) = relativePath
+        tex = os.path.join(folder, name)
+        if not os.path.exists(tex):
+            tex = os.path.join(self.systemClothes, "textures", name)
+        return tex
 
 
 # This method is called when the plugin is loaded into makehuman
