@@ -123,16 +123,16 @@ HeadsTails = {
 
 Planes = {
     "PlaneArm.L" :         ('l-shoulder', 'l-elbow', 'l-hand'),
-    "PlaneIndex.L" :       ('l-finger-2-1', 'l-finger-2-2', 'l-finger-2-3'),
-    "PlaneMiddle.L" :      ('l-finger-3-1', 'l-finger-3-2', 'l-finger-3-3'),
-    "PlaneRing.L" :        ('l-finger-4-1', 'l-finger-4-2', 'l-finger-4-3'),
-    "PlanePinky.L" :       ('l-finger-5-1', 'l-finger-5-2', 'l-finger-5-3'),
+    "PlaneIndex.L" :       ('l-finger-2-1', 'l-finger-2-2', 'l-finger-2-4'),
+    "PlaneMiddle.L" :      ('l-finger-3-1', 'l-finger-3-2', 'l-finger-3-4'),
+    "PlaneRing.L" :        ('l-finger-4-1', 'l-finger-4-2', 'l-finger-4-4'),
+    "PlanePinky.L" :       ('l-finger-5-1', 'l-finger-5-2', 'l-finger-5-4'),
 
     "PlaneArm.R" :         ('l-shoulder', 'l-elbow', 'l-hand'),
-    "PlaneIndex.R" :       ('l-finger-2-1', 'l-finger-2-2', 'l-finger-2-3'),
-    "PlaneMiddle.R" :      ('l-finger-3-1', 'l-finger-3-2', 'l-finger-3-3'),
-    "PlaneRing.R" :        ('l-finger-4-1', 'l-finger-4-2', 'l-finger-4-3'),
-    "PlanePinky.R" :       ('l-finger-5-1', 'l-finger-5-2', 'l-finger-5-3'),
+    "PlaneIndex.R" :       ('l-finger-2-1', 'l-finger-2-2', 'l-finger-2-4'),
+    "PlaneMiddle.R" :      ('l-finger-3-1', 'l-finger-3-2', 'l-finger-3-4'),
+    "PlaneRing.R" :        ('l-finger-4-1', 'l-finger-4-2', 'l-finger-4-4'),
+    "PlanePinky.R" :       ('l-finger-5-1', 'l-finger-5-2', 'l-finger-5-4'),
 }
 
 Armature = {

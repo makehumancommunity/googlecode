@@ -457,7 +457,6 @@ class ExportArmature(CArmature):
             for bone in self.bones.keys():
                 (roll, parent, flags, layers) = self.bones[bone]
                 if isinstance(roll, str) and roll[0:5] == "Plane":
-                    print bone, parent, roll
                     try:
                         normal = normals[roll]
                     except KeyError:
@@ -485,10 +484,9 @@ class ExportArmature(CArmature):
         
 
     def computeNormal(self, j1, j2, j3):
-        p1 = self.locations[j1]
-        p2 = self.locations[j2]
-        p3 = self.locations[j3]
-        print "  ", j1, j2, j3
+        p1 = m2b(self.locations[j1])
+        p2 = m2b(self.locations[j2])
+        p3 = m2b(self.locations[j3])
         pvec = getUnitVector(p2-p1)
         yvec = getUnitVector(p3-p2)
         if pvec is None or yvec is None:
@@ -501,38 +499,28 @@ class ExportArmature(CArmature):
         if normal is None:
             return 0
 
-        p1 = self.rigHeads[bone]
-        p2 = self.rigTails[bone]
+        p1 = m2b(self.rigHeads[bone])
+        p2 = m2b(self.rigTails[bone])
         xvec = normal
         yvec = getUnitVector(p2-p1)
         xy = np.dot(xvec,yvec)
-        if abs(xy) > 1e-4:
-            print "  Corr", p2, xy
-        p2 = self.rigTails[bone] = p2 - xy*xvec
+        #self.rigTails[bone] = b2m(p2-xy*xvec)
         yvec = getUnitVector(yvec-xy*xvec)
         zvec = getUnitVector(np.cross(xvec, yvec))
         if zvec is None:
             return 0
         else:
-            print "  x", xvec
-            print "  y", yvec
-            print "  z", zvec
-            print "  x.y", np.dot(xvec,yvec)
-            mat = np.array((xvec,zvec,-yvec))
+            mat = np.array((xvec,yvec,zvec))
             
-        print(mat)
         checkOrthogonal(mat)
-        #print " mat", mat
-        #print "  d", np.linalg.det(mat)
         quat = tm.quaternion_from_matrix(mat)
-        print "  q", quat
         if abs(quat[0]) < 1e-4:
-            roll = math.pi
+            roll = 0
         else:
-            roll = - 2*math.atan(quat[2]/quat[0])
+            roll = math.pi - 2*math.atan(quat[2]/quat[0])
         if roll > math.pi:
             roll -= 2*math.pi
-        print "  r", roll/D
+        print "  roll", bone, roll/D
         return roll
         
         
@@ -912,6 +900,12 @@ end Object
 #   Utilities
 #-------------------------------------------------------------------------------        
 
+def m2b(vec):
+    return np.array((vec[0], -vec[2], vec[1]))
+        
+def b2m(vec):
+    return np.array((vec[0], vec[2], -vec[1]))
+            
 def getUnitVector(vec):
     length = math.sqrt(np.dot(vec,vec))
     if length > 1e-6:
