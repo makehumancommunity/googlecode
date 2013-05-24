@@ -144,7 +144,7 @@ class Material(object):
 
     def setShader(self, shader):
         self.shader = shader
-        self.shaderParameters = {}
+        #self.shaderParameters = {}
         self.configureShader()
         self.shaderChanged = True
 
