@@ -97,6 +97,7 @@ class Object3D(object):
         self.shaderChanged = False
         self.shaderParameters = {}
         self.shaderDefines = []
+        self.calculateTangents = True   # TODO disable when not needed by shader
         self.shadeless = False
         self.depthless = False
         self.solid = True
@@ -216,6 +217,79 @@ class Object3D(object):
         norms /= np.sqrt(np.sum(norms ** 2, axis=-1))[:,None]
         self.vnorm[ix] = norms
 
+    def calcVertexTangents(self, ix = None):
+        self.markCoords(ix, norm=True)
+        if ix is None:
+            ix = np.s_[:]
+            f_ix = np.s_[:]
+        else:
+            f_ix = np.unique(self.vface[ix])
+
+        # This implementation is based on
+        # http://www.terathon.com/code/tangent.html
+
+        tan = np.zeros((self.getVertexCount(), 2, 3), dtype=np.float32)
+
+        fvert = self.coord[self.fvert[f_ix]]
+        v1 = fvert[:,0,:]
+        v2 = fvert[:,1,:]
+        v3 = fvert[:,2,:]
+
+        x1 = v2[:,0] - v1[:,0]
+        x2 = v3[:,0] - v1[:,0]
+        y1 = v2[:,1] - v1[:,1]
+        y2 = v3[:,1] - v1[:,1]
+        z1 = v2[:,2] - v1[:,2]
+        z2 = v3[:,2] - v1[:,2]
+
+        fuv = self.texco[self.fuvs[f_ix]]
+        w1 = fvert[:,0,:]
+        w2 = fvert[:,1,:]
+        w3 = fvert[:,2,:]
+
+        s1 = w2[:,0] - w1[:,0]
+        s2 = w3[:,0] - w1[:,0]
+        t1 = w2[:,1] - w1[:,1]
+        t2 = w3[:,1] = w1[:,1]
+
+        # Prevent NANs because of borked up UV coordinates
+        s1[np.argwhere(np.equal(s1, 0.0))] = 0.0000001
+        s2[np.argwhere(np.equal(s2, 0.0))] = 0.0000001
+        t1[np.argwhere(np.equal(t1, 0.0))] = 0.0000001
+        t2[np.argwhere(np.equal(t2, 0.0))] = 0.0000001
+
+        r = np.repeat(1.0, len(s1)) / ( (s1 * t2) - (s2 * t1) )
+        sdir = np.zeros((self.getFaceCount(),3), dtype=np.float32)
+        tdir = np.zeros((self.getFaceCount(),3), dtype=np.float32)
+        sdir[f_ix] = np.column_stack( [ ( (t2 * x1) - (t1 * x2) ) * r,
+                                        ( (t2 * y1) - (t1 * y2) ) * r,
+                                        ( (t2 * z1) - (t1 * z2) ) * r  ] )
+        tdir[f_ix] = np.column_stack( [ ( (s1 * x2) - (s1 * x2) ) * r,
+                                        ( (s1 * y2) - (s2 * y1) ) * r,
+                                        ( (s1 * z2) - (s2 * z1) ) * r  ] )
+
+        tan[:,0] = np.sum(sdir[self.vface[ix]])
+        tan[:,1] = np.sum(tdir[self.vface[ix]])
+
+        # Gramm-Schmidt orthogonalize
+        dotP = dot_v3(self.vnorm[ix], tan[:,0] )
+        # Duplicate dot product value in 3 columns because scalar * (n x 3)
+        # does not work
+        dotP = np.tile(dotP, (3,1)).transpose().reshape(len(tan),3)
+        self.vtang[ix,:3] = tan[:,0] - dotP * self.vnorm[ix]
+        # Normalize
+        self.vtang[ix,:3] /= np.sqrt(np.sum(self.vtang[ix,:3] ** 2, axis=-1))[:,None]
+
+        # Determine Handedness as w parameter
+        self.vtang[ix, 3] = 1.0
+        indx = np.argwhere(np.less(dot_v3( \
+                                     np.cross( \
+                                           self.vnorm[ix], \
+                                           tan[:,0]), \
+                                     tan[:,1]), \
+                                   0.0))
+        self.vtang[ix,3][indx] = -1.0
+
     def getObject(self):
         if self.__object:
             return self.__object()
@@ -258,6 +332,7 @@ class Object3D(object):
 
         del self.coord
         del self.vnorm
+        del self.vtang
         del self.color
         del self.texco
         del self.vface
@@ -265,6 +340,7 @@ class Object3D(object):
 
         del self.ucoor
         del self.unorm
+        del self.utang
         del self.ucolr
         del self.utexc
 
@@ -277,6 +353,7 @@ class Object3D(object):
         nverts = len(coords)
         self.coord = np.asarray(coords, dtype=np.float32)
         self.vnorm = np.zeros((nverts, 3), dtype=np.float32)
+        self.vtang = np.zeros((nverts, 4), dtype=np.float32)
         self.color = np.zeros((nverts, 4), dtype=np.uint8) + 255
         self.vface = np.zeros((nverts, self.MAX_FACES), dtype=np.uint32)
         self.nfaces = np.zeros(nverts, dtype=np.uint8)
@@ -285,6 +362,7 @@ class Object3D(object):
 
         self.ucoor = True
         self.unorm = True
+        self.utang = True
         self.ucolr = True
 
         self.markCoords(None, True, True, True)
@@ -319,12 +397,13 @@ class Object3D(object):
 
         if norm:
             if indices is None:
-                self.unorm = True
+                self.unorm = self.utang = True
             else:
                 if self.unorm is False:
-                    self.unorm = np.zeros(nverts, dtype=bool)
+                    self.unorm = self.utang = np.zeros(nverts, dtype=bool)
                 if self.unorm is not True:
                     self.unorm[indices] = True
+                    self.utang[indices] = True
 
         if colr:
             if indices is None:
@@ -458,6 +537,7 @@ class Object3D(object):
         self.r_coord = np.empty((nverts, 3), dtype=np.float32)
         self.r_texco = np.empty((nverts, 2), dtype=np.float32)
         self.r_vnorm = np.zeros((nverts, 3), dtype=np.float32)
+        self.r_vtang = np.zeros((nverts, 4), dtype=np.float32)
         self.r_color = np.zeros((nverts, 4), dtype=np.uint8) + 255
 
         self.r_faces = np.array(iverts, dtype=np.uint32)
@@ -513,6 +593,17 @@ class Object3D(object):
             self.r_vnorm[self.unorm[self.vmap]] = self.vnorm[self.vmap][self.unorm[self.vmap]]
         self.unorm = False
 
+    def sync_tangents(self):
+        if self.utang is False:
+            return
+        if self.vmap is None or len(self.vmap) == 0:
+            return
+        if self.utang is True:
+            self.r_vtang[...] = self.vtang[self.vmap]
+        else:
+            self.r_vtang[self.utang[self.vmap]] = self.vtang[self.vmap][self.utang[self.vmap]]
+        self.utang = False
+
     def sync_color(self):
         if self.ucolr is False:
             return
@@ -538,6 +629,8 @@ class Object3D(object):
     def sync_all(self):
         self.sync_coord()
         self.sync_norms()
+        if self.calculateTangents:
+            self.sync_tangents()
         self.sync_color()
         self.sync_texco()
 
@@ -787,7 +880,7 @@ class Object3D(object):
         vert_mask[verts] = True
         return vert_mask, face_mask
 
-    def updateGroups(self, groupnames, recalcNormals=True, update=True):
+    def updateGroups(self, groupnames, update=True):
         if recalcNormals or update:
             (vertices, faces) = self.getVertexAndFaceMasksForGroups(groupnames)
             if recalcNormals:
@@ -853,6 +946,9 @@ class Object3D(object):
 
         if recalcVertexNormals:
             self.calcVertexNormals(verticesToUpdate)
+
+        if recalcFaceNormals or recalcVertexNormals and self.calculateTangents:
+            self.calcVertexTangents(verticesToUpdate)
                 
     def calcBBox(self, ix=None):
         """
@@ -870,3 +966,13 @@ class Object3D(object):
     def __str__(self):
         x, y, z = self.loc
         return 'object3D named: %s, nverts: %s, nfaces: %s, at |%s,%s,%s|' % (self.name, len(self.fvert), len(self.vface), x, y, z)
+
+def dot_v3(v3_arr1, v3_arr2):
+    """
+    Numpy Ufunc'ed implementation of a series of dot products of two vector3 
+    objects.
+    """
+    return (v3_arr1[:,0] * v3_arr2[:,0]) + \
+           (v3_arr1[:,1] * v3_arr2[:,1]) + \
+           (v3_arr2[:,2] * v3_arr1[:,2])
+

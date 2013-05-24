@@ -56,6 +56,10 @@ class Object3D(object):
         return self.parent.r_texco
 
     @property
+    def tangents(self):
+        return self.parent.r_vtang
+
+    @property
     def primitives(self):
         return self.parent.index
 
