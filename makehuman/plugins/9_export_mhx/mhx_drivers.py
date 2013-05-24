@@ -22,7 +22,8 @@ Abstract
 TODO
 """
 
-from .flags import *
+import armature
+from armature.flags import *
 import log
 
 class CTarget:

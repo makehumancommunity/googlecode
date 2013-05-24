@@ -28,7 +28,8 @@ import numpy.linalg as la
 import transformations as tm
 import log
 
-from .flags import *
+import armature
+from armature.flags import *
 
 #
 #   Master class

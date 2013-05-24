@@ -22,13 +22,14 @@ Abstract
 MHX armature
 """
 
-from .flags import *
-from .mhx_armature import *
+import armature
+from armature.python import *
+from armature import rig_joints
+from armature import rig_bones
+from armature import rig_muscle
+from armature import rig_face
 
-from . import rig_joints
-from . import rig_bones
-from . import rig_muscle
-from . import rig_face
+from .mhx_armature import *
 
 
 class RigifyArmature(ExportArmature):
@@ -36,7 +37,10 @@ class RigifyArmature(ExportArmature):
     def __init__(self, name, human, config):   
         ExportArmature. __init__(self, name, human, config)
         self.rigtype = 'rigify'
-        self.vertexGroupFiles = ["head", "basic"]
+        self.vertexGroupFiles = [
+            PythonVertexGroupDirectory + "head", 
+            PythonVertexGroupDirectory + "basic"
+        ]
         self.master = None
         self.gizmos = None
         self.boneLayers = "08a80caa"

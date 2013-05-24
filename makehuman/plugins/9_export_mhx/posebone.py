@@ -22,7 +22,8 @@ Abstract
 TODO
 """
 
-from .flags import *
+import armature
+from armature.flags import *
 from . import mhx_constraints
 
 

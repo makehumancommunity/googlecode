@@ -22,9 +22,8 @@ Abstract
 MHX bone definitions 
 """
 
-from .flags import *
-from . import posebone
-from posebone import addPoseBone
+import armature
+from armature.flags import *
 
 
 Joints = [

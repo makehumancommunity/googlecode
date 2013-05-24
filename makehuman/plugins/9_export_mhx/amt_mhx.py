@@ -22,14 +22,16 @@ Abstract
 MHX armature
 """
 
-from .flags import *
-from .mhx_armature import *
 
-from . import rig_joints
+import armature
+from armature.python import *
+from armature import rig_joints
+from armature import rig_bones
+from armature import rig_muscle
+from armature import rig_face
+
+from .mhx_armature import *
 from . import rig_master
-from . import rig_bones
-from . import rig_muscle
-from . import rig_face
 from . import rig_mhx
 
 
@@ -63,7 +65,10 @@ class MhxArmature(ExportArmature):
         self.headName = 'head'
         self.master = 'master'
         
-        self.vertexGroupFiles = ["head", "basic"]
+        self.vertexGroupFiles = [
+            PythonVertexGroupDirectory + "head", 
+            PythonVertexGroupDirectory + "basic"
+        ]
         """
         if config.skirtRig == "own":
             self.vertexGroupFiles.append("skirt-rigged")    

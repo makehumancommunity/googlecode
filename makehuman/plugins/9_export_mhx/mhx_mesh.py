@@ -308,7 +308,8 @@ def writeVertexGroups(fp, amt, config, proxy):
 
 
 def getVertexGroups(amt, name, vgroups):
-    file = os.path.join("plugins/9_export_mhx/vertexgroups", name + ".vgrp")
+    #file = os.path.join("shared/armature/vertexgroups", name + ".vgrp")
+    file = name + ".vgrp"
     fp = open(file, "rU")
     vgroupList = []
     for line in fp:

@@ -22,8 +22,8 @@ Abstract
 Hip bones for basic and mhx rigs
 """
 
-from .flags import *
-from .rig_joints import *
+import armature
+from armature.flags import *
 
 Joints = []
 
