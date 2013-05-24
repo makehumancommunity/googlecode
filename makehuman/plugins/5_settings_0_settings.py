@@ -31,7 +31,6 @@ import log
 class FontRadioButton(gui.RadioButton):
 
     def __init__(self, group, font):
-    
         super(FontRadioButton, self).__init__(group, font.capitalize(), gui3d.app.settings.get('font', 'Ubuntu') == font)
         self.font = font
         
@@ -42,7 +41,6 @@ class FontRadioButton(gui.RadioButton):
 class ThemeRadioButton(gui.RadioButton):
 
     def __init__(self, group, label, theme):
-    
         self.theme = theme
         checked = (gui3d.app.settings.get('guiTheme', 'default') == self.theme)
         super(ThemeRadioButton, self).__init__(group, label, checked)
@@ -54,7 +52,6 @@ class ThemeRadioButton(gui.RadioButton):
 class PlatformRadioButton(gui.RadioButton):
 
     def __init__(self, group, looknfeel):
-    
         super(PlatformRadioButton, self).__init__(group, looknfeel, gui3d.app.getLookAndFeel().lower() == looknfeel.lower())
         self.looknfeel = looknfeel
         
@@ -64,7 +61,6 @@ class PlatformRadioButton(gui.RadioButton):
 class LanguageRadioButton(gui.RadioButton):
 
     def __init__(self, group, language):
-    
         super(LanguageRadioButton, self).__init__(group, language.capitalize(), gui3d.app.settings.get('language', 'english') == language)
         self.language = language
         
@@ -85,6 +81,7 @@ class SettingsTaskView(gui3d.TaskView):
         self.shaderPhong = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Phong shader"))
         self.shaderToon = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Toon shader"))
         self.shaderLitSphere = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "LitSphere shader"))
+        self.shaderNormalMap = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Normal Mapping shader"))
         #self.shaderSkin = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Skin shader"))
 
         from shader import Shader
@@ -166,6 +163,12 @@ class SettingsTaskView(gui3d.TaskView):
             if "litsphereTexture" not in human.meshData.shaderParameters:
                 human.setShaderParameter("litsphereTexture", "data/litspheres/adaptive_skin_tone.png")
             self.setShader("data/shaders/glsl/litsphere")
+
+        @self.shaderNormalMap.mhEvent
+        def onClicked(event):
+            human = gui3d.app.selectedHuman
+            self.setShader("data/shaders/glsl/normalmap")
+            human.setShaderParameter("normalmapTexture", "data/textures/normal.jpg")
             
         #@self.shaderSkin.mhEvent
         #def onClicked(event):
@@ -212,15 +215,13 @@ class SettingsTaskView(gui3d.TaskView):
             gui3d.app.settings['preloadTargets'] = self.preload.selected
 
     def setShader(self, path):
-            gui3d.app.selectedHuman.setShader(path)
+        gui3d.app.selectedHuman.setShader(path)
     
     def onShow(self, event):
-    
         gui3d.TaskView.onShow(self, event)
         self.shaderNo.setFocus()
     
     def onHide(self, event):
-
         gui3d.TaskView.onHide(self, event)
         gui3d.app.saveSettings()
 
