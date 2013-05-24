@@ -298,7 +298,7 @@ def drawMesh(obj):
         glUseProgram(obj.shader)
 
         # Set custom attributes
-        if obj.shader.requiresVertexTangent():
+        if obj.shaderObj.requiresVertexTangent():
             glVertexAttribPointer(obj.shader.vertexTangentAttrId, 3, GL_FLOAT, GL_TRUE, 0, obj.tangents)
 
         # This should be optimized, since we only need to do it when it's changed
