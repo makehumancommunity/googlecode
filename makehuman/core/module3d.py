@@ -31,6 +31,7 @@ import unique
 from compat import MaterialsProxy
 import matrix
 import log
+import material
 
 class FaceGroup(object):
     """
@@ -87,16 +88,13 @@ class Object3D(object):
         self.rot = np.zeros(3)
         self.scale = np.ones(3)
         self._faceGroups = []
-        self._materials = []
+        # TODO _materials and _material should probably be merged
+        self._material = material.Material(objName+"_Material")  # Render material
+        self._materials = []    # Object material groups
         self._groups_rev = {}
         self.cameraMode = 1
         self.visibility = True
         self.pickable = True
-        self.texture = None
-        self.shader = None
-        self.shaderChanged = False
-        self.shaderParameters = {}
-        self.shaderDefines = []
         self.calculateTangents = True   # TODO disable when not needed by shader
         self.shadeless = False
         self.depthless = False
@@ -567,6 +565,7 @@ class Object3D(object):
 
         self.ucoor = True
         self.unorm = True
+        self.utang = True
         self.ucolr = True
         self.utexc = True
         self.sync_all()
@@ -739,14 +738,18 @@ class Object3D(object):
         :type cache: dict
         """
         
-        self.texture = path
+        self.material.diffuseTexture = path
 
     def clearTexture(self):
         """
         This method is used to clear an object's texture.
         """
 
-        self.texture = None
+        self.material.diffuseTexture = None
+
+    @property
+    def texture(self):
+        return self.material.diffuseTexture
 
     def hasTexture(self):
         return self.texture is not None
@@ -758,26 +761,45 @@ class Object3D(object):
         :param shader: The path to a pair of shader files.
         :type shader: string
         """
-        self.shader = shader
-        self.shaderChanged = True
+        self.material.setShader(shader)
+
+    @property
+    def shader(self):
+        return self.material.shader
+
+    def configureShader(self, diffuse=True, bump = True, normal=True, displacement=True, spec = True):
+        """
+        Configure shader options and set the necessary properties based on
+        the material configuration of this object.
+        """
+        self.material.configureShader(diffuse, bump, normal, displacement, spec)
+
+    @property
+    def material(self):
+        return self._material
+
+    def setMaterial(self, material):
+        self._material.copyFrom(material)
 
     def setShaderParameter(self, name, value):
-        self.shaderParameters[name] = value
+        self.material.setShaderParameter(name, value)
+
+    @property
+    def shaderParameters(self):
+        return self.material.shaderParameters
+
+    @property
+    def shaderDefines(self):
+        return self.material.shaderDefines
 
     def addShaderDefine(self, defineStr):
-        if defineStr in self.shaderDefines:
-            return
-        self.shaderDefines.append(defineStr)
-        self.shaderDefines.sort()   # This is important for shader caching
-        self.shaderChanged = True
+        self.material.addShaderDefine(defineStr)
 
     def removeShaderDefine(self, defineStr):
-        self.shaderDefines.remove(defineStr)
-        self.shaderChanged = True
+        self.material.removeShaderDefine(defineStr)
 
     def clearShaderDefines(self):
-        self.shaderDefines = []
-        self.shaderChanged = True
+        self.material.clearShaderDefines()
 
     def setShadeless(self, shadeless):
         """

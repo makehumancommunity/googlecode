@@ -41,23 +41,22 @@ class Action(gui3d.Action):
 
 class SkinAction(Action):
 
-    def __init__(self, human, library, before, after):
+    def __init__(self, human, before, after):
         super(SkinAction, self).__init__('Change skin texture', human)
         self.before = before
         self.after = after
-        self.library = library
 
     def do(self):
         self.human.setTexture(self.after)
         # TODO determine which uv map to load from a data definition file
-        #self.library.setHumanUVMap(self.human, 'data/uvs/a7/A7.mhuv')
+        #setHumanUVMap(self.human, 'data/uvs/a7/A7.mhuv')
         self.human.mesh.setShadeless(False)
         return True
 
     def undo(self):
         self.human.setTexture(self.before)
         # TODO determine which uv map to load from a data definition file
-        #self.library.setHumanUVMap(self.human, 'data/uvs/a7/A7.mhuv')
+        #setHumanUVMap(self.human, 'data/uvs/a7/A7.mhuv')
         return True
 
 
@@ -131,7 +130,7 @@ class TextureTaskView(gui3d.TaskView):
         def onFileSelected(filename):
             human = gui3d.app.selectedHuman
             if self.skinRadio.selected:
-                gui3d.app.do(SkinAction(human, self,
+                gui3d.app.do(SkinAction(human,
                     human.getTexture(),
                     filename))
             elif self.hairRadio.selected:
@@ -255,34 +254,6 @@ class TextureTaskView(gui3d.TaskView):
         texture.loadSubImage(
             subtextures.combine(mh.Image(human.getTexture()),mhstx), 0, 0)
         self.eyeTexture = mhstx
-
-    def setHumanUVMap(self, human, filename):
-        import numpy as np
-        import mh2proxy
-
-        if filename is None:
-            human.uvset = None
-        else:
-            human.uvset = mh2proxy.CUvSet(filename)
-            human.uvset.read(human, filename)
-
-        if not human.uvset:
-            return
-
-        faceMask = human.meshData.getFaceMask()
-        faceGroups = human.meshData.group
-
-        human.meshData._materials = []
-        if len(human.uvset.materials) == 0:
-            human.meshData.createMaterial('Default')
-        else:
-            for mat in human.uvset.materials:
-                human.meshData.createMaterial(mat.name)
-
-        human.meshData.setUVs(human.uvset.texVerts)
-        human.meshData.setFaces(human.meshData.fvert, np.asarray(human.uvset.texFaces, dtype=np.uint32)-1, faceGroups, human.uvset.faceMaterials)
-        human.meshData.changeFaceMask(faceMask)
-        human.meshData.updateIndexBuffer()
 
     def reloadTextureChooser(self):
         human = gui3d.app.selectedHuman
@@ -409,7 +380,15 @@ class TextureTaskView(gui3d.TaskView):
 
         self.mediaSync = None
         self.filechooser.refresh()
-        
+
+
+def setHumanUVMap(human, filename):
+    import numpy as np
+    import mh2proxy
+
+    human.setUVMap(filename)
+
+
 # This method is called when the plugin is loaded into makehuman
 # The app reference is passed so that a plugin can attach a new category, task, or other GUI elements
 
@@ -426,7 +405,7 @@ def load(app):
     app.addSaveHandler(taskview.saveHandler)
 
     log.message("Applying A7 UV map to human as temporary fix for lack of new textures.")
-    taskview.setHumanUVMap(gui3d.app.selectedHuman, 'data/uvs/a7/A7.mhuv')
+    setHumanUVMap(gui3d.app.selectedHuman, 'data/uvs/a7/A7.mhuv')
 
 
 

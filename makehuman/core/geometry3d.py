@@ -79,7 +79,7 @@ class NineSliceMesh(module3d.Object3D):
         self.setFaces(f, f, fg.idx)
 
         self.border = border
-        self.texture = texture
+        self.setTexture(texture)
         self.setCameraProjection(1)
         self.setShadeless(1)
         self.updateIndexBuffer()
@@ -129,7 +129,7 @@ class RectangleMesh(module3d.Object3D):
         self.setUVs(uv)
         self.setFaces(fv, fuv, fg.idx)
 
-        self.texture = texture
+        self.setTexture(texture)
         self.setCameraProjection(1)
         self.setShadeless(1)
         self.updateIndexBuffer()
@@ -302,7 +302,7 @@ class Cube(module3d.Object3D):
         # self.setUVs(uv)
         self.setFaces(f, fg.idx)
 
-        self.texture = texture
+        self.setTexture(texture)
         self.setCameraProjection(0)
         self.setShadeless(0)
         self.updateIndexBuffer()

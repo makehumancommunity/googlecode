@@ -68,6 +68,8 @@ class Object(events3d.EventHandler):
         self.__proxyMesh = None
         self.__subdivisionMesh = None
         self.__proxySubdivisionMesh = None
+
+        self._originalUVMap = None
         
     def _attach(self):
     
@@ -311,6 +313,66 @@ class Object(events3d.EventHandler):
     def updateSubdivisionMesh(self):
     
         self.getSubdivisionMesh(True)
+
+    def setUVMap(self, filename):
+        import mh2proxy
+        import numpy as np
+
+        # Set uv map on original, unsubdivided, unproxied mesh
+        mesh = self.__seedMesh
+
+        if filename == mesh.material.uvMap:
+            # No change, do nothing
+            return
+
+        if not self._originalUVMap:
+            # Backup original mesh UVs
+            self._originalUVMap = dict()
+            self._originalUVMap['texco'] = mesh.texco
+            self._originalUVMap['fuvs'] = mesh.fuvs
+            #self._originalUVMap['fvert'] = mesh.fvert
+            #self._originalUVMap['group'] = mesh.group
+            self._originalUVMap['fmtls'] = mesh.fmtls
+
+        faceMask = mesh.getFaceMask()
+        faceGroups = mesh.group
+
+        mesh.material.uvMap = filename
+
+        if not filename:
+            # Restore original UVs
+            mesh.setUVs(self._originalUVMap['texco'])
+            mesh.setFaces(mesh.fvert, self._originalUVMap['fuvs'], faceGroups, self._originalUVMap['fmtls'])
+            self._originalUVMap = None
+        else:
+            uvset = mh2proxy.CUvSet(filename)
+            uvset.read(self, filename)
+
+            mesh._materials = []
+            if len(uvset.materials) == 0:
+                mesh.createMaterial('Default')
+            else:
+                for mat in uvset.materials:
+                    mesh.createMaterial(mat.name)
+
+            mesh.setUVs(uvset.texVerts)
+            mesh.setFaces(mesh.fvert, np.asarray(uvset.texFaces, dtype=np.uint32)-1, faceGroups, uvset.faceMaterials)
+
+        mesh.changeFaceMask(faceMask)
+        mesh.updateIndexBuffer()
+
+        if self.isProxied():
+            # TODO transfer UV coordinates to proxy mesh
+            pass
+
+        if self.isSubdivided():
+            # Re-generate the subdivided mesh
+            self.setSubdivided(False)
+            self.__subdivisionMesh = None
+            self.setSubdivided(True)
+        else:
+            # Remove stale subdivision cache if present
+            self.__subdivisionMesh = None
             
     def onMouseDown(self, event):
         self._view().callEvent('onMouseDown', event)
@@ -368,7 +430,7 @@ class View(events3d.EventHandler):
             
         for child in self.children:
             child._attach()
-        
+
     def _detach(self):
     
         self._attached = False
@@ -378,7 +440,7 @@ class View(events3d.EventHandler):
             
         for child in self.children:
             child._detach()
-        
+
     def addView(self, view):
         """
         Adds the view to this view. If this view is attached to the app, the view will also be attached.
