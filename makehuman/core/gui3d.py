@@ -294,6 +294,8 @@ class Object(events3d.EventHandler):
 
         else:
             originalMesh = self.__seedMesh if self.mesh == self.__subdivisionMesh else self.__proxyMesh
+
+            # Copy shader parameters
             for (param, val) in self.mesh.shaderParameters.items():
                 originalMesh.setShaderParameter(param, val)
             originalMesh.setShader(self.mesh.shader)
@@ -305,11 +307,6 @@ class Object(events3d.EventHandler):
                 self.mesh.update()
             self.mesh.setVisibility(1)
 
-            # Copy shader parameters
-            for (param, val) in object.object.mesh.shaderParameters.items():
-                object.setShaderParameter(param, val)
-            object.setShader(object.object.mesh.shader)
-            
     def updateSubdivisionMesh(self):
     
         self.getSubdivisionMesh(True)
