@@ -43,7 +43,7 @@ class SubdivisionObject(Object3D):
         self.cameraMode = object.cameraMode
         self.visibility = object.visibility
         self.pickable = object.pickable
-        self.texture = object.texture
+        self.setTexture(object.texture)
         self.shadeless = object.shadeless
         self.solid = object.solid
         self.transparentPrimitives = object.transparentPrimitives * 4
@@ -217,12 +217,14 @@ class SubdivisionObject(Object3D):
 
         self.coord = np.zeros((nverts, 3), dtype=np.float32)
         self.vnorm = np.zeros((nverts, 3), dtype=np.float32)
+        self.vtang = np.zeros((nverts, 4), dtype=np.float32)
         self.color = np.zeros((nverts, 4), dtype=np.uint8) + 255
         self.vface = np.zeros((nverts, self.MAX_FACES), dtype=np.uint32)
         self.nfaces = np.zeros(nverts, dtype=np.uint8)
 
         self.ucoor = False
         self.unorm = False
+        self.utang = False
         self.ucolr = False
 
         progress(11)
