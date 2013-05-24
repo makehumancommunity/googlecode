@@ -70,6 +70,7 @@ class Object(events3d.EventHandler):
         self.__proxySubdivisionMesh = None
 
         self._originalUVMap = None
+        self.mesh.configureShader()
         
     def _attach(self):
     

@@ -771,6 +771,8 @@ class Object3D(object):
         """
         Configure shader options and set the necessary properties based on
         the material configuration of this object.
+        This can be done without an actual shader being set for this object.
+        Call this method when changes are made to the material property.
         """
         self.material.configureShader(diffuse, bump, normal, displacement, spec)
 

@@ -21,6 +21,7 @@ Abstract
 
 TODO
 """
+import log
 
 class Color(object):
     def __init__(self, r=0.00, g=0.00, b=0.00):
@@ -116,6 +117,7 @@ class Material(object):
         self.shaderChanged = True
 
         self.uvMap = material.uvMap
+        self.configureShader()
 
     def fromFile(self, filename):
         """
@@ -149,28 +151,32 @@ class Material(object):
         """
         Configure shader options and set the necessary properties based on
         the material configuration of this object.
+        This method can be invoked even when no shader is set.
+        Should be called every time changes are made to this material.
         """
         self.clearShaderDefines()
         # TODO clear shader parameters as well?
         if diffuse and self.supportsDiffuse():
+            log.debug("Enabling diffuse texturing.")
             self.addShaderDefine('DIFFUSE')
+            self.setShaderParameter('diffuseTexture', self.diffuseTexture)
         bump = bump and self.supportsBump()
         normal = normal and self.supportsNormal()
         if bump and not normal:
+            log.debug("Enabling bump mapping.")
             self.addShaderDefine('BUMPMAP')
-        if normal:
-            self.addShaderDefine('NORMALMAP')
-        if spec and self.supportsSpecular():
-            self.addShaderDefine('SPECULARMAP')
-
-        # Set variables and properties
-        if diffuse:
-            self.setShaderParameter('diffuseTexture', self.diffuseTexture)
-        if normal:
-            self.setShaderParameter('normalmapTexture', self.normalTexture)
-        if bump:
             self.setShaderParameter('bumpmapTexture', self.bumpTexture)
-        if spec:
+        if normal:
+            log.debug("Enabling normal mapping.")
+            self.addShaderDefine('NORMALMAP')
+            self.setShaderParameter('normalmapTexture', self.normalTexture)
+        if displacement and self.supportsDisplacement():
+            log.debug("Enabling displacement mapping.")
+            self.addShaderDefine('DISPLACEMENT')
+            self.setShaderParameter('displacementTexture', self.displacementTexture)
+        if spec and self.supportsSpecular():
+            log.debug("Enabling specular mapping.")
+            self.addShaderDefine('SPECULARMAP')
             self.setShaderParameter('specularmapTexture', self.specularTexture)
 
     def setShaderParameter(self, name, value):
