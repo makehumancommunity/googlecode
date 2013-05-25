@@ -61,7 +61,7 @@ class ExporterCollada(Exporter):
         self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
 
         rigtypes = []
-        self.libraryRig     = options.addWidget(gui.RadioButton(rigtypes, "Use rig from library", True))
+        self.libraryRig     = options.addWidget(gui.RadioButton(rigtypes, "Use rig from library", False))
         self.basic          = options.addWidget(gui.RadioButton(rigtypes, "Use basic rig", True))
         self.rigtypes       = [(self.basic, "basic"), (self.libraryRig, None)]
 

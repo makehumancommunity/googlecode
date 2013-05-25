@@ -148,7 +148,7 @@ def exportDae(human, name, fp, config):
         '      <node id="Armature">\n')
 
     gui3d.app.progress(0.8, text="Exporting bones")
-    for root in mainStuff.boneInfo.hier:
+    for root in mainStuff.armature.hierarchy:
         writeBone(fp, root, [0,0,0], 'layer="L1"', '  ', mainStuff, config)
 
     fp.write(
@@ -362,7 +362,7 @@ def writeController(fp, stuff, config):
     nUvVerts = len(obj.texco)
     nFaces = len(obj.fvert)
     nWeights = len(stuff.skinWeights)
-    nBones = len(stuff.boneInfo.bones)
+    nBones = len(stuff.armature.bones)
     nShapes = len(stuff.meshInfo.shapes)
 
     fp.write('\n' +
@@ -378,7 +378,7 @@ def writeController(fp, stuff, config):
         '          <IDREF_array count="%d" id="%s-skin-joints-array">\n' % (nBones,stuff.name) +
         '           ')
 
-    for b in stuff.boneInfo.bones:
+    for b in stuff.armature.bones:
         fp.write(' %s' % b)
     
     fp.write('\n' +
@@ -409,8 +409,8 @@ def writeController(fp, stuff, config):
         '          <float_array count="%d" id="%s-skin-poses-array">' % (16*nBones,stuff.name))
 
     mat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
-    for b in stuff.boneInfo.bones:
-        vec = stuff.boneInfo.heads[b]
+    for b in stuff.armature.bones:
+        vec = stuff.armature.heads[b]
         (x,y,z) = rotateLoc(vec, config)
         mat[0][3] = -x
         mat[1][3] = -y
@@ -516,7 +516,7 @@ def writeGeometry(fp, stuff, config):
     nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
     nWeights = len(stuff.skinWeights)
-    nBones = len(stuff.boneInfo.bones)
+    nBones = len(stuff.armature.bones)
     nShapes = len(stuff.meshInfo.shapes)
 
     fp.write('\n' +
@@ -787,7 +787,7 @@ def writeNode(fp, pad, stuff, config):
         '%s  <rotate sid="rotateX">1 0 0 0</rotate>\n' % pad+
         #'%s  <scale sid="scale">1 1 1</scale>\n' % pad+
         '%s  <instance_controller url="#%s-skin">\n' % (pad, stuff.name) +
-        '%s    <skeleton>#%s</skeleton>\n' % (pad, stuff.boneInfo.root))
+        '%s    <skeleton>#%s</skeleton>\n' % (pad, stuff.armature.root))
 
     (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)    
     if matname:
@@ -829,7 +829,7 @@ def writeBone(fp, bone, orig, extra, pad, stuff, config):
         nameStr = ''
         idStr = ''
 
-    head = stuff.boneInfo.heads[name]
+    head = stuff.armature.heads[name]
     vec = head - orig
     (x,y,z) = rotateLoc(vec, config)
 

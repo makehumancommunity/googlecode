@@ -60,8 +60,7 @@ def exportFbx(human, filepath, config):
         lashes=config.lashes)
 
     bpy.initialize(human, config)
-    boneInfo = stuffs[0].boneInfo
-    rig = bpy.addRig(name, boneInfo, scale=config.scale)
+    rig = bpy.addRig(name, stuffs[0].armature, scale=config.scale)
     for stuff in stuffs:
         ob = bpy.addMesh(stuff.name, stuff, rig, isStuff=True, scale=config.scale)
         

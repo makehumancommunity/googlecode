@@ -134,30 +134,28 @@ class Collection:
 
 class Armature(Rna):
 
-    def __init__(self, name, boneInfo, scale):
+    def __init__(self, name, amt, scale):
         Rna.__init__(self, name, 'ARMATURE')
-        self.bones = {}
+        self.bones = self.edit_bones = {}
         self.boneList = []
-        self.edit_bones = self.bones
-        self.boneInfo = boneInfo
-        self.addHierarchy(boneInfo.hier[0], None, scale)
+        self.addHierarchy(amt.hierarchy[0], amt, None, scale)
         
 
-    def addHierarchy(self, hier, parent, scale):
+    def addHierarchy(self, hier, amt, parent, scale):
         (bname, children) = hier
         bone = Bone(bname)
         self.bones[bname] = bone
         self.boneList.append(bone)
-        bone.head = scale * Vector(self.boneInfo.heads[bname])
-        bone.tail = scale * Vector(self.boneInfo.tails[bname])
-        bone.roll = self.boneInfo.rolls[bname]
+        bone.head = scale * Vector(amt.heads[bname])
+        bone.tail = scale * Vector(amt.tails[bname])
+        bone.roll = amt.rolls[bname]
         bone.parent = parent
 
         bone.matrixLocalFromBone()
 
         bone.children = []
         for child in children:
-            bone.children.append( self.addHierarchy(child, bone, scale) )
+            bone.children.append( self.addHierarchy(child, amt, bone, scale) )
         return bone
         
 

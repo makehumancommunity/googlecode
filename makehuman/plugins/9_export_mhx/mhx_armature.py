@@ -215,9 +215,9 @@ class ExportArmature(PythonArmature):
             scale = self.config.scale
     
             fp.write("\n  Bone %s %s\n" % (bone, True))
-            (x, y, z) = scale*self.rigHeads[bone]
+            (x, y, z) = scale*self.heads[bone]
             fp.write("    head  %.6g %.6g %.6g  ;\n" % (x,-z,y))
-            (x, y, z) = scale*self.rigTails[bone]
+            (x, y, z) = scale*self.tails[bone]
             fp.write("    tail %.6g %.6g %.6g  ;\n" % (x,-z,y))
 
             if type(parent) == tuple:
@@ -235,9 +235,9 @@ class ExportArmature(PythonArmature):
             elif parent:
                 fp.write("    parent Refer Bone %s ; \n" % (parent))
                 
-            roll = self.rigRolls[bone]
+            roll = self.rolls[bone]
             if isinstance(roll, str):
-                roll = self.rigRolls[roll]
+                roll = self.rolls[roll]
                 
             fp.write(
                 "    roll %.6g ; \n" % (roll) +

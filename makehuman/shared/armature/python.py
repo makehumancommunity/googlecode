@@ -45,10 +45,9 @@ class PythonArmature(CArmature):
 
     def __init__(self, name, human, config):    
         CArmature. __init__(self, name, human, config)
-        self.rigRolls = {}
         self.poseInfo = {}
         self.master = None
-        self.parents = {}
+        self.reparents = {}
         self.boneLayers = "00000001"
 
         self.useDeformBones = False
@@ -56,7 +55,6 @@ class PythonArmature(CArmature):
         self.useSplitBones = False
         self.splitBones = {}
 
-        self.bones = OrderedDict()
         self.planes = rig_bones.Planes
         self.bbones = {}
         self.boneGroups = []
@@ -100,7 +98,6 @@ class PythonArmature(CArmature):
             self.boneDefs += custArmature
         """
         self.sortBones(bones)        
-        self.vertexGroupFiles += [PythonVertexGroupDirectory+"leftright"]        
         
 
     def addIkChains(self, boneInfo, bones, ikChains):
@@ -108,7 +105,7 @@ class PythonArmature(CArmature):
             (roll, parent, flags, layers) = data
             headTail = self.headsTails[bone]
             base,ext = splitBoneName(bone)
-            parent = safeGet(self.parents, bone, parent)
+            parent = safeGet(self.reparents, bone, parent)
             nodef = flags & ~F_DEF
             data = (roll, parent, nodef, L_HELP)
 
@@ -176,7 +173,7 @@ class PythonArmature(CArmature):
                 continue
             headTail = self.headsTails[bone]
             base,ext = splitBoneName(bone)
-            parent = safeGet(self.parents, bone, parent)
+            parent = safeGet(self.reparents, bone, parent)
                 
             if parent and self.useDeformBones:
                 pbase, pext = splitBoneName(parent)
@@ -232,13 +229,14 @@ class PythonArmature(CArmature):
  
     
     def getVertexGroups(self):
+
+        self.vertexGroupFiles += [PythonVertexGroupDirectory+"leftright"]        
         vgroupList = []
+        vgroups = {}
         for file in self.vertexGroupFiles:
-            vgroups = {}
             #file = os.path.join("shared/armature/vertexgroups", name + ".vgrp")
             file = file + ".vgrp"
             fp = open(file, "rU")
-            vgroupList = []
             for line in fp:
                 words = line.split()
                 if len(words) < 2:
@@ -254,41 +252,38 @@ class PythonArmature(CArmature):
                 else:
                     vgroup.append((int(words[0]), float(words[1])))
             fp.close()  
-
-        ngroups = OrderedDict([])
         
         if self.useDeformNames:
             for bone,vgroup in vgroupList:
                 base = splitBoneName(bone)[0]
                 if base in self.splitBones.keys():
-                    self.splitVertexGroup(bone, vgroup, ngroups)
+                    self.splitVertexGroup(bone, vgroup)
                 elif not self.useSplitBones:
                     defname = "DEF-"+bone
-                    ngroups[defname] = vgroup
+                    self.vertexWeights[defname] = vgroup
                 else:
                     defname = "DEF-"+bone
                     try:
                         self.bones[defname]
-                        ngroups[defname] = vgroup
+                        self.vertexWeights[defname] = vgroup
                     except KeyError:
-                        ngroups[bone] = vgroup
+                        self.vertexWeights[bone] = vgroup
             
         elif self.useSplitBones:
             for bone,vgroup in vgroupList:
                 base = splitBoneName(bone)[0]
                 if base in self.splitBones.keys():
-                    self.splitVertexGroup(bone, vgroup, ngroups)
+                    self.splitVertexGroup(bone, vgroup)
                 else:
-                    ngroups[bone] = vgroup
+                    self.vertexWeights[bone] = vgroup
             
         else:
             for bone,vgroup in vgroupList:
-                ngroups[bone] = vgroup
-
-        return ngroups
+                self.vertexWeights[bone] = vgroup
 
 
-    def splitVertexGroup(self, bone, vgroup, ngroups):
+
+    def splitVertexGroup(self, bone, vgroup):
         base,ext = splitBoneName(bone)
         npieces,target,numAfter = self.splitBones[base]
         defname1,defname2,defname3 = splitBonesNames(base, ext, numAfter)
@@ -314,8 +309,8 @@ class PythonArmature(CArmature):
                     vgroup2.append((vn, x*w))
                 else:
                     vgroup2.append((vn,w))
-            ngroups[defname1] = vgroup1
-            ngroups[defname2] = vgroup2
+            self.vertexWeights[defname1] = vgroup1
+            self.vertexWeights[defname2] = vgroup2
         elif npieces == 3:
             for vn,w in vgroup:
                 y = self.mesh.coord[vn] - orig
@@ -330,9 +325,9 @@ class PythonArmature(CArmature):
                     vgroup3.append((vn, (2*x-1)*w))
                 else:
                     vgroup3.append((vn,w))        
-            ngroups[defname1] = vgroup1
-            ngroups[defname2] = vgroup2
-            ngroups[defname3] = vgroup3
+            self.vertexWeights[defname1] = vgroup1
+            self.vertexWeights[defname2] = vgroup2
+            self.vertexWeights[defname3] = vgroup3
         
     
     def setup(self):
@@ -340,11 +335,12 @@ class PythonArmature(CArmature):
             self.createBones({})
             self.setupJoints()       
             self.moveOriginToFloor()
+            self.getVertexGroups()
 
             for bone in self.bones.keys():
                 head,tail = self.headsTails[bone]
-                self.rigHeads[bone] = self.findLocation(head)
-                self.rigTails[bone] = self.findLocation(tail)
+                self.heads[bone] = self.findLocation(head)
+                self.tails[bone] = self.findLocation(tail)
 
             normals = {}
             for bone in self.bones.keys():
@@ -357,23 +353,24 @@ class PythonArmature(CArmature):
                     if normal is None:
                         j1,j2,j3 = self.planes[roll]
                         normal = normals[roll] = self.computeNormal(j1, j2, j3)
-                    self.rigRolls[bone] = self.computeRoll(normal, bone)
+                    self.rolls[bone] = self.computeRoll(normal, bone)
                 else:
-                    self.rigRolls[bone] = roll
+                    self.rolls[bone] = roll
                 
         else:
-            self.joints += rig_joints.Joints #+ rig_joints.FloorJoints
+            self.joints = rig_joints.Joints + self.joints
             self.setupJoints()
-            self.moveOriginToFloor()
-            CArmature.setup(self)
+            self.moveOriginToFloor()    
+            filename = "data/rigs/%s.rig" % self.rigtype
+            CArmature.fromRigfile(self, filename, self.mesh)
         
         if self.config.clothesRig:
             for proxy in self.proxies.values():
                 if proxy.rig:
                     coord = proxy.getCoords()
-                    (locations, boneList, weights) = exportutils.rig.readRigFile(proxy.rig, amt.mesh, coord=coord) 
+                    self.fromRigFile(proxy.rig, amt.mesh, coord=coord) 
                     proxy.weights = self.prefixWeights(weights, proxy.name)
-                    appendRigBones(boneList, proxy.name, L_CLO, body, amt)
+                    #appendRigBones(boneList, proxy.name, L_CLO, body, amt)
         
 
     def computeNormal(self, j1, j2, j3):
@@ -392,12 +389,12 @@ class PythonArmature(CArmature):
         if normal is None:
             return 0
 
-        p1 = m2b(self.rigHeads[bone])
-        p2 = m2b(self.rigTails[bone])
+        p1 = m2b(self.heads[bone])
+        p2 = m2b(self.tails[bone])
         xvec = normal
         yvec = getUnitVector(p2-p1)
         xy = np.dot(xvec,yvec)
-        #self.rigTails[bone] = b2m(p2-xy*xvec)
+        #self.tails[bone] = b2m(p2-xy*xvec)
         yvec = getUnitVector(yvec-xy*xvec)
         zvec = getUnitVector(np.cross(xvec, yvec))
         if zvec is None:
@@ -496,12 +493,12 @@ class PythonArmature(CArmature):
     
         
     def setupHeadsTails(self):
-        self.rigHeads = {}
-        self.rigTails = {}
+        self.heads = {}
+        self.tails = {}
         scale = self.config.scale
         for (bone, head, tail) in self.headsTails:
-            self.rigHeads[bone] = findLocation(self, head)
-            self.rigTails[bone] = findLocation(self, tail)
+            self.heads[bone] = findLocation(self, head)
+            self.tails[bone] = findLocation(self, tail)
         
     
     def findLocation(self, joint):
@@ -515,35 +512,6 @@ class PythonArmature(CArmature):
                 w1,j1 = first
                 w2,j2 = second
                 return w1*self.locations[j1] + w2*self.locations[j2]
-
-
-    def sortBones(self, bones):
-        children = {}
-        roots = []
-        for bone in bones.keys():
-            children[bone] = []
-        for bone in bones.keys():
-            (roll, parent, flags, layers) = bones[bone]
-            if parent:
-                children[parent].append(bone)
-            elif self.master:
-                if bone == self.master:
-                    roots.append(bone)
-                else:
-                    bones[bone] = (roll, self.master, flags, layers)
-                    children[self.master].append(bone)
-            else:
-                roots.append(bone)
-                
-        for root in roots:            
-            self.sortBones1(root, bones, children)
-
-
-    def sortBones1(self, bone, bones, children):
-        self.bones[bone] = bones[bone]
-        for child in children[bone]:
-            self.sortBones1(child, bones, children)
-        
     
         
 #-------------------------------------------------------------------------------        

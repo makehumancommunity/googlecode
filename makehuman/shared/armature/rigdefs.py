@@ -22,16 +22,19 @@ Abstract
 Global variables used by MHX package
 """
 
+import os
 import math
 import warp
 import gui3d
+import mh2proxy
 import warpmodifier
 import log
+from collections import OrderedDict
 
 import numpy as np
 import numpy.linalg as la
 import transformations as tm
-    
+
 #-------------------------------------------------------------------------------        
 #   These flags are the same as in mhx.flags
 #-------------------------------------------------------------------------------        
@@ -62,16 +65,27 @@ class CArmature:
         self.mesh = human.meshData
         self.config = config
         self.rigtype = config.rigtype
+        self.root = None
+        self.master = None
         self.proxies = {}
+        self.roots = []
+        self.bones = OrderedDict()
+        self.hierarchy = []
+
         self.locations = {}
-        self.rigHeads = {}
-        self.rigTails = {}
+        self.heads = {}
+        self.tails = {}
+        self.rolls = {}
+        self.parents = {}
+        self.layers = {}
+        self.flags = {}
+        #self.weights = {}
         self.origin = [0,0,0]
         self.loadedShapes = {}
         
         self.locations = {}
         self.boneList = []
-        self.vertexWeights = []
+        self.vertexWeights = OrderedDict([])
         self.joints = []
         self.headsTails = []
         self.boneDefs = []
@@ -84,55 +98,162 @@ class CArmature:
     def prefixWeights(self, weights, prefix):
         pweights = {}
         for name in weights.keys():
-            if name in self.rigHeads:
+            if name in self.heads:
                 pweights[name] = weights[name]
             else:
                 pweights[prefix+name] = weights[name]
         return pweights
     
     
-    def setup(self):
-        import exportutils
-        rigfile = "data/rigs/%s.rig" % self.config.rigtype
-        (self.locations, boneList, self.vertexWeights) = exportutils.rig.readRigFile(rigfile, self.mesh, locations=self.locations)        
+    def fromRigfile(self, filename, obj, coord=None):
+        if type(filename) == tuple:
+            (folder, fname) = filename
+            filename = os.path.join(folder, fname)
+        path = os.path.realpath(os.path.expanduser(filename))
+        try:
+            fp = open(path, "rU")
+        except:
+            log.error("*** Cannot open %s" % path)
+            return
+    
+        doLocations = 1
+        doBones = 2
+        doWeights = 3
+        status = 0
+    
+        bones = {}
+        if not coord:
+            coord = obj.coord
+        for line in fp: 
+            words = line.split()
+            if len(words) == 0:
+                pass
+            elif words[0] == '#':
+                if words[1] == 'locations':
+                    status = doLocations
+                elif words[1] == 'bones':
+                    status = doBones
+                elif words[1] == 'weights':
+                    status = doWeights
+                    wts = []
+                    self.vertexWeights[words[2]] = wts
+            elif status == doWeights:
+                wts.append((int(words[0]), float(words[1])))
+            elif status == doLocations:
+                self.setupRigJoint (words, obj, coord)
+            elif status == doBones:
+                bone = words[0]
+                self.heads[bone] = self.locations[words[1]] - self.origin
+                self.tails[bone] = self.locations[words[2]] - self.origin
+                roll = self.rolls[bone] = float(words[3])
+                parent = words[4]
+                if parent == "-":
+                    parent = None  
+                    self.root = bone
+                self.parents[bone] = parent       
+                self.layers[bone] = L_MAIN
+                
+                key = None
+                value = []
+                flags = F_DEF|F_CON
+                for word in words[5:]:
+                    if isinstance(word, float):
+                        value.append(word)
+                    elif word[0] == '-':
+                        flags = self.setOption(bone, key, value, flags)
+                        key = word[0]
+                        value = []
+                    else:
+                        value.append(word)
+                if key:
+                    flags = self.setOption(bone, key, value, flags) 
+                self.flags[bone] = flags
+                bones[bone] = (roll, parent, flags, L_MAIN)
+            else:
+                raise NameError("Unknown status %d" % status)
 
-        for data in boneList:
-            (bone, head, tail, roll, parent, options) = data
-            if parent == "-":
-                parent = None
-            flags = F_DEF|F_CON
-            for (key, value) in options.items():
-                if key == "-nc":
-                    flags &= ~F_CON
-                elif key == "-nd":
-                    flags &= ~F_DEF
-                elif key == "-res":
-                    flags |= F_RES
-                elif key == "-circ":
-                    name = "Circ"+value[0]
-                    self.customShapes[name] = (key, int(value[0]))
-                    self.addPoseInfo(bone, ("CS", name))
-                    flags |= F_WIR
-                elif key == "-box":
-                    name = "Box" + value[0]
-                    self.customShapes[name] = (key, int(value[0]))
-                    self.addPoseInfo(bone, ("CS", name))
-                    flags |= F_WIR
-                elif key == "-ik":
-                    try:
-                        pt = options["-pt"]
-                    except KeyError:
-                        pt = None
-                    log.debug("%s %s", value, pt)
-                    value.append(pt)
-                    self.addPoseInfo(bone, ("IK", value))
-                elif key == "-ik":
-                    pass
+        self.sortBones(bones)    
+        fp.close()
+        
 
-            self.boneDefs.append((bone, roll, parent, flags, L_MAIN, None))
-            self.rigHeads[bone] = head - self.origin
-            self.rigTails[bone] = tail - self.origin
-            
+    def setupRigJoint(self, words, obj, coord):
+        key = words[0]
+        typ = words[1]
+        if typ == 'joint':
+            self.locations[key] = mh2proxy.calcJointPos(obj, words[2])
+        elif typ == 'vertex':
+            vn = int(words[2])
+            self.locations[key] = obj.coord[vn]
+        elif typ == 'position':
+            x = self.locations[int(words[2])]
+            y = self.locations[int(words[3])]
+            z = self.locations[int(words[4])]
+            self.locations[key] = np.array((x[0],y[1],z[2]))
+        elif typ == 'line':
+            k1 = float(words[2])
+            vn1 = int(words[3])
+            k2 = float(words[4])
+            vn2 = int(words[5])
+            self.locations[key] = k1*self.locations[vn1] + k2*self.locations[vn2]
+        elif typ == 'offset':
+            vn = int(words[2])
+            x = float(words[3])
+            y = float(words[4])
+            z = float(words[5])
+            self.locations[key] = self.locations[vn] + np.array((x,y,z))
+        elif typ == 'voffset':
+            vn = int(words[2])
+            x = float(words[3])
+            y = float(words[4])
+            z = float(words[5])
+            try:
+                loc = obj.coord[vn]
+            except:
+                loc = coord[vn]         
+            self.locations[key] = loc + np.array((x,y,z))
+        elif typ == 'front':
+            raw = self.locations[words[2]]
+            head = self.locations[words[3]]
+            tail = self.locations[words[4]]
+            offs = map(float, words[5].strip().lstrip('[').rstrip(']').split(','))
+            offs = np.array(offs)
+            vec =  tail - head
+            vraw = raw - head
+            x = np.dot(vec,vraw) / np.dot(vec, vec)
+            self.locations[key] = head + x*vec + offs
+        else:
+            raise NameError("Unknown %s" % typ)
+    
+    
+    def setOption(self, bone, key, value, flags):
+        if key == "-nc":
+            flags &= ~F_CON
+        elif key == "-nd":
+            flags &= ~F_DEF
+        elif key == "-res":
+            flags |= F_RES
+        elif key == "-circ":
+            name = "Circ"+value[0]
+            self.customShapes[name] = (key, int(value[0]))
+            self.addPoseInfo(bone, ("CS", name))
+            flags |= F_WIR
+        elif key == "-box":
+            name = "Box" + value[0]
+            self.customShapes[name] = (key, int(value[0]))
+            self.addPoseInfo(bone, ("CS", name))
+            flags |= F_WIR
+        elif key == "-ik":
+            try:
+                pt = options["-pt"]
+            except KeyError:
+                pt = None
+            log.debug("%s %s", value, pt)
+            value.append(pt)
+            self.addPoseInfo(bone, ("IK", value))
+        elif key == "-ik":
+            pass
+        return flags
+        
 
     def addPoseInfo(self, bone, info):
         try:
@@ -141,6 +262,36 @@ class CArmature:
             self.poseInfo[bone] = []
         self.poseInfo[bone].append(info)
 
+
+    def sortBones(self, bones):
+        print "Sort", bones
+        children = {}
+        for bone in bones.keys():
+            children[bone] = []
+        for bone in bones.keys():
+            (roll, parent, flags, layers) = bones[bone]
+            if parent:
+                children[parent].append(bone)
+            elif self.master:
+                if bone == self.master:
+                    self.roots.append(bone)
+                else:
+                    bones[bone] = (roll, self.master, flags, layers)
+                    children[self.master].append(bone)
+            else:
+                self.roots.append(bone)
+                
+        for root in self.roots:            
+            self.sortBones1(root, self.hierarchy, bones, children)
+
+
+    def sortBones1(self, bone, hier, bones, children):
+        self.bones[bone] = bones[bone]
+        subhier = []
+        hier.append([bone, subhier])
+        for child in children[bone]:
+            self.sortBones1(child, subhier, bones, children)
+        
 
 #-------------------------------------------------------------------------------        
 #   Pose armature
@@ -157,7 +308,6 @@ class CPoseArmature(CArmature):
         self.frames = []
         self.bones = {}
         self.boneList = []
-        self.roots = []
         self.controls = []
         self.deforms = []
         """
@@ -242,7 +392,7 @@ class CPoseArmature(CArmature):
         obj = self.human.meshData
         self.proxies = {}
         self.setupRig()
-        log.debug("RHT %s %s", self.rigHeads["Root"], self.rigTails["Root"])
+        log.debug("RHT %s %s", self.heads["Root"], self.tails["Root"])
         for bone in self.boneList:
             bone.rebuild()
             if bone.name in []:
@@ -523,8 +673,8 @@ class CBone:
         self.name = name
         self.dirty = False
         self.amtInfo = amt
-        self.head = amt.rigHeads[name]
-        self.tail = amt.rigTails[name]
+        self.head = amt.heads[name]
+        self.tail = amt.tails[name]
         self.roll = roll
         self.length = 0
         self.yvector4 = None
@@ -580,8 +730,8 @@ class CBone:
         self.build0()
                 
     def rebuild(self):
-        self.head = amt.rigHeads[self.name]
-        self.tail = amt.rigTails[self.name]
+        self.head = amt.heads[self.name]
+        self.tail = amt.tails[self.name]
         self.build0()
 
     def build0(self):

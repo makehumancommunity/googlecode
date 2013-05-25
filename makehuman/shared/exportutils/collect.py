@@ -39,8 +39,6 @@ import catmull_clark_subdivision as cks
 import subtextures
 
 from .config import Config
-from .rig import readRigFile
-from armature.basic import BasicArmature
 
 #
 #    class CStuff
@@ -52,7 +50,7 @@ class CStuff:
         self.proxy = proxy
         self.object = obj
         self.meshInfo = None
-        self.boneInfo = None
+        self.armature = None
         self.vertexWeights = None
         self.skinWeights = None
         self.textureImage = None
@@ -94,106 +92,6 @@ class CStuff:
             self.bump != None or
             self.displacement != None)
     
-#
-#    class CBoneInfo
-#
-
-class CBoneInfo:
-
-    def __init__(self):
-        self.root = None
-        self.heads = {}
-        self.tails = {}
-        self.rolls = {}
-        self.hier = []
-        self.bones = []
-        self.weights = {}
-
-
-    def fromRigFile(self, amt, weights, scale):
-        for (bone, head, tail, roll, parent, options) in amt:
-            self.heads[bone] = head*scale
-            self.tails[bone] = tail*scale
-            self.rolls[bone] = roll
-            if parent == '-':
-                self.hier.append((bone, []))
-                if self.root is None:
-                    self.root = bone
-            else:
-                parHier = findInHierarchy(parent, self.hier)
-                try:
-                    (p, children) = parHier
-                except:
-                    raise NameError("Did not find %s parent %s" % (bone, parent))
-                children.append((bone, []))
-     
-        flatten(self.hier, self.bones)
-        self.weights = weights    
-  
-         
-    def fromPythonArmature(self, amt, scale):
-        amt.setup()
-        self.parents = {}
-        self.rolls = amt.rigRolls
-        hier = []
-        for bone in amt.bones:
-            self.heads[bone] = scale*amt.rigHeads[bone]
-            self.tails[bone] = scale*amt.rigTails[bone]
-            try:
-                parent = amt.parents[bone]
-            except KeyError:
-                parent = amt.bones[bone][1]
-            self.parents[bone] = parent
-            print "Par", bone, parent
-            
-            if parent is None:
-                hier.append((bone, []))
-            else:
-                print "Root", self.root
-                parHier = findInHierarchy(parent, hier)
-                try:
-                    (p, children) = parHier
-                except:
-                    raise NameError("Did not find %s parent %s" % (bone, parent))
-                children.append((bone, []))
-
-        for root,children in hier:
-            if root == self.root:
-                self.hier = ((root, children))
-                break
-        print("HIER", self.hier)
-        
-        self.bones = []
-        flatten(self.hier, self.bones)
-        self.weights = amt.getVertexGroups() 
-        print("PYAM", self.bones)
-    
-    
-    def __repr__(self):
-        return ("<CBoneInfo r %s h %d t %s r %d\n   h %s\n   b %s\n   w %s" % 
-            (self.root, len(self.heads), len(self.tails), len(self.rolls), 
-             self.hier, self.bones, self.weights))
-       
-
-def findInHierarchy(bone, hier):
-    if hier == []:
-        return []
-    for pair in hier:
-        (b, children) = pair
-        if b == bone:
-            return pair
-        else:
-            b = findInHierarchy(bone, children)
-            if b: return b
-    return []
-
-
-def flatten(hier, bones):
-    for (bone, children) in hier:
-        bones.append(bone)
-        flatten(children, bones)
-    return
-
 #
 #   readTargets(config):
 #
@@ -245,22 +143,19 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
 
     print("Rigfile", os.path.basename(rigfile))
     if os.path.basename(rigfile) == "basic.rig":
-        amt = BasicArmature(name, human, config)
-        stuff.boneInfo = CBoneInfo()
-        stuff.boneInfo.fromPythonArmature(amt, config.scale)
+        from armature.basic import BasicArmature
+        stuff.armature = BasicArmature(name, human, config)
     elif rigfile:
-        (locations, amt, weights) = readRigFile(rigfile, obj)
-        stuff.boneInfo = CBoneInfo()
-        stuff.boneInfo.fromRigFile(amt, weights, config.scale)
-        if stuff.boneInfo.root is None:
-            raise NameError("No root bone found in rig file %s" % fileName)
+        from armature.rigdefs import CArmature
+        stuff.armature = CArmature(name, human, config)
+        stuff.armature.fromRigfile(rigfile, obj)
         log.message("Using rig file %s" % rigfile)
     else:
-        stuff.boneInfo = None
+        stuff.armature = None
             
     meshInfo = mh2proxy.getMeshInfo(obj, None, config, None, rawTargets, None)
-    if stuff.boneInfo:
-        meshInfo.weights = stuff.boneInfo.weights
+    if stuff.armature:
+        meshInfo.weights = stuff.armature.vertexWeights
 
     theStuff = stuff
     deleteGroups = []
@@ -324,7 +219,7 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, de
                     stuff = CStuff(name, proxy, pfile.obj)
                 else:
                     stuff = CStuff(proxy.name, proxy, pfile.obj)
-                stuff.boneInfo = theStuff.boneInfo
+                stuff.armature = theStuff.armature
                 if stuff:
                     if pfile.type == 'Proxy':
                         theStuff = stuff
@@ -510,8 +405,7 @@ def setStuffSkinWeights(stuff):
 
     stuff.skinWeights = []
     wn = 0    
-    for (bn,b) in enumerate(stuff.boneInfo.bones):
-        print("SSSW", bn, b)
+    for (bn,b) in enumerate(stuff.armature.bones):
         try:
             wts = stuff.meshInfo.weights[b]
         except KeyError:

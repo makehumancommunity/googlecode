@@ -22,10 +22,10 @@ Abstract
 Export utilities available to all exporters.
 """
 
+"""
 from . import collect
 from . import config
 from . import custom
-from . import rig
 from . import shapekeys
 from . import uvset
-
+"""

@@ -189,17 +189,18 @@ def writeArmatureModifier(fp, amt, config, proxy):
 #-------------------------------------------------------------------------------        
 
 MaterialNumbers = {
-    ""       : 0,     # skin
-    "skin"   : 0,     # skin
-    "nail"   : 1,     # nail
-    "teeth"  : 1,     # teeth
-    "eye"    : 1,     # eye
-    "cornea" : 1,     # cornea
-    "brow"   : 1,     # brows
-    "joint"  : 2,     # joint
-    "red"    : 3,     # red
-    "green"  : 4,     # green
-    "blue"   : 5      # blue
+    ""          : 0,
+    "skin"      : 0,
+    "Material"  : 0,
+    "nail"      : 1,
+    "teeth"     : 1,
+    "eye"       : 1,
+    "cornea"    : 1,
+    "brow"      : 1,
+    "joint"     : 2,
+    "red"       : 3,
+    "green"     : 4,
+    "blue"      : 5,
 }
     
 def writeFaceNumbers(fp, amt, config):
@@ -284,29 +285,13 @@ def writeVertexGroups(fp, amt, config, proxy):
     if proxy and proxy.weights:
         writeRigWeights(fp, proxy.weights)
         return
-
-    if amt.vertexWeights:
-        if proxy:
-            weights = mh2proxy.getProxyWeights(amt.vertexWeights, proxy)
-        else:
-            weights = amt.vertexWeights                    
-        writeRigWeights(fp, weights)
+    if proxy:
+        weights = mh2proxy.getProxyWeights(amt.vertexWeights, proxy)
     else:
-        vgroups = amt.getVertexGroups()
-        copyVertexGroups(fp, vgroups, proxy)
-            
-    #for path in config.customvertexgroups:
-    #    print("    %s" % path)
-    #    copyVertexGroups(path, fp, amt, proxy)    
+        weights = amt.vertexWeights  
+    writeRigWeights(fp, weights)
 
-    if config.cage and not (proxy and proxy.cage):
-        fp.write("#if toggle&T_Cage\n")
-        copyVertexGroups("cage", fp, amt, proxy)    
-        fp.write("#endif\n")
-
-    return
-
-
+"""
 def copyVertexGroups(fp, vgroups, proxy):
     if not proxy:
         for (name, weights) in vgroups.items():
@@ -346,7 +331,7 @@ def printProxyVGroup(fp, vgroups):
     if pv >= 0 and wt > 1e-4:
         fp.write("    wv %d %.4f ;\n" % (pv, wt))
     return
-
+"""
     
 def writeRigWeights(fp, weights):
     for grp in weights.keys():

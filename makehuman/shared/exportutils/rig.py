@@ -19,6 +19,7 @@
 Abstract
 --------
 Read rig file
+This file is obsolete, but exists to make skeleton happy.
 
 TODO
 """

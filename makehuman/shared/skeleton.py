@@ -75,8 +75,9 @@ class Skeleton(object):
     def fromRigFile(self, filename, mesh):
         # TODO the .rig file parser does not belong in exportutils package (it is an importer...)
         import exportutils.rig
-
+        
         joints, bones, vertexWeights = exportutils.rig.readRigFile(filename, mesh)
+        
         # TODO exportutils.rig uses mh2proxy.calcJointPosition(). I would prefer something like Skeleton.getHumanJointPosition()
 
         for boneName, headPos, tailPos, roll, parentName, _ in bones:
