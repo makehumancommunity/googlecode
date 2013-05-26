@@ -181,6 +181,14 @@ class Object3D(object):
 
     sz = property(get_sz, set_sz)
 
+    def getShaderChanged(self):
+        return self.material.shaderChanged
+
+    def setShaderChanged(self, shaderChanged):
+        self.material.shaderChanged = shaderChanged
+
+    shaderChanged = property(getShaderChanged, setShaderChanged)
+
     @property
     def transform(self):
         m = matrix.translate(self.loc)

@@ -59,10 +59,7 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
 
         @self.diffuseChk.mhEvent
         def onClicked(event):
-            if self.diffuseChk.selected:
-                self.human.mesh.addShaderDefine('DIFFUSE')
-            else:
-                self.human.mesh.removeShaderDefine('DIFFUSE')
+            self.human.mesh.configureShading(diffuse=self.diffuseChk.selected)
 
         previewBox = self.addLeftWidget(gui.GroupBox("LitSphere texture"))
         self.image = previewBox.addWidget(gui.ImageView())
