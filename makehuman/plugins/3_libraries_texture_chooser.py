@@ -383,9 +383,6 @@ class TextureTaskView(gui3d.TaskView):
 
 
 def setHumanUVMap(human, filename):
-    import numpy as np
-    import mh2proxy
-
     human.setUVMap(filename)
 
 
@@ -406,7 +403,6 @@ def load(app):
 
     log.message("Applying A7 UV map to human as temporary fix for lack of new textures.")
     setHumanUVMap(gui3d.app.selectedHuman, 'data/uvs/a7/A7.mhuv')
-
 
 
 # This method is called when the plugin is unloaded from makehuman

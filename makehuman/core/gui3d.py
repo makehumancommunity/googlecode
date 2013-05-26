@@ -70,7 +70,8 @@ class Object(events3d.EventHandler):
         self.__proxySubdivisionMesh = None
 
         self._originalUVMap = None
-        self.mesh.configureShader()
+
+        self.setUVMap(mesh.material.uvMap)
         
     def _attach(self):
     
@@ -313,7 +314,7 @@ class Object(events3d.EventHandler):
         self.getSubdivisionMesh(True)
 
     def setUVMap(self, filename):
-        import mh2proxy
+        import material
         import numpy as np
 
         # Set uv map on original, unsubdivided, unproxied mesh
@@ -343,8 +344,8 @@ class Object(events3d.EventHandler):
             mesh.setFaces(mesh.fvert, self._originalUVMap['fuvs'], faceGroups, self._originalUVMap['fmtls'])
             self._originalUVMap = None
         else:
-            uvset = mh2proxy.CUvSet(filename)
-            uvset.read(self, filename)
+            uvset = material.UVMap(filename)
+            uvset.read(self.mesh, filename)
 
             mesh._materials = []
             if len(uvset.materials) == 0:
@@ -371,6 +372,10 @@ class Object(events3d.EventHandler):
         else:
             # Remove stale subdivision cache if present
             self.__subdivisionMesh = None
+
+    def setMaterial(self, material):
+        self.setUVMap(material.uvMap)
+        self.mesh.setMaterial(material)
             
     def onMouseDown(self, event):
         self._view().callEvent('onMouseDown', event)

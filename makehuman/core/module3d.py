@@ -737,7 +737,6 @@ class Object3D(object):
         :param cache: The texture cache to use.
         :type cache: dict
         """
-        
         self.material.diffuseTexture = path
 
     def clearTexture(self):
@@ -767,14 +766,14 @@ class Object3D(object):
     def shader(self):
         return self.material.shader
 
-    def configureShader(self, diffuse=True, bump = True, normal=True, displacement=True, spec = True):
+    def configureShading(self, diffuse=True, bump = True, normal=True, displacement=True, spec = True):
         """
         Configure shader options and set the necessary properties based on
         the material configuration of this object.
         This can be done without an actual shader being set for this object.
         Call this method when changes are made to the material property.
         """
-        self.material.configureShader(diffuse, bump, normal, displacement, spec)
+        self.material.configureShading(diffuse, bump, normal, displacement, spec)
 
     @property
     def material(self):

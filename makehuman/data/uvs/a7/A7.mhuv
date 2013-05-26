@@ -7,8 +7,6 @@
 # tag base
 
 # name A7_uv_map
-# material Material
-  texture texture.png diffuse 1
 # texVerts 0
 0.216267 0.289216
 0.216867 0.289416
