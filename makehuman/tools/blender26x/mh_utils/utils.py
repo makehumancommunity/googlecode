@@ -198,11 +198,14 @@ def loadTarget(filepath, context, irrelevant=[], offset=0):
     #skey = ob.active_shape_key
     skey.name = name
     #print("Active", ob.active_shape_key.name)
+    comments = []
     nverts = len(ob.data.vertices)
     for line in fp:
         words = line.split()
-        if len(words) == 0 or words[0][0] == '#':
+        if len(words) == 0:
             pass
+        elif words[0][0] == '#':
+            comments.append(line)
         else:
             index = int(words[0])
 
@@ -234,7 +237,7 @@ def loadTarget(filepath, context, irrelevant=[], offset=0):
     ob["NTargets"] += 1
     ob["FilePath"] = realpath
     ob["SelectedOnly"] = False
-    return skey
+    return skey, comments
 
 
 def isIrrelevant(index, irrelevant):

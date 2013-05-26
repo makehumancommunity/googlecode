@@ -194,7 +194,7 @@ class CCharacter:
             path = os.path.join(prefix, folder, file + ".target")
             print(path, value)
             try:
-                skey = utils.loadTarget(path, context)
+                skey,_ = utils.loadTarget(path, context)
                 skey.value = value
             except IOError:
                 skey = None

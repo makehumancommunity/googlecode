@@ -55,6 +55,7 @@ from mh_utils import utils
 from mh_utils.utils import round
 
 Epsilon = 1e-4
+Comments = []
 
 #----------------------------------------------------------
 #   Settings
@@ -235,16 +236,17 @@ class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
+        global Comments
         ob = context.object
         settings = getSettings(ob)
         if ob.MhMeshVertsDeleted:
-            utils.loadTarget(
+            _,Comments = utils.loadTarget(
                 self.properties.filepath, 
                 context, 
                 irrelevant=settings.irrelevantVerts[ob.MhAffectOnly], 
                 offset=settings.offsetVerts[ob.MhAffectOnly])
         else:
-            utils.loadTarget(self.properties.filepath, context)
+            _,Comments = utils.loadTarget(self.properties.filepath, context)       
         print("Target loaded")
         return {'FINISHED'}
 
@@ -348,6 +350,7 @@ class VIEW3D_OT_NewTargetButton(bpy.types.Operator):
 #----------------------------------------------------------
     
 def doSaveTarget(context, filepath):    
+    global Comments
     ob = context.object
     settings = getSettings(ob)
     if not utils.isTarget(ob):
@@ -379,7 +382,9 @@ def doSaveTarget(context, filepath):
         for (vn, string) in after:
             fp.write("%d %s" % (vn, string))
     else:
-        fp = open(filepath, "w", encoding="utf-8", newline="\n")  
+        fp = open(filepath, "w", encoding="utf-8", newline="\n") 
+        for line in Comments:
+            fp.write(line)
         saveVerts(fp, ob, verts, saveAll, 0, len(verts), 0)
     fp.close()    
     ob["FilePath"] = filepath
@@ -579,13 +584,14 @@ class VIEW3D_OT_PruneTargetFileButton(bpy.types.Operator, ExportHelper):
 #----------------------------------------------------------
 
 def batchFitTargets(context, folder):
+    global Comments
     print("Batch", folder)
     for fname in os.listdir(folder):
         (root, ext) = os.path.splitext(fname)
         file = os.path.join(folder, fname)        
         if os.path.isfile(file) and ext == ".target":
-            print(file)            
-            utils.loadTarget(file, context)        
+            print(file)                        
+            _,Comments = utils.loadTarget(file, context)        
             fitTarget(context)
             doSaveTarget(context, file)
             discardTarget(context)  
@@ -626,6 +632,7 @@ class VIEW3D_OT_BatchFitButton(bpy.types.Operator):
 #----------------------------------------------------------
 
 def batchRenderTargets(context, folder, opengl, outdir):
+    global Comments
     print("Batch render", folder)
     for fname in os.listdir(folder):
         (root, ext) = os.path.splitext(fname)
@@ -633,7 +640,7 @@ def batchRenderTargets(context, folder, opengl, outdir):
         if os.path.isfile(file) and ext == ".target":
             print(file)                    
             context.scene.render.filepath = os.path.join(outdir, root)
-            utils.loadTarget(file, context)        
+            _,Comments = utils.loadTarget(file, context)        
             if opengl:
                 bpy.ops.render.opengl(animation=True)
             else:
