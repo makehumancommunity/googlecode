@@ -77,10 +77,10 @@ class SettingsTaskView(gui3d.TaskView):
 
         self.shaderGroup = []
         shaderBox = self.addLeftWidget(gui.GroupBox('Shader'))
-        self.shaderNo = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "No shader", True))
+        self.shaderNo = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "No shader"))
         self.shaderPhong = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Phong shader"))
         self.shaderToon = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Toon shader"))
-        self.shaderLitSphere = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "LitSphere shader"))
+        self.shaderLitSphere = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "LitSphere shader", True))
         self.shaderNormalMap = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Normal Mapping shader"))
         #self.shaderSkin = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Skin shader"))
 

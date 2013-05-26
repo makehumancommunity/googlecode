@@ -123,6 +123,10 @@ def load(app):
 
     # Set default litsphere mat at startup
     taskview.updateAdaptiveSkin()
+    # Enable litsphere shading without texture at startup
+    taskview.human.mesh.configureShading(diffuse=False)
+    taskview.human.setShader("data/shaders/glsl/litsphere")
+
 
 def unload(app):
     pass
