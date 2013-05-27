@@ -42,8 +42,6 @@ import warpmodifier
 import posemode
 import exportutils
 
-from armature.rigdefs import CArmature
-
 from . import posebone
 from . import mhx_materials
 from . import mhx_mesh

@@ -49,7 +49,7 @@ def exportFbx(human, filepath, config):
     rawTargets = exportutils.collect.readTargets(human, config)
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
-    stuffs = exportutils.collect.setupObjects(
+    stuffs,amt = exportutils.collect.setupObjects(
         name, 
         human, 
         config=config,
@@ -60,9 +60,9 @@ def exportFbx(human, filepath, config):
         lashes=config.lashes)
 
     bpy.initialize(human, config)
-    rig = bpy.addRig(name, stuffs[0].armature, scale=config.scale)
+    rig = bpy.addRig(name, amt, scale=config.scale)
     for stuff in stuffs:
-        ob = bpy.addMesh(stuff.name, stuff, rig, isStuff=True, scale=config.scale)
+        ob = bpy.addMesh(stuff.name, stuff, amt, rig, isStuff=True, scale=config.scale)
         
     #name = os.path.splitext(os.path.basename(filepath))[0]
     #bpy.addMesh(name, human.meshData, isStuff=False)

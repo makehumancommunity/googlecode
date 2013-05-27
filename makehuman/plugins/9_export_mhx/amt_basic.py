@@ -27,19 +27,19 @@ from armature import basic
 from . import mhx_armature
 
 
-class BasicArmature(mhx_armature.ExportArmature, basic.BasicArmature):
+class BasicArmature(mhx_armature.PythonExportArmature, basic.BasicArmature):
 
     def __init__(self, name, human, config):   
         import gizmos_general
         
-        mhx_armature.ExportArmature. __init__(self, name, human, config)
+        mhx_armature.PythonExportArmature. __init__(self, name, human, config)
         basic.BasicArmature. __init__(self, name, human, config)
         self.gizmos = gizmos_general.asString()
         
     
     def createBones(self, bones):
         basic.BasicArmature.createBones(self, bones)
-        mhx_armature.ExportArmature.createBones(self, bones)
+        mhx_armature.PythonExportArmature.createBones(self, bones)
             
 
     def writeDrivers(self, fp):

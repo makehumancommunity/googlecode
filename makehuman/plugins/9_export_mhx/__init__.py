@@ -31,20 +31,22 @@ class MhxConfig(Config):
 
     def __init__(self, exporter):
         Config.__init__(self)
-        self.useTexFolder =     exporter.useTexFolder.selected
-        self.scale,self.unit =  exporter.taskview.getScale()
-        self.useRelPaths =      True
-        self.helpers =          True
-        self.encoding =         exporter.taskview.getEncoding()
+        self.useTexFolder =         exporter.useTexFolder.selected
+        self.scale,self.unit =      exporter.taskview.getScale()
+        self.useRelPaths =          True
+        self.helpers =              True
+        self.encoding =             exporter.taskview.getEncoding()
         
-        self.useMasks =         exporter.masks.selected
-        self.expressions =      exporter.expressions.selected
-        self.facepanel =        exporter.facepanel.selected
-        self.bodyShapes =       exporter.bodyShapes.selected
-        self.useCustomShapes =  exporter.useCustomShapes.selected
-        self.feetOnGround =     exporter.feetOnGround.selected
-        self.advancedSpine =    False # exporter.advancedSpine.selected
-        self.rigtype =          exporter.getRigType()
+        self.addConnectingBones =   False
+        self.useMuscles =           True
+        self.useMasks =             exporter.masks.selected
+        self.expressions =          exporter.expressions.selected
+        self.facepanel =            exporter.facepanel.selected
+        self.bodyShapes =           exporter.bodyShapes.selected
+        self.useCustomShapes =      exporter.useCustomShapes.selected
+        self.feetOnGround =         exporter.feetOnGround.selected
+        self.advancedSpine =        False # exporter.advancedSpine.selected
+        self.rigtype =              exporter.getRigType()
         # MHX export does not support exporting without rig
         # If no rig selected (from library): default to MHX rig
         if not self.rigtype:

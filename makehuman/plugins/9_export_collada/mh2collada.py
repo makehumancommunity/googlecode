@@ -71,18 +71,15 @@ def exportCollada(human, filepath, config):
 
 
 def exportDae(human, name, fp, config):
-    rigfile = "data/rigs/%s.rig" % config.rigtype
     rawTargets = exportutils.collect.readTargets(human, config)
-    stuffs = exportutils.collect.setupObjects(
+    stuffs,amt = exportutils.collect.setupObjects(
         name, 
         human, 
         config=config,
-        rigfile=rigfile, 
         rawTargets = rawTargets,
         helpers=config.helpers, 
         eyebrows=config.eyebrows, 
         lashes=config.lashes)
-    mainStuff = stuffs[0]        
 
     date = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime())
     if config.rotate90X:
@@ -128,7 +125,7 @@ def exportDae(human, name, fp, config):
 
     gui3d.app.progress(0.3, text="Exporting controllers")
     for stuff in stuffs:
-        writeController(fp, stuff, config)
+        writeController(fp, stuff, amt, config)
 
     fp.write(
         '  </library_controllers>\n'+
@@ -148,15 +145,15 @@ def exportDae(human, name, fp, config):
         '      <node id="Armature">\n')
 
     gui3d.app.progress(0.8, text="Exporting bones")
-    for root in mainStuff.armature.hierarchy:
-        writeBone(fp, root, [0,0,0], 'layer="L1"', '  ', mainStuff, config)
+    for root in amt.hierarchy:
+        writeBone(fp, root, [0,0,0], 'layer="L1"', '  ', amt, config)
 
     fp.write(
         '      </node>\n')
 
     gui3d.app.progress(0.9, text="Exporting nodes")
     for stuff in stuffs:
-        writeNode(fp, "        ", stuff, config)
+        writeNode(fp, "        ", stuff, amt, config)
 
     fp.write(
         '    </visual_scene>\n' +
@@ -351,18 +348,15 @@ def writeMaterials(fp, stuff):
             '    </material>\n')
     return
 
-#
-#    writeController(fp, stuff, config):
-#
 
-def writeController(fp, stuff, config):
+def writeController(fp, stuff, amt, config):
     obj = stuff.meshInfo.object
-    exportutils.collect.setStuffSkinWeights(stuff)
+    exportutils.collect.setStuffSkinWeights(stuff, amt)
     nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
     nFaces = len(obj.fvert)
     nWeights = len(stuff.skinWeights)
-    nBones = len(stuff.armature.bones)
+    nBones = len(amt.bones)
     nShapes = len(stuff.meshInfo.shapes)
 
     fp.write('\n' +
@@ -378,7 +372,7 @@ def writeController(fp, stuff, config):
         '          <IDREF_array count="%d" id="%s-skin-joints-array">\n' % (nBones,stuff.name) +
         '           ')
 
-    for b in stuff.armature.bones:
+    for b in amt.bones:
         fp.write(' %s' % b)
     
     fp.write('\n' +
@@ -409,8 +403,8 @@ def writeController(fp, stuff, config):
         '          <float_array count="%d" id="%s-skin-poses-array">' % (16*nBones,stuff.name))
 
     mat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
-    for b in stuff.armature.bones:
-        vec = stuff.armature.heads[b]
+    for b in amt.bones:
+        vec = amt.heads[b]
         (x,y,z) = rotateLoc(vec, config)
         mat[0][3] = -x
         mat[1][3] = -y
@@ -516,7 +510,6 @@ def writeGeometry(fp, stuff, config):
     nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
     nWeights = len(stuff.skinWeights)
-    nBones = len(stuff.armature.bones)
     nShapes = len(stuff.meshInfo.shapes)
 
     fp.write('\n' +
@@ -774,11 +767,8 @@ def checkFaces(stuff, nVerts, nUvVerts):
                 raise NameError("uv %d > %d" % (uv, nUvVerts))            
     return 
     
-#
-#    writeNode(fp, pad, stuff, config):
-#
 
-def writeNode(fp, pad, stuff, config):    
+def writeNode(fp, pad, stuff, amt, config):    
     fp.write('\n' +
         '%s<node id="%sObject" name="%s">\n' % (pad, stuff.name,stuff.name) +
         '%s  <translate sid="translate">0 0 0</translate>\n' % pad +
@@ -787,7 +777,7 @@ def writeNode(fp, pad, stuff, config):
         '%s  <rotate sid="rotateX">1 0 0 0</rotate>\n' % pad+
         #'%s  <scale sid="scale">1 1 1</scale>\n' % pad+
         '%s  <instance_controller url="#%s-skin">\n' % (pad, stuff.name) +
-        '%s    <skeleton>#%s</skeleton>\n' % (pad, stuff.armature.root))
+        '%s    <skeleton>#%s</skeleton>\n' % (pad, amt.root))
 
     (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)    
     if matname:
@@ -820,7 +810,7 @@ def rotateLoc(loc, config):
     return (x,y,z)        
 
 
-def writeBone(fp, bone, orig, extra, pad, stuff, config):
+def writeBone(fp, bone, orig, extra, pad, amt, config):
     (name, children) = bone
     if name:
         nameStr = 'sid="%s"' % name
@@ -829,7 +819,7 @@ def writeBone(fp, bone, orig, extra, pad, stuff, config):
         nameStr = ''
         idStr = ''
 
-    head = stuff.armature.heads[name]
+    head = amt.heads[name]
     vec = head - orig
     (x,y,z) = rotateLoc(vec, config)
 
@@ -842,7 +832,7 @@ def writeBone(fp, bone, orig, extra, pad, stuff, config):
         '%s        <scale sid="scale">1.0 1.0 1.0</scale>' % pad)    
 
     for child in children:
-        writeBone(fp, child, head, '', pad+'  ', stuff, config)    
+        writeBone(fp, child, head, '', pad+'  ', amt, config)    
 
     fp.write('\n%s      </node>' % pad)
     return

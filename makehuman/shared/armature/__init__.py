@@ -22,4 +22,3 @@ Abstract
 Armature package __init__ file
 """
 
-from . import rigdefs

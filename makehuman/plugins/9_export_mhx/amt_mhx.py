@@ -24,7 +24,7 @@ MHX armature
 
 
 import armature
-from armature.python import *
+from armature.python_amt import *
 from armature import rig_joints
 from armature import rig_bones
 from armature import rig_muscle
@@ -35,12 +35,12 @@ from . import rig_master
 from . import rig_mhx
 
 
-class MhxArmature(ExportArmature):
+class MhxArmature(PythonExportArmature):
 
     def __init__(self, name, human, config):    
         import gizmos_mhx, gizmos_general
     
-        ExportArmature. __init__(self, name, human, config)
+        PythonExportArmature. __init__(self, name, human, config)
         self.rigtype = 'mhx'
         self.boneLayers = "0068056b"
         self.useDeformBones = True
@@ -123,14 +123,14 @@ class MhxArmature(ExportArmature):
         
     def createBones(self, bones):
         generic = mergeDicts([rig_master.Armature, rig_bones.Armature, rig_face.Armature])
-        addBones(rig_master.Armature, bones)
-        addBones(rig_bones.Armature, bones)
+        addDict(rig_master.Armature, bones)
+        addDict(rig_bones.Armature, bones)
         self.addDeformBones(generic, bones),
-        addBones(rig_muscle.Armature, bones)
-        addBones(rig_mhx.Armature, bones)
+        addDict(rig_muscle.Armature, bones)
+        addDict(rig_mhx.Armature, bones)
         self.addIkChains(generic, bones, rig_mhx.IkChains)
-        addBones(rig_face.Armature, bones)
-        ExportArmature.createBones(self, bones)
+        addDict(rig_face.Armature, bones)
+        PythonExportArmature.createBones(self, bones)
 
 
     def dynamicLocations(self):
@@ -139,7 +139,7 @@ class MhxArmature(ExportArmature):
         
 
     def setupCustomShapes(self, fp):
-        ExportArmature.setupCustomShapes(self, fp)
+        PythonExportArmature.setupCustomShapes(self, fp)
         if self.config.facepanel:
             import gizmos_panel
             setupCube(fp, "MHCube025", 0.25, 0)
@@ -150,7 +150,7 @@ class MhxArmature(ExportArmature):
 
     def writeControlPoses(self, fp, config):
         self.writeBoneGroups(fp)   
-        ExportArmature.writeControlPoses(self, fp, config)
+        PythonExportArmature.writeControlPoses(self, fp, config)
 
 
     def writeDrivers(self, fp):
@@ -158,7 +158,6 @@ class MhxArmature(ExportArmature):
             #mhx_drivers.writePropDrivers(fp, self, rig_mhx.PropDrivers, "", "Mha") +
             mhx_drivers.writePropDrivers(fp, self, rig_mhx.PropLRDrivers, "L", "Mha") +
             mhx_drivers.writePropDrivers(fp, self, rig_mhx.PropLRDrivers, "R", "Mha") +
-            mhx_drivers.writePropDrivers(fp, self, rig_face.PropDrivers, "", "Mha") +
             mhx_drivers.writeDrivers(fp, True, rig_face.DeformDrivers(fp, self))            
         )
         return driverList
@@ -181,7 +180,7 @@ class MhxArmature(ExportArmature):
 
         
     def writeProperties(self, fp):
-        ExportArmature.writeProperties(self, fp)
+        PythonExportArmature.writeProperties(self, fp)
 
         fp.write("""
   Property MhaArmIk_L 0.0 Left_arm_FK/IK ;

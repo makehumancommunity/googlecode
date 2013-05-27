@@ -28,9 +28,6 @@ Joints = [
     ('head-end',        'l', ((2.0, 'head'), (-1.0, 'neck'))),
     ('l-mouth',         'v', 11942),
     ('r-mouth',         'v', 5339),
-
-    ('eyes',            'l', ((0.5, 'r-eye'), (0.5,'l-eye'))),
-    ('gaze',            'o', ('eyes', (0,0,5))),
 ]
 
 eyeOffs = (0,0,0.3)
@@ -50,10 +47,6 @@ HeadsTails = {
     'eye_parent.L' :    ('l-eye', ('l-eye', eyeOffs)),
     'uplid.L' :         ('l-eye', 'l-upperlid'),
     'lolid.L' :         ('l-eye', 'l-lowerlid'),
-
-    'eyes' :            ('eyes', ('eyes', (0,0,1))),
-    'gaze' :            ('gaze', ('gaze', (0,0,1))),
-    'gaze_parent' :     ('head', 'head-2'),
 }
 
 
@@ -62,13 +55,8 @@ Armature = {
     'tongue_base' :     (0, 'jaw', F_DEF, L_HEAD),
     'tongue_mid' :      (0, 'tongue_base', F_DEF, L_HEAD),
     'tongue_tip' :      (0, 'tongue_mid', F_DEF, L_HEAD),
-    'gaze_parent' :     (0, None, 0, L_HELP),
-    'gaze' :            (180*D, 'gaze_parent', 0, L_HEAD),
-    'eyes' :            (0, 'head', 0, L_HELP),
-    'eye_parent.R' :    (0, 'head', 0, L_HELP),
-    'eye_parent.L' :    (0, 'head', 0, L_HELP),
-    'eye.R' :           (0, 'eye_parent.R', F_DEF, L_HEAD),
-    'eye.L' :           (0, 'eye_parent.L', F_DEF, L_HEAD),
+    'eye.R' :           (0, 'head', F_DEF, L_HEAD),
+    'eye.L' :           (0, 'head', F_DEF, L_HEAD),
     'uplid.R' :         (0.279253, 'head', F_DEF, L_HEAD),
     'lolid.R' :         (0, 'head', F_DEF, L_HEAD),
     'uplid.L' :         (-0.279253, 'head', F_DEF, L_HEAD),
@@ -78,7 +66,6 @@ Armature = {
 
 CustomShapes = {
     'jaw' :     'GZM_Jaw',
-    'gaze' :    'GZM_Gaze',
     'eye.R' :   'GZM_Circle025',
     'eye.L' :   'GZM_Circle025',
 }
@@ -122,13 +109,4 @@ def DeformDrivers(fp, amt):
         drivers.append(    (driven, 'ROTQ', 'AVERAGE', None, 1, coeff,
          [("var", 'TRANSFORMS', [('OBJECT', amt.name, driver, 'LOC_Z', C_LOC)])]) )
     return drivers
-
-#
-#   PropDrivers
-#   (Bone, Name, Props, Expr)
-#
-
-PropDrivers = [
-    ('gaze_parent', 'head', ['GazeFollowsHead'], 'x1'),
-]
 

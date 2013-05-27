@@ -70,12 +70,12 @@ def initialize(human, cfg):
     context = Context(scn)
     
     
-def addMesh(name, stuff, rig, isStuff=True, scale=1.0):
+def addMesh(name, stuff, amt, rig, isStuff=True, scale=1.0):
     global data
     me = types.Mesh(name+"Mesh")
     data.meshes.append(me)
     if isStuff:
-        me.fromStuff(stuff, scale)
+        me.fromStuff(stuff, amt, scale)
     else:
         me.fromObject(stuff, scale)
     ob = types.Object(name+"Mesh", me, stuff)    

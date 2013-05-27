@@ -47,7 +47,7 @@ def exportOgreMesh(human, filepath, config):
     filename = os.path.basename(filepath)
     name = formatName(config.goodName(os.path.splitext(filename)[0]))
 
-    stuffs = exportutils.collect.setupObjects(
+    stuffs,_amt = exportutils.collect.setupObjects(
         name, 
         human,
         config=config,

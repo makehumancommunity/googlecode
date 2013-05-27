@@ -502,7 +502,7 @@ def exportObj_TL(obj, filename):
 
     # Load all stuff to be rendered - mesh, clothes, polygon hair
 
-    stuffs = exportutils.collect.setupObjects("Mitsuba", gui3d.app.selectedHuman, helpers=False, hidden=False, eyebrows=False, lashes=False)
+    stuffs,_amt = exportutils.collect.setupObjects("Mitsuba", gui3d.app.selectedHuman, helpers=False, hidden=False, eyebrows=False, lashes=False)
 
     # Write obj file
     # not is need mtl file. The material is created into Mitsuba .xml file

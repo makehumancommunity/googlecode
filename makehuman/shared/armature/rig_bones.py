@@ -28,10 +28,6 @@ from .rig_joints import *
 Joints = [
     ('l-heel',              'v', 12820),
     ('r-heel',              'v', 6223),
-    ('l-ball-1',            'vo', (12889, -0.5, 0, 0)),
-    ('l-ball-2',            'vo', (12889, 0.5, 0, 0)),
-    ('r-ball-1',            'vo', (6292, 0.5, 0, 0)),
-    ('r-ball-2',            'vo', (6292, -0.5, 0, 0)),
 
     ('l-hand-end',          'j', 'l-finger-3-1'),
     ('r-hand-end',          'j', 'r-finger-3-1'),
@@ -110,15 +106,11 @@ HeadsTails = {
     'shin.L' :             ('l-knee', 'l-ankle'),
     'foot.L' :             ('l-ankle', 'l-foot-1'),
     'toe.L' :              ('l-foot-1', 'l-foot-2'),
-    'heel.L' :             ('l-ankle', 'l-heel'),
-    'heel.02.L' :          ('l-ball-1', 'l-ball-2'),
 
     'thigh.R' :            ('r-upper-leg', 'r-knee'),
     'shin.R' :             ('r-knee', 'r-ankle'),
     'foot.R' :             ('r-ankle', 'r-foot-1'),
     'toe.R' :              ('r-foot-1', 'r-foot-2'),
-    'heel.R' :             ('r-ankle', 'r-heel'),
-    'heel.02.R' :          ('r-ball-1', 'r-ball-2'),
 }
 
 Planes = {
@@ -205,15 +197,11 @@ Armature = {
     'shin.L' :             (-7*D, 'thigh.L', F_DEF+F_CON, L_LLEGFK),
     'foot.L' :             (-31*D, 'shin.L', F_DEF+F_CON, L_LLEGFK),
     'toe.L' :              (-36*D, 'foot.L', F_DEF+F_CON, L_LLEGFK),
-    'heel.L' :             (180*D, 'shin.L', F_CON, L_HELP2),
-    'heel.02.L' :          (0, 'heel.L', 0, L_HELP2),
 
     'thigh.R' :            (10*D, 'hips', F_DEF, L_RLEGFK),
     'shin.R' :             (7*D, 'thigh.R', F_DEF+F_CON, L_RLEGFK),
     'foot.R' :             (31*D, 'shin.R', F_DEF+F_CON, L_RLEGFK),
     'toe.R' :              (36*D, 'foot.R', F_DEF+F_CON, L_RLEGFK),
-    'heel.R' :             (180*D, 'shin.R', F_CON, L_HELP2),
-    'heel.02.R' :          (0, 'heel.R', 0, L_HELP2),
 }
 
 RotationLimits = {

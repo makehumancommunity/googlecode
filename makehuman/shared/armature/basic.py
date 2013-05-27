@@ -23,7 +23,7 @@ Basic armature
 """
 
 from .flags import *
-from .python import *
+from .python_amt import *
 
 from . import rig_joints
 from . import rig_bones
@@ -46,51 +46,58 @@ class BasicArmature(PythonArmature):
         self.headName = 'head'
         self.useDeformBones = False
         self.useDeformNames = False
-        self.useSplitBones = True
-        self.splitBones = {
-            "forearm" :     (3, "hand", False),
-        }
+        if config.useSplitBones:
+            self.useSplitBones = True
+            self.splitBones = {
+                "forearm" :     (3, "hand", False),
+            }
 
         self.joints = (
             rig_joints.Joints +
             rig_bones.Joints +
-            rig_muscle.Joints +
             rig_face.Joints
         )
+        if config.useMuscles:
+            self.joints += rig_muscle.Joints
         
         self.headsTails = mergeDicts([
             rig_bones.HeadsTails,
-            rig_muscle.HeadsTails,
             rig_face.HeadsTails
         ])
+        if config.useMuscles:
+            addDict(rig_muscle.HeadsTails, self.headsTails)
 
         self.constraints = mergeDicts([
             rig_bones.Constraints,
-            rig_muscle.Constraints,
             rig_face.Constraints
         ])
+        if config.useMuscles:
+            addDict(rig_muscle.Constraints, self.constraints)
 
         self.rotationLimits = mergeDicts([
             rig_bones.RotationLimits,
-            rig_muscle.RotationLimits,
             rig_face.RotationLimits
         ])
+        if config.useMuscles:
+            addDict(rig_muscle.RotationLimits, self.rotationLimits)
 
         self.customShapes = mergeDicts([
             rig_bones.CustomShapes,
-            rig_muscle.CustomShapes,
             rig_face.CustomShapes
         ])
+        if config.useMuscles:
+            addDict(rig_muscle.CustomShapes, self.customShapes)
 
         self.objectProps = rig_bones.ObjectProps
         self.armatureProps = rig_bones.ArmatureProps
         
     
     def createBones(self, bones):
-        addBones(rig_bones.Armature, bones)
-        self.addDeformBones(rig_bones.Armature, bones),
-        addBones(rig_muscle.Armature, bones)
-        addBones(rig_face.Armature, bones)
+        addDict(rig_bones.Armature, bones)
+        self.addDeformBones(rig_bones.Armature, bones)
+        if self.config.useMuscles:
+            addDict(rig_muscle.Armature, bones)
+        addDict(rig_face.Armature, bones)
         PythonArmature.createBones(self, bones)
             
 

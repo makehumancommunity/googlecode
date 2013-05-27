@@ -41,6 +41,9 @@ class Config:
         self.helpers            = False
         self.scale,self.unit    = 1.0, "decimeter"
 
+        self.useSplitBones      = False
+        self.useMuscles         = False
+        self.addConnectingBones = False
         self.useNormals         = False
         self.useRelPaths        = True
         self.feetOnGround       = False

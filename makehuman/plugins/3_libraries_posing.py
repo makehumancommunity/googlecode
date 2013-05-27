@@ -31,7 +31,7 @@ import log
 
 #import cProfile
 
-import armature as amtpkg
+from armature.pose_amt import createPoseRig
 import warpmodifier
 import posemode
 
@@ -139,7 +139,7 @@ class PoseLoadTaskView(gui3d.TaskView):
             pass
             #amt.rebuild()
         else:
-            amt = human.armature = amtpkg.rigdefs.createPoseRig(human, "soft1")            
+            amt = human.armature = createPoseRig(human, "soft1")            
         print("New", amt)
         print(amt.bones.keys())
         amt.setModifier(modifier)

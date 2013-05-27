@@ -23,7 +23,7 @@ TODO
 """
 
 import gui3d
-import armature as amtpkg
+from armature.pose_amt import createPoseRig
 import warpmodifier
 import humanmodifier
 import log
@@ -63,7 +63,7 @@ def enterPoseMode():
     warpmodifier.clearRefObject()
     human.warpsNeedReset = False
     if False and theShadowBones:
-        amt = amtpkg.rigdefs.createPoseRig(human, "Soft1", False)
+        amt = createPoseRig(human, "Soft1", False)
         human.armature = amt
         amt.restore(theShadowBones)
         amt.update()

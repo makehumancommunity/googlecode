@@ -23,19 +23,21 @@ MHX armature
 """
 
 import armature
-from armature.python import *
+from armature.python_amt import *
 from armature import rig_joints
 from armature import rig_bones
 from armature import rig_muscle
+from armature import rig_rigify
 from armature import rig_face
 
 from .mhx_armature import *
+from .rig_rigify import *
 
 
-class RigifyArmature(ExportArmature):
+class RigifyArmature(PythonExportArmature):
 
     def __init__(self, name, human, config):   
-        ExportArmature. __init__(self, name, human, config)
+        PythonExportArmature. __init__(self, name, human, config)
         self.rigtype = 'rigify'
         self.vertexGroupFiles = [
             PythonVertexGroupDirectory + "head", 
@@ -65,12 +67,14 @@ class RigifyArmature(ExportArmature):
         self.joints = (
             rig_joints.Joints +
             rig_bones.Joints +
+            rig_rigify.Joints +
             rig_muscle.Joints +
             rig_face.Joints
         )
         
         self.headsTails = mergeDicts([
             rig_bones.HeadsTails,
+            rig_rigify.HeadsTails,
             rig_muscle.HeadsTails,
             rig_face.HeadsTails
         ])
@@ -95,10 +99,10 @@ class RigifyArmature(ExportArmature):
                 
 
     def createBones(self, bones):
-        addBones(rig_bones.Armature, bones)
-        addBones(rig_muscle.Armature, bones)
-        addBones(rig_face.Armature, bones)
-        ExportArmature.createBones(self, bones)
+        addDict(rig_bones.Armature, bones)
+        addDict(rig_muscle.Armature, bones)
+        addDict(rig_face.Armature, bones)
+        PythonExportArmature.createBones(self, bones)
 
 
     def setupCustomShapes(self, fp):

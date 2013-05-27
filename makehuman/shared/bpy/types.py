@@ -240,10 +240,10 @@ class Mesh(Rna):
         self.vertices = [MeshVertex(idx, obj, scale) for idx in range(nVerts)]
         self.polygons = [MeshPolygon(idx, obj) for idx in range(nFaces)]
 
-    def fromStuff(self, stuff, scale): 
+    def fromStuff(self, stuff, amt, scale): 
         obj = stuff.meshInfo.object
         stuff.bones = []
-        exportutils.collect.setStuffSkinWeights(stuff)
+        exportutils.collect.setStuffSkinWeights(stuff, amt)
         nVerts = len(obj.coord)
         nUvVerts = len(obj.fuvs)
         nNormals = nVerts

@@ -31,7 +31,8 @@ import exportutils
 
 import armature
 from armature.flags import *
-from armature.python import PythonArmature
+from armature.python_amt import *
+from armature.rigfile_amt import RigfileArmature
 from armature import rig_joints
 from armature import rig_bones
 
@@ -54,7 +55,7 @@ def getArmature(name, human, config):
         from . import amt_rigify
         return amt_rigify.RigifyArmature(name, human, config)
     else:
-        return ExportArmature(name, human, config)
+        return RigfileExportArmature(name, human, config)
 
 #-------------------------------------------------------------------------------        
 #   Setup custom shapes
@@ -171,14 +172,22 @@ def setupSimpleCustomShapes(fp):
 #   Armature used for export
 #-------------------------------------------------------------------------------        
 
-class ExportArmature(PythonArmature):
+class ExportArmature:
 
-    def __init__(self, name, human, config):    
-        PythonArmature. __init__(self, name, human, config)
+    def __init__(self, config):    
         self.customShapeFiles = []
         self.customShapes = {}
         self.gizmos = None
+        self.gizmoFiles = []
         self.master = None
+        self.recalcRoll = []              
+        self.objectProps = [("MhxRig", '"%s"' % config.rigtype)]
+        self.armatureProps = []
+        self.customProps = []
+        self.bbones = {}
+        self.boneGroups = []
+        self.customShapes = {}
+        self.poseInfo = {}
 
 
     def setupCustomShapes(self, fp):
@@ -420,78 +429,17 @@ end Object
         #fp.write("  DefProp Bool Mhh%s False Control_%s_visibility ;\n" % (name, name))
         return
         
+ 
+class PythonExportArmature(PythonArmature, ExportArmature):
+    def __init__(self, name, human, config):    
+        PythonArmature. __init__(self, name, human, config)
+        ExportArmature.__init__(self, config)
         
-#-------------------------------------------------------------------------------        
-#   Utilities
-#-------------------------------------------------------------------------------        
 
-def m2b(vec):
-    return np.array((vec[0], -vec[2], vec[1]))
+class RigfileExportArmature(RigfileArmature, ExportArmature):
+    def __init__(self, name, human, config):    
+        RigfileArmature. __init__(self, name, human, config)
+        ExportArmature.__init__(self, config)
         
-def b2m(vec):
-    return np.array((vec[0], vec[2], -vec[1]))
-            
-def getUnitVector(vec):
-    length = math.sqrt(np.dot(vec,vec))
-    if length > 1e-6:
-        return vec/length
-    else:
-        return None
+         
 
-
-def splitBoneName(bone):
-    words = bone.rsplit(".", 1)
-    if len(words) > 1:
-        return words[0], "."+words[1]
-    else:
-        return words[0], ""
-       
-
-def splitBonesNames(base, ext, numAfter):
-    if numAfter:
-        defname1 = "DEF-"+base+ext+".01"
-        defname2 = "DEF-"+base+ext+".02"
-        defname3 = "DEF-"+base+ext+".03"
-    else:
-        defname1 = "DEF-"+base+".01"+ext
-        defname2 = "DEF-"+base+".02"+ext
-        defname3 = "DEF-"+base+".03"+ext
-    return defname1, defname2, defname3
-
-
-def addBones(dict, bones):
-    for key,value in dict.items():
-        bones[key] = value
-
-
-def mergeDicts(dicts):
-    bones = {}
-    for dict in dicts:   
-        addBones(dict, bones)
-    return bones
-    
-    
-def safeGet(dict, key, default):
-    try:
-        return dict[key]
-    except KeyError:
-        return default
-       
-
-def copyTransform(target, cnsname, inf=1):
-    return ('CopyTrans', 0, inf, [cnsname, target, 0])
-
-
-def checkOrthogonal(mat):
-    prod = np.dot(mat, mat.transpose())
-    diff = prod - np.identity(3,float)
-    sum = 0
-    for i in range(3):
-        for j in range(3):
-            if abs(diff[i,j]) > 1e-5:
-                raise NameError("Not ortho: diff[%d,%d] = %g\n%s\n\%s" % (i, j, diff[i,j], mat, prod))
-    return True
-
-   
-
-       

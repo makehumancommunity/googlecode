@@ -30,7 +30,7 @@ import mh2proxy
 import exportutils
 
 from .flags import *
-from .rigdefs import CArmature
+from .base_amt import BaseArmature
 
 from . import rig_joints
 from . import rig_bones
@@ -41,14 +41,12 @@ from . import rig_bones
 
 PythonVertexGroupDirectory = "shared/armature/vertexgroups/"
 
-class PythonArmature(CArmature):
+class PythonArmature(BaseArmature):
 
     def __init__(self, name, human, config):    
-        CArmature. __init__(self, name, human, config)
-        self.poseInfo = {}
+        BaseArmature. __init__(self, name, human, config)
         self.master = None
         self.reparents = {}
-        self.boneLayers = "00000001"
 
         self.useDeformBones = False
         self.useDeformNames = False
@@ -56,18 +54,8 @@ class PythonArmature(CArmature):
         self.splitBones = {}
 
         self.planes = rig_bones.Planes
-        self.bbones = {}
-        self.boneGroups = []
-        self.rotationLimits = {}
-        self.customShapes = {}
-        self.constraints = {}
-        self.recalcRoll = []              
         self.vertexGroupFiles = []
-        self.gizmoFiles = []
         self.headName = 'Head'
-        self.objectProps = [("MhxRig", '"%s"' % config.rigtype)]
-        self.armatureProps = []
-        self.customProps = []
 
 
     def distance(self, joint1, joint2):
@@ -330,39 +318,43 @@ class PythonArmature(CArmature):
             self.vertexWeights[defname3] = vgroup3
         
     
+    def getHeadTail(self, bone):
+        return self.headsTails[bone]
+        
+    def setHeadTail(self, bone, head, tail):
+        self.headsTails[bone] = (head,tail)
+
+        
     def setup(self):
-        if self.rigtype in ["mhx", "basic", "rigify"]:
-            self.createBones({})
-            self.setupJoints()       
-            self.moveOriginToFloor()
-            self.getVertexGroups()
+        if self.rigtype not in ["mhx", "basic", "rigify"]:
+            print "NOT py", self.rigtype
+            halt
 
-            for bone in self.bones.keys():
-                head,tail = self.headsTails[bone]
-                self.heads[bone] = self.findLocation(head)
-                self.tails[bone] = self.findLocation(tail)
+        self.setupJoints()       
+        self.moveOriginToFloor()
+        self.createBones({})
+        self.getVertexGroups()
 
-            normals = {}
-            for bone in self.bones.keys():
-                (roll, parent, flags, layers) = self.bones[bone]
-                if isinstance(roll, str) and roll[0:5] == "Plane":
-                    try:
-                        normal = normals[roll]
-                    except KeyError:
-                        normal = None
-                    if normal is None:
-                        j1,j2,j3 = self.planes[roll]
-                        normal = normals[roll] = self.computeNormal(j1, j2, j3)
-                    self.rolls[bone] = self.computeRoll(normal, bone)
-                else:
-                    self.rolls[bone] = roll
+        for bone in self.bones.keys():
+            head,tail = self.headsTails[bone]
+            self.heads[bone] = self.findLocation(head)
+            self.tails[bone] = self.findLocation(tail)
+
+        normals = {}
+        for bone in self.bones.keys():
+            (roll, parent, flags, layers) = self.bones[bone]
+            if isinstance(roll, str) and roll[0:5] == "Plane":
+                try:
+                    normal = normals[roll]
+                except KeyError:
+                    normal = None
+                if normal is None:
+                    j1,j2,j3 = self.planes[roll]
+                    normal = normals[roll] = self.computeNormal(j1, j2, j3)
+                self.rolls[bone] = self.computeRoll(normal, bone)
+            else:
+                self.rolls[bone] = roll
                 
-        else:
-            self.joints = rig_joints.Joints + self.joints
-            self.setupJoints()
-            self.moveOriginToFloor()    
-            filename = "data/rigs/%s.rig" % self.rigtype
-            CArmature.fromRigfile(self, filename, self.mesh)
         
         if self.config.clothesRig:
             for proxy in self.proxies.values():
@@ -553,16 +545,16 @@ def splitBonesNames(base, ext, numAfter):
     return defname1, defname2, defname3
 
 
-def addBones(dict, bones):
+def addDict(dict, struct):
     for key,value in dict.items():
-        bones[key] = value
+        struct[key] = value
 
 
 def mergeDicts(dicts):
-    bones = {}
+    struct = {}
     for dict in dicts:   
-        addBones(dict, bones)
-    return bones
+        addDict(dict, struct)
+    return struct
     
     
 def safeGet(dict, key, default):

@@ -30,7 +30,7 @@ import mh
 import gui
 import log
 
-import armature as amtpkg
+from armature.pose_amt import CBone
 import transformations as tm
 import warpmodifier
 
@@ -255,7 +255,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
             if self.armature:
                 self.armature.rebuild()
             else:
-                self.armature = amtpkg.rigdefs.createPoseRig(human, self.armature.rigtype)
+                self.armature = createPoseRig(human, self.armature.rigtype)
             self.updateAll()
 
         @self.rotSlider.mhEvent
@@ -341,7 +341,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
         if self.armature:
             self.armature.rebuild()
         else:
-            self.armature = amtpkg.rigdefs.createPoseRig(gui3d.app.selectedHuman, self.rigtype)
+            self.armature = createPoseRig(gui3d.app.selectedHuman, self.rigtype)
         self.armatureObject = None
         
         self.mainBox.show()
@@ -361,7 +361,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
         
         if self.rigtype == "mhx":
             self.layerButtons = []
-            for bit,lname in amtpkg.rigdefs.LayerNames:
+            for bit,lname in LayerNames:
                 check = LayerCheckBox(lname, self.armature.visible & bit, self)
                 self.layerButtons.append(self.layerBox.addWidget(check))
             self.layerBox.show()
@@ -414,7 +414,7 @@ class PoseArmatureTaskView(gui3d.TaskView):
         vis = 0
         for n,button in enumerate(self.layerButtons):
             if button.selected:
-                bit,lname = amtpkg.rigdefs.LayerNames[n]
+                bit,lname = LayerNames[n]
                 vis |= bit
         self.armature.visible = vis
         self.updateAll()                
@@ -508,8 +508,8 @@ class PoseArmatureTaskView(gui3d.TaskView):
 #
 
 class CArmatureObject:
-    def __init__(self, amtpkg, view):
-        self.armature = amtpkg
+    def __init__(self, amt, view):
+        self.armature = amt
         self.view = view
         self.layers = {}
         for n in range(self.armature.last):
@@ -589,7 +589,7 @@ class CArmatureObject:
 
 
 #
-#   Visual representation of amtpkg
+#   Visual representation of armature
 #
 
 class CLayerObject:
@@ -678,11 +678,11 @@ class CLayerObject:
         
         
     def buildCube(self, location, scale):
-        offsets = amtpkg.rigdefs.CBone.PrismVectors['Cube']
+        offsets = CBone.PrismVectors['Cube']
         points = []
         for dx in offsets:
             points.append( location + scale*dx[:3] )
-        faces = amtpkg.rigdefs.CBone.PrismFaces['Box']
+        faces = CBone.PrismFaces['Box']
         p,n = self.addPrism('Cube', points, faces)
         self.prisms['Cube'] = (p, 0)
         self.nVerts = n       

@@ -39,13 +39,22 @@ Joints = [
     ('r-knee-pt',           'o', ('r-knee', [0,0,3])),
     ('l-elbow-pt',          'o', ('l-elbow', [0,0,-3])),
     ('r-elbow-pt',          'o', ('r-elbow', [0,0,-3])),
+
+    ('eyes',                'l', ((0.5, 'r-eye'), (0.5,'l-eye'))),
+    ('gaze',                'o', ('eyes', (0,0,5))),
 ]
 
 HeadsTails = {
+    # Head
+    
+    'eyes' :            ('eyes', ('eyes', (0,0,1))),
+    'gaze' :            ('gaze', ('gaze', (0,0,1))),
+    'gaze_parent' :     ('head', 'head-2'),
+
     # Leg
     
-    'hip.L' :      ('l-upper-leg', ('l-upper-leg', ysmall)),
-    'hip.R' :      ('r-upper-leg', ('r-upper-leg', ysmall)),
+    'hip.L' :           ('l-upper-leg', ('l-upper-leg', ysmall)),
+    'hip.R' :           ('r-upper-leg', ('r-upper-leg', ysmall)),
     
     'ankle.L' :         ('l-ankle', 'l-ankle-tip'),
     'ankle.ik.L' :      ('l-ankle', 'l-ankle-tip'),
@@ -124,7 +133,16 @@ HeadsTails = {
 
 
 Armature = {
+    # Head
     
+    'eye_parent.R' :    (0, 'head', 0, L_HELP),
+    'eye_parent.L' :    (0, 'head', 0, L_HELP),
+    'eye.R' :           (0, 'eye_parent.R', F_DEF, L_HEAD),
+    'eye.L' :           (0, 'eye_parent.L', F_DEF, L_HEAD),
+    'gaze_parent' :     (0, None, 0, L_HELP),
+    'gaze' :            (180*D, 'gaze_parent', 0, L_HEAD),
+    'eyes' :            (0, 'head', 0, L_HELP),
+
     # Leg
     
     'hip.L' :          (0, 'hips', F_WIR, L_TWEAK),
@@ -217,6 +235,10 @@ RotationLimits = {
 }
 
 CustomShapes = {
+    # Head
+
+    'gaze' :            'GZM_Gaze',
+
     # Leg
     
     'hip.L' :           'GZM_Ball025',
@@ -443,6 +465,10 @@ SoftPropLRDrivers = [
 ]
 
 PropDrivers = [
+    # Head
+
+    ('gaze_parent', 'head', ['GazeFollowsHead'], 'x1'),
+
     # Leg
     ('thigh.L', 'LimitRot', ['RotationLimits', 'LegIk.L'], 'x1*(1-x2)'),
     ('shin.L', 'LimitRot', ['RotationLimits', 'LegIk.L'], 'x1*(1-x2)'),    

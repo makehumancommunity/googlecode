@@ -50,7 +50,6 @@ class CStuff:
         self.proxy = proxy
         self.object = obj
         self.meshInfo = None
-        self.armature = None
         self.vertexWeights = None
         self.skinWeights = None
         self.textureImage = None
@@ -116,6 +115,7 @@ def readTargets(human, config):
 
     return targets            
 
+
 #
 #   setupObjects
 #
@@ -141,21 +141,22 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     stuffs = []
     stuff = CStuff(name, obj = human)
 
-    print("Rigfile", os.path.basename(rigfile))
-    if os.path.basename(rigfile) == "basic.rig":
+    if config.rigtype == "basic":
         from armature.basic import BasicArmature
-        stuff.armature = BasicArmature(name, human, config)
-    elif rigfile:
-        from armature.rigdefs import CArmature
-        stuff.armature = CArmature(name, human, config)
-        stuff.armature.fromRigfile(rigfile, obj)
+        amt = BasicArmature(name, human, config)
+        amt.setup()
+    elif config.rigtype:
+        from armature.rigfile_amt import RigfileArmature
+        amt = RigfileArmature(name, human, config)
+        amt.setup()
+        #amt.fromRigfile(rigfile, obj)
         log.message("Using rig file %s" % rigfile)
     else:
-        stuff.armature = None
+        amt = None
             
     meshInfo = mh2proxy.getMeshInfo(obj, None, config, None, rawTargets, None)
-    if stuff.armature:
-        meshInfo.weights = stuff.armature.vertexWeights
+    if amt:
+        meshInfo.weights = amt.vertexWeights
 
     theStuff = stuff
     deleteGroups = []
@@ -196,7 +197,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
         stuffs[0].textureImage = subtextures.combine(stuffs[0].textureImage, mhstx)
     
     progress(1)
-    return stuffs
+    return stuffs,amt
 
 #
 #    setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts):
@@ -219,7 +220,6 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, de
                     stuff = CStuff(name, proxy, pfile.obj)
                 else:
                     stuff = CStuff(proxy.name, proxy, pfile.obj)
-                stuff.armature = theStuff.armature
                 if stuff:
                     if pfile.type == 'Proxy':
                         theStuff = stuff
@@ -392,11 +392,7 @@ def nextName(string):
         return string + "_001"
         
 
-#
-#   setStuffSkinWeights(stuff):
-#
-
-def setStuffSkinWeights(stuff):
+def setStuffSkinWeights(stuff, amt):
     obj = stuff.meshInfo.object
     
     stuff.vertexWeights = {}
@@ -405,7 +401,7 @@ def setStuffSkinWeights(stuff):
 
     stuff.skinWeights = []
     wn = 0    
-    for (bn,b) in enumerate(stuff.armature.bones):
+    for (bn,b) in enumerate(amt.bones):
         try:
             wts = stuff.meshInfo.weights[b]
         except KeyError:
