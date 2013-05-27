@@ -35,13 +35,16 @@ Joints = [
     ('l-ankle-tip',         'o', ('l-ankle', (0,0,-1))),
     ('r-ankle-tip',         'o', ('r-ankle', (0,0,-1))),
     
-    ('l-knee-pt',           'o', ('l-knee', [0,0,3])),
-    ('r-knee-pt',           'o', ('r-knee', [0,0,3])),
-    ('l-elbow-pt',          'o', ('l-elbow', [0,0,-3])),
-    ('r-elbow-pt',          'o', ('r-elbow', [0,0,-3])),
-
     ('eyes',                'l', ((0.5, 'r-eye'), (0.5,'l-eye'))),
     ('gaze',                'o', ('eyes', (0,0,5))),
+]
+
+PlaneJoints = [
+    ('l-knee-pt',           ('l-knee', 'PlaneLeg.L', 3)),
+    ('r-knee-pt',           ('r-knee', 'PlaneLeg.R', 3)),
+    ('l-elbow-pt',          ('l-elbow', 'PlaneArm.L', 3)),
+    ('r-elbow-pt',          ('r-elbow', 'PlaneArm.R', 3)),
+
 ]
 
 HeadsTails = {

@@ -49,6 +49,7 @@ class MhxArmature(PythonExportArmature):
         self.splitBones = {
             "forearm" :     (3, "hand", False),
         }
+        self.planeJoints = rig_mhx.PlaneJoints
 
         self.boneGroups = [
             ('Master', 'THEME13'),

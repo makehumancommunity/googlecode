@@ -29,6 +29,9 @@ Joints = [
     ('l-heel',              'v', 12820),
     ('r-heel',              'v', 6223),
 
+    ('l-kneecap',           'v', 11223),
+    ('r-kneecap',           'v', 4605),
+
     ('l-hand-end',          'j', 'l-finger-3-1'),
     ('r-hand-end',          'j', 'r-finger-3-1'),
 
@@ -115,16 +118,18 @@ HeadsTails = {
 
 Planes = {
     "PlaneArm.L" :         ('l-shoulder', 'l-elbow', 'l-hand'),
+    "PlaneLeg.L" :         ('l-hip', 'l-kneecap', 'l-ankle'),
     "PlaneIndex.L" :       ('l-finger-2-1', 'l-finger-2-2', 'l-finger-2-4'),
     "PlaneMiddle.L" :      ('l-finger-3-1', 'l-finger-3-2', 'l-finger-3-4'),
     "PlaneRing.L" :        ('l-finger-4-1', 'l-finger-4-2', 'l-finger-4-4'),
     "PlanePinky.L" :       ('l-finger-5-1', 'l-finger-5-2', 'l-finger-5-4'),
 
-    "PlaneArm.R" :         ('l-shoulder', 'l-elbow', 'l-hand'),
-    "PlaneIndex.R" :       ('l-finger-2-1', 'l-finger-2-2', 'l-finger-2-4'),
-    "PlaneMiddle.R" :      ('l-finger-3-1', 'l-finger-3-2', 'l-finger-3-4'),
-    "PlaneRing.R" :        ('l-finger-4-1', 'l-finger-4-2', 'l-finger-4-4'),
-    "PlanePinky.R" :       ('l-finger-5-1', 'l-finger-5-2', 'l-finger-5-4'),
+    "PlaneArm.R" :         ('r-shoulder', 'r-elbow', 'r-hand'),
+    "PlaneLeg.R" :         ('r-hip', 'r-kneecap', 'r-ankle'),
+    "PlaneIndex.R" :       ('r-finger-2-1', 'r-finger-2-2', 'r-finger-2-4'),
+    "PlaneMiddle.R" :      ('r-finger-3-1', 'r-finger-3-2', 'r-finger-3-4'),
+    "PlaneRing.R" :        ('r-finger-4-1', 'r-finger-4-2', 'r-finger-4-4'),
+    "PlanePinky.R" :       ('r-finger-5-1', 'r-finger-5-2', 'r-finger-5-4'),
 }
 
 Armature = {
@@ -193,10 +198,10 @@ Armature = {
     'f_pinky.02.R' :       (99*D, 'f_pinky.01.R', F_DEF+F_CON, L_RHANDFK),
     'f_pinky.03.R' :       (90*D, 'f_pinky.02.R', F_DEF+F_CON, L_RHANDFK),
 
-    'thigh.L' :            (-10*D, 'hips', F_DEF, L_LLEGFK),
-    'shin.L' :             (-7*D, 'thigh.L', F_DEF+F_CON, L_LLEGFK),
-    'foot.L' :             (-31*D, 'shin.L', F_DEF+F_CON, L_LLEGFK),
-    'toe.L' :              (-36*D, 'foot.L', F_DEF+F_CON, L_LLEGFK),
+    'thigh.L' :            ("PlaneLeg.L", 'hips', F_DEF, L_LLEGFK),
+    'shin.L' :             ("PlaneLeg.L", 'thigh.L', F_DEF+F_CON, L_LLEGFK),
+    'foot.L' :             ("PlaneLeg.L", 'shin.L', F_DEF+F_CON, L_LLEGFK),
+    'toe.L' :              ("PlaneLeg.L", 'foot.L', F_DEF+F_CON, L_LLEGFK),
 
     'thigh.R' :            (10*D, 'hips', F_DEF, L_RLEGFK),
     'shin.R' :             (7*D, 'thigh.R', F_DEF+F_CON, L_RLEGFK),

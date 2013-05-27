@@ -54,6 +54,7 @@ class PythonArmature(BaseArmature):
         self.splitBones = {}
 
         self.planes = rig_bones.Planes
+        self.planeJoints = []
         self.vertexGroupFiles = []
         self.headName = 'Head'
 
@@ -324,13 +325,15 @@ class PythonArmature(BaseArmature):
     def setHeadTail(self, bone, head, tail):
         self.headsTails[bone] = (head,tail)
 
-        
+
     def setup(self):
         if self.rigtype not in ["mhx", "basic", "rigify"]:
             print "NOT py", self.rigtype
             halt
 
         self.setupJoints()       
+        self.setupNormals()
+        self.setupPlaneJoints()
         self.moveOriginToFloor()
         self.createBones({})
         self.getVertexGroups()
@@ -340,17 +343,10 @@ class PythonArmature(BaseArmature):
             self.heads[bone] = self.findLocation(head)
             self.tails[bone] = self.findLocation(tail)
 
-        normals = {}
         for bone in self.bones.keys():
             (roll, parent, flags, layers) = self.bones[bone]
             if isinstance(roll, str) and roll[0:5] == "Plane":
-                try:
-                    normal = normals[roll]
-                except KeyError:
-                    normal = None
-                if normal is None:
-                    j1,j2,j3 = self.planes[roll]
-                    normal = normals[roll] = self.computeNormal(j1, j2, j3)
+                normal = m2b(self.normals[roll])
                 self.rolls[bone] = self.computeRoll(normal, bone)
             else:
                 self.rolls[bone] = roll
@@ -365,16 +361,19 @@ class PythonArmature(BaseArmature):
                     #appendRigBones(boneList, proxy.name, L_CLO, body, amt)
         
 
-    def computeNormal(self, j1, j2, j3):
-        p1 = m2b(self.locations[j1])
-        p2 = m2b(self.locations[j2])
-        p3 = m2b(self.locations[j3])
-        pvec = getUnitVector(p2-p1)
-        yvec = getUnitVector(p3-p2)
-        if pvec is None or yvec is None:
-            return None
-        else:
-            return getUnitVector(np.cross(yvec, pvec))
+    def setupNormals(self):
+        self.normals = {}
+        for plane,joints in self.planes.items():
+            j1,j2,j3 = joints
+            p1 = self.locations[j1]
+            p2 = self.locations[j2]
+            p3 = self.locations[j3]
+            pvec = getUnitVector(p2-p1)
+            yvec = getUnitVector(p3-p2)
+            if pvec is None or yvec is None:
+                self.normals[plane] = None
+            else:
+                self.normals[plane] = getUnitVector(np.cross(yvec, pvec))
     
 
     def computeRoll(self, normal, bone):
@@ -473,6 +472,18 @@ class PythonArmature(BaseArmature):
                 raise NameError("Unknown %s" % typ)
         return
     
+
+    def setupPlaneJoints (self):    
+        for key,data in self.planeJoints:
+            p0,plane,dist = data
+            x0 = self.locations[p0]            
+            p1,p2,p3 = self.planes[plane]
+            vec = self.locations[p3] - self.locations[p1]
+            vec /= math.sqrt(np.dot(vec,vec))
+            n = self.normals[plane]
+            t = np.cross(n, vec)
+            self.locations[key] = x0 + dist*t
+
     
     def moveOriginToFloor(self):
         if self.config.feetOnGround:
