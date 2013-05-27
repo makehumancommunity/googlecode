@@ -192,6 +192,7 @@ MaterialNumbers = {
     ""          : 0,
     "skin"      : 0,
     "Material"  : 0,
+    "Default"  : 0,
     "nail"      : 1,
     "teeth"     : 1,
     "eye"       : 1,
