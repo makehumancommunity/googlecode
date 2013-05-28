@@ -39,10 +39,12 @@ class UVMapAction(gui3d.Action):
 
     def do(self):
         self.human.setUVMap(self.after)
+        gui3d.app.redraw()
         return True
 
     def undo(self):
         self.human.setUVMap(self.before)
+        gui3d.app.redraw()
         return True
 
 
@@ -78,6 +80,7 @@ class UvTaskView(gui3d.TaskView):
         human = event.human
         if event.change == 'reset':
             human.setUVMap(None)
+            gui3d.app.redraw()
             
     def onHumanChanged(self, event):
         human = event.human
@@ -88,6 +91,7 @@ class UvTaskView(gui3d.TaskView):
             log.notice('UvTaskView.loadHandler: %s does not exist. Skipping.', mhuv)
             return
         human.setUVMap(mhuv)
+        gui3d.app.redraw()
         
     def saveHandler(self, human, file):
         if human.uvset:
