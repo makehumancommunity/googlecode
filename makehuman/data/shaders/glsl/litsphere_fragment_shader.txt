@@ -13,24 +13,48 @@
     uniform sampler2D diffuseTexture;
 #endif
 
+#ifdef NORMALMAP
+    uniform sampler2D normalmapTexture;
+    uniform float normalScale = 1.0;
+    //define CALC_NORMAL_Z
+
+    // Inputs: tangent-space vector
+    varying vec3 tNormVec;
+#endif
+
 // Lit Sphere texture
 uniform sampler2D litsphereTexture;
 
 // Inputs
 varying vec3 vNormal;
 
-// Outputs
-vec3 diffuse;
-
 
 void main() {
-    diffuse = texture2D(litsphereTexture, vec2(vNormal.xyz * vec3(0.495) + vec3(0.5))).rgb;
+
+    #ifdef NORMALMAP
+        #ifdef CALC_NORMAL_Z
+            vec2 normalH = 0.5 * texture2D(normalmapTexture, gl_TexCoord[0].xy).rg;
+            vec3 normal;
+            normal.xy = (2.0 * normalH -1.0) * normalScale;
+            normal.z = sqrt(1.0 - dot(normal.xy, normal.xy));
+        #else
+            vec3 normalH = texture2D(normalmapTexture, gl_TexCoord[0].xy).rgb;
+            vec3 normal = (2.0 * normalH -1.0) * normalScale;
+        #endif
+
+        normal = normalize(vNormal + (tNormVec * normal));
+    #else
+        vec3 normal = vNormal;
+    #endif
+
+    vec3 shading = texture2D(litsphereTexture, vec2(normal.xyz * vec3(0.495) + vec3(0.5))).rgb;
 
     #ifdef DIFFUSE
-        gl_FragColor.rgb = diffuse * texture2D(diffuseTexture, gl_TexCoord[0].xy).rgb;
+        gl_FragColor.rgb = shading * texture2D(diffuseTexture, gl_TexCoord[0].xy).rgb;
     #else
-        gl_FragColor.rgb = diffuse;
+        gl_FragColor.rgb = shading;
     #endif
 
     gl_FragColor.a = 1.0;
 }
+
