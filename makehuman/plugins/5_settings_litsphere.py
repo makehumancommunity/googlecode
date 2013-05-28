@@ -56,10 +56,15 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
 
         settingsBox = self.addLeftWidget(gui.GroupBox("Shader settings"))
         self.diffuseChk = settingsBox.addWidget(gui.CheckBox("Diffuse texture", False))
+        self.normalChk = settingsBox.addWidget(gui.CheckBox("Normal map", False))
 
         @self.diffuseChk.mhEvent
         def onClicked(event):
-            self.human.mesh.configureShading(diffuse=self.diffuseChk.selected)
+            self.configureShading()
+
+        @self.normalChk.mhEvent
+        def onClicked(event):
+            self.configureShading()
 
         previewBox = self.addLeftWidget(gui.GroupBox("LitSphere texture"))
         self.image = previewBox.addWidget(gui.ImageView())
@@ -71,6 +76,13 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
             else:
                 self.human.setShaderParameter("litsphereTexture", filename)
                 self.image.setImage(filename)
+
+    def configureShading(self):
+        if os.path.isfile("data/textures/caucasian-female-young-minmuscle-maxweight1-NM.png"):
+            self.human.material.normalMapTexture = "data/textures/caucasian-female-young-minmuscle-maxweight1-NM.png"
+        else:
+            self.human.material.normalMapTexture = "data/textures/normal.png"
+        self.human.mesh.configureShading(diffuse=self.diffuseChk.selected, normal=self.normalChk.selected)
 
     def onShow(self, event):
         if "litsphereTexture" in self.human.meshData.shaderParameters:

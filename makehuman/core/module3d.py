@@ -657,6 +657,7 @@ class Object3D(object):
         return fg
 
     def createMaterial(self, name):
+        # TODO allow multi-material in MH and allow setting a Material object to each material group
         idx = len(self._materials)
         self._materials.append(name)
         return idx
