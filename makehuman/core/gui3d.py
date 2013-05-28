@@ -367,6 +367,11 @@ class Object(events3d.EventHandler):
         self.mesh.setMaterial(material)
         self.__seedMesh.setMaterial(material)
 
+    def getMaterial(self):
+        return self.mesh.getMaterial()
+
+    material = property(getMaterial, setMaterial)
+
     def onMouseDown(self, event):
         self._view().callEvent('onMouseDown', event)
 
