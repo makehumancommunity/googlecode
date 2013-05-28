@@ -75,7 +75,8 @@ class Human(gui3d.Object):
         self.bodyZones = ['l-eye','r-eye', 'jaw', 'nose', 'mouth', 'head', 'neck', 'torso', 'hip', 'pelvis', 'r-upperarm', 'l-upperarm', 'r-lowerarm', 'l-lowerarm', 'l-hand',
                           'r-hand', 'r-upperleg', 'l-upperleg', 'r-lowerleg', 'l-lowerleg', 'l-foot', 'r-foot', 'ear']
         
-        self.setTexture("data/textures/texture.png")        
+        self.setTexture("data/textures/texture.png")
+        self._defaultMaterial = material.Material().copyFrom(self.mesh.material)
 
     def getFaceMask(self):
         mesh = self.meshData
@@ -641,7 +642,7 @@ class Human(gui3d.Object):
 
         self.targetsDetailStack = {}
         
-        self.setTexture("data/textures/texture.png")
+        self.setMaterial(self._defaultMaterial)
         
         self.callEvent('onChanging', events3d.HumanEvent(self, 'reset'))
         self.callEvent('onChanged', events3d.HumanEvent(self, 'reset'))

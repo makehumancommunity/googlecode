@@ -138,6 +138,8 @@ class Material(object):
 
         self.uvMap = material.uvMap
 
+        return self
+
     def fromFile(self, filename):
         """
         Parse .mhmat file and set as the properties of this material.
