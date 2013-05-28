@@ -31,6 +31,7 @@ import events3d
 import warp
 import mh
 import log
+import material
 
 class Human(gui3d.Object):
 
