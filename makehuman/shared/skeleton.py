@@ -73,6 +73,7 @@ class Skeleton(object):
         self.bones = newBones
 
     def fromRigFile(self, filename, mesh):
+        """
         # TODO the .rig file parser does not belong in exportutils package (it is an importer...)
         import exportutils.rig
         
@@ -84,17 +85,25 @@ class Skeleton(object):
             if not parentName or parentName == "-":
                 parentName = None
             self.addBone(boneName, parentName, headPos, tailPos, roll)
+        """
+        
+        from armature.rigfile_amt import readRigfileArmature
 
+        amt = readRigfileArmature(filename, mesh)
+        for bone in amt.bones.keys():
+            print "Add", bone
+            self.addBone(bone, amt.parents[bone], amt.heads[bone], amt.tails[bone], amt.rolls[bone])
+        
         self.build()
 
         # Normalize weights and put them in np format
         boneWeights = {}
         wtot = np.zeros(mesh.getVertexCount(), np.float32)
-        for vgroup in vertexWeights.values():
+        for vgroup in amt.vertexWeights.values():
             for vn,w in vgroup:
                 wtot[vn] += w
 
-        for bname,vgroup in vertexWeights.items():
+        for bname,vgroup in amt.vertexWeights.items():
             weights = np.zeros(len(vgroup), np.float32)
             verts = []
             n = 0

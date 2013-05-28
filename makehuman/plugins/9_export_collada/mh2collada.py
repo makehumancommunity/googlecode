@@ -772,9 +772,9 @@ def writeNode(fp, pad, stuff, amt, config):
     fp.write('\n' +
         '%s<node id="%sObject" name="%s">\n' % (pad, stuff.name,stuff.name) +
         '%s  <translate sid="translate">0 0 0</translate>\n' % pad +
-        '%s  <rotate sid="rotateZ">0 0 1 0</rotate>\n' % pad +
-        '%s  <rotate sid="rotateY">0 1 0 0</rotate>\n' % pad +
-        '%s  <rotate sid="rotateX">1 0 0 0</rotate>\n' % pad+
+        #'%s  <rotate sid="rotateZ">0 0 1 0</rotate>\n' % pad +
+        #'%s  <rotate sid="rotateY">0 1 0 0</rotate>\n' % pad +
+        #'%s  <rotate sid="rotateX">1 0 0 0</rotate>\n' % pad+
         #'%s  <scale sid="scale">1 1 1</scale>\n' % pad+
         '%s  <instance_controller url="#%s-skin">\n' % (pad, stuff.name) +
         '%s    <skeleton>#%s</skeleton>\n' % (pad, amt.root))
@@ -825,11 +825,11 @@ def writeBone(fp, bone, orig, extra, pad, amt, config):
 
     fp.write('\n'+
         '%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr) +
-        '%s        <translate sid="translate"> %.4f %.4f %.4f </translate>\n' % (pad,x,y,z) +
-        '%s        <rotate sid="rotateZ">0 0 1 0.0</rotate>\n' % pad +
-        '%s        <rotate sid="rotateY">0 1 0 0.0</rotate>\n' % pad +
-        '%s        <rotate sid="rotateX">1 0 0 0.0</rotate>\n' % pad +
-        '%s        <scale sid="scale">1.0 1.0 1.0</scale>' % pad)    
+        '%s        <translate sid="translate"> %.4f %.4f %.4f </translate>' % (pad,x,y,z) )
+        #'%s        <rotate sid="rotateZ">0 0 1 0.0</rotate>\n' % pad +
+        #'%s        <rotate sid="rotateY">0 1 0 0.0</rotate>\n' % pad +
+        #'%s        <rotate sid="rotateX">1 0 0 0.0</rotate>\n' % pad +
+        #'%s        <scale sid="scale">1.0 1.0 1.0</scale>' % pad
 
     for child in children:
         writeBone(fp, child, head, '', pad+'  ', amt, config)    

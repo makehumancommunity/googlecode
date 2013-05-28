@@ -135,4 +135,3 @@ class BaseArmature:
             self.sortBones1(child, subhier, bones, children)
         
 
-    

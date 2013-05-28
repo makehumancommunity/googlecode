@@ -281,9 +281,9 @@ CustomShapes = {
 
 IkChains = {
     "upper_arm" :   (L_LARMIK, "Arm"),
-    "forearm" :     (2, L_LARMIK, "Arm", "wrist", "elbow.pt", 175*D, 5*D),
+    "forearm" :     (2, L_LARMIK, "Arm", "wrist", "elbow.pt", 180*D, 0*D),
     "thigh" :       (L_LLEGIK, "Leg"),
-    "shin" :        (2, L_LLEGIK, "Leg", "ankle", "knee.pt", -112*D, -68*D),
+    "shin" :        (2, L_LLEGIK, "Leg", "ankle", "knee.pt", -90*D, -90*D),
 }        
 
 Hint = 18*D

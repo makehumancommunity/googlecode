@@ -24,9 +24,12 @@ Global variables used by MHX package
 
 import os
 import log
+import numpy as np
 import mh2proxy
+import gui3d
 
 from .flags import *
+from .utils import *
 from .base_amt import BaseArmature
 
 class RigfileArmature(BaseArmature):     
@@ -58,6 +61,7 @@ class RigfileArmature(BaseArmature):
         doLocations = 1
         doBones = 2
         doWeights = 3
+        doFileWeights = 4
         status = 0
     
         bones = {}
@@ -76,8 +80,24 @@ class RigfileArmature(BaseArmature):
                     status = doWeights
                     wts = []
                     self.vertexWeights[words[2]] = wts
+                elif words[1] == 'file-weights':
+                    vgroups = {}
+                    vgroupList = []
+                    for word in words[2:]:
+                        path = os.path.join("shared/armature/vertexgroups", word+".vgrp")
+                        readVertexGroups(path, vgroups, vgroupList)
+                    status = doFileWeights
             elif status == doWeights:
                 wts.append((int(words[0]), float(words[1])))
+            elif status == doFileWeights:
+                bone = words[0]
+                vgroup = vgroups[words[1]]
+                for word in words[2:]:
+                    vgroup += vgroups[word]
+                if len(words) > 2:
+                    self.vertexWeights[bone] = mergeWeights(vgroup)
+                else:
+                    self.vertexWeights[bone] = vgroup
             elif status == doLocations:
                 self.setupRigJoint (words, obj, coord)
             elif status == doBones:
@@ -143,11 +163,11 @@ class RigfileArmature(BaseArmature):
             vn2 = int(words[5])
             self.locations[key] = k1*self.locations[vn1] + k2*self.locations[vn2]
         elif typ == 'offset':
-            vn = int(words[2])
+            loc = words[2]
             x = float(words[3])
             y = float(words[4])
             z = float(words[5])
-            self.locations[key] = self.locations[vn] + np.array((x,y,z))
+            self.locations[key] = self.locations[loc] + np.array((x,y,z))
         elif typ == 'voffset':
             vn = int(words[2])
             x = float(words[3])
@@ -208,6 +228,15 @@ class RigfileArmature(BaseArmature):
         except KeyError:
             self.poseInfo[bone] = []
         self.poseInfo[bone].append(info)
+
+
+
+def readRigfileArmature(filename, obj, coord=None):
+    from exportutils.config import Config
+    amt = RigfileArmature("Global", gui3d.app.selectedHuman, Config())
+    amt.fromRigfile(filename, obj, coord)
+    return amt
+    
 
 
 
