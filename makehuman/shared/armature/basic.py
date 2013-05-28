@@ -39,10 +39,10 @@ class BasicArmature(PythonArmature):
         self.boneLayers = "08a80caa"
         self.root = "hips"
 
-        self.vertexGroupFiles = [
-            PythonVertexGroupDirectory + "head", 
-            PythonVertexGroupDirectory + "basic"
-        ]
+        if config.useMuscles:
+            self.vertexGroupFiles = ["head", "muscles", "hand"]
+        else:
+            self.vertexGroupFiles = ["head", "bones", "hand"]
         self.headName = 'head'
         self.useDeformBones = False
         self.useDeformNames = False

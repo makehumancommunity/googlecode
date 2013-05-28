@@ -22,6 +22,7 @@ Abstract
 Python armature
 """
 
+import os
 import math
 import numpy as np
 import transformations as tm
@@ -40,8 +41,6 @@ from . import rig_bones
 #-------------------------------------------------------------------------------        
 #   Python Armature
 #-------------------------------------------------------------------------------        
-
-PythonVertexGroupDirectory = "shared/armature/vertexgroups/"
 
 class PythonArmature(BaseArmature):
 
@@ -221,11 +220,12 @@ class PythonArmature(BaseArmature):
     
     def getVertexGroups(self):
 
-        self.vertexGroupFiles += [PythonVertexGroupDirectory+"leftright"]        
+        self.vertexGroupFiles += ["leftright"]        
         vgroupList = []
         vgroups = {}
         for file in self.vertexGroupFiles:
-            readVertexGroups(file, vgroups, vgroupList)
+            filepath = os.path.join("shared/armature/vertexgroups", file+".vgrp")
+            readVertexGroups(filepath, vgroups, vgroupList)
         
         if self.useDeformNames:
             for bone,vgroup in vgroupList:

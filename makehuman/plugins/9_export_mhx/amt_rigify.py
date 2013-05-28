@@ -39,10 +39,10 @@ class RigifyArmature(PythonExportArmature):
     def __init__(self, name, human, config):   
         PythonExportArmature. __init__(self, name, human, config)
         self.rigtype = 'rigify'
-        self.vertexGroupFiles = [
-            PythonVertexGroupDirectory + "head", 
-            PythonVertexGroupDirectory + "basic"
-        ]
+        if config.useMuscles:
+            self.vertexGroupFiles = ["head", "muscles", "hand"]
+        else:
+            self.vertexGroupFiles = ["head", "bones", "hand"]
         self.master = None
         self.gizmos = None
         self.boneLayers = "08a80caa"

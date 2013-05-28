@@ -136,9 +136,9 @@
     Mit_L l-finger-4-1 l-finger-4-4 0 Hand_L -nc
 
 
-# file-weights basic head
+# file-weights head bones hand
 
-    Hips        hips pubis
+    Hips        hips
     
     Spine1      spine   
     Spine2      chest chest-1

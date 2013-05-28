@@ -38,7 +38,7 @@ class MhxConfig(Config):
         self.encoding =             exporter.taskview.getEncoding()
         
         self.addConnectingBones =   False
-        self.useMuscles =           True
+        self.useMuscles =           False
         self.useMasks =             exporter.masks.selected
         self.expressions =          exporter.expressions.selected
         self.facepanel =            exporter.facepanel.selected

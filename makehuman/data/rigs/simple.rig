@@ -172,9 +172,9 @@
     Pinky2_L l-finger-5-2 l-finger-5-3 0 Pinky1_L
     Pinky3_L l-finger-5-3 l-finger-5-4 0 Pinky2_L
 
-# file-weights basic head
+# file-weights head bones hand
 
-    Hips        hips pubis
+    Hips        hips
     
     Spine1      spine   
     Spine2      chest

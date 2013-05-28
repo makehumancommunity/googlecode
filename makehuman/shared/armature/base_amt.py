@@ -98,7 +98,7 @@ class BaseArmature:
                     head,_ = self.getHeadTail(bone)
                     _,ptail = self.getHeadTail(parent)
                     if head != ptail:
-                        connector = bone+".conn"
+                        connector = "_"+bone
                         extras.append((connector, (0, parent, F_CON, L_HELP)))
                         bones[bone] = (roll, connector, flags|F_CON, layers)
                         self.setHeadTail(connector, ptail, head)

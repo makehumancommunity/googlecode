@@ -90,9 +90,9 @@
     mWristLeft l-hand l-hand-tail 0 mElbowLeft
 
 
-# file-weights basic head
+# file-weights head bones hand
 
-    mPelvis         hips pubis
+    mPelvis         hips
     
     mTorso          spine 
     mChest          chest chest-1

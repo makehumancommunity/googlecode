@@ -66,10 +66,10 @@ class MhxArmature(PythonExportArmature):
         self.headName = 'head'
         self.master = 'master'
         
-        self.vertexGroupFiles = [
-            PythonVertexGroupDirectory + "head", 
-            PythonVertexGroupDirectory + "basic"
-        ]
+        if config.useMuscles:
+            self.vertexGroupFiles = ["head", "muscles", "hand"]
+        else:
+            self.vertexGroupFiles = ["head", "bones", "hand"]
         """
         if config.skirtRig == "own":
             self.vertexGroupFiles.append("skirt-rigged")    

@@ -22,6 +22,9 @@ Abstract
 Armature utilities
 """
 
+import math
+import numpy as np
+
 
 #-------------------------------------------------------------------------------        
 #   Utilities
