@@ -43,7 +43,7 @@ class SubdivisionObject(Object3D):
         self.cameraMode = object.cameraMode
         self.visibility = object.visibility
         self.pickable = object.pickable
-        self.setTexture(object.texture)
+        self.material = object.material
         self.shadeless = object.shadeless
         self.solid = object.solid
         self.transparentPrimitives = object.transparentPrimitives * 4

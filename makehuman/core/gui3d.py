@@ -69,8 +69,6 @@ class Object(events3d.EventHandler):
         self.__subdivisionMesh = None
         self.__proxySubdivisionMesh = None
 
-        self._originalUVMap = None
-
         self.setUVMap(mesh.material.uvMap)
         
     def _attach(self):
@@ -149,21 +147,16 @@ class Object(events3d.EventHandler):
             mesh.setScale(scale, scaleY, scaleZ)
 
     def setTexture(self, texture):
-        if texture:
-            for mesh in self._meshes():
-                mesh.setTexture(texture)
-        else:
-            self.clearTexture()
+        self.mesh.setTexture(texture)
             
     def getTexture(self):
-        return self.__seedMesh.texture
+        return self.mesh.texture
 
     def clearTexture(self):
-        for mesh in self._meshes():
-            mesh.clearTexture()
+        self.mesh.setTexture(None)
             
     def hasTexture(self):
-        return self.__seedMesh.hasTexture()
+        return self.mesh.hasTexture()
         
     def setSolid(self, solid):
         for mesh in self._meshes():
@@ -189,9 +182,11 @@ class Object(events3d.EventHandler):
         return self.mesh == self.__proxyMesh or self.mesh == self.__proxySubdivisionMesh
         
     def setProxy(self, proxy):
-    
+        isSubdivided = self.isSubdivided()
+
         if self.proxy:
-        
+            # Copy proxy mesh material settings back to original mesh
+            self.__seedMesh.material = self.mesh.material
             self.proxy = None
             self.detachMesh(self.__proxyMesh)
             self.__proxyMesh.clear()
@@ -204,20 +199,15 @@ class Object(events3d.EventHandler):
             self.mesh.setVisibility(1)
     
         if proxy:
-        
             self.proxy = proxy
             
             (folder, name) = proxy.obj_file
             
             self.__proxyMesh = files3d.loadMesh(os.path.join(folder, name))
             for attr in ('x', 'y', 'z', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz',
-                         'visibility', 'shadeless', 'pickable', 'cameraMode', 'texture'):
+                         'visibility', 'shadeless', 'pickable', 'cameraMode', 'material'):
                 setattr(self.__proxyMesh, attr, getattr(self.mesh, attr))
 
-            for (param, val) in self.__seedMesh.shaderParameters.items():
-                self.__proxyMesh.setShaderParameter(param, val)
-            self.__proxyMesh.setShader(self.__seedMesh.shader)
-            
             self.__proxyMesh.object = self.mesh.object
             
             self.proxy.update(self.__proxyMesh)
@@ -229,6 +219,8 @@ class Object(events3d.EventHandler):
             self.mesh = self.__proxyMesh
             self.mesh.setVisibility(1)
             self.__proxyMesh.setSolid(self.__seedMesh.solid)
+
+        self.setSubdivided(isSubdivided)
             
     def getSubdivisionMesh(self, update=True, progressCallback=None):
         """
@@ -271,7 +263,7 @@ class Object(events3d.EventHandler):
         """
 
         return self.mesh == self.__subdivisionMesh or self.mesh == self.__proxySubdivisionMesh
-            
+
     def setSubdivided(self, flag, update=True, progressCallback=None):
         """
         Set whether this mesh is to be subdivided (or smoothed).
@@ -289,18 +281,14 @@ class Object(events3d.EventHandler):
             self.mesh = self.getSubdivisionMesh(update, progressCallback)
             self.mesh.setVisibility(1)
 
-            # Copy shader parameters
-            for (param, val) in originalMesh.shaderParameters.items():
-                self.mesh.setShaderParameter(param, val)
-            self.mesh.setShader(originalMesh.shader)
+            # Copy material
+            self.mesh.setMaterial(originalMesh.material)
 
         else:
             originalMesh = self.__seedMesh if self.mesh == self.__subdivisionMesh else self.__proxyMesh
 
-            # Copy shader parameters
-            for (param, val) in self.mesh.shaderParameters.items():
-                originalMesh.setShaderParameter(param, val)
-            originalMesh.setShader(self.mesh.shader)
+            # Copy material
+            originalMesh.material = self.mesh.material
 
             self.mesh.setVisibility(0)
             self.mesh = originalMesh
@@ -313,25 +301,22 @@ class Object(events3d.EventHandler):
     
         self.getSubdivisionMesh(True)
 
-    def setUVMap(self, filename):
+    def _setMeshUVMap(self, filename, mesh):
         import material
         import numpy as np
-
-        # Set uv map on original, unsubdivided, unproxied mesh
-        mesh = self.__seedMesh
 
         if filename == mesh.material.uvMap:
             # No change, do nothing
             return
 
-        if not self._originalUVMap:
+        if not hasattr(mesh, "_originalUVMap") or not mesh._originalUVMap:
             # Backup original mesh UVs
-            self._originalUVMap = dict()
-            self._originalUVMap['texco'] = mesh.texco
-            self._originalUVMap['fuvs'] = mesh.fuvs
+            mesh._originalUVMap = dict()
+            mesh._originalUVMap['texco'] = mesh.texco
+            mesh._originalUVMap['fuvs'] = mesh.fuvs
             #self._originalUVMap['fvert'] = mesh.fvert
             #self._originalUVMap['group'] = mesh.group
-            self._originalUVMap['fmtls'] = mesh.fmtls
+            mesh._originalUVMap['fmtls'] = mesh.fmtls
 
         faceMask = mesh.getFaceMask()
         faceGroups = mesh.group
@@ -340,9 +325,9 @@ class Object(events3d.EventHandler):
 
         if not filename:
             # Restore original UVs
-            mesh.setUVs(self._originalUVMap['texco'])
-            mesh.setFaces(mesh.fvert, self._originalUVMap['fuvs'], faceGroups, self._originalUVMap['fmtls'])
-            self._originalUVMap = None
+            mesh.setUVs(mesh._originalUVMap['texco'])
+            mesh.setFaces(mesh.fvert, mesh._originalUVMap['fuvs'], faceGroups, mesh._originalUVMap['fmtls'])
+            mesh._originalUVMap = None
         else:
             uvset = material.UVMap(filename)
             uvset.read(self.mesh, filename)
@@ -360,6 +345,10 @@ class Object(events3d.EventHandler):
         mesh.changeFaceMask(faceMask)
         mesh.updateIndexBuffer()
 
+    def setUVMap(self, filename):
+        # Set uv map on original, unsubdivided, unproxied mesh
+        self._setMeshUVMap(filename, self.__seedMesh)
+
         if self.isProxied():
             # TODO transfer UV coordinates to proxy mesh
             pass
@@ -376,7 +365,8 @@ class Object(events3d.EventHandler):
     def setMaterial(self, material):
         self.setUVMap(material.uvMap)
         self.mesh.setMaterial(material)
-            
+        self.__seedMesh.setMaterial(material)
+
     def onMouseDown(self, event):
         self._view().callEvent('onMouseDown', event)
 

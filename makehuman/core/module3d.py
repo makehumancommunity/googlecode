@@ -751,7 +751,6 @@ class Object3D(object):
         """
         This method is used to clear an object's texture.
         """
-
         self.material.diffuseTexture = None
 
     @property
@@ -783,12 +782,13 @@ class Object3D(object):
         """
         self.material.configureShading(diffuse, bump, normal, displacement, spec)
 
-    @property
-    def material(self):
+    def getMaterial(self):
         return self._material
 
     def setMaterial(self, material):
         self._material.copyFrom(material)
+
+    material = property(getMaterial, setMaterial)
 
     def setShaderParameter(self, name, value):
         self.material.setShaderParameter(name, value)
