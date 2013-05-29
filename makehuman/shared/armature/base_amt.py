@@ -30,6 +30,7 @@ import log
 from collections import OrderedDict
 
 import numpy as np
+import numpy.linalg as la
 import transformations as tm
 
 from .flags import *
@@ -59,6 +60,8 @@ class BaseArmature:
         self.locations = {}
         self.origin = [0,0,0]
         self.loadedShapes = {}
+        self.constraints = {}
+        self.rotationLimits = {}
         
         self.vertexWeights = OrderedDict([])
                 
@@ -78,7 +81,6 @@ class BaseArmature:
 
 
     def sortBones(self, boneInfos):
-        print "Sort", boneInfos
         if self.addConnectingBones:            
             extras = []
             for bone in boneInfos.values():
@@ -100,7 +102,6 @@ class BaseArmature:
                 parent = boneInfos[bone.parent]
                 parent.children.append(bone)
             elif self.master:
-                print("MM", bone.name, self.master)
                 if bone.name == self.master:
                     self.roots.append(bone)
                 else:
@@ -110,7 +111,6 @@ class BaseArmature:
             else:
                 self.roots.append(bone)
 
-        print("Root", self.roots)
         for root in self.roots:            
             self.sortBones1(root, self.hierarchy)
 
@@ -160,10 +160,9 @@ class Bone:
         # matrixGlobal:     4x4 matrix, relative world
         # matrixVerts:      4x4 matrix, relative world and own rest pose
         
-        self.matrix_local = np.identity(4,float)
-    
         self.matrixRest = None
         self.matrixRelative = None
+    
         self.matrixPose = None
         self.matrixGlobal = None
         self.matrixVerts = None
@@ -230,38 +229,48 @@ class Bone:
             self.roll = math.pi - 2*math.atan(quat[2]/quat[0])
         if self.roll > math.pi:
             self.roll -= 2*math.pi
-        print "  roll", self.name, self.roll/D
                 
 
-    def getMatrixLocal(self):   
+    def calcRestMatrix(self): 
+        if self.matrixRest is not None:
+            return 
+
         if self.length < 1e-3:
-            log.message("Zero-length bone %s. Removed" % self.name)
-            self.matrix_local[:3,3] = self.head
-            return
+            log.message("Warning: Zero-length bone %s." % self.name)
+            mat = np.identity(4,float)
+        else:
+            ex = np.array([0,1,0], dtype=float)
+            u = self.tail - self.head
+            u = u/self.length
 
-        ex = np.array([1,0,0], dtype=float)
-        u = self.tail - self.head
-        u = u/self.length
+            xu = np.dot(ex, u)
+            if abs(xu) > 0.99999:
+                axis = ex
+                if xu > 0:
+                    angle = 0
+                else:
+                    angle = math.pi
+            else:        
+                axis = np.cross(ex, u)
+                length = math.sqrt(np.dot(axis,axis))
+                axis = axis/length
+                angle = math.acos(xu)
 
-        xu = np.dot(ex, u)
-        if abs(xu) > 0.99999:
-            axis = Bone.Ex
-            if xu > 0:
-                angle = 0
-            else:
-                angle = math.pi
-        else:        
-            axis = np.dot(ex, u)
-            length = math.sqrt(np.dot(axis,axis))
-            axis = axis/length
-            angle = math.acos(xu)
-
-        mat = tm.rotation_matrix(angle,axis)
-        if self.roll:
-            roll = tm.rotation_matrix(self.roll, ex)
+            mat = tm.rotation_matrix(angle, axis)
+            
+        if False and self.roll:
+            ey = np.array([0,1,0], dtype=float)
+            roll = tm.rotation_matrix(self.roll, ey)
             mat = np.dot(mat, roll)
-        self.matrix_local[:3,:3] = mat
-        self.matrix_local[:3,3] = self.head
+            
+        self.matrixRest = mat
+        self.matrixRest[:3,3] = self.head
+        
+        if self.parent:
+            parbone = self.armature.bones[self.parent]
+            self.matrixRelative = np.dot(la.inv(parbone.matrixRest), self.matrixRest)
+        else:
+            self.matrixRelative = self.matrixRest
         
         
 

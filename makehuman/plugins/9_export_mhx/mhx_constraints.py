@@ -681,7 +681,6 @@ def writeConstraints(fp, amt, bname, constraints, lockLoc, lockRot):
     maxs = (pi, pi, pi)
 
     for cons in constraints:
-        print("  ", cons)
         (label, flags, inf, data) = cons
         if type(label) == str:
             typ = label

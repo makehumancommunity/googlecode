@@ -179,7 +179,6 @@ class ExportArmature:
         self.customShapes = {}
         self.gizmos = None
         self.gizmoFiles = []
-        self.master = None
         self.recalcRoll = []              
         self.objectProps = [("MhxRig", '"%s"' % config.rigtype)]
         self.armatureProps = []
@@ -222,11 +221,14 @@ class ExportArmature:
 
             if bone.parent:
                 fp.write("    parent Refer Bone %s ; \n" % (bone.parent))
+                parent = self.bones[bone.parent]
+                conn = (bone.conn and (parent.tail == bone.head))
+                fp.write("    use_connect %s ; \n" % conn)
+            else:
+                fp.write("    use_connect False ; \n")
                 
-            print "X", bone.name, bone.roll
             fp.write(
                 "    roll %.6g ; \n" % (bone.roll) +
-                "    use_connect %s ; \n" % (bone.conn) +
                 "    use_deform %s ; \n" % (bone.deform) +
                 "    show_wire %s ; \n" % (bone.wire))
     

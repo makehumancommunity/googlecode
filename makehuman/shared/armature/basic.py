@@ -100,4 +100,3 @@ class BasicArmature(PythonArmature):
         self.addBones(rig_face.Armature, boneInfo)
         PythonArmature.createBones(self, boneInfo)
             
-

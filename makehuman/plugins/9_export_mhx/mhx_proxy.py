@@ -258,7 +258,6 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, amt, config):
 def writeProxyTexture(fp, texture, mat, extra, amt, config):        
     (folder,name) = texture
     tex = os.path.join(folder,name)
-    #print(amt.name)
     log.debug("Tex %s", tex)
     texname = amt.name + os.path.basename(tex)
     fromDir = os.path.dirname(tex)

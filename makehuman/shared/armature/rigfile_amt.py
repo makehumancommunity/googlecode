@@ -67,6 +67,7 @@ class RigfileArmature(BaseArmature):
         status = 0
     
         boneInfos = {}
+        basicNames = {}
         if not coord:
             coord = obj.coord
         for line in fp: 
@@ -93,7 +94,8 @@ class RigfileArmature(BaseArmature):
                 wts.append((int(words[0]), float(words[1])))
             elif status == doFileWeights:
                 bname = words[0]
-                vgroup = vgroups[words[1]]
+                basicNames[bname] = basicName = words[1]
+                vgroup = vgroups[basicName]
                 for word in words[2:]:
                     vgroup += vgroups[word]
                 if len(words) > 2:
@@ -127,7 +129,7 @@ class RigfileArmature(BaseArmature):
                         value.append(word)
                 if key:
                     flags = self.setOption(bname, key, value, flags) 
-                bone.flags = flags
+                bone.setFlags(flags)
                 boneInfos[bname] = bone
             else:
                 raise NameError("Unknown status %d" % status)
@@ -136,6 +138,15 @@ class RigfileArmature(BaseArmature):
         self.sortBones(boneInfos)    
         for bone in self.bones.values():
             bone.setBone(bone.head, bone.tail)
+            
+        if True:
+            amt = getBasicArmature(self.human)
+            for bone in self.bones.values():
+                try:
+                    basicName = basicNames[bone.name]
+                except KeyError:
+                    continue
+                bone.roll = amt.bones[basicName].roll
         
 
     def getHeadTail(self, bname):
@@ -241,5 +252,10 @@ def readRigfileArmature(filename, obj, coord=None):
     return amt
     
 
-
+def getBasicArmature(human):
+    from exportutils.config import Config
+    from .basic import BasicArmature
+    amt = BasicArmature("Basic", human, Config())
+    amt.setupToRoll()
+    return amt
 

@@ -120,13 +120,13 @@ class PythonArmature(BaseArmature):
                     layer <<= 16
 
                 fkBone = boneInfo[fkName] = Bone(self, fkName)
-                fkBone.fromInfo((bone.roll, bone.parent, F_WIR, layer<<1))
+                fkBone.fromInfo((bone, bone.parent, F_WIR, layer<<1))
                 #fkBone.customShape = bone.customShape
                 ikBone = boneInfo[ikName] = Bone(self, ikName)
-                ikBone.fromInfo((bone.roll, bone.parent, F_WIR, layer))
+                ikBone.fromInfo((bone, bone.parent, F_WIR, layer))
                 #ikBone.customShape = bone.customShape
                 #bone.customShape = None
-                self.constraints[bone] = [
+                self.constraints[bname] = [
                     copyTransform(fkName, cnsname+"FK"), 
                     copyTransform(ikName, cnsname+"IK", 0)
                 ]        
@@ -166,7 +166,6 @@ class PythonArmature(BaseArmature):
             headTail = self.headsTails[bname]
             base,ext = splitBoneName(bname)
             bone.deform = False
-            bone.layers = L_HELP
             bone.parent = self.getParent(bone)
                 
             if bone.parent and self.useDeformBones:
@@ -196,30 +195,30 @@ class PythonArmature(BaseArmature):
                     self.headsTails[defName1] = (head, ((0.5,head),(0.5,tail)))
                     self.headsTails[defName2] = (((0.5,head),(0.5,tail)), tail)
                     defBone1 = boneInfo[defName1] = Bone(self, defName1)
-                    defBone1.fromInfo((bone.roll, defParent, F_DEF+F_CON, L_DEF))
+                    defBone1.fromInfo((bone, defParent, F_DEF+F_CON, L_DEF))
                     defBone2 = boneInfo[defName2] = Bone(self, defName2)
-                    defBone2.fromInfo((bone.roll, bone.name, F_DEF, L_DEF))
+                    defBone2.fromInfo((bone, bone.name, F_DEF, L_DEF))
                 elif npieces == 3:
                     self.headsTails[defName1] = (head, ((0.667,head),(0.333,tail)))
                     self.headsTails[defName2] = (((0.667,head),(0.333,tail)), ((0.333,head),(0.667,tail)))
                     self.headsTails[defName3] = (((0.333,head),(0.667,tail)), tail)
                     defBone1 = boneInfo[defName1] = Bone(self, defName1)
-                    defBone1.fromInfo((bone.roll, defParent, F_DEF+F_CON, L_DEF))
+                    defBone1.fromInfo((bone, defParent, F_DEF+F_CON, L_DEF))
                     defBone3 = boneInfo[defName3] = Bone(self, defName3)
-                    defBone3.fromInfo((bone.roll, bone.name, F_DEF, L_DEF))
+                    defBone3.fromInfo((bone, bone.name, F_DEF, L_DEF))
                     defBone2 = boneInfo[defName2] = Bone(self, defName2)
-                    defBone2.fromInfo((bone.roll, defParent, F_DEF, L_DEF))
+                    defBone2.fromInfo((bone, defParent, F_DEF, L_DEF))
                     self.constraints[defName2] = [
                         ('CopyLoc', 0, 1, ["CopyLoc", defName1, (1,1,1), (0,0,0), 1, False]),
                         ('CopyRot', 0, 1, [defName1, defName1, (1,1,1), (0,0,0), False]),
-                        ('CopyRot', 0, 0.5, [bone, bone.name, (1,1,1), (0,0,0), False])
+                        ('CopyRot', 0, 0.5, [bone.name, bone.name, (1,1,1), (0,0,0), False])
                     ]
 
             elif self.useDeformBones:
                 defName = "DEF-"+bname
                 self.headsTails[defName] = headTail
                 defBone = boneInfo[defName] = Bone(self, defName)
-                defBone.fromInfo((bone.roll, defParent, F_DEF, L_DEF))
+                defBone.fromInfo((bone, defParent, F_DEF, L_DEF))
                 self.constraints[defName] = [copyTransform(bone.name, bone.name)]
                 
         return boneInfo           
@@ -314,11 +313,12 @@ class PythonArmature(BaseArmature):
     def getHeadTail(self, bone):
         return self.headsTails[bone]
         
+
     def setHeadTail(self, bone, head, tail):
         self.headsTails[bone] = (head,tail)
 
 
-    def setup(self):
+    def setupToRoll(self):
         if self.rigtype not in ["mhx", "basic", "rigify"]:
             print "NOT py", self.rigtype
             halt
@@ -328,7 +328,6 @@ class PythonArmature(BaseArmature):
         self.setupPlaneJoints()
         self.moveOriginToFloor()
         self.createBones({})
-        self.getVertexGroups()
 
         for bone in self.bones.values():
             head,tail = self.headsTails[bone.name]
@@ -337,7 +336,14 @@ class PythonArmature(BaseArmature):
         for bone in self.bones.values():
             if isinstance(bone.roll, str):
                 bone.roll = self.bones[bone.roll].roll
+            elif isinstance(bone.roll, Bone):
+            	bone.roll = bone.roll.roll
             
+
+    def setup(self):
+    	self.setupToRoll()
+        self.getVertexGroups()
+
         if self.config.clothesRig:
             for proxy in self.proxies.values():
                 if proxy.rig:
@@ -345,6 +351,7 @@ class PythonArmature(BaseArmature):
                     self.fromRigFile(proxy.rig, amt.mesh, coord=coord) 
                     proxy.weights = self.prefixWeights(weights, proxy.name)
                     #appendRigBones(boneList, proxy.name, L_CLO, body, amt)
+
         
 
     def setupNormals(self):

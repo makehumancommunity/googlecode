@@ -148,12 +148,11 @@ def exportDae(human, name, fp, config):
     for root in amt.hierarchy:
         writeBone(fp, root, [0,0,0], 'layer="L1"', '  ', amt, config)
 
-    fp.write(
-        '      </node>\n')
+    fp.write('\n      </node>\n')
 
     gui3d.app.progress(0.9, text="Exporting nodes")
     for stuff in stuffs:
-        writeNode(fp, "        ", stuff, amt, config)
+        writeNode(fp, "      ", stuff, amt, config)
 
     fp.write(
         '    </visual_scene>\n' +
@@ -402,6 +401,7 @@ def writeController(fp, stuff, amt, config):
         '        <source id="%s-skin-poses">\n' % stuff.name +
         '          <float_array count="%d" id="%s-skin-poses-array">' % (16*nBones,stuff.name))
 
+
     mat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
     for bone in amt.bones.values():
         (x,y,z) = rotateLoc(bone.head, config)
@@ -413,6 +413,20 @@ def writeController(fp, stuff, amt, config):
             for j in range(4):
                 fp.write('%.4f ' % mat[i][j])
 
+    """
+    for bone in amt.bones.values():
+        bone.calcRestMatrix()
+        mat = bone.matrixRest
+        cols = {}
+        for j in range(4):
+            cols[j] = rotateLoc(mat[:3,j], config)
+            cols[j] = mat[:3,j]
+                
+        for j in range(3):        
+            fp.write('\n            %.4f %.4f %.4f %.4f' % (cols[0][j], cols[1][j], cols[2][j], -cols[3][j]))
+        fp.write('\n              0 0 0 1\n')
+    """
+    
     fp.write('\n' +
         '          </float_array>\n' +    
         '          <technique_common>\n' +
@@ -768,6 +782,7 @@ def checkFaces(stuff, nVerts, nUvVerts):
     
 
 def writeNode(fp, pad, stuff, amt, config):    
+
     fp.write('\n' +
         '%s<node id="%sObject" name="%s">\n' % (pad, stuff.name,stuff.name) +
         '%s  <translate sid="translate">0 0 0</translate>\n' % pad +
@@ -777,7 +792,7 @@ def writeNode(fp, pad, stuff, amt, config):
         #'%s  <scale sid="scale">1 1 1</scale>\n' % pad+
         '%s  <instance_controller url="#%s-skin">\n' % (pad, stuff.name) +
         '%s    <skeleton>#%s</skeleton>\n' % (pad, amt.root))
-
+    
     (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)    
     if matname:
         matname = matname.replace(" ", "_")    
@@ -817,22 +832,13 @@ def writeBone(fp, hier, orig, extra, pad, amt, config):
     else:
         nameStr = ''
         idStr = ''
-
-    vec = bone.head - orig
-    (x,y,z) = rotateLoc(vec, config)
-
-    fp.write('\n'+
-        '%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr) +
-        '%s        <translate sid="translate"> %.4f %.4f %.4f </translate>' % (pad,x,y,z) )
-        #'%s        <rotate sid="rotateZ">0 0 1 0.0</rotate>\n' % pad +
-        #'%s        <rotate sid="rotateY">0 1 0 0.0</rotate>\n' % pad +
-        #'%s        <rotate sid="rotateX">1 0 0 0.0</rotate>\n' % pad +
-        #'%s        <scale sid="scale">1.0 1.0 1.0</scale>' % pad
+    
+    fp.write('%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr))
 
     for child in children:
         writeBone(fp, child, bone.head, '', pad+'  ', amt, config)    
 
-    fp.write('\n%s      </node>' % pad)
+    fp.write('%s      </node>\n' % pad)
     return
     
             

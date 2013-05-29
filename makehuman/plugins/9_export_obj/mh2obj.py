@@ -179,7 +179,6 @@ def writeTexture(fp, key, texture, human, config):
     texpath = config.getTexturePath(texfile, folder, True, human)        
     (fname, ext) = os.path.splitext(texfile)  
     name = "%s_%s" % (fname, ext[1:])
-    print(texpath)
     fp.write("%s %s\n" % (key, texpath))
     
 
