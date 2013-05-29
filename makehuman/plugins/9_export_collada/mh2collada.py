@@ -27,7 +27,9 @@ TODO
 
 import os.path
 import time
-import numpy
+import math
+import numpy as np
+import transformations as tm
 import log
 
 import gui3d
@@ -402,6 +404,7 @@ def writeController(fp, stuff, amt, config):
         '          <float_array count="%d" id="%s-skin-poses-array">' % (16*nBones,stuff.name))
 
 
+    """
     mat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
     for bone in amt.bones.values():
         (x,y,z) = rotateLoc(bone.head, config)
@@ -414,18 +417,15 @@ def writeController(fp, stuff, amt, config):
                 fp.write('%.4f ' % mat[i][j])
 
     """
+
     for bone in amt.bones.values():
         bone.calcRestMatrix()
-        mat = bone.matrixRest
-        cols = {}
-        for j in range(4):
-            cols[j] = rotateLoc(mat[:3,j], config)
-            cols[j] = mat[:3,j]
-                
-        for j in range(3):        
-            fp.write('\n            %.4f %.4f %.4f %.4f' % (cols[0][j], cols[1][j], cols[2][j], -cols[3][j]))
-        fp.write('\n              0 0 0 1\n')
-    """
+        mat = rotateMat(bone.matrixBind, config)
+        for i in range(4):
+            fp.write('\n           ')
+            for j in range(4):
+                fp.write(' %.4f' % mat[i,j])
+        fp.write('\n')
     
     fp.write('\n' +
         '          </float_array>\n' +    
@@ -627,9 +627,9 @@ def writeShapeKey(fp, name, shape, stuff, config):
         '          <float_array id="%sMeshMorph_%s-positions-array" count="%d">\n' % (stuff.name, name, 3*nVerts) +
         '           ')
 
-    target = numpy.array(obj.coord)
+    target = np.array(obj.coord)
     for n,dr in shape.items():
-        target[n] += numpy.array(dr)
+        target[n] += np.array(dr)
     for co in target:
         loc = rotateLoc(co, config)
         fp.write(" %.4g %.4g %.4g" % tuple(loc))
@@ -824,6 +824,17 @@ def rotateLoc(loc, config):
     return (x,y,z)        
 
 
+RotX = tm.rotation_matrix(math.pi/2, (1,0,0))
+RotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
+
+def rotateMat(mat, config):    
+    if config.rotate90X:
+        mat = np.dot(RotX, mat)
+    if config.rotate90Z:
+        mat = np.dot(RotZ, mat)
+    return mat
+    
+
 def writeBone(fp, hier, orig, extra, pad, amt, config):
     (bone, children) = hier
     if bone:
@@ -833,7 +844,13 @@ def writeBone(fp, hier, orig, extra, pad, amt, config):
         nameStr = ''
         idStr = ''
     
-    fp.write('%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr))
+    fp.write(
+        '%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr) +
+        '%s          <matrix sid="transform">\n' % pad)
+    mat = bone.matrixRelative
+    for i in range(4):
+        fp.write('%s            %.5f %.5f %.5f %.5f\n' % (pad, mat[i][0], mat[i][1], mat[i][2], mat[i][3]))
+    fp.write('%s          </matrix>\n' % pad)
 
     for child in children:
         writeBone(fp, child, bone.head, '', pad+'  ', amt, config)    

@@ -148,6 +148,9 @@ class RigfileArmature(BaseArmature):
                     continue
                 bone.roll = amt.bones[basicName].roll
         
+        for bone in self.bones.values():
+            bone.calcRestMatrix()
+
 
     def getHeadTail(self, bname):
         return self.heads[bname], self,tails[bname]

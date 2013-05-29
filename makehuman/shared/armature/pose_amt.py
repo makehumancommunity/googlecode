@@ -36,6 +36,7 @@ import numpy as np
 
 from .flags import *
 from .rigfile_amt import RigfileArmature
+from .utils import *
 
 #-------------------------------------------------------------------------------        
 #   Pose armature
@@ -779,57 +780,6 @@ class CBone:
 #
 #
 
-YUnit = np.array((0,1,0))
-
-YZRotation = np.array(((1,0,0,0),(0,0,1,0),(0,-1,0,0),(0,0,0,1)))
-ZYRotation = np.array(((1,0,0,0),(0,0,-1,0),(0,1,0,0),(0,0,0,1)))
-
-def toBlender3(vec):
-    return np.dot(ZYRotation[:3,:3], vec)
-    
-def fromBlender4(mat):
-    return np.dot(YZRotation, mat)
-    
-def getMatrix(head, tail, roll):
-    vector = toBlender3(tail - head)
-    length = math.sqrt(np.dot(vector, vector))
-    vector = vector/length
-    yproj = np.dot(vector, YUnit)
-    
-    if yproj > 1-1e-6:
-        axis = YUnit
-        angle = 0
-    elif yproj < -1+1e-6:
-        axis = YUnit
-        angle = math.pi
-    else:
-        axis = np.cross(YUnit, vector)
-        axis = axis / math.sqrt(np.dot(axis,axis))
-        angle = math.acos(yproj)
-    mat = tm.rotation_matrix(angle, axis)
-    if roll:
-        mat = np.dot(mat, tm.rotation_matrix(roll, YUnit))         
-    mat = fromBlender4(mat)
-    mat[:3,3] = head
-    return length, mat
-
-
-def normalizeQuaternion(quat):
-    r2 = quat[1]*quat[1] + quat[2]*quat[2] + quat[3]*quat[3]
-    if r2 > 1:
-        r2 = 1
-    if quat[0] >= 0:
-        sign = 1
-    else:
-        sign = -1
-    quat[0] = sign*math.sqrt(1-r2)
-    
-    
-def checkPoints(vec1, vec2):
-    return ((abs(vec1[0]-vec2[0]) < 1e-6) and 
-            (abs(vec1[1]-vec2[1]) < 1e-6) and
-            (abs(vec1[2]-vec2[2]) < 1e-6))
-    
 
 def createPoseRig(human, rigtype):
     import exportutils

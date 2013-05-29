@@ -162,6 +162,7 @@ class Bone:
         
         self.matrixRest = None
         self.matrixRelative = None
+        self.matrixBind = None
     
         self.matrixPose = None
         self.matrixGlobal = None
@@ -235,43 +236,26 @@ class Bone:
         if self.matrixRest is not None:
             return 
 
-        if self.length < 1e-3:
-            log.message("Warning: Zero-length bone %s." % self.name)
-            mat = np.identity(4,float)
-        else:
-            ex = np.array([0,1,0], dtype=float)
-            u = self.tail - self.head
-            u = u/self.length
-
-            xu = np.dot(ex, u)
-            if abs(xu) > 0.99999:
-                axis = ex
-                if xu > 0:
-                    angle = 0
-                else:
-                    angle = math.pi
-            else:        
-                axis = np.cross(ex, u)
-                length = math.sqrt(np.dot(axis,axis))
-                axis = axis/length
-                angle = math.acos(xu)
-
-            mat = tm.rotation_matrix(angle, axis)
-            
-        if False and self.roll:
-            ey = np.array([0,1,0], dtype=float)
-            roll = tm.rotation_matrix(self.roll, ey)
-            mat = np.dot(mat, roll)
-            
-        self.matrixRest = mat
-        self.matrixRest[:3,3] = self.head
-        
+        _,self.matrixRest = getMatrix(self.head, self.tail, self.roll)
+                
         if self.parent:
             parbone = self.armature.bones[self.parent]
             self.matrixRelative = np.dot(la.inv(parbone.matrixRest), self.matrixRest)
         else:
             self.matrixRelative = self.matrixRest
         
+        rotX = tm.rotation_matrix(math.pi/2, XUnit)
+        mat4 = np.dot(rotX, self.matrixRest)
+        mat3 = np.transpose(mat4[:3,:3])
+        self.matrixBind = np.identity(4, float)
+        self.matrixBind[:3,:3] = mat3
+        self.matrixBind[:3,3] = -np.dot(mat3, mat4[:3,3])
+
+        return        
+        print self.name, self.roll, self.length
+        print(self.matrixRest)        
+        print(self.matrixRelative)
+        print(self.matrixBind)
         
 
 

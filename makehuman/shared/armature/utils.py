@@ -24,6 +24,7 @@ Armature utilities
 
 import math
 import numpy as np
+import transformations as tm
 
 
 #-------------------------------------------------------------------------------        
@@ -137,5 +138,63 @@ def mergeWeights(vgroup):
     if vn0 >= 0:
         ngroup.append((vn0,w0))
     return ngroup
+    
+#-------------------------------------------------------------------------------        
+#   
+#-------------------------------------------------------------------------------        
+
+XUnit = np.array((1,0,0))
+YUnit = np.array((0,1,0))
+ZUnit = np.array((0,0,1))
+
+YZRotation = np.array(((1,0,0,0),(0,0,1,0),(0,-1,0,0),(0,0,0,1)))
+ZYRotation = np.array(((1,0,0,0),(0,0,-1,0),(0,1,0,0),(0,0,0,1)))
+
+def m2b3(vec):
+    return np.dot(ZYRotation[:3,:3], vec)
+    
+def b2m4(mat):
+    return np.dot(YZRotation, mat)
+    
+def getMatrix(head, tail, roll):
+    vector = m2b3(tail - head)
+    length = math.sqrt(np.dot(vector, vector))
+    vector = vector/length
+    yproj = np.dot(vector, YUnit)
+    
+    if yproj > 1-1e-6:
+        axis = YUnit
+        angle = 0
+    elif yproj < -1+1e-6:
+        axis = YUnit
+        angle = math.pi
+    else:
+        axis = np.cross(YUnit, vector)
+        axis = axis / math.sqrt(np.dot(axis,axis))
+        angle = math.acos(yproj)
+    mat = tm.rotation_matrix(angle, axis)
+    if roll:
+        mat = np.dot(mat, tm.rotation_matrix(roll, YUnit))         
+    mat = b2m4(mat)
+    mat[:3,3] = head
+    return length, mat
+
+
+def normalizeQuaternion(quat):
+    r2 = quat[1]*quat[1] + quat[2]*quat[2] + quat[3]*quat[3]
+    if r2 > 1:
+        r2 = 1
+    if quat[0] >= 0:
+        sign = 1
+    else:
+        sign = -1
+    quat[0] = sign*math.sqrt(1-r2)
+    
+    
+def checkPoints(vec1, vec2):
+    return ((abs(vec1[0]-vec2[0]) < 1e-6) and 
+            (abs(vec1[1]-vec2[1]) < 1e-6) and
+            (abs(vec1[2]-vec2[2]) < 1e-6))
+    
     
    
