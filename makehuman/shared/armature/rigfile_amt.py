@@ -30,13 +30,15 @@ import gui3d
 
 from .flags import *
 from .utils import *
-from .base_amt import BaseArmature
+from .base_amt import *
 
 class RigfileArmature(BaseArmature):     
     
     def __init__(self, name, human, config):
-        self.filepath = "data/rigs/%s.rig" % config.rigtype
+        self.filepath = "data/rigs/%s.rig" % config.rigtype        
         BaseArmature.__init__(self, name, human, config)
+        self.heads = {}
+        self.tails = {}
     
     
     def setup(self):
@@ -64,7 +66,7 @@ class RigfileArmature(BaseArmature):
         doFileWeights = 4
         status = 0
     
-        bones = {}
+        boneInfos = {}
         if not coord:
             coord = obj.coord
         for line in fp: 
@@ -86,31 +88,30 @@ class RigfileArmature(BaseArmature):
                     for word in words[2:]:
                         path = os.path.join("shared/armature/vertexgroups", word+".vgrp")
                         readVertexGroups(path, vgroups, vgroupList)
-                    status = doFileWeights
+                    status = doFileWeights                
             elif status == doWeights:
                 wts.append((int(words[0]), float(words[1])))
             elif status == doFileWeights:
-                bone = words[0]
+                bname = words[0]
                 vgroup = vgroups[words[1]]
                 for word in words[2:]:
                     vgroup += vgroups[word]
                 if len(words) > 2:
-                    self.vertexWeights[bone] = mergeWeights(vgroup)
+                    self.vertexWeights[bname] = mergeWeights(vgroup)
                 else:
-                    self.vertexWeights[bone] = vgroup
+                    self.vertexWeights[bname] = vgroup
             elif status == doLocations:
                 self.setupRigJoint (words, obj, coord)
             elif status == doBones:
-                bone = words[0]
-                self.heads[bone] = self.locations[words[1]] - self.origin
-                self.tails[bone] = self.locations[words[2]] - self.origin
-                roll = self.rolls[bone] = float(words[3])
-                parent = words[4]
-                if parent == "-":
-                    parent = None  
-                    self.root = bone
-                self.parents[bone] = parent       
-                self.layers[bone] = L_MAIN
+                bname = words[0]
+                bone = Bone(self, bname)
+                bone.head = self.locations[words[1]] - self.origin
+                bone.tail = self.locations[words[2]] - self.origin
+                bone.roll = float(words[3])
+                bone.parent = words[4]
+                if bone.parent == "-":
+                    bone.parent = None  
+                    self.root = bname
                 
                 key = None
                 value = []
@@ -119,28 +120,30 @@ class RigfileArmature(BaseArmature):
                     if isinstance(word, float):
                         value.append(word)
                     elif word[0] == '-':
-                        flags = self.setOption(bone, key, value, flags)
+                        flags = self.setOption(bname, key, value, flags)
                         key = word[0]
                         value = []
                     else:
                         value.append(word)
                 if key:
-                    flags = self.setOption(bone, key, value, flags) 
-                self.flags[bone] = flags
-                bones[bone] = (roll, parent, flags, L_MAIN)
+                    flags = self.setOption(bname, key, value, flags) 
+                bone.flags = flags
+                boneInfos[bname] = bone
             else:
                 raise NameError("Unknown status %d" % status)
-
-        self.sortBones(bones)    
         fp.close()
+
+        self.sortBones(boneInfos)    
+        for bone in self.bones.values():
+            bone.setBone(bone.head, bone.tail)
         
 
-    def getHeadTail(self, bone):
-        return self.heads[bone], self,tails[bone]
+    def getHeadTail(self, bname):
+        return self.heads[bname], self,tails[bname]
         
-    def setHeadTail(self, bone, head, tail):
-        self.heads[bone] = head 
-        self,tails[bone] = tail
+    def setHeadTail(self, bname, head, tail):
+        self.heads[bname] = head 
+        self.tails[bname] = tail
         
         
     def setupRigJoint(self, words, obj, coord):
@@ -192,7 +195,7 @@ class RigfileArmature(BaseArmature):
             raise NameError("Unknown %s" % typ)
     
     
-    def setOption(self, bone, key, value, flags):
+    def setOption(self, bname, key, value, flags):
         if key == "-nc":
             flags &= ~F_CON
         elif key == "-nd":
@@ -202,12 +205,12 @@ class RigfileArmature(BaseArmature):
         elif key == "-circ":
             name = "Circ"+value[0]
             self.customShapes[name] = (key, int(value[0]))
-            self.addPoseInfo(bone, ("CS", name))
+            self.addPoseInfo(bname, ("CS", name))
             flags |= F_WIR
         elif key == "-box":
             name = "Box" + value[0]
             self.customShapes[name] = (key, int(value[0]))
-            self.addPoseInfo(bone, ("CS", name))
+            self.addPoseInfo(bname, ("CS", name))
             flags |= F_WIR
         elif key == "-ik":
             try:
@@ -216,18 +219,18 @@ class RigfileArmature(BaseArmature):
                 pt = None
             log.debug("%s %s", value, pt)
             value.append(pt)
-            self.addPoseInfo(bone, ("IK", value))
+            self.addPoseInfo(bname, ("IK", value))
         elif key == "-ik":
             pass
         return flags
         
 
-    def addPoseInfo(self, bone, info):
+    def addPoseInfo(self, bname, info):
         try:
-            self.poseInfo[bone]
+            self.poseInfo[bname]
         except KeyError:
-            self.poseInfo[bone] = []
-        self.poseInfo[bone].append(info)
+            self.poseInfo[bname] = []
+        self.poseInfo[bname].append(info)
 
 
 

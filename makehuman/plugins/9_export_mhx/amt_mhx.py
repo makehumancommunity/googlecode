@@ -122,16 +122,16 @@ class MhxArmature(PythonExportArmature):
         self.parents = rig_mhx.Parents
 
         
-    def createBones(self, bones):
+    def createBones(self, boneInfo):
         generic = mergeDicts([rig_master.Armature, rig_bones.Armature, rig_face.Armature])
-        addDict(rig_master.Armature, bones)
-        addDict(rig_bones.Armature, bones)
-        self.addDeformBones(generic, bones),
-        addDict(rig_muscle.Armature, bones)
-        addDict(rig_mhx.Armature, bones)
-        self.addIkChains(generic, bones, rig_mhx.IkChains)
-        addDict(rig_face.Armature, bones)
-        PythonExportArmature.createBones(self, bones)
+        self.addBones(rig_master.Armature, boneInfo)
+        self.addBones(rig_bones.Armature, boneInfo)
+        self.addBones(rig_face.Armature, boneInfo)
+        self.addDeformBones(generic, boneInfo),
+        self.addBones(rig_muscle.Armature, boneInfo)
+        self.addBones(rig_mhx.Armature, boneInfo)
+        self.addIkChains(generic, boneInfo, rig_mhx.IkChains)
+        PythonExportArmature.createBones(self, boneInfo)
 
 
     def dynamicLocations(self):

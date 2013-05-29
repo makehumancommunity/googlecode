@@ -372,8 +372,8 @@ def writeController(fp, stuff, amt, config):
         '          <IDREF_array count="%d" id="%s-skin-joints-array">\n' % (nBones,stuff.name) +
         '           ')
 
-    for b in amt.bones:
-        fp.write(' %s' % b)
+    for bone in amt.bones.values():
+        fp.write(' %s' % bone.name)
     
     fp.write('\n' +
         '          </IDREF_array>\n' +
@@ -403,9 +403,8 @@ def writeController(fp, stuff, amt, config):
         '          <float_array count="%d" id="%s-skin-poses-array">' % (16*nBones,stuff.name))
 
     mat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
-    for b in amt.bones:
-        vec = amt.heads[b]
-        (x,y,z) = rotateLoc(vec, config)
+    for bone in amt.bones.values():
+        (x,y,z) = rotateLoc(bone.head, config)
         mat[0][3] = -x
         mat[1][3] = -y
         mat[2][3] = -z
@@ -810,17 +809,16 @@ def rotateLoc(loc, config):
     return (x,y,z)        
 
 
-def writeBone(fp, bone, orig, extra, pad, amt, config):
-    (name, children) = bone
-    if name:
-        nameStr = 'sid="%s"' % name
-        idStr = 'id="%s" name="%s"' % (name, name)
+def writeBone(fp, hier, orig, extra, pad, amt, config):
+    (bone, children) = hier
+    if bone:
+        nameStr = 'sid="%s"' % bone.name
+        idStr = 'id="%s" name="%s"' % (bone.name, bone.name)
     else:
         nameStr = ''
         idStr = ''
 
-    head = amt.heads[name]
-    vec = head - orig
+    vec = bone.head - orig
     (x,y,z) = rotateLoc(vec, config)
 
     fp.write('\n'+
@@ -832,7 +830,7 @@ def writeBone(fp, bone, orig, extra, pad, amt, config):
         #'%s        <scale sid="scale">1.0 1.0 1.0</scale>' % pad
 
     for child in children:
-        writeBone(fp, child, head, '', pad+'  ', amt, config)    
+        writeBone(fp, child, bone.head, '', pad+'  ', amt, config)    
 
     fp.write('\n%s      </node>' % pad)
     return

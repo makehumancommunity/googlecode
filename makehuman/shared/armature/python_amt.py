@@ -31,8 +31,7 @@ import mh2proxy
 import exportutils
 
 from .flags import *
-from . import base_amt
-from .base_amt import BaseArmature
+from .base_amt import *
 from .utils import *
 
 from . import rig_joints
@@ -46,6 +45,7 @@ class PythonArmature(BaseArmature):
 
     def __init__(self, name, human, config):    
         BaseArmature. __init__(self, name, human, config)
+        self.headsTails = None
         self.master = None
         self.reparents = {}
 
@@ -90,132 +90,139 @@ class PythonArmature(BaseArmature):
         self.sortBones(bones)        
         
 
-    def addIkChains(self, boneInfo, bones, ikChains):
-        for bone,data in boneInfo.items():
-            (roll, parent, flags, layers) = data
-            headTail = self.headsTails[bone]
-            base,ext = splitBoneName(bone)
-            parent = safeGet(self.reparents, bone, parent)
-            nodef = flags & ~F_DEF
-            data = (roll, parent, nodef, L_HELP)
+    def getParent(self, bone):
+        return bone.parent
+        #return safeGet(self.reparents, bone.name, bone.parent)
+            
+            
+    def addIkChains(self, generic, boneInfo, ikChains):
+        for bname in generic.keys():
+            bone = boneInfo[bname]
+            headTail = self.headsTails[bname]
+            base,ext = splitBoneName(bname)
+            bone.parent = self.getParent(bone)
 
             if base in ikChains.keys():      
                 value = ikChains[base]
-                fkbone = base + ".fk" + ext
-                ikbone = base + ".ik" + ext
-                self.headsTails[fkbone] = headTail
-                self.headsTails[ikbone] = headTail
-                
+                fkName = base + ".fk" + ext
+                ikName = base + ".ik" + ext
+                self.headsTails[fkName] = headTail
+                self.headsTails[ikName] = headTail
+
                 try:
                     layer,cnsname = value
                     simple = True
                 except:
-                    count, layer, cnsname, target, pole, poleAngle, rang = value
+                    count, layer, cnsname, target, pole, lang, rang = value
                     simple = False
-                
-                if simple:
-                    if ext == ".R":
-                        layer <<= 16
-                    bones[bone] = data
-                    bones[fkbone] = (bone, parent, nodef, layer<<1)
-                    bones[ikbone] = (bone, parent, nodef, layer)
-                    self.constraints[bone] = [
-                        copyTransform(fkbone, cnsname+"FK"), 
-                        copyTransform(ikbone, cnsname+"IK", 0)
-                    ]
                     
-                elif isinstance(value, tuple):
-                    words = parent.rsplit(".", 1)
+                if ext == ".R":
+                    layer <<= 16
+
+                fkBone = boneInfo[fkName] = Bone(self, fkName)
+                fkBone.fromInfo((bone.roll, bone.parent, F_WIR, layer<<1))
+                #fkBone.customShape = bone.customShape
+                ikBone = boneInfo[ikName] = Bone(self, ikName)
+                ikBone.fromInfo((bone.roll, bone.parent, F_WIR, layer))
+                #ikBone.customShape = bone.customShape
+                #bone.customShape = None
+                self.constraints[bone] = [
+                    copyTransform(fkName, cnsname+"FK"), 
+                    copyTransform(ikName, cnsname+"IK", 0)
+                ]        
+                
+                if not simple:
+                    words = bone.parent.rsplit(".", 1)
                     pbase = words[0]
                     if len(words) == 1:
                         pext = ""
                     else:
                         pext = "." + words[1]                
-                    fkParent = pbase + ".fk" + pext
-                    ikParent = pbase + ".ik" + pext
-                    if ext == ".R":
-                        layer <<= 16
-                        poleAngle = rang
-                    bones[bone] = data
-                    bones[fkbone] = (bone, fkParent, nodef, layer<<1)
-                    bones[ikbone] = (bone, ikParent, nodef, layer)
-                    self.constraints[bone] = [
-                        copyTransform(fkbone, cnsname+"FK"), 
-                        copyTransform(ikbone, cnsname+"IK", 0)
-                    ]        
+                    fkBone.parent = pbase + ".fk" + pext
+                    ikBone.parent = pbase + ".ik" + pext
+
                     ikTarget = target + ".ik" + ext
                     poleTarget = pole + ".ik" + ext
-                    self.constraints[ikbone] = [
+                    if ext == ".L":
+                        poleAngle = lang
+                    else:
+                        poleAngle = rang
+                    self.constraints[ikName] = [
                         ('IK', 0, 1, ['IK', ikTarget, count, (poleAngle, poleTarget), (True, False,False)])
                     ]                        
 
             else:
-                bones[bone] = (roll, parent, nodef, layers)
+                bone.deform = False
 
 
-    def addDeformBones(self, boneInfo, bones):
+    def addDeformBones(self, generic, boneInfo):
         if not (self.useDeformBones or self.useSplitBones):
             return
             
-        for bone,data in boneInfo.items():
-            (roll, parent, flags, layers) = data
-            if flags & F_DEF == 0:
+        for bname in generic.keys():            
+            bone = boneInfo[bname]
+            if not bone.deform:
                 continue
-            headTail = self.headsTails[bone]
-            base,ext = splitBoneName(bone)
-            parent = safeGet(self.reparents, bone, parent)
+            headTail = self.headsTails[bname]
+            base,ext = splitBoneName(bname)
+            bone.deform = False
+            bone.layers = L_HELP
+            bone.parent = self.getParent(bone)
                 
-            if parent and self.useDeformBones:
-                pbase, pext = splitBoneName(parent)
+            if bone.parent and self.useDeformBones:
+                pbase, pext = splitBoneName(bone.parent)
                 if pbase in self.splitBones.keys():
                     npieces = self.splitBones[pbase][0]
                     defParent = "DEF-" + pbase + ".0" + str(npieces) + pext
                 else:
-                    try:
-                        parInfo = boneInfo[parent]
-                    except KeyError:
-                        parInfo = None                        
-                    if parInfo and (parInfo[2] & F_DEF):
-                        defParent = "DEF-"+parent
+                    parbone = boneInfo[bone.parent]
+                    if parbone.deform:
+                        defParent = "DEF-" + bone.parent
                     else:
-                        defParent = parent
+                        defParent = bone.parent
             else:
-                defParent = parent             
+                defParent = bone.parent             
                 
             if self.useSplitBones and (base in self.splitBones.keys()): 
                 npieces,target,numAfter = self.splitBones[base]
-                defname1,defname2,defname3 = splitBonesNames(base, ext, numAfter)
+                defName1,defName2,defName3 = splitBonesNames(base, ext, numAfter)
                 head,tail = headTail
-                fkbone = base + ".fk" + ext
-                ikbone = base + ".ik" + ext
-                self.constraints[defname1] = [
+                fkName = base + ".fk" + ext
+                ikName = base + ".ik" + ext
+                self.constraints[defName1] = [
                     ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)])
                 ]
                 if npieces == 2:
-                    self.headsTails[defname1] = (head, ((0.5,head),(0.5,tail)))
-                    self.headsTails[defname2] = (((0.5,head),(0.5,tail)), tail)
-                    bones[defname1] = (roll, defParent, F_DEF+F_CON, L_DEF)
-                    bones[defname2] = (roll, bone, F_DEF, L_DEF)
+                    self.headsTails[defName1] = (head, ((0.5,head),(0.5,tail)))
+                    self.headsTails[defName2] = (((0.5,head),(0.5,tail)), tail)
+                    defBone1 = boneInfo[defName1] = Bone(self, defName1)
+                    defBone1.fromInfo((bone.roll, defParent, F_DEF+F_CON, L_DEF))
+                    defBone2 = boneInfo[defName2] = Bone(self, defName2)
+                    defBone2.fromInfo((bone.roll, bone.name, F_DEF, L_DEF))
                 elif npieces == 3:
-                    self.headsTails[defname1] = (head, ((0.667,head),(0.333,tail)))
-                    self.headsTails[defname2] = (((0.667,head),(0.333,tail)), ((0.333,head),(0.667,tail)))
-                    self.headsTails[defname3] = (((0.333,head),(0.667,tail)), tail)
-                    bones[defname1] = (bone, defParent, F_DEF+F_CON, L_DEF)
-                    bones[defname3] = (bone, bone, F_DEF, L_DEF)
-                    bones[defname2] = (bone, defParent, F_DEF, L_DEF)
-                    self.constraints[defname2] = [
-                        ('CopyLoc', 0, 1, ["CopyLoc", defname1, (1,1,1), (0,0,0), 1, False]),
-                        ('CopyRot', 0, 1, [defname1, defname1, (1,1,1), (0,0,0), False]),
-                        ('CopyRot', 0, 0.5, [bone, bone, (1,1,1), (0,0,0), False])
+                    self.headsTails[defName1] = (head, ((0.667,head),(0.333,tail)))
+                    self.headsTails[defName2] = (((0.667,head),(0.333,tail)), ((0.333,head),(0.667,tail)))
+                    self.headsTails[defName3] = (((0.333,head),(0.667,tail)), tail)
+                    defBone1 = boneInfo[defName1] = Bone(self, defName1)
+                    defBone1.fromInfo((bone.roll, defParent, F_DEF+F_CON, L_DEF))
+                    defBone3 = boneInfo[defName3] = Bone(self, defName3)
+                    defBone3.fromInfo((bone.roll, bone.name, F_DEF, L_DEF))
+                    defBone2 = boneInfo[defName2] = Bone(self, defName2)
+                    defBone2.fromInfo((bone.roll, defParent, F_DEF, L_DEF))
+                    self.constraints[defName2] = [
+                        ('CopyLoc', 0, 1, ["CopyLoc", defName1, (1,1,1), (0,0,0), 1, False]),
+                        ('CopyRot', 0, 1, [defName1, defName1, (1,1,1), (0,0,0), False]),
+                        ('CopyRot', 0, 0.5, [bone, bone.name, (1,1,1), (0,0,0), False])
                     ]
 
             elif self.useDeformBones:
-                defname = "DEF-"+bone
-                self.headsTails[defname] = headTail
-                bones[defname] = (bone, defParent, F_DEF, L_DEF)
-                self.constraints[defname] = [copyTransform(bone, bone)]
+                defName = "DEF-"+bname
+                self.headsTails[defName] = headTail
+                defBone = boneInfo[defName] = Bone(self, defName)
+                defBone.fromInfo((bone.roll, defParent, F_DEF, L_DEF))
+                self.constraints[defName] = [copyTransform(bone.name, bone.name)]
                 
-        return bones           
+        return boneInfo           
  
     
     def getVertexGroups(self):
@@ -228,41 +235,41 @@ class PythonArmature(BaseArmature):
             readVertexGroups(filepath, vgroups, vgroupList)
         
         if self.useDeformNames:
-            for bone,vgroup in vgroupList:
-                base = splitBoneName(bone)[0]
+            for bname,vgroup in vgroupList:
+                base = splitBoneName(bname)[0]
                 if base in self.splitBones.keys():
-                    self.splitVertexGroup(bone, vgroup)
+                    self.splitVertexGroup(bname, vgroup)
                 elif not self.useSplitBones:
-                    defname = "DEF-"+bone
-                    self.vertexWeights[defname] = vgroup
+                    defName = "DEF-"+bname
+                    self.vertexWeights[defName] = vgroup
                 else:
-                    defname = "DEF-"+bone
+                    defName = "DEF-"+bname
                     try:
-                        self.bones[defname]
-                        self.vertexWeights[defname] = vgroup
+                        self.bones[defName]
+                        self.vertexWeights[defName] = vgroup
                     except KeyError:
-                        self.vertexWeights[bone] = vgroup
+                        self.vertexWeights[bname] = vgroup
             
         elif self.useSplitBones:
-            for bone,vgroup in vgroupList:
-                base = splitBoneName(bone)[0]
+            for bname,vgroup in vgroupList:
+                base = splitBoneName(bname)[0]
                 if base in self.splitBones.keys():
-                    self.splitVertexGroup(bone, vgroup)
+                    self.splitVertexGroup(bname, vgroup)
                 else:
-                    self.vertexWeights[bone] = vgroup
+                    self.vertexWeights[bname] = vgroup
             
         else:
-            for bone,vgroup in vgroupList:
-                self.vertexWeights[bone] = vgroup
+            for bname,vgroup in vgroupList:
+                self.vertexWeights[bname] = vgroup
 
 
 
-    def splitVertexGroup(self, bone, vgroup):
-        base,ext = splitBoneName(bone)
+    def splitVertexGroup(self, bname, vgroup):
+        base,ext = splitBoneName(bname)
         npieces,target,numAfter = self.splitBones[base]
-        defname1,defname2,defname3 = splitBonesNames(base, ext, numAfter)
+        defName1,defName2,defName3 = splitBonesNames(base, ext, numAfter)
 
-        hname,tname = self.headsTails[bone]
+        hname,tname = self.headsTails[bname]
         head = self.locations[hname]
         tail = self.locations[tname]
         orig = head + self.origin
@@ -283,8 +290,8 @@ class PythonArmature(BaseArmature):
                     vgroup2.append((vn, x*w))
                 else:
                     vgroup2.append((vn,w))
-            self.vertexWeights[defname1] = vgroup1
-            self.vertexWeights[defname2] = vgroup2
+            self.vertexWeights[defName1] = vgroup1
+            self.vertexWeights[defName2] = vgroup2
         elif npieces == 3:
             for vn,w in vgroup:
                 y = self.mesh.coord[vn] - orig
@@ -299,9 +306,9 @@ class PythonArmature(BaseArmature):
                     vgroup3.append((vn, (2*x-1)*w))
                 else:
                     vgroup3.append((vn,w))        
-            self.vertexWeights[defname1] = vgroup1
-            self.vertexWeights[defname2] = vgroup2
-            self.vertexWeights[defname3] = vgroup3
+            self.vertexWeights[defName1] = vgroup1
+            self.vertexWeights[defName2] = vgroup2
+            self.vertexWeights[defName3] = vgroup3
         
     
     def getHeadTail(self, bone):
@@ -323,20 +330,14 @@ class PythonArmature(BaseArmature):
         self.createBones({})
         self.getVertexGroups()
 
-        for bone in self.bones.keys():
-            head,tail = self.headsTails[bone]
-            self.heads[bone] = self.findLocation(head)
-            self.tails[bone] = self.findLocation(tail)
+        for bone in self.bones.values():
+            head,tail = self.headsTails[bone.name]
+            bone.setBone(self.findLocation(head), self.findLocation(tail))
 
-        for bone in self.bones.keys():
-            (roll, parent, flags, layers) = self.bones[bone]
-            if isinstance(roll, str) and roll[0:5] == "Plane":
-                normal = m2b(self.normals[roll])
-                self.rolls[bone] = self.computeRoll(normal, bone)
-            else:
-                self.rolls[bone] = roll
-                
-        
+        for bone in self.bones.values():
+            if isinstance(bone.roll, str):
+                bone.roll = self.bones[bone.roll].roll
+            
         if self.config.clothesRig:
             for proxy in self.proxies.values():
                 if proxy.rig:
@@ -361,35 +362,6 @@ class PythonArmature(BaseArmature):
                 self.normals[plane] = getUnitVector(np.cross(yvec, pvec))
     
 
-    def computeRoll(self, normal, bone):
-        if normal is None:
-            return 0
-
-        p1 = m2b(self.heads[bone])
-        p2 = m2b(self.tails[bone])
-        xvec = normal
-        yvec = getUnitVector(p2-p1)
-        xy = np.dot(xvec,yvec)
-        #self.tails[bone] = b2m(p2-xy*xvec)
-        yvec = getUnitVector(yvec-xy*xvec)
-        zvec = getUnitVector(np.cross(xvec, yvec))
-        if zvec is None:
-            return 0
-        else:
-            mat = np.array((xvec,yvec,zvec))
-            
-        checkOrthogonal(mat)
-        quat = tm.quaternion_from_matrix(mat)
-        if abs(quat[0]) < 1e-4:
-            roll = 0
-        else:
-            roll = math.pi - 2*math.atan(quat[2]/quat[0])
-        if roll > math.pi:
-            roll -= 2*math.pi
-        print "  roll", bone, roll/D
-        return roll
-        
-        
     def setupJoints (self):    
         """
         Evaluate symbolic expressions for joint locations and store them in self.locations.
@@ -480,15 +452,6 @@ class PythonArmature(BaseArmature):
         return
     
         
-    def setupHeadsTails(self):
-        self.heads = {}
-        self.tails = {}
-        scale = self.config.scale
-        for (bone, head, tail) in self.headsTails:
-            self.heads[bone] = findLocation(self, head)
-            self.tails[bone] = findLocation(self, tail)
-        
-    
     def findLocation(self, joint):
         if isinstance(joint, str):
             return self.locations[joint]
@@ -501,7 +464,6 @@ class PythonArmature(BaseArmature):
                 w2,j2 = second
                 return w1*self.locations[j1] + w2*self.locations[j2]
     
-        
-
+       
 
        

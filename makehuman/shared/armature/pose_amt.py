@@ -433,13 +433,6 @@ class CBone:
         self.layers = layers
         self.bbone = bbone
 
-        self.conn = (flags & F_CON != 0)
-        self.deform = (flags & F_DEF != 0)
-        self.restr = (flags & F_RES != 0)
-        self.wire = (flags & F_WIR != 0)
-        self.lloc = (flags & F_NOLOC == 0)
-        self.lock = (flags & F_LOCK != 0)
-        self.cyc = (flags & F_NOCYC == 0)
     
         self.location = (0,0,0)
         self.lock_location = (False,False,False)

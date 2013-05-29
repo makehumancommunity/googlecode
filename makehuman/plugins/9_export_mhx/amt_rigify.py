@@ -98,11 +98,11 @@ class RigifyArmature(PythonExportArmature):
         self.constraints = {}
                 
 
-    def createBones(self, bones):
-        addDict(rig_bones.Armature, bones)
-        addDict(rig_muscle.Armature, bones)
-        addDict(rig_face.Armature, bones)
-        PythonExportArmature.createBones(self, bones)
+    def createBones(self, boneInfo):
+        self.addBones(rig_bones.Armature, boneInfo)
+        self.addBones(rig_muscle.Armature, boneInfo)
+        self.addBones(rig_face.Armature, boneInfo)
+        PythonExportArmature.createBones(self, boneInfo)
 
 
     def setupCustomShapes(self, fp):

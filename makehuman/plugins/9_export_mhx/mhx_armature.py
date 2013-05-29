@@ -211,62 +211,38 @@ class ExportArmature:
 
 
     def writeEditBones(self, fp):        
-        for bone,data in self.bones.items():
-            (_roll, parent, flags, layers) = data
-            conn = (flags & F_CON != 0)
-            deform = (flags & F_DEF != 0)
-            restr = (flags & F_RES != 0)
-            wire = (flags & F_WIR != 0)
-            lloc = (flags & F_NOLOC == 0)
-            lock = (flags & F_LOCK != 0)
-            cyc = (flags & F_NOCYC == 0)
-        
+        for bone in self.bones.values():
             scale = self.config.scale
     
-            fp.write("\n  Bone %s %s\n" % (bone, True))
-            (x, y, z) = scale*self.heads[bone]
+            fp.write("\n  Bone %s %s\n" % (bone.name, True))
+            (x, y, z) = scale*bone.head
             fp.write("    head  %.6g %.6g %.6g  ;\n" % (x,-z,y))
-            (x, y, z) = scale*self.tails[bone]
+            (x, y, z) = scale*bone.tail
             fp.write("    tail %.6g %.6g %.6g  ;\n" % (x,-z,y))
 
-            if type(parent) == tuple:
-                (soft, hard) = parent
-                if hard:
-                    fp.write(
-                        "#if toggle&T_HardParents\n" +
-                        "    parent Refer Bone %s ;\n" % hard +
-                        "#endif\n")
-                if soft:
-                    fp.write(
-                        "#if toggle&T_HardParents==0\n" +
-                        "    parent Refer Bone %s ;\n" % soft +
-                        "#endif\n")
-            elif parent:
-                fp.write("    parent Refer Bone %s ; \n" % (parent))
+            if bone.parent:
+                fp.write("    parent Refer Bone %s ; \n" % (bone.parent))
                 
-            roll = self.rolls[bone]
-            if isinstance(roll, str):
-                roll = self.rolls[roll]
-                
+            print "X", bone.name, bone.roll
             fp.write(
-                "    roll %.6g ; \n" % (roll) +
-                "    use_connect %s ; \n" % (conn) +
-                "    use_deform %s ; \n" % (deform) +
-                "    show_wire %s ; \n" % (wire))
+                "    roll %.6g ; \n" % (bone.roll) +
+                "    use_connect %s ; \n" % (bone.conn) +
+                "    use_deform %s ; \n" % (bone.deform) +
+                "    show_wire %s ; \n" % (bone.wire))
     
-            if 1 and (flags & F_HID):
+            if bone.hide:
                 fp.write("    hide True ; \n")
     
-            if 0 and self.bbones[bone]:
-                (bin, bout, bseg) = self.bbones[bone]
+            if 0 and bone.bbone:
+                (bin, bout, bseg) = bone.bbone
                 fp.write(
                     "    bbone_in %d ; \n" % (bin) +
                     "    bbone_out %d ; \n" % (bout) +
                     "    bbone_segments %d ; \n" % (bseg))
     
-            if flags & F_NOROT:
+            if bone.norot:
                 fp.write("    use_inherit_rotation False ; \n")
-            if flags & F_SCALE:
+            if bone.scale:
                 fp.write("    use_inherit_scale True ; \n")
             else:
                 fp.write("    use_inherit_scale False ; \n")
@@ -274,17 +250,17 @@ class ExportArmature:
     
             bit = 1
             for n in range(32):
-                if layers & bit:
+                if bone.layers & bit:
                     fp.write("1 ")
                 else:
                     fp.write("0 ")
                 bit = bit << 1
     
             fp.write(" ; \n" +
-                "    use_local_location %s ; \n" % lloc +
-                "    lock %s ; \n" % lock +
+                "    use_local_location %s ; \n" % bone.lloc +
+                "    lock %s ; \n" % bone.lock +
                 "    use_envelope_multiply False ; \n"+
-                "    hide_select %s ; \n" % (restr) +
+                "    hide_select %s ; \n" % (bone.restr) +
                 "  end Bone \n")
 
 
@@ -302,20 +278,20 @@ class ExportArmature:
     
     def writeControlPoses(self, fp, config):
         # For mhx, basic, rigify        
-        for bone in self.bones.keys():
-            constraints = safeGet(self.constraints, bone, [])
-            customShape = safeGet(self.customShapes, bone, None)
+        for bname in self.bones.keys():
+            constraints = safeGet(self.constraints, bname, [])
+            customShape = safeGet(self.customShapes, bname, None)
             boneGroup = None
-            limit = safeGet(self.rotationLimits, bone, None)
+            limit = safeGet(self.rotationLimits, bname, None)
             lockLoc = (0,0,0)
             lockRot = (0,0,0)
             lockScale = (0,0,0)
             ik_dof = (1,1,1)
             flags = 0
-            posebone.addPoseBone(fp, self, bone, customShape, boneGroup, lockLoc, lockRot, lockScale, ik_dof, flags, constraints)         
+            posebone.addPoseBone(fp, self, bname, customShape, boneGroup, lockLoc, lockRot, lockScale, ik_dof, flags, constraints)         
     
         # For other rigs
-        for (bone, cinfo) in self.poseInfo.items():
+        for (bname, cinfo) in self.poseInfo.items():
             cs = None
             constraints = []
             for (key, value) in cinfo:
@@ -332,7 +308,7 @@ class ExportArmature:
                         poleAngle = float(pt[1])
                         pt = (poleAngle, subtar)
                     constraints =  [('IK', 0, inf, ['IK', goal, n, pt, (True,False,True)])]
-            posebone.addPoseBone(fp, self, bone, cs, None, (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0, constraints)       
+            posebone.addPoseBone(fp, self, bname, cs, None, (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0, constraints)       
 
 
     def writeProperties(self, fp):

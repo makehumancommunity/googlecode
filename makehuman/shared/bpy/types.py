@@ -142,13 +142,12 @@ class Armature(Rna):
         
 
     def addHierarchy(self, hier, amt, parent, scale):
-        (bname, children) = hier
-        bone = Bone(bname)
-        self.bones[bname] = bone
+        (mbone, children) = hier
+        bone = self.bones[bname] = Bone(bname)
         self.boneList.append(bone)
-        bone.head = scale * Vector(amt.heads[bname])
-        bone.tail = scale * Vector(amt.tails[bname])
-        bone.roll = amt.rolls[bname]
+        bone.head = scale * Vector(mbone.head)
+        bone.tail = scale * Vector(mbone.tail)
+        bone.roll = mbone.roll
         bone.parent = parent
 
         bone.matrixLocalFromBone()

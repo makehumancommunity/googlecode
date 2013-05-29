@@ -90,9 +90,8 @@ class Skeleton(object):
         from armature.rigfile_amt import readRigfileArmature
 
         amt = readRigfileArmature(filename, mesh)
-        for bone in amt.bones.keys():
-            print "Add", bone
-            self.addBone(bone, amt.parents[bone], amt.heads[bone], amt.tails[bone], amt.rolls[bone])
+        for bone in amt.bones.values():
+            self.addBone(bone.name, bone.parent, bone.head, bone.tail, bone.roll)
         
         self.build()
 

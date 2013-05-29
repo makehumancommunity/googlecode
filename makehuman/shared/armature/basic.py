@@ -92,13 +92,12 @@ class BasicArmature(PythonArmature):
         self.armatureProps = rig_bones.ArmatureProps
         
     
-    def createBones(self, bones):
-        addDict(rig_bones.Armature, bones)
-        self.addDeformBones(rig_bones.Armature, bones)
+    def createBones(self, boneInfo):
+        self.addBones(rig_bones.Armature, boneInfo)
+        self.addDeformBones(rig_bones.Armature, boneInfo)
         if self.config.useMuscles:
-            addDict(rig_muscle.Armature, bones)
-        addDict(rig_face.Armature, bones)
-        PythonArmature.createBones(self, bones)
+            self.addBones(rig_muscle.Armature, boneInfo)
+        self.addBones(rig_face.Armature, boneInfo)
+        PythonArmature.createBones(self, boneInfo)
             
-
 
