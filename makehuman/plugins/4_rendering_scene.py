@@ -46,7 +46,7 @@ class SceneLibraryTaskView(gui3d.TaskView):
         if not os.path.exists(defscene):
             self.scene.save(defscene)
         if not os.path.exists(os.path.join(sceneDir, "notfound.thumb")):
-            shutil.copy("data\\uvs\\notfound.thumb", sceneDir)
+            shutil.copy(os.path.normpath("data/uvs/notfound.thumb"), sceneDir)
         self.filechooser = self.addRightWidget( \
         fc.IconListFileChooser(sceneDir , 'mhscene', ['thumb', 'png'], 'notfound.thumb', 'Scene'))
         self.addLeftWidget(self.filechooser.createSortBox())
