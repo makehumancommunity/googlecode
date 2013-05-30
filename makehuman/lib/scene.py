@@ -26,28 +26,28 @@ Definitions of scene objects and the scene class.
 import events3d
 import pickle
 
-mhscene_version = 3
+mhscene_version = 4
 
 class SceneObject(object):
     def __init__(self, scene = None, attributes = {}):
         object.__init__(self)
         self._attributes = attributes.keys()
         for attr in attributes.keys():
-            setattr(self, "_" + attr, attributes[attr])
+            object.__setattr__(self, "_" + attr, attributes[attr])
         self._scene = scene
 
     def __getattr__(self, attr):
-        if attr in self._attributes:
-            return SceneObject.__getattr__(self, "_" + attr)
+        if attr in object.__getattribute__(self, "_attributes"):
+            return object.__getattribute__(self, "_" + attr)
         elif hasattr(self, attr):
-            return getattr(self, attr)
+            return object.__getattribute__(self, attr)
         else:
             raise AttributeError('"%s" type scene objects do not have any "%s" attribute.' % (type(self), attr))
 
     def __setattr__(self, attr, value):
         if hasattr(self, "_attributes") and attr in self._attributes:
-            if (SceneObject.__getattr__(self, "_" + attr) != value):
-                SceneObject.__setattr__(self, "_" + attr, value)
+            if (getattr(self, "_" + attr) != value):
+                object.__setattr__(self, "_" + attr, value)
                 self.changed()
             else:
                 self.changed(False)
@@ -60,6 +60,14 @@ class SceneObject(object):
        
     def getAttributes(self):
         return self._attributes
+
+    def save(self, hfile):
+        for attr in self._attributes:
+            pickle.dump(getattr(self, "_" + attr), hfile)
+
+    def load(self, hfile):
+        for attr in self._attributes:
+            setattr(self, "_" + attr, pickle.load(hfile))
 
     
 class Light(SceneObject):
@@ -101,19 +109,21 @@ class Scene(events3d.EventHandler):
         self.callEvent('onChanged', self)
 
     def load(self, path):   # Load scene from a .mhscene file.        
-        hfile = open(self.path, 'rb')
+        hfile = open(path, 'rb')
         filever = pickle.load(hfile)
-        if (filever < 3):   # Minimum supported version
+        if (filever < 4):   # Minimum supported version
             hfile.close()
             return
         self.unsaved = False
         self.path = path
         
-        self.environment = pickle.load(hfile)
+        self.environment.load(hfile)
         nlig = pickle.load(hfile)
         self.lights = []
         for i in range(nlig):
-            self.lights.append(pickle.load(hfile))
+            light = Light(self)
+            light.load(hfile)
+            self.lights.append(light)
         hfile.close()
 
     def save(self, path = None):    # Save scene to a .mhscene file.
@@ -123,10 +133,10 @@ class Scene(events3d.EventHandler):
         hfile = open(self.path, 'wb')
         pickle.dump(mhscene_version, hfile)
         
-        pickle.dump(self.environment, hfile)
+        self.environment.save(hfile)
         pickle.dump(len(self.lights), hfile)
         for light in self.lights:
-            pickle.dump(light, hfile)
+            light.save(hfile)
         hfile.close()
 
     def close(self):
