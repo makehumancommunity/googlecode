@@ -227,14 +227,16 @@ class Object3D(object):
         self.markCoords(ix, norm=True)
         if ix is None:
             ix = np.s_[:]
+            xLen = self.getVertexCount()
             f_ix = np.s_[:]
         else:
+            xLen = len(ix)
             f_ix = np.unique(self.vface[ix])
 
         # This implementation is based on
         # http://www.terathon.com/code/tangent.html
 
-        tan = np.zeros((self.getVertexCount(), 2, 3), dtype=np.float32)
+        tan = np.zeros((xLen, 2, 3), dtype=np.float32)
 
         fvert = self.coord[self.fvert[f_ix]]
         v1 = fvert[:,0,:]
