@@ -4,9 +4,9 @@ uniform sampler2D unit0;
 
 uniform float silhouetteThreshold = 0.2;
 uniform float shininess = 20.0;
-uniform float ambient = 0.4;
-uniform float specular = 0.2;
-uniform float diffuse = 0.4;
+uniform float ambientIntensity = 0.4;
+uniform float specularIntensity = 0.2;
+uniform float diffuseIntensity = 0.4;
 uniform float specular_th = 0.3;
 uniform float diffuse_th = 0.5;
 
@@ -33,15 +33,15 @@ void main (void)
     gl_FragColor = silhouetteColor;
   else 
   {
-    float multiplier = ambient;
+    float multiplier = ambientIntensity;
     
     // Specular part
     float spec = pow(max(dot(Normal, EyeLight), 0.0), shininess);
-    multiplier += specular * smoothstep(specular_th-0.01, specular_th, spec);
+    multiplier += specularIntensity * smoothstep(specular_th-0.01, specular_th, spec);
 
     // Diffuse part
     float diff = max(dot(Normal, LightVert), 0.0);
-    multiplier += diffuse * smoothstep(diffuse_th-0.01, diffuse_th, diff);
+    multiplier += diffuseIntensity * smoothstep(diffuse_th-0.01, diffuse_th, diff);
       
     gl_FragColor = multiplier * tex_color;
   }

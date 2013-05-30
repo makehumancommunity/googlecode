@@ -364,8 +364,8 @@ class Material(object):
         if not self.shader:
             return
 
-        self.setShaderParameter('ambient', self.ambientColor.values + [self.opacity])
-        self.setShaderParameter('diffuse', np.asarray(self.diffuseColor.values, dtype=np.float32) * self.diffuseIntensity)
+        self.setShaderParameter('ambient', self.ambientColor.values)
+        self.setShaderParameter('diffuse', list(np.asarray(self.diffuseColor.values, dtype=np.float32) * self.diffuseIntensity) + [self.opacity])
         self.setShaderParameter('specular', list(np.asarray(self.specularColor.values, dtype=np.float32) * self.specularIntensity) + [self.specularHardness])
         self.setShaderParameter('emissive', self.emissiveColor)
 
