@@ -201,6 +201,7 @@ MaterialNumbers = {
     "red"       : 3,
     "green"     : 4,
     "blue"      : 5,
+    "yellow"    : 6,
 }
     
 def writeFaceNumbers(fp, amt, config):
@@ -225,7 +226,7 @@ def writeFaceNumbers(fp, amt, config):
                 fmats[fmask] = 2
             elif fg.name == "helper-tights":                    
                 fmats[fmask] = 3
-            elif fg.name == "helper-hair":                    
+            elif fg.name in ["helper-hair", "helper-genital"]: 
                 fmats[fmask] = 6
             elif fg.name == "helper-skirt":                    
                 fmats[fmask] = 5
