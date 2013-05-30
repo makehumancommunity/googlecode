@@ -83,12 +83,7 @@ def exportDae(human, name, fp, config):
         eyebrows=config.eyebrows, 
         lashes=config.lashes)
 
-    date = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime())
-    if config.rotate90X:
-        upaxis = 'Z_UP'
-    else:
-        upaxis = 'Y_UP'
-        
+    date = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime())        
     fp.write('<?xml version="1.0" encoding="utf-8"?>\n' +
         '<COLLADA version="1.4.0" xmlns="http://www.collada.org/2005/11/COLLADASchema">\n' +
         '  <asset>\n' +
@@ -98,7 +93,7 @@ def exportDae(human, name, fp, config):
         '    <created>%s</created>\n' % date +
         '    <modified>%s</modified>\n' % date +
         '    <unit meter="%.4f" name="meter"/>\n' % (0.1/config.scale) +
-        '    <up_axis>%s</up_axis>\n' % upaxis+
+        '    <up_axis>Y_UP</up_axis>\n' +
         '  </asset>\n' +
         '  <library_images>\n')
 
@@ -140,23 +135,36 @@ def exportDae(human, name, fp, config):
         t += dt
         writeGeometry(fp, stuff, config)
 
+    gui3d.app.progress(0.8, text="Exporting bones")
     fp.write(
         '  </library_geometries>\n\n' +
         '  <library_visual_scenes>\n' +
         '    <visual_scene id="Scene" name="Scene">\n' +
-        '      <node id="Armature">\n')
+        '      <node id="%s">\n' % name +
+        '        <matrix sid="transform">\n')
+        
 
-    gui3d.app.progress(0.8, text="Exporting bones")
+    if config.rotate90X:
+        mat = tm.rotation_matrix(-math.pi/2, (1,0,0))
+    else:
+        mat = np.identity(4, float)
+    if config.rotate90Z:
+        rotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
+        mat = np.dot(mat, rotZ)
+    for i in range(4):
+        fp.write('          %.4f %.4f %.4f %.4f\n' % (mat[i][0], mat[i][1], mat[i][2], mat[i][3]))
+
+    fp.write('        </matrix>\n')
+        
     for root in amt.hierarchy:
-        writeBone(fp, root, [0,0,0], 'layer="L1"', '  ', amt, config)
-
-    fp.write('\n      </node>\n')
+        writeBone(fp, root, [0,0,0], 'layer="L1"', '    ', amt, config)
 
     gui3d.app.progress(0.9, text="Exporting nodes")
     for stuff in stuffs:
-        writeNode(fp, "      ", stuff, amt, config)
+        writeNode(fp, "        ", stuff, amt, config)
 
     fp.write(
+        '      </node>\n' +
         '    </visual_scene>\n' +
         '  </library_visual_scenes>\n' +
         '  <scene>\n' +
@@ -364,10 +372,10 @@ def writeController(fp, stuff, amt, config):
         '    <controller id="%s-skin">\n' % stuff.name +
         '      <skin source="#%sMesh">\n' % stuff.name +
         '        <bind_shape_matrix>\n' +
-        '          1.0 0.0 0.0 0.0 \n' +
-        '          0.0 1.0 0.0 0.0 \n' +
-        '          0.0 0.0 1.0 0.0 \n' +
-        '          0.0 0.0 0.0 1.0 \n' +
+        '          1 0 0 0 \n' +
+        '          0 0 -1 0 \n' +
+        '          0 1 0 0 \n' +
+        '          0 0 0 1 \n' +
         '        </bind_shape_matrix>\n' +
         '        <source id="%s-skin-joints">\n' % stuff.name +
         '          <IDREF_array count="%d" id="%s-skin-joints-array">\n' % (nBones,stuff.name) +
@@ -420,7 +428,7 @@ def writeController(fp, stuff, amt, config):
 
     for bone in amt.bones.values():
         bone.calcRestMatrix()
-        mat = rotateMat(bone.matrixBind, config)
+        mat = bone.matrixBind
         for i in range(4):
             fp.write('\n           ')
             for j in range(4):
@@ -785,13 +793,14 @@ def writeNode(fp, pad, stuff, amt, config):
 
     fp.write('\n' +
         '%s<node id="%sObject" name="%s">\n' % (pad, stuff.name,stuff.name) +
-        '%s  <translate sid="translate">0 0 0</translate>\n' % pad +
-        #'%s  <rotate sid="rotateZ">0 0 1 0</rotate>\n' % pad +
-        #'%s  <rotate sid="rotateY">0 1 0 0</rotate>\n' % pad +
-        #'%s  <rotate sid="rotateX">1 0 0 0</rotate>\n' % pad+
-        #'%s  <scale sid="scale">1 1 1</scale>\n' % pad+
+        '%s  <matrix sid="transform">\n' % pad +
+        '%s    1 0 0 0\n' % pad +
+        '%s    0 1 0 0\n' % pad +
+        '%s    0 0 1 0\n' % pad +
+        '%s    0 0 0 1\n' % pad +
+        '%s  </matrix>\n' % pad +
         '%s  <instance_controller url="#%s-skin">\n' % (pad, stuff.name) +
-        '%s    <skeleton>#%s</skeleton>\n' % (pad, amt.root))
+        '%s    <skeleton>#%sSkeleton</skeleton>\n' % (pad, amt.root))
     
     (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)    
     if matname:
@@ -811,7 +820,8 @@ def writeNode(fp, pad, stuff, amt, config):
     return
 
 
-def rotateLoc(loc, config):    
+def rotateLoc(loc, config): 
+    return loc
     (x,y,z) = loc
     if config.rotate90X:
         yy = -z
@@ -822,17 +832,6 @@ def rotateLoc(loc, config):
         x = -y
         y = yy        
     return (x,y,z)        
-
-
-RotX = tm.rotation_matrix(math.pi/2, (1,0,0))
-RotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
-
-def rotateMat(mat, config):    
-    if config.rotate90X:
-        mat = np.dot(RotX, mat)
-    if config.rotate90Z:
-        mat = np.dot(RotZ, mat)
-    return mat
     
 
 def writeBone(fp, hier, orig, extra, pad, amt, config):
@@ -846,11 +845,11 @@ def writeBone(fp, hier, orig, extra, pad, amt, config):
     
     fp.write(
         '%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr) +
-        '%s          <matrix sid="transform">\n' % pad)
+        '%s        <matrix sid="transform">\n' % pad)
     mat = bone.matrixRelative
     for i in range(4):
-        fp.write('%s            %.5f %.5f %.5f %.5f\n' % (pad, mat[i][0], mat[i][1], mat[i][2], mat[i][3]))
-    fp.write('%s          </matrix>\n' % pad)
+        fp.write('%s          %.5f %.5f %.5f %.5f\n' % (pad, mat[i][0], mat[i][1], mat[i][2], mat[i][3]))
+    fp.write('%s        </matrix>\n' % pad)
 
     for child in children:
         writeBone(fp, child, bone.head, '', pad+'  ', amt, config)    
