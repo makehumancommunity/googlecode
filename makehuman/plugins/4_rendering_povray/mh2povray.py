@@ -59,13 +59,23 @@ def povrayExport(settings):
     """
     This function exports data in a format that can be used to reconstruct all
     renderable MakeHuman objects in POV-Ray.
+    After that, POV-Ray is run and the rendering begins.
 
     Parameters
     ----------
-
     settings:
       *Dictionary*. Options passed from the Povray exporter GUI.
     """
+
+    povwatchApp = None
+    povwatchPath = ""
+    povwatchTimer = 0
+    def povwatch():
+        if povwatchApp.poll() is not None:
+            gui3d.app.getCategory('Rendering').getTaskByName('Viewer').setImage(povwatchPath)
+            mh.changeTask('Rendering', 'Viewer')
+            gui3d.app.statusPersist('Rendering complete')
+            mh.removeTimer(povwatchTimer)
 
     settings['name'] = string.replace(getHumanName(), " ", "_")
     log.message('POV-Ray Export of object: %s', settings['name'])
@@ -78,16 +88,6 @@ def povrayExport(settings):
                         gui3d.app.settings.get('povray_render_dir', 'pov_output'),
                         "%s.inc" % settings['name'])
     
-    # The format option defines whether a simple mesh2 object is to be generated
-    # or the more flexible but slower array and macro combo is to be generated.
-    if settings['format'] == 'array':
-        povrayExportArray(gui3d.app.selectedHuman.mesh, camera, path, settings)
-    if settings['format'] == 'mesh2':
-        povrayExportMesh2(gui3d.app.selectedHuman.mesh, camera, path, settings)
-
-    outputDirectory = os.path.dirname(path)
-    log.debug('out folder: %s', outputDirectory)
-
     povray_bin = (gui3d.app.settings.get('povray_bin', ''))
    
     # try to use the appropriate binary 
@@ -103,19 +103,20 @@ def povrayExport(settings):
             povray_bin += '/povray'
         log.debug('Povray path: %s', povray_bin)
 
-
-    povwatchApp = None
-    povwatchPath = ""
-    povwatchTimer = 0
-    def povwatch():
-        if povwatchApp.poll() is not None:
-            gui3d.app.getCategory('Rendering').getTaskByName('Viewer').setImage(povwatchPath)
-            mh.changeTask('Rendering', 'Viewer')
-            gui3d.app.statusPersist('Rendering complete')
-            mh.removeTimer(povwatchTimer)
-
     if settings['action'] == 'render':
         if os.path.isfile(povray_bin):
+
+            # Export the files.
+            # The format option defines whether a simple mesh2 object is to be generated
+            # or the more flexible but slower array and macro combo is to be generated.
+            if settings['format'] == 'array':
+                povrayExportArray(gui3d.app.selectedHuman.mesh, camera, path, settings)
+            if settings['format'] == 'mesh2':
+                povrayExportMesh2(gui3d.app.selectedHuman.mesh, camera, path, settings)
+
+            outputDirectory = os.path.dirname(path)
+            log.debug('out folder: %s', outputDirectory)
+            
             # Prepare command line.
             if os.name == 'nt':
                 cmdLine = (povray_bin, 'MHRENDER', '/EXIT')
@@ -129,6 +130,7 @@ def povrayExport(settings):
                         (settings['resw'], settings['resh'], settings['AA']))
             iniFD.close()
 
+            # Run POV-Ray, and observe it while it renders.
             povwatchApp = subprocess.Popen(cmdLine, cwd = os.path.dirname(path))
             gui3d.app.statusPersist('POV - Ray is rendering.')
             povwatchPath = path.replace('.inc','.png')

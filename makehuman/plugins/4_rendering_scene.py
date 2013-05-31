@@ -43,7 +43,9 @@ class SceneLibraryTaskView(gui3d.TaskView):
         if not os.path.exists(sceneDir):
             os.makedirs(sceneDir)
         defscene = os.path.join(sceneDir, "Default.mhscene")
-        if not os.path.exists(defscene):
+        if os.path.exists(defscene):
+            self.scene.load(defscene)
+        else:
             self.scene.save(defscene)
         if not os.path.exists(os.path.join(sceneDir, "notfound.thumb")):
             shutil.copy(os.path.normpath("data/uvs/notfound.thumb"), sceneDir)
