@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -32,19 +32,20 @@ from .flags import *
 from .utils import *
 from .base_amt import *
 
-class RigfileArmature(BaseArmature):     
-    
+class RigfileArmature(BaseArmature):
+
     def __init__(self, name, human, config):
-        self.filepath = "data/rigs/%s.rig" % config.rigtype        
+        self.filepath = "data/rigs/%s.rig" % config.rigtype
         BaseArmature.__init__(self, name, human, config)
         self.heads = {}
         self.tails = {}
-    
-    
+        self.master = None
+
+
     def setup(self):
         self.fromRigfile(self.filepath, self.human.meshData)
-    
-    
+
+
     def fromRigfile(self, filename, obj, coord=None):
         """
         if type(filename) == tuple:
@@ -59,18 +60,18 @@ class RigfileArmature(BaseArmature):
         except:
             log.error("*** Cannot open %s" % filename)
             return
-    
+
         doLocations = 1
         doBones = 2
         doWeights = 3
         doFileWeights = 4
         status = 0
-    
+
         boneInfos = {}
         basicNames = {}
         if not coord:
             coord = obj.coord
-        for line in fp: 
+        for line in fp:
             words = line.split()
             if len(words) == 0:
                 pass
@@ -89,7 +90,7 @@ class RigfileArmature(BaseArmature):
                     for word in words[2:]:
                         path = os.path.join("shared/armature/vertexgroups", word+".vgrp")
                         readVertexGroups(path, vgroups, vgroupList)
-                    status = doFileWeights                
+                    status = doFileWeights
             elif status == doWeights:
                 wts.append((int(words[0]), float(words[1])))
             elif status == doFileWeights:
@@ -112,9 +113,9 @@ class RigfileArmature(BaseArmature):
                 bone.roll = float(words[3])
                 bone.parent = words[4]
                 if bone.parent == "-":
-                    bone.parent = None  
+                    bone.parent = None
                     self.root = bname
-                
+
                 key = None
                 value = []
                 flags = F_DEF|F_CON
@@ -128,17 +129,17 @@ class RigfileArmature(BaseArmature):
                     else:
                         value.append(word)
                 if key:
-                    flags = self.setOption(bname, key, value, flags) 
+                    flags = self.setOption(bname, key, value, flags)
                 bone.setFlags(flags)
                 boneInfos[bname] = bone
             else:
                 raise NameError("Unknown status %d" % status)
         fp.close()
 
-        self.sortBones(boneInfos)    
+        self.sortBones(boneInfos)
         for bone in self.bones.values():
             bone.setBone(bone.head, bone.tail)
-            
+
         if True:
             amt = getBasicArmature(self.human)
             for bone in self.bones.values():
@@ -147,19 +148,19 @@ class RigfileArmature(BaseArmature):
                 except KeyError:
                     continue
                 bone.roll = amt.bones[basicName].roll
-        
+
         for bone in self.bones.values():
             bone.calcRestMatrix()
 
 
     def getHeadTail(self, bname):
         return self.heads[bname], self,tails[bname]
-        
+
     def setHeadTail(self, bname, head, tail):
-        self.heads[bname] = head 
+        self.heads[bname] = head
         self.tails[bname] = tail
-        
-        
+
+
     def setupRigJoint(self, words, obj, coord):
         key = words[0]
         typ = words[1]
@@ -193,7 +194,7 @@ class RigfileArmature(BaseArmature):
             try:
                 loc = obj.coord[vn]
             except:
-                loc = coord[vn]         
+                loc = coord[vn]
             self.locations[key] = loc + np.array((x,y,z))
         elif typ == 'front':
             raw = self.locations[words[2]]
@@ -207,8 +208,8 @@ class RigfileArmature(BaseArmature):
             self.locations[key] = head + x*vec + offs
         else:
             raise NameError("Unknown %s" % typ)
-    
-    
+
+
     def setOption(self, bname, key, value, flags):
         if key == "-nc":
             flags &= ~F_CON
@@ -237,7 +238,7 @@ class RigfileArmature(BaseArmature):
         elif key == "-ik":
             pass
         return flags
-        
+
 
     def addPoseInfo(self, bname, info):
         try:
@@ -253,7 +254,7 @@ def readRigfileArmature(filename, obj, coord=None):
     amt = RigfileArmature("Global", gui3d.app.selectedHuman, Config())
     amt.fromRigfile(filename, obj, coord)
     return amt
-    
+
 
 def getBasicArmature(human):
     from exportutils.config import Config

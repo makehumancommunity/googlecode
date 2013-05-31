@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -56,7 +56,7 @@ class PoseAction(gui3d.Action):
 
 class PoseModifier(warpmodifier.WarpModifier):
     def __init__(self, template):
-        warpmodifier.WarpModifier.__init__(self, template, "body", "GenderAgeToneWeight") 
+        warpmodifier.WarpModifier.__init__(self, template, "body", "GenderAgeToneWeight")
         self.isPose = True
 
 
@@ -69,7 +69,7 @@ class PoseLoadTaskView(gui3d.TaskView):
         self.paths = [self.systemPoses, self.userPoses]
 
         self.dirty = False
-        
+
         gui3d.TaskView.__init__(self, category, 'Poses')
         if not os.path.exists(self.userPoses):
             os.makedirs(self.userPoses)
@@ -95,14 +95,14 @@ class PoseLoadTaskView(gui3d.TaskView):
                 oldFile,
                 filepath))
             mh.changeCategory('Modelling')
-            
+
         @self.update.mhEvent
         def onClicked(event):
             self.syncMedia()
- 
 
-    def loadMhpFile(self, filepath): 
-    
+
+    def loadMhpFile(self, filepath):
+
         log.message("Load Mhp: %s", filepath)
 
         human = gui3d.app.selectedHuman
@@ -123,7 +123,7 @@ class PoseLoadTaskView(gui3d.TaskView):
                 hasTargets = True
                 break
 
-        if hasTargets:                
+        if hasTargets:
             (fname, ext) = os.path.splitext(os.path.basename(filepath))
             filenamePattern = "${gender}-${age}-${tone}-${weight}-%s.target" % fname
             modpath = os.path.join(folder, filenamePattern)
@@ -132,21 +132,18 @@ class PoseLoadTaskView(gui3d.TaskView):
             modifier.updateValue(human, 1.0)
         else:
             modifier = None
-        
-        amt = human.armature
-        print("AMT", amt)
-        if amt:
-            pass
-            #amt.rebuild()
-        else:
-            amt = human.armature = createPoseRig(human, "soft1")            
-        print("New", amt)
-        print(amt.bones.keys())
-        amt.setModifier(modifier)
-        amt.readMhpFile(filepath)
-        #amt.listPose()
 
- 
+        pose = human.armature
+        print("AMT", pose)
+        if not pose:
+            pose = human.armature = createPoseRig(human, "soft1")
+        print("New", pose)
+        print(pose.posebones.keys())
+        pose.setModifier(modifier)
+        pose.readMhpFile(filepath)
+        #pose.listPose()
+
+
     def onShow(self, event):
 
         # When the task gets shown, set the focus to the file chooser
@@ -156,7 +153,7 @@ class PoseLoadTaskView(gui3d.TaskView):
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
-                
+
     def onHumanChanging(self, event):
         posemode.changePoseMode(event)
 
@@ -168,7 +165,7 @@ class PoseLoadTaskView(gui3d.TaskView):
 
     def loadHandler(self, human, values):
         pass
-        
+
     def saveHandler(self, human, file):
         pass
 

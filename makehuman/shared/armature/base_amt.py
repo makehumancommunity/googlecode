@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -36,10 +36,10 @@ import transformations as tm
 from .flags import *
 from .utils import *
 
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
 #   Armature base class.
-#-------------------------------------------------------------------------------        
-       
+#-------------------------------------------------------------------------------
+
 class BaseArmature:
 
     def __init__(self, name, human, config):
@@ -62,13 +62,14 @@ class BaseArmature:
         self.loadedShapes = {}
         self.constraints = {}
         self.rotationLimits = {}
-        
+
         self.vertexWeights = OrderedDict([])
-                
+        self.isNormalized = False
+
 
     def __repr__(self):
         return ("  <BaseArmature %s %s>" % (self.name, self.rigtype))
-        
+
 
     def prefixWeights(self, weights, prefix):
         pweights = {}
@@ -81,7 +82,7 @@ class BaseArmature:
 
 
     def sortBones(self, boneInfos):
-        if self.addConnectingBones:            
+        if self.addConnectingBones:
             extras = []
             for bone in boneInfos.values():
                 if bone.parent:
@@ -93,10 +94,10 @@ class BaseArmature:
                         bone.parent = connector
                         extras.append(connector)
                         self.setHeadTail(connector, ptail, head)
-                        
+
             for bone in extras:
                 boneInfos[bone.name] = bone
-            
+
         for bone in boneInfos.values():
             if bone.parent:
                 parent = boneInfos[bone.parent]
@@ -111,7 +112,7 @@ class BaseArmature:
             else:
                 self.roots.append(bone)
 
-        for root in self.roots:            
+        for root in self.roots:
             self.sortBones1(root, self.hierarchy)
 
 
@@ -121,13 +122,38 @@ class BaseArmature:
         hier.append([bone, subhier])
         for child in bone.children:
             self.sortBones1(child, subhier)
-            
-    
+
+
     def addBones(self, dict, boneInfo):
         for bname,info in dict.items():
             bone = boneInfo[bname] = Bone(self, bname)
             bone.fromInfo(info)
-        
+
+
+    def normalizeVertexWeights(self):
+        if self.isNormalized:
+            return
+
+        nVerts = len(self.human.meshData.coord)
+        wtot = np.zeros(nVerts, float)
+        for vgroup in self.vertexWeights.values():
+            for vn,w in vgroup:
+                wtot[vn] += w
+
+        for bname in self.vertexWeights.keys():
+            vgroup = self.vertexWeights[bname]
+            weights = np.zeros(len(vgroup), float)
+            verts = []
+            n = 0
+            for vn,w in vgroup:
+                verts.append(vn)
+                weights[n] = w/wtot[vn]
+                n += 1
+            self.vertexWeights[bname] = (verts, weights)
+
+        self.isNormalized = True
+
+
 
 class Bone:
     def __init__(self, amt, name):
@@ -138,42 +164,38 @@ class Bone:
         self.roll = 0
         self.parent = None
         self.flags = 0
-        self.layers = L_MAIN        
+        self.layers = L_MAIN
         self.length = 0
-        self.children = []        
-    
+        self.children = []
+
         self.location = (0,0,0)
         self.lock_location = (False,False,False)
         self.lock_rotation = (False,False,False)
         self.lock_rotation_w = False
         self.lock_rotations_4d = False
         self.lock_scale = (False,False,False)
-        
+
         self.constraints = []
         self.drivers = []
         self.rotationLimits = []
 
         # Matrices:
         # matrixRest:       4x4 rest matrix, relative world
-        # matrixRelative:   4x4 rest matrix, relative parent 
+        # matrixRelative:   4x4 rest matrix, relative parent
         # matrixPose:       4x4 pose matrix, relative parent and own rest pose
         # matrixGlobal:     4x4 matrix, relative world
         # matrixVerts:      4x4 matrix, relative world and own rest pose
-        
+
         self.matrixRest = None
         self.matrixRelative = None
         self.matrixBind = None
-    
-        self.matrixPose = None
-        self.matrixGlobal = None
-        self.matrixVerts = None
 
 
     def __repr__(self):
         return "<Bone %s>" % self.name
-        
-        
-    def fromInfo(self, info):        
+
+
+    def fromInfo(self, info):
         self.roll, self.parent, flags, self.layers = info
         self.setFlags(flags)
         if self.roll == None:
@@ -199,7 +221,7 @@ class Bone:
         self.tail = tail
         vec = tail - head
         self.length = math.sqrt(np.dot(vec,vec))
-        
+
         if isinstance(self.roll, str):
             if self.roll[0:5] == "Plane":
                 normal = m2b(self.armature.normals[self.roll])
@@ -221,7 +243,7 @@ class Bone:
             return 0
         else:
             mat = np.array((xvec,yvec,zvec))
-            
+
         checkOrthogonal(mat)
         quat = tm.quaternion_from_matrix(mat)
         if abs(quat[0]) < 1e-4:
@@ -230,20 +252,20 @@ class Bone:
             self.roll = math.pi - 2*math.atan(quat[2]/quat[0])
         if self.roll > math.pi:
             self.roll -= 2*math.pi
-                
 
-    def calcRestMatrix(self): 
+
+    def calcRestMatrix(self):
         if self.matrixRest is not None:
-            return 
+            return
 
         _,self.matrixRest = getMatrix(self.head, self.tail, self.roll)
-                
+
         if self.parent:
             parbone = self.armature.bones[self.parent]
             self.matrixRelative = np.dot(la.inv(parbone.matrixRest), self.matrixRest)
         else:
             self.matrixRelative = self.matrixRest
-        
+
         rotX = tm.rotation_matrix(math.pi/2, XUnit)
         mat4 = np.dot(rotX, self.matrixRest)
         mat3 = np.transpose(mat4[:3,:3])
@@ -251,13 +273,12 @@ class Bone:
         self.matrixBind[:3,:3] = mat3
         self.matrixBind[:3,3] = -np.dot(mat3, mat4[:3,3])
 
-        return        
+        return
         print self.name, self.roll, self.length
-        print(self.matrixRest)        
+        print(self.matrixRest)
         print(self.matrixRelative)
         print(self.matrixBind)
-        
 
 
 
-        
+

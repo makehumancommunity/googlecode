@@ -34,25 +34,26 @@ import numpy.linalg as la
 import transformations as tm
 import numpy as np
 
+import warpmodifier
+
 from .flags import *
 from .rigfile_amt import RigfileArmature
 from .utils import *
 
-#-------------------------------------------------------------------------------        
-#   Pose armature
-#-------------------------------------------------------------------------------        
-       
-class PoseArmature(RigfileArmature):
+#-------------------------------------------------------------------------------
+#   Pose
+#-------------------------------------------------------------------------------
+
+class Pose:
 
     def __init__(self, human, config):
-        RigfileArmature.__init__(self, "Armature", human, config)
-
+        amt = self.armature = RigfileArmature("Armature", human, config)
+        self.human = human
+        self.posebones = OrderedDict()
         self.modifier = None
         self.restPosition = False
         self.dirty = True
         self.frames = []
-        self.bones = {}
-        self.boneList = []
         self.controls = []
         self.deforms = []
         """
@@ -64,22 +65,34 @@ class PoseArmature(RigfileArmature):
             self.last = 1
         """
 
-        self.setup()
-
+        amt.setup()
+        amt.normalizeVertexWeights()
         self.matrixGlobal = tm.identity_matrix()
-        self.restCoords = None
-        self.boneWeights = {}
+
+        self.deforms = []
+        for bone in amt.bones.values():
+            pb = self.posebones[bone.name] = PoseBone(self, bone)
+            pb.build()
+            if pb.bone.deform:
+                self.deforms.append(pb)
+
+        print "PB", self.posebones.keys()
+        nVerts = len(amt.human.meshData.coord)
+        self.restCoords = np.zeros((nVerts,4), float)
+        self.restCoords[:,3] = 1
+        self.syncRestVerts("rest")
 
 
     def __repr__(self):
-        return ("  <CPoseArmature %s>" % self.name)
-        
+        return ("  <Pose %s>" % self.armature.name)
+
+
     def display(self):
-        log.debug("<CPoseArmature %s", self.name)
-        for bone in self.boneList:
+        log.debug("<Pose %s", self.armature.name)
+        for bone in self.posebones.values():
             bone.display()
         log.debug(">")
-        
+
 
     def printLocs(self, words):
         return
@@ -95,33 +108,33 @@ class PoseArmature(RigfileArmature):
 
 
     def listPose(self):
-        for bone in self.boneList:
-            quat = tm.quaternion_from_matrix(bone.matrixPose)
-            log.debug("  %s %s", bone.name, quat)
+        for pb in self.posebones.values():
+            quat = tm.quaternion_from_matrix(pb.matrixPose)
+            log.debug("  %s %s", pb.name, quat)
 
 
     def clear(self, update=False):
         log.message("Clear armature")
-        for bone in self.boneList:
-            bone.matrixPose = tm.identity_matrix()
+        for pb in self.posebones.values():
+            pb.matrixPose = tm.identity_matrix()
         if update:
             halt
-            self.update()     
+            self.update()
             self.removeModifier()
 
 
     def store(self):
         shadowBones = {}
-        for bone in self.boneList:
-            shadowBones[bone.name] = bone.matrixPose
-            bone.matrixPose = tm.identity_matrix()
+        for pb in self.posebones.values():
+            shadowBones[pb.name] = pb.matrixPose
+            pb.matrixPose = tm.identity_matrix()
         #self.listPose()
         return shadowBones
-        
-        
-    def restore(self, shadowBones):        
-        for bone in self.boneList:
-            bone.matrixPose = shadowBones[bone.name]
+
+
+    def restore(self, shadowBones):
+        for pb in self.bones.values():
+            pb.matrixPose = shadowBones[pb.name]
         #self.listPose()
 
 
@@ -130,15 +143,15 @@ class PoseArmature(RigfileArmature):
         self.syncRestVerts("adapt")
         self.restore(shadowBones)
         self.update()
-        
 
-    def rebuild(self, update=True):   
+    """
+    def rebuild(self, update=True):
         log.message("Rebuild %s %s %s", self, update, self.config.rigtype)
         obj = self.human.meshData
         self.proxies = {}
         self.setupRig()
         log.debug("RHT %s %s", self.heads["Root"], self.tails["Root"])
-        for bone in self.boneList:
+        for bone in self.bones.values():
             bone.rebuild()
             if bone.name in []:
                 log.debug("%s %s %s", bone.name, bone.head, bone.tail)
@@ -147,33 +160,33 @@ class PoseArmature(RigfileArmature):
                 #print "G", bone.matrixGlobal
         if self.modifier:
             self.modifier.updateValue(self.human, 1.0)
-        self.syncRestVerts("rebuild")                
+        self.syncRestVerts("rebuild")
         if update:
-            self.update()            
-
+            self.update()
+    """
 
     def syncRestVerts(self, caller):
         log.message("Sync rest verts: %s", caller)
         self.restCoords[:,:3] = warpmodifier.getWarpedCoords(self.human)
-    
+
 
     def removeModifier(self):
         if self.modifier:
             self.modifier.updateValue(self.human, 0.0)
             self.modifier = None
             self.human.meshData.update()
-            self.syncRestVerts("removeModifier")                
+            self.syncRestVerts("removeModifier")
             self.printLocs(["Remove", self.modifier])
 
-        
+
     def updateModifier(self):
         if self.modifier:
             self.modifier.updateValue(self.human, 1.0)
             self.human.meshData.update()
-            self.syncRestVerts("updateModifier")                
+            self.syncRestVerts("updateModifier")
             self.printLocs(["Update", self.modifier])
 
-        
+
     def setModifier(self, modifier):
         self.removeModifier()
         self.modifier = modifier
@@ -188,41 +201,46 @@ class PoseArmature(RigfileArmature):
         obj = human.meshData
         self.printLocs(["Update", self])
 
-        for bone in self.boneList:
-            bone.updateBone()
-            bone.updateConstraints()
-        self.printLocs(["Bones updated"])            
+        for pb in self.posebones.values():
+            pb.updateBone()
+            pb.updateConstraints()
+        self.printLocs(["Bones updated"])
 
         self.updateObj()
         self.printLocs(["Updated", human])
 
         if human.proxy:
             human.updateProxyMesh()
-            
-        if human.hairObj and human.hairProxy:            
+
+        if human.hairObj and human.hairProxy:
             mesh = human.hairObj.getSeedMesh()
             human.hairProxy.update(mesh)
             mesh.update()
             if human.hairObj.isSubdivided():
                 human.hairObj.getSubdivisionMesh()
 
-        for (name,clo) in human.clothesObjs.items():            
+        for (name,clo) in human.clothesObjs.items():
             if clo:
                 mesh = clo.getSeedMesh()
                 human.clothesProxies[name].update(mesh)
                 mesh.update()
                 if clo.isSubdivided():
                     clo.getSubdivisionMesh()
-        
-        
+
+
     def updateObj(self):
         obj = self.human.meshData
         nVerts = len(obj.coord)
+        amt = self.armature
         coords = np.zeros((nVerts,4), float)
-        for bname,data in self.boneWeights.items():
-            bone = self.bones[bname]
-            verts,weights = data
-            vec = np.dot(bone.matrixVerts, self.restCoords[verts].transpose())
+        print("UO", amt.vertexWeights.keys())
+        print([pb.name for pb in self.deforms])
+        for pb in self.deforms:
+            try:
+                verts,weights = amt.vertexWeights[pb.name]
+            except KeyError:
+                continue
+            vec = np.dot(pb.matrixVerts, self.restCoords[verts].transpose())
             wvec = weights*vec
             coords[verts] += wvec.transpose()
         obj.changeCoords(coords[:,:3])
@@ -230,58 +248,19 @@ class PoseArmature(RigfileArmature):
         obj.update()
 
 
-    def build(self):
-        self.controls = []
-        self.deforms = []
-
-        for bone in self.boneList:
-            print("BL", bone)
-            bone.build()
-            #print "Roll", bone.name, bone.roll, bone.getRoll()
-            if bone.deform:
-                self.deforms.append(bone)
-            #if bone.layers & self.visible:
-            #    self.controls.append(bone)
-            
-
-        if not self.boneWeights:
-            nVerts = len(self.human.meshData.coord)
-            self.restCoords = np.zeros((nVerts,4), float)
-            self.restCoords[:,3] = 1
-            self.syncRestVerts("rest")
-            
-            wtot = np.zeros(nVerts, float)
-            for vgroup in self.vertexWeights.values():
-                for vn,w in vgroup:
-                    wtot[vn] += w
-
-            self.boneWeights = {}
-            for bname,vgroup in self.vertexWeights.items():
-                weights = np.zeros(len(vgroup), float)
-                verts = []
-                n = 0
-                for vn,w in vgroup:
-                    verts.append(vn)
-                    weights[n] = w/wtot[vn]
-                    n += 1
-                self.boneWeights[bname] = (verts, weights)
-        else:                
-            self.syncRestVerts("build")
-                
-                
-    def checkDirty(self):                
+    def checkDirty(self):
         dirty = False
-        for bone in self.boneList:
-            bone.dirty = False
+        for pb in self.bones.values():
+            pb.dirty = False
 
-        for bone in self.boneList:
-            bone.dirty = True
-            for cns in bone.constraints:
+        for pb in self.bones.values():
+            pb.dirty = True
+            for cns in pb.constraints:
                 bnames = []
                 try:
                     bnames.append( cns.subtar )
                 except AttributeError:
-                    pass            
+                    pass
                 try:
                     bnames.append( cns.ptar )
                 except AttributeError:
@@ -290,32 +269,35 @@ class PoseArmature(RigfileArmature):
                     if bname:
                         target = self.bones[bname]
                         if not target.dirty:
-                            log.debug("Dirty %s before %s" % (bone.name, target.name))
+                            log.debug("Dirty %s before %s" % (pb.name, target.name))
                             dirty = True
         if dirty:
-            raise NameError("Dirty bones encountered") 
-            
-            
+            raise NameError("Dirty bones encountered")
+
+
     def readMhpFile(self, filepath):
         log.message("Mhp %s", filepath)
+        amt = self.armature
+        print(self.posebones.keys())
         fp = open(filepath, "rU")
         for line in fp:
             words = line.split()
             if len(words) < 5:
                 continue
             elif words[1] in ["quat", "gquat"]:
-                bone = self.bones[words[0]]
+                pb = self.posebones[words[0]]
                 quat = float(words[2]),float(words[3]),float(words[4]),float(words[5])
                 mat = tm.quaternion_matrix(quat)
                 if words[1] == "gquat":
-                    mat = np.dot(la.inv(bone.matrixRelative), mat)
-                bone.matrixPose[:3,:3] = mat[:3,:3]
+                    mat = np.dot(la.inv(pb.bone.matrixRelative), mat)
+                pb.matrixPose[:3,:3] = mat[:3,:3]
         fp.close()
-        self.update()                    
+        self.update()
 
 
     def readBvhFile(self, filepath):
         log.message("Bvh %s", filepath)
+        amt = self.armature
         fp = open(filepath, "rU")
         bones = []
         motion = False
@@ -328,18 +310,18 @@ class PoseArmature(RigfileArmature):
                 frame = []
                 for word in words:
                     frame.append(float(word))
-                frames.append(frame)                
+                frames.append(frame)
             elif words[0] == "ROOT":
                 joint = words[1]
                 isRoot = True
             elif words[0] == "JOINT":
                 try:
-                    bone = self.bones[joint]
+                    pb = self.posebones[joint]
                 except KeyError:
-                    bone = None
-                if not bone:
-                    raise NameError("Missing bone: %s" % joint)
-                data = (bone, offset, channels, isRoot)
+                    pb = None
+                if not pb:
+                    raise NameError("Missing pb: %s" % joint)
+                data = (pb, offset, channels, isRoot)
                 bones.append(data)
                 joint = words[1]
                 isRoot = False
@@ -353,16 +335,16 @@ class PoseArmature(RigfileArmature):
                 channels = words[2:]
             elif words[0] == "Frame":
                 try:
-                    bone = self.bones[joint]
+                    pb = self.posebones[joint]
                 except KeyError:
-                    bone = None
-                data = (bone, offset, channels, isRoot)
+                    pb = None
+                data = (pb, offset, channels, isRoot)
                 bones.append(data)
                 motion = True
         fp.close()
 
         frame = frames[0]
-        for bone, offset, channels, isRoot in bones:
+        for pb, offset, channels, isRoot in bones:
             order = ""
             angles = []
             for channel in channels:
@@ -386,135 +368,86 @@ class PoseArmature(RigfileArmature):
                     order = "y" + order
                     angles.append(az)
                 frame = frame[1:]
-            if bone:
-                ak,aj,ai = angles     
+            if pb:
+                ak,aj,ai = angles
                 order = "s" + order
-                mat1 = tm.euler_matrix(ai, aj, ak, axes=order) 
-                mat2 = np.dot(np.dot(la.inv(bone.matrixRest), mat1), bone.matrixRest)
-                bone.matrixPose[:3,:3] = mat2[:3,:3]
+                mat1 = tm.euler_matrix(ai, aj, ak, axes=order)
+                mat2 = np.dot(np.dot(la.inv(pb.bone.matrixRest), mat1), pb.bone.matrixRest)
+                pb.matrixPose[:3,:3] = mat2[:3,:3]
                 if isRoot and False:
-                    bone.matrixPose[0,3] = rx
-                    bone.matrixPose[1,3] = ry
-                    bone.matrixPose[2,3] = rz
+                    pb.matrixPose[0,3] = rx
+                    pb.matrixPose[1,3] = ry
+                    pb.matrixPose[2,3] = rz
 
-            if bone.name in []:
-                log.debug("%s %s", bone.name, order)
+            if pb.name in []:
+                log.debug("%s %s", pb.name, order)
                 log.debug("%s", str(channels))
                 log.debug("%s %s %s", ax/D, ay/D, az/D)
-                log.debug("R %s", bone.matrixRest)
+                log.debug("R %s", pb.bone.matrixRest)
                 log.debug("M1 %s", mat1)
                 log.debug("M2 %s", mat2)
-                log.debug("P %s", bone.matrixPose)
-                log.debug("G %s", bone.matrixGlobal)
+                log.debug("P %s", pb.matrixPose)
+                log.debug("G %s", pb.matrixGlobal)
 
-        self.update()                    
+        self.update()
 
-#-------------------------------------------------------------------------------        
-#   Bone in pose armature
-#-------------------------------------------------------------------------------        
-                
-class CBone:
-    def __init__(self, amt, name, roll, parent, flags, layers, bbone):
-        self.name = name
-        self.dirty = False
-        self.amtInfo = amt
-        self.head = amt.heads[name]
-        self.tail = amt.tails[name]
-        self.roll = roll
-        self.length = 0
-        self.yvector4 = None
-        self.parent = parent
-        self.children = []
-        if parent:
-            self.parent = amt.bones[parent]
-            self.parent.children.append(self)
+#-------------------------------------------------------------------------------
+#   PoseBone
+#-------------------------------------------------------------------------------
+
+class PoseBone:
+    def __init__(self, pose, bone):
+        self.pose = pose
+        self.bone = bone
+        self.name = bone.name
+        if self.bone.parent:
+            self.parent = pose.posebones[self.bone.parent]
         else:
             self.parent = None
-            amt.roots.append(self)
-        self.layers = layers
-        self.bbone = bbone
-
-    
-        self.location = (0,0,0)
-        self.lock_location = (False,False,False)
-        self.lock_rotation = (False,False,False)
-        self.lock_rotation_w = False
-        self.lock_rotations_4d = False
-        self.lock_scale = (False,False,False)
-        
-        self.constraints = []
-        self.drivers = []
-
-        # Matrices:
-        # matrixRest:       4x4 rest matrix, relative world
-        # matrixRelative:   4x4 rest matrix, relative parent 
-        # matrixPose:       4x4 pose matrix, relative parent and own rest pose
-        # matrixGlobal:     4x4 matrix, relative world
-        # matrixVerts:      4x4 matrix, relative world and own rest pose
-        
-        self.matrixRest = None
-        self.matrixRelative = None
+        self.dirty = False
+        self.head4 = None
+        self.tail4 = None
+        self.yvector4 = None
         self.matrixPose = None
         self.matrixGlobal = None
         self.matrixVerts = None
+        self.constraints = bone.constraints
 
-            
+
     def __repr__(self):
-        return ("  <CBone %s>" % self.name)
-        
+        return ("  <PoseBone %s>" % self.name)
+
 
     def build(self):
         self.matrixPose = tm.identity_matrix()
-        self.build0()
-                
-    def rebuild(self):
-        self.head = amt.heads[self.name]
-        self.tail = amt.tails[self.name]
-        self.build0()
-
-    def build0(self):
-        x,y,z = self.head
-        self.head3 = np.array(self.head)
+        x,y,z = self.bone.head
         self.head4 = np.array((x,y,z,1.0))
-        x,y,z = self.tail
-        self.tail3 = np.array(self.tail)
+        x,y,z = self.bone.tail
         self.tail4 = np.array((x,y,z,1.0))
-        self.length, self.matrixRest = getMatrix(self.head3, self.tail3, self.roll)
         self.vector4 = self.tail4 - self.head4
-        self.yvector4 = np.array((0, self.length, 0, 1))
+        self.yvector4 = np.array((0, self.bone.length, 0, 1))
 
         if self.parent:
-            self.matrixRelative = np.dot(la.inv(self.parent.matrixRest), self.matrixRest)
-            self.matrixGlobal = np.dot(self.parent.matrixGlobal, self.matrixRelative)
+            self.matrixGlobal = np.dot(self.parent.matrixGlobal, self.bone.matrixRelative)
         else:
-            self.matrixRelative = self.matrixRest
-            self.matrixGlobal = self.matrixRelative   
+            self.matrixGlobal = self.bone.matrixRest
         try:
-            self.matrixVerts = np.dot(self.matrixGlobal, la.inv(self.matrixRest))
+            self.matrixVerts = np.dot(self.matrixGlobal, la.inv(self.bone.matrixRest))
         except:
-            log.debug("%s %s %s", self.name, self.head, self.tail)
-            log.debug("%s", self.matrixRest)
+            log.debug("%s\n  %s\n  %s", self.name, self.head4, self.tail4)
+            log.debug("%s", self.bone.matrixRest)
+            log.debug("%s", self.matrixPose)
+            log.debug("%s", self.matrixGlobal)
             halt
-                       
+
 
     def getHead(self):
         return self.matrixGlobal[:3,3]
-        
+
+
     def getTail(self):
-        tail4 = np.dot(self.matrixGlobal, self.yvector4)
-        return tail4[:3]
+        return np.dot(self.matrixGlobal, self.yvector4)[:3]
 
-    def getRoll(self, R):
-        #R = self.matrixRest
-        qy = R[0,2] - R[2,0];
-        qw = R[0,0] + R[1,1] + R[2,2] + 1;
-
-        if qw < 1e-4:
-            roll = math.pi
-        else:
-            roll = 2*math.atan2(qy, qw);
-        return roll
-        
 
     def quatAngles(self, quat):
         qw = quat[0]
@@ -525,12 +458,12 @@ class CBone:
                      2*math.atan(quat[2]/qw),
                      2*math.atan(quat[3]/qw)
                    )
-        
+
 
     def zeroTransformation(self):
         self.matrixPose = np.identity(4, float)
 
-    
+
     def setRotationIndex(self, index, angle, useQuat):
         if useQuat:
             quat = tm.quaternion_from_matrix(self.matrixPose)
@@ -540,7 +473,7 @@ class CBone:
             normalizeQuaternion(quat)
             log.debug("%s", str(quat))
             self.matrixPose = tm.quaternion_matrix(quat)
-            return quat[0]*1000    
+            return quat[0]*1000
         else:
             angle = angle*D
             ax,ay,az = tm.euler_from_matrix(self.matrixPose, axes='sxyz')
@@ -554,6 +487,7 @@ class CBone:
             self.matrixPose[:3,:3] = mat[:3,:3]
             return 1000.0
 
+
     Axes = [
         np.array((1,0,0)),
         np.array((0,1,0)),
@@ -563,7 +497,7 @@ class CBone:
     def rotate(self, angle, axis, rotWorld):
         mat = tm.rotation_matrix(angle*D, CBone.Axes[axis])
         if rotWorld:
-            mat = np.dot(mat, self.matrixGlobal)        
+            mat = np.dot(mat, self.matrixGlobal)
             self.matrixGlobal[:3,:3] = mat[:3,:3]
             self.matrixPose = self.getPoseFromGlobal()
         else:
@@ -588,7 +522,7 @@ class CBone:
         rot = tm.rotation_matrix(-ay + self.roll, CBone.Axes[1])
         self.matrixGlobal[:3,:3] = np.dot(self.matrixGlobal[:3,:3], rot[:3,:3])
         pose2 = self.getPoseFromGlobal()
-        
+
         if 0 and self.name in ["DfmKneeBack_L", "DfmLoLeg_L"]:
             log.debug("A %s %s %s", ax, ay, az)
             log.debug("R %s", rot)
@@ -612,7 +546,7 @@ class CBone:
             rot = tm.rotation_matrix(angle - angle0, CBone.Axes[1])
             #m0 = self.matrixGlobal.copy()
             self.matrixGlobal[:3,:3] = np.dot(self.matrixGlobal[:3,:3], rot[:3,:3])
-            
+
             if 0 and self.name == "DfmUpArm2_L":
                 log.debug("")
                 log.debug("IK %s", self.name)
@@ -628,17 +562,18 @@ class CBone:
 
     def getPoseFromGlobal(self):
         if self.parent:
-            return np.dot(la.inv(self.matrixRelative), np.dot(la.inv(self.parent.matrixGlobal), self.matrixGlobal))
+            return np.dot(la.inv(self.bone.matrixRelative), np.dot(la.inv(self.parent.matrixGlobal), self.matrixGlobal))
         else:
-            return np.dot(la.inv(self.matrixRelative), self.matrixGlobal)
-        
-    
+            return np.dot(la.inv(self.bone.matrixRelative), self.matrixGlobal)
+
+
     def setRotation(self, angles):
         ax,ay,az = angles
         mat = tm.euler_matrix(ax, ay, az, axes='szyx')
         self.matrixPose[:3,:3] = mat[:3,:3]
 
-    def getRotation(self):  
+
+    def getRotation(self):
         qw,qx,qy,qz = tm.quaternion_from_matrix(self.matrixPose)
         ax,ay,az = tm.euler_from_matrix(self.matrixPose, axes='sxyz')
         return (1000*qw,1000*qx,1000*qy,1000*qz, ax/D,ay/D,az/D)
@@ -646,17 +581,17 @@ class CBone:
 
     def getPoseQuaternion(self):
         return tm.quaternion_from_matrix(self.matrixPose)
-                
+
     def setPoseQuaternion(self, quat):
         self.matrixPose = tm.quaternion_matrix(quat)
-        
+
 
     def updateBone(self):
         if self.parent:
-            self.matrixGlobal = np.dot(self.parent.matrixGlobal, np.dot(self.matrixRelative, self.matrixPose))
+            self.matrixGlobal = np.dot(self.parent.matrixGlobal, np.dot(self.bone.matrixRelative, self.matrixPose))
         else:
-            self.matrixGlobal = np.dot(self.matrixRelative, self.matrixPose)
-        """    
+            self.matrixGlobal = np.dot(self.bone.matrixRelative, self.matrixPose)
+        """
         pquat = tm.quaternion_from_matrix(self.matrixPose)
         gquat = tm.quaternion_from_matrix(self.matrixGlobal)
         print("%s (%.4f %.4f %.4f %.4f) (%.4f %.4f %.4f %.4f)" % (self.name, pquat[0], pquat[1], pquat[2], pquat[3], gquat[0], gquat[1], gquat[2], gquat[3]))
@@ -665,14 +600,14 @@ class CBone:
     def updateConstraints(self):
         for cns in self.constraints:
             cns.update(self.amtInfo, self)
-        self.matrixVerts = np.dot(self.matrixGlobal, la.inv(self.matrixRest))
-            
+        self.matrixVerts = np.dot(self.matrixGlobal, la.inv(self.bone.matrixRest))
+
 
 
     #
     #   Prisms
     #
-    
+
     PrismVectors = {
         'Prism': [
             np.array((0, 0, 0, 0)),
@@ -683,7 +618,7 @@ class CBone:
             np.array((0, 1, 0, 0)),
         ],
         'Box' : [
-            np.array((-0.10, 0, -0.10, 0)), 
+            np.array((-0.10, 0, -0.10, 0)),
             np.array((-0.10, 0, 0.10, 0)),
             np.array((-0.10, 1, -0.10, 0)),
             np.array((-0.10, 1, 0.10, 0)),
@@ -693,7 +628,7 @@ class CBone:
             np.array((0.10, 1, 0.10, 0)),
         ],
         'Cube' : [
-            np.array((-1, 0, -1, 0)), 
+            np.array((-1, 0, -1, 0)),
             np.array((-1, 0, 1, 0)),
             np.array((-1, 1, -1, 0)),
             np.array((-1, 1, 1, 0)),
@@ -702,7 +637,7 @@ class CBone:
             np.array((1, 1, -1, 0)),
             np.array((1, 1, 1, 0)),
         ],
-        'Line' : [    
+        'Line' : [
             np.array((-0.03, 0, -0.03, 0)),
             np.array((-0.03, 0, 0.03, 0)),
             np.array((-0.03, 1, -0.03, 0)),
@@ -717,17 +652,17 @@ class CBone:
     PrismFaces = {
         'Prism': [ (0,1,4,0), (0,4,3,0), (0,3,2,0), (0,2,1,0),
                    (5,4,1,5), (5,1,2,5), (5,2,3,5), (5,3,4,5) ],
-        'Box' : [ (0,1,3,2), (4,6,7,5), (0,2,6,4), 
+        'Box' : [ (0,1,3,2), (4,6,7,5), (0,2,6,4),
                    (1,5,7,3), (1,0,4,5), (2,3,7,6) ],
-        'Line' : [ (0,1,3,2), (4,6,7,5), (0,2,6,4), 
+        'Line' : [ (0,1,3,2), (4,6,7,5), (0,2,6,4),
                    (1,5,7,3), (1,0,4,5), (2,3,7,6) ],
-    }                   
-    
+    }
+
     HeadVec = np.array((0,0,0,1))
-         
+
     def prismPoints(self, type):
         if self.amtInfo.restPosition:
-            mat = self.matrixRest
+            mat = self.bone.matrixRest
             length = self.length
             self.matrixGlobal = mat
             self.yvector4[1] = length
@@ -744,7 +679,7 @@ class CBone:
     #
     #   Display
     #
-    
+
     def display(self):
         log.debug("  <CBone %s", self.name)
         log.debug("    head: (%.4g %.4g %.4g)", self.head[0], self.head[1], self.head[2])
@@ -756,7 +691,7 @@ class CBone:
 
         log.debug("    constraints: [")
         for cns in self.constraints:
-            cns.display()        
+            cns.display()
         log.debug("    ]")
         log.debug("    drivers: [")
         for drv in self.drivers:
@@ -769,13 +704,13 @@ class CBone:
         log.debug(self.name)
         log.debug("H4 %s", self.head4)
         log.debug("T4 %s", self.tail4)
-        log.debug("RM %s", self.matrixRest)
-        log.debug("RV %s", np.dot(self.matrixRest, self.yvector4))
+        log.debug("RM %s", self.bone.matrixRest)
+        log.debug("RV %s", np.dot(self.bone.matrixRest, self.yvector4))
         log.debug("P %s", self.matrixPose)
-        log.debug("Rel %s", self.matrixRelative)
+        log.debug("Rel %s", self.bone.matrixRelative)
         log.debug("G %s", self.matrixGlobal)
         log.debug("GV %s", np.dot(self.matrixGlobal, self.yvector4))
-            
+
 #
 #
 #
@@ -788,16 +723,7 @@ def createPoseRig(human, rigtype):
     config.rigtype = rigtype
     config.setHuman(human)
 
-    fp = None
-    amt = CPoseArmature(human, config)
-
-    for (bname, roll, parent, flags, layers, bbone) in amt.boneDefs:
-        bone = CBone(amt, bname, roll, parent, flags, layers, bbone)
-        amt.boneList.append(bone)        
-        amt.bones[bname] = bone
-    
-    amt.build()   
-    #amt.checkDirty()
+    amt = Pose(human, config)
     return amt
 
- 
+
