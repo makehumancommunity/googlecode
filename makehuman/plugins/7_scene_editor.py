@@ -240,6 +240,12 @@ class SceneEditorTaskView(gui3d.TaskView):
                 self.scene.load(filename)
                 self.readScene()
 
+        def doSave(filename = None):
+            self.scene.save(filename)
+            mhscene = gui3d.app.getCategory('Rendering').getTaskByName('Scene').scene
+            if os.path.normpath(mhscene.path) == os.path.normpath(self.scene.path):
+                mhscene.load(mhscene.path) # Refresh MH's current scene.
+
         @self.scene.mhEvent
         def onChanged(scene):
             self.updateFileTitle()
@@ -258,7 +264,7 @@ class SceneEditorTaskView(gui3d.TaskView):
             if self.scene.path is None:
                 self.saveAsButton.callEvent('onClicked', None)
             else:
-                self.scene.save()
+                doSave()
             self.updateFileTitle()
 
         @self.closeButton.mhEvent
@@ -275,7 +281,7 @@ class SceneEditorTaskView(gui3d.TaskView):
         def onClicked(event):
             filename = mh.getSaveFileName(mh.getPath("scenes"), 'MakeHuman scene (*.mhscene);;All files (*.*)')
             if filename:
-                self.scene.save(filename)
+                doSave(filename)
             self.updateFileTitle()
                 
         @self.itemList.mhEvent

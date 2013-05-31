@@ -829,7 +829,7 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
         progress(1.0)
 
 def getHumanName():
-    sav = str(gui3d.app.categories['Files'].tasksByName['Save'].fileentry.edit.text())
+    sav = str(gui3d.app.getCategory('Files').getTaskByName('Save').fileentry.edit.text())
     if sav == "":
         return 'Untitled'
     else:
