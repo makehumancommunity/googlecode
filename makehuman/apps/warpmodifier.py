@@ -31,7 +31,6 @@ import mh
 import os
 
 import algos3d
-from algos3d import theHuman, NMHVerts
 import warp
 import humanmodifier
 import log
@@ -246,7 +245,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
 
     def updateValue(self, human, value, updateNormals=1):
-        target = self.getWarpTarget(theHuman)
+        target = self.getWarpTarget(G.app.selectedHuman)
         if not target:
             return
         target.reinit()
@@ -472,7 +471,7 @@ def readTarget(path):
             words = line.split()
             if len(words) >= 4 and words[0][0] != '#':
                 n = int(words[0])
-                if n < NMHVerts:
+                if n < algos3d.NMHVerts:
                     target[n] = numpy.array([float(words[1]), float(words[2]), float(words[3])])
         fp.close()
         return target

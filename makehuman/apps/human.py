@@ -45,7 +45,6 @@ class Human(gui3d.Object):
         
         self.warpsNeedReset = True
         self.armature = None
-        algos3d.theHuman = self
         
         self.mesh.setCameraProjection(0)
         self.mesh.setShadeless(0)
