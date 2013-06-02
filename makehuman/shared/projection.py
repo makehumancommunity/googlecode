@@ -351,13 +351,24 @@ def mapSceneLighting(scn, progressCallback = None):
         else:
             pass
 
+    humanRot = gui3d.app.selectedHuman.getRotation()
+    def calcLightPos(light):
+        return tuple(
+            matrix.transform3(
+                matrix.rotx(-humanRot[0]) *
+                matrix.roty(-humanRot[1]) *
+                matrix.rotz(-humanRot[2]),
+                light.position))
+
     lnum = float(len(scn.lights))
     if (lnum>0):    # Add up all the lightmaps.
-        lmap = mapLighting(scn.lights[0].position, lambda p: progress(p/lnum))
+        lmap = mapLighting(calcLightPos(scn.lights[0]),
+                           lambda p: progress(p/lnum))
         i = 1.0        
         for light in scn.lights[1:]:
             lmap = image_operations.mix(
-                lmap, mapLighting(light.position, lambda p: progress((i+p)/lnum)),1,1)       
+                lmap, mapLighting(calcLightPos(light),
+                                  lambda p: progress((i+p)/lnum)),1,1)       
             i += 1.0
         return image_operations.clipped(lmap)
     else:   # If the scene has no lights, return an empty lightmap.
