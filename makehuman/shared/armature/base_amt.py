@@ -188,7 +188,6 @@ class Bone:
 
         self.matrixRest = None
         self.matrixRelative = None
-        self.matrixBind = None
 
 
     def __repr__(self):
@@ -266,18 +265,23 @@ class Bone:
         else:
             self.matrixRelative = self.matrixRest
 
+
+    def getBindMatrixCollada(self):
+        self.calcRestMatrix()
         rotX = tm.rotation_matrix(math.pi/2, XUnit)
         mat4 = np.dot(rotX, self.matrixRest)
         mat3 = np.transpose(mat4[:3,:3])
-        self.matrixBind = np.identity(4, float)
-        self.matrixBind[:3,:3] = mat3
-        self.matrixBind[:3,3] = -np.dot(mat3, mat4[:3,3])
+        bindMat = np.identity(4, float)
+        bindMat[:3,:3] = mat3
+        bindMat[:3,3] = -np.dot(mat3, mat4[:3,3])
+        return bindMat
 
-        return
-        print self.name, self.roll, self.length
-        print(self.matrixRest)
-        print(self.matrixRelative)
-        print(self.matrixBind)
+
+    def getBindMatrixFbx(self):
+        self.calcRestMatrix()
+        rotX = tm.rotation_matrix(math.pi/2, XUnit)
+        return np.transpose(self.matrixRest)
+
 
 
 

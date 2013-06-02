@@ -32,17 +32,17 @@ class FbxConfig(Config):
     def __init__(self, exporter):
         Config.__init__(self)
         self.selectedOptions(exporter)
-        
+
         self.useRelPaths     = False
         self.rigtype = exporter.getRigType()
         # FBX export does not support exporting without rig
         # If no rig selected (from library): default to soft1 rig
         if not self.rigtype:
-            self.rigtype = "soft1"
+            self.rigtype = "game"
         self.expressions     = exporter.expressions.selected
         self.useCustomShapes = exporter.useCustomShapes.selected
-        
-        
+
+
     def __repr__(self):
         return("<FbxOptions %s s %s e %s h %s>" % (
             self.rigtype, self.useTexFolder, self.expressions, self.helpers))

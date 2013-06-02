@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -38,7 +38,7 @@ import posemode
 
 #
 #    Size of end bones = 1 mm
-# 
+#
 Delta = [0,0.01,0]
 
 
@@ -46,14 +46,14 @@ Delta = [0,0.01,0]
 # exportCollada(human, filepath, config):
 #
 
-def exportCollada(human, filepath, config):    
-    posemode.exitPoseMode()        
+def exportCollada(human, filepath, config):
+    posemode.exitPoseMode()
     posemode.enterPoseMode()
     gui3d.app.progress(0, text="Exporting %s" % filepath)
 
     time1 = time.clock()
     config.setHuman(human)
-    config.setupTexFolder(filepath)        
+    config.setupTexFolder(filepath)
     try:
         fp = open(filepath, 'w')
         log.message("Writing Collada file %s" % filepath)
@@ -68,22 +68,22 @@ def exportCollada(human, filepath, config):
     time2 = time.clock()
     log.message("Wrote Collada file in %g s: %s" % (time2-time1, filepath))
     gui3d.app.progress(1)
-    posemode.exitPoseMode()        
+    posemode.exitPoseMode()
     return
 
 
 def exportDae(human, name, fp, config):
     rawTargets = exportutils.collect.readTargets(human, config)
     stuffs,amt = exportutils.collect.setupObjects(
-        name, 
-        human, 
+        name,
+        human,
         config=config,
         rawTargets = rawTargets,
-        helpers=config.helpers, 
-        eyebrows=config.eyebrows, 
+        helpers=config.helpers,
+        eyebrows=config.eyebrows,
         lashes=config.lashes)
 
-    date = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime())        
+    date = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime())
     fp.write('<?xml version="1.0" encoding="utf-8"?>\n' +
         '<COLLADA version="1.4.0" xmlns="http://www.collada.org/2005/11/COLLADASchema">\n' +
         '  <asset>\n' +
@@ -142,7 +142,7 @@ def exportDae(human, name, fp, config):
         '    <visual_scene id="Scene" name="Scene">\n' +
         '      <node id="%s">\n' % name +
         '        <matrix sid="transform">\n')
-        
+
 
     if config.rotate90X:
         mat = tm.rotation_matrix(-math.pi/2, (1,0,0))
@@ -155,7 +155,7 @@ def exportDae(human, name, fp, config):
         fp.write('          %.4f %.4f %.4f %.4f\n' % (mat[i][0], mat[i][1], mat[i][2], mat[i][3]))
 
     fp.write('        </matrix>\n')
-        
+
     for root in amt.hierarchy:
         writeBone(fp, root, [0,0,0], 'layer="L1"', '    ', amt, config)
 
@@ -183,10 +183,10 @@ def writeImages(fp, stuff, human, config):
     else:
         textures = []
 
-    for (folder, texname) in textures: 
-        path = config.getTexturePath(texname, folder, True, human)        
+    for (folder, texname) in textures:
+        path = config.getTexturePath(texname, folder, True, human)
         texfile = os.path.basename(path)
-        (fname, ext) = os.path.splitext(texname)  
+        (fname, ext) = os.path.splitext(texname)
         name = "%s_%s" % (fname, ext[1:])
         if config.useTexFolder:
             texpath = "textures/"+texfile
@@ -209,22 +209,22 @@ def writeColor(fp, tech, tex, color, s):
     if tex:
         fp.write('              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % tex)
     fp.write('            </%s>\n' % tech)
-    return 
-    
+    return
+
 def writeIntensity(fp, tech, tex, value):
     fp.write('            <%s><float>%s</float>\n' % (tech, value))
     if tex:
         fp.write('              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % tex)
     fp.write('            </%s>\n' % tech)
     return
-    
-def writeTexture(fp, tech, tex):            
+
+def writeTexture(fp, tech, tex):
     fp.write(
         '            <%s>\n' % tech +
         '              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % tex +
         '            </%s>\n' % tech)
-    return    
-    
+    return
+
 BlenderDaeColor = {
     'diffuse_color' : 'diffuse',
     'specular_color' : 'specular',
@@ -236,7 +236,7 @@ BlenderDaeIntensity = {
     'specular_hardness' : 'shininess',
 }
 
-DefaultMaterialSettings = {    
+DefaultMaterialSettings = {
     'diffuse': (0.8,0.8,0.8),
     'specular': (0.1,0.1,0.1),
     'transparency' : 1,
@@ -253,10 +253,10 @@ def writeEffects(fp, stuff):
         writePhongStart(fp)
         writeTexture(fp, 'diffuse', tex)
         writeTexture(fp, 'transparent', tex)
-        writeColor(fp, 'specular', None, (1,1,1), 0.1)        
+        writeColor(fp, 'specular', None, (1,1,1), 0.1)
         writeIntensity(fp, 'shininess', None, 10)
         writeIntensity(fp, 'transparency', None, 0)
-        writePhongEnd(fp)            
+        writePhongEnd(fp)
     elif matname:
         matname = matname.replace(" ", "_")
         mat = stuff.material
@@ -282,7 +282,7 @@ def writeEffects(fp, stuff):
             elif key == "specular_color":
                 writeColor(fp, 'specular', None, value, specInt)
                 doneSpec = True
-            else:                
+            else:
                 try:
                     tech = BlenderDaeColor[key]
                 except:
@@ -295,28 +295,28 @@ def writeEffects(fp, stuff):
                     tech = None
                 if tech:
                     writeIntensity(fp, tech, None, value, 1)
-        if not doneDiffuse:   
+        if not doneDiffuse:
             writeColor(fp, "diffuse", texfile, (1,1,1), 0.8)
             if mat.use_transparency:
                 writeTexture(fp, 'transparent', texfile)
                 writeIntensity(fp, 'transparency', None, mat.alpha)
         if not doneSpec:
-            writeColor(fp, 'specular', None, (1,1,1), 0.1)        
-            writeIntensity(fp, 'shininess', None, 10)                
+            writeColor(fp, 'specular', None, (1,1,1), 0.1)
+            writeIntensity(fp, 'shininess', None, 10)
         writePhongEnd(fp)
     return
 
-def writeEffectStart(fp, name):        
+def writeEffectStart(fp, name):
     fp.write(
        '    <effect id="%s-effect">\n' % name +
        '      <profile_COMMON>\n')
 
-def writePhongStart(fp): 
+def writePhongStart(fp):
     fp.write(
         '        <technique sid="common">\n' +
         '          <phong>\n')
 
-def writePhongEnd(fp):        
+def writePhongEnd(fp):
     fp.write(
         '          </phong>\n' +
         '          <extra/>\n' +
@@ -383,7 +383,7 @@ def writeController(fp, stuff, amt, config):
 
     for bone in amt.bones.values():
         fp.write(' %s' % bone.name)
-    
+
     fp.write('\n' +
         '          </IDREF_array>\n' +
         '          <technique_common>\n' +
@@ -401,7 +401,7 @@ def writeController(fp, stuff, amt, config):
         fp.write(' %s' % w)
 
     fp.write('\n' +
-        '          </float_array>\n' +    
+        '          </float_array>\n' +
         '          <technique_common>\n' +
         '            <accessor count="%d" source="#%s-skin-weights-array" stride="1">\n' % (nWeights,stuff.name) +
         '              <param type="float" name="WEIGHT"></param>\n' +
@@ -427,16 +427,15 @@ def writeController(fp, stuff, amt, config):
     """
 
     for bone in amt.bones.values():
-        bone.calcRestMatrix()
-        mat = bone.matrixBind
+        mat = bone.getBindMatrixCollada()
         for i in range(4):
             fp.write('\n           ')
             for j in range(4):
                 fp.write(' %.4f' % mat[i,j])
         fp.write('\n')
-    
+
     fp.write('\n' +
-        '          </float_array>\n' +    
+        '          </float_array>\n' +
         '          <technique_common>\n' +
         '            <accessor count="%d" source="#%s-skin-poses-array" stride="16">\n' % (nBones,stuff.name) +
         '              <param type="float4x4"></param>\n' +
@@ -479,11 +478,11 @@ def writeController(fp, stuff, amt, config):
         '    </controller>\n')
 
     # Morph controller
-    
+
     if stuff.meshInfo.shapes:
         nShapes = len(stuff.meshInfo.shapes)
-        
-        fp.write(        
+
+        fp.write(
             '    <controller id="%sMorph" name="%sMorph">\n' % (stuff.name, stuff.name)+
             '      <morph source="#%sMesh" method="NORMALIZED">\n' % (stuff.name) +
             '        <source id="%sTargets">\n' % (stuff.name) +
@@ -525,7 +524,7 @@ def writeController(fp, stuff, amt, config):
 #
 #    writeGeometry(fp, stuff, config):
 #
-        
+
 def writeGeometry(fp, stuff, config):
     obj = stuff.meshInfo.object
     nVerts = len(obj.coord)
@@ -557,7 +556,7 @@ def writeGeometry(fp, stuff, config):
         '        </source>\n')
 
     # Normals
-    
+
     if config.useNormals:
         obj.calcFaceNormals()
         nNormals = len(obj.fnorm)
@@ -580,9 +579,9 @@ def writeGeometry(fp, stuff, config):
             '            </accessor>\n' +
             '          </technique_common>\n' +
             '        </source>\n')
-    
+
     # UV coordinates
-    
+
     fp.write(
         '        <source id="%s-UV">\n' % stuff.name +
         '          <float_array count="%d" id="%s-UV-array">\n' % (2*nUvVerts,stuff.name) +
@@ -603,7 +602,7 @@ def writeGeometry(fp, stuff, config):
         '        </source>\n')
 
     # Faces
-    
+
     fp.write(
         '        <vertices id="%s-Vertex">\n' % stuff.name +
         '          <input semantic="POSITION" source="#%s-Position"/>\n' % stuff.name +
@@ -612,7 +611,7 @@ def writeGeometry(fp, stuff, config):
     checkFaces(stuff, nVerts, nUvVerts)
     #writePolygons(fp, stuff, config)
     writePolylist(fp, stuff, config)
-    
+
     fp.write(
         '      </mesh>\n' +
         '    </geometry>\n')
@@ -620,14 +619,14 @@ def writeGeometry(fp, stuff, config):
     for name,shape in stuff.meshInfo.shapes:
         writeShapeKey(fp, name, shape, stuff, config)
     return
-    
-    
-def writeShapeKey(fp, name, shape, stuff, config):  
+
+
+def writeShapeKey(fp, name, shape, stuff, config):
     obj = stuff.meshInfo.object
-    nVerts = len(obj.coord)    
-    
+    nVerts = len(obj.coord)
+
     # Verts
-    
+
     fp.write(
         '    <geometry id="%sMeshMorph_%s" name="%s">\n' % (stuff.name, name, name) +
         '      <mesh>\n' +
@@ -687,7 +686,7 @@ def writeShapeKey(fp, name, shape, stuff, config):
             fp.write("3 ")
         else:
             fp.write("4 ")
-        
+
     fp.write('\n' +
         '          </vcount>\n' +
         '          <p>')
@@ -704,7 +703,7 @@ def writeShapeKey(fp, name, shape, stuff, config):
         '      </mesh>\n' +
         '    </geometry>\n')
 
-    
+
 #
 #   writePolygons(fp, stuff, config):
 #   writePolylist(fp, stuff, config):
@@ -712,7 +711,7 @@ def writeShapeKey(fp, name, shape, stuff, config):
 
 def writePolygons(fp, stuff, config):
     obj = stuff.meshInfo.object
-    fp.write(        
+    fp.write(
         '        <polygons count="%d">\n' % len(obj.fvert) +
         '          <input offset="0" semantic="VERTEX" source="#%s-Vertex"/>\n' % stuff.name +
         '          <input offset="1" semantic="NORMAL" source="#%s-Normals"/>\n' % stuff.name +
@@ -724,17 +723,17 @@ def writePolygons(fp, stuff, config):
         for n,vn in enumerate(fverts):
             fp.write("%d %d %d " % (vn, vn, fuv[n]))
         fp.write('</p>\n')
-    
+
     fp.write('\n' +
         '        </polygons>\n')
     return
 
 def writePolylist(fp, stuff, config):
     obj = stuff.meshInfo.object
-    fp.write(        
+    fp.write(
         '        <polylist count="%d">\n' % len(obj.fvert) +
         '          <input offset="0" semantic="VERTEX" source="#%s-Vertex"/>\n' % stuff.name)
-        
+
     if config.useNormals:
         fp.write(
         '          <input offset="1" semantic="NORMAL" source="#%s-Normals"/>\n' % stuff.name +
@@ -785,11 +784,11 @@ def checkFaces(stuff, nVerts, nUvVerts):
             if vn > nVerts:
                 raise NameError("v %d > %d" % (vn, nVerts))
             if uv > nUvVerts:
-                raise NameError("uv %d > %d" % (uv, nUvVerts))            
-    return 
-    
+                raise NameError("uv %d > %d" % (uv, nUvVerts))
+    return
 
-def writeNode(fp, pad, stuff, amt, config):    
+
+def writeNode(fp, pad, stuff, amt, config):
 
     fp.write('\n' +
         '%s<node id="%sObject" name="%s">\n' % (pad, stuff.name,stuff.name) +
@@ -801,10 +800,10 @@ def writeNode(fp, pad, stuff, amt, config):
         '%s  </matrix>\n' % pad +
         '%s  <instance_controller url="#%s-skin">\n' % (pad, stuff.name) +
         '%s    <skeleton>#%sSkeleton</skeleton>\n' % (pad, amt.root))
-    
-    (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)    
+
+    (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)
     if matname:
-        matname = matname.replace(" ", "_")    
+        matname = matname.replace(" ", "_")
         fp.write(
             '%s    <bind_material>\n' % pad +
             '%s      <technique_common>\n' % pad +
@@ -820,7 +819,7 @@ def writeNode(fp, pad, stuff, amt, config):
     return
 
 
-def rotateLoc(loc, config): 
+def rotateLoc(loc, config):
     return loc
     (x,y,z) = loc
     if config.rotate90X:
@@ -830,9 +829,9 @@ def rotateLoc(loc, config):
     if config.rotate90Z:
         yy = x
         x = -y
-        y = yy        
-    return (x,y,z)        
-    
+        y = yy
+    return (x,y,z)
+
 
 def writeBone(fp, hier, orig, extra, pad, amt, config):
     (bone, children) = hier
@@ -842,7 +841,7 @@ def writeBone(fp, hier, orig, extra, pad, amt, config):
     else:
         nameStr = ''
         idStr = ''
-    
+
     fp.write(
         '%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr) +
         '%s        <matrix sid="transform">\n' % pad)
@@ -852,9 +851,9 @@ def writeBone(fp, hier, orig, extra, pad, amt, config):
     fp.write('%s        </matrix>\n' % pad)
 
     for child in children:
-        writeBone(fp, child, bone.head, '', pad+'  ', amt, config)    
+        writeBone(fp, child, bone.head, '', pad+'  ', amt, config)
 
     fp.write('%s      </node>\n' % pad)
     return
-    
-            
+
+
