@@ -4,48 +4,100 @@
 // using premade lightmaps.  
 #ifndef (%%name%%_Material)                            
 
-#declare %%name%%_Texture = 
-    texture { // Apply high blur to red channel.
-        pigment { image_map {png "%%name%%_sss_redlmap.png" interpolate 2} }
+#declare TexMultiply_2x =
+texture { // 2x multiplier layer.
+        pigment { rgbf <2,2,2,1> }
+        finish {
+            specular 0
+            phong 0
+            ambient 0
+            diffuse 0
+        }
+    }
+
+#declare %%name%%_Texture =
+    texture { // Red diffusion remover.
+         pigment {image_map {png "%%name%%_sss_redlmap.png" interpolate 2}}
+         finish {
+            specular 0
+            phong 0
+            ambient -2
+            diffuse 2
+         }
+    }
+    texture { // Green diffusion remover.
+         pigment {image_map {png "%%name%%_sss_greenlmap.png" interpolate 2 transmit all 1/2}}
+         finish {
+            specular 0
+            phong 0
+            ambient -2
+            diffuse 2
+         }
+    }
+    texture {TexMultiply_2x}    
+    texture { // Blue diffusion remover.
+         pigment {image_map {png "%%name%%_sss_bluelmap.png" interpolate 2 transmit all 1/2}}
+         finish {
+            specular 0
+            phong 0
+            ambient -2
+            diffuse 2
+         }
+    }    
+    texture { // Inverter.
+        pigment { rgbf <-1,-1,-1,1> }
+        finish {
+            specular 0
+            phong 0
+            ambient 0
+            diffuse 0
+        }
+    }
+    texture {TexMultiply_2x} 
+    texture { // Red SSS channel. High blur.
+        pigment { image_map {png "%%name%%_sss_redlmap.png" interpolate 2 transmit all 1/2} }
         normal  {%%rednormal%%}
         finish { 
             specular 0
             roughness 0.01
             phong 0 phong_size 0
             ambient 0
-            diffuse 6
+            diffuse 2
             reflection {0}
             conserve_energy
         }
     }
-    texture { // Apply medium blur to green channel.
+    texture {TexMultiply_2x}
+    texture { // Green SSS channel. Medium blur.
         pigment { image_map {png "%%name%%_sss_greenlmap.png" interpolate 2 transmit all 1/2} }
         normal  {%%greennormal%%}
         finish { 
-            specular 6*%%edss%%
+            specular 6*%%edss%%  // EpiDermal Specularity Scattering.
             roughness 2*%%rough%%
             phong 0 phong_size 0
             ambient 0
-            diffuse 6
+            diffuse 2
             reflection {0}
             conserve_energy
         }
     }
-    texture { // Apply no blur to blue channel.
-        pigment { image_map {png "%%name%%_sss_bluelmap.png" interpolate 2 transmit all 2/3} }
+    texture {TexMultiply_2x}
+    texture { // Blue SSS channel. No blur.
+        pigment { image_map {png "%%name%%_sss_bluelmap.png" interpolate 2 transmit all 1/2} }
         normal  {%%bluenormal%%}
         finish { 
             specular 0
             roughness 0.01
             phong 0 phong_size 0
             ambient 0
-            diffuse 6
+            diffuse 2
             reflection {0}
             conserve_energy
         }
     }
+    texture {TexMultiply_2x}
     texture { // Ambience.
-        pigment {rgbt <1, 1, 1, 0.5>}
+        pigment {rgbt <1, 1, 1, 1/2>}
         finish {
             specular 0
             roughness 0.01
