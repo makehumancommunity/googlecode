@@ -427,6 +427,8 @@ def writeController(fp, stuff, amt, config):
     """
 
     for bone in amt.bones.values():
+        bone.calcBindMatrix()
+        mat = bone.bindMatrix
         mat = bone.getBindMatrixCollada()
         for i in range(4):
             fp.write('\n           ')

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -28,18 +28,19 @@ import module3d
 import gui3d
 import exportutils
 import log
+from collections import OrderedDict
 
 _A7converter = None
 
 class CProxyRefVert:
 
     def __init__(self, parent, scale):
-        self._parent = parent        
+        self._parent = parent
         self._scale = scale
-    
+
 
     def fromSingle(self, words, vnum, proxy):
-        self._exact = True        
+        self._exact = True
         v0 = int(words[0])
         self._verts = (v0,v0,v0)
         self._weights = (1,0,0)
@@ -47,7 +48,7 @@ class CProxyRefVert:
         self.addProxyVertWeight(proxy, v0, vnum, 1)
         return self
 
-        
+
     def fromTriple(self, words, vnum, proxy):
         self._exact = False
         v0 = int(words[0])
@@ -55,14 +56,14 @@ class CProxyRefVert:
         v2 = int(words[2])
         w0 = float(words[3])
         w1 = float(words[4])
-        w2 = float(words[5])            
+        w2 = float(words[5])
         if len(words) > 6:
             d0 = float(words[6])
             d1 = float(words[7])
             d2 = float(words[8])
         else:
             (d0,d1,d2) = (0,0,0)
-        
+
         self._verts = (v0,v1,v2)
         self._weights = (w0,w1,w2)
         self._offset = numpy.array((d0,d1,d2), float)
@@ -81,13 +82,13 @@ class CProxyRefVert:
         return
 
     def getHumanVerts(self):
-        return self._verts    
+        return self._verts
 
     def getWeights(self):
-        return self._weights            
+        return self._weights
 
     def getOffset(self):
-        return self._offset            
+        return self._offset
 
     def getCoord(self):
         rv0,rv1,rv2 = self._verts
@@ -118,10 +119,10 @@ class CProxy:
         self.uuid = None
         self.basemesh = "alpha_7"
         self.tags = []
-        
+
         self.vertWeights = {}       # (proxy-vert, weight) list for each parent vert
-        self.refVerts = []          
-                
+        self.refVerts = []
+
         self.xScaleData = None
         self.yScaleData = None
         self.zScaleData = None
@@ -169,19 +170,19 @@ class CProxy:
         self.transparencies = dict()
         self.textures = []
         return
-        
+
 
     def __repr__(self):
         return ("<CProxy %s %s %s %s>" % (self.name, self.type, self.file, self.uuid))
-        
 
-    def getCoords(self):        
+
+    def getCoords(self):
         if self.basemesh in ["alpha_7", "alpha7"]:
             global _A7converter
-            if _A7converter is None:                
+            if _A7converter is None:
                 _A7converter = readProxyFile(gui3d.app.selectedHuman.meshData, "data/3dobjs/a7_converter.proxy")
             print "Converting clothes with", _A7converter
-            return [refVert.getConvertedCoord(_A7converter) for refVert in self.refVerts]        
+            return [refVert.getConvertedCoord(_A7converter) for refVert in self.refVerts]
         elif self.basemesh == "alpha_8":
             return [refVert.getCoord() for refVert in self.refVerts]
         else:
@@ -190,15 +191,15 @@ class CProxy:
 
     def update(self, obj):
         coords = self.getCoords()
-        obj.changeCoords(coords)      
+        obj.changeCoords(coords)
 
-     
+
 
     def getUuid(self):
         if self.uuid:
             return self.uuid
         else:
-            return self.name        
+            return self.name
 
 #
 #    classes CMaterial, CTexture
@@ -209,7 +210,7 @@ class CTexture:
         self.file = fname
         self.types = []
 
-        
+
 class CMaterial:
     def __init__(self):
         self.name = None
@@ -228,10 +229,10 @@ class CMaterial:
         self.emit_color = (0,0,0)
         self.use_transparency = False
         self.alpha = 1
-        
+
         self.textures = []
- 
-                
+
+
 #
 #   class CMeshInfo:
 #
@@ -245,7 +246,7 @@ class CMeshInfo:
         self.shapes = []
         self.vertexMask = None
         self.faceMask = None
-        self.vertexMapping = None   # Maps vertex index of original object to the attached filtered object 
+        self.vertexMapping = None   # Maps vertex index of original object to the attached filtered object
 
 
     def fromProxy(self, coords, texVerts, faceVerts, faceUvs, weights, shapes, scale=1.0):
@@ -254,7 +255,7 @@ class CMeshInfo:
             coords = [scale*co for co in coords]
         obj.setCoords(coords)
         obj.setUVs(texVerts)
-        
+
         for fv in faceVerts:
             if len(fv) != 4:
                 raise NameError("Mesh %s has non-quad faces and can not be handled by MakeHuman" % self.name)
@@ -272,11 +273,11 @@ class CMeshInfo:
         self.weights = weights
         self.shapes = shapes
         return self
-        
-        
+
+
     def __repr__(self):
-        return ("<CMeshInfo %s w %d t %d>" % (self.object, len(self.weights), len(self.shapes)))       
-        
+        return ("<CMeshInfo %s w %d t %d>" % (self.object, len(self.weights), len(self.shapes)))
+
 
 def getFileName(folder, file, suffix):
     folder = os.path.realpath(os.path.expanduser(folder))
@@ -297,7 +298,7 @@ doObjData = 5
 doWeights = 6
 doRefVerts = 7
 doFaceNumbers = 8
-doTexFaces = 9    
+doTexFaces = 9
 doDeleteVerts = 10
 
 def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
@@ -311,7 +312,7 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
     #print "Loading", pfile
     folder = os.path.dirname(pfile.file)
     objfile = None
-    
+
     try:
         tmpl = open(pfile.file, "rU")
     except:
@@ -337,7 +338,7 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
         if len(words) == 0:
             pass
 
-        elif words[0] == '#':        
+        elif words[0] == '#':
             theGroup = None
             if len(words) == 1:
                 continue
@@ -496,7 +497,7 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
             proxy.refVerts.append(refVert)
             if len(words) == 1:
                 refVert.fromSingle(words, vnum, proxy)
-            else:                
+            else:
                 refVert.fromTriple(words, vnum, proxy)
             vnum += 1
 
@@ -519,7 +520,7 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
 
         elif status == doDeleteVerts:
             sequence = False
-            for v in words:            
+            for v in words:
                 if v == "-":
                     sequence = True
                 else:
@@ -527,12 +528,12 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
                     if sequence:
                         for vn in range(v0,v1+1):
                             proxy.deleteVerts[vn] = True
-                        sequence = False                            
+                        sequence = False
                     else:
                         proxy.deleteVerts[v1] = True
                     v0 = v1
-                        
-            
+
+
     if evalOnLoad and proxy.obj_file:
         if not copyObjFile(proxy):
             return None
@@ -541,32 +542,32 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
 #
 #   selectConnected(proxy, obj, vn):
 #
-    
+
 def selectConnected(proxy, obj, vn):
     if not proxy.neighbors:
-        for n in range(nVerts):    
+        for n in range(nVerts):
             proxy.neighbors[n] = []
         for fv in obj.fvert:
             for vn1 in fv:
                 for vn2 in fv:
                     if vn1 != vn2:
                         proxy.neighbors[vn1].append(vn2)
-                    
+
         #for f in obj.faces:
-        #    for v1 in f.verts:            
+        #    for v1 in f.verts:
         #        for v2 in f.verts:
         #            if v1 != v2:
         #                proxy.neighbors[v1.idx].append(v2.idx)
     walkTree(proxy, vn)
     return
-    
-    
-def walkTree(proxy, vn):    
+
+
+def walkTree(proxy, vn):
     proxy.deleteVerts[vn] = True
     for vk in proxy.neighbors[vn]:
         if not proxy.deleteVerts[vk]:
             walkTree(proxy, vk)
-    return            
+    return
 
 
 def deleteGroup(name, groups):
@@ -574,7 +575,7 @@ def deleteGroup(name, groups):
         if part in name:
             return True
     return False
-       
+
 
 def copyObjFile(proxy):
     (folder, name) = proxy.obj_file
@@ -590,9 +591,9 @@ def copyObjFile(proxy):
     layer = proxy.objFileLayer
     proxy.texVertsLayers[layer] = proxy.texVerts
     proxy.texFacesLayers[layer] = proxy.texFaces
-    theGroup = None    
+    theGroup = None
     for line in tmpl:
-        words= line.split()        
+        words= line.split()
         if len(words) == 0:
             pass
         elif words[0] == 'vt':
@@ -601,9 +602,9 @@ def copyObjFile(proxy):
             newFace(1, words, theGroup, proxy)
         elif words[0] == 'g':
             theGroup = words[1]
-    tmpl.close()            
-    return True            
-    
+    tmpl.close()
+    return True
+
 
 def getScaleData(words):
     v1 = int(words[2])
@@ -611,7 +612,7 @@ def getScaleData(words):
     den = float(words[4])
     return (v1, v2, den)
 
-    
+
 def getScale(data, obj, index):
     if not data:
         return 1.0
@@ -629,7 +630,7 @@ def readMaterial(line, mat, proxy, multiTex):
         mat.settings.append( (key, words[1]) )
     elif key in ['use_shadows', 'use_transparent_shadows', 'use_transparency', 'use_raytrace']:
         mat.settings.append( (key, int(words[1])) )
-    elif key in ['diffuse_intensity', 'specular_intensity', 'specular_hardness', 'translucency', 
+    elif key in ['diffuse_intensity', 'specular_intensity', 'specular_hardness', 'translucency',
         'alpha', 'specular_alpha']:
         mat.settings.append( (key, float(words[1])) )
     elif key in ['diffuse_color_factor', 'alpha_factor', 'translucency_factor']:
@@ -663,21 +664,21 @@ def getJoint(joint, obj, locations):
     except KeyError:
         loc = locations[joint] = calcJointPos(obj, joint)
     return loc
-    
+
 
 def calcJointPos(obj, joint):
     verts = obj.getVerticesForGroups(["joint-"+joint])
     coords = obj.coord[verts]
     return coords.mean(axis=0)
     return numpy.array(coords).mean(axis=0)
-    
+
     #g = obj.getFaceGroup("joint-"+joint)
     #coords = []
     #for f in g.faces:
     #    for v in f.verts:
     #        coords.append(v.co)
     #return numpy.array(coords).mean(axis=0)
-    
+
 
 def newFace(first, words, group, proxy):
     face = []
@@ -710,10 +711,10 @@ def getMeshInfo(obj, proxy, config, rawWeights, rawShapes, rigname):
     if proxy:
         coords = proxy.getCoords()
         faceVerts = [[v for v in f] for (f,g) in proxy.faces]
-        
+
         if proxy.texVerts:
             texVerts = proxy.texVertsLayers[proxy.objFileLayer]
-            texFaces = proxy.texFacesLayers[proxy.objFileLayer]        
+            texFaces = proxy.texFacesLayers[proxy.objFileLayer]
             fnmax = len(texFaces)
             faceVerts = faceVerts[:fnmax]
         else:
@@ -727,15 +728,18 @@ def getMeshInfo(obj, proxy, config, rawWeights, rawShapes, rigname):
     else:
         meshInfo = CMeshInfo(obj.name).fromObject(obj, rawWeights, rawShapes)
     return meshInfo
-        
-        
+
+
 def getProxyWeights(rawWeights, proxy):
+    weights = OrderedDict()
     if not rawWeights:
-        return {}
-    weights = {}
+        return weights
     for key in rawWeights.keys():
         vgroup = []
         empty = True
+        if key == "Spine1":
+            print "RW", rawWeights[key]
+            print "VW", proxy.vertWeights.items()
         for (v,wt) in rawWeights[key]:
             try:
                 vlist = proxy.vertWeights[v]
@@ -746,6 +750,8 @@ def getProxyWeights(rawWeights, proxy):
                 if (pw > 1e-4):
                     vgroup.append((pv, pw))
                     empty = False
+        if key == "Spine1":
+            print "VL", vlist
         if not empty:
             weights[key] = fixProxyVGroup(vgroup)
     return weights
@@ -774,7 +780,7 @@ def getProxyShapes(rawShapes, proxy, scale):
     shapes = []
     for (key, rawShape) in rawShapes:
         shape = []
-        for (v,dr) in rawShape.items():    
+        for (v,dr) in rawShape.items():
             (dx,dy,dz) = dr
             try:
                 vlist = proxy.vertWeights[v]
@@ -802,8 +808,8 @@ def fixProxyShape(shape):
         else:
             if pv >= 0 and (dx*dx + dy*dy + dz*dz) > 1e-8:
                 fixedShape[pv] = (dx, dy, dz)
-            (pv, dx, dy, dz) = (pv0, dx0, dy0, dz0)        
+            (pv, dx, dy, dz) = (pv0, dx0, dy0, dz0)
     if pv >= 0 and (dx*dx + dy*dy + dz*dz) > 1e-8:
         fixedShape[pv] = (dx, dy, dz)
     return fixedShape
-    
+

@@ -27,17 +27,39 @@ from .fbx_utils import *
 #   Object definitions
 #--------------------------------------------------------------------
 
+def getObjectNumbers(stuffs):
+    nMaterials = len(stuffs)
+    nTextures = 0
+    nImages = 0
+    for stuff in stuffs:
+        if stuff.texture:
+            nTextures += 2
+            nImages += 1
+        if stuff.specular:
+            nTextures += 1
+            nImages += 1
+        if stuff.normal:
+            nTextures += 1
+            nImages += 1
+        if stuff.transparency:
+            nTextures += 1
+            nImages += 1
+        if stuff.bump:
+            nTextures += 1
+            nImages += 1
+        if stuff.displacement:
+            nTextures += 1
+            nImages += 1
+    return nMaterials,nTextures,nImages
+
+
 def countObjects(stuffs, amt):
-    nMaterials = 1
-    nTextures = 1
-    nImages = 1
+    nMaterials,nTextures,nImages = getObjectNumbers(stuffs)
     return (nMaterials + nTextures + nImages)
 
 
 def writeObjectDefs(fp, stuffs, amt):
-    nMaterials = 1
-    nTextures = 1
-    nImages = 1
+    nMaterials,nTextures,nImages = getObjectNumbers(stuffs)
 
     fp.write(
 """
@@ -73,9 +95,6 @@ def writeObjectDefs(fp, stuffs, amt):
         }
     }
 """)
-
-    if nTextures == 0:
-        return
 
     fp.write(
 """

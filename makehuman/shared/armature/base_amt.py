@@ -154,6 +154,11 @@ class BaseArmature:
         self.isNormalized = True
 
 
+    def calcBindMatrix(self):
+        self.bindMatrix = tm.rotation_matrix(math.pi/2, XUnit)
+        self.bindInverse = la.inv(self.bindMatrix)
+
+
 
 class Bone:
     def __init__(self, amt, name):
@@ -188,6 +193,8 @@ class Bone:
 
         self.matrixRest = None
         self.matrixRelative = None
+        self.bindMatrix = None
+        self.bindInverse = None
 
 
     def __repr__(self):
@@ -270,17 +277,15 @@ class Bone:
         self.calcRestMatrix()
         rotX = tm.rotation_matrix(math.pi/2, XUnit)
         mat4 = np.dot(rotX, self.matrixRest)
-        mat3 = np.transpose(mat4[:3,:3])
-        bindMat = np.identity(4, float)
-        bindMat[:3,:3] = mat3
-        bindMat[:3,3] = -np.dot(mat3, mat4[:3,3])
-        return bindMat
+        return la.inv(mat4)
 
 
-    def getBindMatrixFbx(self):
+    def calcBindMatrix(self):
+        if self.bindMatrix is not None:
+            return
         self.calcRestMatrix()
-        rotX = tm.rotation_matrix(math.pi/2, XUnit)
-        return np.transpose(self.matrixRest)
+        self.bindInverse = np.transpose(self.matrixRest)
+        self.bindMatrix = la.inv(self.bindInverse)
 
 
 

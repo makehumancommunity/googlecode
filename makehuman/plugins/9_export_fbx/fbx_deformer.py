@@ -60,38 +60,39 @@ def writeObjectDefs(fp, stuffs, amt):
 #--------------------------------------------------------------------
 
 def writeObjectProps(fp, stuffs, amt):
-
-    bindMats = {}
-    writeBindPose(fp, stuffs, amt, bindMats)
-    writeDeformer(fp, amt)
+    writeBindPose(fp, stuffs, amt)
 
     for stuff in stuffs:
+        name = getStuffName(stuff, amt)
+        writeDeformer(fp, name)
         for bone in amt.bones.values():
             try:
                 weights = stuff.meshInfo.weights[bone.name]
             except KeyError:
                 continue
-            writeSubDeformer(fp, bone, weights, bindMats)
+            writeSubDeformer(fp, name, bone, weights)
 
 
-def writeDeformer(fp, amt):
-    id,key = getId("Deformer::%s" % amt.name)
+def writeDeformer(fp, name):
+    id,key = getId("Deformer::%s" % name)
 
     fp.write(
 '    Deformer: ¨%d, "%s", "Skin" {' % (id, key) +
 """
         Version: 101
         Properties70:  {
-            P: "COLLADA_ID", "KString", "", "", "foo-skin"
+""" +
+'            P: "MHName", "KString", "", "", "%sSkin"' % name +
+"""
         }
         Link_DeformAcuracy: 50
     }
 """)
 
 
-def writeSubDeformer(fp, bone, weights, bindMats):
+def writeSubDeformer(fp, name, bone, weights):
     nVertexWeights = len(weights)
-    id,key = getId("SubDeformer::%s" % bone.name)
+    id,key = getId("SubDeformer::%s_%s" % (bone.name, name))
 
     fp.write(
 '    Deformer: %d, "%s", "Cluster" {\n' % (id, key) +
@@ -117,13 +118,12 @@ def writeSubDeformer(fp, bone, weights, bindMats):
         writeComma(fp, n, last)
 
     fp.write('        }\n')
-    bindMat = bindMats[bone.name]
-    writeMatrix(fp, 'Transform', la.inv(bindMat))
-    writeMatrix(fp, 'TransformLink', bindMat)
+    writeMatrix(fp, 'Transform', bone.bindMatrix)
+    writeMatrix(fp, 'TransformLink', bone.bindInverse)
     fp.write('    }\n')
 
 
-def writeBindPose(fp, stuffs, amt, bindMats):
+def writeBindPose(fp, stuffs, amt):
     id,key = getId("Pose::" + amt.name)
     nBones = len(amt.bones)
     nMeshes = len(stuffs)
@@ -135,17 +135,16 @@ def writeBindPose(fp, stuffs, amt, bindMats):
 '        NbPoseNodes: %d\n' % (1+nMeshes+nBones))
 
     startLinking()
-    rotX = tm.rotation_matrix(math.pi/2, (1,0,0))
-    bindMat = np.identity(4, float)
-    poseNode(fp, "Model::%s" % amt.name, bindMat)
+    amt.calcBindMatrix()
+    poseNode(fp, "Model::%s" % amt.name, amt.bindMatrix)
 
     for stuff in stuffs:
         name = getStuffName(stuff, amt)
-        poseNode(fp, "Model::%sMesh" % name, bindMat)
+        poseNode(fp, "Model::%sMesh" % name, amt.bindMatrix)
 
     for bone in amt.bones.values():
-        bindMat = bindMats[bone.name] = bone.getBindMatrixFbx()
-        poseNode(fp, "Model::%s" % bone.name, bindMat)
+        bone.calcBindMatrix()
+        poseNode(fp, "Model::%s" % bone.name, bone.bindMatrix)
 
     stopLinking()
     fp.write('    }\n')
@@ -170,7 +169,12 @@ def writeLinks(fp, stuffs, amt):
         name = getStuffName(stuff, amt)
         ooLink(fp, 'Deformer::%s' % name, 'Geometry::%s' % name)
         for bone in amt.bones.values():
-            ooLink(fp, 'SubDeformer::%s' % bone.name, 'Deformer::%s' % name)
-            ooLink(fp, 'Model::%s' % bone.name, 'SubDeformer::%s' % bone.name)
+            subdef = 'SubDeformer::%s_%s' % (bone.name, name)
+            try:
+                getId(subdef)
+            except NameError:
+                continue
+            ooLink(fp, subdef, 'Deformer::%s' % name)
+            ooLink(fp, 'Model::%s' % bone.name, subdef)
 
 
