@@ -32,21 +32,36 @@ from .fbx_utils import *
 #   Object definitions
 #--------------------------------------------------------------------
 
+def getObjectCounts(stuffs):
+    nVertexGroups = 0
+    for stuff in stuffs:
+        for weights in stuff.meshInfo.weights:
+            if weights:
+                nVertexGroups += 1
+
+    nShapes = 0
+    for stuff in stuffs:
+        for key,shape in stuff.meshInfo.shapes:
+            if shape:
+                nShapes += 1
+
+    return nVertexGroups, nShapes
+
 def countObjects(stuffs, amt):
-    char = stuffs[0]
-    nMeshes = len(stuffs)
-    nVertexGroups = len(char.meshInfo.weights)
-    return (nMeshes*nVertexGroups + 1)
+    nVertexGroups, nShapes = getObjectCounts(stuffs)
+    if amt:
+        return (nVertexGroups + 1 + 2*nShapes)
+    else:
+        return 2*nShapes
 
 
 def writeObjectDefs(fp, stuffs, amt):
-    char = stuffs[0]
-    nMeshes = len(stuffs)
-    nVertexGroups = len(char.meshInfo.weights)
+    nVertexGroups, nShapes = getObjectCounts(stuffs)
 
-    fp.write(
+    if amt:
+        fp.write(
 '    ObjectType: "Deformer" {\n' +
-'    Count: %d' % (nMeshes*nVertexGroups) +
+'       Count: %d' % (nVertexGroups + 1 + 2*nShapes) +
 """
     }
 
@@ -55,22 +70,94 @@ def writeObjectDefs(fp, stuffs, amt):
     }
 """)
 
+    else:
+        fp.write(
+'    ObjectType: "Deformer" {\n' +
+'       Count: %d' % (2*nShapes) +
+"""
+}
+""")
+
+
 #--------------------------------------------------------------------
 #   Object properties
 #--------------------------------------------------------------------
 
 def writeObjectProps(fp, stuffs, amt):
-    writeBindPose(fp, stuffs, amt)
+    if amt:
+        writeBindPose(fp, stuffs, amt)
+
+        for stuff in stuffs:
+            name = getStuffName(stuff, amt)
+            writeDeformer(fp, name)
+            for bone in amt.bones.values():
+                try:
+                    weights = stuff.meshInfo.weights[bone.name]
+                except KeyError:
+                    continue
+                writeSubDeformer(fp, name, bone, weights)
 
     for stuff in stuffs:
         name = getStuffName(stuff, amt)
-        writeDeformer(fp, name)
-        for bone in amt.bones.values():
-            try:
-                weights = stuff.meshInfo.weights[bone.name]
-            except KeyError:
-                continue
-            writeSubDeformer(fp, name, bone, weights)
+        if stuff.meshInfo.shapes:
+            for sname,shape in stuff.meshInfo.shapes:
+                writeShapeGeometry(fp, name, sname, shape)
+                writeShapeDeformer(fp, name, sname)
+                writeShapeSubDeformer(fp, name, sname, shape)
+
+
+def writeShapeGeometry(fp, name, sname, shape):
+        id,key = getId("Geometry::%s_%sShape" % (name, sname))
+        nVerts = len(shape)
+        fp.write(
+'    Geometry: %d, "%s", "Shape" {\n' % (id, key) +
+'        version: 100\n' +
+'        Indexes: *%d   {\n' % nVerts +
+'            a: ')
+
+        last = nVerts - 1
+        shape = list(shape.items())
+        shape.sort()
+        for n,data in enumerate(shape):
+            vn,_ = data
+            fp.write("%d" % vn)
+            writeComma(fp, n, last)
+
+        fp.write(
+'        }\n' +
+'        Vertices: *%d   {\n' % (3*nVerts) +
+'            a: ')
+
+        last = nVerts - 1
+        for n,data in enumerate(shape):
+            _,dr = data
+            fp.write("%.4f,%.4f,%.4f" % tuple(dr))
+            writeComma(fp, n, last)
+
+        fp.write(
+'        }\n' +
+'    }\n')
+
+
+def writeShapeDeformer(fp, name, sname):
+    id,key = getId("Deformer::%s_%sShape" % (name, sname))
+    fp.write(
+'    Deformer: %d, "%s", "BlendShape" {\n' % (id, key) +
+'    }\n')
+
+
+def writeShapeSubDeformer(fp, name, sname, shape):
+    sid,skey = getId("SubDeformer::%s_%sShape" % (name, sname))
+    fp.write(
+'    Deformer: %d, "%s", "BlendShapeChannel" {' % (sid, skey) +
+"""
+        version: 100
+        deformpercent: 0.0
+        FullWeights: *1   {
+            a: 100
+        }
+    }
+""")
 
 
 def writeDeformer(fp, name):
@@ -165,16 +252,28 @@ def poseNode(fp, key, matrix):
 
 def writeLinks(fp, stuffs, amt):
 
+    if amt:
+        for stuff in stuffs:
+            name = getStuffName(stuff, amt)
+
+            ooLink(fp, 'Deformer::%s' % name, 'Geometry::%s' % name)
+            for bone in amt.bones.values():
+                subdef = 'SubDeformer::%s_%s' % (bone.name, name)
+                try:
+                    getId(subdef)
+                except NameError:
+                    continue
+                ooLink(fp, subdef, 'Deformer::%s' % name)
+                ooLink(fp, 'Model::%s' % bone.name, subdef)
+
     for stuff in stuffs:
-        name = getStuffName(stuff, amt)
-        ooLink(fp, 'Deformer::%s' % name, 'Geometry::%s' % name)
-        for bone in amt.bones.values():
-            subdef = 'SubDeformer::%s_%s' % (bone.name, name)
-            try:
-                getId(subdef)
-            except NameError:
-                continue
-            ooLink(fp, subdef, 'Deformer::%s' % name)
-            ooLink(fp, 'Model::%s' % bone.name, subdef)
+        if stuff.meshInfo.shapes:
+            name = getStuffName(stuff, amt)
+            for sname, shape in stuff.meshInfo.shapes:
+                deform = "Deformer::%s_%sShape" % (name, sname)
+                subdef = "SubDeformer::%s_%sShape" % (name, sname)
+                ooLink(fp, "Geometry::%s_%sShape" % (name, sname), subdef)
+                ooLink(fp, subdef, deform)
+                ooLink(fp, deform, "Geometry::%s" % name)
 
 

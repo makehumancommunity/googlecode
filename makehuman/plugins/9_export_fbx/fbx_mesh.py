@@ -32,12 +32,12 @@ def countObjects(stuffs, amt):
     return (nMeshes + 1)
 
 
-def writeObjectDefs(fp, stuffs, amt):
+def writeObjectDefs(fp, stuffs, amt, nShapes):
     nMeshes = len(stuffs)
 
     fp.write(
 '    ObjectType: "Geometry" {\n' +
-'    Count: %d' % (nMeshes) +
+'       Count: %d' % (nMeshes + nShapes) +
 """
         PropertyTemplate: "FbxMesh" {
             Properties70:  {
@@ -82,6 +82,7 @@ def writeGeometryProp(fp, name, obj, config):
         fp.write("%.4f,%.4f,%.4f" % (co[0], co[1], co[2]))
         writeComma(fp, n, last)
 
+    last = nFaces - 1
     fp.write(
 '        } \n' +
 '        PolygonVertexIndex: *%d {\n' % (4*nFaces) +
@@ -93,10 +94,10 @@ def writeGeometryProp(fp, name, obj, config):
             fp.write('%d,%d,%d,%d' % (fv[0],fv[1],fv[2],-1-fv[3]))
         writeComma(fp, n, last)
 
-    if config.useNormals:
-        obj.calcVertexNormals()
-        nNormals = len(obj.vnorm)
-        fp.write(
+    # Must use normals for shapekeys
+    obj.calcNormals()
+    nNormals = len(obj.vnorm)
+    fp.write(
 """
         }
         GeometryVersion: 124
@@ -109,29 +110,20 @@ def writeGeometryProp(fp, name, obj, config):
 '            Normals: *%d {\n' % (3*nNormals) +
 '                a: ')
 
-        last = nNormals - 1
-        for n,no in enumerate(obj.vnorm):
-            fp.write("%.4f,%.4f,%.4f" % (no[0], no[1], no[2]))
-            writeComma(fp, n, last)
-
-        fp.write(
-'            } \n'
-'            NormalsIndex: *%d {\n' % (4*nFaces) +
-'                a: ')
-
-        for n,fv in enumerate(obj.fvert):
-            if fv[3] == fv[0]:
-                fp.write('%d,%d,%d' % (n,n,n))
-            else:
-                fp.write('%d,%d,%d,%d' % (n,n,n,n))
-            writeComma(fp, n, last)
+    last = nNormals - 1
+    for n,no in enumerate(obj.vnorm):
+        fp.write("%.4f,%.4f,%.4f" % tuple(no))
+        writeComma(fp, n, last)
+    fp.write(
+"""
+            }
+        }
+""")
 
     writeUvs2(fp, obj)
 
     fp.write(
 """
-            }
-        }
         LayerElementMaterial: 0 {
             Version: 101
             Name: "Dummy"
@@ -151,6 +143,10 @@ def writeGeometryProp(fp, name, obj, config):
         }
         Layer: 0 {
             Version: 100
+            LayerElement:  {
+                Type: "LayerElementNormal"
+                TypedIndex: 0
+            }
             LayerElement:  {
                 Type: "LayerElementMaterial"
                 TypedIndex: 0
@@ -189,8 +185,6 @@ def writeUvs1(fp, obj):
 
     fp.write(
 """
-        }
-        GeometryVersion: 124
         LayerElementUV: 0 {
             Version: 101
             Name: ""
@@ -219,6 +213,11 @@ def writeUvs1(fp, obj):
         else:
             fp.write('%d,%d,%d,%d' % (fuv[0],fuv[1],fuv[2],fuv[3]))
         writeComma(fp, n, last)
+    fp.write(
+"""
+            }
+        }
+""")
 
 
 def writeUvs2(fp, obj):
@@ -227,8 +226,6 @@ def writeUvs2(fp, obj):
 
     fp.write(
 """
-        }
-        GeometryVersion: 124
         LayerElementUV: 0 {
             Version: 101
             Name: ""
@@ -257,6 +254,12 @@ def writeUvs2(fp, obj):
     for n,fuv in enumerate(obj.fuvs):
         fp.write('%d,%d,%d,%d' % (4*n,4*n+1,4*n+2,4*n+3))
         writeComma(fp, n, last)
+
+    fp.write(
+"""
+            }
+        }
+""")
 
 
 #--------------------------------------------------------------------
@@ -291,7 +294,8 @@ def writeLinks(fp, stuffs, amt):
     for stuff in stuffs:
         name = getStuffName(stuff, amt)
         ooLink(fp, 'Model::%sMesh' % name, 'Model::RootNode')
-        ooLink(fp, 'Model::%sMesh' % name, 'Model::%s' % amt.name)
+        if amt:
+            ooLink(fp, 'Model::%sMesh' % name, 'Model::%s' % amt.name)
         ooLink(fp, 'Geometry::%s' % name, 'Model::%sMesh' % name)
 
 

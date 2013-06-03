@@ -92,7 +92,7 @@ def getTexturePath(filepath):
 
 
 def getStuffName(stuff, amt):
-    if stuff.name == "base.obj":
+    if amt and stuff.name == "base.obj":
         return amt.name
     else:
         return os.path.splitext(stuff.name)[0]

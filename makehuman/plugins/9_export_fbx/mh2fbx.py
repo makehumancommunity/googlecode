@@ -49,7 +49,10 @@ def exportFbx(human, filepath, config):
     log.message("Write FBX file %s" % filepath)
     print(config)
 
-    rigfile = "data/rigs/%s.rig" % config.rigtype
+    if config.rigtype:
+        rigfile = "data/rigs/%s.rig" % config.rigtype
+    else:
+        rigfile = None
     rawTargets = exportutils.collect.readTargets(human, config)
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
@@ -70,28 +73,34 @@ def exportFbx(human, filepath, config):
     fbx_utils.setAbsolutePath(filepath)
     fbx_header.writeHeader(fp, filepath)
 
-    fbx_header.writeObjectDefs(fp, stuffs, amt)
+    nVertexGroups,nShapes = fbx_deformer.getObjectCounts(stuffs)
+    fbx_header.writeObjectDefs(fp, stuffs, amt, config)
     fbx_skeleton.writeObjectDefs(fp, stuffs, amt)
-    fbx_mesh.writeObjectDefs(fp, stuffs, amt)
+    fbx_mesh.writeObjectDefs(fp, stuffs, amt, nShapes)
     fbx_deformer.writeObjectDefs(fp, stuffs, amt)
-    fbx_material.writeObjectDefs(fp, stuffs, amt)
+    if config.useMaterials:
+        fbx_material.writeObjectDefs(fp, stuffs, amt)
     #fbx_anim.writeObjectDefs(fp, stuffs, amt)
     fp.write('}\n\n')
 
     fbx_header.writeObjectProps(fp, stuffs, amt)
-    fbx_skeleton.writeObjectProps(fp, stuffs, amt)
+    if amt:
+        fbx_skeleton.writeObjectProps(fp, stuffs, amt)
     fbx_mesh.writeObjectProps(fp, stuffs, amt, config)
     fbx_deformer.writeObjectProps(fp, stuffs, amt)
-    fbx_material.writeObjectProps(fp, stuffs, amt)
+    if config.useMaterials:
+        fbx_material.writeObjectProps(fp, stuffs, amt)
     #fbx_anim.writeObjectProps(fp, stuffs, amt)
     fp.write('}\n\n')
 
     fbx_utils.startLinking()
     fbx_header.writeLinks(fp, stuffs, amt)
-    fbx_skeleton.writeLinks(fp, stuffs, amt)
+    if amt:
+        fbx_skeleton.writeLinks(fp, stuffs, amt)
     fbx_mesh.writeLinks(fp, stuffs, amt)
     fbx_deformer.writeLinks(fp, stuffs, amt)
-    fbx_material.writeLinks(fp, stuffs, amt)
+    if config.useMaterials:
+        fbx_material.writeLinks(fp, stuffs, amt)
     #fbx_anim.writeLinks(fp, stuffs, amt)
     fp.write('}\n\n')
 

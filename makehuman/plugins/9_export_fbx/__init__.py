@@ -35,12 +35,11 @@ class FbxConfig(Config):
 
         self.useRelPaths     = False
         self.rigtype = exporter.getRigType()
-        # FBX export does not support exporting without rig
-        # If no rig selected (from library): default to soft1 rig
-        if not self.rigtype:
+        if 1 and not self.rigtype:
             self.rigtype = "game"
         self.expressions     = exporter.expressions.selected
         self.useCustomShapes = exporter.useCustomShapes.selected
+        self.useMaterials    = True # for debugging
 
 
     def __repr__(self):

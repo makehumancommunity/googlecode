@@ -125,15 +125,16 @@ References:  {
 """)
 
 
-def writeObjectDefs(fp, stuffs, amt):
+def writeObjectDefs(fp, stuffs, amt, config):
     count = (
               fbx_skeleton.countObjects(stuffs, amt) +
               fbx_mesh.countObjects(stuffs, amt) +
               fbx_deformer.countObjects(stuffs, amt) +
-              #fbx_material.countObjects(stuffs, amt) +
-              fbx_anim.countObjects(stuffs, amt) +
+              #fbx_anim.countObjects(stuffs, amt) +
               1
             )
+    if config.useMaterials:
+        count += fbx_material.countObjects(stuffs, amt)
 
     fp.write(
 """
@@ -180,10 +181,5 @@ def writeTakes(fp):
 
 Takes:  {
     Current: ""
-    Take: "Take 001" {
-        FileName: "Take_001.tak"
-        LocalTime: 0,46186158000
-        ReferenceTime: 0,46186158000
-    }
 }
 """)

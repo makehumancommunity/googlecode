@@ -30,18 +30,24 @@ from .fbx_utils import *
 #--------------------------------------------------------------------
 
 def countObjects(stuffs, amt):
-    nBones = len(amt.bones)
-    return (2*nBones + 1)
+    if amt:
+        nBones = len(amt.bones)
+        return (2*nBones + 1)
+    else:
+        return 0
 
 
 def writeObjectDefs(fp, stuffs, amt):
-    nBones = len(amt.bones)
+    nModels = len(stuffs)
+    if amt:
+        nBones = len(amt.bones)
+        nModels += nBones + 1
 
     fp.write(
 """
     ObjectType: "Model" {
 """ +
-'    Count: %d' % (nBones+1) +
+'    Count: %d' % nModels +
 """
         PropertyTemplate: "FbxNode" {
             Properties70:  {
@@ -119,9 +125,11 @@ def writeObjectDefs(fp, stuffs, amt):
             }
         }
     }
+""")
 
-    ObjectType: "NodeAttribute" {
-""" +
+    if amt:
+        fp.write(
+'    ObjectType: "NodeAttribute" {\n' +
 '       Count: %d' % (nBones) +
 """
         PropertyTemplate: "FbxSkeleton" {
