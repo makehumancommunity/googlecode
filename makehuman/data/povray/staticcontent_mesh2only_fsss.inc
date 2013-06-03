@@ -109,7 +109,7 @@ texture { // 2x multiplier layer.
         }
     }
     texture {
-        pigment { image_map {png "%%name%%_texture.png" filter all 1} }
+        pigment {image_map {png "%%name%%_texture.png" filter all 1} }
         normal  {%%normal%%}
         finish { 
             specular %%spec%%
@@ -122,6 +122,20 @@ texture { // 2x multiplier layer.
         }
     }
 
+#declare %%name%%_DiffuseTex =
+    texture {
+        pigment {image_map {png "%%name%%_texture.png"} }
+        normal  {%%normal%%}
+        finish { 
+            specular %%spec%%
+            roughness %%rough%%
+            phong 0 phong_size 0
+            ambient rgb %%ambience%%
+            diffuse 1
+            reflection {0}
+            conserve_energy
+        }
+    }
 
 #declare %%name%%_Material = material {
     texture {
@@ -129,7 +143,13 @@ texture { // 2x multiplier layer.
         pigment_pattern {image_map {png "%%name%%_alpha.png" interpolate 2}}
         texture_map {
             [0 pigment {color transmit 1.0}]
-            [1 %%name%%_Texture]
+            [1
+                pigment_pattern {image_map {png "%%name%%_sss_alpha.png" interpolate 2}}
+                texture_map {
+                [0 %%name%%_DiffuseTex]
+                [1 %%name%%_Texture]
+                }
+            ]
         }
     }
 }
