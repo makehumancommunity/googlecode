@@ -201,6 +201,7 @@ def writeBoneProp(fp, bone):
             P: "DefaultAttributeIndex", "int", "Integer", "",0
 """)
 
+    bone.calcRestMatrix()
     mat = bone.matrixRelative
     trans = mat[:3,3]
     e = tm.euler_from_matrix(mat, axes='sxyz')

@@ -36,7 +36,7 @@ class FbxConfig(Config):
         self.useRelPaths     = False
         self.rigtype = exporter.getRigType()
         if 1 and not self.rigtype:
-            self.rigtype = "game"
+            self.rigtype = "basic"
         self.expressions     = exporter.expressions.selected
         self.useCustomShapes = exporter.useCustomShapes.selected
         self.useMaterials    = True # for debugging

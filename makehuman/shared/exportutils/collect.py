@@ -62,14 +62,14 @@ class CStuff:
             self.transparency = proxy.transparency
             self.bump = proxy.bump
             self.displacement = proxy.displacement
-        else:                    
+        else:
             if obj:
                 self.texture = obj.mesh.texture
             else:
                 self.texture = None
             self.type = None
             self.material = None
-            self.specular = ("data/textures", "texture_ref.png") 
+            self.specular = ("data/textures", "texture_ref.png")
             self.normal = None
             self.transparency = None
             self.bump = ("data/textures", "bump.png")
@@ -77,7 +77,7 @@ class CStuff:
 
     #def setObject3dMesh(self, object3d, weights, shapes):
     #    self.meshInfo.setObject3dMesh(object3d, weights, shapes)
-        
+
     def __repr__(self):
         return "<CStuff %s %s mat %s tex %s>" % (self.name, self.type, self.material, self.texture)
 
@@ -90,7 +90,7 @@ class CStuff:
             self.transparency != None or
             self.bump != None or
             self.displacement != None)
-    
+
 #
 #   readTargets(config):
 #
@@ -105,22 +105,22 @@ def readTargets(human, config):
         targets += shapeList
 
     if config.useCustomShapes:
-        listCustomFiles(config)                            
+        listCustomFiles(config)
 
-        log.message("Custom shapes:")    
+        log.message("Custom shapes:")
         for path,name in config.customShapeFiles:
             log.message("    %s", path)
             shape = readCustomTarget(path)
             targets.append((name,shape))
 
-    return targets            
+    return targets
 
 
 #
 #   setupObjects
 #
 
-def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=False, hidden=False, eyebrows=True, lashes=True, subdivide = False, progressCallback=None):
+def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=False, eyebrows=True, lashes=True, subdivide = False, progressCallback=None):
     global theStuff, theTextures, theTexFiles, theMaterials
 
     def progress(prog):
@@ -132,12 +132,12 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     if not config:
         config = Config()
         config.setHuman(human)
-        
+
     obj = human.meshData
     theTextures = {}
     theTexFiles = {}
     theMaterials = {}
-    
+
     stuffs = []
     stuff = CStuff(name, obj = human)
 
@@ -145,15 +145,16 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
         from armature.basic import BasicArmature
         amt = BasicArmature(name, human, config)
         amt.setup()
+        log.message("Using basic rig")
     elif config.rigtype:
         from armature.rigfile_amt import RigfileArmature
         amt = RigfileArmature(name, human, config)
         amt.setup()
-        #amt.fromRigfile(rigfile, obj)
+        rigfile = "data/rigs/%s.rig" % config.rigtype
         log.message("Using rig file %s" % rigfile)
     else:
         amt = None
-            
+
     meshInfo = mh2proxy.getMeshInfo(obj, None, config, None, rawTargets, None)
     if amt:
         meshInfo.weights = amt.vertexWeights
@@ -195,7 +196,7 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
     mhstx = mh.G.app.getCategory('Textures').getTaskByName('Texture').eyeTexture
     if mhstx:
         stuffs[0].textureImage = subtextures.combine(stuffs[0].textureImage, mhstx)
-    
+
     progress(1)
     return stuffs,amt
 
@@ -206,8 +207,8 @@ def setupObjects(name, human, config=None, rigfile=None, rawTargets=[], helpers=
 def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts):
     # TODO document that this method does not only return values, it also modifies some of the passed parameters (deleteGroups and stuffs, deleteVerts is modified only if it is not None)
     global theStuff
-    
-    foundProxy = False    
+
+    foundProxy = False
     for pfile in config.getProxyList():
         if pfile.type == typename and pfile.file:
             proxy = mh2proxy.readProxyFile(obj, pfile, evalOnLoad=True, scale=config.scale)
@@ -246,23 +247,23 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
 
     killUvs = numpy.zeros(len(obj.texco), bool)
     killFaces = numpy.zeros(len(obj.fvert), bool)
-        
+
     if deleteVerts is not None:
         killVerts = deleteVerts
         for fn,fverts in enumerate(obj.fvert):
             for vn in fverts:
                 if killVerts[vn]:
-                    killFaces[fn] = True             
+                    killFaces[fn] = True
     else:
         killVerts = numpy.zeros(len(obj.coord), bool)
 
-    killGroups = []        
+    killGroups = []
     for fg in obj.faceGroups:
-        if (("joint" in fg.name) or 
+        if (("joint" in fg.name) or
            ("helper" in fg.name) or
-           ((not eyebrows) and 
+           ((not eyebrows) and
            (("eyebrown" in fg.name) or ("cornea" in fg.name))) or
-           ((not lashes) and 
+           ((not lashes) and
            ("lash" in fg.name)) or
            mh2proxy.deleteGroup(fg.name, deleteGroups)):
             killGroups.append(fg.name)
@@ -288,7 +289,7 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
     uvs = numpy.argwhere(uvMask)
     del uvMask
     killUvs[uvs] = True
-    
+
     n = 0
     newVerts = {}
     coords = []
@@ -297,7 +298,7 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
             coords.append(co)
             newVerts[m] = n
             n += 1
-    
+
     n = 0
     texVerts = []
     newUvs = {}
@@ -305,8 +306,8 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
         if not killUvs[m]:
             texVerts.append(uv)
             newUvs[m] = n
-            n += 1   
-    
+            n += 1
+
     faceVerts = []
     faceUvs = []
     for fn,fverts in enumerate(obj.fvert):
@@ -319,7 +320,7 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
                 fuvs2.append(newUvs[uv])
             faceVerts.append(fverts2)
             faceUvs.append(fuvs2)
-    
+
     weights = {}
     if meshInfo.weights:
         for (b, wts1) in meshInfo.weights.items():
@@ -328,7 +329,7 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
                 if not killVerts[v1]:
                    wts2.append((newVerts[v1],w))
             weights[b] = wts2
-    
+
     shapes = []
     if meshInfo.shapes:
         for (name, morphs1) in meshInfo.shapes:
@@ -343,7 +344,7 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
     meshInfo.vertexMapping = newVerts
     meshInfo.faceMask = numpy.logical_not(faceMask)
     return meshInfo
- 
+
 #
 #   getTextureNames(stuff):
 #
@@ -353,7 +354,7 @@ def getTextureNames(stuff):
 
     if not stuff.type:
         return ("SkinShader", None, "SkinShader")
-        
+
     try:
         texname = theTextures[stuff.name]
         texfile = theTexFiles[stuff.name]
@@ -361,11 +362,11 @@ def getTextureNames(stuff):
         return (texname, texfile, matname)
     except KeyError:
         pass
-    
+
     texname = None
     texfile = None
     matname = None
-    if stuff.texture:        
+    if stuff.texture:
         (folder, fname) = stuff.texture
         (texname, ext) = os.path.splitext(fname)
         texfile = ("%s_%s" % (texname, ext[1:]))
@@ -379,8 +380,8 @@ def getTextureNames(stuff):
             matname = nextName(matname)
         theMaterials[stuff.name] = matname
     return (texname, texfile, matname)
-    
-    
+
+
 def nextName(string):
     try:
         n = int(string[-3:])
@@ -390,17 +391,17 @@ def nextName(string):
         return "%s%03d" % (string[:-3], n+1)
     else:
         return string + "_001"
-        
+
 
 def setStuffSkinWeights(stuff, amt):
     obj = stuff.meshInfo.object
-    
+
     stuff.vertexWeights = {}
     for vn in range(len(obj.coord)):
         stuff.vertexWeights[vn] = []
 
     stuff.skinWeights = []
-    wn = 0    
+    wn = 0
     for (bn,b) in enumerate(amt.bones):
         try:
             wts = stuff.meshInfo.weights[b]
@@ -420,7 +421,7 @@ def getpath(path):
         return os.path.realpath(os.path.expanduser(path))
     else:
         return None
-            
+
 def copy(frompath, topath):
     frompath = getpath(frompath)
     if frompath:

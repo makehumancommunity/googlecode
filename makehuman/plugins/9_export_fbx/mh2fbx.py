@@ -49,10 +49,6 @@ def exportFbx(human, filepath, config):
     log.message("Write FBX file %s" % filepath)
     print(config)
 
-    if config.rigtype:
-        rigfile = "data/rigs/%s.rig" % config.rigtype
-    else:
-        rigfile = None
     rawTargets = exportutils.collect.readTargets(human, config)
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
@@ -60,7 +56,6 @@ def exportFbx(human, filepath, config):
         name,
         human,
         config=config,
-        rigfile=rigfile,
         rawTargets=rawTargets,
         helpers=config.helpers,
         eyebrows=config.eyebrows,
