@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -39,12 +39,12 @@ from armature import rig_bones
 from . import posebone
 from . import mhx_drivers
 from . import mhx_constraints
-    
-#-------------------------------------------------------------------------------        
-#   Armature selector
-#-------------------------------------------------------------------------------        
 
-def getArmature(name, human, config):        
+#-------------------------------------------------------------------------------
+#   Armature selector
+#-------------------------------------------------------------------------------
+
+def getArmature(name, human, config):
     if config.rigtype == 'mhx':
         from . import amt_mhx
         return amt_mhx.MhxArmature(name, human, config)
@@ -57,16 +57,16 @@ def getArmature(name, human, config):
     else:
         return RigfileExportArmature(name, human, config)
 
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
 #   Setup custom shapes
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
 
 def setupCircle(fp, name, r):
     """
     Write circle object to the MHX file. Circles are used as custom shapes.
-    
+
     fp:
-        *File*: Output file pointer. 
+        *File*: Output file pointer.
     name:
         *string*: Object name.
     r:
@@ -89,7 +89,7 @@ def setupCircle(fp, name, r):
         "    e 15 0 ;\n" +
         "  end Edges\n"+
         "end Mesh\n")
-        
+
     fp.write(
         "Object %s MESH %s\n" % (name, name) +
         "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n"+
@@ -100,9 +100,9 @@ def setupCircle(fp, name, r):
 def setupCube(fp, name, r, offs):
     """
     Write cube object to the MHX file. Cubes are used as custom shapes.
-    
+
     fp:
-        *File*: Output file pointer. 
+        *File*: Output file pointer.
     name:
         *string*: Object name.
     r:
@@ -110,7 +110,7 @@ def setupCube(fp, name, r, offs):
     offs:
         *float* or *float triple*: Y offset or offsets from origin.
     """
-    
+
     try:
         (rx,ry,rz) = r
     except:
@@ -148,13 +148,13 @@ def setupCube(fp, name, r, offs):
 
 def setupSimpleCustomShapes(fp):
     """
-    Write simple custom shapes to the MHX file. Additional custom shapes are defined in 
+    Write simple custom shapes to the MHX file. Additional custom shapes are defined in
     mhx files in mhx/templates.
-    
+
     fp:
-        *File*: Output file pointer. 
+        *File*: Output file pointer.
     """
-    
+
     setupCircle(fp, "GZM_Circle01", 0.1)
     setupCircle(fp, "GZM_Circle025", 0.25)
     setupCircle(fp, "GZM_Circle05", 0.5)
@@ -168,18 +168,18 @@ def setupSimpleCustomShapes(fp):
     setupCube(fp, "GZM_Chest", (0.7,0.25,0.5), (0,0.5,0.35))
     setupCube(fp, "GZM_Root", (1.25,0.5,1.0), 1)
 
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
 #   Armature used for export
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
 
 class ExportArmature:
 
-    def __init__(self, config):    
+    def __init__(self, config):
         self.customShapeFiles = []
         self.customShapes = {}
         self.gizmos = None
         self.gizmoFiles = []
-        self.recalcRoll = []              
+        self.recalcRoll = []
         self.objectProps = [("MhxRig", '"%s"' % config.rigtype)]
         self.armatureProps = []
         self.customProps = []
@@ -198,7 +198,7 @@ class ExportArmature:
         if self.gizmos:
             fp.write(self.gizmos)
             setupSimpleCustomShapes(fp)
-        else:   
+        else:
             for (name, data) in self.customShapes.items():
                 (typ, r) = data
                 if typ == "-circ":
@@ -209,10 +209,10 @@ class ExportArmature:
                     halt
 
 
-    def writeEditBones(self, fp):        
+    def writeEditBones(self, fp):
         for bone in self.bones.values():
             scale = self.config.scale
-    
+
             fp.write("\n  Bone %s %s\n" % (bone.name, True))
             (x, y, z) = scale*bone.head
             fp.write("    head  %.6g %.6g %.6g  ;\n" % (x,-z,y))
@@ -222,26 +222,28 @@ class ExportArmature:
             if bone.parent:
                 fp.write("    parent Refer Bone %s ; \n" % (bone.parent))
                 parent = self.bones[bone.parent]
-                conn = (bone.conn and (parent.tail == bone.head))
+                vec = parent.tail - bone.head
+                dist = math.sqrt(np.dot(vec,vec))
+                conn = (bone.conn and dist < 1e-5)
                 fp.write("    use_connect %s ; \n" % conn)
             else:
                 fp.write("    use_connect False ; \n")
-                
+
             fp.write(
                 "    roll %.6g ; \n" % (bone.roll) +
                 "    use_deform %s ; \n" % (bone.deform) +
                 "    show_wire %s ; \n" % (bone.wire))
-    
+
             if bone.hide:
                 fp.write("    hide True ; \n")
-    
+
             if 0 and bone.bbone:
                 (bin, bout, bseg) = bone.bbone
                 fp.write(
                     "    bbone_in %d ; \n" % (bin) +
                     "    bbone_out %d ; \n" % (bout) +
                     "    bbone_segments %d ; \n" % (bseg))
-    
+
             if bone.norot:
                 fp.write("    use_inherit_rotation False ; \n")
             if bone.scale:
@@ -249,7 +251,7 @@ class ExportArmature:
             else:
                 fp.write("    use_inherit_scale False ; \n")
             fp.write("    layers Array ")
-    
+
             bit = 1
             for n in range(32):
                 if bone.layers & bit:
@@ -257,7 +259,7 @@ class ExportArmature:
                 else:
                     fp.write("0 ")
                 bit = bit << 1
-    
+
             fp.write(" ; \n" +
                 "    use_local_location %s ; \n" % bone.lloc +
                 "    lock %s ; \n" % bone.lock +
@@ -266,7 +268,7 @@ class ExportArmature:
                 "  end Bone \n")
 
 
-    def writeBoneGroups(self, fp):    
+    def writeBoneGroups(self, fp):
         if not fp:
             return
         for (name, color) in self.boneGroups:
@@ -277,9 +279,9 @@ class ExportArmature:
                 "    end BoneGroup\n")
         return
 
-    
+
     def writeControlPoses(self, fp, config):
-        # For mhx, basic, rigify        
+        # For mhx, basic, rigify
         for bname in self.bones.keys():
             constraints = safeGet(self.constraints, bname, [])
             customShape = safeGet(self.customShapes, bname, None)
@@ -290,8 +292,8 @@ class ExportArmature:
             lockScale = (0,0,0)
             ik_dof = (1,1,1)
             flags = 0
-            posebone.addPoseBone(fp, self, bname, customShape, boneGroup, lockLoc, lockRot, lockScale, ik_dof, flags, constraints)         
-    
+            posebone.addPoseBone(fp, self, bname, customShape, boneGroup, lockLoc, lockRot, lockScale, ik_dof, flags, constraints)
+
         # For other rigs
         for (bname, cinfo) in self.poseInfo.items():
             cs = None
@@ -310,25 +312,25 @@ class ExportArmature:
                         poleAngle = float(pt[1])
                         pt = (poleAngle, subtar)
                     constraints =  [('IK', 0, inf, ['IK', goal, n, pt, (True,False,True)])]
-            posebone.addPoseBone(fp, self, bname, cs, None, (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0, constraints)       
+            posebone.addPoseBone(fp, self, bname, cs, None, (0,0,0), (0,0,0), (1,1,1), (1,1,1), 0, constraints)
 
 
     def writeProperties(self, fp):
         for (key, val) in self.objectProps:
             fp.write("  Property %s %s ;\n" % (key, val))
-            
+
         for (key, val, string, min, max) in self.customProps:
             self.defProp(fp, "FLOAT", key, val, string, min, max)
-    
+
         if self.config.expressions:
             fp.write("#if toggle&T_Shapekeys\n")
             for skey in exportutils.shapekeys.ExpressionUnits:
                 self.defProp(fp, "FLOAT", "Mhs%s"%skey, 0.0, skey, -1.0, 2.0)
                 #fp.write("  DefProp Float Mhs%s 0.0 %s min=-1.0,max=2.0 ;\n" % (skey, skey))
-            fp.write("#endif\n")   
+            fp.write("#endif\n")
 
 
-    def defProp(self, fp, type, key, val, string, min=0, max=1):            
+    def defProp(self, fp, type, key, val, string, min=0, max=1):
         #fp.write("  DefProp %s %s %s %s min=%s,max=%s ;\n" % (type, key, val, string, min, max))
         if type == "BOOLEAN":
             fp.write(
@@ -340,11 +342,11 @@ class ExportArmature:
                 '  PropKeys %s "min":%.2f,"max":%.2f, ;\n' % (key, min, max))
         else:
             halt
-    
+
 
     def writeArmature(self, fp, version):
         fp.write("""
-# ----------------------------- ARMATURE --------------------- # 
+# ----------------------------- ARMATURE --------------------- #
 
 NoScale False ;
 """)
@@ -352,7 +354,7 @@ NoScale False ;
         fp.write("Armature %s %s   Normal \n" % (self.name, self.name))
         self.writeEditBones(fp)
 
-        fp.write("""        
+        fp.write("""
   show_axes False ;
   show_bone_custom_shapes True ;
   show_group_colors True ;
@@ -363,7 +365,7 @@ NoScale False ;
 
         if self.config.rigtype == "mhx":
             fp.write("  RecalcRoll %s ;\n" % self.recalcRoll)
-  
+
         fp.write("""
   layers_protected Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  ;
   pose_position 'POSE' ;
@@ -391,33 +393,33 @@ end Armature
         self.writeHideProp(fp, self.name)
         for proxy in self.proxies.values():
             self.writeHideProp(fp, proxy.name)
-        if self.config.useCustomShapes: 
-            exportutils.custom.listCustomFiles(self.config)                    
+        if self.config.useCustomShapes:
+            exportutils.custom.listCustomFiles(self.config)
         for path,name in self.config.customShapeFiles:
             self.defProp(fp, "FLOAT", name, 0, name[3:], -1.0, 2.0)
             #fp.write("  DefProp Float %s 0 %s  min=-1.0,max=2.0 ;\n" % (name, name[3:]))
-  
+
         fp.write("""
 end Object
 """)
 
 
-    def writeHideProp(self, fp, name):                
+    def writeHideProp(self, fp, name):
         self.defProp(fp, "BOOLEAN", "Mhh%s"%name, False, "Control_%s_visibility"%name)
         #fp.write("  DefProp Bool Mhh%s False Control_%s_visibility ;\n" % (name, name))
         return
-        
- 
+
+
 class PythonExportArmature(PythonArmature, ExportArmature):
-    def __init__(self, name, human, config):    
+    def __init__(self, name, human, config):
         PythonArmature. __init__(self, name, human, config)
         ExportArmature.__init__(self, config)
-        
+
 
 class RigfileExportArmature(RigfileArmature, ExportArmature):
-    def __init__(self, name, human, config):    
+    def __init__(self, name, human, config):
         RigfileArmature. __init__(self, name, human, config)
         ExportArmature.__init__(self, config)
-        
-         
+
+
 
