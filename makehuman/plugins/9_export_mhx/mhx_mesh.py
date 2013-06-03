@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makeinfo.human.org/
@@ -27,15 +27,15 @@ import os
 import mh2proxy
 from . import mhx_drivers
 
-#-------------------------------------------------------------------------------        
-#   
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
+#
+#-------------------------------------------------------------------------------
 
 def writeMesh(fp, amt, config):
 
     fp.write("""
-# ----------------------------- MESH --------------------- # 
-""")    
+# ----------------------------- MESH --------------------- #
+""")
 
     fp.write("Mesh %sMesh %sMesh\n  Verts\n" % (amt.name, amt.name))
     ox = amt.origin[0]
@@ -44,25 +44,25 @@ def writeMesh(fp, amt, config):
     scale = config.scale
     for co in amt.mesh.coord:
         fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(co[0]-ox), scale*(-co[2]+oz), scale*(co[1]-oy)))
-  
+
     fp.write("""
   end Verts
 
   Faces
-""")  
-    for fverts in amt.mesh.fvert:
-        if fverts[0] == fverts[3]:
-            fp.write("    f %d %d %d ;\n" % tuple(fverts[0:3]))
+""")
+    for n,fv in enumerate(amt.mesh.fvert):
+        if fv[0] == fv[3]:
+            raise NameError("Triangular face %d = %s encountered. MakeHuman meshes must be pure quad." % (n, fv))
         else:
-            fp.write("    f %d %d %d %d ;\n" % tuple(fverts))
+            fp.write("    f %d %d %d %d ;\n" % tuple(fv))
 
     writeFaceNumbers(fp, amt, config)
 
     fp.write("""
   end Faces
-  
+
   MeshTextureFaceLayer UVTex
-    Data 
+    Data
 """)
 
     if amt.human.uvset:
@@ -73,22 +73,19 @@ def writeMesh(fp, amt, config):
                 fp.write(" %.4g %.4g" %(uv[0], uv[1]))
             fp.write(" ;\n")
     else:
-        for fuv in amt.mesh.fuvs:
+        for n,fuv in enumerate(amt.mesh.fuvs):
             uv0 = amt.mesh.texco[fuv[0]]
             uv1 = amt.mesh.texco[fuv[1]]
             uv2 = amt.mesh.texco[fuv[2]]
             uv3 = amt.mesh.texco[fuv[3]]
-            if fuv[0] == fuv[3]:
-                fp.write("    vt %.4g %.4g %.4g %.4g %.4g %.4g ;\n" % (uv0[0], uv0[1], uv1[0], uv1[1], uv2[0], uv2[1]))
-            else:
-                fp.write("    vt %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g ;\n" % (uv0[0], uv0[1], uv1[0], uv1[1], uv2[0], uv2[1], uv3[0], uv3[1]))
+            fp.write("    vt %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g ;\n" % (uv0[0], uv0[1], uv1[0], uv1[1], uv2[0], uv2[1], uv3[0], uv3[1]))
 
     fp.write("""
     end Data
     active True ;
     active_clone True ;
     active_render True ;
-  end MeshTextureFaceLayer  
+  end MeshTextureFaceLayer
 """)
 
     writeBaseMaterials(fp, amt)
@@ -116,9 +113,9 @@ end Mesh
 #endif
   color Array 1.0 1.0 1.0 1.0  ;
   select True ;
-  lock_location Array 1 1 1 ; 
+  lock_location Array 1 1 1 ;
   lock_rotation Array 1 1 1 ;
-  lock_scale Array 1 1 1  ; 
+  lock_scale Array 1 1 1  ;
   Property MhxScale theScale ;
   Property MhxMesh True ;
   Modifier SubSurf SUBSURF
@@ -132,14 +129,14 @@ end Object
     return
 
 
-#-------------------------------------------------------------------------------        
-#   Armature modifier. 
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
+#   Armature modifier.
+#-------------------------------------------------------------------------------
 
 def writeArmatureModifier(fp, amt, config, proxy):
     if (config.cage and
         not (proxy and proxy.cage)):
-    
+
         fp.write("""
   #if toggle&T_Cage
     Modifier MeshDeform MESH_DEFORM
@@ -172,7 +169,7 @@ def writeArmatureModifier(fp, amt, config, proxy):
 """)
 
     else:
-    
+
         fp.write("""
     Modifier Armature ARMATURE
 """)
@@ -182,10 +179,10 @@ def writeArmatureModifier(fp, amt, config, proxy):
       use_vertex_groups True ;
     end Modifier
 """)
-    
-#-------------------------------------------------------------------------------        
+
+#-------------------------------------------------------------------------------
 #   Face numbers
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
 
 MaterialNumbers = {
     ""          : 0,
@@ -203,41 +200,41 @@ MaterialNumbers = {
     "blue"      : 5,
     "yellow"    : 6,
 }
-    
+
 def writeFaceNumbers(fp, amt, config):
     if amt.human.uvset:
         for ftn in amt.human.uvset.faceNumbers:
             fp.write(ftn)
-    else:            
+    else:
         obj = amt.mesh
         fmats = numpy.zeros(len(obj.coord), int)
         for fn,mtl in obj.materials.items():
             fmats[fn] = MaterialNumbers[mtl]
-            
+
         # TODO use facemask set on module3d instead (cant we reuse filterMesh from collect module?)
         deleteVerts = None
         deleteGroups = []
 
-        for fg in obj.faceGroups: 
+        for fg in obj.faceGroups:
             fmask = obj.getFaceMaskForGroups([fg.name])
             if mh2proxy.deleteGroup(fg.name, deleteGroups):
                 fmats[fmask] = 4
             elif fg.name[0:6] == "joint-":
                 fmats[fmask] = 2
-            elif fg.name == "helper-tights":                    
+            elif fg.name == "helper-tights":
                 fmats[fmask] = 3
-            elif fg.name in ["helper-hair", "helper-genital"]: 
+            elif fg.name in ["helper-hair", "helper-genital"]:
                 fmats[fmask] = 6
-            elif fg.name == "helper-skirt":                    
+            elif fg.name == "helper-skirt":
                 fmats[fmask] = 5
-            elif fg.name[0:7] == "helper-":  
+            elif fg.name[0:7] == "helper-":
                 fmats[fmask] = 1
-                    
+
         if deleteVerts != None:
             for fn,fverts in enumerate(obj.fvert):
                 if deleteVerts[fverts[0]]:
-                    fmats[fn] = 6                        
-                
+                    fmats[fn] = 6
+
         mn = -1
         fn = 0
         f0 = 0
@@ -251,11 +248,11 @@ def writeFaceNumbers(fp, amt, config):
         if fn != f0:
             fp.write("  ftn %d %d 1 ;\n" % (fn-f0, mn))
 
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
 #   Material access
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
 
-def writeBaseMaterials(fp, amt):      
+def writeBaseMaterials(fp, amt):
     if amt.human.uvset:
         for mat in amt.human.uvset.materials:
             fp.write("  Material %s_%s ;\n" % (amt.name, mat.name))
@@ -269,27 +266,27 @@ def writeBaseMaterials(fp, amt):
 "  Material %sBlue ;\n" % amt.name +
 "  Material %sYellow ;\n" % amt.name
 )
-    
+
 
 def writeHideAnimationData(fp, amt, prefix, name):
     fp.write("AnimationData %s%sMesh True\n" % (prefix, name))
     mhx_drivers.writePropDriver(fp, amt, ["Mhh%s" % name], "x1", "hide", -1)
     mhx_drivers.writePropDriver(fp, amt, ["Mhh%s" % name], "x1", "hide_render", -1)
     fp.write("end AnimationData\n")
-    return    
-       
-#-------------------------------------------------------------------------------        
-#   Vertex groups   
-#-------------------------------------------------------------------------------        
+    return
 
-def writeVertexGroups(fp, amt, config, proxy):                
+#-------------------------------------------------------------------------------
+#   Vertex groups
+#-------------------------------------------------------------------------------
+
+def writeVertexGroups(fp, amt, config, proxy):
     if proxy and proxy.weights:
         writeRigWeights(fp, proxy.weights)
         return
     if proxy:
         weights = mh2proxy.getProxyWeights(amt.vertexWeights, proxy)
     else:
-        weights = amt.vertexWeights  
+        weights = amt.vertexWeights
     writeRigWeights(fp, weights)
 
 """
@@ -316,7 +313,7 @@ def copyVertexGroups(fp, vgroups, proxy):
                 fp.write("  VertexGroup %s\n" % name)
                 printProxyVGroup(fp, pgroup)
                 fp.write("  end VertexGroup\n\n")
-    
+
 
 def printProxyVGroup(fp, vgroups):
     vgroups.sort()
@@ -333,7 +330,7 @@ def printProxyVGroup(fp, vgroups):
         fp.write("    wv %d %.4f ;\n" % (pv, wt))
     return
 """
-    
+
 def writeRigWeights(fp, weights):
     for grp in weights.keys():
         fp.write("\n  VertexGroup %s\n" % grp)
@@ -341,5 +338,5 @@ def writeRigWeights(fp, weights):
             fp.write("    wv %d %.4f ;\n" % (v,w))
         fp.write("  end VertexGroup\n")
     return
-    
-    
+
+
