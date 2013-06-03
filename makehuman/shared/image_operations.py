@@ -87,14 +87,26 @@ def blurred(img, level=10.0, kernelSize = 15, progressCallback=None):
     return Image(data = data[padSize:data.shape[0], padSize:data.shape[1], :])
 
 def mix(img1, img2, weight1, weight2 = None):
+    return Image(data = mixData(img1.data, img2.data, weight1, weight2).astype(numpy.uint8))
+
+def clip(img):
+    return Image(clipData(img.data).astype(numpy.uint8))
+
+def normalize(img):
+    return Image(normalizeData(img.data).astype(numpy.uint8))
+
+def mixData(data1, data2, weight1, weight2 = None):
     if weight2 is None:
         weight2 =  1 - weight1
-    return Image(data = numpy.asarray(numpy.around(weight1*img1.data.astype(float) +
-                                   weight2*img2.data.astype(float)).astype(int), dtype = numpy.uint8))
+    return numpy.around(weight1*data1.astype(float) +
+                        weight2*data2.astype(float)).astype(int)
 
-def clipped (img):
-    return Image(data = numpy.clip(img.data,0,255))
-                 
+def clipData(data):
+    return numpy.clip(data,0,255)
+
+def normalizeData(data):
+    return numpy.around(data.astype(float) * (255.0/float(data.max())) ).astype(int)
+
 def compose(channels):
     # 'channels' is a sequence of Images.
     outch = []

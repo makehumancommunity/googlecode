@@ -363,14 +363,15 @@ def mapSceneLighting(scn, progressCallback = None):
     lnum = float(len(scn.lights))
     if (lnum>0):    # Add up all the lightmaps.
         lmap = mapLighting(calcLightPos(scn.lights[0]),
-                           lambda p: progress(p/lnum))
+                           lambda p: progress(p/lnum)).data
         i = 1.0        
         for light in scn.lights[1:]:
-            lmap = image_operations.mix(
+            lmap = image_operations.mixData(
                 lmap, mapLighting(calcLightPos(light),
-                                  lambda p: progress((i+p)/lnum)),1,1)       
+                                  lambda p: progress((i+p)/lnum)).data,1,1)       
             i += 1.0
-        return image_operations.clipped(lmap)
+
+        return mh.Image(data = image_operations.normalizeData(lmap))
     else:   # If the scene has no lights, return an empty lightmap.
         return mh.Image(data = np.zeros((1024, 1024, 1), dtype=np.uint8))
 
