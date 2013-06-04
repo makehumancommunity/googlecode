@@ -66,7 +66,7 @@ def writePose(fp, env):
     amt.writeControlPoses(fp, config)
     fp.write("  ik_solver 'LEGACY' ;\nend Pose\n")
 
-    if config.rigtype == "mhx":
+    if amt.options.rigtype == "mhx":
         fp.write("AnimationData %s True\n" % amt.name)
         amt.writeDrivers(fp)
         fp.write(
@@ -152,7 +152,7 @@ def writeShapeKeys(fp, env, name, proxy):
     isHair = (proxy and proxy.type == 'Hair')
     useCorrectives = (
         config.bodyShapes and
-        config.rigtype == "mhx" and
+        amt.options.rigtype == "mhx" and
         ((not proxy) or (proxy.type in ['Proxy', 'Clothes']))
     )
     scale = config.scale
@@ -163,7 +163,7 @@ def writeShapeKeys(fp, env, name, proxy):
 "  ShapeKey Basis Sym True\n" +
 "  end ShapeKey\n")
 
-    if isHuman and config.facepanel:
+    if isHuman and amt.options.facepanel:
         shapeList = exportutils.shapekeys.readFaceShapes(amt.human, rig_panel.BodyLanguageShapeDrivers, 0.6, 0.7)
         for (pose, shape, lr, min, max) in shapeList:
             writeShape(fp, pose, lr, shape, min, max, proxy, scale)
@@ -188,7 +188,7 @@ def writeShapeKeys(fp, env, name, proxy):
         knee = writeCorrectives(fp, env, rig_leg.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)
 
     if isHuman:
-        for path,name in config.customShapeFiles:
+        for path,name in amt.customShapeFiles:
             try:
                 shape = amt.loadedShapes[path]
             except KeyError:
@@ -214,13 +214,13 @@ def writeShapeKeys(fp, env, name, proxy):
     fp.write("#if toggle&T_ShapeDrivers\n")
 
     if isHuman:
-        for path,name in config.customShapeFiles:
+        for path,name in amt.options.customShapeFiles:
             mhx_drivers.writeShapePropDrivers(fp, amt, [name], proxy, "")
 
         if config.expressions:
             mhx_drivers.writeShapePropDrivers(fp, amt, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
 
-        if config.facepanel and amt.rigtype=='mhx':
+        if amt.options.facepanel and amt.options.rigtype=='mhx':
             mhx_drivers.writeShapeDrivers(fp, amt, rig_panel.BodyLanguageShapeDrivers, proxy)
 
         skeys = []

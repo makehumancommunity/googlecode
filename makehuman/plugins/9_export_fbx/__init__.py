@@ -33,11 +33,13 @@ class FbxConfig(Config):
         Config.__init__(self)
         self.selectedOptions(exporter)
 
+        options = self.rigOptions
+        options.rigtype = exporter.getRigType()
+        if 1 and not options.rigtype:
+            options.rigtype = "basic"
+
         self.useRelPaths     = False
-        self.rigtype = exporter.getRigType()
-        if 1 and not self.rigtype:
-            self.rigtype = "basic"
-        self.expressions     = exporter.expressions.selected
+        self.expressions = options.expressions = exporter.expressions.selected
         self.useCustomShapes = exporter.useCustomShapes.selected
         self.useMaterials    = True # for debugging
 

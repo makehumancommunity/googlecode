@@ -44,18 +44,18 @@ from . import mhx_constraints
 #   Armature selector
 #-------------------------------------------------------------------------------
 
-def getArmature(name, human, config):
-    if config.rigtype == 'mhx':
+def getArmature(name, human, options):
+    if options.rigtype == 'mhx':
         from . import amt_mhx
-        return amt_mhx.MhxArmature(name, human, config)
-    elif config.rigtype == 'basic':
+        return amt_mhx.MhxArmature(name, human, options)
+    elif options.rigtype == 'basic':
         from . import amt_basic
-        return amt_basic.BasicArmature(name, human, config)
-    elif config.rigtype == 'rigify':
+        return amt_basic.BasicArmature(name, human, options)
+    elif options.rigtype == 'rigify':
         from . import amt_rigify
-        return amt_rigify.RigifyArmature(name, human, config)
+        return amt_rigify.RigifyArmature(name, human, options)
     else:
-        return RigfileExportArmature(name, human, config)
+        return RigfileExportArmature(name, human, options)
 
 #-------------------------------------------------------------------------------
 #   Setup custom shapes
@@ -174,14 +174,14 @@ def setupSimpleCustomShapes(fp):
 
 class ExportArmature:
 
-    def __init__(self, config):
+    def __init__(self, options):
         self.boneLayers = "00000001"
-        self.scale = config.scale
+        self.scale = options.scale
 
         self.gizmos = None
         self.gizmoFiles = []
         self.recalcRoll = []
-        self.objectProps = [("MhxRig", '"%s"' % config.rigtype)]
+        self.objectProps = [("MhxRig", '"%s"' % options.rigtype)]
         self.armatureProps = []
         self.customProps = []
         self.bbones = {}
@@ -190,7 +190,7 @@ class ExportArmature:
 
 
     def setup(self):
-        if self.config.clothesRig:
+        if self.options.clothesRig:
             for proxy in self.proxies.values():
                 if proxy.rig:
                     coord = proxy.getCoords()
@@ -290,7 +290,7 @@ class ExportArmature:
         return
 
 
-    def writeControlPoses(self, fp, config):
+    def writeControlPoses(self, fp, options):
         # For mhx, basic, rigify
         for bone in self.bones.values():
             posebone.addPoseBone(
@@ -327,7 +327,7 @@ class ExportArmature:
         for (key, val, string, min, max) in self.customProps:
             self.defProp(fp, "FLOAT", key, val, string, min, max)
 
-        if self.config.expressions:
+        if self.options.expressions:
             fp.write("#if toggle&T_Shapekeys\n")
             for skey in exportutils.shapekeys.ExpressionUnits:
                 self.defProp(fp, "FLOAT", "Mhs%s"%skey, 0.0, skey, -1.0, 2.0)
@@ -398,9 +398,9 @@ end Armature
         self.writeHideProp(fp, self.name)
         for proxy in proxies.values():
             self.writeHideProp(fp, proxy.name)
-        if self.config.useCustomShapes:
-            exportutils.custom.listCustomFiles(self.config)
-        for path,name in self.config.customShapeFiles:
+        if self.options.useCustomShapes:
+            exportutils.custom.listCustomFiles(self.options)
+        for path,name in self.options.customShapeFiles:
             self.defProp(fp, "FLOAT", name, 0, name[3:], -1.0, 2.0)
             #fp.write("  DefProp Float %s 0 %s  min=-1.0,max=2.0 ;\n" % (name, name[3:]))
 
@@ -416,9 +416,9 @@ end Object
 
 
 class PythonExportArmature(PythonArmature, ExportArmature):
-    def __init__(self, name, human, config):
-        PythonArmature. __init__(self, name, human, config)
-        ExportArmature.__init__(self, config)
+    def __init__(self, name, human, options):
+        PythonArmature. __init__(self, name, human, options)
+        ExportArmature.__init__(self, options)
 
     def setup(self):
         PythonArmature.setup(self)
@@ -426,9 +426,9 @@ class PythonExportArmature(PythonArmature, ExportArmature):
 
 
 class RigfileExportArmature(RigfileArmature, ExportArmature):
-    def __init__(self, name, human, config):
-        RigfileArmature. __init__(self, name, human, config)
-        ExportArmature.__init__(self, config)
+    def __init__(self, name, human, options):
+        RigfileArmature. __init__(self, name, human, options)
+        ExportArmature.__init__(self, options)
 
     def setup(self):
         RigfileArmature.setup(self)

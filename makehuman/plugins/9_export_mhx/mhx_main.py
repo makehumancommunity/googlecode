@@ -72,7 +72,7 @@ def exportMhx(human, filepath, config):
 
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
-    amt = mhx_armature.getArmature(name, human, config)
+    amt = mhx_armature.getArmature(name, human, config.rigOptions)
     fp = open(filepath, 'w')
     fp.write(
         "# MakeHuman exported MHX\n" +
@@ -118,7 +118,7 @@ def exportMhx(human, filepath, config):
 
     writeGroups(fp, env)
 
-    if config.rigtype == 'rigify':
+    if amt.options.rigtype == 'rigify':
         fp.write("Rigify %s ;\n" % amt.name)
 
     fp.close()
@@ -172,6 +172,7 @@ def writeGroups(fp, env):
 
 
 def groupProxy(typ, test, fp, env):
+    amt = env.armature
     fp.write("#if toggle&%s\n" % test)
     for proxy in env.proxies.values():
         if proxy.type == typ:

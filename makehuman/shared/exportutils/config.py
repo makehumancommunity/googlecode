@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -34,30 +34,21 @@ import log
 class Config:
 
     def __init__(self):
+        from armature.base_amt import RigOptions
+
         self.encoding           = 'utf-8'
         self.useTexFolder       = True
         self.eyebrows           = True
         self.lashes             = True
         self.helpers            = False
-        self.scale,self.unit    = 1.0, "decimeter"
-
-        self.useSplitBones      = False
-        self.useMuscles         = False
-        self.addConnectingBones = False
+        self.rigOptions         = RigOptions()
         self.useNormals         = False
         self.useRelPaths        = True
-        self.feetOnGround       = False
-        self.skirtRig           = "inh"
-        self.rigtype            = None
-        self.facepanel          = False
         self.cage               = False
         self.texFolder          = None
         self.customPrefix       = ""
         self.human              = None
-
         self.cage =             False
-        self.maleRig =          False
-        self.clothesRig =       False
 
 
     def selectedOptions(self, exporter):
@@ -68,7 +59,7 @@ class Config:
         self.helpers            = exporter.helpers.selected
         self.scale,self.unit    = exporter.taskview.getScale()
         return self
-        
+
         self.cage =             exporter.cage.selected
         self.maleRig =          exporter.maleRig.selected
         self.clothesRig =       eexporter.clothesRig.selected
@@ -83,15 +74,15 @@ class Config:
             return False
         else:
             return self.human.isSubdivided()
-    
+
 
     def setHuman(self, human):
         """
         Set the human object for this config.
         """
         self.human = human
-    
-    
+
+
     def getProxyList(self):
         """
         Get the proxy list from the current state of the set human object.
@@ -110,31 +101,31 @@ class Config:
             name = self.goodName(words[0])
             pfile.file = self.human.hairProxy.file
             proxyList.append(pfile)
-    
+
         for (key,clo) in self.human.clothesObjs.items():
             if clo:
                 name = self.goodName(key)
                 pfile = CProxyFile()
-                pfile.set('Clothes', 3)            
+                pfile.set('Clothes', 3)
                 pfile.obj = clo
                 proxy = self.human.clothesProxies[key]
                 pfile.file = proxy.file
                 proxyList.append(pfile)
-                
+
         if self.human.proxy:
             name = self.goodName(self.human.proxy.name)
             pfile = CProxyFile()
             pfile.set('Proxy', 4)
             pfile.obj = self.human
             pfile.file = self.human.proxy.file
-            proxyList.append(pfile)    
-    
+            proxyList.append(pfile)
+
         if self.cage:
             pfile = CProxyFile()
             pfile.set('Cage', 4)
             pfile.file = os.path.realpath("./data/cages/cage/cage.mhclo")
-            proxyList.append(pfile)  
-            
+            proxyList.append(pfile)
+
         return proxyList
 
 
@@ -146,8 +137,8 @@ class Config:
         if self.useTexFolder:
             self.texFolder = self.getSubFolder(self.outFolder, "textures")
             self.copiedFiles = {}
-    
-    
+
+
     def getSubFolder(self, path, name):
         folder = os.path.join(path, name)
         print "Using folder", folder
@@ -158,16 +149,16 @@ class Config:
             except:
                 log.error("Unable to create separate folder:", exc_info=True)
                 return None
-        return folder        
-        
-        
+        return folder
+
+
     def getTexturePath(self, filePath, fromDir, isTexture, human):
         srcDir = os.path.realpath(os.path.expanduser(fromDir))
         filename = os.path.basename(filePath)
 
         if human and (filename == "texture.png"):
             fromPath = human.getTexture()
-            fileDir = os.path.dirname(fromPath)         
+            fileDir = os.path.dirname(fromPath)
             filename = os.path.basename(fromPath)
             #print(filePath, fromDir, fileDir, fromPath)
             if fileDir == fromDir:
@@ -194,18 +185,18 @@ class Config:
                 try:
                     shutil.copyfile(fromPath, toPath)
                 except:
-                    pass    
+                    pass
                 self.copiedFiles[fromPath] = True
             texPath = toPath
         else:
             texPath = os.path.abspath(fromPath)
-            
+
         if not self.useRelPaths:
             return texPath
         else:
             return str(os.path.normpath(os.path.relpath(texPath, self.outFolder)))
-            
-            
+
+
     def goodName(self, name):
         string = name.replace(" ", "_").replace("-","_").lower()
         try:
@@ -224,18 +215,18 @@ class CProxyFile:
         self.layer = 0
         self.file = ""
         self.obj = None
-        
+
     def set(self, type, layer):
         self.type = type
         self.layer = layer
-        
+
     def __repr__(self):
         return ("<CProxyFile %s %d \"%s\">" % (self.type, self.layer, self.file))
-        
+
 #
 #
 #
-        
+
 def getExistingProxyFile(path, uuid, category):
     if not uuid:
         if not os.path.exists(os.path.realpath(path)):
@@ -249,19 +240,19 @@ def getExistingProxyFile(path, uuid, category):
         addProxyFiles(file, folder, paths, 6)
         folder = os.path.join('data', category)
         addProxyFiles(file, folder, paths, 6)
-        for path in paths:        
+        for path in paths:
             uuid1 = scanFileForUuid(path)
             if uuid1 == uuid:
                 log.message("Found %s %s", path, uuid)
                 return path
-        return None                
+        return None
 
 
 def addProxyFiles(file, folder, paths, depth):
     if depth < 0:
         return None
     try:
-        files = os.listdir(folder)        
+        files = os.listdir(folder)
     except OSError:
         return None
     for pname in files:
@@ -270,10 +261,10 @@ def addProxyFiles(file, folder, paths, depth):
             paths.append(path)
         elif os.path.isdir(path):
             addProxyFiles(file, path, paths, depth-1)
-    return            
+    return
 
 
-def scanFileForUuid(path):           
+def scanFileForUuid(path):
     fp = open(path)
     for line in fp:
         words = line.split()

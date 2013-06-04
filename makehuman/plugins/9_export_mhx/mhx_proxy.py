@@ -57,6 +57,9 @@ def writeProxyType(type, test, env, fp, t0, t1):
 #-------------------------------------------------------------------------------
 
 def writeProxy(fp, env, proxy):
+    amt = env.armature
+    scale = env.config.scale
+
     fp.write("""
 NoScale False ;
 """)
@@ -80,7 +83,6 @@ NoScale False ;
     ox = amt.origin[0]
     oy = amt.origin[1]
     oz = amt.origin[2]
-    scale = config.scale
     for x,y,z in proxy.getCoords():
         fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(x-ox), scale*(-z+oz), scale*(y-oy)))
 
@@ -217,6 +219,7 @@ def writeProxyModifiers(fp, amt, proxy):
 
 
 def copyProxyMaterialFile(fp, pair, mat, proxy, env):
+    amt = env.armature
     prxList = sortedMasks(env)
     nMasks = countMasks(proxy, prxList)
     tex = None
@@ -247,7 +250,7 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, env):
                 fp.write("%s " % word)
             fp.write("\n")
         elif words[0] == 'Filename':
-            file = config.getTexturePath(words[1], folder, True, amt.human)
+            file = env.config.getTexturePath(words[1], folder, True, amt.human)
             fp.write("  Filename %s ;\n" % file)
         else:
             fp.write(line)
@@ -256,6 +259,9 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, env):
 
 
 def writeProxyTexture(fp, texture, mat, extra, env):
+    amt = env.armature
+    config = env.config
+
     (folder,name) = texture
     tex = os.path.join(folder,name)
     log.debug("Tex %s", tex)
@@ -276,6 +282,7 @@ def writeProxyTexture(fp, texture, mat, extra, env):
 
 
 def writeProxyMaterial(fp, mat, proxy, env):
+    amt = env.armature
     alpha = mat.alpha
     tex = None
     bump = None

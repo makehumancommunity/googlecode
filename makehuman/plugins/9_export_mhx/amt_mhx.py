@@ -37,11 +37,11 @@ from . import rig_mhx
 
 class MhxArmature(PythonExportArmature):
 
-    def __init__(self, name, human, config):
+    def __init__(self, name, human, options):
         import gizmos_mhx, gizmos_general
 
-        PythonExportArmature. __init__(self, name, human, config)
-        self.config.rigtype = 'mhx'
+        PythonExportArmature. __init__(self, name, human, options)
+        self.options.rigtype = 'mhx'
         self.boneLayers = "0068056b"
         self.useDeformBones = True
         self.useDeformNames = True
@@ -66,17 +66,17 @@ class MhxArmature(PythonExportArmature):
         self.headName = 'head'
         self.master = 'master'
 
-        if config.useMuscles:
+        if options.useMuscles:
             self.vertexGroupFiles = ["head", "muscles", "hand"]
         else:
             self.vertexGroupFiles = ["head", "bones", "hand"]
         """
-        if config.skirtRig == "own":
+        if options.skirtRig == "own":
             self.vertexGroupFiles.append("skirt-rigged")
-        elif config.skirtRig == "inh":
+        elif options.skirtRig == "inh":
             self.vertexGroupFiles.append("skirt")
 
-        if config.maleRig:
+        if options.maleRig:
             self.vertexGroupFiles.append( "male" )
         """
 
@@ -141,7 +141,7 @@ class MhxArmature(PythonExportArmature):
 
     def setupCustomShapes(self, fp):
         PythonExportArmature.setupCustomShapes(self, fp)
-        if self.config.facepanel:
+        if self.options.facepanel:
             import gizmos_panel
             setupCube(fp, "MHCube025", 0.25, 0)
             setupCube(fp, "MHCube05", 0.5, 0)
@@ -149,9 +149,9 @@ class MhxArmature(PythonExportArmature):
             fp.write(self.gizmos)
 
 
-    def writeControlPoses(self, fp, config):
+    def writeControlPoses(self, fp, options):
         self.writeBoneGroups(fp)
-        PythonExportArmature.writeControlPoses(self, fp, config)
+        PythonExportArmature.writeControlPoses(self, fp, options)
 
 
     def writeDrivers(self, fp):
@@ -163,7 +163,7 @@ class MhxArmature(PythonExportArmature):
         )
         return driverList
 
-        if config.advancedSpine:
+        if options.advancedSpine:
             driverList += mhx_drivers.writePropDrivers(fp, self, rig_body.PropDriversAdvanced, "", "Mha")
         fingDrivers = rig_finger.getPropDrivers()
         driverList += (
@@ -275,7 +275,7 @@ class MhxArmature(PythonExportArmature):
   PropKeys MhaBreathe "min":-0.5,"max":2.0, ;
 """)
 
-        if self.config.advancedSpine:
+        if self.options.advancedSpine:
 
             fp.write("""
   Property MhaSpineInvert False Spine_from_shoulders_to_pelvis ;

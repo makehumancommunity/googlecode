@@ -43,8 +43,8 @@ from . import rig_bones
 
 class PythonArmature(BaseArmature):
 
-    def __init__(self, name, human, config):
-        BaseArmature. __init__(self, name, human, config)
+    def __init__(self, name, human, options):
+        BaseArmature. __init__(self, name, human, options)
         self.headsTails = None
         self.master = None
         self.reparents = {}
@@ -70,22 +70,22 @@ class PythonArmature(BaseArmature):
 
     def createBones(self, bones):
         """
-        config = self.config
-        if config.skirtRig == "own":
+        options = self.options
+        if options.skirtRig == "own":
             self.joints += rig_skirt.Joints
             self.headsTails += rig_skirt.HeadsTails
             self.boneDefs += rig_skirt.Armature
 
-        if config.maleRig:
+        if options.maleRig:
             self.boneDefs += rig_body.MaleArmature
 
-        if self.config.facepanel:
+        if self.options.facepanel:
             self.joints += rig_panel.Joints
             self.headsTails += rig_panel.HeadsTails
             self.boneDefs += rig_panel.Armature
 
-        if False and config.custom:
-            (custJoints, custHeadsTails, custArmature, self.customProps) = exportutils.custom.setupCustomRig(config)
+        if False and options.custom:
+            (custJoints, custHeadsTails, custArmature, self.customProps) = exportutils.custom.setupCustomRig(options)
             self.joints += custJoints
             self.headsTails += custHeadsTails
             self.boneDefs += custArmature
@@ -326,8 +326,8 @@ class PythonArmature(BaseArmature):
 
 
     def setupToRoll(self):
-        if self.config.rigtype not in ["mhx", "basic", "rigify"]:
-            print "NOT py", self.config.rigtype
+        if self.options.rigtype not in ["mhx", "basic", "rigify"]:
+            print "NOT py", self.options.rigtype
             halt
 
         self.setupJoints()
@@ -448,7 +448,7 @@ class PythonArmature(BaseArmature):
 
 
     def moveOriginToFloor(self):
-        if self.config.feetOnGround:
+        if self.options.feetOnGround:
             self.origin = self.locations['ground']
             for key in self.locations.keys():
                 self.locations[key] = self.locations[key] - self.origin

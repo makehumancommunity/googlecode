@@ -38,6 +38,7 @@ import warpmodifier
 
 from .flags import *
 from .rigfile_amt import RigfileArmature
+from .base_amt import RigOptions
 from .utils import *
 
 #-------------------------------------------------------------------------------
@@ -46,8 +47,8 @@ from .utils import *
 
 class Pose:
 
-    def __init__(self, human, config):
-        amt = self.armature = RigfileArmature("Armature", human, config)
+    def __init__(self, human, options):
+        amt = self.armature = RigfileArmature("Armature", human, options)
         self.human = human
         self.posebones = OrderedDict()
         self.modifier = None
@@ -57,7 +58,7 @@ class Pose:
         self.controls = []
         self.deforms = []
         """
-        if self.config.rigtype == 'mhx':
+        if self.options.rigtype == 'mhx':
             self.visible = VISIBLE_LAYERS
             self.last = 32
         else:
@@ -146,7 +147,7 @@ class Pose:
 
     """
     def rebuild(self, update=True):
-        log.message("Rebuild %s %s %s", self, update, self.config.rigtype)
+        log.message("Rebuild %s %s %s", self, update, self.options.rigtype)
         obj = self.human.meshData
         self.setupRig()
         log.debug("RHT %s %s", self.heads["Root"], self.tails["Root"])
@@ -716,13 +717,10 @@ class PoseBone:
 
 
 def createPoseRig(human, rigtype):
-    import exportutils
-    config = exportutils.config.Config()
-    config.feetOnGround = False
-    config.rigtype = rigtype
-    config.setHuman(human)
-
-    amt = Pose(human, config)
+    options = RigOptions(
+                rigtype = rigtype,
+                feetOnGround = False)
+    amt = Pose(human, options)
     return amt
 
 

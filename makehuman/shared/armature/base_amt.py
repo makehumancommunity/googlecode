@@ -36,16 +36,50 @@ import transformations as tm
 from .flags import *
 from .utils import *
 
+
+#-------------------------------------------------------------------------------
+#   Rigging options
+#-------------------------------------------------------------------------------
+
+class RigOptions:
+    def __init__(self,
+            rigtype = "basic",
+            scale = 1.0,
+            useMuscles = False,
+            addConnectingBones = False,
+            facepanel = False,
+            advancedSpine = False,
+            clothesRig = False,
+            useCustomShapes = False,
+            customShapeFiles = [],
+            useMasks = False,
+            expressions = False,
+        ):
+
+        self.rigtype = rigtype
+        self.scale = scale
+        self.useSplitBones = False
+        self.useMuscles = useMuscles
+        self.addConnectingBones = addConnectingBones
+        self.feetOnGround = False
+        self.facepanel = facepanel
+        self.advancedSpine = advancedSpine
+        self.clothesRig = clothesRig
+        self.useCustomShapes = useCustomShapes
+        self.customShapeFiles = customShapeFiles
+        self.useMasks = useMasks
+        self.expressions = expressions
+
 #-------------------------------------------------------------------------------
 #   Armature base class.
 #-------------------------------------------------------------------------------
 
 class BaseArmature:
 
-    def __init__(self, name, human, config):
+    def __init__(self, name, human, options):
         self.name = name
         self.human = human
-        self.config = config
+        self.options = options
 
         self.root = None
         self.roots = []
@@ -63,7 +97,7 @@ class BaseArmature:
 
 
     def __repr__(self):
-        return ("  <BaseArmature %s %s>" % (self.name, self.config.rigtype))
+        return ("  <BaseArmature %s %s>" % (self.name, self.options.rigtype))
 
 
     def prefixWeights(self, weights, prefix):
@@ -77,7 +111,7 @@ class BaseArmature:
 
 
     def sortBones(self, boneInfos):
-        if self.config.addConnectingBones:
+        if self.options.addConnectingBones:
             extras = []
             for bone in boneInfos.values():
                 if bone.parent:

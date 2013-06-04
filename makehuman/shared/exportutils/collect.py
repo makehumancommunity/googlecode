@@ -120,6 +120,24 @@ def readTargets(human, config):
 #   setupObjects
 #
 
+def setupRig(name, human, options):
+    if options.rigtype == "basic":
+        from armature.basic import BasicArmature
+        amt = BasicArmature(name, human, options)
+        amt.setup()
+        log.message("Using basic rig")
+        return amt
+    elif options.rigtype:
+        from armature.rigfile_amt import RigfileArmature
+        amt = RigfileArmature(name, human, options)
+        amt.setup()
+        rigfile = "data/rigs/%s.rig" % options.rigtype
+        log.message("Using rig file %s" % rigfile)
+        return amt
+    else:
+        return None
+
+
 def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=False, eyebrows=True, lashes=True, subdivide = False, progressCallback=None):
     global theStuff, theTextures, theTexFiles, theMaterials
 
@@ -140,21 +158,7 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
 
     stuffs = []
     stuff = CStuff(name, obj = human)
-
-    if config.rigtype == "basic":
-        from armature.basic import BasicArmature
-        amt = BasicArmature(name, human, config)
-        amt.setup()
-        log.message("Using basic rig")
-    elif config.rigtype:
-        from armature.rigfile_amt import RigfileArmature
-        amt = RigfileArmature(name, human, config)
-        amt.setup()
-        rigfile = "data/rigs/%s.rig" % config.rigtype
-        log.message("Using rig file %s" % rigfile)
-    else:
-        amt = None
-
+    amt = setupRig(name, human, config.rigOptions)
     meshInfo = mh2proxy.getMeshInfo(obj, None, config, None, rawTargets, None)
     if amt:
         meshInfo.weights = amt.vertexWeights

@@ -34,9 +34,9 @@ from .base_amt import *
 
 class RigfileArmature(BaseArmature):
 
-    def __init__(self, name, human, config):
-        self.filepath = "data/rigs/%s.rig" % config.rigtype
-        BaseArmature.__init__(self, name, human, config)
+    def __init__(self, name, human, options):
+        self.filepath = "data/rigs/%s.rig" % options.rigtype
+        BaseArmature.__init__(self, name, human, options)
         self.heads = {}
         self.tails = {}
         self.master = None
@@ -250,16 +250,14 @@ class RigfileArmature(BaseArmature):
 
 
 def readRigfileArmature(filename, obj, coord=None):
-    from exportutils.config import Config
-    amt = RigfileArmature("Global", gui3d.app.selectedHuman, Config())
+    amt = RigfileArmature("Global", gui3d.app.selectedHuman, RigOptions())
     amt.fromRigfile(filename, obj, coord)
     return amt
 
 
 def getBasicArmature(human):
-    from exportutils.config import Config
     from .basic import BasicArmature
-    amt = BasicArmature("Basic", human, Config())
+    amt = BasicArmature("Basic", human, RigOptions())
     amt.setupToRoll()
     return amt
 

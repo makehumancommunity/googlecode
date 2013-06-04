@@ -36,24 +36,24 @@ class MhxConfig(Config):
         self.useRelPaths =          True
         self.helpers =              True
         self.encoding =             exporter.taskview.getEncoding()
-        
-        self.addConnectingBones =   False
-        self.useMuscles =           False
-        self.useMasks =             exporter.masks.selected
-        self.expressions =          exporter.expressions.selected
-        self.facepanel =            exporter.facepanel.selected
-        self.bodyShapes =           exporter.bodyShapes.selected
-        self.useCustomShapes =      exporter.useCustomShapes.selected
-        self.feetOnGround =         exporter.feetOnGround.selected
-        self.advancedSpine =        False # exporter.advancedSpine.selected
-        self.rigtype =              exporter.getRigType()
+
+        options = self.rigOptions
+        options.facepanel =         exporter.facepanel.selected
+        options.feetOnGround =      exporter.feetOnGround.selected
+        options.advancedSpine =     False # exporter.advancedSpine.selected
+        options.rigtype =           exporter.getRigType()
         # MHX export does not support exporting without rig
         # If no rig selected (from library): default to MHX rig
-        if not self.rigtype:
-            self.rigtype = "mhx"
-        
+        if not options.rigtype:
+            options.rigtype = "mhx"
+
+        self.useMasks =             exporter.masks.selected
+        self.expressions = options.expressions = exporter.expressions.selected
+        self.bodyShapes =           exporter.bodyShapes.selected
+        self.useCustomShapes =      exporter.useCustomShapes.selected
+
         # Used by mhx exporter
-        self.customShapeFiles = []        
+        self.customShapeFiles = []
         self.customPrefix = "Mhc"
 
 
@@ -66,9 +66,9 @@ class ExporterMHX(Exporter):
 
     def build(self, options, taskview):
         #Exporter.build(self, options, taskview)
-        self.taskview       = taskview        
+        self.taskview       = taskview
         self.useTexFolder   = options.addWidget(gui.CheckBox("Separate folder", True))
-        
+
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
         self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))
         self.facepanel      = options.addWidget(gui.CheckBox("Face rig", False))

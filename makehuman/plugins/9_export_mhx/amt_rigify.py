@@ -35,10 +35,10 @@ from . import rig_rigify
 
 class RigifyArmature(PythonExportArmature):
 
-    def __init__(self, name, human, config):
-        PythonExportArmature. __init__(self, name, human, config)
+    def __init__(self, name, human, options):
+        PythonExportArmature. __init__(self, name, human, options)
         self.rigtype = 'rigify'
-        if config.useMuscles:
+        if options.useMuscles:
             self.vertexGroupFiles = ["head", "muscles", "hand"]
         else:
             self.vertexGroupFiles = ["head", "bones", "hand"]

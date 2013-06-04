@@ -31,13 +31,15 @@ class DaeConfig(Config):
     def __init__(self, exporter):
         Config.__init__(self)
         self.selectedOptions(exporter)
-        
-        self.useRelPaths = True
-        self.rigtype =   exporter.getRigType()
+
+        options = self.rigOptions
+        options.rigtype =   exporter.getRigType()
         # Collada exporter does not support exporting without rig, so default
         # to soft1 rig when no rig specified in the skeleton library
-        if not self.rigtype:
-            self.rigtype = "game"
+        if not options.rigtype:
+            options.rigtype = "game"
+
+        self.useRelPaths = True
         self.useNormals = exporter.useNormals.selected
         self.rotate90X = exporter.rotate90X.selected
         self.rotate90Z = exporter.rotate90Z.selected
