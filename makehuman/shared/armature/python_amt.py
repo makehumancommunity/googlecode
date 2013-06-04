@@ -127,9 +127,10 @@ class PythonArmature(BaseArmature):
                 ikBone = boneInfo[ikName] = Bone(self, ikName)
                 ikBone.fromInfo((bone, bone.parent, F_WIR, layer))
 
-                fkBone.customShape = bone.customShape
-                ikBone.customShape = bone.customShape
-                bone.customShape = None
+                customShape = self.customShapes[bone.name]
+                self.customShapes[fkName] = customShape
+                self.customShapes[ikName] = customShape
+                self.customShapes[bone.name] = None
                 bone.layers = L_HELP
 
                 self.constraints[bname] = [
