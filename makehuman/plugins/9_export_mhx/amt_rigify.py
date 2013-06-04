@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -27,16 +27,15 @@ from armature.python_amt import *
 from armature import rig_joints
 from armature import rig_bones
 from armature import rig_muscle
-from armature import rig_rigify
 from armature import rig_face
 
 from .mhx_armature import *
-from .rig_rigify import *
+from . import rig_rigify
 
 
 class RigifyArmature(PythonExportArmature):
 
-    def __init__(self, name, human, config):   
+    def __init__(self, name, human, config):
         PythonExportArmature. __init__(self, name, human, config)
         self.rigtype = 'rigify'
         if config.useMuscles:
@@ -56,7 +55,7 @@ class RigifyArmature(PythonExportArmature):
             "forearm" :     (2, "hand", False),
             "thigh" :       (2, "shin", False),
             "shin" :        (2, "foot", False),
-            
+
             "thumb.01" :    (2, "thumb.02", True),
             "f_index.01" :  (2, "f_index.02", True),
             "f_middle.01" : (2, "f_middle.02", True),
@@ -71,7 +70,7 @@ class RigifyArmature(PythonExportArmature):
             rig_muscle.Joints +
             rig_face.Joints
         )
-        
+
         self.headsTails = mergeDicts([
             rig_bones.HeadsTails,
             rig_rigify.HeadsTails,
@@ -86,8 +85,8 @@ class RigifyArmature(PythonExportArmature):
         ])
 
         self.objectProps = (
-            rig_bones.ObjectProps + 
-            [("MhxRig", '"Rigify"'), 
+            rig_bones.ObjectProps +
+            [("MhxRig", '"Rigify"'),
              ("MhxRigify", True)]
         )
         self.armatureProps = rig_bones.ArmatureProps
@@ -96,7 +95,7 @@ class RigifyArmature(PythonExportArmature):
         self.rotationLimits = {}
         self.customShapes = {}
         self.constraints = {}
-                
+
 
     def createBones(self, boneInfo):
         self.addBones(rig_bones.Armature, boneInfo)
@@ -106,4 +105,4 @@ class RigifyArmature(PythonExportArmature):
 
 
     def setupCustomShapes(self, fp):
-        return        
+        return

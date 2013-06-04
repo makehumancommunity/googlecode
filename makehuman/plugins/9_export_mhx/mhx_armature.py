@@ -177,7 +177,6 @@ class ExportArmature:
     def __init__(self, config):
         self.boneLayers = "00000001"
         self.scale = config.scale
-        self.proxies = {}
 
         self.gizmos = None
         self.gizmoFiles = []
@@ -350,7 +349,7 @@ class ExportArmature:
             halt
 
 
-    def writeArmature(self, fp, version):
+    def writeArmature(self, fp, version, proxies):
         fp.write("""
 # ----------------------------- ARMATURE --------------------- #
 
@@ -397,7 +396,7 @@ end Armature
 
         self.writeProperties(fp)
         self.writeHideProp(fp, self.name)
-        for proxy in self.proxies.values():
+        for proxy in proxies.values():
             self.writeHideProp(fp, proxy.name)
         if self.config.useCustomShapes:
             exportutils.custom.listCustomFiles(self.config)

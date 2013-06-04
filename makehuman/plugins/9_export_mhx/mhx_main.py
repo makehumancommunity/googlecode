@@ -49,6 +49,13 @@ from . import mhx_proxy
 from . import mhx_armature
 from . import mhx_pose
 
+
+class MhxEnvironment:
+    def __init__(self, amt, config, proxies):
+        self.armature = amt
+        self.config = config
+        self.proxies = proxies
+
 #-------------------------------------------------------------------------------
 #   Export MHX file
 #-------------------------------------------------------------------------------
@@ -75,7 +82,8 @@ def exportMhx(human, filepath, config):
         "  error 'This file can only be read with Blender 2.5' ;\n" +
         "#endif\n")
 
-    scanProxies(config, amt)
+    proxies = scanProxies(human, config)
+    env = MhxEnvironment(amt, config, proxies)
     amt.setup()
 
     if not config.cage:
@@ -88,27 +96,27 @@ def exportMhx(human, filepath, config):
     amt.setupCustomShapes(fp)
 
     gui3d.app.progress(0.1, text="Exporting armature")
-    amt.writeArmature(fp, MINOR_VERSION)
+    amt.writeArmature(fp, MINOR_VERSION, proxies)
 
     gui3d.app.progress(0.15, text="Exporting materials")
     fp.write("\nNoScale False ;\n\n")
-    mhx_materials.writeMaterials(fp, amt, config)
+    mhx_materials.writeMaterials(fp, env)
 
     if config.cage:
-        mhx_proxy.writeProxyType('Cage', 'T_Cage', amt, config, fp, 0.2, 0.25)
+        mhx_proxy.writeProxyType('Cage', 'T_Cage', env, fp, 0.2, 0.25)
 
     gui3d.app.progress(0.25, text="Exporting main mesh")
     fp.write("#if toggle&T_Mesh\n")
-    mhx_mesh.writeMesh(fp, human.meshData, amt, config)
+    mhx_mesh.writeMesh(fp, human.meshData, env)
     fp.write("#endif\n")
 
-    mhx_proxy.writeProxyType('Proxy', 'T_Proxy', amt, config, fp, 0.35, 0.4)
-    mhx_proxy.writeProxyType('Clothes', 'T_Clothes', amt, config, fp, 0.4, 0.55)
-    mhx_proxy.writeProxyType('Hair', 'T_Clothes', amt, config, fp, 0.55, 0.6)
+    mhx_proxy.writeProxyType('Proxy', 'T_Proxy', env, fp, 0.35, 0.4)
+    mhx_proxy.writeProxyType('Clothes', 'T_Clothes', env, fp, 0.4, 0.55)
+    mhx_proxy.writeProxyType('Hair', 'T_Clothes', env, fp, 0.55, 0.6)
 
-    mhx_pose.writePose(fp, amt, config)
+    mhx_pose.writePose(fp, env)
 
-    writeGroups(fp, amt)
+    writeGroups(fp, env)
 
     if config.rigtype == 'rigify':
         fp.write("Rigify %s ;\n" % amt.name)
@@ -122,19 +130,21 @@ def exportMhx(human, filepath, config):
 #   Scan proxies
 #-------------------------------------------------------------------------------
 
-def scanProxies(config, amt):
-    amt.proxies = {}
+def scanProxies(human, config):
+    proxies = {}
     for pfile in config.getProxyList():
         if pfile.file:
-            proxy = mh2proxy.readProxyFile(amt.human.meshData, pfile, True)
+            proxy = mh2proxy.readProxyFile(human.meshData, pfile, True)
             if proxy:
-                amt.proxies[proxy.name] = proxy
+                proxies[proxy.name] = proxy
+    return proxies
 
 #-------------------------------------------------------------------------------
 #   Groups
 #-------------------------------------------------------------------------------
 
-def writeGroups(fp, amt):
+def writeGroups(fp, env):
+    amt = env.armature
     fp.write("""
 # ---------------- Groups -------------------------------- #
 
@@ -148,10 +158,10 @@ def writeGroups(fp, amt):
         "    ob %sMesh ;\n" % amt.name +
         "#endif\n")
 
-    groupProxy('Cage', 'T_Cage', fp, amt)
-    groupProxy('Proxy', 'T_Proxy', fp, amt)
-    groupProxy('Clothes', 'T_Clothes', fp, amt)
-    groupProxy('Hair', 'T_Clothes', fp, amt)
+    groupProxy('Cage', 'T_Cage', fp, env)
+    groupProxy('Proxy', 'T_Proxy', fp, env)
+    groupProxy('Clothes', 'T_Clothes', fp, env)
+    groupProxy('Hair', 'T_Clothes', fp, env)
 
     fp.write(
         "    ob CustomShapes ;\n" +
@@ -161,9 +171,9 @@ def writeGroups(fp, amt):
     return
 
 
-def groupProxy(typ, test, fp, amt):
+def groupProxy(typ, test, fp, env):
     fp.write("#if toggle&%s\n" % test)
-    for proxy in amt.proxies.values():
+    for proxy in env.proxies.values():
         if proxy.type == typ:
             name = amt.name + proxy.name
             fp.write("    ob %sMesh ;\n" % name)

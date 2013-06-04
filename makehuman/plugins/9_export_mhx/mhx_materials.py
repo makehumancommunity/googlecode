@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -26,19 +26,21 @@ import os
 import log
 from . import mhx_drivers
 
-#-------------------------------------------------------------------------------        
-#   
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
+#
+#-------------------------------------------------------------------------------
 
-def writeMaterials(fp, amt, config):
-    
+def writeMaterials(fp, env):
+    amt = env.armature
+    config = env.config
+
     if amt.human.uvset:
-        writeMultiMaterials(fp, amt, config)
+        writeMultiMaterials(fp, env)
         return
-    
-    fp.write("""    
-# --------------- Images and textures ----------------------------- # 
- 
+
+    fp.write("""
+# --------------- Images and textures ----------------------------- #
+
 Image texture.png
 """)
 
@@ -72,17 +74,17 @@ Texture solid IMAGE
 end Texture
 """)
 
-    if config.useMasks:    
-        prxList = list(amt.proxies.values())        
+    if config.useMasks:
+        prxList = list(env.proxies.values())
         for prx in prxList:
             if prx.mask:
-                addMaskImage(fp, amt, config, prx.mask)
+                addMaskImage(fp, env, prx.mask)
 
     fp.write(
         "# --------------- Materials ----------------------------- #\n\n" +
         "Material %sSkin\n" % amt.name)
-        
-    nMasks = writeMaskMTexs(fp, amt, config)
+
+    nMasks = writeMaskMTexs(fp, env)
     fp.write("  MTex %d diffuse UV COLOR" % nMasks)
 
     fp.write("""
@@ -98,7 +100,7 @@ end Texture
 """)
 
     fp.write("  MTex %d specularity UV SPECULAR_COLOR" % (1+nMasks))
-  
+
     fp.write("""
     texture Refer Texture specularity ;
     use_map_color_diffuse False ;
@@ -150,11 +152,11 @@ end Texture
   Property MhxDriven True ;
 """)
 
-    writeMaterialAnimationData(fp, nMasks, 2, amt, config)
+    writeMaterialAnimationData(fp, nMasks, 2, env)
     fp.write("end Material\n\n")
 
     fp.write("Material %sShiny\n" % amt.name)
-    nMasks = writeMaskMTexs(fp, amt, config)
+    nMasks = writeMaskMTexs(fp, env)
     fp.write("  MTex %d diffuse UV COLOR\n" % nMasks)
     fp.write("""
     texture Refer Texture diffuse ;
@@ -187,7 +189,7 @@ end Texture
   use_transparent_shadows True ;
 """)
 
-    writeMaterialAnimationData(fp, nMasks, 1, amt, config)
+    writeMaterialAnimationData(fp, nMasks, 1, env)
     fp.write("end Material\n\n")
 
     writeSimpleMaterial(fp, "Invisio", amt, (1,1,1))
@@ -196,16 +198,16 @@ end Texture
     writeSimpleMaterial(fp, "Blue", amt, (0,0,1))
     writeSimpleMaterial(fp, "Yellow", amt, (1,1,0))
     return
-    
-#-------------------------------------------------------------------------------        
-#   Simple materials: red, green, blue   
-#-------------------------------------------------------------------------------           
+
+#-------------------------------------------------------------------------------
+#   Simple materials: red, green, blue
+#-------------------------------------------------------------------------------
 
 def writeSimpleMaterial(fp, name, amt, color):
     fp.write(
         "Material %s%s\n" % (amt.name, name) +
         "  diffuse_color Array %s %s %s  ;" % (color[0], color[1], color[2]))
-        
+
     fp.write("""
   use_shadeless True ;
   use_shadows False ;
@@ -214,15 +216,17 @@ def writeSimpleMaterial(fp, name, amt, color):
   use_transparency True ;
   transparency_method 'Z_TRANSPARENCY' ;
   alpha 0 ;
-  specular_alpha 0 ;  
+  specular_alpha 0 ;
 end Material
 """)
 
-#-------------------------------------------------------------------------------        
-#   
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
+#
+#-------------------------------------------------------------------------------
 
-def writeMaterialAnimationData(fp, nMasks, nTextures, amt, config):
+def writeMaterialAnimationData(fp, nMasks, nTextures, env):
+    amt = env.armature
+
     fp.write("  use_textures Array")
     for n in range(nMasks):
         fp.write(" 1")
@@ -231,37 +235,37 @@ def writeMaterialAnimationData(fp, nMasks, nTextures, amt, config):
     fp.write(" ;\n")
     fp.write("  AnimationData %sMesh True\n" % amt.name)
     #mhx_drivers.writeTextureDrivers(fp, rig_panel.BodyLanguageTextureDrivers)
-    writeMaskDrivers(fp, amt, config)
+    writeMaskDrivers(fp, env)
     fp.write("  end AnimationData\n")
-    
 
-def writeMaskMTexs(fp, amt, config):
+
+def writeMaskMTexs(fp, env):
     nMasks = 0
-    if config.useMasks:        
-        prxList = list(amt.proxies.values())        
+    if env.config.useMasks:
+        prxList = list(env.proxies.values())
         for prx in prxList:
             if prx.mask:
                 nMasks = addMaskMTex(fp, prx.mask, None, 'MULTIPLY', nMasks)
-    return nMasks                
-    
+    return nMasks
 
-def writeMaskDrivers(fp, amt, config):
-    if not config.useMasks:
+
+def writeMaskDrivers(fp, env):
+    if not env.config.useMasks:
         return
     fp.write("#if toggle&T_Clothes\n")
     n = 0
-    for prx in amt.proxies.values():
+    for prx in env.proxies.values():
         if prx.type == 'Clothes' and prx.mask:
             (dir, file) = prx.mask
             mhx_drivers.writePropDriver(fp, amt, ["Mhh%s" % prx.name], "1-x1", 'use_textures', n)
-            n += 1            
+            n += 1
     fp.write("#endif\n")
     return
 
-#-------------------------------------------------------------------------------        
-#   Multi materials   
-#-------------------------------------------------------------------------------        
-      
+#-------------------------------------------------------------------------------
+#   Multi materials
+#-------------------------------------------------------------------------------
+
 TX_SCALE = 1
 TX_BW = 2
 
@@ -272,10 +276,13 @@ TexInfo = {
     "translucency": ("TRANSLUCENCY", "use_map_translucency", "translucency_factor", TX_BW),
     "bump" :        ("NORMAL", "use_map_normal", "normal_factor", TX_SCALE|TX_BW),
     "displacement": ("DISPLACEMENT", "use_map_displacement", "displacement_factor", TX_SCALE|TX_BW),
-}    
+}
 
-def writeMultiMaterials(fp, amt, config):
+def writeMultiMaterials(fp, env):
+    amt = env.armature
+    config = env.config
     uvset = amt.human.uvset
+
     folder = os.path.dirname(uvset.filename)
     log.debug("Folder %s", folder)
     for mat in uvset.materials:
@@ -291,7 +298,7 @@ def writeMultiMaterials(fp, amt, config):
                 "Texture %s IMAGE\n" % name +
                 "  Image %s ;\n" % name +
                 "end Texture\n\n")
-            
+
         fp.write("Material %s_%s\n" % (amt.name, mat.name))
         alpha = False
         for (key, value) in mat.settings:
@@ -309,7 +316,7 @@ def writeMultiMaterials(fp, amt, config):
                 fp.write("  %s %s ;\n" % (key, value))
         if not alpha:
             fp.write("  use_transparent_shadows True ;\n")
-                
+
         n = 0
         for tex in mat.textures:
             name = os.path.basename(tex.file)
@@ -321,7 +328,7 @@ def writeMultiMaterials(fp, amt, config):
             diffuse = False
             fp.write(
                 "  MTex %d %s UV %s\n" % (n, name, type) +
-                "    texture Refer Texture %s ;\n" % name)            
+                "    texture Refer Texture %s ;\n" % name)
             for (key, value) in tex.types:
                 (type, use, factor, flags) = TexInfo[key]
                 if flags & TX_SCALE:
@@ -340,12 +347,14 @@ def writeMultiMaterials(fp, amt, config):
             fp.write("  end MTex\n")
             n += 1
         fp.write("end Material\n\n")
-  
-#-------------------------------------------------------------------------------        
-#   Masking   
-#-------------------------------------------------------------------------------        
-  
-def addMaskImage(fp, amt, config, mask):            
+
+#-------------------------------------------------------------------------------
+#   Masking
+#-------------------------------------------------------------------------------
+
+def addMaskImage(fp, env, mask):
+    amt = env.armature
+
     (folder, file) = mask
     path = config.getTexturePath(file, folder, True, amt.human)
     fp.write(
@@ -356,10 +365,9 @@ def addMaskImage(fp, amt, config, mask):
 "Texture %s IMAGE\n" % file  +
 "  Image %s ;\n" % file +
 "end Texture\n\n")
-    return
-    
 
-def addMaskMTex(fp, mask, proxy, blendtype, n):            
+
+def addMaskMTex(fp, mask, proxy, blendtype, n):
     if proxy:
         try:
             uvLayer = proxy.uvtexLayerName[proxy.maskLayer]
@@ -382,5 +390,4 @@ def addMaskMTex(fp, mask, proxy, blendtype, n):
         fp.write("    uv_layer '%s' ;\n" %  uvLayer)
     fp.write("  end MTex\n")
     return n+1
-    
-  
+

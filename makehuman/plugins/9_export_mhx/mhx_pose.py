@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makeinfo.human.org/
@@ -29,28 +29,30 @@ import exportutils
 
 from . import mhx_drivers
 
-#-------------------------------------------------------------------------------        
-#   
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
+#
+#-------------------------------------------------------------------------------
 
-def writePose(fp, amt, config):
+def writePose(fp, env):
+    amt = env.armature
+    config = env.config
 
     fp.write("""
-# --------------- Shapekeys ----------------------------- # 
+# --------------- Shapekeys ----------------------------- #
 """)
 
-    proxyShapes('Cage', 'T_Cage', amt, config, fp)
-    proxyShapes('Proxy', 'T_Proxy', amt, config, fp)
-    proxyShapes('Clothes', 'T_Clothes', amt, config, fp)
-    proxyShapes('Hair', 'T_Clothes', amt, config, fp)
+    proxyShapes('Cage', 'T_Cage', env, fp)
+    proxyShapes('Proxy', 'T_Proxy', env, fp)
+    proxyShapes('Clothes', 'T_Clothes', env, fp)
+    proxyShapes('Hair', 'T_Clothes', env, fp)
 
     fp.write("#if toggle&T_Mesh\n")
-    writeShapeKeys(fp, amt, config, "%sMesh" % amt.name, None)
-    
-    fp.write("""    
+    writeShapeKeys(fp, env, "%sMesh" % amt.name, None)
+
+    fp.write("""
 #endif
 
-# --------------- Actions ----------------------------- # 
+# --------------- Actions ----------------------------- #
 
 #if toggle&T_Armature
 """)
@@ -68,7 +70,7 @@ def writePose(fp, amt, config):
         fp.write("AnimationData %s True\n" % amt.name)
         amt.writeDrivers(fp)
         fp.write(
-"""        
+"""
   action_blend_type 'REPLACE' ;
   action_extrapolation 'HOLD' ;
   action_influence 1 ;
@@ -79,24 +81,26 @@ end AnimationData
     fp.write("CorrectRig %s ;\n" % amt.name)
 
     fp.write("""
-#endif 
+#endif
 """)
 
 # *** material-drivers
 
-#-------------------------------------------------------------------------------        
-#   
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
+#
+#-------------------------------------------------------------------------------
 
-def proxyShapes(typ, test, amt, config, fp):
+def proxyShapes(typ, test, env, fp):
+    amt = env.armature
     fp.write("#if toggle&%s\n" % test)
-    for proxy in amt.proxies.values():
+    for proxy in env.proxies.values():
         if proxy.name and proxy.type == typ:
-            writeShapeKeys(fp, amt, config, amt.name+proxy.name+"Mesh", proxy)
+            writeShapeKeys(fp, env, amt.name+proxy.name+"Mesh", proxy)
     fp.write("#endif\n")
-        
 
-def writeCorrectives(fp, amt, config, drivers, folder, landmarks, proxy, t0, t1):  
+
+def writeCorrectives(fp, env, drivers, folder, landmarks, proxy, t0, t1):
+    amt = env.armature
     empties = []
     try:
         shapeList = amt.loadedShapes[folder]
@@ -106,11 +110,11 @@ def writeCorrectives(fp, amt, config, drivers, folder, landmarks, proxy, t0, t1)
         shapeList = exportutils.shapekeys.readCorrectives(drivers, amt.human, folder, landmarks, t0, t1)
         amt.loadedShapes[folder] = shapeList
     for (shape, pose, lr) in shapeList:
-        empty = writeShape(fp, pose, lr, shape, 0, 1, proxy, config.scale)
+        empty = writeShape(fp, pose, lr, shape, 0, 1, proxy, env.config.scale)
         if empty:
             empties.append(pose)
-    return empties            
-    
+    return empties
+
 
 def writeShapeHeader(fp, pose, lr, min, max):
     fp.write(
@@ -125,14 +129,14 @@ def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
         if len(pshapes) > 0:
             name,pshape = pshapes[0]
             if len(pshape.keys()) > 0:
-                writeShapeHeader(fp, pose, lr, min, max)        
+                writeShapeHeader(fp, pose, lr, min, max)
                 for (pv, dr) in pshape.items():
                     (dx, dy, dz) = dr
                     fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (pv, dx, -dz, dy))
                 fp.write("end ShapeKey\n")
-                return False          
+                return False
     else:
-        writeShapeHeader(fp, pose, lr, min, max)        
+        writeShapeHeader(fp, pose, lr, min, max)
         for (vn, dr) in shape.items():
            fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (vn, scale*dr[0], -scale*dr[2], scale*dr[1]))
         fp.write("end ShapeKey\n")
@@ -140,17 +144,19 @@ def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
     return True
 
 
-def writeShapeKeys(fp, amt, config, name, proxy):
+def writeShapeKeys(fp, env, name, proxy):
+    amt = env.armature
+    config = env.config
 
     isHuman = ((not proxy) or proxy.type == 'Proxy')
     isHair = (proxy and proxy.type == 'Hair')
     useCorrectives = (
-        config.bodyShapes and 
-        config.rigtype == "mhx" and 
+        config.bodyShapes and
+        config.rigtype == "mhx" and
         ((not proxy) or (proxy.type in ['Proxy', 'Clothes']))
     )
     scale = config.scale
-    
+
     fp.write(
 "#if toggle&T_Shapekeys\n" +
 "ShapeKeys %s\n" % name +
@@ -161,7 +167,7 @@ def writeShapeKeys(fp, amt, config, name, proxy):
         shapeList = exportutils.shapekeys.readFaceShapes(amt.human, rig_panel.BodyLanguageShapeDrivers, 0.6, 0.7)
         for (pose, shape, lr, min, max) in shapeList:
             writeShape(fp, pose, lr, shape, min, max, proxy, scale)
-    
+
     if isHuman and config.expressions:
         try:
             shapeList = amt.loadedShapes["expressions"]
@@ -172,14 +178,14 @@ def writeShapeKeys(fp, amt, config, name, proxy):
             amt.loadedShapes["expressions"] = shapeList
         for (pose, shape) in shapeList:
             writeShape(fp, pose, "Sym", shape, -1, 2, proxy, scale)
-        
+
     if useCorrectives:
-    	from . import rig_arm
-    	from . import rig_leg
-        shoulder = writeCorrectives(fp, amt, config, rig_shoulder.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)
-        hips = writeCorrectives(fp, amt, config, rig_leg.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)                
-        elbow = writeCorrectives(fp, amt, config, rig_arm.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)                
-        knee = writeCorrectives(fp, amt, config, rig_leg.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)                
+        from . import rig_arm
+        from . import rig_leg
+        shoulder = writeCorrectives(fp, env, rig_shoulder.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)
+        hips = writeCorrectives(fp, env, rig_leg.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)
+        elbow = writeCorrectives(fp, env, rig_arm.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)
+        knee = writeCorrectives(fp, env, rig_leg.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)
 
     if isHuman:
         for path,name in config.customShapeFiles:
@@ -191,10 +197,10 @@ def writeShapeKeys(fp, amt, config, name, proxy):
                 log.message("    %s", path)
                 shape = exportutils.custom.readCustomTarget(path)
                 amt.loadedShapes[path] = shape
-            writeShape(fp, name, "Sym", shape, -1, 2, proxy, scale)                        
+            writeShape(fp, name, "Sym", shape, -1, 2, proxy, scale)
 
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
-        
+
     if useCorrectives:
         mhx_drivers.writeTargetDrivers(fp, rig_shoulder.ShoulderTargetDrivers, amt.name, shoulder)
         mhx_drivers.writeTargetDrivers(fp, rig_leg.HipTargetDrivers, amt.name, hips)
@@ -209,32 +215,32 @@ def writeShapeKeys(fp, amt, config, name, proxy):
 
     if isHuman:
         for path,name in config.customShapeFiles:
-            mhx_drivers.writeShapePropDrivers(fp, amt, [name], proxy, "")    
+            mhx_drivers.writeShapePropDrivers(fp, amt, [name], proxy, "")
 
         if config.expressions:
             mhx_drivers.writeShapePropDrivers(fp, amt, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
-            
+
         if config.facepanel and amt.rigtype=='mhx':
             mhx_drivers.writeShapeDrivers(fp, amt, rig_panel.BodyLanguageShapeDrivers, proxy)
-        
+
         skeys = []
         for (skey, val, string, min, max) in  amt.customProps:
             skeys.append(skey)
-        mhx_drivers.writeShapePropDrivers(fp, amt, skeys, proxy, "Mha")    
+        mhx_drivers.writeShapePropDrivers(fp, amt, skeys, proxy, "Mha")
     fp.write("#endif\n")
-        
+
     fp.write("  end AnimationData\n\n")
 
     if config.expressions and not proxy:
         exprList = exportutils.shapekeys.readExpressionMhm("data/expressions")
-        writeExpressions(fp, exprList, "Expression")        
+        writeExpressions(fp, exprList, "Expression")
         visemeList = exportutils.shapekeys.readExpressionMhm("data/visemes")
-        writeExpressions(fp, visemeList, "Viseme")        
+        writeExpressions(fp, visemeList, "Viseme")
 
     fp.write(
         "  end ShapeKeys\n" +
         "#endif\n")
-    return    
+    return
 
 
 def writeExpressions(fp, exprList, label):
@@ -243,4 +249,4 @@ def writeExpressions(fp, exprList, label):
         for (unit, value) in units:
             fp.write("    %s %s ;\n" % (unit, value))
         fp.write("  end\n")
-            
+

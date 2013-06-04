@@ -163,7 +163,7 @@ class MhxArmature(PythonExportArmature):
         )
         return driverList
 
-        if self.config.advancedSpine:
+        if config.advancedSpine:
             driverList += mhx_drivers.writePropDrivers(fp, self, rig_body.PropDriversAdvanced, "", "Mha")
         fingDrivers = rig_finger.getPropDrivers()
         driverList += (

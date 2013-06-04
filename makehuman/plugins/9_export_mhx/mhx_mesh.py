@@ -31,7 +31,10 @@ from . import mhx_drivers
 #
 #-------------------------------------------------------------------------------
 
-def writeMesh(fp, mesh, amt, config):
+def writeMesh(fp, mesh, env):
+    amt = env.armature
+    config = env.config
+    scale = config.scale
 
     fp.write("""
 # ----------------------------- MESH --------------------- #
@@ -41,7 +44,6 @@ def writeMesh(fp, mesh, amt, config):
     ox = amt.origin[0]
     oy = amt.origin[1]
     oz = amt.origin[2]
-    scale = config.scale
     for co in mesh.coord:
         fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(co[0]-ox), scale*(-co[2]+oz), scale*(co[1]-oy)))
 
@@ -56,7 +58,7 @@ def writeMesh(fp, mesh, amt, config):
         else:
             fp.write("    f %d %d %d %d ;\n" % tuple(fv))
 
-    writeFaceNumbers(fp, amt, config)
+    writeFaceNumbers(fp, env)
 
     fp.write("""
   end Faces
@@ -89,7 +91,7 @@ def writeMesh(fp, mesh, amt, config):
 """)
 
     writeBaseMaterials(fp, amt)
-    writeVertexGroups(fp, amt, config, None)
+    writeVertexGroups(fp, env, None)
 
     fp.write("""
 end Mesh
@@ -105,7 +107,7 @@ end Mesh
 #if toggle&T_Armature
 """)
 
-    writeArmatureModifier(fp, amt, config, None)
+    writeArmatureModifier(fp, env, None)
 
     fp.write("  parent Refer Object %s ;\n" % amt.name)
     fp.write("""
@@ -133,7 +135,10 @@ end Object
 #   Armature modifier.
 #-------------------------------------------------------------------------------
 
-def writeArmatureModifier(fp, amt, config, proxy):
+def writeArmatureModifier(fp, env, proxy):
+    amt = env.armature
+    config = env.config
+
     if (config.cage and
         not (proxy and proxy.cage)):
 
@@ -201,7 +206,9 @@ MaterialNumbers = {
     "yellow"    : 6,
 }
 
-def writeFaceNumbers(fp, amt, config):
+def writeFaceNumbers(fp, env):
+    amt = env.armature
+
     if amt.human.uvset:
         for ftn in amt.human.uvset.faceNumbers:
             fp.write(ftn)
@@ -279,7 +286,9 @@ def writeHideAnimationData(fp, amt, prefix, name):
 #   Vertex groups
 #-------------------------------------------------------------------------------
 
-def writeVertexGroups(fp, amt, config, proxy):
+def writeVertexGroups(fp, env, proxy):
+    amt = env.armature
+
     if proxy and proxy.weights:
         writeRigWeights(fp, proxy.weights)
         return
@@ -289,47 +298,6 @@ def writeVertexGroups(fp, amt, config, proxy):
         weights = amt.vertexWeights
     writeRigWeights(fp, weights)
 
-"""
-def copyVertexGroups(fp, vgroups, proxy):
-    if not proxy:
-        for (name, weights) in vgroups.items():
-            fp.write("  VertexGroup %s\n" % name)
-            for (v,wt) in weights:
-                fp.write("    wv %d %.4g ;\n" % (v,wt))
-            fp.write("  end VertexGroup\n\n")
-    else:
-        for (name, weights) in vgroups.items():
-            pgroup = []
-            for (v,wt) in weights:
-                try:
-                    vlist = proxy.vertWeights[v]
-                except:
-                    vlist = []
-                for (pv, w) in vlist:
-                    pw = w*wt
-                    if pw > 1e-4:
-                        pgroup.append((pv, pw))
-            if pgroup:
-                fp.write("  VertexGroup %s\n" % name)
-                printProxyVGroup(fp, pgroup)
-                fp.write("  end VertexGroup\n\n")
-
-
-def printProxyVGroup(fp, vgroups):
-    vgroups.sort()
-    pv = -1
-    while vgroups:
-        (pv0, wt0) = vgroups.pop()
-        if pv0 == pv:
-            wt += wt0
-        else:
-            if pv >= 0 and wt > 1e-4:
-                fp.write("    wv %d %.4f ;\n" % (pv, wt))
-            (pv, wt) = (pv0, wt0)
-    if pv >= 0 and wt > 1e-4:
-        fp.write("    wv %d %.4f ;\n" % (pv, wt))
-    return
-"""
 
 def writeRigWeights(fp, weights):
     for grp in weights.keys():
