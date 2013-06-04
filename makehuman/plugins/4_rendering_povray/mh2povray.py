@@ -797,7 +797,9 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
         settings['scene'],progressCallback = lambda p: progress(0.3*nextpb*p))
     # prepare channels
     lmap = imgop.getChannel(lmap,1)
-    alpha = imgop.getAlpha(mh.Image(collect.getpath(stuffs[0].texture)))
+    alpha = imgop.shrinkSelection(projection.mapMask())
+    for i in range(3):
+        alpha = imgop.shrinkSelection(alpha)
     black = mh.Image(data = imgop.numpy.zeros((lmap.height, lmap.width, 1), dtype=imgop.numpy.uint8))
     # calculate blur level of each cannel, according to settings
     sssa = float(settings['SSSA'])
@@ -806,16 +808,16 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
         os.path.join(outDir, '%s_sss_bluelmap.png' % stuffs[0].name))
     # green channel
     progress(0.4*nextpb)
-    lmap = imgop.blurred(lmap, 16*sssa, 13, lambda p: progress((0.4+0.3*p)*nextpb))
+    lmap = imgop.blurred(lmap, 10*sssa, 13, lambda p: progress((0.4+0.3*p)*nextpb))
     imgop.compose([black,lmap,black]).save(
         os.path.join(outDir, '%s_sss_greenlmap.png' % stuffs[0].name))
     # red channel
     progress(0.7*nextpb)
-    lmap = imgop.blurred(lmap, 32*sssa, 13, lambda p: progress((0.7+0.2*p)*nextpb))
-    alpha = imgop.blurred(alpha, 32*sssa, 13, lambda p: progress((0.9+0.1*p)*nextpb))
+    lmap = imgop.blurred(lmap, 20*sssa, 13, lambda p: progress((0.7+0.2*p)*nextpb))
+    alpha = imgop.blurred(alpha, 4, 13, lambda p: progress((0.9+0.1*p)*nextpb))
+    alpha.save(os.path.join(outDir, '%s_sss_alpha.png' % stuffs[0].name))
     imgop.compose([lmap,black,black]).save(
         os.path.join(outDir, '%s_sss_redlmap.png' % stuffs[0].name))
-    alpha.save(os.path.join(outDir, '%s_sss_alpha.png' % stuffs[0].name))
     progbase = nextpb
     progress(progbase)
     if settings['usebump']:

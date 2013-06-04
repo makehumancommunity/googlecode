@@ -375,6 +375,15 @@ def mapSceneLighting(scn, progressCallback = None):
     else:   # If the scene has no lights, return an empty lightmap.
         return mh.Image(data = np.zeros((1024, 1024, 1), dtype=np.uint8))
 
+def mapMask(dimensions = (1024, 1024)):
+    """
+    Create a texture map mask, for finding the texture map borders.
+    """
+    
+    mesh = gui3d.app.selectedHuman.mesh
+    return mh.renderSkin(dimensions, mesh.vertsPerPrimitive, mesh.r_texco,
+                         index = mesh.index, clearColor = (0, 0, 0, 0))
+
 def rasterizeHLines(dstImg, edges, delta, progress = None):
     flip = delta[:,0] < 0
     p = np.where(flip[:,None,None], edges[:,::-1,:], edges[:,:,:])

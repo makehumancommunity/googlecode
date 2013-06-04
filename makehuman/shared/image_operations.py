@@ -8,7 +8,8 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Jonas Hauquier, Glynn Clements
+**Authors:**           Jonas Hauquier, Glynn Clements,
+                       Thanasis Papoutsidakis
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
@@ -126,3 +127,36 @@ def getAlpha(img):
 
 def getChannel(img, channel):
     return Image(data = img.data[:,:,(channel-1):channel])
+
+def growSelection(img):
+    return expandSelection(img)
+
+def shrinkSelection(img):
+    return expandSelection(img, True)
+
+def expandSelection(img, shrink = False):
+    '''
+    In a single alpha channel that serves as a mask,
+    grow or shrink the mask by a pixel.
+
+    Based on projection.py's fixSeams function.
+    '''
+       
+    h,w,c = img.data.shape
+    jitters = numpy.empty((3,3,h,w), dtype=numpy.uint8)
+    jitters[1,1,:,:] = img.data[...,-1]
+    if shrink:
+        jitters[1,1,:,:] = 255 - jitters[1,1,:,:]
+
+    jitters[1,0,:,:] = numpy.roll(jitters[1,1,:,:], -1, axis=-2)
+    jitters[1,2,:,:] = numpy.roll(jitters[1,1,:,:],  1, axis=-2)
+    jitters[0,:,:,:] = numpy.roll(jitters[1,:,:,:], -1, axis=-3)
+    jitters[2,:,:,:] = numpy.roll(jitters[1,:,:,:],  1, axis=-3)
+
+    jitters_f = jitters.reshape(9,h,w)
+    mask = numpy.logical_or(jitters[1,1,:,:] != 0, numpy.any(jitters_f[:,:,:] != 0, axis=0))
+
+    if shrink:
+        mask = numpy.logical_not(mask)
+
+    return Image(data = 255*((mask[...,None]).astype(numpy.uint8)))
