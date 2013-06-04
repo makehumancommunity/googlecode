@@ -45,21 +45,16 @@ class BaseArmature:
     def __init__(self, name, human, config):
         self.name = name
         self.human = human
-        self.mesh = human.meshData
-        self.boneLayers = "00000001"
         self.config = config
-        self.rigtype = config.rigtype
-        self.addConnectingBones = config.addConnectingBones
+
         self.root = None
-        self.master = None
-        self.proxies = {}
         self.roots = []
         self.bones = OrderedDict()
         self.hierarchy = []
 
         self.locations = {}
         self.origin = [0,0,0]
-        self.loadedShapes = {}
+        self.customShapes = {}
         self.constraints = {}
         self.rotationLimits = {}
 
@@ -68,7 +63,7 @@ class BaseArmature:
 
 
     def __repr__(self):
-        return ("  <BaseArmature %s %s>" % (self.name, self.rigtype))
+        return ("  <BaseArmature %s %s>" % (self.name, self.config.rigtype))
 
 
     def prefixWeights(self, weights, prefix):
@@ -82,7 +77,7 @@ class BaseArmature:
 
 
     def sortBones(self, boneInfos):
-        if self.addConnectingBones:
+        if self.config.addConnectingBones:
             extras = []
             for bone in boneInfos.values():
                 if bone.parent:
@@ -114,6 +109,15 @@ class BaseArmature:
 
         for root in self.roots:
             self.sortBones1(root, self.hierarchy)
+
+        for bname,data in self.customShapes.items():
+            self.bones[bname].customShape = data
+
+        for bname,data in self.constraints.items():
+            try:
+                self.bones[bname].constraints = data
+            except KeyError:
+                log.message("Warning: constraint for undefined bone %s" % bname)
 
 
     def sortBones1(self, bone, hier):
@@ -158,8 +162,6 @@ class BaseArmature:
         self.bindMatrix = tm.rotation_matrix(math.pi/2, XUnit)
         self.bindInverse = la.inv(self.bindMatrix)
 
-
-
 class Bone:
     def __init__(self, amt, name):
         self.name = name
@@ -171,18 +173,20 @@ class Bone:
         self.flags = 0
         self.layers = L_MAIN
         self.length = 0
+        self.customShape = None
         self.children = []
 
         self.location = (0,0,0)
-        self.lock_location = (False,False,False)
-        self.lock_rotation = (False,False,False)
-        self.lock_rotation_w = False
-        self.lock_rotations_4d = False
-        self.lock_scale = (False,False,False)
+        self.group = None
+        self.lockLocation = (0,0,0)
+        self.lockRotation = (0,0,0)
+        self.lockScale = (1,1,1)
+        self.ikDof = (1,1,1)
+        #self.lock_rotation_w = False
+        #self.lock_rotations_4d = False
 
         self.constraints = []
         self.drivers = []
-        self.rotationLimits = []
 
         # Matrices:
         # matrixRest:       4x4 rest matrix, relative world

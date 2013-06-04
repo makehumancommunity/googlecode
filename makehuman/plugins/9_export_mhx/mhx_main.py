@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makeinfo.human.org/
@@ -49,24 +49,24 @@ from . import mhx_proxy
 from . import mhx_armature
 from . import mhx_pose
 
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
 #   Export MHX file
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
 
-def exportMhx(human, filepath, config):  
+def exportMhx(human, filepath, config):
     gui3d.app.progress(0, text="Exporting MHX")
     log.message("Exporting %s" % filepath.encode('utf-8'))
     time1 = time.clock()
-    posemode.exitPoseMode()        
+    posemode.exitPoseMode()
     posemode.enterPoseMode()
-    
+
     config.setHuman(human)
-    config.setupTexFolder(filepath)    
+    config.setupTexFolder(filepath)
 
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
     amt = mhx_armature.getArmature(name, human, config)
-    fp = open(filepath, 'w')    
+    fp = open(filepath, 'w')
     fp.write(
         "# MakeHuman exported MHX\n" +
         "# www.makeinfo.human.org\n" +
@@ -77,29 +77,29 @@ def exportMhx(human, filepath, config):
 
     scanProxies(config, amt)
     amt.setup()
-    
+
     if not config.cage:
         fp.write(
             "#if toggle&T_Cage\n" +
             "  error 'This MHX file does not contain a cage. Unselect the Cage import option.' ;\n" +
             "#endif\n")
 
-    fp.write("NoScale True ;\n")    
+    fp.write("NoScale True ;\n")
     amt.setupCustomShapes(fp)
-        
+
     gui3d.app.progress(0.1, text="Exporting armature")
     amt.writeArmature(fp, MINOR_VERSION)
-    
-    gui3d.app.progress(0.15, text="Exporting materials")    
+
+    gui3d.app.progress(0.15, text="Exporting materials")
     fp.write("\nNoScale False ;\n\n")
     mhx_materials.writeMaterials(fp, amt, config)
 
     if config.cage:
         mhx_proxy.writeProxyType('Cage', 'T_Cage', amt, config, fp, 0.2, 0.25)
-    
-    gui3d.app.progress(0.25, text="Exporting main mesh")    
+
+    gui3d.app.progress(0.25, text="Exporting main mesh")
     fp.write("#if toggle&T_Mesh\n")
-    mhx_mesh.writeMesh(fp, amt, config)
+    mhx_mesh.writeMesh(fp, human.meshData, amt, config)
     fp.write("#endif\n")
 
     mhx_proxy.writeProxyType('Proxy', 'T_Proxy', amt, config, fp, 0.35, 0.4)
@@ -117,30 +117,30 @@ def exportMhx(human, filepath, config):
     log.message("%s exported" % filepath.encode('utf-8'))
     gui3d.app.progress(1.0)
     return
-    
-#-------------------------------------------------------------------------------        
+
+#-------------------------------------------------------------------------------
 #   Scan proxies
-#-------------------------------------------------------------------------------        
-    
+#-------------------------------------------------------------------------------
+
 def scanProxies(config, amt):
     amt.proxies = {}
     for pfile in config.getProxyList():
         if pfile.file:
-            proxy = mh2proxy.readProxyFile(amt.mesh, pfile, True)
+            proxy = mh2proxy.readProxyFile(amt.human.meshData, pfile, True)
             if proxy:
-                amt.proxies[proxy.name] = proxy        
+                amt.proxies[proxy.name] = proxy
 
-#-------------------------------------------------------------------------------        
-#   Groups   
-#-------------------------------------------------------------------------------        
-    
-def writeGroups(fp, amt):    
+#-------------------------------------------------------------------------------
+#   Groups
+#-------------------------------------------------------------------------------
+
+def writeGroups(fp, amt):
     fp.write("""
-# ---------------- Groups -------------------------------- # 
+# ---------------- Groups -------------------------------- #
 
 """)
     fp.write(
-        "PostProcess %sMesh %s 0000003f 00080000 %s 0000c000 ;\n" % (amt.name, amt.name, amt.boneLayers) + 
+        "PostProcess %sMesh %s 0000003f 00080000 %s 0000c000 ;\n" % (amt.name, amt.name, amt.boneLayers) +
         "Group %s\n"  % amt.name +
         "  Objects\n" +
         "    ob %s ;\n" % amt.name +
@@ -154,12 +154,12 @@ def writeGroups(fp, amt):
     groupProxy('Hair', 'T_Clothes', fp, amt)
 
     fp.write(
-        "    ob CustomShapes ;\n" + 
+        "    ob CustomShapes ;\n" +
         "  end Objects\n" +
         "  layers Array 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1  ;\n" +
         "end Group\n")
     return
-    
+
 
 def groupProxy(typ, test, fp, amt):
     fp.write("#if toggle&%s\n" % test)

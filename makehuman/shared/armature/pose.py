@@ -19,7 +19,7 @@
 Abstract
 --------
 
-Pose armature
+Pose
 """
 
 import os
@@ -57,7 +57,7 @@ class Pose:
         self.controls = []
         self.deforms = []
         """
-        if self.rigtype == 'mhx':
+        if self.config.rigtype == 'mhx':
             self.visible = VISIBLE_LAYERS
             self.last = 32
         else:
@@ -148,7 +148,6 @@ class Pose:
     def rebuild(self, update=True):
         log.message("Rebuild %s %s %s", self, update, self.config.rigtype)
         obj = self.human.meshData
-        self.proxies = {}
         self.setupRig()
         log.debug("RHT %s %s", self.heads["Root"], self.tails["Root"])
         for bone in self.bones.values():

@@ -175,8 +175,10 @@ def setupSimpleCustomShapes(fp):
 class ExportArmature:
 
     def __init__(self, config):
-        self.customShapeFiles = []
-        self.customShapes = {}
+        self.boneLayers = "00000001"
+        self.scale = config.scale
+        self.proxies = {}
+
         self.gizmos = None
         self.gizmoFiles = []
         self.recalcRoll = []
@@ -185,8 +187,17 @@ class ExportArmature:
         self.customProps = []
         self.bbones = {}
         self.boneGroups = []
-        self.customShapes = {}
         self.poseInfo = {}
+
+
+    def setup(self):
+        if self.config.clothesRig:
+            for proxy in self.proxies.values():
+                if proxy.rig:
+                    coord = proxy.getCoords()
+                    self.fromRigFile(proxy.rig, amt.human.meshData, coord=coord)
+                    proxy.weights = self.prefixWeights(weights, proxy.name)
+                    #appendRigBones(boneList, proxy.name, L_CLO, body, amt)
 
 
     def setupCustomShapes(self, fp):
@@ -211,7 +222,7 @@ class ExportArmature:
 
     def writeEditBones(self, fp):
         for bone in self.bones.values():
-            scale = self.config.scale
+            scale = self.scale
 
             fp.write("\n  Bone %s %s\n" % (bone.name, True))
             (x, y, z) = scale*bone.head
@@ -282,17 +293,12 @@ class ExportArmature:
 
     def writeControlPoses(self, fp, config):
         # For mhx, basic, rigify
-        for bname in self.bones.keys():
-            constraints = safeGet(self.constraints, bname, [])
-            customShape = safeGet(self.customShapes, bname, None)
-            boneGroup = None
-            limit = safeGet(self.rotationLimits, bname, None)
-            lockLoc = (0,0,0)
-            lockRot = (0,0,0)
-            lockScale = (0,0,0)
-            ik_dof = (1,1,1)
-            flags = 0
-            posebone.addPoseBone(fp, self, bname, customShape, boneGroup, lockLoc, lockRot, lockScale, ik_dof, flags, constraints)
+        for bone in self.bones.values():
+            posebone.addPoseBone(
+                fp, self, bone.name,
+                bone.customShape, bone.group,
+                bone.lockLocation, bone.lockRotation, bone.lockScale,
+                bone.ikDof, bone.flags, bone.constraints)
 
         # For other rigs
         for (bname, cinfo) in self.poseInfo.items():
@@ -363,7 +369,7 @@ NoScale False ;
   layers Array 1 1 1 1 1 1 1 1  1 1 1 1 1 1 1 1  1 1 1 1 1 1 1 1  1 1 1 1 1 1 1 1  ;
 """)
 
-        if self.config.rigtype == "mhx":
+        if self.recalcRoll:
             fp.write("  RecalcRoll %s ;\n" % self.recalcRoll)
 
         fp.write("""
@@ -415,11 +421,19 @@ class PythonExportArmature(PythonArmature, ExportArmature):
         PythonArmature. __init__(self, name, human, config)
         ExportArmature.__init__(self, config)
 
+    def setup(self):
+        PythonArmature.setup(self)
+        ExportArmature.setup(self)
+
 
 class RigfileExportArmature(RigfileArmature, ExportArmature):
     def __init__(self, name, human, config):
         RigfileArmature. __init__(self, name, human, config)
         ExportArmature.__init__(self, config)
+
+    def setup(self):
+        RigfileArmature.setup(self)
+        ExportArmature.setup(self)
 
 
 

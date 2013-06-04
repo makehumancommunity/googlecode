@@ -31,7 +31,7 @@ import log
 
 #import cProfile
 
-from armature.pose_amt import createPoseRig
+from armature.pose import createPoseRig
 import warpmodifier
 import posemode
 

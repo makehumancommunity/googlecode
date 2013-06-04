@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -23,7 +23,7 @@ TODO
 """
 
 import gui3d
-from armature.pose_amt import createPoseRig
+from armature.pose import createPoseRig
 import warpmodifier
 import humanmodifier
 import log
@@ -37,11 +37,12 @@ def resetPoseMode():
         human = gui3d.app.selectedHuman
         if human:
             human.armature = None
-    
-resetPoseMode()    
+
+resetPoseMode()
 
 
 def printVert(human):
+    return
     for vn in [8202]:
         x = human.meshData.coord[vn]
         if warpmodifier.shadowCoords is None:
@@ -49,8 +50,8 @@ def printVert(human):
         else:
             y = warpmodifier.shadowCoords[vn]
         log.debug("  %d: (%.3f %.3f %.3f) (%.3f %.3f %.3f)", vn,x[0],x[1],x[2],y[0],y[1],y[2])
-        
-        
+
+
 def enterPoseMode():
     global InPoseMode, theShadowBones
     if InPoseMode:
@@ -71,7 +72,7 @@ def enterPoseMode():
     #gui3d.app.poseModeBox.selected = True
     printVert(human)
 
-    
+
 def exitPoseMode():
     global InPoseMode, theShadowBones
     if not InPoseMode:
@@ -79,7 +80,7 @@ def exitPoseMode():
     log.message("Exit pose mode")
     human = gui3d.app.selectedHuman
     printVert(human)
-    
+
     amt = human.armature
     obj = human.meshData
     if amt:
@@ -88,22 +89,22 @@ def exitPoseMode():
     InPoseMode = False
     if warpmodifier.shadowCoords == None:
         halt
-    warpmodifier.removeAllWarpTargets(human)        
+    warpmodifier.removeAllWarpTargets(human)
     obj.changeCoords(warpmodifier.shadowCoords)
     obj.calcNormals()
     obj.update()
-    
+
     if amt:
-        amt.update()     
+        amt.update()
         amt.dirty = True
         #amt.removeModifier()
-        human.armature = None    
-    warpmodifier.shadowCoords = None    
+        human.armature = None
+    warpmodifier.shadowCoords = None
     log.message("Pose mode exited")
     #gui3d.app.poseModeBox.selected = False
     printVert(human)
-    
-    
+
+
 def changePoseMode(event):
     human = event.human
     #log.debug("Change pose mode %s w=%s e=%s", InPoseMode, human.warpsNeedReset, event.change)
@@ -112,21 +113,21 @@ def changePoseMode(event):
     elif event.change not in ["targets", "warp"]:
         exitPoseMode()
     if event.change == "reset":
-        resetPoseMode()     
-     
+        resetPoseMode()
+
 #----------------------------------------------------------
 #   class PoseModifierSlider
 #----------------------------------------------------------
 
 class PoseModifierSlider(humanmodifier.ModifierSlider):
-    def __init__(self, label, modifier):        
+    def __init__(self, label, modifier):
         humanmodifier.ModifierSlider.__init__(self, label=label, modifier=modifier, warpResetNeeded=False)
-        
-    def onChanging(self, value):   
+
+    def onChanging(self, value):
         enterPoseMode()
         humanmodifier.ModifierSlider.onChanging(self, value)
-            
-    def onChange(self, value):    
+
+    def onChange(self, value):
         enterPoseMode()
         humanmodifier.ModifierSlider.onChange(self, value)
-       
+

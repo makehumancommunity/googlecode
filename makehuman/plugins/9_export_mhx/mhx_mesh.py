@@ -31,7 +31,7 @@ from . import mhx_drivers
 #
 #-------------------------------------------------------------------------------
 
-def writeMesh(fp, amt, config):
+def writeMesh(fp, mesh, amt, config):
 
     fp.write("""
 # ----------------------------- MESH --------------------- #
@@ -42,7 +42,7 @@ def writeMesh(fp, amt, config):
     oy = amt.origin[1]
     oz = amt.origin[2]
     scale = config.scale
-    for co in amt.mesh.coord:
+    for co in mesh.coord:
         fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(co[0]-ox), scale*(-co[2]+oz), scale*(co[1]-oy)))
 
     fp.write("""
@@ -50,7 +50,7 @@ def writeMesh(fp, amt, config):
 
   Faces
 """)
-    for n,fv in enumerate(amt.mesh.fvert):
+    for n,fv in enumerate(mesh.fvert):
         if fv[0] == fv[3]:
             raise NameError("Triangular face %d = %s encountered. MakeHuman meshes must be pure quad." % (n, fv))
         else:
@@ -73,11 +73,11 @@ def writeMesh(fp, amt, config):
                 fp.write(" %.4g %.4g" %(uv[0], uv[1]))
             fp.write(" ;\n")
     else:
-        for n,fuv in enumerate(amt.mesh.fuvs):
-            uv0 = amt.mesh.texco[fuv[0]]
-            uv1 = amt.mesh.texco[fuv[1]]
-            uv2 = amt.mesh.texco[fuv[2]]
-            uv3 = amt.mesh.texco[fuv[3]]
+        for n,fuv in enumerate(mesh.fuvs):
+            uv0 = mesh.texco[fuv[0]]
+            uv1 = mesh.texco[fuv[1]]
+            uv2 = mesh.texco[fuv[2]]
+            uv3 = mesh.texco[fuv[3]]
             fp.write("    vt %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g ;\n" % (uv0[0], uv0[1], uv1[0], uv1[1], uv2[0], uv2[1], uv3[0], uv3[1]))
 
     fp.write("""
@@ -206,7 +206,7 @@ def writeFaceNumbers(fp, amt, config):
         for ftn in amt.human.uvset.faceNumbers:
             fp.write(ftn)
     else:
-        obj = amt.mesh
+        obj = amt.human.meshData
         fmats = numpy.zeros(len(obj.coord), int)
         for fn,mtl in obj.materials.items():
             fmats[fn] = MaterialNumbers[mtl]

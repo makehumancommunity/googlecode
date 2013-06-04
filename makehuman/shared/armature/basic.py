@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -33,11 +33,11 @@ from . import rig_face
 
 class BasicArmature(PythonArmature):
 
-    def __init__(self, name, human, config):   
+    def __init__(self, name, human, config):
         PythonArmature. __init__(self, name, human, config)
-        self.rigtype = "basic"
-        self.boneLayers = "08a80caa"
+        self.config.rigtype = "basic"
         self.root = "hips"
+        self.config = config
 
         if config.useMuscles:
             self.vertexGroupFiles = ["head", "muscles", "hand"]
@@ -59,7 +59,7 @@ class BasicArmature(PythonArmature):
         )
         if config.useMuscles:
             self.joints += rig_muscle.Joints
-        
+
         self.headsTails = mergeDicts([
             rig_bones.HeadsTails,
             rig_face.HeadsTails
@@ -90,8 +90,8 @@ class BasicArmature(PythonArmature):
 
         self.objectProps = rig_bones.ObjectProps
         self.armatureProps = rig_bones.ArmatureProps
-        
-    
+
+
     def createBones(self, boneInfo):
         self.addBones(rig_bones.Armature, boneInfo)
         self.addDeformBones(rig_bones.Armature, boneInfo)
@@ -99,4 +99,4 @@ class BasicArmature(PythonArmature):
             self.addBones(rig_muscle.Armature, boneInfo)
         self.addBones(rig_face.Armature, boneInfo)
         PythonArmature.createBones(self, boneInfo)
-            
+

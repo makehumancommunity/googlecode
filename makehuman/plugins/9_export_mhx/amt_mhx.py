@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -37,11 +37,11 @@ from . import rig_mhx
 
 class MhxArmature(PythonExportArmature):
 
-    def __init__(self, name, human, config):    
+    def __init__(self, name, human, config):
         import gizmos_mhx, gizmos_general
-    
+
         PythonExportArmature. __init__(self, name, human, config)
-        self.rigtype = 'mhx'
+        self.config.rigtype = 'mhx'
         self.boneLayers = "0068056b"
         self.useDeformBones = True
         self.useDeformNames = True
@@ -65,21 +65,21 @@ class MhxArmature(PythonExportArmature):
         self.armatureProps = []
         self.headName = 'head'
         self.master = 'master'
-        
+
         if config.useMuscles:
             self.vertexGroupFiles = ["head", "muscles", "hand"]
         else:
             self.vertexGroupFiles = ["head", "bones", "hand"]
         """
         if config.skirtRig == "own":
-            self.vertexGroupFiles.append("skirt-rigged")    
+            self.vertexGroupFiles.append("skirt-rigged")
         elif config.skirtRig == "inh":
-            self.vertexGroupFiles.append("skirt")    
+            self.vertexGroupFiles.append("skirt")
 
         if config.maleRig:
             self.vertexGroupFiles.append( "male" )
         """
-        
+
         self.joints = (
             rig_joints.Joints +
             rig_master.Joints +
@@ -87,8 +87,8 @@ class MhxArmature(PythonExportArmature):
             rig_muscle.Joints +
             rig_mhx.Joints +
             rig_face.Joints
-        )            
-        
+        )
+
         self.headsTails = mergeDicts([
             rig_master.HeadsTails,
             rig_bones.HeadsTails,
@@ -118,10 +118,10 @@ class MhxArmature(PythonExportArmature):
             rig_mhx.CustomShapes,
             rig_face.CustomShapes
         ])
-        
+
         self.parents = rig_mhx.Parents
 
-        
+
     def createBones(self, boneInfo):
         generic = mergeDicts([rig_master.Armature, rig_bones.Armature, rig_face.Armature])
         self.addBones(rig_master.Armature, boneInfo)
@@ -137,7 +137,7 @@ class MhxArmature(PythonExportArmature):
     def dynamicLocations(self):
         return
         rig_body.DynamicLocations()
-        
+
 
     def setupCustomShapes(self, fp):
         PythonExportArmature.setupCustomShapes(self, fp)
@@ -147,10 +147,10 @@ class MhxArmature(PythonExportArmature):
             setupCube(fp, "MHCube05", 0.5, 0)
             self.gizmos = gizmos_panel.asString()
             fp.write(self.gizmos)
-        
+
 
     def writeControlPoses(self, fp, config):
-        self.writeBoneGroups(fp)   
+        self.writeBoneGroups(fp)
         PythonExportArmature.writeControlPoses(self, fp, config)
 
 
@@ -159,19 +159,19 @@ class MhxArmature(PythonExportArmature):
             #mhx_drivers.writePropDrivers(fp, self, rig_mhx.PropDrivers, "", "Mha") +
             mhx_drivers.writePropDrivers(fp, self, rig_mhx.PropLRDrivers, "L", "Mha") +
             mhx_drivers.writePropDrivers(fp, self, rig_mhx.PropLRDrivers, "R", "Mha") +
-            mhx_drivers.writeDrivers(fp, True, rig_face.DeformDrivers(fp, self))            
+            mhx_drivers.writeDrivers(fp, True, rig_face.DeformDrivers(fp, self))
         )
         return driverList
 
         if self.config.advancedSpine:
-            driverList += mhx_drivers.writePropDrivers(fp, self, rig_body.PropDriversAdvanced, "", "Mha") 
+            driverList += mhx_drivers.writePropDrivers(fp, self, rig_body.PropDriversAdvanced, "", "Mha")
         fingDrivers = rig_finger.getPropDrivers()
         driverList += (
             mhx_drivers.writePropDrivers(fp, self, fingDrivers, "_L", "Mha") +
             mhx_drivers.writePropDrivers(fp, self, fingDrivers, "_R", "Mha")
         )
         return driverList
-    
+
 
     def writeActions(self, fp):
         #rig_arm.WriteActions(fp)
@@ -179,7 +179,7 @@ class MhxArmature(PythonExportArmature):
         #rig_finger.WriteActions(fp)
         return
 
-        
+
     def writeProperties(self, fp):
         PythonExportArmature.writeProperties(self, fp)
 
@@ -198,7 +198,7 @@ class MhxArmature(PythonExportArmature):
 
   Property MhaLegIk_L 0.0 Left_leg_FK/IK ;
   PropKeys MhaLegIk_L "min":0.0,"max":1.0, ;
-  
+
   Property MhaLegIkToAnkle_L False Left_leg_IK_to_ankle ;
   PropKeys MhaLegIkToAnkle_L "type":'BOOLEAN',"min":0,"max":1, ;
 
@@ -252,7 +252,7 @@ class MhxArmature(PythonExportArmature):
 
   Property MhaFingerControl_R True Right_fingers_controlled ;
   PropKeys MhaFingerControl_R "type":'BOOLEAN',"min":0,"max":1, ;
-  
+
   Property MhaArmStretch_L 0.1 Left_arm_stretch_amount ;
   PropKeys MhaArmStretch_L "min":0.0,"max":1.0, ;
 
@@ -276,16 +276,16 @@ class MhxArmature(PythonExportArmature):
 """)
 
         if self.config.advancedSpine:
-        
+
             fp.write("""
   Property MhaSpineInvert False Spine_from_shoulders_to_pelvis ;
   PropKeys MhaSpineInvert "type":'BOOLEAN',"min":0,"max":1, ;
-  
+
   Property MhaSpineIk False Spine_FK/IK ;
   PropKeys MhaSpineIk "type":'BOOLEAN',"min":0,"max":1, ;
-  
+
   Property MhaSpineStretch 0.2 Spine_stretch_amount ;
-  PropKeys MhaSpineStretch "min":0.0,"max":1.0, ;    
-""")        
+  PropKeys MhaSpineStretch "min":0.0,"max":1.0, ;
+""")
 
 

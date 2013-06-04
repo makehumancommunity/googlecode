@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -19,7 +19,7 @@
 Abstract
 --------
 
-Face bone definitions 
+Face bone definitions
 """
 
 from .flags import *
@@ -42,7 +42,7 @@ HeadsTails = {
     'eye_parent.R' :    ('r-eye', ('r-eye', eyeOffs)),
     'uplid.R' :         ('r-eye', 'r-upperlid'),
     'lolid.R' :         ('r-eye', 'r-lowerlid'),
-   
+
     'eye.L' :           ('l-eye', ('l-eye', eyeOffs)),
     'eye_parent.L' :    ('l-eye', ('l-eye', eyeOffs)),
     'uplid.L' :         ('l-eye', 'l-upperlid'),
@@ -70,26 +70,12 @@ CustomShapes = {
     'eye.L' :   'GZM_Circle025',
 }
 
+Constraints = {}
 
 RotationLimits = {
     'jaw' : (-5*D,45*D, 0,0, -20*D,20*D),
 }
 
-
-Constraints = {
-    'gaze_parent' : [
-         ('CopyTrans', 0, 1, ['head', 'head', 0])
-         ],
-    'eyes' : [
-        ('IK', 0, 1, ['IK', 'gaze', 1, None, (True, False,False), 1.0])
-        ],
-    'eye_parent.L' : [
-        ('CopyRot', C_LOCAL, 1, ['eyes', 'eyes', (1,1,1), (0,0,0), True])
-        ],
-    'eye_parent.R' : [
-        ('CopyRot', C_LOCAL, 1, ['eyes', 'eyes', (1,1,1), (0,0,0), True])
-        ],
-}
 
 #
 #    DeformDrivers(fp, amt):
