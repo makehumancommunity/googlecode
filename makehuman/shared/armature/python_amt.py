@@ -61,7 +61,7 @@ class PythonParser(Parser):
         self.vertexGroupFiles = []
         self.headName = 'Head'
 
-        self.customShapeFiles = []
+        self.customTargetFiles = []
         self.loadedShapes = {}
 
 

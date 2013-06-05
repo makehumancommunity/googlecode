@@ -50,8 +50,6 @@ class RigOptions:
             facepanel = False,
             advancedSpine = False,
             clothesRig = False,
-            useCustomShapes = False,
-            customShapeFiles = [],
             useMasks = False,
             expressions = False,
         ):
@@ -65,8 +63,6 @@ class RigOptions:
         self.facepanel = facepanel
         self.advancedSpine = advancedSpine
         self.clothesRig = clothesRig
-        self.useCustomShapes = useCustomShapes
-        self.customShapeFiles = customShapeFiles
         self.useMasks = useMasks
         self.expressions = expressions
 
@@ -88,7 +84,7 @@ class BaseArmature:
 
         self.locations = {}
         self.origin = [0,0,0]
-        self.customShapes = {}
+        self.customTargets = {}
         self.constraints = {}
         self.rotationLimits = {}
 
@@ -144,8 +140,8 @@ class BaseArmature:
         for root in self.roots:
             self.sortBones1(root, self.hierarchy)
 
-        for bname,data in self.customShapes.items():
-            self.bones[bname].customShape = data
+        for bname,data in self.customTargets.items():
+            self.bones[bname].customTarget = data
 
         for bname,data in self.constraints.items():
             try:
@@ -207,7 +203,7 @@ class Bone:
         self.flags = 0
         self.layers = L_MAIN
         self.length = 0
-        self.customShape = None
+        self.customTarget = None
         self.children = []
 
         self.location = (0,0,0)

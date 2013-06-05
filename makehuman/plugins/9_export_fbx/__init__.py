@@ -40,7 +40,7 @@ class FbxConfig(Config):
 
         self.useRelPaths     = False
         self.expressions = options.expressions = exporter.expressions.selected
-        self.useCustomShapes = exporter.useCustomShapes.selected
+        self.useCustomTargets = exporter.useCustomTargets.selected
         self.useMaterials    = True # for debugging
 
 
@@ -58,7 +58,7 @@ class ExporterFBX(Exporter):
     def build(self, options, taskview):
         Exporter.build(self, options, taskview)
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
-        self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
+        self.useCustomTargets = options.addWidget(gui.CheckBox("Custom shapes", False))
 
     def export(self, human, filename):
         from . import mh2fbx

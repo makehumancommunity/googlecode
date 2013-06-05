@@ -63,6 +63,13 @@ def getArmature(name, human, options):
 #   Setup custom shapes
 #-------------------------------------------------------------------------------
 
+def writeCustomEmpty(fp):
+    fp.write(
+        "Object CustomShapes EMPTY None\n" +
+        "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
+        "end Object\n\n")
+
+
 def setupCircle(fp, name, r):
     """
     Write circle object to the MHX file. Circles are used as custom shapes.
@@ -148,7 +155,7 @@ def setupCube(fp, name, r, offs):
         "end Object\n")
 
 
-def setupSimpleCustomShapes(fp):
+def setupSimpleCustomTargets(fp):
     """
     Write simple custom shapes to the MHX file. Additional custom shapes are defined in
     mhx files in mhx/templates.
@@ -181,7 +188,6 @@ class ExportArmature(Armature):
         self.visibleLayers = "00000001"
         self.scale = options.scale
 
-        self.customShapes = {}
         self.gizmos = None
         self.gizmoFiles = []
         self.recalcRoll = []
@@ -196,10 +202,6 @@ class ExportArmature(Armature):
     def setup(self):
         Armature.setup(self)
 
-        parser = self.parser
-        self.origin = parser.origin
-        self.customShapeFiles = parser.customShapeFiles
-
         if self.options.clothesRig:
             for proxy in self.proxies.values():
                 if proxy.rig:
@@ -210,23 +212,15 @@ class ExportArmature(Armature):
 
 
     def setupCustomShapes(self, fp):
-        fp.write(
-            "Object CustomShapes EMPTY None\n" +
-            "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
-            "end Object\n\n")
-
-        if self.gizmos:
-            fp.write(self.gizmos)
-            setupSimpleCustomShapes(fp)
-        else:
-            for (name, data) in self.customShapes.items():
-                (typ, r) = data
-                if typ == "-circ":
-                    setupCircle(fp, name, 0.1*r)
-                elif typ == "-box":
-                    setupCube(fp, name, 0.1*r, (0,0,0))
-                else:
-                    halt
+        writeCustomEmpty(fp)
+        for (name, data) in self.parser.customShapes.items():
+            (typ, r) = data
+            if typ == "-circ":
+                setupCircle(fp, name, 0.1*r)
+            elif typ == "-box":
+                setupCube(fp, name, 0.1*r, (0,0,0))
+            else:
+                halt
 
 
     def writeEditBones(self, fp):
@@ -359,7 +353,8 @@ class ExportArmature(Armature):
             halt
 
 
-    def writeArmature(self, fp, version, proxies):
+    def writeArmature(self, fp, version, env):
+
         fp.write("""
 # ----------------------------- ARMATURE --------------------- #
 
@@ -406,11 +401,9 @@ end Armature
 
         self.writeProperties(fp)
         self.writeHideProp(fp, self.name)
-        for proxy in proxies.values():
+        for proxy in env.proxies.values():
             self.writeHideProp(fp, proxy.name)
-        if self.options.useCustomShapes:
-            exportutils.custom.listCustomFiles(self.options)
-        for path,name in self.options.customShapeFiles:
+        for path,name in env.customTargetFiles:
             self.defProp(fp, "FLOAT", name, 0, name[3:], -1.0, 2.0)
             #fp.write("  DefProp Float %s 0 %s  min=-1.0,max=2.0 ;\n" % (name, name[3:]))
 

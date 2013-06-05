@@ -55,6 +55,9 @@ class MhxEnvironment:
         self.armature = amt
         self.config = config
         self.proxies = proxies
+        self.customTargetFiles = exportutils.custom.listCustomFiles(config)
+        self.loadedShapes = {}
+        self.customProps = []
 
 #-------------------------------------------------------------------------------
 #   Export MHX file
@@ -96,7 +99,7 @@ def exportMhx(human, filepath, config):
     amt.setupCustomShapes(fp)
 
     gui3d.app.progress(0.1, text="Exporting armature")
-    amt.writeArmature(fp, MINOR_VERSION, proxies)
+    amt.writeArmature(fp, MINOR_VERSION, env)
 
     gui3d.app.progress(0.15, text="Exporting materials")
     fp.write("\nNoScale False ;\n\n")

@@ -69,8 +69,6 @@ class RigOptions:
             facepanel = False,
             advancedSpine = False,
             clothesRig = False,
-            useCustomShapes = False,
-            customShapeFiles = [],
             useMasks = False,
             expressions = False,
         ):
@@ -84,8 +82,6 @@ class RigOptions:
         self.facepanel = facepanel
         self.advancedSpine = advancedSpine
         self.clothesRig = clothesRig
-        self.useCustomShapes = useCustomShapes
-        self.customShapeFiles = customShapeFiles
         self.useMasks = useMasks
         self.expressions = expressions
 
@@ -100,6 +96,7 @@ class Armature:
         self.human = human
         self.options = options
         self.parser = None
+        self.origin = None
 
         #self.root = None
         self.roots = []
@@ -116,6 +113,7 @@ class Armature:
 
     def setup(self):
         self.parser.setup()
+        self.origin = self.parser.origin
 
 
     def normalizeVertexWeights(self):

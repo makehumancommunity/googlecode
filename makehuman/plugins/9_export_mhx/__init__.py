@@ -50,11 +50,11 @@ class MhxConfig(Config):
         self.useMasks =             exporter.masks.selected
         self.expressions = options.expressions = exporter.expressions.selected
         self.bodyShapes =           exporter.bodyShapes.selected
-        self.useCustomShapes =      exporter.useCustomShapes.selected
+        self.useCustomTargets =     exporter.useCustomTargets.selected
 
         # Used by mhx exporter
-        self.customShapeFiles = []
-        self.customPrefix = "Mhc"
+        #self.customTargetFiles = []
+        #self.customPrefix = "Mhc"
 
 
 class ExporterMHX(Exporter):
@@ -73,7 +73,7 @@ class ExporterMHX(Exporter):
         self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))
         self.facepanel      = options.addWidget(gui.CheckBox("Face rig", False))
         self.bodyShapes     = options.addWidget(gui.CheckBox("Body shapes", False))
-        self.useCustomShapes = options.addWidget(gui.CheckBox("Custom shapes", False))
+        self.useCustomTargets = options.addWidget(gui.CheckBox("Custom shapes", False))
         self.masks          = options.addWidget(gui.CheckBox("Clothes masks", False))
         #self.clothesRig     = options.addWidget(gui.CheckBox("Clothes rig", False))
         #self.cage           = options.addWidget(gui.CheckBox("Cage", False))

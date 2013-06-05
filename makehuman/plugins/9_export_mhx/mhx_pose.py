@@ -147,6 +147,7 @@ def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
 def writeShapeKeys(fp, env, name, proxy):
     amt = env.armature
     config = env.config
+    scale = config.scale
 
     isHuman = ((not proxy) or proxy.type == 'Proxy')
     isHair = (proxy and proxy.type == 'Hair')
@@ -155,7 +156,6 @@ def writeShapeKeys(fp, env, name, proxy):
         amt.options.rigtype == "mhx" and
         ((not proxy) or (proxy.type in ['Proxy', 'Clothes']))
     )
-    scale = config.scale
 
     fp.write(
 "#if toggle&T_Shapekeys\n" +
@@ -170,12 +170,12 @@ def writeShapeKeys(fp, env, name, proxy):
 
     if isHuman and config.expressions:
         try:
-            shapeList = amt.loadedShapes["expressions"]
+            shapeList = env.loadedShapes["expressions"]
         except KeyError:
             shapeList = None
         if shapeList is None:
             shapeList = exportutils.shapekeys.readExpressionUnits(amt.human, 0.7, 0.9)
-            amt.loadedShapes["expressions"] = shapeList
+            env.loadedShapes["expressions"] = shapeList
         for (pose, shape) in shapeList:
             writeShape(fp, pose, "Sym", shape, -1, 2, proxy, scale)
 
@@ -188,15 +188,15 @@ def writeShapeKeys(fp, env, name, proxy):
         knee = writeCorrectives(fp, env, rig_leg.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)
 
     if isHuman:
-        for path,name in amt.customShapeFiles:
+        for path,name in env.customTargetFiles:
             try:
-                shape = amt.loadedShapes[path]
+                shape = env.loadedShapes[path]
             except KeyError:
                 shape = None
             if shape is None:
                 log.message("    %s", path)
                 shape = exportutils.custom.readCustomTarget(path)
-                amt.loadedShapes[path] = shape
+                env.loadedShapes[path] = shape
             writeShape(fp, name, "Sym", shape, -1, 2, proxy, scale)
 
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
@@ -214,7 +214,7 @@ def writeShapeKeys(fp, env, name, proxy):
     fp.write("#if toggle&T_ShapeDrivers\n")
 
     if isHuman:
-        for path,name in amt.options.customShapeFiles:
+        for path,name in env.customTargetFiles:
             mhx_drivers.writeShapePropDrivers(fp, amt, [name], proxy, "")
 
         if config.expressions:
@@ -224,7 +224,7 @@ def writeShapeKeys(fp, env, name, proxy):
             mhx_drivers.writeShapeDrivers(fp, amt, rig_panel.BodyLanguageShapeDrivers, proxy)
 
         skeys = []
-        for (skey, val, string, min, max) in  amt.customProps:
+        for (skey, val, string, min, max) in  env.customProps:
             skeys.append(skey)
         mhx_drivers.writeShapePropDrivers(fp, amt, skeys, proxy, "Mha")
     fp.write("#endif\n")

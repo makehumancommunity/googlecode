@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -29,24 +29,27 @@ import mh
 import log
 
 
-def listCustomFiles(config):                    
-    config.customShapeFiles = []
-    if config.useCustomShapes: 
+def listCustomFiles(config):
+    files = []
+    if config.useCustomTargets:
         folder = os.path.join(mh.getPath(''), 'custom')
-        readCustomFolder(folder, config)
-        
-        
-def readCustomFolder(folder, config):        
-    for file in os.listdir(folder):            
+        files += readCustomFolder(folder)
+    return files
+
+
+def readCustomFolder(folder):
+    files = []
+    for file in os.listdir(folder):
         path = os.path.join(folder, file)
         if os.path.isdir(path):
-            readCustomFolder(path, config)
+            files += readCustomFolder(path)
         else:
             (fname, ext) = os.path.splitext(file)
             if ext == ".target":
                 path = os.path.join(folder, file)
                 name = config.customPrefix + fname.capitalize().replace(" ","_").replace("-","_")
-                config.customShapeFiles.append((path, name))
+                files.append((path, name))
+    return files
 
 
 def readCustomTarget(path):
@@ -63,16 +66,16 @@ def readCustomTarget(path):
             return {}
     fp.close()
     return shape
-        
 
-def setupCustomRig(config): 
+
+def setupCustomRig(config):
     return [],[],[],[]
-    
+
     joints = []
     headsTails = []
     armature = []
     props = []
-    
+
     for (path, modname) in config.customrigs:
         log.message("Custom rig %s %s", path, modname)
         if path not in sys.path:
@@ -83,12 +86,12 @@ def setupCustomRig(config):
             imported = True
         except:
             imported = False
-        if True or not imported:    
+        if True or not imported:
             log.message("Importing module %s", modname)
             mod = __import__(modname)
             sys.modules[modname] = mod
             log.message("%s imported", mod)
-        mod = sys.modules[modname]                
+        mod = sys.modules[modname]
         log.message("Adding %s.Joints", modname)
         joints += mod.Joints
         log.message("Adding %s.HeadsTails", modname)
@@ -97,8 +100,8 @@ def setupCustomRig(config):
         armature += mod.Armature
         log.message("Adding %s.Properties", modname)
         props += mod.Properties
-        
-        
+
+
     return (joints, headsTails, armature, props)
 
 

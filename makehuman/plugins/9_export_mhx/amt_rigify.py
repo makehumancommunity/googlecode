@@ -44,6 +44,10 @@ class RigifyArmature(ExportArmature):
         self.visibleLayers = "08a80caa"
 
 
+    def setupCustomShapes(self, fp):
+        return
+
+
 class RigifyParser(PythonParser):
 
     def __init__(self, amt):
@@ -111,7 +115,3 @@ class RigifyParser(PythonParser):
         self.addBones(rig_muscle.Armature, boneInfo)
         self.addBones(rig_face.Armature, boneInfo)
         PythonParser.createBones(self, boneInfo)
-
-
-    def setupCustomShapes(self, fp):
-        return

@@ -23,6 +23,7 @@ Basic armature
 """
 
 from armature import basic
+from . import mhx_armature
 from .mhx_armature import ExportArmature
 
 
@@ -42,6 +43,18 @@ class BasicArmature(ExportArmature):
     def __init__(self, name, human, options):
         ExportArmature.__init__(self, name, human, options)
         self.parser = BasicParser(self)
+
+
+    def setupCustomShapes(self, fp):
+        mhx_armature.writeCustomEmpty(fp)
+        fp.write(self.parser.gizmos)
+        mhx_armature.setupSimpleCustomTargets(fp)
+        if self.options.facepanel:
+            import gizmos_panel
+            setupCube(fp, "MHCube025", 0.25, 0)
+            setupCube(fp, "MHCube05", 0.5, 0)
+            gizmos = gizmos_panel.asString()
+            fp.write(gizmos)
 
 
     def writeDrivers(self, fp):

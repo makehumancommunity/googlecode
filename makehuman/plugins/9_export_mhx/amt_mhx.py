@@ -25,6 +25,7 @@ MHX armature
 
 import armature
 from armature.python_amt import PythonParser
+from . import mhx_armature
 from .mhx_armature import ExportArmature
 
 from armature import rig_joints
@@ -48,13 +49,15 @@ class MhxArmature(ExportArmature):
 
 
     def setupCustomShapes(self, fp):
-        ExportArmature.setupCustomShapes(self, fp)
+        mhx_armature.writeCustomEmpty(fp)
+        fp.write(self.parser.gizmos)
+        mhx_armature.setupSimpleCustomTargets(fp)
         if self.options.facepanel:
             import gizmos_panel
             setupCube(fp, "MHCube025", 0.25, 0)
             setupCube(fp, "MHCube05", 0.5, 0)
-            self.gizmos = gizmos_panel.asString()
-            fp.write(self.gizmos)
+            gizmos = gizmos_panel.asString()
+            fp.write(gizmos)
 
 
     def writeControlPoses(self, fp, options):

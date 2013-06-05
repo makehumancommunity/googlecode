@@ -104,11 +104,11 @@ def readTargets(human, config):
         shapeList = readExpressionUnits(human, 0, 1)
         targets += shapeList
 
-    if config.useCustomShapes:
-        listCustomFiles(config)
+    if config.useCustomTargets:
+        files = listCustomFiles(config)
 
         log.message("Custom shapes:")
-        for path,name in config.customShapeFiles:
+        for path,name in files:
             log.message("    %s", path)
             shape = readCustomTarget(path)
             targets.append((name,shape))
