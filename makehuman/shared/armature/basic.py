@@ -23,29 +23,29 @@ Basic armature
 """
 
 from .flags import *
-from .python_amt import *
+from .python_amt import PythonParser
 
 from . import rig_joints
 from . import rig_bones
 from . import rig_muscle
 from . import rig_face
+from .utils import *
 
 
-class BasicArmature(PythonArmature):
+class BasicParser(PythonParser):
 
-    def __init__(self, name, human, options):
-        PythonArmature. __init__(self, name, human, options)
-        self.options.rigtype = "basic"
+    def __init__(self, amt):
+        PythonParser. __init__(self, amt)
         self.root = "hips"
 
-        if options.useMuscles:
+        if amt.options.useMuscles:
             self.vertexGroupFiles = ["head", "muscles", "hand"]
         else:
             self.vertexGroupFiles = ["head", "bones", "hand"]
         self.headName = 'head'
         self.useDeformBones = False
         self.useDeformNames = False
-        if options.useSplitBones:
+        if amt.options.useSplitBones:
             self.useSplitBones = True
             self.splitBones = {
                 "forearm" :     (3, "hand", False),
@@ -56,35 +56,35 @@ class BasicArmature(PythonArmature):
             rig_bones.Joints +
             rig_face.Joints
         )
-        if options.useMuscles:
+        if amt.options.useMuscles:
             self.joints += rig_muscle.Joints
 
         self.headsTails = mergeDicts([
             rig_bones.HeadsTails,
             rig_face.HeadsTails
         ])
-        if options.useMuscles:
+        if amt.options.useMuscles:
             addDict(rig_muscle.HeadsTails, self.headsTails)
 
         self.constraints = mergeDicts([
             rig_bones.Constraints,
             rig_face.Constraints
         ])
-        if options.useMuscles:
+        if amt.options.useMuscles:
             addDict(rig_muscle.Constraints, self.constraints)
 
         self.rotationLimits = mergeDicts([
             rig_bones.RotationLimits,
             rig_face.RotationLimits
         ])
-        if options.useMuscles:
+        if amt.options.useMuscles:
             addDict(rig_muscle.RotationLimits, self.rotationLimits)
 
         self.customShapes = mergeDicts([
             rig_bones.CustomShapes,
             rig_face.CustomShapes
         ])
-        if options.useMuscles:
+        if amt.options.useMuscles:
             addDict(rig_muscle.CustomShapes, self.customShapes)
 
         self.objectProps = rig_bones.ObjectProps
@@ -92,10 +92,11 @@ class BasicArmature(PythonArmature):
 
 
     def createBones(self, boneInfo):
+        amt = self.armature
         self.addBones(rig_bones.Armature, boneInfo)
         self.addDeformBones(rig_bones.Armature, boneInfo)
-        if self.options.useMuscles:
+        if amt.options.useMuscles:
             self.addBones(rig_muscle.Armature, boneInfo)
         self.addBones(rig_face.Armature, boneInfo)
-        PythonArmature.createBones(self, boneInfo)
+        PythonParser.createBones(self, boneInfo)
 

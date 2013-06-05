@@ -32,7 +32,6 @@ import exportutils
 import armature
 from armature.flags import *
 from armature.python_amt import *
-from armature.rigfile_amt import RigfileArmature
 from armature import rig_joints
 from armature import rig_bones
 
@@ -55,7 +54,10 @@ def getArmature(name, human, options):
         from . import amt_rigify
         return amt_rigify.RigifyArmature(name, human, options)
     else:
-        return RigfileExportArmature(name, human, options)
+        from armature.rigfile_amt import RigfileParser
+        amt = ExportArmature(name, human, options)
+        amt.parser = RigfileParser(amt)
+        return amt
 
 #-------------------------------------------------------------------------------
 #   Setup custom shapes
@@ -172,12 +174,14 @@ def setupSimpleCustomShapes(fp):
 #   Armature used for export
 #-------------------------------------------------------------------------------
 
-class ExportArmature:
+class ExportArmature(Armature):
 
-    def __init__(self, options):
-        self.boneLayers = "00000001"
+    def __init__(self, name, human, options):
+        Armature.__init__(self, name, human, options)
+        self.visibleLayers = "00000001"
         self.scale = options.scale
 
+        self.customShapes = {}
         self.gizmos = None
         self.gizmoFiles = []
         self.recalcRoll = []
@@ -190,6 +194,12 @@ class ExportArmature:
 
 
     def setup(self):
+        Armature.setup(self)
+
+        parser = self.parser
+        self.origin = parser.origin
+        self.customShapeFiles = parser.customShapeFiles
+
         if self.options.clothesRig:
             for proxy in self.proxies.values():
                 if proxy.rig:
@@ -413,26 +423,6 @@ end Object
         self.defProp(fp, "BOOLEAN", "Mhh%s"%name, False, "Control_%s_visibility"%name)
         #fp.write("  DefProp Bool Mhh%s False Control_%s_visibility ;\n" % (name, name))
         return
-
-
-class PythonExportArmature(PythonArmature, ExportArmature):
-    def __init__(self, name, human, options):
-        PythonArmature. __init__(self, name, human, options)
-        ExportArmature.__init__(self, options)
-
-    def setup(self):
-        PythonArmature.setup(self)
-        ExportArmature.setup(self)
-
-
-class RigfileExportArmature(RigfileArmature, ExportArmature):
-    def __init__(self, name, human, options):
-        RigfileArmature. __init__(self, name, human, options)
-        ExportArmature.__init__(self, options)
-
-    def setup(self):
-        RigfileArmature.setup(self)
-        ExportArmature.setup(self)
 
 
 

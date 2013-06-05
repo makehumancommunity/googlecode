@@ -801,7 +801,7 @@ def writeNode(fp, pad, stuff, amt, config):
         '%s    0 0 0 1\n' % pad +
         '%s  </matrix>\n' % pad +
         '%s  <instance_controller url="#%s-skin">\n' % (pad, stuff.name) +
-        '%s    <skeleton>#%sSkeleton</skeleton>\n' % (pad, amt.root))
+        '%s    <skeleton>#%sSkeleton</skeleton>\n' % (pad, amt.roots[0]))
 
     (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)
     if matname:

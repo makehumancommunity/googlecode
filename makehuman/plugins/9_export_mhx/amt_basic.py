@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -22,28 +22,30 @@ Abstract
 Basic armature
 """
 
-import armature
 from armature import basic
-from . import mhx_armature
+from .mhx_armature import ExportArmature
 
 
-class BasicArmature(mhx_armature.PythonExportArmature, basic.BasicArmature):
+class BasicParser(basic.BasicParser):
 
-    def __init__(self, name, human, config):   
+    def __init__(self, amt):
         import gizmos_general
-        
-        mhx_armature.PythonExportArmature. __init__(self, name, human, config)
-        basic.BasicArmature. __init__(self, name, human, config)
+
+        basic.BasicParser.__init__(self, amt)
         self.gizmos = gizmos_general.asString()
-        
-    
-    def createBones(self, bones):
-        basic.BasicArmature.createBones(self, bones)
-        mhx_armature.PythonExportArmature.createBones(self, bones)
-            
+        amt.visibleLayers = "002804aa"
+
+
+
+class BasicArmature(ExportArmature):
+
+    def __init__(self, name, human, options):
+        ExportArmature.__init__(self, name, human, options)
+        self.parser = BasicParser(self)
+
 
     def writeDrivers(self, fp):
-        rig_face.DeformDrivers(fp, self)        
+        rig_face.DeformDrivers(fp, self)
         mhx_drivers.writePropDrivers(fp, self, rig_face.PropDrivers, "", "Mha")
         mhx_drivers.writePropDrivers(fp, self, rig_face.SoftPropDrivers, "", "Mha")
         return []

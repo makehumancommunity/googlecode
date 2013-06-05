@@ -530,7 +530,7 @@ class CStretchToConstraint(CConstraint):
         if (amt != None) and (len(data) > 4):
             if isinstance(data[4], tuple):
                 start,end = data[4]
-                self.rest_length = amt.distance(start,end)
+                self.rest_length = amt.parser.distance(start,end)
             else:
                 self.rest_length = data[4]
         else:

@@ -37,8 +37,8 @@ import numpy as np
 import warpmodifier
 
 from .flags import *
-from .rigfile_amt import RigfileArmature
-from .base_amt import RigOptions
+from .rigfile_amt import RigfileParser
+from .armature import RigOptions
 from .utils import *
 
 #-------------------------------------------------------------------------------
@@ -48,7 +48,8 @@ from .utils import *
 class Pose:
 
     def __init__(self, human, options):
-        amt = self.armature = RigfileArmature("Armature", human, options)
+        amt = self.armature = Armature("Armature", human, options)
+        amt.parser = RigfileParser(amt)
         self.human = human
         self.posebones = OrderedDict()
         self.modifier = None
@@ -149,7 +150,7 @@ class Pose:
     def rebuild(self, update=True):
         log.message("Rebuild %s %s %s", self, update, self.options.rigtype)
         obj = self.human.meshData
-        self.setupRig()
+        self.setupArmature()
         log.debug("RHT %s %s", self.heads["Root"], self.tails["Root"])
         for bone in self.bones.values():
             bone.rebuild()

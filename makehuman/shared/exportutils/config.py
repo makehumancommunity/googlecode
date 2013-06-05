@@ -34,7 +34,7 @@ import log
 class Config:
 
     def __init__(self):
-        from armature.base_amt import RigOptions
+        from armature.armature import RigOptions
 
         self.encoding           = 'utf-8'
         self.useTexFolder       = True

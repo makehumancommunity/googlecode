@@ -30,20 +30,21 @@ import gui3d
 
 from .flags import *
 from .utils import *
-from .base_amt import *
+from .armature import *
+from .parser import Parser
 
-class RigfileArmature(BaseArmature):
+class RigfileParser(Parser):
 
-    def __init__(self, name, human, options):
-        self.filepath = "data/rigs/%s.rig" % options.rigtype
-        BaseArmature.__init__(self, name, human, options)
+    def __init__(self, amt):
+        Parser.__init__(self, amt)
+        self.filepath = "data/rigs/%s.rig" % amt.options.rigtype
         self.heads = {}
         self.tails = {}
         self.master = None
 
 
     def setup(self):
-        self.fromRigfile(self.filepath, self.human.meshData)
+        self.fromRigfile(self.filepath, self.armature.human.meshData)
 
 
     def fromRigfile(self, filename, obj, coord=None):
@@ -67,6 +68,7 @@ class RigfileArmature(BaseArmature):
         doFileWeights = 4
         status = 0
 
+        amt = self.armature
         boneInfos = {}
         basicNames = {}
         if not coord:
@@ -83,7 +85,7 @@ class RigfileArmature(BaseArmature):
                 elif words[1] == 'weights':
                     status = doWeights
                     wts = []
-                    self.vertexWeights[words[2]] = wts
+                    amt.vertexWeights[words[2]] = wts
                 elif words[1] == 'file-weights':
                     vgroups = {}
                     vgroupList = []
@@ -100,14 +102,14 @@ class RigfileArmature(BaseArmature):
                 for word in words[2:]:
                     vgroup += vgroups[word]
                 if len(words) > 2:
-                    self.vertexWeights[bname] = mergeWeights(vgroup)
+                    amt.vertexWeights[bname] = mergeWeights(vgroup)
                 else:
-                    self.vertexWeights[bname] = vgroup
+                    amt.vertexWeights[bname] = vgroup
             elif status == doLocations:
                 self.setupRigJoint (words, obj, coord)
             elif status == doBones:
                 bname = words[0]
-                bone = Bone(self, bname)
+                bone = Bone(amt, bname)
                 bone.head = self.locations[words[1]] - self.origin
                 bone.tail = self.locations[words[2]] - self.origin
                 bone.roll = float(words[3])
@@ -136,20 +138,21 @@ class RigfileArmature(BaseArmature):
                 raise NameError("Unknown status %d" % status)
         fp.close()
 
-        self.sortBones(boneInfos)
-        for bone in self.bones.values():
+        #self.sortBones(boneInfos, amt.hierarchy)
+        self.createBones(boneInfos)
+        for bone in amt.bones.values():
             bone.setBone(bone.head, bone.tail)
 
         if True:
-            amt = getBasicArmature(self.human)
-            for bone in self.bones.values():
+            basic = getBasicArmature(amt.human)
+            for bone in amt.bones.values():
                 try:
                     basicName = basicNames[bone.name]
                 except KeyError:
                     continue
-                bone.roll = amt.bones[basicName].roll
+                bone.roll = basic.bones[basicName].roll
 
-        for bone in self.bones.values():
+        for bone in amt.bones.values():
             bone.calcRestMatrix()
 
 
@@ -250,14 +253,16 @@ class RigfileArmature(BaseArmature):
 
 
 def readRigfileArmature(filename, obj, coord=None):
-    amt = RigfileArmature("Global", gui3d.app.selectedHuman, RigOptions())
-    amt.fromRigfile(filename, obj, coord)
+    amt = Armature("Global", gui3d.app.selectedHuman, RigOptions())
+    amt.parser = RigfileParser(amt)
+    amt.parser.fromRigfile(filename, obj, coord)
     return amt
 
 
 def getBasicArmature(human):
-    from .basic import BasicArmature
-    amt = BasicArmature("Basic", human, RigOptions())
-    amt.setupToRoll()
+    from .basic import BasicParser
+    amt = Armature("Basic", human, RigOptions())
+    amt.parser = BasicParser(amt)
+    amt.parser.setupToRoll()
     return amt
 

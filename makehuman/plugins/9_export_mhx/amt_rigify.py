@@ -23,28 +23,37 @@ MHX armature
 """
 
 import armature
-from armature.python_amt import *
+from armature.python_amt import PythonParser
+from .mhx_armature import ExportArmature
+
 from armature import rig_joints
 from armature import rig_bones
 from armature import rig_muscle
 from armature import rig_face
-
-from .mhx_armature import *
 from . import rig_rigify
 
+from armature.flags import *
+from armature.utils import *
 
-class RigifyArmature(PythonExportArmature):
+
+class RigifyArmature(ExportArmature):
 
     def __init__(self, name, human, options):
-        PythonExportArmature. __init__(self, name, human, options)
-        self.rigtype = 'rigify'
-        if options.useMuscles:
+        ExportArmature.__init__(self, name, human, options)
+        self.parser = RigifyParser(self)
+        self.visibleLayers = "08a80caa"
+
+
+class RigifyParser(PythonParser):
+
+    def __init__(self, amt):
+        PythonParser.__init__(self, amt)
+        if amt.options.useMuscles:
             self.vertexGroupFiles = ["head", "muscles", "hand"]
         else:
             self.vertexGroupFiles = ["head", "bones", "hand"]
         self.master = None
         self.gizmos = None
-        self.boneLayers = "08a80caa"
         self.headName = 'head'
 
         self.useDeformBones = False
@@ -101,7 +110,7 @@ class RigifyArmature(PythonExportArmature):
         self.addBones(rig_bones.Armature, boneInfo)
         self.addBones(rig_muscle.Armature, boneInfo)
         self.addBones(rig_face.Armature, boneInfo)
-        PythonExportArmature.createBones(self, boneInfo)
+        PythonParser.createBones(self, boneInfo)
 
 
     def setupCustomShapes(self, fp):
