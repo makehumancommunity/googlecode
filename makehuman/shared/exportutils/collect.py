@@ -143,7 +143,7 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
     stuffs = []
     stuff = CStuff(name, obj = human)
     amt = setupArmature(name, human, config.rigOptions)
-    richMesh = richmesh.getRichMesh(obj, None, config, None, rawTargets, None, amt)
+    richMesh = richmesh.getRichMesh(obj, None, None, rawTargets, amt, config.scale)
     if amt:
         richMesh.weights = amt.vertexWeights
 
@@ -217,7 +217,7 @@ def setupProxies(typename, name, obj, stuffs, richMesh, config, deleteGroups, de
                     else:
                         stuffname = None
 
-                    stuff.richMesh = richmesh.getRichMesh(obj, proxy, config, richMesh.weights, richMesh.shapes, stuffname, richMesh.armature)
+                    stuff.richMesh = richmesh.getRichMesh(obj, proxy, richMesh.weights, richMesh.shapes, richMesh.armature, config.scale)
                     stuffs.append(stuff)
     return foundProxy, deleteVerts
 

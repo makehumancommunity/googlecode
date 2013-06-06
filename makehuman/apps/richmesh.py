@@ -71,8 +71,7 @@ class RichMesh:
         return ("<RichMesh %s w %d t %d>" % (self.object, len(self.weights), len(self.shapes)))
 
 
-
-def getRichMesh(obj, proxy, config, rawWeights, rawShapes, rigname, amt):
+def getRichMesh(obj, proxy, rawWeights, rawShapes, amt, scale=1.0):
     if proxy:
         coords = proxy.getCoords()
         faceVerts = [[v for v in f] for (f,g) in proxy.faces]
@@ -87,8 +86,8 @@ def getRichMesh(obj, proxy, config, rawWeights, rawShapes, rigname, amt):
             texFaces = []
 
         weights = proxy.getWeights(rawWeights)
-        shapes = proxy.getShapes(rawShapes, config.scale)
-        richMesh = RichMesh(proxy.name, amt).fromProxy(coords, texVerts, faceVerts, texFaces, weights, shapes, scale=config.scale)
+        shapes = proxy.getShapes(rawShapes, scale)
+        richMesh = RichMesh(proxy.name, amt).fromProxy(coords, texVerts, faceVerts, texFaces, weights, shapes, scale=scale)
 
     else:
         richMesh = RichMesh(obj.name, amt).fromObject(obj, rawWeights, rawShapes)

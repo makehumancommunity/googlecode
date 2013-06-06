@@ -31,6 +31,7 @@ from collections import OrderedDict
 
 _A7converter = None
 
+
 class CProxyRefVert:
 
     def __init__(self, parent, scale):
@@ -176,16 +177,11 @@ class CProxy:
 
 
     def getCoords(self):
-        if self.basemesh in ["alpha_7", "alpha7"]:
-            global _A7converter
-            if _A7converter is None:
-                _A7converter = readProxyFile(gui3d.app.selectedHuman.meshData, "data/3dobjs/a7_converter.proxy")
-            print "Converting clothes with", _A7converter
-            return [refVert.getConvertedCoord(_A7converter) for refVert in self.refVerts]
-        elif self.basemesh == "alpha_8":
-            return [refVert.getCoord() for refVert in self.refVerts]
+        converter = self.getConverter()
+        if converter:
+            return [refVert.getConvertedCoord(converter) for refVert in self.refVerts]
         else:
-            raise NameError("Unknown basemesh for mhclo file: %s" % self.basemesh)
+            return [refVert.getCoord() for refVert in self.refVerts]
 
 
     def update(self, obj):
@@ -198,6 +194,36 @@ class CProxy:
             return self.uuid
         else:
             return self.name
+
+
+    def getConverter(self):
+        if self.basemesh in ["alpha_7", "alpha7"]:
+            global _A7converter
+            if _A7converter is None:
+                _A7converter = readProxyFile(gui3d.app.selectedHuman.meshData, "data/3dobjs/a7_converter.proxy")
+            print "Converting clothes with", _A7converter
+            return _A7converter
+        elif self.basemesh[:6] == "alpha8":
+            return None
+        else:
+            raise NameError("Unknown basemesh for mhclo file: %s" % self.basemesh)
+
+
+    def getScale(self, data, obj, index):
+        if not data:
+            return 1.0
+        (vn1, vn2, den) = data
+
+        converter = self.getConverter()
+        if converter:
+            co1 = converter.refVerts[vn1].getCoord()
+            co2 = converter.refVerts[vn2].getCoord()
+        else:
+            co1 = obj.coord[vn1]
+            co2 = obj.coord[vn2]
+
+        num = abs(co1[index] - co2[index])
+        return num/den
 
 
     def getWeights(self, rawWeights):
@@ -424,13 +450,13 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
                 proxy.cage = True
             elif key == 'x_scale':
                 proxy.xScaleData = getScaleData(words)
-                scales[0] = getScale(proxy.xScaleData, obj, 0)
+                scales[0] = proxy.getScale(proxy.xScaleData, obj, 0)
             elif key == 'y_scale':
                 proxy.yScaleData = getScaleData(words)
-                scales[1] = getScale(proxy.yScaleData, obj, 1)
+                scales[1] = proxy.getScale(proxy.yScaleData, obj, 1)
             elif key == 'z_scale':
                 proxy.zScaleData = getScaleData(words)
-                scales[2] = getScale(proxy.zScaleData, obj, 2)
+                scales[2] = proxy.getScale(proxy.zScaleData, obj, 2)
             elif key == 'use_projection':
                 useProjection = int(words[2])
             elif key == 'ignoreOffset':
@@ -608,14 +634,6 @@ def getScaleData(words):
     v2 = int(words[3])
     den = float(words[4])
     return (v1, v2, den)
-
-
-def getScale(data, obj, index):
-    if not data:
-        return 1.0
-    (vn1, vn2, den) = data
-    num = abs(obj.coord[vn1][index] - obj.coord[vn2][index])
-    return num/den
 
 
 def readMaterial(line, mat, proxy, multiTex):
