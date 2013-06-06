@@ -138,47 +138,32 @@ def exportObj(human, filepath, config=None):
 
 def writeMaterial(fp, stuff, human, config):
     fp.write("\nnewmtl %s\n" % stuff.name)
-    diffuse = (1, 1, 1)
-    spec = (1, 1, 1)
-    diffScale = 0.8
-    specScale = 0.02
-    alpha = 1
-    if stuff.material:
-        for (key, value) in stuff.material.settings:
-            if key == "diffuse_color":
-                diffuse = value
-            elif key == "specular_color":
-                spec = value
-            elif key == "diffuse_intensity":
-                diffScale = value
-            elif key == "specular_intensity":
-                specScale = value
-            elif key == "alpha":
-                alpha = value
-
+    mat = stuff.material
+    di = mat.diffuseIntensity
+    diff = mat.diffuseColor
+    si = mat.specularIntensity
+    spec =  mat.specularColor
     fp.write(
-        "Kd %.4g %.4g %.4g\n" % (diffScale*diffuse[0], diffScale*diffuse[1], diffScale*diffuse[2]) +
-        "Ks %.4g %.4g %.4g\n" % (specScale*spec[0], specScale*spec[1], specScale*spec[2]) +
-        "d %.4g\n" % alpha
+        "Kd %.4g %.4g %.4g\n" % (di*diff.r, di*diff.g, di*diff.b) +
+        "Ks %.4g %.4g %.4g\n" % (si*spec.r, si*spec.g, si*spec.b) +
+        "d %.4g\n" % (1-mat.transparencyIntensity)
     )
 
-    if stuff.proxy:
-        writeTexture(fp, "map_Kd", stuff.texture, human, config)
-        #writeTexture(fp, "map_Tr", stuff.proxy.translucency, human, config)
-        writeTexture(fp, "map_Disp", stuff.proxy.normal, human, config)
-        writeTexture(fp, "map_Disp", stuff.proxy.displacement, human, config)
-    else:
-        writeTexture(fp, "map_Kd", ("data/textures", "texture.png"), human, config)
+    writeTexture(fp, "map_Kd", mat.diffuseTexture, human, config)
+    writeTexture(fp, "map_Ks", mat.specularMapTexture, human, config)
+    #writeTexture(fp, "map_Tr", mat.translucencyMapTexture, human, config)
+    writeTexture(fp, "map_Disp", mat.normalMapTexture, human, config)
+    writeTexture(fp, "map_Disp", mat.specularMapTexture, human, config)
+    writeTexture(fp, "map_Disp", mat.displacementMapTexture, human, config)
+
+    #    writeTexture(fp, "map_Kd", ("data/textures", "texture.png"), human, config)
 
 
-def writeTexture(fp, key, texture, human, config):
-    if not texture:
+def writeTexture(fp, key, filepath, human, config):
+    if not filepath:
         return
-    (folder, texfile) = texture
-    texpath = config.getTexturePath(texfile, folder, True, human)
-    (fname, ext) = os.path.splitext(texfile)
-    name = "%s_%s" % (fname, ext[1:])
-    fp.write("%s %s\n" % (key, texpath))
+    newpath = config.copyTextureToNewLocation(filepath)
+    fp.write("%s %s\n" % (key, newpath))
 
 
 """

@@ -43,8 +43,8 @@ def writeMaterials(fp, env):
 Image texture.png
 """)
 
-    filename = config.getTexturePath("texture.png", "data/textures", True, env.human)
-    fp.write("  Filename %s ;" % filename)
+    newpath = config.copyTextureToNewLocation("data/textures/texture.png")
+    fp.write("  Filename %s ;" % newpath)
 
     fp.write("""
   use_premultiply True ;
@@ -53,8 +53,8 @@ end Image
 Image texture_ref.png
 """)
 
-    filename = config.getTexturePath("texture_ref.png", "data/textures", True, env.human)
-    fp.write("  Filename %s ;" % filename)
+    newpath = config.copyTextureToNewLocation("data/textures/texture_ref.png")
+    fp.write("  Filename %s ;" % newpath)
 
     fp.write("""
   use_premultiply True ;
@@ -279,16 +279,13 @@ def writeMultiMaterials(fp, env):
     config = env.config
     uvset = env.human.uvset
 
-    folder = os.path.dirname(uvset.filename)
-    log.debug("Folder %s", folder)
     for mat in uvset.materials:
         for tex in mat.textures:
             name = os.path.basename(tex.file)
             fp.write("Image %s\n" % name)
-            #file = config.getTexturePath(tex, "data/textures", True, env.human)
-            file = config.getTexturePath(name, folder, True, env.human)
+            newpath = config.copyTextureToNewLocation(tex)
             fp.write(
-                "  Filename %s ;\n" % file +
+                "  Filename %s ;\n" % newpath +
 #                "  alpha_mode 'PREMUL' ;\n" +
                 "end Image\n\n" +
                 "Texture %s IMAGE\n" % name +
@@ -348,30 +345,31 @@ def writeMultiMaterials(fp, env):
 #   Masking
 #-------------------------------------------------------------------------------
 
-def addMaskImage(fp, env, mask):
-    (folder, file) = mask
-    path = env.config.getTexturePath(file, folder, True, env.human)
+def addMaskImage(fp, env, filepath):
+    newpath = env.config.copyTextureToNewLocation(filepath)
+    filename = os.path.basename(filepath)
     fp.write(
-"Image %s\n" % file +
-"  Filename %s ;\n" % path +
-#"  alpha_mode 'PREMUL' ;\n" +
-"end Image\n\n" +
-"Texture %s IMAGE\n" % file  +
-"  Image %s ;\n" % file +
-"end Texture\n\n")
+        "Image %s\n" % filename +
+        "  Filename %s ;\n" % newpath +
+        #"  alpha_mode 'PREMUL' ;\n" +
+        "end Image\n\n" +
+        "Texture %s IMAGE\n" % filename  +
+        "  Image %s ;\n" % filename +
+        "end Texture\n\n"
+    )
 
 
-def addMaskMTex(fp, mask, proxy, blendtype, n):
+def addMaskMTex(fp, filepath, proxy, blendtype, n):
     if proxy:
         try:
             uvLayer = proxy.uvtexLayerName[proxy.maskLayer]
         except KeyError:
             return n
 
-    (dir, file) = mask
+    filename = os.path.basename(filepath)
     fp.write(
-"  MTex %d %s UV ALPHA\n" % (n, file) +
-"    texture Refer Texture %s ;\n" % file +
+"  MTex %d %s UV ALPHA\n" % (n, filename) +
+"    texture Refer Texture %s ;\n" % filename +
 "    use_map_alpha True ;\n" +
 "    use_map_color_diffuse False ;\n" +
 "    alpha_factor 1 ;\n" +

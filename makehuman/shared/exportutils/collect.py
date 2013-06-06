@@ -42,57 +42,6 @@ import subtextures
 from .config import Config
 
 #
-#    class CStuff
-#
-
-class CStuff:
-    def __init__(self, name, proxy = None, obj = None):
-        self.name = os.path.basename(name)
-        self.proxy = proxy
-        self.object = obj
-        self.richMesh = None
-        self.vertexWeights = None
-        self.skinWeights = None
-        self.textureImage = None
-        if proxy:
-            self.type = proxy.type
-            self.material = proxy.material
-            self.texture = proxy.texture
-            self.specular = proxy.specular
-            self.normal = proxy.normal
-            self.transparency = proxy.transparency
-            self.bump = proxy.bump
-            self.displacement = proxy.displacement
-        else:
-            if obj:
-                self.texture = obj.mesh.texture
-            else:
-                self.texture = None
-            self.type = None
-            self.material = None
-            self.specular = ("data/textures", "texture_ref.png")
-            self.normal = None
-            self.transparency = None
-            self.bump = ("data/textures", "bump.png")
-            self.displacement = None
-
-    #def setObject3dMesh(self, object3d, weights, shapes):
-    #    self.richMesh.setObject3dMesh(object3d, weights, shapes)
-
-    def __repr__(self):
-        return "<CStuff %s %s mat %s tex %s>" % (self.name, self.type, self.material, self.texture)
-
-    def hasMaterial(self):
-        return (
-            self.material != None or
-            self.texture != None or
-            self.specular != None or
-            self.normal != None or
-            self.transparency != None or
-            self.bump != None or
-            self.displacement != None)
-
-#
 #   readTargets(config):
 #
 
@@ -122,7 +71,7 @@ def readTargets(human, config):
 #
 
 def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=False, eyebrows=True, lashes=True, subdivide = False, progressCallback=None):
-    global theStuff, theTextures, theTexFiles, theMaterials
+    global theStuff
     from armature.armature import setupArmature
 
     def progress(prog):
@@ -135,14 +84,10 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
         config = Config()
         config.setHuman(human)
 
-    obj = human.meshData
-    theTextures = {}
-    theTexFiles = {}
-    theMaterials = {}
-
     stuffs = []
-    stuff = CStuff(name, obj = human)
+    stuff = richmesh.CStuff(name, None, human)
     amt = setupArmature(name, human, config.rigOptions)
+    obj = human.meshData
     richMesh = richmesh.getRichMesh(obj, None, None, rawTargets, amt, config.scale)
     if amt:
         richMesh.weights = amt.vertexWeights
@@ -171,7 +116,7 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
     i = 0.0
     for stuff in stuffs:
         progress(progbase+(i/stuffnum)*(1-progbase))
-        texture = stuff.object.mesh.texture
+        texture = stuff.human.mesh.texture
         stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
         if subdivide:
             subMesh = cks.createSubdivisionObject(
@@ -206,9 +151,9 @@ def setupProxies(typename, name, obj, stuffs, richMesh, config, deleteGroups, de
                 if deleteVerts != None:
                     deleteVerts = deleteVerts | proxy.deleteVerts
                 if name:
-                    stuff = CStuff(name, proxy, pfile.obj)
+                    stuff = richmesh.CStuff(name, proxy, pfile.obj)
                 else:
-                    stuff = CStuff(proxy.name, proxy, pfile.obj)
+                    stuff = richmesh.CStuff(proxy.name, proxy, pfile.obj)
                 if stuff:
                     if pfile.type == 'Proxy':
                         theStuff = stuff
@@ -338,55 +283,6 @@ def deleteGroup(name, groups):
         if part in name:
             return True
     return False
-
-
-
-#
-#   getTextureNames(stuff):
-#
-
-def getTextureNames(stuff):
-    global theTextures, theTexFiles, theMaterials
-
-    if not stuff.type:
-        return ("SkinShader", None, "SkinShader")
-
-    try:
-        texname = theTextures[stuff.name]
-        texfile = theTexFiles[stuff.name]
-        matname = theMaterials[stuff.name]
-        return (texname, texfile, matname)
-    except KeyError:
-        pass
-
-    texname = None
-    texfile = None
-    matname = None
-    if stuff.texture:
-        (folder, fname) = stuff.texture
-        (texname, ext) = os.path.splitext(fname)
-        texfile = ("%s_%s" % (texname, ext[1:]))
-        while texname in theTextures.values():
-            texname = nextName(texname)
-        theTextures[stuff.name] = texname
-        theTexFiles[stuff.name] = texfile
-    if stuff.material:
-        matname = stuff.material.name
-        while matname in theMaterials.values():
-            matname = nextName(matname)
-        theMaterials[stuff.name] = matname
-    return (texname, texfile, matname)
-
-
-def nextName(string):
-    try:
-        n = int(string[-3:])
-    except:
-        n = -1
-    if n >= 0:
-        return "%s%03d" % (string[:-3], n+1)
-    else:
-        return string + "_001"
 
 
 def setStuffSkinWeights(stuff, amt):

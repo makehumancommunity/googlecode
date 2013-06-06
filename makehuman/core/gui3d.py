@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -40,7 +40,7 @@ class Object(events3d.EventHandler):
 
     """
     An object on the screen.
-    
+
     :param position: The position in 3d space.
     :type position: list or tuple
     :param mesh: The mesh object.
@@ -49,30 +49,30 @@ class Object(events3d.EventHandler):
     """
 
     def __init__(self, position, mesh, visible=True):
-        
+
         if mesh.object:
             raise RuntimeError('This mesh is already attached to an object')
-                
+
         self.mesh = mesh
         self.mesh.setLoc(*position)
         self.mesh.object = self
         self.mesh.setVisibility(visible)
-        
+
         self._view = None
-        
+
         self.visible = visible
-        
+
         self.proxy = None
-        
+
         self.__seedMesh = self.mesh
         self.__proxyMesh = None
         self.__subdivisionMesh = None
         self.__proxySubdivisionMesh = None
 
         self.setUVMap(mesh.material.uvMap)
-        
+
     def _attach(self):
-    
+
         if self._view().isVisible() and self.visible:
             self.mesh.setVisibility(1)
         else:
@@ -80,7 +80,7 @@ class Object(events3d.EventHandler):
 
         for mesh in self._meshes():
             self.attachMesh(mesh)
-            
+
     def _detach(self):
         for mesh in self._meshes():
             self.detachMesh(mesh)
@@ -107,7 +107,7 @@ class Object(events3d.EventHandler):
         return self._view()
 
     def show(self):
-        
+
         self.visible = True
         self.setVisibility(True)
 
@@ -118,7 +118,7 @@ class Object(events3d.EventHandler):
 
     def isVisible(self):
         return self.visible
-        
+
     def setVisibility(self, visibility):
 
         if self._view().isVisible() and self.visible and visibility:
@@ -139,7 +139,7 @@ class Object(events3d.EventHandler):
     def setRotation(self, rotation):
         for mesh in self._meshes():
             mesh.setRot(rotation[0], rotation[1], rotation[2])
-            
+
     def setScale(self, scale, scaleY=None, scaleZ=1):
         if scaleY is None:
             scaleY = scale
@@ -148,39 +148,39 @@ class Object(events3d.EventHandler):
 
     def setTexture(self, texture):
         self.mesh.setTexture(texture)
-            
+
     def getTexture(self):
         return self.mesh.texture
 
     def clearTexture(self):
         self.mesh.setTexture(None)
-            
+
     def hasTexture(self):
         return self.mesh.hasTexture()
-        
+
     def setSolid(self, solid):
         for mesh in self._meshes():
             mesh.setSolid(solid)
-            
+
     def isSolid(self):
         return self.__seedMesh.solid
-        
+
     def getSeedMesh(self):
         return self.__seedMesh
-        
+
     def getProxyMesh(self):
         return self.__proxyMesh
-        
+
     def updateProxyMesh(self):
-    
+
         if self.proxy and self.__proxyMesh:
             self.proxy.update(self.__proxyMesh)
             self.__proxyMesh.update()
-        
+
     def isProxied(self):
-    
+
         return self.mesh == self.__proxyMesh or self.mesh == self.__proxySubdivisionMesh
-        
+
     def setProxy(self, proxy):
         isSubdivided = self.isSubdivided()
 
@@ -197,34 +197,31 @@ class Object(events3d.EventHandler):
                 self.__proxySubdivisionMesh = None
             self.mesh = self.__seedMesh
             self.mesh.setVisibility(1)
-    
+
         if proxy:
             self.proxy = proxy
-            
-            (folder, name) = proxy.obj_file
-            
-            self.__proxyMesh = files3d.loadMesh(os.path.join(folder, name))
+            self.__proxyMesh = files3d.loadMesh(proxy.obj_file)
             for attr in ('x', 'y', 'z', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz',
                          'visibility', 'shadeless', 'pickable', 'cameraMode', 'material'):
                 setattr(self.__proxyMesh, attr, getattr(self.mesh, attr))
 
             self.__proxyMesh.object = self.mesh.object
-            
+
             self.proxy.update(self.__proxyMesh)
-            
+
             if self.__seedMesh.object3d:
                 self.attachMesh(self.__proxyMesh)
-            
+
             self.mesh.setVisibility(0)
             self.mesh = self.__proxyMesh
             self.mesh.setVisibility(1)
             self.__proxyMesh.setSolid(self.__seedMesh.solid)
 
         self.setSubdivided(isSubdivided)
-            
+
     def getSubdivisionMesh(self, update=True, progressCallback=None):
         """
-        Create or update the Catmull-Clark subdivided (or smoothed) mesh for 
+        Create or update the Catmull-Clark subdivided (or smoothed) mesh for
         this mesh.
         This does not change the status of isSubdivided(), use setSubdivided()
         for that.
@@ -235,7 +232,7 @@ class Object(events3d.EventHandler):
         Returns the subdivided mesh data.
 
         """
-        
+
         if self.isProxied():
             if not self.__proxySubdivisionMesh:
                 self.__proxySubdivisionMesh = cks.createSubdivisionObject(self.__proxyMesh, progressCallback)
@@ -243,7 +240,7 @@ class Object(events3d.EventHandler):
                     self.attachMesh(self.__proxySubdivisionMesh)
             elif update:
                 cks.updateSubdivisionObject(self.__proxySubdivisionMesh, progressCallback)
-                
+
             return self.__proxySubdivisionMesh
         else:
             if not self.__subdivisionMesh:
@@ -252,12 +249,12 @@ class Object(events3d.EventHandler):
                     self.attachMesh(self.__subdivisionMesh)
             elif update:
                 cks.updateSubdivisionObject(self.__subdivisionMesh, progressCallback)
-                
+
             return self.__subdivisionMesh
 
     def isSubdivided(self):
         """
-        Returns whether this mesh is currently set to be subdivided 
+        Returns whether this mesh is currently set to be subdivided
         (or smoothed).
 
         """
@@ -274,7 +271,7 @@ class Object(events3d.EventHandler):
 
         if flag == self.isSubdivided():
             return
-            
+
         if flag:
             self.mesh.setVisibility(0)
             originalMesh = self.mesh
@@ -298,7 +295,7 @@ class Object(events3d.EventHandler):
             self.mesh.setVisibility(1)
 
     def updateSubdivisionMesh(self):
-    
+
         self.getSubdivisionMesh(True)
 
     def _setMeshUVMap(self, filename, mesh):
@@ -411,38 +408,38 @@ class View(events3d.EventHandler):
         self._parent = None
         self._attached = False
         self.widgets = []
-        
+
     @property
     def parent(self):
         if self._parent:
             return self._parent();
         else:
             return None
-            
+
     def _attach(self):
-        
+
         self._attached = True
-        
+
         for object in self.objects:
             object._attach()
-            
+
         for child in self.children:
             child._attach()
 
     def _detach(self):
-    
+
         self._attached = False
-        
+
         for object in self.objects:
             object._detach()
-            
+
         for child in self.children:
             child._detach()
 
     def addView(self, view):
         """
         Adds the view to this view. If this view is attached to the app, the view will also be attached.
-        
+
         :param view: The view to be added.
         :type view: gui3d.View
         :return: The view, for convenience.
@@ -450,36 +447,36 @@ class View(events3d.EventHandler):
         """
         if view.parent:
             raise RuntimeError('The view is already added to a view')
-            
+
         view._parent = weakref.ref(self)
         view._updateVisibility()
         if self._attached:
             view._attach()
 
         self.children.append(view)
-            
+
         return view
-    
+
     def removeView(self, view):
         """
         Removes the view from this view. If this view is attached to the app, the view will be detached.
-        
+
         :param view: The view to be removed.
         :type view: gui3d.View
         """
         if view not in self.children:
             raise RuntimeError('The view is not a child of this view')
-            
+
         view._parent = None
         if self._attached:
             view._detach()
-            
+
         self.children.remove(view)
-            
+
     def addObject(self, object):
         """
         Adds the object to the view. If the view is attached to the app, the object will also be attached and will get an OpenGL counterpart.
-        
+
         :param object: The object to be added.
         :type object: gui3d.Object
         :return: The object, for convenience.
@@ -487,31 +484,31 @@ class View(events3d.EventHandler):
         """
         if object._view:
             raise RuntimeError('The object is already added to a view')
-            
+
         object._view = weakref.ref(self)
         if self._attached:
             object._attach()
-            
+
         self.objects.append(object)
-            
+
         return object
-            
+
     def removeObject(self, object):
         """
         Removes the object from the view. If the object was attached to the app, its OpenGL counterpart will be removed as well.
-        
+
         :param object: The object to be removed.
         :type object: gui3d.Object
         """
         if object not in self.objects:
             raise RuntimeError('The object is not a child of this view')
-            
+
         object._view = None
         if self._attached:
             object._detach()
-            
+
         self.objects.remove(object)
-        
+
     def show(self):
         self._visible = True
         self._updateVisibility()
@@ -519,7 +516,7 @@ class View(events3d.EventHandler):
     def hide(self):
         self._visible = False
         self._updateVisibility()
-        
+
     def isShown(self):
         return self._visible
 
@@ -684,7 +681,7 @@ class Category(View):
 
     def getTaskByName(self, name):
         return self.tasksByName.get(name)
- 
+
 # The application
 app = None
 
@@ -692,7 +689,7 @@ class Application(events3d.EventHandler):
     """
    The Application.
     """
-    
+
     singleton = None
 
     def __init__(self):
@@ -707,11 +704,11 @@ class Application(events3d.EventHandler):
         self.mouseDownObject = None
         self.enteredObject = None
         self.fullscreen = False
-        
+
     def addObject(self, object):
         """
         Adds the object to the application. The object will also be attached and will get an OpenGL counterpart.
-        
+
         :param object: The object to be added.
         :type object: gui3d.Object
         :return: The object, for convenience.
@@ -719,33 +716,33 @@ class Application(events3d.EventHandler):
         """
         if object._view:
             raise RuntimeError('The object is already attached to a view')
-            
+
         object._view = weakref.ref(self)
         object._attach()
-        
+
         self.objects.append(object)
-            
+
         return object
-            
+
     def removeObject(self, object):
         """
         Removes the object from the application. Its OpenGL counterpart will be removed as well.
-        
+
         :param object: The object to be removed.
         :type object: gui3d.Object
         """
         if object not in self.objects:
             raise RuntimeError('The object is not a child of this view')
-            
+
         object._view = None
         object._detach()
-        
+
         self.objects.remove(object)
-        
+
     def addView(self, view):
         """
         Adds the view to the application.The view will also be attached.
-        
+
         :param view: The view to be added.
         :type view: gui3d.View
         :return: The view, for convenience.
@@ -753,37 +750,37 @@ class Application(events3d.EventHandler):
         """
         if view.parent:
             raise RuntimeError('The view is already attached')
-            
+
         view._parent = weakref.ref(self)
         view._updateVisibility()
         view._attach()
-        
+
         self.children.append(view)
-            
+
         return view
-    
+
     def removeView(self, view):
         """
         Removes the view from the application. The view will be detached.
-        
+
         :param view: The view to be removed.
         :type view: gui3d.View
         """
         if view not in self.children:
             raise RuntimeError('The view is not a child of this view')
-            
+
         view._parent = None
         view._detach()
-        
+
         self.children.remove(view)
 
     def isVisible(self):
         return True
-            
+
     def getSelectedFaceGroupAndObject(self):
         picked = mh.getColorPicked()
         return selection.selectionColorMap.getSelectedFaceGroupAndObject(picked)
-        
+
     def getSelectedFaceGroup(self):
         picked = mh.getColorPicked()
         return selection.selectionColorMap.getSelectedFaceGroup(picked)
@@ -817,7 +814,7 @@ class Application(events3d.EventHandler):
 
     def switchTask(self, name):
         if not self.currentCategory:
-            return 
+            return
         newTask = self.currentCategory.tasksByName[name]
 
         if self.currentTask and self.currentTask is newTask:
@@ -901,7 +898,7 @@ class Application(events3d.EventHandler):
             object = pickedObject[1].object
         else:
             object = self
-                
+
         if self.mouseDownObject:
             self.mouseDownObject.callEvent('onMouseUp', event)
             if self.mouseDownObject is object:
@@ -910,7 +907,7 @@ class Application(events3d.EventHandler):
     def onMouseMovedCallback(self, event):
         # Get picked object
         picked = self.getSelectedFaceGroupAndObject()
-        
+
         if picked:
             group = picked[0]
             object = picked[1].object or self
@@ -938,7 +935,7 @@ class Application(events3d.EventHandler):
     def onMouseWheelCallback(self, event):
         if self.currentTask:
             self.currentTask.callEvent('onMouseWheel', event)
-            
+
     def onResizedCallback(self, event):
         if self.fullscreen != event.fullscreen:
             module3d.reloadTextures()

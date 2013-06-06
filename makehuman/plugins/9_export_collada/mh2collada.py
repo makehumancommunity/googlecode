@@ -98,7 +98,7 @@ def exportDae(human, name, fp, config):
         '  <library_images>\n')
 
     for stuff in stuffs:
-        writeImages(fp, stuff, human, config)
+        writeImages(fp, stuff, config)
 
     fp.write(
         '  </library_images>\n' +
@@ -174,149 +174,87 @@ def exportDae(human, name, fp, config):
     return
 
 #
-#    writeImages(fp, stuff, human, config):
+#   Write images
 #
 
-def writeImages(fp, stuff, human, config):
-    if stuff.texture:
-        textures = [stuff.texture]
-    else:
-        textures = []
+def writeImages(fp, stuff, config):
+    mat = stuff.material
+    if mat.diffuseTexture:
+        writeImage(fp, mat.diffuseTexture, config)
+    if mat.specularMapTexture:
+        writeImage(fp, mat.specularMapTexture, config)
+    if mat.bumpMapTexture:
+        writeImage(fp, mat.bumpMapTexture, config)
+    if mat.normalMapTexture:
+        writeImage(fp, mat.normalMapTexture, config)
+    if mat.displacementMapTexture:
+        writeImage(fp, mat.displacementMapTexture, config)
 
-    for (folder, texname) in textures:
-        path = config.getTexturePath(texname, folder, True, human)
-        texfile = os.path.basename(path)
-        (fname, ext) = os.path.splitext(texname)
-        name = "%s_%s" % (fname, ext[1:])
-        if config.useTexFolder:
-            texpath = "textures/"+texfile
-        else:
-            texpath = path
-        fp.write(
-            '    <image id="%s" name="%s">\n' % (name, name) +
-            '      <init_from>%s</init_from>\n' % texpath +
-            '    </image>\n'
-        )
-    return
+
+def getTextureName(filepath):
+    texfile = os.path.basename(filepath)
+    return texfile.replace(".","_")
+
+
+def writeImage(fp, filepath, config):
+    if not filepath:
+        return
+    newpath = config.copyTextureToNewLocation(filepath)
+    print "Collada Image", filepath, newpath
+    texname = getTextureName(filepath)
+    fp.write(
+        '    <image id="%s" name="%s">\n' % (texname, texname) +
+        '      <init_from>%s</init_from>\n' % newpath +
+        '    </image>\n'
+    )
 
 #
 #    writeEffects(fp, stuff):
 #
 
-def writeColor(fp, tech, tex, color, s):
-    (r,g,b) = color
-    fp.write('            <%s><color>%.4f %.4f %.4f 1</color> \n' % (tech, r*s, g*s, b*s) )
-    if tex:
-        fp.write('              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % tex)
-    fp.write('            </%s>\n' % tech)
-    return
+def writeIntensity(fp, tech, intensity):
+    fp.write('            <%s><float>%s</float></%s>\n' % (tech, intensity, tech))
 
-def writeIntensity(fp, tech, tex, value):
-    fp.write('            <%s><float>%s</float>\n' % (tech, value))
-    if tex:
-        fp.write('              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % tex)
-    fp.write('            </%s>\n' % tech)
-    return
 
-def writeTexture(fp, tech, tex):
+def writeTexture(fp, tech, filepath, color, intensity, s=1.0):
+    if not filepath:
+        return
+
+    fp.write('            <%s>\n' % tech)
+    if color:
+        fp.write('            <color>%.4f %.4f %.4f 1</color> \n' % (s*color.r, s*color.g, s*color.b))
+    if intensity:
+        fp.write('            <float>%s</float>\n' % intensity)
+    texname = getTextureName(filepath)
     fp.write(
-        '            <%s>\n' % tech +
-        '              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % tex +
+        '              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % texname +
         '            </%s>\n' % tech)
-    return
 
-BlenderDaeColor = {
-    'diffuse_color' : 'diffuse',
-    'specular_color' : 'specular',
-    'emit_color' : 'emission',
-    'ambient_color' : 'ambient',
-}
-
-BlenderDaeIntensity = {
-    'specular_hardness' : 'shininess',
-}
-
-DefaultMaterialSettings = {
-    'diffuse': (0.8,0.8,0.8),
-    'specular': (0.1,0.1,0.1),
-    'transparency' : 1,
-    'shininess' : 10,
-}
 
 def writeEffects(fp, stuff):
-    (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)
-    if not stuff.type:
-        tex = "texture_png"
-        writeEffectStart(fp, "SkinShader")
-        writeSurfaceSampler(fp, tex)
-        #writeSurfaceSampler(fp, "texture_ref_png")
-        writePhongStart(fp)
-        writeTexture(fp, 'diffuse', tex)
-        writeTexture(fp, 'transparent', tex)
-        writeColor(fp, 'specular', None, (1,1,1), 0.1)
-        writeIntensity(fp, 'shininess', None, 10)
-        writeIntensity(fp, 'transparency', None, 0)
-        writePhongEnd(fp)
-    elif matname:
-        matname = matname.replace(" ", "_")
-        mat = stuff.material
-        writeEffectStart(fp, matname)
-        writeSurfaceSampler(fp, texfile)
-        writePhongStart(fp)
-        doneDiffuse = False
-        doneSpec = False
-        diffInt = 1
-        specInt = 0.1
-        for (key, value) in mat.settings:
-            if key == "diffuse_intensity":
-                diffInt = value
-            elif key == "specular_intensity":
-                specInt = value
-        for (key, value) in mat.settings:
-            if key == "diffuse_color":
-                writeColor(fp, 'diffuse', texfile, value, diffInt)
-                if mat.use_transparency:
-                    writeTexture(fp, 'transparent', texfile)
-                    writeIntensity(fp, 'transparency', None, mat.alpha)
-                doneDiffuse = True
-            elif key == "specular_color":
-                writeColor(fp, 'specular', None, value, specInt)
-                doneSpec = True
-            else:
-                try:
-                    tech = BlenderDaeColor[key]
-                except:
-                    tech = None
-                if tech:
-                    writeColor(fp, tech, None, value, 1)
-                try:
-                    tech = BlenderDaeIntensity[tech]
-                except:
-                    tech = None
-                if tech:
-                    writeIntensity(fp, tech, None, value, 1)
-        if not doneDiffuse:
-            writeColor(fp, "diffuse", texfile, (1,1,1), 0.8)
-            if mat.use_transparency:
-                writeTexture(fp, 'transparent', texfile)
-                writeIntensity(fp, 'transparency', None, mat.alpha)
-        if not doneSpec:
-            writeColor(fp, 'specular', None, (1,1,1), 0.1)
-            writeIntensity(fp, 'shininess', None, 10)
-        writePhongEnd(fp)
-    return
-
-def writeEffectStart(fp, name):
+    mat = stuff.material
     fp.write(
-       '    <effect id="%s-effect">\n' % name +
+       '    <effect id="%s-effect">\n' % mat.name.replace(" ", "_") +
        '      <profile_COMMON>\n')
 
-def writePhongStart(fp):
+    writeSurfaceSampler(fp, mat.diffuseTexture)
+    writeSurfaceSampler(fp, mat.specularMapTexture)
+    writeSurfaceSampler(fp, mat.normalMapTexture)
+    writeSurfaceSampler(fp, mat.bumpMapTexture)
+    writeSurfaceSampler(fp, mat.displacementMapTexture)
+
     fp.write(
         '        <technique sid="common">\n' +
         '          <phong>\n')
 
-def writePhongEnd(fp):
+    writeTexture(fp, 'diffuse', mat.diffuseTexture, mat.diffuseColor, mat.diffuseIntensity)
+    writeTexture(fp, 'transparency', mat.diffuseTexture, None, mat.transparencyIntensity)
+    writeTexture(fp, 'specular', mat.specularMapTexture, mat.specularColor, 0.1*mat.specularIntensity)
+    writeIntensity(fp, 'shininess', mat.specularHardness)
+    writeTexture(fp, 'normal', mat.normalMapTexture, None, mat.normalMapIntensity)
+    writeTexture(fp, 'bump', mat.bumpMapTexture, None, mat.bumpMapIntensity)
+    writeTexture(fp, 'displacement', mat.displacementMapTexture, None, mat.displacementMapIntensity)
+
     fp.write(
         '          </phong>\n' +
         '          <extra/>\n' +
@@ -330,16 +268,20 @@ def writePhongEnd(fp):
         '      <extra><technique profile="MAX3D"><double_sided>1</double_sided></technique></extra>\n' +
         '    </effect>\n')
 
-def writeSurfaceSampler(fp, tex):
+
+def writeSurfaceSampler(fp, filepath):
+    if not filepath:
+        return
+    texname = getTextureName(filepath)
     fp.write(
-        '        <newparam sid="%s-surface">\n' % tex +
+        '        <newparam sid="%s-surface">\n' % texname +
         '          <surface type="2D">\n' +
-        '            <init_from>%s</init_from>\n' % tex +
+        '            <init_from>%s</init_from>\n' % texname +
         '          </surface>\n' +
         '        </newparam>\n' +
-        '        <newparam sid="%s-sampler">\n' % tex +
+        '        <newparam sid="%s-sampler">\n' % texname +
         '          <sampler2D>\n' +
-        '            <source>%s-surface</source>\n' % tex +
+        '            <source>%s-surface</source>\n' % texname +
         '          </sampler2D>\n' +
         '        </newparam>\n')
 
@@ -348,14 +290,12 @@ def writeSurfaceSampler(fp, tex):
 #
 
 def writeMaterials(fp, stuff):
-    (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)
-    if matname:
-        matname = matname.replace(" ", "_")
-        fp.write(
-            '    <material id="%s" name="%s">\n' % (matname, matname) +
-            '      <instance_effect url="#%s-effect"/>\n' % matname +
-            '    </material>\n')
-    return
+    mat = stuff.material
+    matname = mat.name.replace(" ", "_")
+    fp.write(
+        '    <material id="%s" name="%s">\n' % (matname, matname) +
+        '      <instance_effect url="#%s-effect"/>\n' % matname +
+        '    </material>\n')
 
 
 def writeController(fp, stuff, amt, config):
@@ -803,17 +743,16 @@ def writeNode(fp, pad, stuff, amt, config):
         '%s  <instance_controller url="#%s-skin">\n' % (pad, stuff.name) +
         '%s    <skeleton>#%sSkeleton</skeleton>\n' % (pad, amt.roots[0].name))
 
-    (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)
-    if matname:
-        matname = matname.replace(" ", "_")
-        fp.write(
-            '%s    <bind_material>\n' % pad +
-            '%s      <technique_common>\n' % pad +
-            '%s        <instance_material symbol="%s" target="#%s">\n' % (pad, matname, matname) +
-            '%s          <bind_vertex_input semantic="UVTex" input_semantic="TEXCOORD" input_set="0"/>\n' % pad +
-            '%s        </instance_material>\n' % pad +
-            '%s      </technique_common>\n' % pad +
-            '%s    </bind_material>\n' % pad)
+    mat = stuff.material
+    matname = mat.name.replace(" ", "_")
+    fp.write(
+        '%s    <bind_material>\n' % pad +
+        '%s      <technique_common>\n' % pad +
+        '%s        <instance_material symbol="%s" target="#%s">\n' % (pad, matname, matname) +
+        '%s          <bind_vertex_input semantic="UVTex" input_semantic="TEXCOORD" input_set="0"/>\n' % pad +
+        '%s        </instance_material>\n' % pad +
+        '%s      </technique_common>\n' % pad +
+        '%s    </bind_material>\n' % pad)
 
     fp.write(
         '%s  </instance_controller>\n' % pad +

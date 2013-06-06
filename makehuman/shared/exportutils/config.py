@@ -24,8 +24,8 @@ TODO
 
 import os
 import mh
-import shutil
 import log
+import shutil
 
 #
 #   class Config
@@ -41,6 +41,9 @@ class Config:
         self.eyebrows           = True
         self.lashes             = True
         self.helpers            = False
+        self.scale              = 1.0
+        self.unit               = "dm"
+
         self.rigOptions         = RigOptions()
         self.useNormals         = False
         self.useRelPaths        = True
@@ -48,7 +51,6 @@ class Config:
         self.texFolder          = None
         self.customPrefix       = ""
         self.human              = None
-        self.cage =             False
 
 
     def selectedOptions(self, exporter):
@@ -136,7 +138,7 @@ class Config:
         self.filename = os.path.basename(filepath)
         if self.useTexFolder:
             self.texFolder = self.getSubFolder(self.outFolder, "textures")
-            self.copiedFiles = {}
+            self._copiedFiles = {}
 
 
     def getSubFolder(self, path, name):
@@ -152,49 +154,38 @@ class Config:
         return folder
 
 
-    def getTexturePath(self, filePath, fromDir, isTexture, human):
-        srcDir = os.path.realpath(os.path.expanduser(fromDir))
-        filename = os.path.basename(filePath)
+    def copyTextureToNewLocation(self, filepath):
+        srcDir = os.path.abspath(os.path.expanduser(os.path.dirname(filepath)))
+        filename = os.path.basename(filepath)
 
-        if human and (filename == "texture.png"):
-            fromPath = human.getTexture()
-            fileDir = os.path.dirname(fromPath)
-            filename = os.path.basename(fromPath)
-            #print(filePath, fromDir, fileDir, fromPath)
-            if fileDir == fromDir:
-                fromPath = os.path.join(srcDir, filename)
-        else:
-            fromPath = os.path.join(srcDir, filename)
+        print "CopyTex", srcDir
+        print "  ", filename
+        print "  ", self.useTexFolder, self.texFolder,
+        print "  ", self.outFolder
 
         if self.useTexFolder:
-            if isTexture:
-                toPath = os.path.join(self.texFolder, filename)
-            else:
-                toPath = os.path.join(self.outFolder, filename)
+            newpath = os.path.abspath( os.path.join(self.texFolder, filename) )
+            print "New", newpath
             try:
-                self.copiedFiles[fromPath]
+                self._copiedFiles[filepath]
                 done = True
             except:
                 done = False
             if not done:
-                if 0 and human:
-                    img = mh.Image(human.getTexture())
-                    log.debug("%s", dir(img))
-                    img.save(toPath)
-                    halt
                 try:
-                    shutil.copyfile(fromPath, toPath)
+                    shutil.copyfile(filepath, newpath)
                 except:
-                    pass
-                self.copiedFiles[fromPath] = True
-            texPath = toPath
+                    log.message("Unable to copy \"%s\" -> \"%s\"" % (filepath, newpath))
+                self._copiedFiles[filepath] = True
         else:
-            texPath = os.path.abspath(fromPath)
+            newpath = filepath
 
         if not self.useRelPaths:
-            return texPath
+            return newpath
         else:
-            return str(os.path.normpath(os.path.relpath(texPath, self.outFolder)))
+            relpath = os.path.relpath(newpath, self.outFolder)
+            print "  Rel", relpath
+            return str(os.path.normpath(relpath))
 
 
     def goodName(self, name):

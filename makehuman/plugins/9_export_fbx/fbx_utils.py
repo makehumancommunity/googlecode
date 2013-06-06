@@ -83,8 +83,6 @@ def getRelativePath(filepath):
 
 def getTexturePath(filepath):
     global _AbsPath
-    if isinstance(filepath, tuple):
-        filepath = os.path.join(filepath[0], filepath[1])
     filepath = os.path.abspath(os.path.expanduser(filepath))
     filepath = os.path.join(_AbsPath, "textures", os.path.basename(filepath))
     tex = os.path.basename(filepath).replace(" ","_")

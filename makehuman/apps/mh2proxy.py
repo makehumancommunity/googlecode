@@ -29,6 +29,8 @@ import exportutils
 import log
 from collections import OrderedDict
 
+from material import Material
+
 _A7converter = None
 
 
@@ -113,7 +115,8 @@ class CProxyRefVert:
 
 class CProxy:
     def __init__(self, file, typ, layer):
-        self.name = None
+        name = os.path.splitext(os.path.basename(file))[0]
+        self.name = name.capitalize().replace(" ","_")
         self.type = typ
         self.file = file
         self.uuid = None
@@ -130,7 +133,7 @@ class CProxy:
         self.cull = False
         self.transparent = False
         self.layer = layer
-        self.material = CMaterial()
+
         self.faces = []
         self.texFaces = []
         self.texVerts = []
@@ -140,6 +143,9 @@ class CProxy:
         self.faceNumbers = []
         self.rig = None
         self.mask = None
+
+        self.material = Material(self.name + "Material")
+        """
         self.texture = None
         self.specular = None
         self.bump = None
@@ -150,17 +156,18 @@ class CProxy:
         self.bumpStrength = 1.0
         self.normalStrength = 1.0
         self.dispStrength = 0.2
+        """
+
         self.obj_file = None
         self.material_file = None
         self.maskLayer = -1
         self.textureLayer = 0
         self.objFileLayer = 0
         self.uvtexLayerName = {0 : "UVTex"}
-        self.materials = []
-        self.constraints = []
-        self.neighbors = {}
+
         self.deleteGroups = []
         self.deleteVerts = None
+
         self.wire = False
         self.cage = False
         self.modifiers = []
@@ -168,7 +175,7 @@ class CProxy:
         self.weights = None
         self.clothings = []
         self.transparencies = dict()
-        self.textures = []
+        #self.textures = []
         return
 
 
@@ -310,7 +317,7 @@ class CProxy:
 #
 #    classes CMaterial, CTexture
 #
-
+"""
 class CTexture:
     def __init__(self, fname):
         self.file = fname
@@ -339,13 +346,7 @@ class CMaterial:
         self.textures = []
 
 
-def getFileName(folder, file, suffix):
-    folder = os.path.realpath(os.path.expanduser(folder))
-    (name, ext) = os.path.split(file)
-    if ext:
-        return (folder, file)
-    else:
-        return (folder, file+suffix)
+"""
 
 #
 #    readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
@@ -370,7 +371,7 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
     else:
         pfile = file
     #print "Loading", pfile
-    folder = os.path.dirname(pfile.file)
+    folder = os.path.realpath(os.path.expanduser(os.path.dirname(pfile.file)))
     objfile = None
 
     try:
@@ -386,7 +387,7 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
     tails = {}
     proxy = CProxy(pfile.file, pfile.type, pfile.layer)
     proxy.deleteVerts = numpy.zeros(len(obj.coord), bool)
-    proxy.name = "MyProxy"
+    material = proxy.material
 
     useProjection = True
     ignoreOffset = False
@@ -415,7 +416,7 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
                 proxy.weights[words[2]] = weights
             elif key == 'material':
                 status = doMaterial
-                proxy.material.name = " ".join(words[2:])
+                material.name = " ".join(words[2:])
             elif key == 'useBaseMaterials':
                 proxy.useBaseMaterials = True
             elif key == 'faceNumbers':
@@ -473,35 +474,37 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
                 proxy.mask = getFileName(folder, words[2], ".png")
                 if len(words) > 3:
                     proxy.maskLayer = int(words[3])
+
             elif key == 'specular':
-                proxy.specular = getFileName(folder, words[2], ".png")
+                material.specularMapTexture = getFileName(folder, words[2], ".png")
                 if len(words) > 4:
-                    proxy.specularStrength = float(words[4])
+                    material.specularMapIntensity = float(words[4])
             elif key == 'bump':
-                proxy.bump = getFileName(folder, words[2], ".png")
+                material.bumpMapTexture = getFileName(folder, words[2], ".png")
                 if len(words) > 4:
-                    proxy.bumpStrength = float(words[4])
+                    material.bumpMapIntensity = float(words[4])
             elif key == 'normal':
-                proxy.normal = getFileName(folder, words[2], ".png")
+                material.normalMapTexture = getFileName(folder, words[2], ".png")
                 if len(words) > 4:
-                    proxy.normalStrength = float(words[4])
+                    material.normalMapIntensity = float(words[4])
             elif key == 'transparency':
-                proxy.transparency = getFileName(folder, words[2], ".png")
+                material.transparencyTexture = getFileName(folder, words[2], ".png")
             elif key == 'displacement':
-                proxy.displacement = getFileName(folder, words[2], ".png")
+                material.displacementMapTexture = getFileName(folder, words[2], ".png")
                 if len(words) > 4:
-                    proxy.dispStrength = float(words[4])
+                    material.dispStrength = float(words[4])
             elif key == 'texture':
-                proxy.texture = getFileName(folder, words[2], ".png")
+                material.diffuseTexture = getFileName(folder, words[2], ".png")
                 if len(words) > 3:
                     proxy.textureLayer = int(words[3])
+
             elif key == 'objfile_layer':
                 proxy.objFileLayer = int(words[2])
             elif key == 'uvtex_layer':
                 proxy.uvtexLayerName[int(words[2])] = words[3]
             elif key == 'material_file':
                 pass
-                #proxy.material_file = getFileName(folder, words[2], ".mhx")
+                #material_file = getFileName(folder, words[2], ".mhx")
             elif key == 'obj_file':
                 proxy.obj_file = getFileName(folder, words[2], ".obj")
             elif key == 'backface_culling':
@@ -571,7 +574,8 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
             newTexFace(words, proxy)
 
         elif status == doMaterial:
-            readMaterial(line, proxy.material, proxy, False)
+            pass
+            #readMaterial(line, material, proxy, False)
 
         elif status == doWeights:
             v = int(words[0])
@@ -600,13 +604,19 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
     return proxy
 
 
+def getFileName(folder, file, suffix):
+    (name, ext) = os.path.split(file)
+    if ext:
+        return os.path.join(folder, file)
+    else:
+        return os.path.join(folder, file+suffix)
+
+
 def copyObjFile(proxy):
-    (folder, name) = proxy.obj_file
-    objpath = os.path.join(folder, name)
     try:
-        tmpl = open(objpath, "rU")
+        tmpl = open(proxy.obj_file, "rU")
     except:
-        log.error("*** Cannot open %s", objpath)
+        log.error("*** Cannot open %s", proxy.obj_file)
         return False
 
     proxy.texVerts = []
@@ -635,6 +645,9 @@ def getScaleData(words):
     den = float(words[4])
     return (v1, v2, den)
 
+
+"""
+Ignoring material settings in proxy file atm.
 
 def readMaterial(line, mat, proxy, multiTex):
     words= line.split()
@@ -671,7 +684,7 @@ def readMaterial(line, mat, proxy, multiTex):
     if key == 'alpha':
         mat.alpha = float(words[1])
         mat.use_transparency = True
-
+"""
 
 def newFace(first, words, group, proxy):
     face = []

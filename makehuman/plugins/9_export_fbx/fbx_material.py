@@ -32,22 +32,23 @@ def getObjectNumbers(stuffs):
     nTextures = 0
     nImages = 0
     for stuff in stuffs:
-        if stuff.texture:
+        mat = stuff.material
+        if mat.diffuseTexture:
             nTextures += 2
             nImages += 1
-        if stuff.specular:
+        if mat.specularMapTexture:
             nTextures += 1
             nImages += 1
-        if stuff.normal:
+        if mat.transparencyMapTexture:
             nTextures += 1
             nImages += 1
-        if stuff.transparency:
+        if mat.normalMapTexture:
             nTextures += 1
             nImages += 1
-        if stuff.bump:
+        if mat.bumpMapTexture:
             nTextures += 1
             nImages += 1
-        if stuff.displacement:
+        if mat.displacementMapTexture:
             nTextures += 1
             nImages += 1
     return nMaterials,nTextures,nImages
@@ -157,13 +158,14 @@ def writeObjectDefs(fp, stuffs, amt):
 def writeObjectProps(fp, stuffs, amt):
 
     for stuff in stuffs:
+        mat = stuff.material
         writeMaterial(fp, stuff, amt)
-        writeTexture(fp, stuff.texture, "DiffuseColor")
-        writeTexture(fp, stuff.specular, "SpecularFactor")
-        writeTexture(fp, stuff.normal, "Bump")
-        writeTexture(fp, stuff.transparency, "TransparencyFactor")
-        writeTexture(fp, stuff.bump, "BumpFactor")
-        writeTexture(fp, stuff.displacement, "DisplacementFactor")
+        writeTexture(fp, mat.diffuseTexture, "DiffuseColor")
+        writeTexture(fp, mat.specularMapTexture, "SpecularFactor")
+        writeTexture(fp, mat.normalMapTexture, "Bump")
+        writeTexture(fp, mat.transparencyMapTexture, "TransparencyFactor")
+        writeTexture(fp, mat.bumpMapTexture, "BumpFactor")
+        writeTexture(fp, mat.displacementMapTexture, "DisplacementFactor")
 
 
 def writeMaterial(fp, stuff, amt):
@@ -171,47 +173,23 @@ def writeMaterial(fp, stuff, amt):
     id,key = getId("Material::"+name)
     fp.write('    Material: %d, "%s", "" {' % (id, key))
 
-    if stuff.material:
-        diffuseColor = stuff.material.diffuse_color
-        diffuseIntensity = stuff.material.diffuse_intensity
-        specularColor = stuff.material.specular_color
-        specularIntensity = stuff.material.specular_intensity
-        specularHardness = stuff.material.specular_hardness
-        transparency = stuff.material.transparency
-        translucency = stuff.material.translucency
-        ambientColor = stuff.material.ambient_color
-        emitColor = stuff.material.emit_color
-        use_transparency = stuff.material.use_transparency
-        alpha = stuff.material.alpha
-    else:
-        diffuseColor = (0.8,0.8,0.8)
-        diffuseIntensity = 0.8
-        specularColor = (1,1,1)
-        specularIntensity = 0.1
-        specularHardness = 25
-        transparency = 1
-        translucency = 0.0
-        ambientColor = (0,0,0)
-        emitColor = (0,0,0)
-        use_transparency = False
-        alpha = 1
-
+    mat = stuff.material
     fp.write(
 '        Version: 102\n' +
 '        ShadingModel: "phong"\n' +
 '        MultiLayer: 0\n' +
 '        Properties70:  {\n' +
 '            P: "TransparentColor", "Color", "", "A",1,1,1\n' +
-'            P: "TransparencyFactor", "Number", "", "A",%.4f\n' % (1-alpha) +
-'            P: "SpecularColor", "Color", "", "A",%.4f,%.4f,%.4f\n' % tuple(specularColor) +
-'            P: "ShininessExponent", "Number", "", "A",%.4f\n' % specularHardness +
-'            P: "EmissiveColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % tuple(emitColor) +
-'            P: "AmbientColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % tuple(ambientColor) +
-'            P: "DiffuseColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % tuple(diffuseColor) +
-'            P: "DiffuseFactor", "Number", "", "A",%.4f\n' % diffuseIntensity +
-'            P: "SpecularColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % tuple(specularColor) +
-'            P: "SpecularFactor", "Number", "", "A",%.4f\n' % specularIntensity +
-'            P: "Shininess", "double", "Number", "",%.4f\n' % specularHardness +
+'            P: "TransparencyFactor", "Number", "", "A",%.4f\n' % mat.transparencyIntensity +
+'            P: "SpecularColor", "Color", "", "A",%.4f,%.4f,%.4f\n' % mat.specularColor.asTuple() +
+'            P: "ShininessExponent", "Number", "", "A",%.4f\n' % mat.specularHardness +
+#'            P: "EmissiveColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % emitColor.asTuple() +
+#'            P: "AmbientColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % ambientColor.asTuple() +
+'            P: "DiffuseColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % mat.diffuseColor.asTuple() +
+'            P: "DiffuseFactor", "Number", "", "A",%.4f\n' % mat.diffuseIntensity +
+'            P: "SpecularColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % mat.specularColor.asTuple() +
+'            P: "SpecularFactor", "Number", "", "A",%.4f\n' % mat.specularIntensity +
+'            P: "Shininess", "double", "Number", "",%.4f\n' % mat.specularHardness +
 '            P: "Reflectivity", "double", "Number", "",0\n' +
 '        }\n' +
 '    }\n')
@@ -266,14 +244,15 @@ def writeLinks(fp, stuffs, amt):
         name = getStuffName(stuff, amt)
         ooLink(fp, 'Material::%s' % name, 'Model::%sMesh' % name)
 
+        mat = stuff.material
         for filepath,channel in [
-            (stuff.texture, "DiffuseColor"),
-            (stuff.texture, "TransparencyFactor"),
-            (stuff.specular, "SpecularIntensity"),
-            (stuff.normal, "Bump"),
-            (stuff.transparency, "TransparencyFactor"),
-            (stuff.bump, "BumpFactor"),
-            (stuff.displacement, "Displacement")]:
+            (mat.diffuseTexture, "DiffuseColor"),
+            (mat.diffuseTexture, "TransparencyFactor"),
+            (mat.specularMapTexture, "SpecularIntensity"),
+            (mat.normalMapTexture, "Bump"),
+            (mat.transparencyMapTexture, "TransparencyFactor"),
+            (mat.bumpMapTexture, "BumpFactor"),
+            (mat.displacementMapTexture, "Displacement")]:
             if filepath:
                 _,tex = getTexturePath(filepath)
                 opLink(fp, 'Texture::%s' % tex, 'Material::%s' % name, channel)

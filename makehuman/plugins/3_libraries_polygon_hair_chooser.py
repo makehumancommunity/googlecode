@@ -49,10 +49,10 @@ class HairAction(gui3d.Action):
 
 
 class HairTaskView(gui3d.TaskView):
-    
+
     def __init__(self, category):
-        
-        gui3d.TaskView.__init__(self, category, 'Hair')        
+
+        gui3d.TaskView.__init__(self, category, 'Hair')
         hairDir = os.path.join(mh.getPath(''), 'data', 'hairstyles')
         if not os.path.exists(hairDir):
             os.makedirs(hairDir)
@@ -88,7 +88,7 @@ class HairTaskView(gui3d.TaskView):
 
         if os.path.basename(mhclo) == "clear.mhclo":
             return
-            
+
         human.hairProxy = mh2proxy.readProxyFile(human.meshData, mhclo)
         human.hairProxy.type = 'Hair'
         if not human.hairProxy:
@@ -96,15 +96,15 @@ class HairTaskView(gui3d.TaskView):
             return
 
         obj = human.hairProxy.obj_file
-        obj = os.path.join(obj[0], obj[1])
+        #obj = os.path.join(obj[0], obj[1])
         mesh = files3d.loadMesh(obj)
         if not mesh:
             log.error("Failed to load %s", obj)
             return
-        if human.hairProxy.texture:
-            (folder, name) = human.hairProxy.texture
-            tex = os.path.join(folder, name)
-            mesh.setTexture(tex)
+
+        mat = human.hairProxy.material
+        if mat.diffuseTexture:
+            mesh.setTexture(mat.diffuseTexture)
         else:
             tex = obj.replace('.obj', '_texture.png')
             mesh.setTexture(tex)
@@ -128,13 +128,13 @@ class HairTaskView(gui3d.TaskView):
     def adaptHairToHuman(self, human):
 
         if human.hairObj and human.hairProxy:
-            
+
             mesh = human.hairObj.getSeedMesh()
             human.hairProxy.update(mesh)
             mesh.update()
             if human.hairObj.isSubdivided():
                 human.hairObj.getSubdivisionMesh()
-        
+
     def onShow(self, event):
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
@@ -142,9 +142,9 @@ class HairTaskView(gui3d.TaskView):
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
-        
+
     def onHumanChanging(self, event):
-        
+
         human = event.human
         if event.change == 'reset':
             log.message("deleting hair")
@@ -154,22 +154,22 @@ class HairTaskView(gui3d.TaskView):
                 human.hairObj = None
                 human.hairProxy = None
             self.filechooser.deselectAll()
-        
+
     def onHumanChanged(self, event):
-        
+
         human = event.human
         self.adaptHairToHuman(human)
 
     def loadHandler(self, human, values):
-        
+
         mhclo = values[1]
         if not os.path.exists(os.path.realpath(mhclo)):
             log.notice('HairTaskView.loadHandler: %s does not exist. Skipping.', mhclo)
             return
         self.setHair(human, mhclo)
-        
+
     def saveHandler(self, human, file):
-        
+
         if human.hairProxy:
             file.write('hair %s\n' % human.hairProxy.file)
 

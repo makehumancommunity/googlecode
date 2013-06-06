@@ -115,13 +115,13 @@ def exportMd5(human, filepath, config):
             numFaces = len(obj.r_faces)
 
         f.write('mesh {\n')
-        if stuff.texture:
-            texfolder,texname = stuff.texture
+        mat = stuff.material
+        if mat.diffuseTexture:
             if config.useTexFolder:
-                tex = copyTexture(stuff.texture, human, config)
+                tex = copyTexture(mat.diffuseTexture, human, config)
                 f.write('\tshader "%s"\n' % tex)
             else:
-                f.write('\tshader "%s"\n' % (texname))
+                f.write('\tshader "%s"\n' % mat.diffuseTexture)
 
         f.write('\n\tnumverts %d\n' % numVerts)
 
@@ -403,11 +403,9 @@ def writeAnimation(filepath, human, config, animTrack):
 def copyTexture(texture, human, config):
     if not texture:
         return
-    (folder, texfile) = texture
-
     # Contrary to what you might expect, this function actually copies the texture to its new location...
-    texpath = config.getTexturePath(texfile, folder, True, human)
-    return texpath
+    newpath = config.copyTextureToNewLocation(texture)
+    return newpath
 
 
 def getFeetOnGroundOffset(human):

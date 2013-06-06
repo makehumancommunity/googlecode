@@ -82,7 +82,7 @@ class ClothesAction(gui3d.Action):
 #
 
 class ClothesTaskView(gui3d.TaskView):
-    
+
     def __init__(self, category):
 
         self.systemClothes = os.path.join('data', 'clothes')
@@ -94,7 +94,7 @@ class ClothesTaskView(gui3d.TaskView):
 
         self.cache = {}
         self.meshCache = {}
-        
+
         gui3d.TaskView.__init__(self, category, 'Clothes')
         if not os.path.exists(self.userClothes):
             os.makedirs(self.userClothes)
@@ -153,7 +153,7 @@ class ClothesTaskView(gui3d.TaskView):
         def onClicked(event):
             self.updateFaceMasks(self.faceHidingTggl.selected)
         self.faceHidingTggl.setSelected(True)
-        
+
     def setClothes(self, human, filepath):
         if os.path.basename(filepath) == "clear.mhclo":
             for name,clo in human.clothesObjs.items():
@@ -222,12 +222,9 @@ class ClothesTaskView(gui3d.TaskView):
             return
         '''
 
-        #folder = os.path.dirname(filepath)
-        (folder, name) = proxy.obj_file
-        obj = os.path.join(folder, name)
-
+        obj = proxy.obj_file
         try:
-            clo = human.clothesObjs[uuid]
+            clo = human.clothesObjs[obj]
         except:
             clo = None
         if clo:
@@ -251,13 +248,15 @@ class ClothesTaskView(gui3d.TaskView):
         if not mesh:
             log.error("Could not load mesh for clothing object %s", proxy.name)
             return
-        if proxy.texture:
-            mesh.setTexture( self.getClothesTexture(proxy.texture) )
-        if proxy.normal:
-            mesh.material.normalTexture = self.getClothesTexture(proxy.normal)
-        if proxy.displacement:
-            mesh.material.displacementTexture = self.getClothesTexture(proxy.displacement)
-        
+
+        mat = mesh.material = proxy.material
+        if mat.diffuseTexture:
+            mesh.setTexture( self.getClothesTexture(mat.diffuseTexture) )
+        #if proxy.normal:
+        #    mesh.material.normalTexture = self.getClothesTexture(proxy.normal)
+        #if proxy.displacement:
+        #    mesh.material.displacementTexture = self.getClothesTexture(proxy.displacement)
+
         clo = gui3d.app.addObject(gui3d.Object(human.getPosition(), mesh))
         clo.setRotation(human.getRotation())
         clo.mesh.setCameraProjection(0)
@@ -271,7 +270,7 @@ class ClothesTaskView(gui3d.TaskView):
         else:
             clo.mesh.setTransparentPrimitives(0)
         clo.mesh.priority = 10
-        human.clothesObjs[uuid] = clo        
+        human.clothesObjs[uuid] = clo
         human.clothesProxies[uuid] = proxy
         human.activeClothing = uuid
         self.clothesList.append(uuid)
@@ -310,7 +309,7 @@ class ClothesTaskView(gui3d.TaskView):
 
         self.adaptClothesToHuman(human)
         clo.setSubdivided(human.isSubdivided())
-        
+
         #self.clothesButton.setTexture(obj.replace('.obj', '.png'))
         self.orderRenderQueue()
         self.updateFaceMasks(self.faceHidingTggl.selected)
@@ -367,7 +366,7 @@ class ClothesTaskView(gui3d.TaskView):
                 proxyVertMask[idx] = np.count_nonzero(vertsMask[[v1, v2, v3]]) > 1
                 # Alternative2: Only hide proxy vert if all of its referenced body verts are hidden (least agressive)
                 #proxyVertMask[idx] = vertsMask[v1] or vertsMask[v2] or vertsMask[v3]
-                
+
             proxyKeepVerts = np.argwhere(proxyVertMask)[...,0]
             proxyFaceMask = obj.mesh.getFaceMaskForVertices(proxyKeepVerts)
 
@@ -391,7 +390,7 @@ class ClothesTaskView(gui3d.TaskView):
 
     def adaptClothesToHuman(self, human):
 
-        for (uuid,clo) in human.clothesObjs.items():            
+        for (uuid,clo) in human.clothesObjs.items():
             if clo:
                 mesh = clo.getSeedMesh()
                 human.clothesProxies[uuid].update(mesh)
@@ -408,8 +407,8 @@ class ClothesTaskView(gui3d.TaskView):
             if highlighted not in self.cache or not self.cache[highlighted].toggleEnabled:
                 self.setClothes(gui3d.app.selectedHuman, highlighted)
             self.highlightedPiece = self.cache[highlighted]
-        
-        #if not os.path.isdir(self.userClothes) or not len([filename for filename in os.listdir(self.userClothes) if filename.lower().endswith('mhclo')]):    
+
+        #if not os.path.isdir(self.userClothes) or not len([filename for filename in os.listdir(self.userClothes) if filename.lower().endswith('mhclo')]):
         #    gui3d.app.prompt('No user clothes found', 'You don\'t seem to have any user clothes, download them from the makehuman media repository?\nNote: this can take some time depending on your connection speed.', 'Yes', 'No', self.syncMedia)
 
     def onHide(self, event):
@@ -418,9 +417,9 @@ class ClothesTaskView(gui3d.TaskView):
             # Remove highlighted clothes
             self.setClothes(gui3d.app.selectedHuman, self.highlightedPiece.file)
         self.highlightedPiece = None
-        
+
     def onHumanChanging(self, event):
-        
+
         human = event.human
         if event.change == 'reset':
             log.message("deleting clothes")
@@ -439,7 +438,7 @@ class ClothesTaskView(gui3d.TaskView):
             # self.clothesButton.setTexture('data/clothes/clear.png')
 
     def onHumanChanged(self, event):
-        
+
         human = event.human
         self.adaptClothesToHuman(human)
 
@@ -451,38 +450,36 @@ class ClothesTaskView(gui3d.TaskView):
             mhclo = exportutils.config.getExistingProxyFile(values[1], None, "clothes")
         if not mhclo:
             log.notice("%s does not exist. Skipping.", values[1])
-        else:            
+        else:
             self.setClothes(human, mhclo)
             self.filechooser.selectItem(mhclo)
-        
+
     def saveHandler(self, human, file):
-        
+
         for name in self.clothesList:
             clo = human.clothesObjs[name]
             if clo:
                 proxy = human.clothesProxies[name]
                 file.write('clothes %s %s\n' % (os.path.basename(proxy.file), proxy.getUuid()))
-                
+
     def syncMedia(self):
-        
+
         if self.mediaSync:
             return
         if not os.path.isdir(self.userClothes):
             os.makedirs(self.userClothes)
         self.mediaSync = download.MediaSync(gui3d.app, self.userClothes, 'http://download.tuxfamily.org/makehuman/clothes/', self.syncMediaFinished)
         self.mediaSync.start()
-        
+
     def syncMediaFinished(self):
-        
+
         self.mediaSync = None
 
 
-    def getClothesTexture(self, relativePath):
-        (folder, name) = relativePath
-        tex = os.path.join(folder, name)
-        if not os.path.exists(tex):
-            tex = os.path.join(self.systemClothes, "textures", name)
-        return tex
+    def getClothesTexture(self, filepath):
+        if not os.path.exists(filepath):
+            filepath = os.path.join(self.systemClothes, "textures", os.path.basename(filepath))
+        return filepath
 
 
 # This method is called when the plugin is loaded into makehuman

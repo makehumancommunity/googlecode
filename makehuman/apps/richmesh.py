@@ -24,17 +24,56 @@ A rich mesh, with vertex weights, shapes and an armature
 TODO
 """
 
+import os
 import module3d
+
+from material import Material, Color
+
+# CStuff used by exportutils/collect. Will eventually be merged with RichMesh
+
+class CStuff:
+    def __init__(self, name, proxy, human):
+        self.name = os.path.basename(name)
+        self.proxy = proxy
+        self.human = human
+        self.richMesh = None
+        self.vertexWeights = None
+        self.skinWeights = None
+        self.textureImage = None
+        if proxy:
+            self.type = proxy.type
+            self.material = proxy.material
+            self.material.name = proxy.name + "Material"
+        else:
+            self.type = None
+            #self.material = human.material
+            mat = self.material = Material(self.name + "Material")
+            self.material.name = os.path.splitext(self.name)[0] + "Material"
+            mat.diffuseTexture = "data/textures/texture.png"
+            mat.diffuseColor = Color(1,1,1)
+            mat.diffuseIntensity = 0.8
+            mat.specularMapTexture = "data/textures/texture_ref.png"
+            mat.specularColor = Color(1,1,1)
+            mat.specularIntensity = 0.05
+            mat.bumpMapTexture = "data/textures/bump.png"
+            mat.bumpMatIntensity = 0.2
+
+        print "CStuff", self.name, self.material, self.material.name
+
+
+    def __repr__(self):
+        return "<CStuff %s %s mat %s tex %s>" % (self.name, self.type, self.material, self.texture)
 
 
 class RichMesh:
 
     def __init__(self, name, amt):
-        self.name = name
+        self.name = os.path.basename(name)
         self.object = None
         self.weights = {}
         self.shapes = []
         self.armature = amt
+        self.material = None
 
         self.vertexMask = None
         self.faceMask = None

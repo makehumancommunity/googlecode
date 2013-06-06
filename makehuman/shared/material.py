@@ -38,13 +38,13 @@ class Color(object):
     values = property(getValues, setValues)
 
     def setR(self, r):
-        self.r = min(0.0, max(1.0, float(r)))
+        self.r = max(0.0, min(1.0, float(r)))
 
     def setG(self, g):
-        self.g = min(0.0, max(1.0, float(g)))
+        self.g = max(0.0, min(1.0, float(g)))
 
     def setB(self, b):
-        self.b = min(0.0, max(1.0, float(b)))
+        self.b = max(0.0, min(1.0, float(b)))
 
     def __repr__(self):
         return "Color(%s %s %s)" % (self.r,self.g,self.b)
@@ -60,6 +60,8 @@ class Color(object):
 
         return self
 
+    def asTuple(self):
+        return (self.r, self.g, self.b)
 
 class Material(object):
     """
@@ -75,10 +77,11 @@ class Material(object):
         self.name = name
 
         self._ambientColor = Color(1.0, 1.0, 1.0)
-        self._diffuseColor = Color()
-        self._diffuseIntensity = 1.0    # TODO is this useful?
-        self._specularColor = Color()
+        self._diffuseColor = Color(1.0, 1.0, 1.0)
+        self._diffuseIntensity = 0.8    # TODO is this useful?
+        self._specularColor = Color(1.0, 1.0, 1.0)
         self._specularIntensity = 0.5   # TODO is this useful?
+        self._transparencyIntensity = 0.0
         self._specularHardness = 0.2
         self._emissiveColor = Color()
 
@@ -94,6 +97,8 @@ class Material(object):
         self._displacementMapIntensity = 1.0
         self._specularMapTexture = None
         self._specularMapIntensity = 1.0 # TODO do we need this AND specularIntensity?
+        self._transparencyMapTexture = None
+        self._transparencyMapIntensity = 1.0
 
         self._shader = None
         self._shaderConfig = {}
@@ -129,6 +134,8 @@ class Material(object):
         self._displacementMapIntensity = material.displacementMapIntensity
         self._specularMapTexture = material.specularMapTexture
         self._specularMapIntensity = material.specularMapIntensity
+        self._transparencyMapTexture = material.transparencyMapTexture
+        self._transparencyMapIntensity = material.transparencyMapIntensity
 
         self._shader = material.shader
         self._shaderConfig = dict(material._shaderConfig)
@@ -204,6 +211,10 @@ class Material(object):
                 self._specularMapTexture = words[1]
             if words[0] == "specularmapIntensity":
                 self._specularMapIntensity = max(0.0, min(1.0, float(words[1])))
+            if words[0] == "transparencymapTexture":
+                self._transparencyMapTexture = words[1]
+            if words[0] == "transparencymapIntensity":
+                self._transparencyMapIntensity = max(0.0, min(1.0, float(words[1])))
             if words[0] == "shader":
                 self._shader = words[1]
             if words[0] == "uvMap":
@@ -296,6 +307,25 @@ class Material(object):
     specularHardness = property(getSpecularHardness, setSpecularHardness)
 
 
+    def getTransparencyColor(self):
+        #return self._transparencyColor.values
+        return self._transparencyColor
+
+    def setTransparencyColor(self, color):
+        self._transparencyColor.copyFrom(color)
+
+    transparencyColor = property(getTransparencyColor, setTransparencyColor)
+
+
+    def getTransparencyIntensity(self):
+        return self._transparencyIntensity
+
+    def setTransparencyIntensity(self, intensity):
+        self._transparencyIntensity = min(1.0, max(0.0, intensity))
+
+    transparencyIntensity = property(getTransparencyIntensity, setTransparencyIntensity)
+
+
     def getEmissiveColor(self):
         #return self._emissiveColor.values
         return self._emissiveColor
@@ -339,7 +369,10 @@ class Material(object):
     def supportsSpecular(self):
         return self.specularMapTexture != None
 
-    
+    def supportstransparency(self):
+        return self.transparencyMapTexture != None
+
+
     def configureShading(self, diffuse=True, bump = True, normal=True, displacement=True, spec = True, vertexColors = True):
         """
         Configure shading options and set the necessary properties based on
@@ -553,6 +586,32 @@ class Material(object):
     specularMapIntensity = property(getSpecularMapIntensity, setSpecularMapIntensity)
 
 
+    def getTransparencyMapTexture(self):
+        """
+        The transparency or reflectivity map texture.
+        """
+        return self._transparencyMapTexture
+
+    def setTransparencyMapTexture(self, texture):
+        """
+        Set the transparency or reflectivity map texture.
+        """
+        self._transparencyMapTexture = texture
+        self._updateShaderConfig()
+
+    transparencyMapTexture = property(getTransparencyMapTexture, setTransparencyMapTexture)
+
+
+    def getTransparencyMapIntensity(self):
+        return self._transparencyMapIntensity
+
+    def setTransparencyMapIntensity(self, intensity):
+        self._transparencyMapIntensity = intensity
+        self._updateShaderConfig()
+
+    transparencyMapIntensity = property(getTransparencyMapIntensity, setTransparencyMapIntensity)
+
+
 def fromFile(filename):
     """
     Create a material from a .mhmat file.
@@ -578,7 +637,7 @@ class UVMap:
         import numpy as np
 
         doTexVerts = 1
-        doTexFaces = 2    
+        doTexFaces = 2
         doFaces = 3
         doFaceNumbers = 4
         doMaterial = 5
@@ -588,7 +647,7 @@ class UVMap:
         except:
             log.error("Error loading UV map from %s.", filename)
             raise NameError("Cannot open %s" % filename)
-                
+
         status = 0
         for line in fp:
             words = line.split()
@@ -617,10 +676,10 @@ class UVMap:
             elif status == doTexFaces:
                 texface = [int(word) for word in words]
                 self.texFaces.append(texface)
-        fp.close()   
+        fp.close()
         self.filename = filename
-            
-        nFaces = len(mesh.fvert)                
+
+        nFaces = len(mesh.fvert)
         self.faceMaterials = np.zeros(nFaces, int)
         fn = 0
         mn = 0
@@ -628,7 +687,7 @@ class UVMap:
             words = line.split()
             if len(words) < 2:
                 continue
-            elif words[0] == "ft":        
+            elif words[0] == "ft":
                 self.faceMaterials[fn] = int(words[1])
                 fn += 1
             elif words[0] == "ftn":
