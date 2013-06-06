@@ -188,8 +188,6 @@ class ExportArmature(Armature):
         self.visibleLayers = "00000001"
         self.scale = options.scale
 
-        self.gizmos = None
-        self.gizmoFiles = []
         self.recalcRoll = []
         self.objectProps = [("MhxRig", '"%s"' % options.rigtype)]
         self.armatureProps = []
@@ -206,12 +204,14 @@ class ExportArmature(Armature):
             for proxy in self.proxies.values():
                 if proxy.rig:
                     coord = proxy.getCoords()
-                    self.fromRigFile(proxy.rig, amt.human.meshData, coord=coord)
+                    self.fromRigFile(proxy.rig, env.human.meshData, coord=coord)
                     proxy.weights = self.prefixWeights(weights, proxy.name)
                     #appendRigBones(boneList, proxy.name, L_CLO, body, amt)
 
 
     def setupCustomShapes(self, fp):
+        if not self.parser.customShapes:
+            return
         writeCustomEmpty(fp)
         for (name, data) in self.parser.customShapes.items():
             (typ, r) = data
@@ -221,6 +221,18 @@ class ExportArmature(Armature):
                 setupCube(fp, name, 0.1*r, (0,0,0))
             else:
                 halt
+
+
+    def writeGizmos(self, fp, gizmos):
+        writeCustomEmpty(fp)
+        fp.write(gizmos)
+        setupSimpleCustomTargets(fp)
+        if self.options.facepanel:
+            import gizmos_panel
+            setupCube(fp, "MHCube025", 0.25, 0)
+            setupCube(fp, "MHCube05", 0.5, 0)
+            gizmos = gizmos_panel.asString()
+            fp.write(gizmos)
 
 
     def writeEditBones(self, fp):
@@ -404,7 +416,7 @@ end Armature
         for proxy in env.proxies.values():
             self.writeHideProp(fp, proxy.name)
         for path,name in env.customTargetFiles:
-            self.defProp(fp, "FLOAT", name, 0, name[3:], -1.0, 2.0)
+            self.defProp(fp, "FLOAT", "Mhc"+name, 0, name, -1.0, 2.0)
             #fp.write("  DefProp Float %s 0 %s  min=-1.0,max=2.0 ;\n" % (name, name[3:]))
 
         fp.write("""

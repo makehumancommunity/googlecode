@@ -32,7 +32,6 @@ from . import mhx_drivers
 #-------------------------------------------------------------------------------
 
 def writeMesh(fp, mesh, env):
-    amt = env.armature
     config = env.config
     scale = config.scale
 
@@ -40,7 +39,8 @@ def writeMesh(fp, mesh, env):
 # ----------------------------- MESH --------------------- #
 """)
 
-    fp.write("Mesh %sMesh %sMesh\n  Verts\n" % (amt.name, amt.name))
+    fp.write("Mesh %sMesh %sMesh\n  Verts\n" % (env.name, env.name))
+    amt = env.armature
     ox = amt.origin[0]
     oy = amt.origin[1]
     oz = amt.origin[2]
@@ -67,11 +67,11 @@ def writeMesh(fp, mesh, env):
     Data
 """)
 
-    if amt.human.uvset:
-        for ft in amt.human.uvset.texFaces:
+    if env.human.uvset:
+        for ft in env.human.uvset.texFaces:
             fp.write("    vt")
             for vt in ft:
-                uv = amt.human.uvset.texVerts[vt]
+                uv = env.human.uvset.texVerts[vt]
                 fp.write(" %.4g %.4g" %(uv[0], uv[1]))
             fp.write(" ;\n")
     else:
@@ -90,27 +90,27 @@ def writeMesh(fp, mesh, env):
   end MeshTextureFaceLayer
 """)
 
-    writeBaseMaterials(fp, amt)
+    writeBaseMaterials(fp, env)
     writeVertexGroups(fp, env, None)
 
-    fp.write("""
-end Mesh
-""")
-
     fp.write(
-        "Object %sMesh MESH %sMesh\n"  % (amt.name, amt.name) +
-        "  Property MhxOffsetX %.4f ;\n" % amt.origin[0] +
-        "  Property MhxOffsetY %.4f ;\n" % amt.origin[1] +
-        "  Property MhxOffsetZ %.4f ;\n" % amt.origin[2])
-    fp.write("""
+"""
+end Mesh
+""" +
+"Object %sMesh MESH %sMesh\n"  % (env.name, env.name) +
+"  Property MhxOffsetX %.4f ;\n" % ox +
+"  Property MhxOffsetY %.4f ;\n" % oy +
+"  Property MhxOffsetZ %.4f ;\n" % oz +
+"""
   layers Array 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  ;
 #if toggle&T_Armature
 """)
 
     writeArmatureModifier(fp, env, None)
 
-    fp.write("  parent Refer Object %s ;\n" % amt.name)
-    fp.write("""
+    fp.write(
+"  parent Refer Object %s ;" % env.name +
+"""
   parent_type 'OBJECT' ;
 #endif
   color Array 1.0 1.0 1.0 1.0  ;
@@ -127,7 +127,7 @@ end Mesh
 end Object
 """)
 
-    writeHideAnimationData(fp, amt, "", amt.name)
+    writeHideAnimationData(fp, amt, "", env.name)
     return
 
 
@@ -142,21 +142,22 @@ def writeArmatureModifier(fp, env, proxy):
     if (config.cage and
         not (proxy and proxy.cage)):
 
-        fp.write("""
+        fp.write(
+"""
   #if toggle&T_Cage
     Modifier MeshDeform MESH_DEFORM
       invert_vertex_group False ;
-""")
-        fp.write("  object Refer Object %sCageMesh ;" % amt.name)
-        fp.write("""
+""" +
+"  object Refer Object %sCageMesh ;" % env.name +
+"""
       precision 6 ;
       use_dynamic_bind True ;
     end Modifier
     Modifier Armature ARMATURE
       invert_vertex_group False ;
-""")
-        fp.write("  object Refer Object %s ;" % amt.name)
-        fp.write("""
+""" +
+"  object Refer Object %s ;" % env.name +
+"""
       use_bone_envelopes False ;
       use_multi_modifier True ;
       use_vertex_groups True ;
@@ -164,9 +165,9 @@ def writeArmatureModifier(fp, env, proxy):
     end Modifier
   #else
     Modifier Armature ARMATURE
-""")
-        fp.write("  object Refer Object %s ;" % amt.name)
-        fp.write("""
+""" +
+"  object Refer Object %s ;" % env.name +
+"""
       use_bone_envelopes False ;
       use_vertex_groups True ;
     end Modifier
@@ -175,11 +176,12 @@ def writeArmatureModifier(fp, env, proxy):
 
     else:
 
-        fp.write("""
+        fp.write(
+"""
     Modifier Armature ARMATURE
-""")
-        fp.write("  object Refer Object %s ;" % amt.name)
-        fp.write("""
+""" +
+"  object Refer Object %s ;" % env.name +
+"""
       use_bone_envelopes False ;
       use_vertex_groups True ;
     end Modifier
@@ -207,13 +209,11 @@ MaterialNumbers = {
 }
 
 def writeFaceNumbers(fp, env):
-    amt = env.armature
-
-    if amt.human.uvset:
-        for ftn in amt.human.uvset.faceNumbers:
+    if env.human.uvset:
+        for ftn in env.human.uvset.faceNumbers:
             fp.write(ftn)
     else:
-        obj = amt.human.meshData
+        obj = env.human.meshData
         fmats = numpy.zeros(len(obj.coord), int)
         for fn,mtl in obj.materials.items():
             fmats[fn] = MaterialNumbers[mtl]
@@ -259,19 +259,19 @@ def writeFaceNumbers(fp, env):
 #   Material access
 #-------------------------------------------------------------------------------
 
-def writeBaseMaterials(fp, amt):
-    if amt.human.uvset:
-        for mat in amt.human.uvset.materials:
-            fp.write("  Material %s_%s ;\n" % (amt.name, mat.name))
+def writeBaseMaterials(fp, env):
+    if env.human.uvset:
+        for mat in env.human.uvset.materials:
+            fp.write("  Material %s_%s ;\n" % (env.name, mat.name))
     else:
         fp.write(
-"  Material %sSkin ;\n" % amt.name +
-"  Material %sShiny ;\n" % amt.name +
-"  Material %sInvisio ;\n" % amt.name +
-"  Material %sRed ;\n" % amt.name +
-"  Material %sGreen ;\n" % amt.name +
-"  Material %sBlue ;\n" % amt.name +
-"  Material %sYellow ;\n" % amt.name
+"  Material %sSkin ;\n" % env.name +
+"  Material %sShiny ;\n" % env.name +
+"  Material %sInvisio ;\n" % env.name +
+"  Material %sRed ;\n" % env.name +
+"  Material %sGreen ;\n" % env.name +
+"  Material %sBlue ;\n" % env.name +
+"  Material %sYellow ;\n" % env.name
 )
 
 

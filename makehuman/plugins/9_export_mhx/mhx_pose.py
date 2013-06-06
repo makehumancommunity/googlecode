@@ -47,7 +47,7 @@ def writePose(fp, env):
     proxyShapes('Hair', 'T_Clothes', env, fp)
 
     fp.write("#if toggle&T_Mesh\n")
-    writeShapeKeys(fp, env, "%sMesh" % amt.name, None)
+    writeShapeKeys(fp, env, "%sMesh" % env.name, None)
 
     fp.write("""
 #endif
@@ -58,16 +58,16 @@ def writePose(fp, env):
 """)
 
     fp.write(
-        "Pose %s\n" % amt.name +
+        "Pose %s\n" % env.name +
         "end Pose\n")
     #amt.writeAllActions(fp)
 
-    fp.write("Pose %s\n" % amt.name)
+    fp.write("Pose %s\n" % env.name)
     amt.writeControlPoses(fp, config)
     fp.write("  ik_solver 'LEGACY' ;\nend Pose\n")
 
     if amt.options.rigtype == "mhx":
-        fp.write("AnimationData %s True\n" % amt.name)
+        fp.write("AnimationData %s True\n" % env.name)
         amt.writeDrivers(fp)
         fp.write(
 """
@@ -78,7 +78,7 @@ def writePose(fp, env):
 end AnimationData
 """)
 
-    fp.write("CorrectRig %s ;\n" % amt.name)
+    fp.write("CorrectRig %s ;\n" % env.name)
 
     fp.write("""
 #endif
@@ -91,11 +91,10 @@ end AnimationData
 #-------------------------------------------------------------------------------
 
 def proxyShapes(typ, test, env, fp):
-    amt = env.armature
     fp.write("#if toggle&%s\n" % test)
     for proxy in env.proxies.values():
         if proxy.name and proxy.type == typ:
-            writeShapeKeys(fp, env, amt.name+proxy.name+"Mesh", proxy)
+            writeShapeKeys(fp, env, env.name+proxy.name+"Mesh", proxy)
     fp.write("#endif\n")
 
 
@@ -107,7 +106,7 @@ def writeCorrectives(fp, env, drivers, folder, landmarks, proxy, t0, t1):
     except KeyError:
         shapeList = None
     if shapeList is None:
-        shapeList = exportutils.shapekeys.readCorrectives(drivers, amt.human, folder, landmarks, t0, t1)
+        shapeList = exportutils.shapekeys.readCorrectives(drivers, env.human, folder, landmarks, t0, t1)
         amt.loadedShapes[folder] = shapeList
     for (shape, pose, lr) in shapeList:
         empty = writeShape(fp, pose, lr, shape, 0, 1, proxy, env.config.scale)
@@ -152,6 +151,7 @@ def writeShapeKeys(fp, env, name, proxy):
     isHuman = ((not proxy) or proxy.type == 'Proxy')
     isHair = (proxy and proxy.type == 'Hair')
     useCorrectives = (
+        False and
         config.bodyShapes and
         amt.options.rigtype == "mhx" and
         ((not proxy) or (proxy.type in ['Proxy', 'Clothes']))
@@ -164,7 +164,7 @@ def writeShapeKeys(fp, env, name, proxy):
 "  end ShapeKey\n")
 
     if isHuman and amt.options.facepanel:
-        shapeList = exportutils.shapekeys.readFaceShapes(amt.human, rig_panel.BodyLanguageShapeDrivers, 0.6, 0.7)
+        shapeList = exportutils.shapekeys.readFaceShapes(env.human, rig_panel.BodyLanguageShapeDrivers, 0.6, 0.7)
         for (pose, shape, lr, min, max) in shapeList:
             writeShape(fp, pose, lr, shape, min, max, proxy, scale)
 
@@ -174,18 +174,16 @@ def writeShapeKeys(fp, env, name, proxy):
         except KeyError:
             shapeList = None
         if shapeList is None:
-            shapeList = exportutils.shapekeys.readExpressionUnits(amt.human, 0.7, 0.9)
+            shapeList = exportutils.shapekeys.readExpressionUnits(env.human, 0.7, 0.9)
             env.loadedShapes["expressions"] = shapeList
         for (pose, shape) in shapeList:
             writeShape(fp, pose, "Sym", shape, -1, 2, proxy, scale)
 
     if useCorrectives:
-        from . import rig_arm
-        from . import rig_leg
-        shoulder = writeCorrectives(fp, env, rig_shoulder.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)
-        hips = writeCorrectives(fp, env, rig_leg.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)
-        elbow = writeCorrectives(fp, env, rig_arm.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)
-        knee = writeCorrectives(fp, env, rig_leg.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)
+        shoulder = writeCorrectives(fp, env, rig_mhx.ShoulderTargetDrivers, "shoulder", "shoulder", proxy, 0.88, 0.90)
+        hips = writeCorrectives(fp, env, rig_mhx.HipTargetDrivers, "hips", "hips", proxy, 0.90, 0.92)
+        elbow = writeCorrectives(fp, env, rig_mhx.ElbowTargetDrivers, "elbow", "body", proxy, 0.92, 0.94)
+        knee = writeCorrectives(fp, env, rig_mhx.KneeTargetDrivers, "knee", "knee", proxy, 0.94, 0.96)
 
     if isHuman:
         for path,name in env.customTargetFiles:
@@ -202,20 +200,20 @@ def writeShapeKeys(fp, env, name, proxy):
     fp.write("  AnimationData None (toggle&T_Symm==0)\n")
 
     if useCorrectives:
-        mhx_drivers.writeTargetDrivers(fp, rig_shoulder.ShoulderTargetDrivers, amt.name, shoulder)
-        mhx_drivers.writeTargetDrivers(fp, rig_leg.HipTargetDrivers, amt.name, hips)
-        mhx_drivers.writeTargetDrivers(fp, rig_arm.ElbowTargetDrivers, amt.name, elbow)
-        mhx_drivers.writeTargetDrivers(fp, rig_leg.KneeTargetDrivers, amt.name, knee)
+        mhx_drivers.writeTargetDrivers(fp, rig_mhx.ShoulderTargetDrivers, env.name, shoulder)
+        mhx_drivers.writeTargetDrivers(fp, rig_mhx.HipTargetDrivers, env.name, hips)
+        mhx_drivers.writeTargetDrivers(fp, rig_mhx.ElbowTargetDrivers, env.name, elbow)
+        mhx_drivers.writeTargetDrivers(fp, rig_mhx.KneeTargetDrivers, env.name, knee)
 
-        mhx_drivers.writeRotDiffDrivers(fp, rig_arm.ArmShapeDrivers, proxy)
-        mhx_drivers.writeRotDiffDrivers(fp, rig_leg.LegShapeDrivers, proxy)
-        #mhx_drivers.writeShapePropDrivers(fp, amt, rig_body.bodyShapes, proxy, "Mha")
+        mhx_drivers.writeRotDiffDrivers(fp, rig_mhx.ArmShapeDrivers, proxy)
+        mhx_drivers.writeRotDiffDrivers(fp, rig_mhx.LegShapeDrivers, proxy)
+        #mhx_drivers.writeShapePropDrivers(fp, amt, rig_mhx.bodyShapes, proxy, "Mha")
 
     fp.write("#if toggle&T_ShapeDrivers\n")
 
     if isHuman:
         for path,name in env.customTargetFiles:
-            mhx_drivers.writeShapePropDrivers(fp, amt, [name], proxy, "")
+            mhx_drivers.writeShapePropDrivers(fp, amt, [name], proxy, "Mhc")
 
         if config.expressions:
             mhx_drivers.writeShapePropDrivers(fp, amt, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")

@@ -33,16 +33,16 @@ def listCustomFiles(config):
     files = []
     if config.useCustomTargets:
         folder = os.path.join(mh.getPath(''), 'custom')
-        files += readCustomFolder(folder)
+        files += readCustomFolder(folder, config)
     return files
 
 
-def readCustomFolder(folder):
+def readCustomFolder(folder, config):
     files = []
     for file in os.listdir(folder):
         path = os.path.join(folder, file)
         if os.path.isdir(path):
-            files += readCustomFolder(path)
+            files += readCustomFolder(path, config)
         else:
             (fname, ext) = os.path.splitext(file)
             if ext == ".target":

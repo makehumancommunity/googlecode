@@ -51,7 +51,9 @@ from . import mhx_pose
 
 
 class MhxEnvironment:
-    def __init__(self, amt, config, proxies):
+    def __init__(self, name, human, amt, config, proxies):
+        self.name = name
+        self.human = human
         self.armature = amt
         self.config = config
         self.proxies = proxies
@@ -86,7 +88,7 @@ def exportMhx(human, filepath, config):
         "#endif\n")
 
     proxies = scanProxies(human, config)
-    env = MhxEnvironment(amt, config, proxies)
+    env = MhxEnvironment(name, human, amt, config, proxies)
     amt.setup()
 
     if not config.cage:

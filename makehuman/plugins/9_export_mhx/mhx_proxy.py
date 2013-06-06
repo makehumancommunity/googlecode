@@ -57,7 +57,6 @@ def writeProxyType(type, test, env, fp, t0, t1):
 #-------------------------------------------------------------------------------
 
 def writeProxy(fp, env, proxy):
-    amt = env.armature
     scale = env.config.scale
 
     fp.write("""
@@ -75,11 +74,12 @@ NoScale False ;
 
     # Proxy mesh
 
-    name = amt.name + proxy.name
+    name = env.name + proxy.name
     fp.write(
         "Mesh %sMesh %sMesh \n" % (name, name) +
         "  Verts\n")
 
+    amt = env.armature
     ox = amt.origin[0]
     oy = amt.origin[1]
     oz = amt.origin[2]
@@ -132,9 +132,9 @@ NoScale False ;
     mhx_mesh.writeVertexGroups(fp, env, proxy)
 
     if proxy.useBaseMaterials:
-        mhx_mesh.writeBaseMaterials(fp, amt)
+        mhx_mesh.writeBaseMaterials(fp, env)
     elif proxy.material:
-        fp.write("  Material %s%s ;" % (amt.name, proxy.material.name))
+        fp.write("  Material %s%s ;" % (env.name, proxy.material.name))
 
 
     fp.write("""
@@ -143,10 +143,10 @@ end Mesh
 
     # Proxy object
 
-    name = amt.name + proxy.name
+    name = env.name + proxy.name
     fp.write(
         "Object %sMesh MESH %sMesh \n" % (name, name) +
-        "  parent Refer Object %s ;\n" % amt.name +
+        "  parent Refer Object %s ;\n" % env.name +
         "  hide False ;\n" +
         "  hide_render False ;\n")
     if proxy.wire:
@@ -168,7 +168,7 @@ end Mesh
 """)
 
     mhx_mesh.writeArmatureModifier(fp, env, proxy)
-    writeProxyModifiers(fp, amt, proxy)
+    writeProxyModifiers(fp, env, proxy)
 
     fp.write("""
   parent_type 'OBJECT' ;
@@ -184,13 +184,13 @@ end Mesh
 end Object
 """)
 
-    mhx_mesh.writeHideAnimationData(fp, amt, amt.name, proxy.name)
+    mhx_mesh.writeHideAnimationData(fp, env, env.name, proxy.name)
 
 #-------------------------------------------------------------------------------
 #
 #-------------------------------------------------------------------------------
 
-def writeProxyModifiers(fp, amt, proxy):
+def writeProxyModifiers(fp, env, proxy):
     for mod in proxy.modifiers:
         if mod[0] == 'subsurf':
             fp.write(
@@ -202,7 +202,7 @@ def writeProxyModifiers(fp, amt, proxy):
             offset = mod[1]
             fp.write(
                 "    Modifier ShrinkWrap SHRINKWRAP\n" +
-                "      target Refer Object %sMesh ;\n" % amt.name +
+                "      target Refer Object %sMesh ;\n" % env.name +
                 "      offset %.4f ;\n" % offset +
                 "      use_keep_above_surface True ;\n" +
                 "    end Modifier\n")
@@ -219,7 +219,6 @@ def writeProxyModifiers(fp, amt, proxy):
 
 
 def copyProxyMaterialFile(fp, pair, mat, proxy, env):
-    amt = env.armature
     prxList = sortedMasks(env)
     nMasks = countMasks(proxy, prxList)
     tex = None
@@ -233,24 +232,24 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, env):
         if len(words) == 0:
             fp.write(line)
         elif words[0] == 'Texture':
-            words[1] = amt.name + words[1]
+            words[1] = env.name + words[1]
             for word in words:
                 fp.write("%s " % word)
             fp.write("\n")
             tex = os.path.join(folder,words[1])
         elif words[0] == 'Material':
-            words[1] = amt.name + words[1]
+            words[1] = env.name + words[1]
             for word in words:
                 fp.write("%s " % word)
             fp.write("\n")
             addProxyMaskMTexs(fp, mat, proxy, prxList, tex)
         elif words[0] == 'MTex':
-            words[2] = amt.name + words[2]
+            words[2] = env.name + words[2]
             for word in words:
                 fp.write("%s " % word)
             fp.write("\n")
         elif words[0] == 'Filename':
-            file = env.config.getTexturePath(words[1], folder, True, amt.human)
+            file = env.config.getTexturePath(words[1], folder, True, env.human)
             fp.write("  Filename %s ;\n" % file)
         else:
             fp.write(line)
@@ -259,13 +258,12 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, env):
 
 
 def writeProxyTexture(fp, texture, mat, extra, env):
-    amt = env.armature
     config = env.config
 
     (folder,name) = texture
     tex = os.path.join(folder,name)
     log.debug("Tex %s", tex)
-    texname = amt.name + os.path.basename(tex)
+    texname = env.name + os.path.basename(tex)
     fromDir = os.path.dirname(tex)
     texfile = config.getTexturePath(tex, fromDir, True, None)
     fp.write(
@@ -282,7 +280,6 @@ def writeProxyTexture(fp, texture, mat, extra, env):
 
 
 def writeProxyMaterial(fp, mat, proxy, env):
-    amt = env.armature
     alpha = mat.alpha
     tex = None
     bump = None
@@ -291,9 +288,9 @@ def writeProxyMaterial(fp, mat, proxy, env):
     transparency = None
     if proxy.texture:
         uuid = proxy.getUuid()
-        if uuid in amt.human.clothesObjs.keys() and amt.human.clothesObjs[uuid]:
+        if uuid in env.human.clothesObjs.keys() and env.human.clothesObjs[uuid]:
             # Apply custom texture
-            clothesObj = amt.human.clothesObjs[uuid]
+            clothesObj = env.human.clothesObjs[uuid]
             texture = clothesObj.mesh.texture
             texPath = (os.path.dirname(texture), os.path.basename(texture))
             (tex,texname) = writeProxyTexture(fp, texPath, mat, "", env)
@@ -314,7 +311,7 @@ def writeProxyMaterial(fp, mat, proxy, env):
     nMasks = countMasks(proxy, prxList)
     slot = nMasks
 
-    fp.write("Material %s%s \n" % (amt.name, mat.name))
+    fp.write("Material %s%s \n" % (env.name, mat.name))
     addProxyMaskMTexs(fp, mat, proxy, prxList, tex)
     writeProxyMaterialSettings(fp, mat.settings)
     uvlayer = proxy.uvtexLayerName[proxy.textureLayer]

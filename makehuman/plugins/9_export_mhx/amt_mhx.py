@@ -46,18 +46,14 @@ class MhxArmature(ExportArmature):
         ExportArmature.__init__(self, name, human, options)
         self.parser = MhxParser(self)
         self.visibleLayers = "0068056b"
+        self.recalcRoll = []
+        self.objectProps = [("MhxRig", '"MHX"')]
 
 
     def setupCustomShapes(self, fp):
-        mhx_armature.writeCustomEmpty(fp)
-        fp.write(self.parser.gizmos)
-        mhx_armature.setupSimpleCustomTargets(fp)
-        if self.options.facepanel:
-            import gizmos_panel
-            setupCube(fp, "MHCube025", 0.25, 0)
-            setupCube(fp, "MHCube05", 0.5, 0)
-            gizmos = gizmos_panel.asString()
-            fp.write(gizmos)
+        import gizmos_mhx, gizmos_general
+        gizmos = (gizmos_mhx.asString() + gizmos_general.asString())
+        self.writeGizmos(fp, gizmos)
 
 
     def writeControlPoses(self, fp, options):
@@ -203,7 +199,6 @@ class MhxArmature(ExportArmature):
 class MhxParser(PythonParser):
 
     def __init__(self, amt):
-        import gizmos_mhx, gizmos_general
 
         PythonParser.__init__(self, amt)
         self.useDeformBones = True
@@ -222,7 +217,6 @@ class MhxParser(PythonParser):
             ('IK_L', 'THEME03'),
             ('IK_R', 'THEME04'),
         ]
-        self.gizmos = (gizmos_mhx.asString() + gizmos_general.asString())
 
         self.objectProps = [("MhxRig", '"MHX"')]
         self.armatureProps = []

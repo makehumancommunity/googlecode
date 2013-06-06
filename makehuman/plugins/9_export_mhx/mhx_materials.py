@@ -31,10 +31,9 @@ from . import mhx_drivers
 #-------------------------------------------------------------------------------
 
 def writeMaterials(fp, env):
-    amt = env.armature
     config = env.config
 
-    if amt.human.uvset:
+    if env.human.uvset:
         writeMultiMaterials(fp, env)
         return
 
@@ -44,7 +43,7 @@ def writeMaterials(fp, env):
 Image texture.png
 """)
 
-    filename = config.getTexturePath("texture.png", "data/textures", True, amt.human)
+    filename = config.getTexturePath("texture.png", "data/textures", True, env.human)
     fp.write("  Filename %s ;" % filename)
 
     fp.write("""
@@ -54,7 +53,7 @@ end Image
 Image texture_ref.png
 """)
 
-    filename = config.getTexturePath("texture_ref.png", "data/textures", True, amt.human)
+    filename = config.getTexturePath("texture_ref.png", "data/textures", True, env.human)
     fp.write("  Filename %s ;" % filename)
 
     fp.write("""
@@ -82,7 +81,7 @@ end Texture
 
     fp.write(
         "# --------------- Materials ----------------------------- #\n\n" +
-        "Material %sSkin\n" % amt.name)
+        "Material %sSkin\n" % env.name)
 
     nMasks = writeMaskMTexs(fp, env)
     fp.write("  MTex %d diffuse UV COLOR" % nMasks)
@@ -155,7 +154,7 @@ end Texture
     writeMaterialAnimationData(fp, nMasks, 2, env)
     fp.write("end Material\n\n")
 
-    fp.write("Material %sShiny\n" % amt.name)
+    fp.write("Material %sShiny\n" % env.name)
     nMasks = writeMaskMTexs(fp, env)
     fp.write("  MTex %d diffuse UV COLOR\n" % nMasks)
     fp.write("""
@@ -192,20 +191,20 @@ end Texture
     writeMaterialAnimationData(fp, nMasks, 1, env)
     fp.write("end Material\n\n")
 
-    writeSimpleMaterial(fp, "Invisio", amt, (1,1,1))
-    writeSimpleMaterial(fp, "Red", amt, (1,0,0))
-    writeSimpleMaterial(fp, "Green", amt, (0,1,0))
-    writeSimpleMaterial(fp, "Blue", amt, (0,0,1))
-    writeSimpleMaterial(fp, "Yellow", amt, (1,1,0))
+    writeSimpleMaterial(fp, "Invisio", env, (1,1,1))
+    writeSimpleMaterial(fp, "Red", env, (1,0,0))
+    writeSimpleMaterial(fp, "Green", env, (0,1,0))
+    writeSimpleMaterial(fp, "Blue", env, (0,0,1))
+    writeSimpleMaterial(fp, "Yellow", env, (1,1,0))
     return
 
 #-------------------------------------------------------------------------------
 #   Simple materials: red, green, blue
 #-------------------------------------------------------------------------------
 
-def writeSimpleMaterial(fp, name, amt, color):
+def writeSimpleMaterial(fp, name, env, color):
     fp.write(
-        "Material %s%s\n" % (amt.name, name) +
+        "Material %s%s\n" % (env.name, name) +
         "  diffuse_color Array %s %s %s  ;" % (color[0], color[1], color[2]))
 
     fp.write("""
@@ -225,15 +224,13 @@ end Material
 #-------------------------------------------------------------------------------
 
 def writeMaterialAnimationData(fp, nMasks, nTextures, env):
-    amt = env.armature
-
     fp.write("  use_textures Array")
     for n in range(nMasks):
         fp.write(" 1")
     for n in range(nTextures):
         fp.write(" 1")
     fp.write(" ;\n")
-    fp.write("  AnimationData %sMesh True\n" % amt.name)
+    fp.write("  AnimationData %sMesh True\n" % env.name)
     #mhx_drivers.writeTextureDrivers(fp, rig_panel.BodyLanguageTextureDrivers)
     writeMaskDrivers(fp, env)
     fp.write("  end AnimationData\n")
@@ -257,7 +254,7 @@ def writeMaskDrivers(fp, env):
     for prx in env.proxies.values():
         if prx.type == 'Clothes' and prx.mask:
             (dir, file) = prx.mask
-            mhx_drivers.writePropDriver(fp, amt, ["Mhh%s" % prx.name], "1-x1", 'use_textures', n)
+            mhx_drivers.writePropDriver(fp, env, ["Mhh%s" % prx.name], "1-x1", 'use_textures', n)
             n += 1
     fp.write("#endif\n")
     return
@@ -279,9 +276,8 @@ TexInfo = {
 }
 
 def writeMultiMaterials(fp, env):
-    amt = env.armature
     config = env.config
-    uvset = amt.human.uvset
+    uvset = env.human.uvset
 
     folder = os.path.dirname(uvset.filename)
     log.debug("Folder %s", folder)
@@ -289,8 +285,8 @@ def writeMultiMaterials(fp, env):
         for tex in mat.textures:
             name = os.path.basename(tex.file)
             fp.write("Image %s\n" % name)
-            #file = config.getTexturePath(tex, "data/textures", True, amt.human)
-            file = config.getTexturePath(name, folder, True, amt.human)
+            #file = config.getTexturePath(tex, "data/textures", True, env.human)
+            file = config.getTexturePath(name, folder, True, env.human)
             fp.write(
                 "  Filename %s ;\n" % file +
 #                "  alpha_mode 'PREMUL' ;\n" +
@@ -299,7 +295,7 @@ def writeMultiMaterials(fp, env):
                 "  Image %s ;\n" % name +
                 "end Texture\n\n")
 
-        fp.write("Material %s_%s\n" % (amt.name, mat.name))
+        fp.write("Material %s_%s\n" % (env.name, mat.name))
         alpha = False
         for (key, value) in mat.settings:
             if key == "alpha":
@@ -353,10 +349,8 @@ def writeMultiMaterials(fp, env):
 #-------------------------------------------------------------------------------
 
 def addMaskImage(fp, env, mask):
-    amt = env.armature
-
     (folder, file) = mask
-    path = config.getTexturePath(file, folder, True, amt.human)
+    path = env.config.getTexturePath(file, folder, True, env.human)
     fp.write(
 "Image %s\n" % file +
 "  Filename %s ;\n" % path +

@@ -42,6 +42,8 @@ class RigifyArmature(ExportArmature):
         ExportArmature.__init__(self, name, human, options)
         self.parser = RigifyParser(self)
         self.visibleLayers = "08a80caa"
+        self.recalcRoll = []
+        self.objectProps = [("MhxRig", '"Rigify"')]
 
 
     def setupCustomShapes(self, fp):
@@ -57,7 +59,6 @@ class RigifyParser(PythonParser):
         else:
             self.vertexGroupFiles = ["head", "bones", "hand"]
         self.master = None
-        self.gizmos = None
         self.headName = 'head'
 
         self.useDeformBones = False

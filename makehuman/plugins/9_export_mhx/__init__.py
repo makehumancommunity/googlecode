@@ -38,7 +38,7 @@ class MhxConfig(Config):
         self.encoding =             exporter.taskview.getEncoding()
 
         options = self.rigOptions
-        options.facepanel =         exporter.facepanel.selected
+        options.facepanel =         False # exporter.facepanel.selected
         options.feetOnGround =      exporter.feetOnGround.selected
         options.advancedSpine =     False # exporter.advancedSpine.selected
         options.rigtype =           exporter.getRigType()
@@ -49,12 +49,8 @@ class MhxConfig(Config):
 
         self.useMasks =             exporter.masks.selected
         self.expressions = options.expressions = exporter.expressions.selected
-        self.bodyShapes =           exporter.bodyShapes.selected
+        self.bodyShapes =           False # exporter.bodyShapes.selected
         self.useCustomTargets =     exporter.useCustomTargets.selected
-
-        # Used by mhx exporter
-        #self.customTargetFiles = []
-        #self.customPrefix = "Mhc"
 
 
 class ExporterMHX(Exporter):
@@ -71,9 +67,9 @@ class ExporterMHX(Exporter):
 
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
         self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))
-        self.facepanel      = options.addWidget(gui.CheckBox("Face rig", False))
-        self.bodyShapes     = options.addWidget(gui.CheckBox("Body shapes", False))
-        self.useCustomTargets = options.addWidget(gui.CheckBox("Custom shapes", False))
+        # self.facepanel      = options.addWidget(gui.CheckBox("Face rig", False))
+        # self.bodyShapes     = options.addWidget(gui.CheckBox("Body shapes", False))
+        self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
         self.masks          = options.addWidget(gui.CheckBox("Clothes masks", False))
         #self.clothesRig     = options.addWidget(gui.CheckBox("Clothes rig", False))
         #self.cage           = options.addWidget(gui.CheckBox("Cage", False))

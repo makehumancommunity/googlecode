@@ -30,10 +30,8 @@ from .mhx_armature import ExportArmature
 class BasicParser(basic.BasicParser):
 
     def __init__(self, amt):
-        import gizmos_general
 
         basic.BasicParser.__init__(self, amt)
-        self.gizmos = gizmos_general.asString()
         amt.visibleLayers = "002804aa"
 
 
@@ -46,15 +44,9 @@ class BasicArmature(ExportArmature):
 
 
     def setupCustomShapes(self, fp):
-        mhx_armature.writeCustomEmpty(fp)
-        fp.write(self.parser.gizmos)
-        mhx_armature.setupSimpleCustomTargets(fp)
-        if self.options.facepanel:
-            import gizmos_panel
-            setupCube(fp, "MHCube025", 0.25, 0)
-            setupCube(fp, "MHCube05", 0.5, 0)
-            gizmos = gizmos_panel.asString()
-            fp.write(gizmos)
+        import gizmos_general
+        gizmos = gizmos_general.asString()
+        self.writeGizmos(fp, gizmos)
 
 
     def writeDrivers(self, fp):
