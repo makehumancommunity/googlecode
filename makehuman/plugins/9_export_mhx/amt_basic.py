@@ -29,18 +29,17 @@ from .mhx_armature import ExportArmature
 
 class BasicParser(basic.BasicParser):
 
-    def __init__(self, amt):
+    def __init__(self, amt, human):
 
-        basic.BasicParser.__init__(self, amt)
-        amt.visibleLayers = "002804aa"
+        basic.BasicParser.__init__(self, amt, human)
 
 
 
 class BasicArmature(ExportArmature):
 
-    def __init__(self, name, human, options):
-        ExportArmature.__init__(self, name, human, options)
-        self.parser = BasicParser(self)
+    def __init__(self, name, options):
+        ExportArmature.__init__(self, name, options)
+        self.visibleLayers = "002804aa"
 
 
     def setupCustomShapes(self, fp):

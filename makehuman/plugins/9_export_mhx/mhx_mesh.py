@@ -24,7 +24,6 @@ Mesh
 
 import numpy
 import os
-import mh2proxy
 from . import mhx_drivers
 
 #-------------------------------------------------------------------------------
@@ -209,6 +208,8 @@ MaterialNumbers = {
 }
 
 def writeFaceNumbers(fp, env):
+    from exportutils.collect import deleteGroup
+
     if env.human.uvset:
         for ftn in env.human.uvset.faceNumbers:
             fp.write(ftn)
@@ -224,7 +225,7 @@ def writeFaceNumbers(fp, env):
 
         for fg in obj.faceGroups:
             fmask = obj.getFaceMaskForGroups([fg.name])
-            if mh2proxy.deleteGroup(fg.name, deleteGroups):
+            if deleteGroup(fg.name, deleteGroups):
                 fmats[fmask] = 4
             elif fg.name[0:6] == "joint-":
                 fmats[fmask] = 2
@@ -293,7 +294,7 @@ def writeVertexGroups(fp, env, proxy):
         writeRigWeights(fp, proxy.weights)
         return
     if proxy:
-        weights = mh2proxy.getProxyWeights(amt.vertexWeights, proxy)
+        weights = proxy.getWeights(amt.vertexWeights)
     else:
         weights = amt.vertexWeights
     writeRigWeights(fp, weights)

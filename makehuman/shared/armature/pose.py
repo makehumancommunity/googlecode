@@ -25,7 +25,6 @@ Pose
 import os
 import math
 import gui3d
-import mh2proxy
 import log
 from collections import OrderedDict
 
@@ -48,8 +47,8 @@ from .utils import *
 class Pose:
 
     def __init__(self, human, options):
-        amt = self.armature = Armature("Armature", human, options)
-        amt.parser = RigfileParser(amt)
+        amt = self.armature = Armature("Armature", options)
+        amt.parser = RigfileParser(amt, human)
         self.human = human
         self.posebones = OrderedDict()
         self.modifier = None
@@ -79,7 +78,7 @@ class Pose:
                 self.deforms.append(pb)
 
         print "PB", self.posebones.keys()
-        nVerts = len(amt.human.meshData.coord)
+        nVerts = len(self.human.meshData.coord)
         self.restCoords = np.zeros((nVerts,4), float)
         self.restCoords[:,3] = 1
         self.syncRestVerts("rest")

@@ -34,8 +34,8 @@ from .utils import *
 
 class BasicParser(PythonParser):
 
-    def __init__(self, amt):
-        PythonParser. __init__(self, amt)
+    def __init__(self, amt, human):
+        PythonParser. __init__(self, amt, human)
         self.root = "hips"
 
         if amt.options.useMuscles:

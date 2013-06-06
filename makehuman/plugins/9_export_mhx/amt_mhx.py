@@ -42,9 +42,8 @@ from armature.utils import *
 
 class MhxArmature(ExportArmature):
 
-    def __init__(self, name, human, options):
-        ExportArmature.__init__(self, name, human, options)
-        self.parser = MhxParser(self)
+    def __init__(self, name, options):
+        ExportArmature.__init__(self, name, options)
         self.visibleLayers = "0068056b"
         self.recalcRoll = []
         self.objectProps = [("MhxRig", '"MHX"')]
@@ -198,9 +197,9 @@ class MhxArmature(ExportArmature):
 
 class MhxParser(PythonParser):
 
-    def __init__(self, amt):
+    def __init__(self, amt, human):
 
-        PythonParser.__init__(self, amt)
+        PythonParser.__init__(self, amt, human)
         self.useDeformBones = True
         self.useDeformNames = True
         self.useSplitBones = True

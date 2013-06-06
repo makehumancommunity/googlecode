@@ -24,7 +24,6 @@ Pose
 
 import log
 
-import mh2proxy
 import exportutils
 
 from . import mhx_drivers
@@ -124,7 +123,7 @@ def writeShapeHeader(fp, pose, lr, min, max):
 
 def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
     if proxy:
-        pshapes = mh2proxy.getProxyShapes([("shape",shape)], proxy, scale)
+        pshapes = proxy.getShapes([("shape",shape)], scale)
         if len(pshapes) > 0:
             name,pshape = pshapes[0]
             if len(pshape.keys()) > 0:

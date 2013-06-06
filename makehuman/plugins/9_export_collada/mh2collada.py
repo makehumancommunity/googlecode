@@ -359,14 +359,14 @@ def writeMaterials(fp, stuff):
 
 
 def writeController(fp, stuff, amt, config):
-    obj = stuff.meshInfo.object
+    obj = stuff.richMesh.object
     exportutils.collect.setStuffSkinWeights(stuff, amt)
     nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
     nFaces = len(obj.fvert)
     nWeights = len(stuff.skinWeights)
     nBones = len(amt.bones)
-    nShapes = len(stuff.meshInfo.shapes)
+    nShapes = len(stuff.richMesh.shapes)
 
     fp.write('\n' +
         '    <controller id="%s-skin">\n' % stuff.name +
@@ -481,8 +481,8 @@ def writeController(fp, stuff, amt, config):
 
     # Morph controller
 
-    if stuff.meshInfo.shapes:
-        nShapes = len(stuff.meshInfo.shapes)
+    if stuff.richMesh.shapes:
+        nShapes = len(stuff.richMesh.shapes)
 
         fp.write(
             '    <controller id="%sMorph" name="%sMorph">\n' % (stuff.name, stuff.name)+
@@ -490,7 +490,7 @@ def writeController(fp, stuff, amt, config):
             '        <source id="%sTargets">\n' % (stuff.name) +
             '          <IDREF_array id="%sTargets-array" count="%d">' % (stuff.name, nShapes))
 
-        for key,_ in stuff.meshInfo.shapes:
+        for key,_ in stuff.richMesh.shapes:
             fp.write(" %sMeshMorph_%s" % (stuff.name, key))
 
         fp.write(
@@ -528,11 +528,11 @@ def writeController(fp, stuff, amt, config):
 #
 
 def writeGeometry(fp, stuff, config):
-    obj = stuff.meshInfo.object
+    obj = stuff.richMesh.object
     nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
     nWeights = len(stuff.skinWeights)
-    nShapes = len(stuff.meshInfo.shapes)
+    nShapes = len(stuff.richMesh.shapes)
 
     fp.write('\n' +
         '    <geometry id="%sMesh" name="%s">\n' % (stuff.name,stuff.name) +
@@ -618,13 +618,13 @@ def writeGeometry(fp, stuff, config):
         '      </mesh>\n' +
         '    </geometry>\n')
 
-    for name,shape in stuff.meshInfo.shapes:
+    for name,shape in stuff.richMesh.shapes:
         writeShapeKey(fp, name, shape, stuff, config)
     return
 
 
 def writeShapeKey(fp, name, shape, stuff, config):
-    obj = stuff.meshInfo.object
+    obj = stuff.richMesh.object
     nVerts = len(obj.coord)
 
     # Verts
@@ -712,7 +712,7 @@ def writeShapeKey(fp, name, shape, stuff, config):
 #
 
 def writePolygons(fp, stuff, config):
-    obj = stuff.meshInfo.object
+    obj = stuff.richMesh.object
     fp.write(
         '        <polygons count="%d">\n' % len(obj.fvert) +
         '          <input offset="0" semantic="VERTEX" source="#%s-Vertex"/>\n' % stuff.name +
@@ -731,7 +731,7 @@ def writePolygons(fp, stuff, config):
     return
 
 def writePolylist(fp, stuff, config):
-    obj = stuff.meshInfo.object
+    obj = stuff.richMesh.object
     fp.write(
         '        <polylist count="%d">\n' % len(obj.fvert) +
         '          <input offset="0" semantic="VERTEX" source="#%s-Vertex"/>\n' % stuff.name)
@@ -779,7 +779,7 @@ def writePolylist(fp, stuff, config):
 #
 
 def checkFaces(stuff, nVerts, nUvVerts):
-    obj = stuff.meshInfo.object
+    obj = stuff.richMesh.object
     for fn,fverts in enumerate(obj.fvert):
         for n,vn in enumerate(fverts):
             uv = obj.fuvs[fn][n]
@@ -801,7 +801,7 @@ def writeNode(fp, pad, stuff, amt, config):
         '%s    0 0 0 1\n' % pad +
         '%s  </matrix>\n' % pad +
         '%s  <instance_controller url="#%s-skin">\n' % (pad, stuff.name) +
-        '%s    <skeleton>#%sSkeleton</skeleton>\n' % (pad, amt.roots[0]))
+        '%s    <skeleton>#%sSkeleton</skeleton>\n' % (pad, amt.roots[0].name))
 
     (texname, texfile, matname) = exportutils.collect.getTextureNames(stuff)
     if matname:

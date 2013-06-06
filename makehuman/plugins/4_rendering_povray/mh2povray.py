@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 POV-Ray Export functions.
 
 **Project Name:**      MakeHuman
@@ -21,15 +21,15 @@ POV-Ray Export functions.
 Abstract
 --------
 
-This module implements functions to export a human model in POV-Ray format. POV-Ray is a 
-Raytracing application (a renderer) that is free to download and use. The generated text 
-file contains POV-Ray Scene Description Language (SDL), which consists of human-readable 
-instructions for building 3D scenes. 
+This module implements functions to export a human model in POV-Ray format. POV-Ray is a
+Raytracing application (a renderer) that is free to download and use. The generated text
+file contains POV-Ray Scene Description Language (SDL), which consists of human-readable
+instructions for building 3D scenes.
 
 This module supports the export of a simple mesh2 object or the export of arrays of data
-with accompanying macros to assemble POV-Ray objects. Both formats include some handy 
-variable and texture definitions that are written into a POV-Ray include file. A POV-Ray 
-scene file is also written to the output directory containing a range of examples 
+with accompanying macros to assemble POV-Ray objects. Both formats include some handy
+variable and texture definitions that are written into a POV-Ray include file. A POV-Ray
+scene file is also written to the output directory containing a range of examples
 illustrating the use of the include file.
 
 The filenames and object names exported are based on the human's current name,
@@ -79,18 +79,18 @@ def povrayExport(settings):
 
     settings['name'] = string.replace(getHumanName(), " ", "_")
     log.message('POV-Ray Export of object: %s', settings['name'])
-  
+
     camera = gui3d.app.modelCamera
     settings['resw'] = gui3d.app.settings.get('rendering_width', 800)
     settings['resh'] = gui3d.app.settings.get('rendering_height', 600)
-  
+
     path = os.path.join(mh.getPath('render'),
                         gui3d.app.settings.get('povray_render_dir', 'pov_output'),
                         "%s.inc" % settings['name'])
-    
+
     povray_bin = (gui3d.app.settings.get('povray_bin', ''))
-   
-    # try to use the appropriate binary 
+
+    # try to use the appropriate binary
     if os.path.exists(povray_bin):
         exetype = settings['bintype']
         if exetype == 'win64':
@@ -116,13 +116,13 @@ def povrayExport(settings):
 
             outputDirectory = os.path.dirname(path)
             log.debug('out folder: %s', outputDirectory)
-            
+
             # Prepare command line.
             if os.name == 'nt':
                 cmdLine = (povray_bin, 'MHRENDER', '/EXIT')
             else:
                 cmdLine = (povray_bin, 'MHRENDER')
-                
+
             # Pass parameters by writing an .ini file.
             iniFD = open(os.path.join(outputDirectory, 'MHRENDER.ini'), 'w')
             iniFD.write('Input_File_Name="%s.pov"\n' % settings['name'] +
@@ -140,22 +140,22 @@ def povrayExport(settings):
             gui3d.app.prompt(
                 'POV-Ray not found',
                 'You don\'t seem to have POV-Ray installed or the path is incorrect.',
-                'Download', 'Cancel', downloadPovRay)        
+                'Download', 'Cancel', downloadPovRay)
 
 def povrayExportArray(obj, camera, path, settings):
     """
-    This function exports data in the form of arrays of data the can be used to 
-    reconstruct a humanoid object using some very simple POV-Ray macros. These macros 
+    This function exports data in the form of arrays of data the can be used to
+    reconstruct a humanoid object using some very simple POV-Ray macros. These macros
     can build this data into a variety of different POV-Ray objects, including a
-    mesh2 object that represents the human figure much as it was displayed in MakeHuman. 
+    mesh2 object that represents the human figure much as it was displayed in MakeHuman.
 
-    These macros can also generate a union of spheres at the vertices and a union of 
-    cylinders that follow the edges of the mesh. A parameter on the mesh2 macro can be 
-    used to generate a slightly inflated or deflated mesh. 
+    These macros can also generate a union of spheres at the vertices and a union of
+    cylinders that follow the edges of the mesh. A parameter on the mesh2 macro can be
+    used to generate a slightly inflated or deflated mesh.
 
-    The generated output file always starts with a standard header, is followed by a set 
-    of array definitions containing the object data and is ended by a standard set of 
-    POV-Ray object definitions. 
+    The generated output file always starts with a standard header, is followed by a set
+    of array definitions containing the object data and is ended by a standard set of
+    POV-Ray object definitions.
 
     Parameters
     ----------
@@ -165,10 +165,10 @@ def povrayExportArray(obj, camera, path, settings):
       uv-mapping data and Face Groups defined.
 
     camera:
-      *Camera object*. The camera to render from. 
+      *Camera object*. The camera to render from.
 
     path:
-      *string*. The file system path to the output files that need to be generated. 
+      *string*. The file system path to the output files that need to be generated.
     """
 
   # Certain files and blocks of SDL are mostly static and can be copied directly
@@ -227,11 +227,11 @@ def povrayExportArray(obj, camera, path, settings):
   # Declare POV_Ray variables containing the current makehuman camera.
 
     povrayCameraData(camera, resolution, outputFileDescriptor)
-    
+
     outputFileDescriptor.write('#declare MakeHuman_TranslateX      = %s;\n' % -obj.x)
     outputFileDescriptor.write('#declare MakeHuman_TranslateY      = %s;\n' % obj.y)
     outputFileDescriptor.write('#declare MakeHuman_TranslateZ      = %s;\n\n' % obj.z)
-    
+
     outputFileDescriptor.write('#declare MakeHuman_RotateX         = %s;\n' % obj.rx)
     outputFileDescriptor.write('#declare MakeHuman_RotateY         = %s;\n' % -obj.ry)
     outputFileDescriptor.write('#declare MakeHuman_RotateZ         = %s;\n\n' % obj.rz)
@@ -381,8 +381,8 @@ def writeConstants(hfile, settings):
 
 def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     """
-    This function exports data in the form of a mesh2 humanoid object. The POV-Ray 
-    file generated is fairly inflexible, but is highly efficient. 
+    This function exports data in the form of a mesh2 humanoid object. The POV-Ray
+    file generated is fairly inflexible, but is highly efficient.
 
     Parameters
     ----------
@@ -392,7 +392,7 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
       uv-mapping data and Face Groups defined.
 
     camera:
-      *Camera object*. The camera to render from. 
+      *Camera object*. The camera to render from.
 
     path:
       *string*. The file system path to the output files that need to be generated.
@@ -427,7 +427,7 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
         except:
             log.error('Error creating export directory.')
             return 0
-    
+
     # Open the output file in Write mode
     try:
         outputFileDescriptor = open(path, 'w')
@@ -453,14 +453,14 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     povrayWriteMesh2(outputFileDescriptor, stuffs, lambda p: progress(progbase+p*(0.9-progbase),"Writing Objects"))
     progbase = 0.9
     nextpb = 0.95
-                                            
+
     # Copy texture definitions to the output file.
     progress(progbase,"Writing Materials")
     writeLights(settings['scene'], outputFileDescriptor)
     hmatfile = open(staticFile, 'r')
     matlines = hmatfile.read()
     hmatfile.close()
-    matlines = matlines.replace('%%spec%%', str(settings['skinoil']*settings['moist']))    
+    matlines = matlines.replace('%%spec%%', str(settings['skinoil']*settings['moist']))
     matlines = matlines.replace('%%edss%%', str(settings['skinoil']*(1-settings['moist'])))
     matlines = matlines.replace('%%rough%%', str(settings['rough']))
     if settings['usebump']:
@@ -468,33 +468,33 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
         matlines = matlines.replace(
             '%%normal%%','bump_map {%s "%s_bump.%s" bump_size %s interpolate 2}' % (
                 imgtype, stuffs[0].name,(stuffs[0].bump[1].split("."))[1],str(
-                    settings['wrinkles'])))         
+                    settings['wrinkles'])))
         if settings['SSS']:
             matlines = matlines.replace(
                 '%%bluenormal%%','bump_map {%s "%s_bump.%s" bump_size 3*%s interpolate 2}' % (
-                    imgtype, stuffs[0].name,(stuffs[0].bump[1].split("."))[1],str(settings['wrinkles'])))         
+                    imgtype, stuffs[0].name,(stuffs[0].bump[1].split("."))[1],str(settings['wrinkles'])))
             matlines = matlines.replace(
                 '%%greennormal%%','bump_map {png "%s_sss_greenbump.png" bump_size 3*%s interpolate 2}' % (
-                    stuffs[0].name, str(settings['wrinkles'])))         
+                    stuffs[0].name, str(settings['wrinkles'])))
             matlines = matlines.replace(
                 '%%rednormal%%','bump_map {png "%s_sss_redbump.png" bump_size 3*%s interpolate 2}' % (
-                    stuffs[0].name, str(settings['wrinkles'])))         
+                    stuffs[0].name, str(settings['wrinkles'])))
     else:
         matlines = matlines.replace(
-            '%%normal%%','wrinkles %s scale 0.0002' % str(settings['wrinkles']))         
+            '%%normal%%','wrinkles %s scale 0.0002' % str(settings['wrinkles']))
         if settings['SSS']:
             matlines = matlines.replace(
-                '%%bluenormal%%','wrinkles 3*%s scale 0.0002' % str(settings['wrinkles']))         
+                '%%bluenormal%%','wrinkles 3*%s scale 0.0002' % str(settings['wrinkles']))
             matlines = matlines.replace(
-                '%%greennormal%%','wrinkles 1.5*%s scale 0.0004' % str(settings['wrinkles']))         
+                '%%greennormal%%','wrinkles 1.5*%s scale 0.0004' % str(settings['wrinkles']))
             matlines = matlines.replace(
                 '%%rednormal%%','wrinkles 0.75*%s scale 0.0006' % str(settings['wrinkles']))
-    matlines = matlines.replace('%%name%%', stuffs[0].name)    
+    matlines = matlines.replace('%%name%%', stuffs[0].name)
     matlines = matlines.replace(
         '%%ambience%%','<%f,%f,%f>' % settings['scene'].environment.ambience)
     outputFileDescriptor.write(matlines)
     outputFileDescriptor.write('\n')
-    
+
     progress(progbase+0.65*(nextpb-progbase),"Writing Materials")
     writeItemsMaterials(outputFileDescriptor, stuffs, settings, outputDirectory)
     outputFileDescriptor.close()
@@ -505,7 +505,7 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
 
     nextpb = 1.0
     writeTextures(stuffs, outputDirectory, lambda p: progress(progbase+p*(nextpb-progbase),"Writing Textures"))
-    
+
     progress(1,"Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
 
 def writeTextures(stuffs, outDir, progressCallback = None):
@@ -515,7 +515,7 @@ def writeTextures(stuffs, outDir, progressCallback = None):
         else:
             progressCallback(prog)
     progress(0)
-    
+
     i = 0.0
     stuffnum = float(len(stuffs))
     for stuff in stuffs:
@@ -541,7 +541,7 @@ def writeTextures(stuffs, outDir, progressCallback = None):
                     stuff.displacement[1].split("."))[1])))
         i += 1.0
         progress(i/stuffnum)
-        
+
 def writeItemsMaterials(hfile, stuffs, settings, outDir):
     for stuff in stuffs[1:]:
         texdata = getChannelData(stuff.texture)
@@ -583,8 +583,8 @@ def writeItemsMaterials(hfile, stuffs, settings, outDir):
             elif settings['hairShine']:
                 inlines = inlines.replace (
                     "%%bumpmap%%", 'png "%s_alpha.png"' % stuff.name)
-        else:               
-            if texdata:                
+        else:
+            if texdata:
                 inlines = inlines.replace (
                     "%%texture%%", 'image_map {%s "%s_texture.%s" interpolate 2}' %
                     (texdata[1], stuff.name, stuff.texture[1].split(".")[1]))
@@ -614,7 +614,7 @@ def getChannelData(value):
         return file,type
     else:
         return None
-                
+
 def povrayWriteMesh2(hfile, stuffs, progressCallback = None):
 
     def progress(prog):
@@ -623,11 +623,11 @@ def povrayWriteMesh2(hfile, stuffs, progressCallback = None):
         else:
             progressCallback(prog)
     progress(0)
-        
+
     i = 0.0
     stuffnum = float(len(stuffs))
     for stuff in stuffs:
-        obj = stuff.meshInfo.object
+        obj = stuff.richMesh.object
 
         hfile.write('// Mesh2 object definition\n')
         hfile.write('#declare %s_Mesh2Object = mesh2 {\n' % stuff.name)
@@ -645,14 +645,14 @@ def povrayWriteMesh2(hfile, stuffs, progressCallback = None):
             hfile.write('<%s,%s,%s>' % (-no[0],no[1],no[2]))
         hfile.write('\n  }\n\n')
         progress((i+0.286)/stuffnum)
-    
+
         # UV Vectors
         hfile.write('  uv_vectors {\n      %s\n  ' % len(obj.texco))
         for uv in obj.texco:
-            hfile.write('<%s,%s>' % tuple(uv))        
+            hfile.write('<%s,%s>' % tuple(uv))
         hfile.write('\n  }\n\n')
         progress((i+0.428)/stuffnum)
-        
+
         nTriangles = 2*len(obj.fvert) # MH faces are quads.
 
         hfile.write('  face_indices {\n      %s\n  ' % nTriangles)
@@ -672,7 +672,7 @@ def povrayWriteMesh2(hfile, stuffs, progressCallback = None):
 
         # Write the end squiggly bracket for the mesh2 object declaration
         hfile.write('\n      uv_mapping\n}\n\n')
-        
+
         i += 1.0
         progress(i/stuffnum)
 
@@ -686,7 +686,7 @@ def povrayWriteArray(hfile, stuffs, progressCallback = None):
     progress(0)
 
     obj = stuffs[0].object
-    
+
     # Vertices
     hfile.write('#declare MakeHuman_VertexArray = array[%s] {\n  ' % len(obj.coord))
     for co in obj.coord:
@@ -704,7 +704,7 @@ def povrayWriteArray(hfile, stuffs, progressCallback = None):
     # UV Vectors
     hfile.write('#declare MakeHuman_UVArray = array[%s] {\n  ' % len(obj.texco))
     for uv in obj.texco:
-        
+
         hfile.write('<%s,%s>' % (uv[0], uv[1]))
 
     # hfile.write("\n")
@@ -789,7 +789,7 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
         else:
             progressCallback(prog)
     progress(0)
-        
+
     progbase = 0
     nextpb = 1 - 0.65*settings['usebump']
     # get lightmap
@@ -843,4 +843,4 @@ def getHumanName():
 def invx(pos):
     return (-pos[0],pos[1],pos[2])
 
-    
+

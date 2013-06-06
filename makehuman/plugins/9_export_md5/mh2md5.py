@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 Export to id Software's MD5 format.
 
 **Project Name:**      MakeHuman
@@ -47,14 +47,14 @@ scale = 5  # Override scale setting to a sensible default for doom-style engines
 
 def exportMd5(human, filepath, config):
     """
-    This function exports MakeHuman mesh and skeleton data to id Software's MD5 format. 
-    
+    This function exports MakeHuman mesh and skeleton data to id Software's MD5 format.
+
     Parameters
     ----------
-   
-    human:     
+
+    human:
       *Human*.  The object whose information is to be used for the export.
-    filepath:     
+    filepath:
       *string*.  The filepath of the file to export the object to.
     config:
       *Config*.  Export configuration.
@@ -71,11 +71,11 @@ def exportMd5(human, filepath, config):
     name = config.goodName(os.path.splitext(filename)[0])
 
     stuffs,_amt = exportutils.collect.setupObjects(
-        name, 
+        name,
         human,
         config=config,
-        helpers=config.helpers, 
-        eyebrows=config.eyebrows, 
+        helpers=config.helpers,
+        eyebrows=config.eyebrows,
         lashes=config.lashes,
         subdivide=config.subdivide)
 
@@ -87,9 +87,9 @@ def exportMd5(human, filepath, config):
     f = open(filepath, 'w')
     f.write('MD5Version 10\n')
     f.write('commandline ""\n\n')
-    f.write('numJoints %d\n' % numJoints) 
+    f.write('numJoints %d\n' % numJoints)
     f.write('numMeshes %d\n\n' % (len(stuffs)))
-    
+
     f.write('joints {\n')
     # Hardcoded root joint
     f.write('\t"%s" %d ( %f %f %f ) ( %f %f %f )\n' % ('origin', -1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
@@ -100,7 +100,7 @@ def exportMd5(human, filepath, config):
 
     for stuffIdx, stuff in enumerate(stuffs):
         # stuff.type: None is human, "Proxy" is human proxy, "Clothes" for clothing and "Hair" for hair
-        obj = stuff.meshInfo.object
+        obj = stuff.richMesh.object
 
         obj.calcFaceNormals()
         obj.calcVertexNormals()
@@ -136,8 +136,8 @@ def exportMd5(human, filepath, config):
                 # Use vertex weights for human body
                 weights = bodyWeights
                 # Account for vertices that are filtered out
-                if stuff.meshInfo.vertexMapping != None:
-                    filteredVIdxMap = stuff.meshInfo.vertexMapping
+                if stuff.richMesh.vertexMapping != None:
+                    filteredVIdxMap = stuff.richMesh.vertexMapping
                     weights2 = {}
                     for (boneName, (verts,ws)) in weights.items():
                         verts2 = []
@@ -257,14 +257,14 @@ def exportMd5(human, filepath, config):
 
 def writeBone(f, bone, human, config):
     """
-    This function writes out information describing one joint in MD5 format. 
+    This function writes out information describing one joint in MD5 format.
 
     Parameters
     ----------
 
-    f:     
+    f:
     *file handle*.  The handle of the file being written to.
-    joint:     
+    joint:
     *Bone object*.  The bone object to be processed by this function call.
     """
     if bone.parent:
@@ -272,7 +272,7 @@ def writeBone(f, bone, human, config):
     else:
         parentIndex = 0 # Refers to the hard-coded root joint
     pos = bone.getRestHeadPos() * scale
-    
+
     if config.feetOnGround:
         pos[1] += (getFeetOnGroundOffset(human) * scale)
 
@@ -308,7 +308,7 @@ def writeAnimation(filepath, human, config, animTrack):
     f = open(animfilepath, 'w')
     f.write('MD5Version 10\n')
     f.write('commandline ""\n\n')
-    f.write('numFrames %d\n' % animTrack.nFrames) 
+    f.write('numFrames %d\n' % animTrack.nFrames)
     f.write('numJoints %d\n' % numJoints)
     f.write('frameRate %d\n' % int(animTrack.frameRate))
     f.write('numAnimatedComponents %d\n\n' % (numJoints * 6))

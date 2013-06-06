@@ -38,17 +38,17 @@ from .utils import *
 #-------------------------------------------------------------------------------
 
 def setupArmature(name, human, options):
-    amt = Armature(name, human, options)
+    amt = Armature(name, options)
 
     if options.rigtype == "basic":
         from .basic import BasicParser
-        amt.parser = BasicParser(amt)
+        amt.parser = BasicParser(amt, human)
         amt.setup()
         log.message("Using basic rig")
         return amt
     elif options.rigtype:
         from .rigfile_amt import RigfileParser
-        amt.parser = RigfileParser(amt)
+        amt.parser = RigfileParser(amt, human)
         amt.setup()
         rigfile = "data/rigs/%s.rig" % options.rigtype
         log.message("Using rig file %s" % rigfile)
@@ -91,14 +91,11 @@ class RigOptions:
 
 class Armature:
 
-    def __init__(self, name, human, options):
+    def __init__(self, name, options):
         self.name = name
-        self.human = human
         self.options = options
         self.parser = None
         self.origin = None
-
-        #self.root = None
         self.roots = []
         self.bones = OrderedDict()
         self.hierarchy = []

@@ -25,8 +25,6 @@ Global variables used by MHX package
 import os
 import log
 import numpy as np
-import mh2proxy
-import gui3d
 
 from .flags import *
 from .utils import *
@@ -35,8 +33,8 @@ from .parser import Parser
 
 class RigfileParser(Parser):
 
-    def __init__(self, amt):
-        Parser.__init__(self, amt)
+    def __init__(self, amt, human):
+        Parser.__init__(self, amt, human)
         self.filepath = "data/rigs/%s.rig" % amt.options.rigtype
         self.heads = {}
         self.tails = {}
@@ -44,7 +42,7 @@ class RigfileParser(Parser):
 
 
     def setup(self):
-        self.fromRigfile(self.filepath, self.armature.human.meshData)
+        self.fromRigfile(self.filepath, self.human.meshData)
 
 
     def fromRigfile(self, filename, obj, coord=None):
@@ -144,7 +142,7 @@ class RigfileParser(Parser):
             bone.setBone(bone.head, bone.tail)
 
         if True:
-            basic = getBasicArmature(amt.human)
+            basic = getBasicArmature(self.human)
             for bone in amt.bones.values():
                 try:
                     basicName = basicNames[bone.name]
@@ -168,7 +166,7 @@ class RigfileParser(Parser):
         key = words[0]
         typ = words[1]
         if typ == 'joint':
-            self.locations[key] = mh2proxy.calcJointPos(obj, words[2])
+            self.locations[key] = calcJointPos(obj, words[2])
         elif typ == 'vertex':
             vn = int(words[2])
             self.locations[key] = obj.coord[vn]
@@ -253,16 +251,17 @@ class RigfileParser(Parser):
 
 
 def readRigfileArmature(filename, obj, coord=None):
-    amt = Armature("Global", gui3d.app.selectedHuman, RigOptions())
-    amt.parser = RigfileParser(amt)
+    import gui3d
+    amt = Armature("Global", RigOptions())
+    amt.parser = RigfileParser(amt, gui3d.app.selectedHuman)
     amt.parser.fromRigfile(filename, obj, coord)
     return amt
 
 
 def getBasicArmature(human):
     from .basic import BasicParser
-    amt = Armature("Basic", human, RigOptions())
-    amt.parser = BasicParser(amt)
+    amt = Armature("Basic", RigOptions())
+    amt.parser = BasicParser(amt, human)
     amt.parser.setupToRoll()
     return amt
 

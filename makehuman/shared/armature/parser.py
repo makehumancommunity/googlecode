@@ -25,7 +25,6 @@ Base armature
 import os
 import math
 import gui3d
-import mh2proxy
 import log
 from collections import OrderedDict
 
@@ -43,8 +42,9 @@ from .armature import Bone
 
 class Parser:
 
-    def __init__(self, amt):
+    def __init__(self, amt, human):
         self.armature = amt
+        self.human = human
         self.locations = {}
         self.origin = [0,0,0]
         self.customShapes = {}
@@ -319,7 +319,7 @@ class Parser:
         vgroup1 = []
         vgroup2 = []
         vgroup3 = []
-        obj = amt.human.meshData
+        obj = self.human.meshData
         if npieces == 2:
             for vn,w in vgroup:
                 y = obj.coord[vn] - orig

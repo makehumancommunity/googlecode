@@ -27,7 +27,6 @@ import math
 import numpy as np
 import transformations as tm
 from collections import OrderedDict
-import mh2proxy
 import exportutils
 
 from .flags import *
@@ -44,8 +43,8 @@ from . import rig_bones
 
 class PythonParser(Parser):
 
-    def __init__(self, amt):
-        Parser. __init__(self, amt)
+    def __init__(self, amt, human):
+        Parser. __init__(self, amt, human)
         self.headsTails = None
         self.master = None
         self.reparents = {}
@@ -105,7 +104,7 @@ class PythonParser(Parser):
 
     def setupToRoll(self):
         amt = self.armature
-        self.setupJoints(amt.human)
+        self.setupJoints(self.human)
         self.setupNormals()
         self.setupPlaneJoints()
         self.moveOriginToFloor(amt.options.feetOnGround)
@@ -146,7 +145,7 @@ class PythonParser(Parser):
         obj = human.meshData
         for (key, typ, data) in self.joints:
             if typ == 'j':
-                loc = mh2proxy.calcJointPos(obj, data)
+                loc = calcJointPos(obj, data)
                 self.locations[key] = loc
                 self.locations[data] = loc
             elif typ == 'v':

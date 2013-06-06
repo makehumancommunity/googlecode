@@ -34,6 +34,7 @@ import shutil
 
 import export
 import mh2proxy
+import richmesh
 import log
 import catmull_clark_subdivision as cks
 import subtextures
@@ -49,7 +50,7 @@ class CStuff:
         self.name = os.path.basename(name)
         self.proxy = proxy
         self.object = obj
-        self.meshInfo = None
+        self.richMesh = None
         self.vertexWeights = None
         self.skinWeights = None
         self.textureImage = None
@@ -76,7 +77,7 @@ class CStuff:
             self.displacement = None
 
     #def setObject3dMesh(self, object3d, weights, shapes):
-    #    self.meshInfo.setObject3dMesh(object3d, weights, shapes)
+    #    self.richMesh.setObject3dMesh(object3d, weights, shapes)
 
     def __repr__(self):
         return "<CStuff %s %s mat %s tex %s>" % (self.name, self.type, self.material, self.texture)
@@ -142,25 +143,25 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
     stuffs = []
     stuff = CStuff(name, obj = human)
     amt = setupArmature(name, human, config.rigOptions)
-    meshInfo = mh2proxy.getMeshInfo(obj, None, config, None, rawTargets, None)
+    richMesh = richmesh.getRichMesh(obj, None, config, None, rawTargets, None, amt)
     if amt:
-        meshInfo.weights = amt.vertexWeights
+        richMesh.weights = amt.vertexWeights
 
     theStuff = stuff
     deleteGroups = []
     deleteVerts = None  # Don't load deleteVerts from proxies directly, we use the facemask set in the gui module3d
-    _,deleteVerts = setupProxies('Clothes', None, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
-    _,deleteVerts = setupProxies('Hair', None, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
-    foundProxy,deleteVerts = setupProxies('Proxy', name, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Clothes', None, obj, stuffs, richMesh, config, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Hair', None, obj, stuffs, richMesh, config, deleteGroups, deleteVerts)
+    foundProxy,deleteVerts = setupProxies('Proxy', name, obj, stuffs, richMesh, config, deleteGroups, deleteVerts)
     progress(0.06*(3-2*subdivide))
     if not foundProxy:
         if helpers:     # helpers override everything
             if config.scale == 1.0:
-                stuff.meshInfo = meshInfo
+                stuff.richMesh = richMesh
             else:
-                stuff.meshInfo = meshInfo.fromProxy(obj.coord, obj.texco, obj.fvert, obj.fuvs, meshInfo.weights, meshInfo.shapes)
+                stuff.richMesh = richMesh.fromProxy(obj.coord, obj.texco, obj.fvert, obj.fuvs, richMesh.weights, richMesh.shapes)
         else:
-            stuff.meshInfo = filterMesh(meshInfo, config.scale, deleteGroups, deleteVerts, eyebrows, lashes, not hidden)
+            stuff.richMesh = filterMesh(richMesh, config.scale, deleteGroups, deleteVerts, eyebrows, lashes, not hidden)
         stuffs = [stuff] + stuffs
     progbase = 0.12*(3-2*subdivide)
     progress(progbase)
@@ -174,8 +175,8 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
         stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
         if subdivide:
             subMesh = cks.createSubdivisionObject(
-                stuff.meshInfo.object, lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
-            stuff.meshInfo.fromObject(subMesh, stuff.meshInfo.weights, rawTargets)
+                stuff.richMesh.object, lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
+            stuff.richMesh.fromObject(subMesh, stuff.richMesh.weights, rawTargets)
         i += 1.0
 
     # Apply subtextures.
@@ -188,10 +189,10 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
     return stuffs,amt
 
 #
-#    setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts):
+#    setupProxies(typename, name, obj, stuffs, richMesh, config, deleteGroups, deleteVerts):
 #
 
-def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, deleteVerts):
+def setupProxies(typename, name, obj, stuffs, richMesh, config, deleteGroups, deleteVerts):
     # TODO document that this method does not only return values, it also modifies some of the passed parameters (deleteGroups and stuffs, deleteVerts is modified only if it is not None)
     global theStuff
 
@@ -216,8 +217,7 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, de
                     else:
                         stuffname = None
 
-                    stuff.meshInfo = mh2proxy.getMeshInfo(obj, proxy, config, meshInfo.weights, meshInfo.shapes, stuffname)
-
+                    stuff.richMesh = richmesh.getRichMesh(obj, proxy, config, richMesh.weights, richMesh.shapes, stuffname, richMesh.armature)
                     stuffs.append(stuff)
     return foundProxy, deleteVerts
 
@@ -225,12 +225,12 @@ def setupProxies(typename, name, obj, stuffs, meshInfo, config, deleteGroups, de
 #
 #
 
-def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, useFaceMask = False):
+def filterMesh(richMesh, scale, deleteGroups, deleteVerts, eyebrows, lashes, useFaceMask = False):
     """
     Filter out vertices and faces from the mesh that are not desired for exporting.
     """
     # TODO scaling does not belong in a filter method
-    obj = meshInfo.object
+    obj = richMesh.object
 
     killUvs = numpy.zeros(len(obj.texco), bool)
     killFaces = numpy.zeros(len(obj.fvert), bool)
@@ -252,7 +252,7 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
            (("eyebrown" in fg.name) or ("cornea" in fg.name))) or
            ((not lashes) and
            ("lash" in fg.name)) or
-           mh2proxy.deleteGroup(fg.name, deleteGroups)):
+           deleteGroup(fg.name, deleteGroups)):
             killGroups.append(fg.name)
 
     faceMask = obj.getFaceMaskForGroups(killGroups)
@@ -309,8 +309,8 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
             faceUvs.append(fuvs2)
 
     weights = {}
-    if meshInfo.weights:
-        for (b, wts1) in meshInfo.weights.items():
+    if richMesh.weights:
+        for (b, wts1) in richMesh.weights.items():
             wts2 = []
             for (v1,w) in wts1:
                 if not killVerts[v1]:
@@ -318,19 +318,28 @@ def filterMesh(meshInfo, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
             weights[b] = wts2
 
     shapes = []
-    if meshInfo.shapes:
-        for (name, morphs1) in meshInfo.shapes:
+    if richMesh.shapes:
+        for (name, morphs1) in richMesh.shapes:
             morphs2 = {}
             for (v1,dx) in morphs1.items():
                 if not killVerts[v1]:
                     morphs2[newVerts[v1]] = scale*dx
             shapes.append((name, morphs2))
 
-    meshInfo.fromProxy(coords, texVerts, faceVerts, faceUvs, weights, shapes, scale=scale)
-    meshInfo.vertexMask = numpy.logical_not(killVerts)
-    meshInfo.vertexMapping = newVerts
-    meshInfo.faceMask = numpy.logical_not(faceMask)
-    return meshInfo
+    richMesh.fromProxy(coords, texVerts, faceVerts, faceUvs, weights, shapes, scale=scale)
+    richMesh.vertexMask = numpy.logical_not(killVerts)
+    richMesh.vertexMapping = newVerts
+    richMesh.faceMask = numpy.logical_not(faceMask)
+    return richMesh
+
+
+def deleteGroup(name, groups):
+    for part in groups:
+        if part in name:
+            return True
+    return False
+
+
 
 #
 #   getTextureNames(stuff):
@@ -381,7 +390,7 @@ def nextName(string):
 
 
 def setStuffSkinWeights(stuff, amt):
-    obj = stuff.meshInfo.object
+    obj = stuff.richMesh.object
 
     stuff.vertexWeights = {}
     for vn in range(len(obj.coord)):
@@ -391,7 +400,7 @@ def setStuffSkinWeights(stuff, amt):
     wn = 0
     for (bn,b) in enumerate(amt.bones):
         try:
-            wts = stuff.meshInfo.weights[b]
+            wts = stuff.richMesh.weights[b]
         except KeyError:
             wts = []
         for (vn,w) in wts:

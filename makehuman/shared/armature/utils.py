@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -27,17 +27,26 @@ import numpy as np
 import transformations as tm
 
 
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
+#   Calc joint position. Moved here from mh2proxy
+#-------------------------------------------------------------------------------
+
+def calcJointPos(obj, joint):
+    verts = obj.getVerticesForGroups(["joint-"+joint])
+    coords = obj.coord[verts]
+    return coords.mean(axis=0)
+
+#-------------------------------------------------------------------------------
 #   Utilities
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
 
 
 def m2b(vec):
     return np.array((vec[0], -vec[2], vec[1]))
-        
+
 def b2m(vec):
     return np.array((vec[0], vec[2], -vec[1]))
-            
+
 def getUnitVector(vec):
     length = math.sqrt(np.dot(vec,vec))
     if length > 1e-6:
@@ -52,7 +61,7 @@ def splitBoneName(bone):
         return words[0], "."+words[1]
     else:
         return words[0], ""
-       
+
 
 def splitBonesNames(base, ext, numAfter):
     if numAfter:
@@ -73,17 +82,17 @@ def addDict(dict, struct):
 
 def mergeDicts(dicts):
     struct = {}
-    for dict in dicts:   
+    for dict in dicts:
         addDict(dict, struct)
     return struct
-    
-    
+
+
 def safeGet(dict, key, default):
     try:
         return dict[key]
     except KeyError:
         return default
-       
+
 
 def copyTransform(target, cnsname, inf=1):
     return ('CopyTrans', 0, inf, [cnsname, target, 0])
@@ -99,9 +108,9 @@ def checkOrthogonal(mat):
                 raise NameError("Not ortho: diff[%d,%d] = %g\n%s\n\%s" % (i, j, diff[i,j], mat, prod))
     return True
 
-#-------------------------------------------------------------------------------        
-#   
-#-------------------------------------------------------------------------------        
+#-------------------------------------------------------------------------------
+#
+#-------------------------------------------------------------------------------
 
 def readVertexGroups(file, vgroups, vgroupList):
     #file = os.path.join("shared/armature/vertexgroups", name)
@@ -116,13 +125,13 @@ def readVertexGroups(file, vgroups, vgroupList):
                 vgroup = vgroups[name]
             except KeyError:
                 vgroup = []
-                vgroups[name] = vgroup 
+                vgroups[name] = vgroup
             vgroupList.append((name, vgroup))
         else:
             vgroup.append((int(words[0]), float(words[1])))
-    fp.close()  
+    fp.close()
 
-    
+
 def mergeWeights(vgroup):
     vgroup.sort()
     ngroup = []
@@ -138,10 +147,10 @@ def mergeWeights(vgroup):
     if vn0 >= 0:
         ngroup.append((vn0,w0))
     return ngroup
-    
-#-------------------------------------------------------------------------------        
-#   
-#-------------------------------------------------------------------------------        
+
+#-------------------------------------------------------------------------------
+#
+#-------------------------------------------------------------------------------
 
 XUnit = np.array((1,0,0))
 YUnit = np.array((0,1,0))
@@ -152,16 +161,16 @@ ZYRotation = np.array(((1,0,0,0),(0,0,-1,0),(0,1,0,0),(0,0,0,1)))
 
 def m2b3(vec):
     return np.dot(ZYRotation[:3,:3], vec)
-    
+
 def b2m4(mat):
     return np.dot(YZRotation, mat)
-    
+
 def getMatrix(head, tail, roll):
     vector = m2b3(tail - head)
     length = math.sqrt(np.dot(vector, vector))
     vector = vector/length
     yproj = np.dot(vector, YUnit)
-    
+
     if yproj > 1-1e-6:
         axis = YUnit
         angle = 0
@@ -174,7 +183,7 @@ def getMatrix(head, tail, roll):
         angle = math.acos(yproj)
     mat = tm.rotation_matrix(angle, axis)
     if roll:
-        mat = np.dot(mat, tm.rotation_matrix(roll, YUnit))         
+        mat = np.dot(mat, tm.rotation_matrix(roll, YUnit))
     mat = b2m4(mat)
     mat[:3,3] = head
     return length, mat
@@ -189,12 +198,11 @@ def normalizeQuaternion(quat):
     else:
         sign = -1
     quat[0] = sign*math.sqrt(1-r2)
-    
-    
+
+
 def checkPoints(vec1, vec2):
-    return ((abs(vec1[0]-vec2[0]) < 1e-6) and 
+    return ((abs(vec1[0]-vec2[0]) < 1e-6) and
             (abs(vec1[1]-vec2[1]) < 1e-6) and
             (abs(vec1[2]-vec2[2]) < 1e-6))
-    
-    
-   
+
+

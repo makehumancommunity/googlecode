@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -25,10 +25,9 @@ Exports proxy mesh to obj
 import os
 import math
 import exportutils
-import mh2proxy
 
 #
-#    exportObj(human, filepath, config):    
+#    exportObj(human, filepath, config):
 #
 
 def exportObj(human, filepath, config=None):
@@ -41,14 +40,14 @@ def exportObj(human, filepath, config=None):
     name = config.goodName(os.path.splitext(filename)[0])
 
     stuffs,_amt = exportutils.collect.setupObjects(
-        name, 
+        name,
         human,
         config=config,
-        helpers=config.helpers, 
-        eyebrows=config.eyebrows, 
+        helpers=config.helpers,
+        eyebrows=config.eyebrows,
         lashes=config.lashes,
         subdivide=config.subdivide)
-    
+
     fp = open(filepath, 'w')
     mtlfile = "%s.mtl" % os.path.splitext(filepath)[0]
     mtlfile = mtlfile.encode(config.encoding, 'replace')
@@ -58,17 +57,17 @@ def exportObj(human, filepath, config=None):
         "mtllib %s\n" % os.path.basename(mtlfile))
 
     # Vertices
-    
+
     for stuff in stuffs:
-        obj = stuff.meshInfo.object
+        obj = stuff.richMesh.object
         for co in obj.coord:
             fp.write("v %.4g %.4g %.4g\n" % tuple(co))
 
     # Vertex normals
-    
+
     if config.useNormals:
         for stuff in stuffs:
-            obj = stuff.meshInfo.object
+            obj = stuff.richMesh.object
             obj.calcFaceNormals()
             #obj.calcVertexNormals()
             for no in obj.fnorm:
@@ -77,30 +76,30 @@ def exportObj(human, filepath, config=None):
 
 
     # UV vertices
-    
+
     for stuff in stuffs:
-        obj = stuff.meshInfo.object
+        obj = stuff.richMesh.object
         if obj.has_uv:
             for uv in obj.texco:
                 fp.write("vt %.4g %.4g\n" % tuple(uv))
 
     # Faces
-    
+
     nVerts = 1
     nTexVerts = 1
     for stuff in stuffs:
         fp.write("usemtl %s\n" % stuff.name)
-        fp.write("g %s\n" % stuff.name)    
-        obj = stuff.meshInfo.object
+        fp.write("g %s\n" % stuff.name)
+        obj = stuff.richMesh.object
         for fn,fv in enumerate(obj.fvert):
             fp.write('f ')
-            fuv = obj.fuvs[fn]                
+            fuv = obj.fuvs[fn]
             if fv[0] == fv[3]:
                 nv = 3
             else:
                 nv = 4
             if config.useNormals:
-                if obj.has_uv:            
+                if obj.has_uv:
                     for n in range(nv):
                         vn = fv[n]+nVerts
                         fp.write("%d/%d/%d " % (vn, fuv[n]+nTexVerts, fn))
@@ -118,12 +117,12 @@ def exportObj(human, filepath, config=None):
                         vn = fv[n]+nVerts
                         fp.write("%d " % (vn))
             fp.write('\n')
-        
+
         nVerts += len(obj.coord)
         nTexVerts += len(obj.texco)
-        
+
     fp.close()
-    
+
     fp = open(mtlfile, 'w')
     fp.write(
         '# MakeHuman exported MTL\n' +
@@ -156,19 +155,19 @@ def writeMaterial(fp, stuff, human, config):
                 specScale = value
             elif key == "alpha":
                 alpha = value
-                
+
     fp.write(
         "Kd %.4g %.4g %.4g\n" % (diffScale*diffuse[0], diffScale*diffuse[1], diffScale*diffuse[2]) +
         "Ks %.4g %.4g %.4g\n" % (specScale*spec[0], specScale*spec[1], specScale*spec[2]) +
         "d %.4g\n" % alpha
     )
-    
+
     if stuff.proxy:
         writeTexture(fp, "map_Kd", stuff.texture, human, config)
         #writeTexture(fp, "map_Tr", stuff.proxy.translucency, human, config)
         writeTexture(fp, "map_Disp", stuff.proxy.normal, human, config)
         writeTexture(fp, "map_Disp", stuff.proxy.displacement, human, config)
-    else:        
+    else:
         writeTexture(fp, "map_Kd", ("data/textures", "texture.png"), human, config)
 
 
@@ -176,13 +175,13 @@ def writeTexture(fp, key, texture, human, config):
     if not texture:
         return
     (folder, texfile) = texture
-    texpath = config.getTexturePath(texfile, folder, True, human)        
-    (fname, ext) = os.path.splitext(texfile)  
+    texpath = config.getTexturePath(texfile, folder, True, human)
+    (fname, ext) = os.path.splitext(texfile)
     name = "%s_%s" % (fname, ext[1:])
     fp.write("%s %s\n" % (key, texpath))
-    
 
-"""    
+
+"""
 Ka 1.0 1.0 1.0
 Kd 1.0 1.0 1.0
 Ks 0.33 0.33 0.52

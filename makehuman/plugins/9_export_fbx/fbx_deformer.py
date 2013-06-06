@@ -35,13 +35,13 @@ from .fbx_utils import *
 def getObjectCounts(stuffs):
     nVertexGroups = 0
     for stuff in stuffs:
-        for weights in stuff.meshInfo.weights:
+        for weights in stuff.richMesh.weights:
             if weights:
                 nVertexGroups += 1
 
     nShapes = 0
     for stuff in stuffs:
-        for key,shape in stuff.meshInfo.shapes:
+        for key,shape in stuff.richMesh.shapes:
             if shape:
                 nShapes += 1
 
@@ -92,15 +92,15 @@ def writeObjectProps(fp, stuffs, amt):
             writeDeformer(fp, name)
             for bone in amt.bones.values():
                 try:
-                    weights = stuff.meshInfo.weights[bone.name]
+                    weights = stuff.richMesh.weights[bone.name]
                 except KeyError:
                     continue
                 writeSubDeformer(fp, name, bone, weights)
 
     for stuff in stuffs:
         name = getStuffName(stuff, amt)
-        if stuff.meshInfo.shapes:
-            for sname,shape in stuff.meshInfo.shapes:
+        if stuff.richMesh.shapes:
+            for sname,shape in stuff.richMesh.shapes:
                 writeShapeGeometry(fp, name, sname, shape)
                 writeShapeDeformer(fp, name, sname)
                 writeShapeSubDeformer(fp, name, sname, shape)
@@ -267,9 +267,9 @@ def writeLinks(fp, stuffs, amt):
                 ooLink(fp, 'Model::%s' % bone.name, subdef)
 
     for stuff in stuffs:
-        if stuff.meshInfo.shapes:
+        if stuff.richMesh.shapes:
             name = getStuffName(stuff, amt)
-            for sname, shape in stuff.meshInfo.shapes:
+            for sname, shape in stuff.richMesh.shapes:
                 deform = "Deformer::%s_%sShape" % (name, sname)
                 subdef = "SubDeformer::%s_%sShape" % (name, sname)
                 ooLink(fp, "Geometry::%s_%sShape" % (name, sname), subdef)

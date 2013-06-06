@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -27,7 +27,7 @@ bone).
 
 A pose can be applied to the skeleton by setting a pose matrix for each of the
 bones, allowing static posing or animation playback.
-The skeleton supports skinning of a mesh using a list of vertex-to-bone 
+The skeleton supports skinning of a mesh using a list of vertex-to-bone
 assignments.
 """
 
@@ -76,9 +76,9 @@ class Skeleton(object):
         """
         # TODO the .rig file parser does not belong in exportutils package (it is an importer...)
         import exportutils.rig
-        
+
         joints, bones, vertexWeights = exportutils.rig.readRigFile(filename, mesh)
-        
+
         # TODO exportutils.rig uses mh2proxy.calcJointPosition(). I would prefer something like Skeleton.getHumanJointPosition()
 
         for boneName, headPos, tailPos, roll, parentName, _ in bones:
@@ -86,13 +86,13 @@ class Skeleton(object):
                 parentName = None
             self.addBone(boneName, parentName, headPos, tailPos, roll)
         """
-        
+
         from armature.rigfile_amt import readRigfileArmature
 
         amt = readRigfileArmature(filename, mesh)
         for bone in amt.bones.values():
             self.addBone(bone.name, bone.parent, bone.head, bone.tail, bone.roll)
-        
+
         self.build()
 
         # Normalize weights and put them in np format
@@ -155,17 +155,17 @@ class Skeleton(object):
     def getPose(self):
         """
         Retrieves the current pose of this skeleton as a list of pose matrices,
-        one matrix per bone, bones in breadth-first order (same order as 
+        one matrix per bone, bones in breadth-first order (same order as
         getBones()).
 
         returns     np.array((nBones, 4, 4), dtype=float32)
         """
         nBones = self.getBoneCount()
         poseMats = np.zeros((nBones,4,4),dtype=np.float32)
-        
+
         for bIdx, bone in enumerate(self.getBones()):    # TODO eliminate loop?
             poseMats[bIdx] = bone.matPose
-        
+
         return poseMats
 
     def setPose(self, poseMats):
@@ -233,7 +233,7 @@ class Skeleton(object):
 
     def getJointNames(self):
         """
-        Returns a list of all joints defining the bone positions (minus end 
+        Returns a list of all joints defining the bone positions (minus end
         effectors for leaf bones). The names are the same as the corresponding
         bones in this skeleton.
         List is in depth-first order (usually the order of joints in a BVH file)
@@ -263,7 +263,7 @@ class Skeleton(object):
         """
         Load a MHP pose file that contains a static pose. Posing data is defined
         with quaternions to indicate rotation angles.
-        Sets current pose to 
+        Sets current pose to
         """
         log.message("Mhp %s", filepath)
         fp = open(filepath, "rU")
@@ -284,7 +284,7 @@ class Skeleton(object):
                 if words[1] == "gquat":
                     mat = np.dot(la.inv(bone.matRestRelative), mat)
                 poseMats[boneIdx] = mat[:3,:3]
-        
+
         fp.close()
         self.setPose(poseMats)
 
@@ -321,7 +321,7 @@ class Bone(object):
             self.parent = None
 
         self.index = None   # The index of this bone in the breadth-first bone list
-        
+
         # Matrices:
         # static
         #  matRestGlobal:     4x4 rest matrix, relative world
@@ -330,13 +330,13 @@ class Bone(object):
         #  matPose:           4x4 pose matrix, relative parent and own rest pose
         #  matPoseGlobal:     4x4 matrix, relative world
         #  matPoseVerts:      4x4 matrix, relative world and own rest pose
-        
+
         self.matRestGlobal = None
         self.matRestRelative = None
         self.matPose = None
         self.matPoseGlobal = None
         self.matPoseVerts = None
-          
+
     def __repr__(self):
         return ("  <Bone %s>" % self.name)
 
@@ -366,7 +366,7 @@ class Bone(object):
 
         # Update pose matrices
         self.update()
-        
+
     def update(self):
         """
         Recalculate global pose matrix ... TODO
@@ -389,7 +389,7 @@ class Bone(object):
         The head position of this bone in world space.
         """
         return self.matPoseGlobal[:3,3].copy()
-        
+
     def getTail(self):
         """
         The tail position of this bone in world space.
@@ -468,7 +468,7 @@ class Bone(object):
             normalizeQuaternion(quat)
             log.debug("%s", str(quat))
             self.matPose = tm.quaternion_matrix(quat)
-            return quat[0]*1000    
+            return quat[0]*1000
         else:
             angle = angle*D
             ax,ay,az = tm.euler_from_matrix(self.matPose, axes='sxyz')
@@ -498,7 +498,7 @@ class Bone(object):
         # TODO non-existing class CBone
         mat = tm.rotation_matrix(angle*D, CBone.Axes[axis])
         if rotWorld:
-            mat = np.dot(mat, self.matPoseGlobal)        
+            mat = np.dot(mat, self.matPoseGlobal)
             self.matPoseGlobal[:3,:3] = mat[:3,:3]
             self.matPose = self.getPoseFromGlobal()
         else:
@@ -507,7 +507,7 @@ class Bone(object):
 
     def setRotation(self, angles):
         """
-        Sets rotation of this bone (in local space) as Euler rotation 
+        Sets rotation of this bone (in local space) as Euler rotation
         angles x,y and z.
         """
         ax,ay,az = angles
@@ -527,7 +527,7 @@ class Bone(object):
         Get quaternion of orientation of this bone in local space.
         """
         return tm.quaternion_from_matrix(self.matPose)
-                
+
     def setPoseQuaternion(self, quat):
         """
         Set orientation of this bone in local space as quaternion.
@@ -588,11 +588,11 @@ ZYRotation = np.array(((1,0,0,0),(0,0,-1,0),(0,1,0,0),(0,0,0,1)))
 
 def toZisUp3(vec):
     """
-    Convert vector from MH coordinate system (y is up) to Blender coordinate 
+    Convert vector from MH coordinate system (y is up) to Blender coordinate
     system (z is up).
     """
     return np.dot(ZYRotation[:3,:3], vec)
-    
+
 def fromZisUp4(mat):
     """
     Convert matrix from Blender coordinate system (z is up) to MH coordinate
@@ -602,10 +602,10 @@ def fromZisUp4(mat):
 
 YUnit = np.array((0,1,0))
 
-## TODO do y-z conversion inside this method or require caller to do it?    
+## TODO do y-z conversion inside this method or require caller to do it?
 def getMatrix(head, tail, roll):
     """
-    Calculate an orientation (rest) matrix for a bone between specified head 
+    Calculate an orientation (rest) matrix for a bone between specified head
     and tail positions with given bone roll angle.
     Returns length of the bone and rest orientation matrix in global coordinates.
     """
@@ -616,7 +616,7 @@ def getMatrix(head, tail, roll):
     else:
         vector = vector/length
     yproj = np.dot(vector, YUnit)
-    
+
     if yproj > 1-1e-6:
         axis = YUnit
         angle = 0
@@ -629,7 +629,7 @@ def getMatrix(head, tail, roll):
         angle = math.acos(yproj)
     mat = tm.rotation_matrix(angle, axis)
     if roll:
-        mat = np.dot(mat, tm.rotation_matrix(roll, YUnit))         
+        mat = np.dot(mat, tm.rotation_matrix(roll, YUnit))
     mat = fromZisUp4(mat)
     mat[:3,3] = head
     return length, mat
@@ -672,14 +672,13 @@ def loadRig(filename, mesh):
     return skel, weights
 
 def getProxyWeights(proxy, humanWeights, mesh):
-    import mh2proxy
 
     # Zip vertex indices and weights
     rawWeights = {}
     for (key, val) in humanWeights.items():
         indxs, weights = val
         rawWeights[key] = zip(indxs, weights)
-    vertexWeights = mh2proxy.getProxyWeights(rawWeights, proxy)
+    vertexWeights = proxy.getWeights(rawWeights)
 
     # Unzip and normalize weights (and put them in np format)
     boneWeights = {}
@@ -769,7 +768,7 @@ def loadSourceMapping(srcName):
     log.message("Read source file %s", path)
     sourceMapping = {}
     fp = open(path, "r")
-    status = 0    
+    status = 0
     for line in fp:
         words = line.split()
         if len(words) > 0:
@@ -812,7 +811,7 @@ def __getRotation(bone, sourceMapping, targetMapping):
             _, rot = sourceMapping[refBone]
             return rot
     return 0.0
-        
+
 def getRetargetMapping(sourceRig, targetRig, skel):
     import os
 
@@ -867,7 +866,7 @@ def getRestPoseCompensation(srcSkel, tgtSkel, boneMapping, excludedTgtBones = ["
     """
     Determine compensation orientations for all bones of a target skeleton
     to be able to map motion from the specified source skeleton to the target
-    skeleton, if their rest poses (or bone angles in rest pose) differ. 
+    skeleton, if their rest poses (or bone angles in rest pose) differ.
     The result will be the given boneMapping, as a list of tuples with a
     compensation transformation matrix as second item in each tuple.
     This matrix should be multiplied with each frame for the intended bone, so
@@ -905,7 +904,7 @@ def getRestPoseCompensation(srcSkel, tgtSkel, boneMapping, excludedTgtBones = ["
 
         if srcBone.length == 0:
             # Safeguard because this always leads to wrong pointing target bones
-            # I have no idea why, but for some reason the skeleton created from the BVH 
+            # I have no idea why, but for some reason the skeleton created from the BVH
             # has some zero-sized bones (this is probably a bug)
             log.message("skipping zero-length (source) bone %s", srcBone.name)
             continue

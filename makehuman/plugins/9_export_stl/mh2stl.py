@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 Export to stereolithography format.
 
 **Project Name:**      MakeHuman
@@ -38,18 +38,18 @@ import exportutils
 
 def exportStlAscii(human, filepath, config, exportJoints = False):
     """
-    This function exports MakeHuman mesh and skeleton data to stereolithography ascii format. 
-    
+    This function exports MakeHuman mesh and skeleton data to stereolithography ascii format.
+
     Parameters
     ----------
-   
-    human:     
+
+    human:
       *Human*.  The object whose information is to be used for the export.
-    filepath:     
+    filepath:
       *string*.  The filepath of the file to export the object to.
     config:
       *Config*.  Export configuration.
-    """    
+    """
 
     obj = human.meshData
     config.setHuman(human)
@@ -58,11 +58,11 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
     name = config.goodName(os.path.splitext(filename)[0])
 
     stuffs,_amt = exportutils.collect.setupObjects(
-        name, 
+        name,
         human,
         config=config,
-        helpers=config.helpers, 
-        eyebrows=config.eyebrows, 
+        helpers=config.helpers,
+        eyebrows=config.eyebrows,
         lashes=config.lashes,
         subdivide=config.subdivide)
 
@@ -71,8 +71,8 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
     f.write('solid %s\n' % solid)
 
     for stuff in stuffs:
-        obj = stuff.meshInfo.object
-        
+        obj = stuff.richMesh.object
+
         for fn,fv in enumerate(obj.fvert):
             f.write('facet normal %f %f %f\n' % tuple(obj.fnorm[fn]))
             f.write('\touter loop\n')
@@ -81,7 +81,7 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
             f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[2]]))
             f.write('\tendloop\n')
             f.write('\tendfacet\n')
-            
+
             if fv[0] != fv[3]:
                 f.write('facet normal %f %f %f\n' % tuple(obj.fnorm[fn]))
                 f.write('\touter loop\n')
@@ -90,20 +90,20 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
                 f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[0]]))
                 f.write('\tendloop\n')
                 f.write('\tendfacet\n')
-        
+
     f.write('endsolid %s\n' % solid)
     f.close()
 
-    
+
 def exportStlBinary(human, filename, config, exportJoints = False):
     """
-    human:     
+    human:
       *Human*.  The object whose information is to be used for the export.
-    filepath:     
+    filepath:
       *string*.  The filepath of the file to export the object to.
     config:
       *Config*.  Export configuration.
-    """    
+    """
 
     obj = human.meshData
     config.setHuman(human)
@@ -112,11 +112,11 @@ def exportStlBinary(human, filename, config, exportJoints = False):
     name = config.goodName(os.path.splitext(filename)[0])
 
     stuffs,_amt = exportutils.collect.setupObjects(
-        name, 
+        name,
         human,
         config=config,
-        helpers=config.helpers, 
-        eyebrows=config.eyebrows, 
+        helpers=config.helpers,
+        eyebrows=config.eyebrows,
         lashes=config.lashes,
         subdivide=config.subdivide)
 
@@ -135,7 +135,7 @@ def exportStlBinary(human, filename, config, exportJoints = False):
         f.write(struct.pack('<fff', fverts[2][0], fverts[2][1], fverts[2][2]))
         f.write(struct.pack('<H', 0))
         count += 1
-        
+
         f.write(struct.pack('<fff', fno[0], fno[1], fno[2]))
         f.write(struct.pack('<fff', fverts[2][0], fverts[2][1], fverts[2][2]))
         f.write(struct.pack('<fff', fverts[3][0], fverts[3][1], fverts[3][2]))
@@ -145,4 +145,4 @@ def exportStlBinary(human, filename, config, exportJoints = False):
     f.seek(80)
     f.write(struct.pack('<I', count))
 
-    
+

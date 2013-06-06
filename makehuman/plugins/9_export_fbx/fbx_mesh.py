@@ -59,7 +59,7 @@ def writeObjectDefs(fp, stuffs, amt, nShapes):
 def writeObjectProps(fp, stuffs, amt, config):
     for stuff in stuffs:
         name = getStuffName(stuff, amt)
-        obj = stuff.meshInfo.object
+        obj = stuff.richMesh.object
         writeGeometryProp(fp, name, obj, config)
         writeMeshProp(fp, name, obj)
 

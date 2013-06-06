@@ -44,9 +44,9 @@ def MitsubaExport(obj, app, settings):
 
     log.message('Mitsuba Export object: %s', obj.name)
 
-    # Read settings from an ini file. This reload enables the settings to be changed dynamically 
+    # Read settings from an ini file. This reload enables the settings to be changed dynamically
     # without forcing the user to restart the MH application for the changes to take effect.
-    
+
     camera = app.modelCamera
     #
     resolution = (app.settings.get('rendering_width', 800), app.settings.get('rendering_height', 600))
@@ -58,7 +58,7 @@ def MitsubaExport(obj, app, settings):
     lighting = mh2mitsuba_ini.lighting if settings['lighting'] == 'dl' else settings['lighting']
     #
     sampler = mh2mitsuba_ini.sampler if settings['sampler'] == 'low' else settings['sampler']
-           
+
     # output directory for rendering
     # Make sure the directory exists
     out_path = os.path.join(mh.getPath('render'), mh2mitsuba_ini.outputpath)
@@ -66,11 +66,11 @@ def MitsubaExport(obj, app, settings):
         os.makedirs(out_path)
     #
     outputDirectory = os.path.dirname(out_path)
-    
+
     # The ini action option defines whether or not to attempt to render the file once
     # it's been written.
     action = mh2mitsuba_ini.action
-    
+
     # Mitsuba binaries path
     Mitsuba_bin = app.settings.get('mitsuba_bin', '')
     #
@@ -79,7 +79,7 @@ def MitsubaExport(obj, app, settings):
             # exporting human mesh.
             fileobj = 'human.obj'
             filename = out_path + fileobj
-        
+
             #
             #exportObj(obj, filename)
             exportObj_TL(obj, filename)
@@ -94,10 +94,10 @@ def MitsubaExport(obj, app, settings):
 
             # create a integrator
             mitsubaIntegrator(filexml, lighting)
-        
+
             # create sampler
             samplerData = mitsubaSampler(sampler)
-        
+
             # create camera
             mitsubaCamera(camera, resolution, filexml, samplerData, obj)
 
@@ -133,25 +133,25 @@ def MitsubaExport(obj, app, settings):
                            'Created .xml file in output folder.\n'\
                            'Ready to render',
                            'Close')
-    
+
     # if not valid path
     else:
         app.prompt('WARNING!!',
                    'Path to Mitsuba is not correct or not exist.\n'\
                    'Please, enter a valid path to Mitsuba folder.',
-                   'Accept')    
+                   'Accept')
 
 def exportPly(obj, filename, exportGroups = True, groupFilter=None):
     """
     This function exports a mesh object in Wavefront obj format. It is assumed that obj will have at least vertices and
     faces (exception handling for vertices/faces must be done outside this method).
-    
+
     Parameters
     ----------
-   
-    obj:     
+
+    obj:
       *Object3D*.  The object to export.
-    filename:     
+    filename:
       *string*.  The filename of the file to export the object to.
     """
 
@@ -165,7 +165,7 @@ def exportPly(obj, filename, exportGroups = True, groupFilter=None):
     f.write("property float x\n")
     f.write("property float y\n")
     f.write("property float z\n")
-    
+
     '''
     for vertex colors?
     f << "property uchar red\n";
@@ -175,40 +175,40 @@ def exportPly(obj, filename, exportGroups = True, groupFilter=None):
     f.write("property float nx\n")
     f.write("property float ny\n")
     f.write("property float nz\n")
-   
+
     #f.write("property float u\n")
     #f.write("property float v\n")
-    
+
     f.write("element face ""amount faces""\n")
     f.write("property list uchar uint vertex_indices\n")
     f.write("end_header\n")
-   
+
     uvs =[u for u in obj.uvValues]
     log.debug(uvs[24])
-    
+
     for vn in range(len(obj.coord)):
         # vertex
         f.write('%f %f %f' % tuple(obj.coord[vn]))
-        
+
         # normals
         f.write(' %f %f %f' % tuple(obj.vnorm[vn]))
 
         f.write('\n')
-    
-    faces = [fe for fe in obj.faces 
-             if not 'joint' in fe.group.name 
+
+    faces = [fe for fe in obj.faces
+             if not 'joint' in fe.group.name
              and not 'helper' in fe.group.name]
     #
     for fa in faces:
         f.write('3 %s %s %s' % (fa.verts[0].idx, fa.verts[1].idx, fa.verts[2].idx))
         f.write('\n')
-    
-    
+
+
 
 def exportObj(obj, filename):
     '''
     #
-    This function exports a mesh object in Wavefront obj format. 
+    This function exports a mesh object in Wavefront obj format.
     It is assumed that obj will have at least vertices and faces,
     (exception handling for vertices/faces must be done outside this method).
 
@@ -228,7 +228,7 @@ def exportObj(obj, filename):
     f = open(filename, 'w')
     f.write('# MakeHuman exported OBJ for Mitsuba\n')
     f.write('# www.makehuman.org\n')
-    # 
+    #
     for co in obj.coord:
         f.write('v %f %f %f\n' % tuple(co))
 
@@ -245,13 +245,13 @@ def exportObj(obj, filename):
     # basic filter..
     faces = [fa for fa in obj.faces
              if not 'joint-' in fa.group.name
-             and not 'helper' in fa.group.name 
+             and not 'helper' in fa.group.name
              and not 'eye-cornea' in fa.group.name]
-    
+
     # filter eyebrown and lash for use an special material with 'alpha' value
     # SSS not work fine, cause: the geometry is not closed solid?
-    faces = [fa for fa in faces 
-             if not '-eyebrown' in fa.group.name 
+    faces = [fa for fa in faces
+             if not '-eyebrown' in fa.group.name
              and not '-lash' in fa.group.name]
     #
     for face in faces:
@@ -262,7 +262,7 @@ def exportObj(obj, filename):
             else:
                 f.write(' %i/%i/%i ' % (v.idx + 1, face.uv[i] + 1, v.idx + 1))
         #
-        f.write('\n')  
+        f.write('\n')
     #
     f.close()
 
@@ -285,11 +285,11 @@ def mitsubaIntegrator(filexml, lighting):
                 '\t</integrator>\n'
                 )
     else:
-        f.write('\n' + 
-                '\t<integrator type="path">\n' + 
-                '\t    <integer name="maxDepth" value="-1"/>\n' + 
+        f.write('\n' +
+                '\t<integrator type="path">\n' +
+                '\t    <integer name="maxDepth" value="-1"/>\n' +
                 '\t    <integer name="rrDepth" value="10"/>\n' +
-                '\t    <boolean name="strictNormals" value="false"/>\n' + 
+                '\t    <boolean name="strictNormals" value="false"/>\n' +
                 '\t</integrator>\n'
                 )
     f.close()
@@ -308,14 +308,14 @@ def mitsubaSSS():
                       '\t    </subsurface>\n'
                       )
     return subSurfaceData
-   
+
 def mitsubaSampler(sampler):
     #
     samplerData = ''
     if sampler == 'ind':
         samplerData =('\n' +
-                      '\t    <sampler type="independent">\n' + 
-                      '\t        <integer name="sampleCount" value="16"/>\n' + 
+                      '\t    <sampler type="independent">\n' +
+                      '\t        <integer name="sampleCount" value="16"/>\n' +
                       '\t    </sampler>\n'
                       )
     else:
@@ -327,7 +327,7 @@ def mitsubaSampler(sampler):
                       )
     #
     return samplerData
-    
+
 def mitsubaCamera(camera, resolution, filexml, samplerData, obj):
     # TODO; camera fov
     fov = 27
@@ -341,7 +341,7 @@ def mitsubaCamera(camera, resolution, filexml, samplerData, obj):
             '\t    <transform name="toWorld">\n' +
             '\t        <lookAt origin="%f, %f, %f"\n' % (camera.eyeX, camera.eyeY, camera.eyeZ) +
             '\t                target="%f, %f, %f"\n' % (camera.focusX, camera.focusY, camera.focusZ) +
-            '\t                up="0, 1, 0"/>\n' + 
+            '\t                up="0, 1, 0"/>\n' +
             '\t        <scale x="-1"/>\n' +
             '\t        <rotate x="1" angle="%f"/>\n' % -obj.rx +
             '\t        <rotate y="1" angle="%f"/>\n' % -obj.ry +
@@ -398,7 +398,7 @@ def mitsubaLights(filexml):
 def mitsubaTexture(filexml):
     #pigment map
     texture_path = os.getcwd() + '/data/textures/texture.png'
-        
+
     f = open(filexml, 'a')
     f.write('\n' +
             '\t<texture type="bitmap" id="imageh">\n' +
@@ -421,7 +421,7 @@ def mitsubaMaterials(filexml):
     f = open(filexml, 'a')
     # material for human mesh
     f.write('\n' +
-            '\t<bsdf type="roughplastic" id="humanMat">\n' + #% mat_type +  
+            '\t<bsdf type="roughplastic" id="humanMat">\n' + #% mat_type +
             '\t    <rgb name="specularReflectance" value="0.35, 0.25, 0.25"/>\n' +
             '\t    <ref name="diffuseReflectance" id="imageh"/>\n' + # aplic texture image to diffuse chanel
             '\t    <float name="specularSamplingWeight" value="0.1250"/>\n' +
@@ -463,7 +463,7 @@ def mitsubaGeometry(filexml, fileobj, subSurfaceData):
     '''
     # human mesh
     f.write('\n' +
-            '\t<shape type="obj">\n' + 
+            '\t<shape type="obj">\n' +
             '\t    <string name="filename" value="%s"/>\n' % fileobj +
             '\t    %s\n' % subSurfaceData +
             '\t    <ref id="humanMat"/>\n' + # use 'instantiate' material declaration (id)
@@ -476,8 +476,8 @@ def mitsubaFileClose(filexml):
     f = open(filexml, 'a')
     f.write('</scene>')
     f.close()
-    
-    
+
+
 #--------------------------------------------------------------------------
 #   TL: A version of exportObj that handles clothes
 #--------------------------------------------------------------------------
@@ -487,7 +487,7 @@ import exportutils
 
 def exportObj_TL(obj, filename):
     """
-    This function exports a mesh object in Wavefront obj format. 
+    This function exports a mesh object in Wavefront obj format.
     It is assumed that obj will have at least vertices and faces,
     (exception handling for vertices/faces must be done outside this method).
 
@@ -511,22 +511,22 @@ def exportObj_TL(obj, filename):
     f = open(filename, 'w')
     f.write('# MakeHuman exported OBJ for Mitsuba\n')
     f.write('# www.makehuman.org\n')
-    # 
+    #
 
     for stuff in stuffs:
-        obj = stuff.meshInfo.object
+        obj = stuff.richMesh.object
         for co in obj.coord:
             f.write("v %.4f %.4f %.4f\n" % tuple(co))
 
     for stuff in stuffs:
-        obj = stuff.meshInfo.object
+        obj = stuff.richMesh.object
         for uv in obj.texco:
             f.write("vt %.4f %.4f\n" % tuple(uv))
 
     nVerts = 1
     nTexCo = 1
     for stuff in stuffs:
-        obj = stuff.meshInfo.object
+        obj = stuff.richMesh.object
         for fn,fv in enumerate(obj.fvert):
             fuv = obj.fuvs[fn]
             if fv[0] == fv[3]:
@@ -539,10 +539,10 @@ def exportObj_TL(obj, filename):
             f.write('\n')
         nVerts += len(obj.coord)
         nTexCo += len(obj.texco)
-    
+
     f.close()
 
 #--------------------------------------------------------------------------
 #   End TL modications
 #--------------------------------------------------------------------------
-    
+

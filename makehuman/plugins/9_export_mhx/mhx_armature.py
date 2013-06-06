@@ -26,7 +26,6 @@ import math
 import numpy as np
 import transformations as tm
 from collections import OrderedDict
-import mh2proxy
 import exportutils
 
 import armature
@@ -46,18 +45,21 @@ from . import mhx_constraints
 def getArmature(name, human, options):
     if options.rigtype == 'mhx':
         from . import amt_mhx
-        return amt_mhx.MhxArmature(name, human, options)
+        amt = amt_mhx.MhxArmature(name, options)
+        amt.parser = amt_mhx.MhxParser(amt, human)
     elif options.rigtype == 'basic':
         from . import amt_basic
-        return amt_basic.BasicArmature(name, human, options)
+        amt = amt_basic.BasicArmature(name, options)
+        amt.parser = amt_basic.BasicParser(amt, human)
     elif options.rigtype == 'rigify':
         from . import amt_rigify
-        return amt_rigify.RigifyArmature(name, human, options)
+        amt = amt_rigify.RigifyArmature(name, options)
+        amt.parser = amt_rigify.RigifyParser(amt, human)
     else:
         from armature.rigfile_amt import RigfileParser
-        amt = ExportArmature(name, human, options)
-        amt.parser = RigfileParser(amt)
-        return amt
+        amt = ExportArmature(name, options)
+        amt.parser = RigfileParser(amt, human)
+    return amt
 
 #-------------------------------------------------------------------------------
 #   Setup custom shapes
@@ -183,8 +185,8 @@ def setupSimpleCustomTargets(fp):
 
 class ExportArmature(Armature):
 
-    def __init__(self, name, human, options):
-        Armature.__init__(self, name, human, options)
+    def __init__(self, name, options):
+        Armature.__init__(self, name, options)
         self.visibleLayers = "00000001"
         self.scale = options.scale
 

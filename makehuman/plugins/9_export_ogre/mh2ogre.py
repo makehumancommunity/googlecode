@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 Export to the Ogre3d mesh format.
 
 **Project Name:**      MakeHuman
@@ -48,11 +48,11 @@ def exportOgreMesh(human, filepath, config):
     name = formatName(config.goodName(os.path.splitext(filename)[0]))
 
     stuffs,_amt = exportutils.collect.setupObjects(
-        name, 
+        name,
         human,
         config=config,
-        helpers=config.helpers, 
-        eyebrows=config.eyebrows, 
+        helpers=config.helpers,
+        eyebrows=config.eyebrows,
         lashes=config.lashes,
         subdivide=config.subdivide)
 
@@ -73,7 +73,7 @@ def writeMeshFile(human, filepath, stuffs, config):
     f.write('    <submeshes>\n')
 
     for stuffIdx, stuff in enumerate(stuffs):
-        obj = stuff.meshInfo.object
+        obj = stuff.richMesh.object
         # Make sure vertex normals are calculated
         obj.calcFaceNormals()
         obj.calcVertexNormals()
@@ -116,7 +116,7 @@ def writeMeshFile(human, filepath, stuffs, config):
 
         # UV Texture Coordinates
         f.write('                <vertexbuffer texture_coord_dimensions_0="2" texture_coords="1">\n')
-        for vIdx in xrange(numVerts): 
+        for vIdx in xrange(numVerts):
             if obj.has_uv:
                 u, v = obj.r_texco[vIdx]
                 v = 1-v
@@ -138,8 +138,8 @@ def writeMeshFile(human, filepath, stuffs, config):
                 # Use vertex weights for human body
                 weights = bodyWeights
                 # Account for vertices that are filtered out
-                if stuff.meshInfo.vertexMapping != None:
-                    filteredVIdxMap = stuff.meshInfo.vertexMapping
+                if stuff.richMesh.vertexMapping != None:
+                    filteredVIdxMap = stuff.richMesh.vertexMapping
                     weights2 = {}
                     for (boneName, (verts,ws)) in weights.items():
                         verts2 = []

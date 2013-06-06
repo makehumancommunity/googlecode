@@ -38,9 +38,8 @@ from armature.utils import *
 
 class RigifyArmature(ExportArmature):
 
-    def __init__(self, name, human, options):
-        ExportArmature.__init__(self, name, human, options)
-        self.parser = RigifyParser(self)
+    def __init__(self, name, options):
+        ExportArmature.__init__(self, name, options)
         self.visibleLayers = "08a80caa"
         self.recalcRoll = []
         self.objectProps = [("MhxRig", '"Rigify"')]
@@ -52,8 +51,8 @@ class RigifyArmature(ExportArmature):
 
 class RigifyParser(PythonParser):
 
-    def __init__(self, amt):
-        PythonParser.__init__(self, amt)
+    def __init__(self, amt, human):
+        PythonParser.__init__(self, amt, human)
         if amt.options.useMuscles:
             self.vertexGroupFiles = ["head", "muscles", "hand"]
         else:
