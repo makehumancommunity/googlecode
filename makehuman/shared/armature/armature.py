@@ -63,7 +63,6 @@ def setupArmature(name, human, options):
 class RigOptions:
     def __init__(self,
             rigtype = "basic",
-            scale = 1.0,
             useMuscles = False,
             addConnectingBones = False,
             facepanel = False,
@@ -74,7 +73,6 @@ class RigOptions:
         ):
 
         self.rigtype = rigtype
-        self.scale = scale
         self.useSplitBones = False
         self.useMuscles = useMuscles
         self.addConnectingBones = addConnectingBones
@@ -111,6 +109,12 @@ class Armature:
     def setup(self):
         self.parser.setup()
         self.origin = self.parser.origin
+
+
+    def rescale(self, scale):
+        # OK to overwrite bones, because they are not used elsewhere
+        for bone in self.bones.values():
+            bone.rescale(scale)
 
 
     def normalizeVertexWeights(self):
@@ -218,6 +222,17 @@ class Bone:
                 self.computeRoll(normal)
 
 
+    def rescale(self, scale):
+        self.head = scale*self.head
+        self.tail = scale*self.tail
+        self.length = scale*self.length
+
+        self.matrixRest = None
+        self.matrixRelative = None
+        self.bindMatrix = None
+        self.bindInverse = None
+
+
     def computeRoll(self, normal):
         if normal is None:
             return
@@ -270,7 +285,6 @@ class Bone:
         self.calcRestMatrix()
         self.bindInverse = np.transpose(self.matrixRest)
         self.bindMatrix = la.inv(self.bindInverse)
-
 
 
 

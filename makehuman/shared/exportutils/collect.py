@@ -88,7 +88,7 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
     stuff = richmesh.CStuff(name, None, human)
     amt = setupArmature(name, human, config.rigOptions)
     obj = human.meshData
-    richMesh = richmesh.getRichMesh(obj, None, None, rawTargets, amt, config.scale)
+    richMesh = richmesh.getRichMesh(obj, None, None, rawTargets, amt)
     if amt:
         richMesh.weights = amt.vertexWeights
 
@@ -101,13 +101,16 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
     progress(0.06*(3-2*subdivide))
     if not foundProxy:
         if helpers:     # helpers override everything
-            if config.scale == 1.0:
-                stuff.richMesh = richMesh
-            else:
-                stuff.richMesh = richMesh.fromProxy(obj.coord, obj.texco, obj.fvert, obj.fuvs, richMesh.weights, richMesh.shapes)
+            stuff.richMesh = richMesh
         else:
-            stuff.richMesh = filterMesh(richMesh, config.scale, deleteGroups, deleteVerts, eyebrows, lashes, not hidden)
+            stuff.richMesh = filterMesh(richMesh, deleteGroups, deleteVerts, eyebrows, lashes, not hidden)
         stuffs = [stuff] + stuffs
+
+    if config.scale != 1.0:
+        amt.rescale(config.scale)
+        for stuff in stuffs:
+            stuff.richMesh.rescale(config.scale)
+
     progbase = 0.12*(3-2*subdivide)
     progress(progbase)
 
@@ -144,7 +147,7 @@ def setupProxies(typename, name, obj, stuffs, richMesh, config, deleteGroups, de
     foundProxy = False
     for pfile in config.getProxyList():
         if pfile.type == typename and pfile.file:
-            proxy = mh2proxy.readProxyFile(obj, pfile, evalOnLoad=True, scale=config.scale)
+            proxy = mh2proxy.readProxyFile(obj, pfile, evalOnLoad=True)
             if proxy and proxy.name and proxy.texVerts:
                 foundProxy = True
                 deleteGroups += proxy.deleteGroups
@@ -162,7 +165,7 @@ def setupProxies(typename, name, obj, stuffs, richMesh, config, deleteGroups, de
                     else:
                         stuffname = None
 
-                    stuff.richMesh = richmesh.getRichMesh(obj, proxy, richMesh.weights, richMesh.shapes, richMesh.armature, config.scale)
+                    stuff.richMesh = richmesh.getRichMesh(obj, proxy, richMesh.weights, richMesh.shapes, richMesh.armature)
                     stuffs.append(stuff)
     return foundProxy, deleteVerts
 
@@ -170,11 +173,11 @@ def setupProxies(typename, name, obj, stuffs, richMesh, config, deleteGroups, de
 #
 #
 
-def filterMesh(richMesh, scale, deleteGroups, deleteVerts, eyebrows, lashes, useFaceMask = False):
+def filterMesh(richMesh, deleteGroups, deleteVerts, eyebrows, lashes, useFaceMask = False):
     """
     Filter out vertices and faces from the mesh that are not desired for exporting.
     """
-    # TODO scaling does not belong in a filter method
+    # DONE. TODO scaling does not belong in a filter method.
     obj = richMesh.object
 
     killUvs = numpy.zeros(len(obj.texco), bool)
@@ -268,10 +271,10 @@ def filterMesh(richMesh, scale, deleteGroups, deleteVerts, eyebrows, lashes, use
             morphs2 = {}
             for (v1,dx) in morphs1.items():
                 if not killVerts[v1]:
-                    morphs2[newVerts[v1]] = scale*dx
+                    morphs2[newVerts[v1]] = dx
             shapes.append((name, morphs2))
 
-    richMesh.fromProxy(coords, texVerts, faceVerts, faceUvs, weights, shapes, scale=scale)
+    richMesh.fromProxy(coords, texVerts, faceVerts, faceUvs, weights, shapes)
     richMesh.vertexMask = numpy.logical_not(killVerts)
     richMesh.vertexMapping = newVerts
     richMesh.faceMask = numpy.logical_not(faceMask)

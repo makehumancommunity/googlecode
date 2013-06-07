@@ -82,8 +82,6 @@ class RichMesh:
 
     def fromProxy(self, coords, texVerts, faceVerts, faceUvs, weights, shapes, scale=1.0):
         obj = self.object = module3d.Object3D(self.name)
-        if scale != 1.0:
-            coords = [scale*co for co in coords]
         obj.setCoords(coords)
         obj.setUVs(texVerts)
 
@@ -104,6 +102,25 @@ class RichMesh:
         self.weights = weights
         self.shapes = shapes
         return self
+
+
+    def rescale(self, scale):
+        obj = self.object
+        newobj = module3d.Object3D(self.name)
+        newobj.setCoords(scale*obj.coord)
+        newobj.setUVs(obj.texco)
+        newobj.setFaces(obj.fvert, obj.fuvs)
+        self.object = newobj
+
+        newshapes = []
+        print(self.shapes)
+        for name,shape in self.shapes:
+            newshape = {}
+            print name, shape
+            for vn,dr in shape.items():
+                newshape[vn] = scale*dr
+            newshapes.append((name, newshape))
+        self.shapes = newshapes
 
 
     def __repr__(self):

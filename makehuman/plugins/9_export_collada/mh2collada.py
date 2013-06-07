@@ -92,7 +92,7 @@ def exportDae(human, name, fp, config):
         '    </contributor>\n' +
         '    <created>%s</created>\n' % date +
         '    <modified>%s</modified>\n' % date +
-        '    <unit meter="%.4f" name="meter"/>\n' % (0.1/config.scale) +
+        '    <unit meter="1.0" name="meter"/>\n' +
         '    <up_axis>Y_UP</up_axis>\n' +
         '  </asset>\n' +
         '  <library_images>\n')
