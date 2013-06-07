@@ -58,7 +58,7 @@ class ExporterFBX(Exporter):
     def build(self, options, taskview):
         Exporter.build(self, options, taskview)
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
-        self.useCustomTargets = options.addWidget(gui.CheckBox("Custom shapes", False))
+        self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
 
     def export(self, human, filename):
         from . import mh2fbx

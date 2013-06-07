@@ -60,7 +60,7 @@ class ExporterCollada(Exporter):
         self.rotate90X = options.addWidget(gui.CheckBox("Z up (Rotate 90 X)", False))
         self.rotate90Z = options.addWidget(gui.CheckBox("Face X (Rotate 90 Z)", False))
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
-        self.useCustomTargets = options.addWidget(gui.CheckBox("Custom shapes", False))
+        self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
 
         rigtypes = []
         self.libraryRig     = options.addWidget(gui.RadioButton(rigtypes, "Use rig from library", True))
