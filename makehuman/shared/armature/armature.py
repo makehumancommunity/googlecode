@@ -63,6 +63,7 @@ def setupArmature(name, human, options):
 class RigOptions:
     def __init__(self,
             rigtype = "basic",
+            scale = 1.0,
             useMuscles = False,
             addConnectingBones = False,
             facepanel = False,
@@ -73,6 +74,7 @@ class RigOptions:
         ):
 
         self.rigtype = rigtype
+        self.scale = scale
         self.useSplitBones = False
         self.useMuscles = useMuscles
         self.addConnectingBones = addConnectingBones
@@ -219,7 +221,7 @@ class Bone:
         if isinstance(self.roll, str):
             if self.roll[0:5] == "Plane":
                 normal = m2b(self.armature.parser.normals[self.roll])
-                self.computeRoll(normal)
+                self.roll = computeRoll(self.head, self.tail, normal)
 
 
     def rescale(self, scale):
@@ -231,32 +233,6 @@ class Bone:
         self.matrixRelative = None
         self.bindMatrix = None
         self.bindInverse = None
-
-
-    def computeRoll(self, normal):
-        if normal is None:
-            return
-
-        p1 = m2b(self.head)
-        p2 = m2b(self.tail)
-        xvec = normal
-        yvec = getUnitVector(p2-p1)
-        xy = np.dot(xvec,yvec)
-        yvec = getUnitVector(yvec-xy*xvec)
-        zvec = getUnitVector(np.cross(xvec, yvec))
-        if zvec is None:
-            return 0
-        else:
-            mat = np.array((xvec,yvec,zvec))
-
-        checkOrthogonal(mat)
-        quat = tm.quaternion_from_matrix(mat)
-        if abs(quat[0]) < 1e-4:
-            self.roll = 0
-        else:
-            self.roll = math.pi - 2*math.atan(quat[2]/quat[0])
-        if self.roll > math.pi:
-            self.roll -= 2*math.pi
 
 
     def calcRestMatrix(self):

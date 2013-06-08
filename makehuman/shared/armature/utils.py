@@ -63,6 +63,14 @@ def splitBoneName(bone):
         return words[0], ""
 
 
+def getFkName(base, ext):
+    return (base + ".fk" + ext)
+
+
+def getIkName(base, ext):
+    return (base + ".ik" + ext)
+
+
 def splitBonesNames(base, ext, numAfter):
     if numAfter:
         defname1 = "DEF-"+base+ext+".01"
@@ -73,6 +81,11 @@ def splitBonesNames(base, ext, numAfter):
         defname2 = "DEF-"+base+".02"+ext
         defname3 = "DEF-"+base+".03"+ext
     return defname1, defname2, defname3
+
+
+def csysBoneName(bname, infix):
+    base,ext = splitBoneName(bname)
+    return ("CSYS-" + base + infix + ext)
 
 
 def addDict(dict, struct):
@@ -107,6 +120,33 @@ def checkOrthogonal(mat):
             if abs(diff[i,j]) > 1e-5:
                 raise NameError("Not ortho: diff[%d,%d] = %g\n%s\n\%s" % (i, j, diff[i,j], mat, prod))
     return True
+
+
+def computeRoll(head, tail, normal):
+    if normal is None:
+        return 0
+
+    p1 = m2b(head)
+    p2 = m2b(tail)
+    xvec = normal
+    yvec = getUnitVector(p2-p1)
+    xy = np.dot(xvec,yvec)
+    yvec = getUnitVector(yvec-xy*xvec)
+    zvec = getUnitVector(np.cross(xvec, yvec))
+    if zvec is None:
+        return 0
+    else:
+        mat = np.array((xvec,yvec,zvec))
+
+    checkOrthogonal(mat)
+    quat = tm.quaternion_from_matrix(mat)
+    if abs(quat[0]) < 1e-4:
+        return 0
+    else:
+        roll = math.pi + 2*math.atan(quat[2]/quat[0])
+
+    return max(-math.pi, min(roll, math.pi))
+
 
 #-------------------------------------------------------------------------------
 #

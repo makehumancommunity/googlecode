@@ -131,6 +131,12 @@ class Parser:
 
 
     def addIkChains(self, generic, boneInfo, ikChains):
+        """
+        Adds FK and IK versions of the bones in the chain, and add CopyTransform
+        constraints to the original bone, which is moved to the L_HELP layer. E.g.
+        shin.L => shin.fk.L, shin.ik.L, shin.L
+        """
+
         amt = self.armature
         for bname in generic.keys():
             bone = boneInfo[bname]
@@ -139,39 +145,54 @@ class Parser:
             bone.parent = self.getParent(bone)
 
             if base in ikChains.keys():
+                print bone, bone.parent
+                pbase,pext = splitBoneName(bone.parent)
                 value = ikChains[base]
-                fkName = base + ".fk" + ext
-                ikName = base + ".ik" + ext
-                self.headsTails[fkName] = headTail
-                self.headsTails[ikName] = headTail
-
-                try:
-                    layer,cnsname = value
-                    simple = True
-                except:
-                    count, layer, cnsname, target, pole, lang, rang = value
-                    simple = False
+                type = value[0]
+                if type == "DownStream":
+                    _,layer,cnsname = value
+                    fkParent = getFkName(pbase,pext)
+                elif type == "Upstream":
+                    _,layer,cnsname = value
+                    fkParent = ikParent = bone.parent
+                elif type == "Leaf":
+                    _, layer, count, cnsname, target, pole, lang, rang = value
+                    fkParent = getFkName(pbase,pext)
+                    ikParent = getIkName(pbase,pext)
+                else:
+                    raise NameError("Unknown IKChain type %s" % type)
 
                 if ext == ".R":
                     layer <<= 16
 
+                fkName = getFkName(base,ext)
+                self.headsTails[fkName] = headTail
                 fkBone = boneInfo[fkName] = Bone(amt, fkName)
-                fkBone.fromInfo((bone, bone.parent, F_WIR, layer<<1))
-                ikBone = boneInfo[ikName] = Bone(amt, ikName)
-                ikBone.fromInfo((bone, bone.parent, F_WIR, layer))
+                fkBone.fromInfo((bname, fkParent, F_WIR, layer<<1))
 
                 customShape = self.customShapes[bone.name]
                 self.customShapes[fkName] = customShape
-                self.customShapes[ikName] = customShape
                 self.customShapes[bone.name] = None
                 bone.layers = L_HELP
 
-                self.constraints[bname] = [
-                    copyTransform(fkName, cnsname+"FK"),
-                    copyTransform(ikName, cnsname+"IK", 0)
-                ]
+                cns = copyTransform(fkName, cnsname+"FK")
+                try:
+                    self.constraints[bname].append(cns)
+                except KeyError:
+                    self.constraints[bname] = [cns]
 
-                if not simple:
+                if type == "DownStream":
+                    continue
+
+                ikName = base + ".ik" + ext
+                self.headsTails[ikName] = headTail
+                ikBone = boneInfo[ikName] = Bone(amt, ikName)
+                ikBone.fromInfo((bname, ikParent, F_WIR, layer))
+
+                self.customShapes[ikName] = customShape
+                self.constraints[bname].append( copyTransform(ikName, cnsname+"IK", 0) )
+
+                if type == "Leaf":
                     words = bone.parent.rsplit(".", 1)
                     pbase = words[0]
                     if len(words) == 1:
@@ -196,6 +217,14 @@ class Parser:
 
 
     def addDeformBones(self, generic, boneInfo):
+        """
+        Add deform bones with CopyTransform constraints to the original bone.
+        Deform bones start with "DEF-", as in Rigify.
+        Also split selected bones into two or three parts for better deformation,
+        and constrain them to copy the partially.
+        E.g. forearm.L => DEF-forearm.01.L, DEF-forearm.02.L, DEF-forearm.03.L
+        """
+
         if not (self.useDeformBones or self.useSplitBones):
             return
 
@@ -265,6 +294,14 @@ class Parser:
 
 
     def getVertexGroups(self):
+        """
+        Read vertex groups from specified files, and do some manipulations.
+        If the rig has deform bones, prefix vertex group names with "DEF-".
+        If some bones are split, split the vertex groups into two or three.
+        Rigify uses deform and split names but not bones, because the rigify
+        script will fix that in Blender.
+        """
+
         amt = self.armature
         self.vertexGroupFiles += ["leftright"]
         vgroupList = []
@@ -302,19 +339,20 @@ class Parser:
                 amt.vertexWeights[bname] = vgroup
 
 
-
     def splitVertexGroup(self, bname, vgroup):
+        """
+        Splits a vertex group into two or three, with weights distributed
+        linearly along the bone.
+        """
+
         amt = self.armature
         base,ext = splitBoneName(bname)
         npieces,target,numAfter = self.splitBones[base]
         defName1,defName2,defName3 = splitBonesNames(base, ext, numAfter)
 
-        hname,tname = self.headsTails[bname]
-        head = self.locations[hname]
-        tail = self.locations[tname]
-        orig = head + self.origin
-        vec0 = tail - head
-        vec = vec0/np.dot(vec0,vec0)
+        head,tail = self.headsTails[bname]
+        vec = getUnitVector(self.locations[head] - self.locations[tail])
+        orig = self.locations[head] + self.origin
 
         vgroup1 = []
         vgroup2 = []
@@ -350,3 +388,70 @@ class Parser:
             amt.vertexWeights[defName1] = vgroup1
             amt.vertexWeights[defName2] = vgroup2
             amt.vertexWeights[defName3] = vgroup3
+
+
+    def addCSysBones(self, csysList, boneInfo):
+        """
+        Add a local coordinate system consisting of six bones around the head
+        of a given bone. Useful for setting up ROTATION_DIFF drivers for
+        corrective shapekeys.
+        Y axis: parallel to bone.
+        X axis: main bend axis, normal to plane.
+        Z axis: third axis.
+        """
+
+        for bname,ikTarget in csysList:
+            bone = boneInfo[bname]
+            parent = self.getParent(bone)
+            head,_ = self.headsTails[bname]
+
+            self.addCSysBone(bname, "_X1", boneInfo, parent, head, (1,0,0), 0)
+            self.addCSysBone(bname, "_X2", boneInfo, parent, head, (-1,0,0), 0)
+            csysY1 = self.addCSysBone(bname, "_Y1", boneInfo, parent, head, (0,1,0), 90*D)
+            csysY2 = self.addCSysBone(bname, "_Y2", boneInfo, parent, head, (0,-1,0), -90*D)
+            self.addCSysBone(bname, "_Z1", boneInfo, parent, head, (0,0,1), 0)
+            self.addCSysBone(bname, "_Z2", boneInfo, parent, head, (0,0,-1), 0)
+
+            self.constraints[csysY1] = [('IK', 0, 1, ['IK', ikTarget, 1, None, (True, False,False)])]
+            self.constraints[csysY2] = [('IK', 0, 1, ['IK', ikTarget, 1, None, (True, False,False)])]
+
+
+    def addCSysBone(self, bname, infix, boneInfo, parent, head, offs, roll):
+        csys = csysBoneName(bname, infix)
+        bone = boneInfo[csys] = Bone(self.armature, csys)
+        bone.fromInfo((roll, parent, 0, L_HELP2))
+        self.headsTails[csys] = (head, (head,offs))
+        return csys
+
+
+    def fixCSysBones(self, csysList):
+        """
+        Rotate the coordinate system bones into place.
+        """
+
+        amt = self.armature
+        for bone in amt.bones.values():
+            bone.calcRestMatrix()
+
+        for bname,ikTarget in csysList:
+            bone = amt.bones[bname]
+            mat = bone.matrixRest
+
+            self.fixCSysBone(bname, "_X1", mat, 0, (1,0,0), 90*D)
+            self.fixCSysBone(bname, "_X2", mat, 0, (1,0,0), -90*D)
+            self.fixCSysBone(bname, "_Y1", mat, 1, (0,1,0), 90*D)
+            self.fixCSysBone(bname, "_Y2", mat, 1, (0,1,0), -90*D)
+            self.fixCSysBone(bname, "_Z1", mat, 2, (0,0,1), 90*D)
+            self.fixCSysBone(bname, "_Z2", mat, 2, (0,0,1), -90*D)
+
+
+    def fixCSysBone(self, bname, infix, mat, index, axis, angle):
+        csys = csysBoneName(bname, infix)
+        bone = self.armature.bones[csys]
+        rot = tm.rotation_matrix(angle, axis)
+        cmat = np.dot(mat, rot)
+        bone.tail = bone.head + self.armature.bones[bname].length * cmat[:3,1]
+        normal = getUnitVector(mat[:3,index])
+        bone.roll = computeRoll(bone.head, bone.tail, normal)
+
+

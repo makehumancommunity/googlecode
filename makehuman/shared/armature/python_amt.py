@@ -100,6 +100,11 @@ class PythonParser(Parser):
     def setup(self):
         self.setupToRoll()
         self.getVertexGroups()
+        self.postSetup()
+
+
+    def postSetup(self):
+        return
 
 
     def setupToRoll(self):
@@ -119,6 +124,9 @@ class PythonParser(Parser):
                 bone.roll = amt.bones[bone.roll].roll
             elif isinstance(bone.roll, Bone):
                 bone.roll = bone.roll.roll
+            elif isinstance(bone.roll, tuple):
+                bname,angle = bone.roll
+                bone.roll = amt.bones[bname].roll + angle
 
 
     def setupNormals(self):

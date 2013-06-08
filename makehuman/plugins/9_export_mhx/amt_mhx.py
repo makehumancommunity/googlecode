@@ -99,8 +99,8 @@ class MhxArmature(ExportArmature):
   Property MhaElbowPlant_L False Left_elbow_plant ;
   PropKeys MhaElbowPlant_L "type":'BOOLEAN',"min":0,"max":1, ;
 
-  Property MhaHandFollowsWrist_L True Left_hand_follows_wrist ;
-  PropKeys MhaHandFollowsWrist_L "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaHandFollowsIKHand_L True Left_hand_follows_wrist ;
+  PropKeys MhaHandFollowsIKHand_L "type":'BOOLEAN',"min":0,"max":1, ;
 
   Property MhaLegIk_L 0.0 Left_leg_FK/IK ;
   PropKeys MhaLegIk_L "min":0.0,"max":1.0, ;
@@ -114,8 +114,8 @@ class MhxArmature(ExportArmature):
   # Property MhaKneeFollowsHip_L False Left_knee_follows_hip ;
   # PropKeys MhaKneeFollowsHip_L "type":'BOOLEAN',"min":0,"max":1, ;
 
-  # Property MhaElbowFollowsWrist_L False Left_elbow_follows_wrist ;
-  # PropKeys MhaElbowFollowsWrist_L "type":'BOOLEAN',"min":0,"max":1, ;
+  # Property MhaElbowFollowsIKHand_L False Left_elbow_follows_wrist ;
+  # PropKeys MhaElbowFollowsIKHand_L "type":'BOOLEAN',"min":0,"max":1, ;
 
   # Property MhaElbowFollowsShoulder_L True Left_elbow_follows_shoulder ;
   # PropKeys MhaElbowFollowsShoulder_L "type":'BOOLEAN',"min":0,"max":1, ;
@@ -135,8 +135,8 @@ class MhxArmature(ExportArmature):
   Property MhaLegIk_R 0.0 Right_leg_FK/IK ;
   PropKeys MhaLegIk_R "min":0.0,"max":1.0, ;
 
-  Property MhaHandFollowsWrist_R True Right_hand_follows_wrist ;
-  PropKeys MhaHandFollowsWrist_R "type":'BOOLEAN',"min":0,"max":1, ;
+  Property MhaHandFollowsIKHand_R True Right_hand_follows_wrist ;
+  PropKeys MhaHandFollowsIKHand_R "type":'BOOLEAN',"min":0,"max":1, ;
 
   Property MhaLegIkToAnkle_R False Right_leg_IK_to_ankle ;
   PropKeys MhaLegIkToAnkle_R "type":'BOOLEAN',"min":0,"max":1, ;
@@ -147,8 +147,8 @@ class MhxArmature(ExportArmature):
   # Property MhaKneeFollowsHip_R False Right_knee_follows_hip ;
   # PropKeys MhaKneeFollowsHip_R "type":'BOOLEAN',"min":0,"max":1, ;
 
-  # Property MhaElbowFollowsWrist_R False Right_elbow_follows_wrist ;
-  # PropKeys MhaElbowFollowsWrist_R "type":'BOOLEAN',"min":0,"max":1, ;
+  # Property MhaElbowFollowsIKHand_R False Right_elbow_follows_wrist ;
+  # PropKeys MhaElbowFollowsIKHand_R "type":'BOOLEAN',"min":0,"max":1, ;
 
   # Property MhaElbowFollowsShoulder_R True Right_elbow_follows_shoulder ;
   # PropKeys MhaElbowFollowsShoulder_R "type":'BOOLEAN',"min":0,"max":1, ;
@@ -287,7 +287,12 @@ class MhxParser(PythonParser):
         self.addBones(rig_muscle.Armature, boneInfo)
         self.addBones(rig_mhx.Armature, boneInfo)
         self.addIkChains(generic, boneInfo, rig_mhx.IkChains)
+        self.addCSysBones(rig_mhx.CoordinateSystems, boneInfo)
         PythonParser.createBones(self, boneInfo)
+
+
+    def postSetup(self):
+        self.fixCSysBones(rig_mhx.CoordinateSystems)
 
 
     def dynamicLocations(self):

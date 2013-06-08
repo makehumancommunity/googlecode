@@ -61,13 +61,13 @@ HeadsTails = {
 
     'ankle.L' :         ('l-ankle', 'l-ankle-tip'),
     'ankle.ik.L' :      ('l-ankle', 'l-ankle-tip'),
-    'leg.ik.L' :        ('l-heel', 'l-foot-2'),
+    'foot.ik.L' :        ('l-heel', 'l-foot-2'),
     'toe.rev.L' :       ('l-foot-2', 'l-foot-1'),
     'foot.rev.L' :      ('l-foot-1', 'l-ankle'),
 
     'ankle.R' :         ('r-ankle', 'r-ankle-tip'),
     'ankle.ik.R' :      ('r-ankle', 'r-ankle-tip'),
-    'leg.ik.R' :        ('r-heel', 'r-foot-2'),
+    'foot.ik.R' :        ('r-heel', 'r-foot-2'),
     'toe.rev.R' :       ('r-foot-2', 'r-foot-1'),
     'foot.rev.R' :      ('r-foot-1', 'r-ankle'),
 
@@ -94,12 +94,12 @@ HeadsTails = {
     'arm_socket.R' :    ('r-shoulder', ('r-shoulder', ysmall)),
     'arm_hinge.R' :     ('r-shoulder', ('r-shoulder', ysmall)),
 
-    'wrist.ik.L' :      ('l-hand', 'l-hand-end'),
+    'hand.ik.L' :       ('l-hand', 'l-hand-end'),
     'elbow.pt.ik.L' :   ('l-elbow-pt', ('l-elbow-pt', ysmall)),
     'elbow.pt.fk.L' :   ('l-elbow-pt', ('l-elbow-pt', ysmall)),
     'elbow.link.L' :    ('l-elbow', 'l-elbow-pt'),
 
-    'wrist.ik.R' :      ('r-hand', 'r-hand-end'),
+    'hand.ik.R' :       ('r-hand', 'r-hand-end'),
     'elbow.pt.ik.R' :   ('r-elbow-pt', ('r-elbow-pt', ysmall)),
     'elbow.pt.fk.R' :   ('r-elbow-pt', ('r-elbow-pt', ysmall)),
     'elbow.link.R' :    ('r-elbow', 'r-elbow-pt'),
@@ -149,15 +149,15 @@ Armature = {
     # Leg
 
     'hip.L' :          (0, 'hips', F_WIR, L_TWEAK),
-    'leg.ik.L' :       (0, None, F_WIR, L_LLEGIK),
-    'toe.rev.L' :      (0, 'leg.ik.L', F_WIR, L_LLEGIK),
+    'foot.ik.L' :      (0, None, F_WIR, L_LLEGIK),
+    'toe.rev.L' :      (0, 'foot.ik.L', F_WIR, L_LLEGIK),
     'foot.rev.L' :     (0, 'toe.rev.L', F_WIR, L_LLEGIK),
     'ankle.L' :        (0, None, F_WIR, L_LEXTRA),
     'ankle.ik.L' :     (0, 'foot.rev.L', 0, L_HELP2),
 
     'hip.R' :          (0, 'hips', F_WIR, L_TWEAK),
-    'leg.ik.R' :       (0, None, F_WIR, L_RLEGIK),
-    'toe.rev.R' :      (0, 'leg.ik.R', F_WIR, L_RLEGIK),
+    'foot.ik.R' :      (0, None, F_WIR, L_RLEGIK),
+    'toe.rev.R' :      (0, 'foot.ik.R', F_WIR, L_RLEGIK),
     'foot.rev.R' :     (0, 'toe.rev.R', F_WIR, L_RLEGIK),
     'ankle.R' :        (0, None, F_WIR, L_REXTRA),
     'ankle.ik.R' :     (0, 'foot.rev.R', 0, L_HELP2),
@@ -179,12 +179,12 @@ Armature = {
     'arm_hinge.L' :    (0, 'arm_socket.L', 0, L_HELP),
     'arm_hinge.R' :    (0, 'arm_socket.R', 0, L_HELP),
 
-    'wrist.ik.L' :     (0, None, F_WIR, L_LARMIK),
+    'hand.ik.L' :      ('hand.L', None, F_WIR, L_LARMIK),
     'elbow.pt.ik.L' :  (0, 'shoulder.L', F_WIR, L_LARMIK+L_LEXTRA),
     'elbow.pt.fk.L' :  (0, 'upper_arm.L', 0, L_HELP2),
     'elbow.link.L' :   (0, 'upper_arm.ik.L', F_RES, L_LARMIK+L_LEXTRA),
 
-    'wrist.ik.R' :     (0, None, F_WIR, L_RARMIK),
+    'hand.ik.R' :      ('hand.R', None, F_WIR, L_RARMIK),
     'elbow.pt.ik.R' :  (0, 'shoulder.R', F_WIR, L_RARMIK+L_REXTRA),
     'elbow.pt.fk.R' :  (0, 'upper_arm.R', 0, L_HELP2),
     'elbow.link.R' :   (0, 'upper_arm.ik.R', F_RES, L_RARMIK+L_REXTRA),
@@ -204,21 +204,6 @@ Armature = {
     'pinky.R' :        ('f_pinky.01.R', 'palm.04.R', F_WIR, L_RHANDIK),
 }
 
-"""
-
-    # Directions
-    ('DirUpLegFwd.L',       180*D, 'hip.L', 0, L_HELP),
-    ('DirUpLegFwd.R',       180*D, 'hip.R', 0, L_HELP),
-    ('DirUpLegBack.L',      0*D, 'hip.L', 0, L_HELP),
-    ('DirUpLegBack.R',      0*D, 'hip.R', 0, L_HELP),
-    ('DirUpLegOut.L',       -90*D, 'hip.L', 0, L_HELP),
-    ('DirUpLegOut.R',       90*D, 'hip.R', 0, L_HELP),
-
-    ('DirKneeBack.L',       0*D, 'thigh.L', 0, L_HELP),
-    ('DirKneeBack.R',       0*D, 'thigh.R', 0, L_HELP),
-    ('DirKneeInv.L',        0*D, 'thigh.L', 0, L_HELP),
-    ('DirKneeInv.R',        0*D, 'thigh.R', 0, L_HELP),
-"""
 
 Parents = {
     'upper_arm.L' :     'arm_hinge.L',
@@ -226,6 +211,12 @@ Parents = {
     'thigh.L' :         'hip.L',
     'thigh.R' :         'hip.R',
 }
+
+
+CoordinateSystems = [
+    ("upper_arm.L", "forearm.L"),
+    ("forearm.L", "hand.L"),
+]
 
 
 RotationLimits = {
@@ -259,8 +250,8 @@ CustomShapes = {
 
     'arm_root.L' :      'GZM_Ball025',
     'arm_root.R' :      'GZM_Ball025',
-    'wrist.ik.L' :      'GZM_Ball025',
-    'wrist.ik.R' :      'GZM_Ball025',
+    'hand.ik.L' :       'GZM_Ball025',
+    'hand.ik.R' :       'GZM_Ball025',
     'elbow.pt.ik.L' :   'GZM_Cube025',
     'elbow.pt.ik.R' :   'GZM_Cube025',
 
@@ -280,10 +271,13 @@ CustomShapes = {
 }
 
 IkChains = {
-    "upper_arm" :   (L_LARMIK, "Arm"),
-    "forearm" :     (2, L_LARMIK, "Arm", "wrist", "elbow.pt", 180*D, 0*D),
-    "thigh" :       (L_LLEGIK, "Leg"),
-    "shin" :        (2, L_LLEGIK, "Leg", "ankle", "knee.pt", -90*D, -90*D),
+    "upper_arm" :   ("Upstream", L_LARMIK, "Arm"),
+    "forearm" :     ("Leaf", L_LARMIK, 2, "Arm", "hand", "elbow.pt", 180*D, 0*D),
+    "hand" :        ("DownStream", L_LARMIK, "Arm"),
+    "thigh" :       ("Upstream", L_LLEGIK, "Leg"),
+    "shin" :        ("Leaf", L_LLEGIK, 2, "Leg", "ankle", "knee.pt", -90*D, -90*D),
+    "foot" :        ("DownStream", L_LLEGIK, "Leg"),
+    "toe" :         ("DownStream", L_LLEGIK, "Leg"),
 }
 
 Hint = 18*D
@@ -315,18 +309,18 @@ Constraints = {
         ('LimitRot', C_OW_LOCAL, 1, ['Hint', (Hint,Hint, 0,0, 0,0), (1,0,0)])
         ],
     'foot.L' : [
-         ('IK', 0, 0, ['RevIK', 'foot.rev.L', 1, None, (1,0,1)]),
-         ('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,True)])
+         ('IK', 0, 0, ['LegIK', 'foot.rev.L', 1, None, (1,0,1)]),
+         #('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,True)])
         ],
     'foot.R' : [
-         ('IK', 0, 0, ['RevIK', 'foot.rev.R', 1, None, (1,0,1)]),
-         ('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,True)])
+         ('IK', 0, 0, ['LegIK', 'foot.rev.R', 1, None, (1,0,1)]),
+         #('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,True)])
         ],
     'toe.L' : [
-         ('IK', 0, 0, ['RevIK', 'toe.rev.L', 1, None, (1,0,1)]),
+         ('IK', 0, 0, ['LegIK', 'toe.rev.L', 1, None, (1,0,1)]),
         ],
     'toe.R' : [
-         ('IK', 0, 0, ['RevIK', 'toe.rev.R', 1, None, (1,0,1)]),
+         ('IK', 0, 0, ['LegIK', 'toe.rev.R', 1, None, (1,0,1)]),
         ],
     'ankle.ik.L' : [
          ('CopyLoc', 0, 1, ['Foot', 'foot.rev.L', (1,1,1), (0,0,0), 1, False]),
@@ -360,14 +354,14 @@ Constraints = {
         ('LimitRot', C_OW_LOCAL, 1, ['Hint', (Hint,Hint, 0,0, 0,0), (1,0,0)])
         ],
     'hand.L' : [
-         ('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,False)]),
-         ('CopyLoc', 0, 0, ['WristLoc', 'wrist.ik.L', (1,1,1), (0,0,0), 0, False]),
-         ('CopyRot', 0, 0, ['WristRot', 'wrist.ik.L', (1,1,1), (0,0,0), False])
+         #('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,False)]),
+         ('CopyLoc', 0, 0, ['HandLoc', 'hand.ik.L', (1,1,1), (0,0,0), 0, False]),
+         ('CopyRot', 0, 0, ['HandRot', 'hand.ik.L', (1,1,1), (0,0,0), False])
         ],
     'hand.R' : [
-         ('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,False)]),
-         ('CopyLoc', 0, 0, ['WristLoc', 'wrist.ik.R', (1,1,1), (0,0,0), 0, False]),
-         ('CopyRot', 0, 0, ['WristRot', 'wrist.ik.R', (1,1,1), (0,0,0), False])
+         #('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,False)]),
+         ('CopyLoc', 0, 0, ['HandLoc', 'hand.ik.R', (1,1,1), (0,0,0), 0, False]),
+         ('CopyRot', 0, 0, ['HandRot', 'hand.ik.R', (1,1,1), (0,0,0), False])
         ],
     'elbow.link.L' : [
         ('StretchTo', 0, 1, ['Stretch', 'elbow.pt.ik.L', 0, 1, 3.0])
@@ -418,7 +412,6 @@ Constraints = {
 
 }
 
-
 #
 #   PropLRDrivers
 #   (Bone, Name, Props, Expr)
@@ -432,9 +425,10 @@ PropLRDrivers = [
     ('thigh', 'LegFK', ['LegIk'], '1-x1'),
     ('shin', 'LegIK', ['LegIk'], 'x1'),
     ('shin', 'LegFK', ['LegIk'], '1-x1'),
-    ('foot', 'RevIK', ['LegIk', 'LegIkToAnkle'], 'x1*(1-x2)'),
+    ('foot', 'LegFK', ['LegIk'], '1-x1'),
+    ('foot', 'LegIK', ['LegIk', 'LegIkToAnkle'], 'x1*(1-x2)'),
     #('foot', 'FreeIK', ['LegIk'], '1-x1'),
-    ('toe', 'RevIK', ['LegIk', 'LegIkToAnkle'], 'x1*(1-x2)'),
+    ('toe', 'LegIK', ['LegIk', 'LegIkToAnkle'], 'x1*(1-x2)'),
     ('ankle.ik', 'Foot', ['LegIkToAnkle'], '1-x1'),
     ('ankle.ik', 'Ankle', ['LegIkToAnkle'], 'x1'),
 
@@ -447,11 +441,12 @@ PropLRDrivers = [
     #('upper_arm', 'Elbow', ['ElbowPlant'], 'x1'),
     ('forearm', 'ArmIK', ['ArmIk', 'ElbowPlant'], 'x1*(1-x2)'),
     ('forearm', 'ArmFK', ['ArmIk', 'ElbowPlant'], '1-x1*(1-x2)'),
-    #('forearm', 'Wrist', ['ArmIk', 'ElbowPlant'], 'x1*x2'),
+    #('forearm', 'Hand', ['ArmIk', 'ElbowPlant'], 'x1*x2'),
+    ('hand', 'ArmFK', ['ArmIk'], '1-x1'),
     #('hand', 'FreeIK', ['ArmIk', 'ElbowPlant'], '(1-x1)*(1-x2)'),
-    #('hand', 'WristLoc', ['ArmIk'], 'x1'),
-    ('hand', 'WristRot', ['ArmIk', 'HandFollowsWrist'], 'x1*x2'),
-    #('HlpLoArm', 'WristRot', ['ArmIk', 'HandFollowsWrist'], 'x1*x2'),
+    #('hand', 'HandLoc', ['ArmIk'], 'x1'),
+    ('hand', 'HandRot', ['ArmIk', 'HandFollowsIKHand'], 'x1*x2'),
+    #('HlpLoArm', 'HandRot', ['ArmIk', 'HandFollowsIKHand'], 'x1*x2'),
 
     # Finger
 
@@ -479,8 +474,8 @@ SoftPropLRDrivers = [
 
     # Arm
 
-    #('ElbowPT', 'Hand', ['ElbowFollowsWrist'], 'x1'),
-    #('ElbowPT', 'Shoulder', ['ElbowFollowsWrist'], '(1-x1)'),
+    #('ElbowPT', 'Hand', ['ElbowFollowsHand'], 'x1'),
+    #('ElbowPT', 'Shoulder', ['ElbowFollowsHand'], '(1-x1)'),
 
 ]
 
@@ -501,11 +496,11 @@ PropDrivers = [
     #Arm
     ('upper_arm.L', 'LimitRot', ['RotationLimits', 'ArmIk.L'], 'x1*(1-x2)'),
     #('LoArm.L', 'LimitRot', ['RotationLimits', 'ArmIk.L'], 'x1*(1-x2)'),
-    ('hand.L', 'LimitRot', ['RotationLimits', 'ArmIk.L', 'HandFollowsWrist.L'], 'x1*(1-x2*x3)'),
+    ('hand.L', 'LimitRot', ['RotationLimits', 'ArmIk.L', 'HandFollowsIKHand.L'], 'x1*(1-x2*x3)'),
 
     ('upper_arm.R', 'LimitRot', ['RotationLimits', 'ArmIk.R'], 'x1*(1-x2)'),
     #('LoArm.R', 'LimitRot', ['RotationLimits', 'ArmIk.R'], 'x1*(1-x2)'),
-    ('hand.R', 'LimitRot', ['RotationLimits', 'ArmIk.R', 'HandFollowsWrist.R'], 'x1*(1-x2*x3)'),
+    ('hand.R', 'LimitRot', ['RotationLimits', 'ArmIk.R', 'HandFollowsIKHand.R'], 'x1*(1-x2*x3)'),
 
 ]
 
