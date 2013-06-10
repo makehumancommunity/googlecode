@@ -259,6 +259,8 @@ class Shader(object):
     def createShader(file, type, defines = []):
         with open(file, 'rU') as f:
             source = f.read()
+        if "#version" not in source:
+            log.warning("The shader source in %s does not contain an explicit GLSL version declaration. This could cause problems with some compilers.", file)
         if defines:
             # Add #define instructions for shader preprocessor to enable extra
             # shader features at compile time
