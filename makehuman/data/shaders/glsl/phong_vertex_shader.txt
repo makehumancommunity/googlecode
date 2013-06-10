@@ -1,3 +1,5 @@
+#version 120
+
 varying vec3 normal, lightDir, halfVector;
 varying vec4 ambient_color, diffuse_color, specular_color;
 

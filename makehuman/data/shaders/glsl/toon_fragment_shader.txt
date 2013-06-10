@@ -1,3 +1,5 @@
+#version 120
+
 varying vec3 vNormal;
 varying vec3 vVertex;
 uniform sampler2D unit0;
