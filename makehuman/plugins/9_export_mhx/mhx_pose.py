@@ -64,24 +64,12 @@ def writePose(fp, env):
     fp.write("Pose %s\n" % env.name)
     amt.writeControlPoses(fp, config)
     fp.write("  ik_solver 'LEGACY' ;\nend Pose\n")
-
-    if amt.options.rigtype == "mhx":
-        fp.write("AnimationData %s True\n" % env.name)
-        amt.writeDrivers(fp)
-        fp.write(
-"""
-  action_blend_type 'REPLACE' ;
-  action_extrapolation 'HOLD' ;
-  action_influence 1 ;
-  use_nla True ;
-end AnimationData
-""")
-
+    amt.writeDrivers(fp)
     fp.write("CorrectRig %s ;\n" % env.name)
-
     fp.write("""
 #endif
 """)
+
 
 # *** material-drivers
 

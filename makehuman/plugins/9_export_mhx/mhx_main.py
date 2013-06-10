@@ -66,6 +66,8 @@ class MhxEnvironment:
 #-------------------------------------------------------------------------------
 
 def exportMhx(human, filepath, config):
+    from .mhx_armature import setupArmature
+
     gui3d.app.progress(0, text="Exporting MHX")
     log.message("Exporting %s" % filepath.encode('utf-8'))
     time1 = time.clock()
@@ -77,7 +79,7 @@ def exportMhx(human, filepath, config):
 
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
-    amt = mhx_armature.getArmature(name, human, config.rigOptions)
+    amt = setupArmature(name, human, config.rigOptions)
     fp = open(filepath, 'w')
     fp.write(
         "# MakeHuman exported MHX\n" +
@@ -89,7 +91,6 @@ def exportMhx(human, filepath, config):
 
     proxies = scanProxies(human, config)
     env = MhxEnvironment(name, human, amt, config, proxies)
-    amt.setup()
 
     if not config.cage:
         fp.write(
@@ -98,7 +99,7 @@ def exportMhx(human, filepath, config):
             "#endif\n")
 
     fp.write("NoScale True ;\n")
-    amt.setupCustomShapes(fp)
+    #amt.setupCustomShapes(fp)
 
     gui3d.app.progress(0.1, text="Exporting armature")
     amt.writeArmature(fp, MINOR_VERSION, env)

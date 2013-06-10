@@ -72,24 +72,17 @@ class Skeleton(object):
             newBones[bone.name] = bone
         self.bones = newBones
 
-    def fromRigFile(self, filename, mesh):
+    def fromOptions(self, options, mesh):
         """
-        # TODO the .rig file parser does not belong in exportutils package (it is an importer...)
-        import exportutils.rig
-
-        joints, bones, vertexWeights = exportutils.rig.readRigFile(filename, mesh)
-
-        # TODO exportutils.rig uses mh2proxy.calcJointPosition(). I would prefer something like Skeleton.getHumanJointPosition()
-
-        for boneName, headPos, tailPos, roll, parentName, _ in bones:
-            if not parentName or parentName == "-":
-                parentName = None
-            self.addBone(boneName, parentName, headPos, tailPos, roll)
+        Create armature from option set.
+        Convert to skeleton.
+        TODO: Merge Armature and Skeleton classes one day.
         """
 
-        from armature.rigfile_amt import readRigfileArmature
+        from armature.armature import setupArmature
+        import gui3d
 
-        amt = readRigfileArmature(filename, mesh)
+        amt = setupArmature("python", gui3d.app.selectedHuman, options)
         for bone in amt.bones.values():
             self.addBone(bone.name, bone.parent, bone.head, bone.tail, bone.roll)
 
@@ -658,17 +651,17 @@ def getHumanJointPosition(mesh, jointName):
     verts = mesh.getCoords(mesh.getVerticesForGroups([fg.name]))
     return aljabr.centroid(verts)
 
-def loadRig(filename, mesh):
+def loadRig(options, mesh):
     """
-    Initializes a skeleton from a .rig file.
+    Initializes a skeleton from an option set
     Returns the skeleton and vertex-to-bone weights.
     Weights are of format: {"boneName": [ (vertIdx, weight), ...], ...}
     """
     import os
 
-    rigName = os.path.splitext(os.path.basename(filename))[0]
-    skel = Skeleton(rigName)
-    weights = skel.fromRigFile(filename, mesh)
+    #rigName = os.path.splitext(os.path.basename(filename))[0]
+    skel = Skeleton("python")
+    weights = skel.fromOptions(options, mesh)
     return skel, weights
 
 def getProxyWeights(proxy, humanWeights, mesh):

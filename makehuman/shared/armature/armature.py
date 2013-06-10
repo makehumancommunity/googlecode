@@ -38,52 +38,15 @@ from .utils import *
 #-------------------------------------------------------------------------------
 
 def setupArmature(name, human, options):
-    amt = Armature(name, options)
-
-    if options.rigtype == "basic":
-        from .basic import BasicParser
-        amt.parser = BasicParser(amt, human)
-        amt.setup()
-        log.message("Using basic rig")
-        return amt
-    elif options.rigtype:
-        from .rigfile_amt import RigfileParser
-        amt.parser = RigfileParser(amt, human)
-        amt.setup()
-        rigfile = "data/rigs/%s.rig" % options.rigtype
-        log.message("Using rig file %s" % rigfile)
-        return amt
-    else:
+    from .python_amt import PythonParser
+    if options is None:
         return None
-
-#-------------------------------------------------------------------------------
-#   Rigging options
-#-------------------------------------------------------------------------------
-
-class RigOptions:
-    def __init__(self,
-            rigtype = "basic",
-            scale = 1.0,
-            useMuscles = False,
-            addConnectingBones = False,
-            facepanel = False,
-            advancedSpine = False,
-            clothesRig = False,
-            useMasks = False,
-            expressions = False,
-        ):
-
-        self.rigtype = rigtype
-        self.scale = scale
-        self.useSplitBones = False
-        self.useMuscles = useMuscles
-        self.addConnectingBones = addConnectingBones
-        self.feetOnGround = False
-        self.facepanel = facepanel
-        self.advancedSpine = advancedSpine
-        self.clothesRig = clothesRig
-        self.useMasks = useMasks
-        self.expressions = expressions
+    else:
+        amt = Armature(name, options)
+        amt.parser = PythonParser(amt, human)
+        amt.setup()
+        log.message("Using rig with options %s" % options)
+        return amt
 
 #-------------------------------------------------------------------------------
 #   Armature base class.

@@ -36,6 +36,9 @@ from .armature import *
 
 from . import rig_joints
 from . import rig_bones
+from . import rig_muscle
+from . import rig_face
+from . import rig_control
 
 #-------------------------------------------------------------------------------
 #   Python Parser
@@ -45,28 +48,139 @@ class PythonParser(Parser):
 
     def __init__(self, amt, human):
         Parser. __init__(self, amt, human)
+        options = amt.options
+
         self.headsTails = None
         self.master = None
-        self.reparents = {}
-
-        self.useDeformBones = False
-        self.useDeformNames = False
-        self.useSplitBones = False
-        self.splitBones = {}
+        self.headName = 'head'
+        self.parents = {}
+        self.ikChains = {}
 
         self.normals = {}
-        self.planes = rig_bones.Planes
-        self.planeJoints = []
         self.vertexGroupFiles = []
         self.headName = 'Head'
 
         self.customTargetFiles = []
         self.loadedShapes = {}
+        self.root = "hips"
+
+        if options.useMuscles:
+            self.vertexGroupFiles = ["head", "muscles", "hand"]
+        else:
+            self.vertexGroupFiles = ["head", "bones", "hand"]
+
+        self.joints = (
+            rig_joints.Joints +
+            rig_bones.Joints +
+            rig_face.Joints +
+            rig_control.Joints
+        )
+
+        self.planes = rig_bones.Planes
+        self.planeJoints = rig_control.PlaneJoints
+
+        self.headsTails = mergeDicts([
+            rig_bones.HeadsTails,
+            rig_face.HeadsTails,
+            rig_control.HeadsTails,
+        ])
+
+        self.constraints = mergeDicts([
+            rig_bones.Constraints,
+            rig_face.Constraints
+        ])
+
+        self.rotationLimits = mergeDicts([
+            rig_bones.RotationLimits,
+            rig_face.RotationLimits
+        ])
+
+        self.customShapes = mergeDicts([
+            rig_bones.CustomShapes,
+            rig_face.CustomShapes
+        ])
+
+        if options.useMuscles:
+            self.joints += rig_muscle.Joints
+            addDict(rig_muscle.HeadsTails, self.headsTails)
+            addDict(rig_muscle.Constraints, self.constraints)
+            addDict(rig_muscle.CustomShapes, self.customShapes)
+            addDict(rig_muscle.RotationLimits, self.rotationLimits)
+
+        if options.useFingers:
+            addDict(rig_control.FingerConstraints, self.constraints)
+            self.lrDrivers += rig_control.FingerPropLRDrivers
+
+        self.splitBones = {}
+        if options.useSplitBones:
+            self.splitBones = {
+                "forearm" :     (3, "hand", False),
+            }
+
+        self.objectProps = rig_bones.ObjectProps
+        self.armatureProps = rig_bones.ArmatureProps
 
 
-    def createBones(self, boneInfos):
+    def createBones(self, boneInfo):
+
+        amt = self.armature
+        options = amt.options
+
+        self.addBones(rig_bones.Armature, boneInfo)
+        self.addBones(rig_face.Armature, boneInfo)
+
+        if options.useDeformBones:
+            self.addDeformBones(rig_bones.Armature, boneInfo)
+            self.addDeformBones(rig_face.Armature, boneInfo)
+
+        if options.useMasterBone:
+            self.master = 'master'
+            self.addBones(rig_control.MasterArmature, boneInfo)
+
+        if options.useMuscles:
+            self.addBones(rig_muscle.Armature, boneInfo)
+
+        if options.useIkLegs:
+            self.addBones(rig_control.IkLegArmature, boneInfo)
+            addDict(rig_control.IkLegConstraints, self.constraints)
+            addDict(rig_control.IkLegChains, self.ikChains)
+            addDict(rig_control.IkLegParents, self.parents)
+            self.lrDrivers += rig_control.IkLegPropLRDrivers
+
+        if options.useIkArms:
+            self.addBones(rig_control.IkArmArmature, boneInfo)
+            addDict(rig_control.IkArmConstraints, self.constraints)
+            addDict(rig_control.IkArmChains, self.ikChains)
+            addDict(rig_control.IkArmParents, self.parents)
+            self.lrDrivers += rig_control.IkArmPropLRDrivers
+
+        if options.useIkLegs or options.useIkArms:
+            self.addIkChains(rig_bones.Armature, boneInfo, self.ikChains)
+
+        if options.useFingers:
+            self.addBones(rig_control.FingerArmature, boneInfo)
+
+        if options.useCorrectives:
+            self.addCSysBones(rig_control.CoordinateSystems, boneInfo)
+
+        if options.addConnectingBones:
+            extras = []
+            for bone in boneInfo.values():
+                if bone.parent:
+                    head,_ = self.getHeadTail(bone.name)
+                    _,ptail = self.getHeadTail(bone.parent)
+                    if head != ptail:
+                        connector = Bone(amt, "_"+bone.name)
+                        connector.parent = bone.parent
+                        bone.parent = connector
+                        extras.append(connector)
+                        self.setHeadTail(connector, ptail, head)
+
+            for bone in extras:
+                boneInfo[bone.name] = bone
+
+
         """
-        options = self.options
         if options.skirtRig == "own":
             self.joints += rig_skirt.Joints
             self.headsTails += rig_skirt.HeadsTails
@@ -75,7 +189,7 @@ class PythonParser(Parser):
         if options.maleRig:
             self.boneDefs += rig_body.MaleArmature
 
-        if self.options.facepanel:
+        if options.facepanel:
             self.joints += rig_panel.Joints
             self.headsTails += rig_panel.HeadsTails
             self.boneDefs += rig_panel.Armature
@@ -86,7 +200,8 @@ class PythonParser(Parser):
             self.headsTails += custHeadsTails
             self.boneDefs += custArmature
         """
-        Parser.createBones(self, boneInfos)
+
+        Parser.createBones(self, boneInfo)
 
 
     def getHeadTail(self, bone):
@@ -99,7 +214,6 @@ class PythonParser(Parser):
 
     def setup(self):
         self.setupToRoll()
-        self.getVertexGroups()
         self.postSetup()
 
 
@@ -109,10 +223,12 @@ class PythonParser(Parser):
 
     def setupToRoll(self):
         amt = self.armature
+        options = amt.options
+
         self.setupJoints(self.human)
         self.setupNormals()
         self.setupPlaneJoints()
-        self.moveOriginToFloor(amt.options.feetOnGround)
+        self.moveOriginToFloor(options.feetOnGround)
         self.createBones({})
 
         for bone in amt.bones.values():

@@ -34,8 +34,6 @@ import shutil
 class Config:
 
     def __init__(self):
-        from armature.armature import RigOptions
-
         self.encoding           = 'utf-8'
         self.useTexFolder       = True
         self.eyebrows           = True
@@ -44,7 +42,7 @@ class Config:
         self.scale              = 1.0
         self.unit               = "dm"
 
-        self.rigOptions         = RigOptions()
+        self.rigOptions         = None
         self.useNormals         = False
         self.useRelPaths        = True
         self.cage               = False

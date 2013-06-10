@@ -67,7 +67,7 @@ class RigfileParser(Parser):
         status = 0
 
         amt = self.armature
-        boneInfos = {}
+        boneInfo = {}
         basicNames = {}
         if not coord:
             coord = obj.coord
@@ -131,13 +131,13 @@ class RigfileParser(Parser):
                 if key:
                     flags = self.setOption(bname, key, value, flags)
                 bone.setFlags(flags)
-                boneInfos[bname] = bone
+                boneInfo[bname] = bone
             else:
                 raise NameError("Unknown status %d" % status)
         fp.close()
 
-        #self.sortBones(boneInfos, amt.hierarchy)
-        self.createBones(boneInfos)
+        #self.sortBones(boneInfo, amt.hierarchy)
+        self.createBones(boneInfo)
         for bone in amt.bones.values():
             bone.setBone(bone.head, bone.tail)
 
@@ -252,7 +252,7 @@ class RigfileParser(Parser):
 
 def readRigfileArmature(filename, obj, coord=None):
     import gui3d
-    amt = Armature("Global", RigOptions())
+    amt = Armature("Global", ArmatureOptions())
     amt.parser = RigfileParser(amt, gui3d.app.selectedHuman)
     amt.parser.fromRigfile(filename, obj, coord)
     return amt
@@ -260,7 +260,7 @@ def readRigfileArmature(filename, obj, coord=None):
 
 def getBasicArmature(human):
     from .basic import BasicParser
-    amt = Armature("Basic", RigOptions())
+    amt = Armature("Basic", ArmatureOptions())
     amt.parser = BasicParser(amt, human)
     amt.parser.setupToRoll()
     return amt

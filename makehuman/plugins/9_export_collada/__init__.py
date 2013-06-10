@@ -29,22 +29,27 @@ from exportutils.config import Config
 
 class DaeConfig(Config):
     def __init__(self, exporter):
+        from armature.options import ArmatureOptions
+
         Config.__init__(self)
         self.selectedOptions(exporter)
-
-        options = self.rigOptions
-        options.rigtype =   exporter.getRigType()
-        # Collada exporter does not support exporting without rig, so default
-        # to soft1 rig when no rig specified in the skeleton library
-        if not options.rigtype:
-            options.rigtype = "game"
 
         self.useRelPaths = True
         self.useNormals = exporter.useNormals.selected
         self.rotate90X = exporter.rotate90X.selected
         self.rotate90Z = exporter.rotate90Z.selected
+        self.feetOnGround = False
         self.expressions     = exporter.expressions.selected
         self.useCustomTargets = exporter.useCustomTargets.selected
+
+        self.rigOptions = exporter.getRigOptions()
+        if not self.rigOptions:
+            self.rigOptions = ArmatureOptions()
+        self.rigOptions.setExportOptions(
+            useExpressions = self.expressions,
+            feetOnGround = self.feetOnGround,
+        )
+
 
 
 class ExporterCollada(Exporter):
@@ -61,11 +66,6 @@ class ExporterCollada(Exporter):
         self.rotate90Z = options.addWidget(gui.CheckBox("Face X (Rotate 90 Z)", False))
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
         self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
-
-        rigtypes = []
-        self.libraryRig     = options.addWidget(gui.RadioButton(rigtypes, "Use rig from library", True))
-        self.basic          = options.addWidget(gui.RadioButton(rigtypes, "Use basic rig", False))
-        self.rigtypes       = [(self.basic, "basic"), (self.libraryRig, None)]
 
 
     def export(self, human, filename):

@@ -30,27 +30,32 @@ from exportutils.config import Config
 class MhxConfig(Config):
 
     def __init__(self, exporter):
+        from armature.options import ArmatureOptions
+
         Config.__init__(self)
+        self.selectedOptions(exporter)
+
         self.useTexFolder =         exporter.useTexFolder.selected
         self.scale,self.unit =      exporter.taskview.getScale()
         self.useRelPaths =          True
         self.helpers =              True
         self.encoding =             exporter.taskview.getEncoding()
 
-        options = self.rigOptions
-        options.facepanel =         False # exporter.facepanel.selected
-        options.feetOnGround =      exporter.feetOnGround.selected
-        options.advancedSpine =     False # exporter.advancedSpine.selected
-        options.rigtype =           exporter.getRigType()
-        # MHX export does not support exporting without rig
-        # If no rig selected (from library): default to MHX rig
-        if not options.rigtype:
-            options.rigtype = "mhx"
-
+        self.feetOnGround =         exporter.feetOnGround.selected
         self.useMasks =             exporter.masks.selected
-        self.expressions = options.expressions = exporter.expressions.selected
+        self.expressions =          exporter.expressions.selected
         self.bodyShapes =           False # exporter.bodyShapes.selected
         self.useCustomTargets =     exporter.useCustomTargets.selected
+
+        self.rigOptions =           exporter.getRigOptions()
+        if not self.rigOptions:
+            self.rigOptions = ArmatureOptions()
+        self.rigOptions.setExportOptions(
+            useCorrectives = self.bodyShapes,
+            useExpressions = self.expressions,
+            feetOnGround = self.feetOnGround,
+            useMasks = self.useMasks,
+        )
 
 
 class ExporterMHX(Exporter):
@@ -61,9 +66,9 @@ class ExporterMHX(Exporter):
 
 
     def build(self, options, taskview):
-        #Exporter.build(self, options, taskview)
-        self.taskview       = taskview
-        self.useTexFolder   = options.addWidget(gui.CheckBox("Separate folder", True))
+        Exporter.build(self, options, taskview)
+        #self.taskview       = taskview
+        #self.useTexFolder   = options.addWidget(gui.CheckBox("Separate folder", True))
 
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
         self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))
@@ -75,34 +80,6 @@ class ExporterMHX(Exporter):
         #self.cage           = options.addWidget(gui.CheckBox("Cage", False))
         #self.advancedSpine  = options.addWidget(gui.CheckBox("Advanced spine", False))
         #self.maleRig        = options.addWidget(gui.CheckBox("Male rig", False))
-
-        rigtypes = []
-        self.libraryRig     = options.addWidget(gui.RadioButton(rigtypes, "Use rig from library", True))
-        self.basic          = options.addWidget(gui.RadioButton(rigtypes, "Use basic rig", True))
-        self.mhx            = options.addWidget(gui.RadioButton(rigtypes, "Use mhx rig", False))
-        self.rigify         = options.addWidget(gui.RadioButton(rigtypes, "Use rigify rig", False))
-        self.rigtypes       = [(self.basic, "basic"), (self.mhx, "mhx"), (self.rigify, "rigify"), (self.libraryRig, None)]
-
-
-    def getRigType(self):
-        for (button, rigtype) in self.rigtypes:
-            if button.selected:
-                break
-
-        if not button.selected:
-            return None
-
-        if not rigtype:
-            return super(ExporterMHX, self).getRigType()
-        else:
-            return rigtype
-
-    def onShow(self, task):
-        if not self.getRigType():
-            self.libraryRig.setChecked(False)
-            self.mhx.setChecked(True)
-
-        self.libraryRig.setEnabled(bool(super(ExporterMHX, self).getRigType()))
 
 
     def export(self, human, filename):

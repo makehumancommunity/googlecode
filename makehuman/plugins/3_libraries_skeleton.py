@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -31,11 +31,13 @@ import mh
 import gui
 import module3d
 import log
-import filechooser as fc
+#import filechooser as fc
 
 import skeleton
 import skeleton_drawing
 import animation
+
+from armature.options import ArmatureOptions, ArmatureSelector
 
 import numpy as np
 import os
@@ -56,6 +58,7 @@ class SkeletonAction(gui3d.Action):
         return True
 
 def _getSkeleton(self):
+    log.debug("Get skeleton %s %s" % (self, self._skeleton))
     if not self._skeleton:
         return None
     if self._skeleton.dirty:
@@ -113,6 +116,60 @@ class SkeletonLibrary(gui3d.TaskView):
 
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
 
+        #
+        #   TL additions: Preset box and options box
+        #   Presets should probably be defined in data files eventually
+        #
+
+        self.presetBox = self.addRightWidget(gui.GroupBox('Rig Presets'))
+
+        self.presetDefaultBtn = self.presetBox.addWidget(gui.Button("Default"))
+        @self.presetDefaultBtn.mhEvent
+        def onClicked(event):
+            self.amtOptions.reset(self.optionsSelector)
+            self.descrLbl.setText("No description available")
+            self.updateSkeleton()
+
+        self.presetGameBtn = self.presetBox.addWidget(gui.Button("Game"))
+        @self.presetGameBtn.mhEvent
+        def onClicked(event):
+            descr = self.amtOptions.presetGame(self.optionsSelector)
+            self.descrLbl.setText("Description: %s" % descr)
+            self.updateSkeleton()
+
+        self.presetSimpleBtn = self.presetBox.addWidget(gui.Button("Simple"))
+        @self.presetSimpleBtn.mhEvent
+        def onClicked(event):
+            descr = self.amtOptions.presetSimple(self.optionsSelector)
+            self.descrLbl.setText("Description: %s" % descr)
+            self.updateSkeleton()
+
+        self.presetMediumBtn = self.presetBox.addWidget(gui.Button("Medium"))
+        @self.presetMediumBtn.mhEvent
+        def onClicked(event):
+            descr = self.amtOptions.presetMedium(self.optionsSelector)
+            self.descrLbl.setText("Description: %s" % descr)
+            self.updateSkeleton()
+
+        self.presetAdvancedBtn = self.presetBox.addWidget(gui.Button("Advanced"))
+        @self.presetAdvancedBtn.mhEvent
+        def onClicked(event):
+            descr = self.amtOptions.presetAdvanced(self.optionsSelector)
+            self.descrLbl.setText("Description: %s" % descr)
+            self.updateSkeleton()
+
+        self.optionsBox = self.addRightWidget(gui.GroupBox('Rig Options'))
+        self.optionsSelector = ArmatureSelector(self.optionsBox)
+        self.amtOptions = ArmatureOptions()
+        self.optionsSelector.fromOptions(self.amtOptions)
+
+        self.amtShowBtn = self.optionsBox.addWidget(gui.Button("Show Bones"))
+        @self.amtShowBtn.mhEvent
+        def onClicked(event):
+            self.updateSkeleton()
+
+
+        """
         self.filechooser = self.addRightWidget(fc.ListFileChooser(self.rigPaths, self.extension, 'Skeleton rig'))
         self.addLeftWidget(self.filechooser.createSortBox())
 
@@ -135,6 +192,7 @@ class SkeletonLibrary(gui3d.TaskView):
                 self.filechooser.selectItem(noSkelPath)
 
         self.filechooser.refresh()
+        """
 
         displayBox = self.addLeftWidget(gui.GroupBox('Display'))
         self.showHumanTggl = displayBox.addWidget(gui.ToggleButton("Show human"))
@@ -178,7 +236,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.descrLbl.setSizePolicy(gui.QtGui.QSizePolicy.Ignored, gui.QtGui.QSizePolicy.Preferred)
         self.descrLbl.setWordWrap(True)
 
-        self.rigDescriptions = { 
+        self.rigDescriptions = {
             "soft1":       "Soft skinned rig. Simple version of the MHX reference rig containing only its deforming bones.",
             "xonotic":     "Rig compatible with the open-source game Xonotic.",
             "second_life": "Rig compatible with Second Life.",
@@ -186,6 +244,19 @@ class SkeletonLibrary(gui3d.TaskView):
             "humanik":     "Rig compatible with the HumanIK software.",
             "rigid":       "Same as soft1 a simple version of the MHX reference rig, but with rigid weighting.",
         }
+
+
+    def updateSkeleton(self):
+        if self.human.getSkeleton():
+            oldSkelOptions = self.human.getSkeleton().file
+        else:
+            oldSkelOptions = None
+        self.amtOptions.fromSelector(self.optionsSelector)
+        gui3d.app.do(SkeletonAction("Change skeleton",
+                                    self,
+                                    oldSkelOptions,
+                                    self.amtOptions))
+
 
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
@@ -205,7 +276,7 @@ class SkeletonLibrary(gui3d.TaskView):
         if not self.jointsObj:
             self.drawJointHelpers()
 
-        self.filechooser.refresh()
+        #self.filechooser.refresh()
 
         # Make sure skeleton is updated when human has changed
         self.human.getSkeleton()
@@ -235,13 +306,14 @@ class SkeletonLibrary(gui3d.TaskView):
         """
         Load skeleton from rig definition in a .rig file.
         """
-        log.debug("Loading skeleton from rig file %s", filename)
+        log.debug("Loading skeleton with options %s", filename)
 
         try:
             self.removeBoneHighlights()
         except:
             pass
 
+        """
         if not filename or os.path.basename(filename) == 'clear.rig':
             # Unload current skeleton
             self.human._skeleton = None
@@ -258,6 +330,7 @@ class SkeletonLibrary(gui3d.TaskView):
             self.descrLbl.setText("Description: ")
             self.filechooser.selectItem(os.path.join(self.rigPaths[0], 'clear.rig'))
             return
+        """
 
         # Load skeleton definition from .rig file
         self.human._skeleton, boneWeights = skeleton.loadRig(filename, self.human.meshData)
@@ -267,11 +340,11 @@ class SkeletonLibrary(gui3d.TaskView):
         self.human._skeleton.dirty = False   # Flag used for deferred updating
         self.human._skeleton._library = self  # Temporary member, used for rebuilding skeleton
 
-        self.filechooser.selectItem(filename)
+        #self.filechooser.selectItem(filename)
 
         # Created an AnimatedMesh object to manage the skeletal animation on the
         # human mesh and optionally additional meshes.
-        # The animation manager object is accessible by other plugins via 
+        # The animation manager object is accessible by other plugins via
         # gui3d.app.currentHuman.animated.
         self.human.animated = animation.AnimatedMesh(self.human.getSkeleton(), self.human.meshData, boneWeights)
 
@@ -415,7 +488,7 @@ class SkeletonLibrary(gui3d.TaskView):
             Event fired when mouse hovers off of a joint mesh facegroup
             """
             gui3d.TaskView.onMouseExited(self, event)
-            
+
             # Disable highlight on joint
             if self.selectedJoint:
                 setColorForFaceGroup(self.jointsMesh, self.selectedJoint.name, [255,255,0,255])

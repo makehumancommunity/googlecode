@@ -30,18 +30,25 @@ from exportutils.config import Config
 class FbxConfig(Config):
 
     def __init__(self, exporter):
+        from armature.options import ArmatureOptions
+
         Config.__init__(self)
         self.selectedOptions(exporter)
 
-        options = self.rigOptions
-        options.rigtype = exporter.getRigType()
-        if 1 and not options.rigtype:
-            options.rigtype = "basic"
-
         self.useRelPaths     = False
-        self.expressions = options.expressions = exporter.expressions.selected
+        self.feetOnGround = False
+        self.expressions = exporter.expressions.selected
         self.useCustomTargets = exporter.useCustomTargets.selected
         self.useMaterials    = True # for debugging
+
+        self.rigOptions = exporter.getRigOptions()
+        if not self.rigOptions:
+            self.rigOptions = ArmatureOptions()
+        self.rigOptions.setExportOptions(
+            useExpressions = self.expressions,
+            feetOnGround = self.feetOnGround,
+        )
+
 
 
     def __repr__(self):

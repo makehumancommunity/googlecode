@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -31,12 +31,12 @@ def addCSlider(fp, amt, bone, mx):
     mn = "-"+mx
     addPoseBone(fp, amt, bone, 'MHCube025', None, (0,1,0), (1,1,1), (1,1,1), (1,1,1), 0,
         [('LimitLoc', C_OW_LOCAL+C_LTRA, 1, ['Const', (mn,mx, '0','0', mn,mx), (1,1,1,1,1,1)])])
-    
+
 def addYSlider(fp, amt, bone, mx):
     mn = "-"+mx
     addPoseBone(fp, amt, bone, 'MHCube025', None, (1,1,0), (1,1,1), (1,1,1), (1,1,1), 0,
         [('LimitLoc', C_OW_LOCAL+C_LTRA, 1, ['Const', ('0','0', '0','0', mn,mx), (1,1,1,1,1,1)])])
-    
+
 def addXSlider(fp, amt, bone, mn, mx, dflt):
     addPoseBone(fp, amt, bone, 'MHCube025', None, ((0,1,1), (dflt,0,0)), (1,1,1), (1,1,1), (1,1,1), 0,
         [('LimitLoc', C_OW_LOCAL+C_LTRA, 1, ['Const', (mn,mx, '0','0', mn,mx), (1,1,1,1,1,1)])])
@@ -50,8 +50,8 @@ def addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScal
         (lockLoc, location) = locArg
     except:
         lockLoc = locArg
-        location = (0,0,0)        
-    
+        location = (0,0,0)
+
     (locX, locY, locZ) = location
     (lockLocX, lockLocY, lockLocZ) = lockLoc
     (lockRotX, lockRotY, lockRotZ) = lockRot
@@ -66,9 +66,9 @@ def addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScal
     if not fp:
         amt.createdArmature.bones[bone].constraints = mhx_constraints.getConstraints(bone, constraints, lockLoc, lockRot)
         return
-    
+
     fp.write("\n  Posebone %s %s \n" % (bone, True))
-        
+
     if boneGroup:
         index = boneGroupIndex(boneGroup, amt)
         fp.write("    bone_group Refer BoneGroup %s ;\n" % boneGroup)
@@ -83,7 +83,7 @@ def addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScal
     except:
         (ik_dof1, ik_stiff, ik_stretch, ik_lim) = ik_dof
         (ik_dof_x, ik_dof_y, ik_dof_z) = ik_dof1
-   
+
     fp.write(
 "    lock_ik_x %d ;\n" % (1-ik_dof_x) +
 "    lock_ik_y %d ;\n" % (1-ik_dof_y) +
@@ -117,7 +117,7 @@ def addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScal
 "    use_ik_rotation_control %s ; \n" % ikRot +
 "    ik_rotation_weight 0 ; \n" +
 "    hide %s ; \n" % hide)
-    
+
     if ik_stretch:
         fp.write("    ik_stretch %.3f ; \n" % ik_stretch)
     else:
@@ -131,13 +131,13 @@ def addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScal
 "    lock_rotations_4d %s ; \n" % lkRot4 +
 "    lock_scale Array %d %d %d  ; \n" % (lockScaleX, lockScaleY, lockScaleZ)+
 "  end Posebone \n")
-    return    
+    return
 
 
 def rotationMode(flags):
     modes = ['QUATERNION', 'XYZ', 'XZY', 'YXZ', 'YZX', 'ZXY', 'ZYX']
     return modes[(flags&P_ROTMODE) >> 8]
-        
+
 
 def boneGroupIndex(grp, amt):
     index = 1

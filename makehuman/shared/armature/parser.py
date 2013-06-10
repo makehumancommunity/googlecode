@@ -36,6 +36,8 @@ from .flags import *
 from .utils import *
 from .armature import Bone
 
+from . import rig_merge
+
 #-------------------------------------------------------------------------------
 #   Parser base class.
 #-------------------------------------------------------------------------------
@@ -50,6 +52,9 @@ class Parser:
         self.customShapes = {}
         self.constraints = {}
         self.rotationLimits = {}
+
+        self.drivers = []
+        self.lrDrivers = []
 
 
     def distance(self, joint1, joint2):
@@ -67,34 +72,34 @@ class Parser:
         return pweights
 
 
-    def createBones(self, boneInfos):
+    def createBones(self, boneInfo):
         amt = self.armature
-        if amt.options.addConnectingBones:
-            extras = []
-            for bone in boneInfos.values():
-                if bone.parent:
-                    head,_ = self.getHeadTail(bone.name)
-                    _,ptail = self.getHeadTail(bone.parent)
-                    if head != ptail:
-                        connector = Bone("_"+bone.name)
-                        connector.parent = bone.parent
-                        bone.parent = connector
-                        extras.append(connector)
-                        self.setHeadTail(connector, ptail, head)
+        options = amt.options
 
-            for bone in extras:
-                boneInfos[bone.name] = bone
+        self.getVertexGroups()
 
-        for bone in boneInfos.values():
+        if options.mergeSpine:
+            self.mergeBones(rig_merge.SpineMergers, boneInfo)
+
+        if options.mergeFingers:
+            self.mergeBones(rig_merge.FingerMergers, boneInfo)
+
+        if options.mergePalms:
+            self.mergeBones(rig_merge.PalmMergers, boneInfo)
+
+        if options.mergeHead:
+            self.mergeBones(rig_merge.HeadMergers, boneInfo)
+
+        for bone in boneInfo.values():
             if bone.parent:
-                parent = boneInfos[bone.parent]
+                parent = boneInfo[bone.parent]
                 parent.children.append(bone)
             elif self.master:
                 if bone.name == self.master:
                     amt.roots.append(bone)
                 else:
                     bone.parent = self.master
-                    master = boneInfos[self.master]
+                    master = boneInfo[self.master]
                     master.children.append(bone)
             else:
                 amt.roots.append(bone)
@@ -138,6 +143,8 @@ class Parser:
         """
 
         amt = self.armature
+        options = amt.options
+
         for bname in generic.keys():
             bone = boneInfo[bname]
             headTail = self.headsTails[bname]
@@ -225,10 +232,12 @@ class Parser:
         E.g. forearm.L => DEF-forearm.01.L, DEF-forearm.02.L, DEF-forearm.03.L
         """
 
-        if not (self.useDeformBones or self.useSplitBones):
+        amt = self.armature
+        options = amt.options
+
+        if not (options.useDeformBones or options.useSplitBones):
             return
 
-        amt = self.armature
         for bname in generic.keys():
             bone = boneInfo[bname]
             if not bone.deform:
@@ -237,7 +246,7 @@ class Parser:
             base,ext = splitBoneName(bname)
             bone.deform = False
             bone.parent = self.getParent(bone)
-            if bone.parent and self.useDeformBones:
+            if bone.parent and options.useDeformBones:
                 pbase, pext = splitBoneName(bone.parent)
                 if pbase in self.splitBones.keys():
                     npieces = self.splitBones[pbase][0]
@@ -251,7 +260,7 @@ class Parser:
             else:
                 defParent = bone.parent
 
-            if self.useSplitBones and (base in self.splitBones.keys()):
+            if options.useSplitBones and (base in self.splitBones.keys()):
                 npieces,target,numAfter = self.splitBones[base]
                 defName1,defName2,defName3 = splitBonesNames(base, ext, numAfter)
                 head,tail = headTail
@@ -283,7 +292,7 @@ class Parser:
                         ('CopyRot', 0, 0.5, [bone.name, bone.name, (1,1,1), (0,0,0), False])
                     ]
 
-            elif self.useDeformBones:
+            elif options.useDeformBones:
                 defName = "DEF-"+bname
                 self.headsTails[defName] = headTail
                 defBone = boneInfo[defName] = Bone(amt, defName)
@@ -303,6 +312,8 @@ class Parser:
         """
 
         amt = self.armature
+        options = amt.options
+
         self.vertexGroupFiles += ["leftright"]
         vgroupList = []
         vgroups = {}
@@ -310,12 +321,12 @@ class Parser:
             filepath = os.path.join("shared/armature/vertexgroups", file+".vgrp")
             readVertexGroups(filepath, vgroups, vgroupList)
 
-        if self.useDeformNames:
+        if options.useDeformNames:
             for bname,vgroup in vgroupList:
                 base = splitBoneName(bname)[0]
                 if base in self.splitBones.keys():
                     self.splitVertexGroup(bname, vgroup)
-                elif not self.useSplitBones:
+                elif not options.useSplitBones:
                     defName = "DEF-"+bname
                     amt.vertexWeights[defName] = vgroup
                 else:
@@ -326,7 +337,7 @@ class Parser:
                     except KeyError:
                         amt.vertexWeights[bname] = vgroup
 
-        elif self.useSplitBones:
+        elif options.useSplitBones:
             for bname,vgroup in vgroupList:
                 base = splitBoneName(bname)[0]
                 if base in self.splitBones.keys():
@@ -388,6 +399,21 @@ class Parser:
             amt.vertexWeights[defName1] = vgroup1
             amt.vertexWeights[defName2] = vgroup2
             amt.vertexWeights[defName3] = vgroup3
+
+
+    def mergeBones(self, mergers, boneInfo):
+        amt = self.armature
+        for bname, merged in mergers.items():
+            vgroup = amt.vertexWeights[bname]
+            for mbone in merged:
+                if mbone != bname:
+                    vgroup += amt.vertexWeights[mbone]
+                    del amt.vertexWeights[mbone]
+                    del boneInfo[mbone]
+                    for child in boneInfo.values():
+                        if child.parent == mbone:
+                            child.parent = bname
+        amt.vertexWeights[bname] = mergeWeights(vgroup)
 
 
     def addCSysBones(self, csysList, boneInfo):

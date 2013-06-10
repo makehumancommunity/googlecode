@@ -37,7 +37,7 @@ import warpmodifier
 
 from .flags import *
 from .rigfile_amt import RigfileParser
-from .armature import RigOptions
+from .options import ArmatureOptions
 from .utils import *
 
 #-------------------------------------------------------------------------------
@@ -717,7 +717,7 @@ class PoseBone:
 
 
 def createPoseRig(human, rigtype):
-    options = RigOptions(
+    options = ArmatureOptions(
                 rigtype = rigtype,
                 feetOnGround = False)
     amt = Pose(human, options)
