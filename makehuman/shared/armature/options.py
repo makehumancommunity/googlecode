@@ -31,6 +31,7 @@ class ArmatureOptions:
 
         self.rigtype = "python"
         self.description = ""
+        self.locale = None
         self.scale = 1.0
         self.boneMap = None
 
@@ -65,6 +66,11 @@ class ArmatureOptions:
         self.facepanel = False
         self.advancedSpine = False
         self.clothesRig = False
+
+
+    def setLocale(self, language, filepath):
+        self.locale = Locale(language, filepath)
+        self.locale.load()
 
 
     def setExportOptions(self,
@@ -255,3 +261,38 @@ class ArmatureSelector:
 
         for child in self.box.children:
             child.update()
+
+
+class Locale:
+    def __init__(self, language, filepath):
+        self.filepath = filepath
+        self.language = language
+        self.bones = None
+        print "CLL", self
+
+
+    def __repr__(self):
+        return ("<Locale %s %s>" % (self.language, self.filepath))
+
+
+    def load(self):
+        import io_json
+        if self.bones:
+            return
+        struct = io_json.loadJson(self.filepath)
+        #self.language = struct["language"]
+        self.bones = struct["bones"]
+
+
+    def rename(self, bname):
+        try:
+            return self.bones[bname]
+        except KeyError:
+            pass
+
+        words = bname.split(".", 1)
+        try:
+            return self.bones[words[0]] + "." + words[1]
+        except KeyError:
+            return bname
+

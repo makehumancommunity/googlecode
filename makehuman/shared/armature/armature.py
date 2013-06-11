@@ -77,12 +77,30 @@ class Armature:
     def setup(self):
         self.parser.setup()
         self.origin = self.parser.origin
+        options = self.options
+
+        if options.locale:
+            print "Rename %s" % options.locale
+            self.rename(options.locale)
 
 
     def rescale(self, scale):
         # OK to overwrite bones, because they are not used elsewhere
         for bone in self.bones.values():
             bone.rescale(scale)
+
+
+    def rename(self, locale):
+        locale.load()
+        newbones = OrderedDict()
+        for bone in self.bones.values():
+            bone.rename(locale, newbones)
+        self.bones = newbones
+        for bname,vgroup in self.vertexWeights.items():
+            newname = locale.rename(bname)
+            if newname != bname:
+                self.vertexWeights[newname] = vgroup
+                del self.vertexWeights[bname]
 
 
     def normalizeVertexWeights(self):
@@ -199,6 +217,16 @@ class Bone:
         self.matrixRelative = None
         self.bindMatrix = None
         self.bindInverse = None
+
+
+    def rename(self, locale, bones):
+        print "REN", self
+        self.name = locale.rename(self.name)
+        if self.parent:
+            self.parent = locale.rename(self.parent)
+        for cns in self.constraints:
+            print "CNS", cns
+        bones[self.name] = self
 
 
     def calcRestMatrix(self):

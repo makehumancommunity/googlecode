@@ -1,0 +1,28 @@
+{
+    "language" : "Svenska",
+    "bones" : {
+        "head":     "huvud",
+        "neck":     "hals",
+        "hips":     "h%0F6ft",
+        "spine":    "ryggrad",
+        "chest":    "br%0F6stkorg",
+
+        "shoulder": "skuldra",
+        "upper_arm":"%0F6verarm",
+        "forearm":  "underarm",
+        "hand":     "hand",
+        "palm":     "handflata",
+        "finger":   "finger",
+
+        "f_thumb":    "f_tumme",
+        "f_index":    "f_pekfinger",
+        "f_middle":   "f_l%0E5ngfinger",
+        "f_ring":     "f_ringfinger",
+        "f_pinky":    "f_lillfinger",
+
+        "thigh":    "l%0E5r",
+        "shin":     "smalben",
+        "foot":     "fot",
+        "toe":      "t%0E5"
+    }
+}

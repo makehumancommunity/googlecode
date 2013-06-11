@@ -31,13 +31,13 @@ import mh
 import gui
 import module3d
 import log
+from collections import OrderedDict
 #import filechooser as fc
 
 import skeleton
 import skeleton_drawing
 import animation
-
-from armature.options import ArmatureOptions, ArmatureSelector
+import armature
 
 import numpy as np
 import os
@@ -121,13 +121,17 @@ class SkeletonLibrary(gui3d.TaskView):
         #   Presets should probably be defined in data files eventually
         #
 
+        #
+        #   Preset. Currently hardcoded, should be data files
+        #
+
         self.presetBox = self.addRightWidget(gui.GroupBox('Rig Presets'))
 
         self.presetDefaultBtn = self.presetBox.addWidget(gui.Button("Default"))
         @self.presetDefaultBtn.mhEvent
         def onClicked(event):
             self.amtOptions.reset(self.optionsSelector)
-            self.descrLbl.setText("No description available")
+            self.descrLbl.setText("Description: The default rig. Use this for weighting")
             self.updateSkeleton()
 
         self.presetGameBtn = self.presetBox.addWidget(gui.Button("Game"))
@@ -158,9 +162,35 @@ class SkeletonLibrary(gui3d.TaskView):
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
+        #
+        #   Bone names. Different languages and target apps.
+        #
+
+        self.languageBox = self.addRightWidget(gui.GroupBox('Bone names'))
+
+        self.languages = OrderedDict()
+        self.languages["English"] = None
+        folder = "data/rigs/bonenames"
+        for filename in os.listdir(folder):
+            name,ext = os.path.splitext(filename)
+            filepath = os.path.join(folder, filename)
+            self.languages[name.capitalize()] = filepath
+
+        for language,filepath in self.languages.items():
+            button = self.languageBox.addWidget(gui.Button(language))
+            @button.mhEvent
+            def onClicked(event):
+                print "Language", language
+                self.amtOptions.setLocale(language, filepath)
+                self.updateSkeleton()
+
+        #
+        #   Options. For fine-tuning
+        #
+
         self.optionsBox = self.addRightWidget(gui.GroupBox('Rig Options'))
-        self.optionsSelector = ArmatureSelector(self.optionsBox)
-        self.amtOptions = ArmatureOptions()
+        self.optionsSelector = armature.options.ArmatureSelector(self.optionsBox)
+        self.amtOptions = armature.options.ArmatureOptions()
         self.optionsSelector.fromOptions(self.amtOptions)
 
         self.amtShowBtn = self.optionsBox.addWidget(gui.Button("Show Bones"))
