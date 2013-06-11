@@ -36,7 +36,7 @@ import numpy as np
 import warpmodifier
 
 from .flags import *
-from .rigfile_amt import RigfileParser
+from .parser import Parser
 from .options import ArmatureOptions
 from .utils import *
 
@@ -47,8 +47,6 @@ from .utils import *
 class Pose:
 
     def __init__(self, human, options):
-        amt = self.armature = Armature("Armature", options)
-        amt.parser = RigfileParser(amt, human)
         self.human = human
         self.posebones = OrderedDict()
         self.modifier = None
@@ -57,15 +55,9 @@ class Pose:
         self.frames = []
         self.controls = []
         self.deforms = []
-        """
-        if self.options.rigtype == 'mhx':
-            self.visible = VISIBLE_LAYERS
-            self.last = 32
-        else:
-            self.visible = 1
-            self.last = 1
-        """
 
+        amt = self.armature = Armature("Armature", options)
+        amt.parser = Parser(amt, human)
         amt.setup()
         amt.normalizeVertexWeights()
         self.matrixGlobal = tm.identity_matrix()

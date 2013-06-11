@@ -40,12 +40,13 @@ from . import mhx_constraints
 #-------------------------------------------------------------------------------
 
 def setupArmature(name, human, options):
-    from armature.python_amt import PythonParser
+    from armature.parser import Parser
     if options is None:
         return None
     else:
+        log.message("Setup MHX rig %s" % name)
         amt = ExportArmature(name, options)
-        amt.parser = PythonParser(amt, human)
+        amt.parser = Parser(amt, human)
         amt.setup()
         log.message("Using rig with options %s" % options)
         return amt
@@ -112,19 +113,45 @@ end AnimationData
                     #appendRigBones(boneList, proxy.name, L_CLO, body, amt)
 
 
-    def setupCustomShapes(self, fp):
-        import gizmos_mhx, gizmos_general
-        gizmos = (gizmos_mhx.asString() + gizmos_general.asString())
+    def writeGizmos(self, fp):
+        if not self.parser.gizmos:
+            return
 
-        writeCustomEmpty(fp)
-        fp.write(gizmos)
-        setupSimpleCustomTargets(fp)
-        if self.options.facepanel:
-            import gizmos_panel
-            setupCube(fp, "MHCube025", 0.25, 0)
-            setupCube(fp, "MHCube05", 0.5, 0)
-            gizmos = gizmos_panel.asString()
-            fp.write(gizmos)
+        fp.write(
+            "Object CustomShapes EMPTY None\n" +
+            "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
+            "end Object\n\n")
+
+        for name,gizmo in self.parser.gizmos.items():
+            fp.write(
+                '# ----------------------------- MESH --------------------- # \n\n' +
+                'Mesh %s %s \n' % (name,name) +
+                '  Verts\n')
+            for v in gizmo["verts"]:
+                fp.write('    v %.3f %.3f %.3f ;\n' % tuple(v))
+            fp.write(
+                '  end Verts\n' +
+                '  Edges\n')
+            for e in gizmo["edges"]:
+                fp.write('    e %d %d ;\n' % tuple(e))
+            fp.write(
+"""
+  end Edges
+end Mesh
+
+""" +
+'Object %s MESH %s' % (name, name) +
+"""
+  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;
+    Modifier Subsurf SUBSURF
+      levels 2 ;
+      render_levels 2 ;
+      subdivision_type 'CATMULL_CLARK' ;
+      use_subsurf_uv True ;
+    end Modifier
+  parent Refer Object CustomShapes ;
+end Object
+""")
 
 
     def writeEditBones(self, fp):
@@ -409,13 +436,6 @@ end Object
 #-------------------------------------------------------------------------------
 #   Setup custom shapes
 #-------------------------------------------------------------------------------
-
-def writeCustomEmpty(fp):
-    fp.write(
-        "Object CustomShapes EMPTY None\n" +
-        "  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n" +
-        "end Object\n\n")
-
 
 def setupCircle(fp, name, r):
     """

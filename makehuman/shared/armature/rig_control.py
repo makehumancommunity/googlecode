@@ -363,12 +363,12 @@ IkArmConstraints = {
     'hand.L' : [
          #('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,False)]),
          ('CopyLoc', 0, 0, ['HandLoc', 'hand.ik.L', (1,1,1), (0,0,0), 0, False]),
-         ('CopyRot', 0, 0, ['HandRot', 'hand.ik.L', (1,1,1), (0,0,0), False])
+         ('CopyRot', 0, 0, ['HandRot', 'hand.ik.L', (1,1,1), (0,0,0), False]),
         ],
     'hand.R' : [
          #('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,False)]),
          ('CopyLoc', 0, 0, ['HandLoc', 'hand.ik.R', (1,1,1), (0,0,0), 0, False]),
-         ('CopyRot', 0, 0, ['HandRot', 'hand.ik.R', (1,1,1), (0,0,0), False])
+         ('CopyRot', 0, 0, ['HandRot', 'hand.ik.R', (1,1,1), (0,0,0), False]),
         ],
     'elbow.link.L' : [
         ('StretchTo', 0, 1, ['Stretch', 'elbow.pt.ik.L', 0, 1, 3.0])

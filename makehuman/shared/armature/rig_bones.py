@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -29,8 +29,8 @@ Joints = [
     ('l-heel',              'v', 12820),
     ('r-heel',              'v', 6223),
 
-    ('l-kneecap',           'v', 11223),
-    ('r-kneecap',           'v', 4605),
+    ('l-kneecap',           'vo', (11223, 0,0,1)),
+    ('r-kneecap',           'vo', (4605, 0,0,-1)),
 
     ('l-hand-end',          'j', 'l-finger-3-1'),
     ('r-hand-end',          'j', 'r-finger-3-1'),
@@ -172,22 +172,22 @@ Armature = {
     'f_middle.01.L' :      ("PlaneMiddle.L", 'palm.02.L', F_DEF+F_CON, L_LHANDFK),
     'f_middle.02.L' :      ("PlaneMiddle.L", 'f_middle.01.L', F_DEF+F_CON, L_LHANDFK),
     'f_middle.03.L' :      ("PlaneMiddle.L", 'f_middle.02.L', F_DEF+F_CON, L_LHANDFK),
-    
+
     'palm.02.R' :          (153*D, 'hand.R', F_DEF, L_RPALM),
     'f_middle.01.R' :      (110*D, 'palm.02.R', F_DEF+F_CON, L_RHANDFK),
     'f_middle.02.R' :      (93*D, 'f_middle.01.R', F_DEF+F_CON, L_RHANDFK),
     'f_middle.03.R' :      (89*D, 'f_middle.02.R', F_DEF+F_CON, L_RHANDFK),
-    
+
     'palm.03.L' :          (-161*D, 'hand.L', F_DEF, L_LPALM),
     'f_ring.01.L' :        ("PlaneRing.L", 'palm.03.L', F_DEF+F_CON, L_LHANDFK),
     'f_ring.02.L' :        ("PlaneRing.L", 'f_ring.01.L', F_DEF+F_CON, L_LHANDFK),
     'f_ring.03.L' :        ("PlaneRing.L", 'f_ring.02.L', F_DEF+F_CON, L_LHANDFK),
-    
+
     'palm.03.R' :          (161*D, 'hand.R', F_DEF, L_RPALM),
     'f_ring.01.R' :        (107*D, 'palm.03.R', F_DEF+F_CON, L_RHANDFK),
     'f_ring.02.R' :        (98*D, 'f_ring.01.R', F_DEF+F_CON, L_RHANDFK),
     'f_ring.03.R' :        (83*D, 'f_ring.02.R', F_DEF+F_CON, L_RHANDFK),
-    
+
     'palm.04.L' :          (-144*D, 'hand.L', F_DEF, L_LPALM),
     'f_pinky.01.L' :       ("PlanePinky.L", 'palm.04.L', F_DEF+F_CON, L_LHANDFK),
     'f_pinky.02.L' :       ("PlanePinky.L", 'f_pinky.01.L', F_DEF+F_CON, L_LHANDFK),
@@ -241,7 +241,7 @@ CustomShapes = {
     'chest' :           'GZM_CircleChest',
     'neck' :            'GZM_Neck',
     'head' :            'GZM_Head',
-    
+
     'thigh.L' :         'GZM_Circle025',
     'thigh.R' :         'GZM_Circle025',
     'shin.L' :          'GZM_Circle025',
@@ -262,7 +262,7 @@ CustomShapes = {
 }
 
 Constraints = {}
-    
+
 
 ObjectProps = [
 ]

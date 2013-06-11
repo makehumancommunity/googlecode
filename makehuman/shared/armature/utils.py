@@ -93,6 +93,14 @@ def addDict(dict, struct):
         struct[key] = value
 
 
+def safeAppendToDict(struct, key, value):
+    try:
+        struct[key] = list(struct[key])
+    except KeyError:
+        struct[key] = []
+    struct[key].append(value)
+
+
 def mergeDicts(dicts):
     struct = {}
     for dict in dicts:

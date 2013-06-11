@@ -52,6 +52,7 @@ class ArmatureOptions:
         self.useFingers = False
 
         # Options set by exporters
+        self.useCustomShapes = False
         self.useCorrectives = False
         self.useExpressions = False
         self.feetOnGround = False
@@ -64,21 +65,17 @@ class ArmatureOptions:
 
 
     def setExportOptions(self,
+            useCustomShapes = False,
             useCorrectives = False,
             useExpressions = False,
             feetOnGround = False,
             useMasks = False,
             ):
+        self.useCustomShapes = useCustomShapes
         self.useCorrectives = useCorrectives
         self.useExpressions = useExpressions
         self.feetOnGround = feetOnGround
         self.useMasks = useMasks
-
-
-    def clearExportOptions(self):
-        self.useCorrectives = False
-        self.feetOnGround = False
-        self.useMasks = False
 
 
     def __repr__(self):
@@ -177,8 +174,9 @@ Some features only work with mhx export.
 """
         )
 
-        self.useMuscles = True
         self.useSplitBones = True
+        self.useDeformBones = True
+        self.useMuscles = True
         self.mergePalms = True
 
         selector.fromOptions(self)
@@ -197,6 +195,7 @@ Some features only work with mhx export or not at all.
 
         self.useMasterBone = True
         self.useSplitBones = True
+        self.useDeformBones = True
         self.useMuscles = True
         self.useIkArms = True
         self.useIkLegs = True

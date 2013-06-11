@@ -99,7 +99,7 @@ def exportMhx(human, filepath, config):
             "#endif\n")
 
     fp.write("NoScale True ;\n")
-    #amt.setupCustomShapes(fp)
+    amt.writeGizmos(fp)
 
     gui3d.app.progress(0.1, text="Exporting armature")
     amt.writeArmature(fp, MINOR_VERSION, env)

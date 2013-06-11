@@ -38,12 +38,13 @@ from .utils import *
 #-------------------------------------------------------------------------------
 
 def setupArmature(name, human, options):
-    from .python_amt import PythonParser
+    from .parser import Parser
     if options is None:
         return None
     else:
+        log.message("Setup rig %s" % name)
         amt = Armature(name, options)
-        amt.parser = PythonParser(amt, human)
+        amt.parser = Parser(amt, human)
         amt.setup()
         log.message("Using rig with options %s" % options)
         return amt
@@ -62,6 +63,8 @@ class Armature:
         self.roots = []
         self.bones = OrderedDict()
         self.hierarchy = []
+
+        self.done = False
 
         self.vertexWeights = OrderedDict([])
         self.isNormalized = False

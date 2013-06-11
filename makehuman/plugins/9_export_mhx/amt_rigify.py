@@ -23,7 +23,7 @@ MHX armature
 """
 
 import armature
-from armature.python_amt import PythonParser
+from armature.parser import Parser
 from .mhx_armature import ExportArmature
 
 from armature import rig_joints
@@ -49,10 +49,10 @@ class RigifyArmature(ExportArmature):
         return
 
 
-class RigifyParser(PythonParser):
+class RigifyParser(Parser):
 
     def __init__(self, amt, human):
-        PythonParser.__init__(self, amt, human)
+        Parser.__init__(self, amt, human)
         if amt.options.useMuscles:
             self.vertexGroupFiles = ["head", "muscles", "hand"]
         else:
@@ -114,4 +114,4 @@ class RigifyParser(PythonParser):
         self.addBones(rig_bones.Armature, boneInfo)
         self.addBones(rig_muscle.Armature, boneInfo)
         self.addBones(rig_face.Armature, boneInfo)
-        PythonParser.createBones(self, boneInfo)
+        Parser.createBones(self, boneInfo)

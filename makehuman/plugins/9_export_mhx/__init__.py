@@ -51,6 +51,7 @@ class MhxConfig(Config):
         if not self.rigOptions:
             self.rigOptions = ArmatureOptions()
         self.rigOptions.setExportOptions(
+            useCustomShapes = True,
             useCorrectives = self.bodyShapes,
             useExpressions = self.expressions,
             feetOnGround = self.feetOnGround,

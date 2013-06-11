@@ -24,7 +24,7 @@ MHX armature
 
 
 import armature
-from armature.python_amt import PythonParser
+from armature.parser import Parser
 from . import mhx_armature
 from .mhx_armature import ExportArmature
 
@@ -195,11 +195,11 @@ class MhxArmature(ExportArmature):
 """)
 
 
-class MhxParser(PythonParser):
+class MhxParser(Parser):
 
     def __init__(self, amt, human):
 
-        PythonParser.__init__(self, amt, human)
+        Parser.__init__(self, amt, human)
         self.useDeformBones = True
         self.useDeformNames = True
         self.useSplitBones = True
@@ -288,7 +288,7 @@ class MhxParser(PythonParser):
         self.addBones(rig_mhx.Armature, boneInfo)
         self.addIkChains(generic, boneInfo, rig_mhx.IkChains)
         self.addCSysBones(rig_mhx.CoordinateSystems, boneInfo)
-        PythonParser.createBones(self, boneInfo)
+        Parser.createBones(self, boneInfo)
 
 
     def postSetup(self):
