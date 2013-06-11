@@ -41,12 +41,18 @@ from . import mhx_constraints
 
 def setupArmature(name, human, options):
     from armature.parser import Parser
+    from . import mhx_rigify
+
     if options is None:
         return None
     else:
         log.message("Setup MHX rig %s" % name)
-        amt = ExportArmature(name, options)
-        amt.parser = Parser(amt, human)
+        if isinstance(options, mhx_rigify.RigifyOptions):
+            amt = mhx_rigify.RigifyArmature(name, options)
+            amt.parser = mhx_rigify.RigifyParser(amt, human)
+        else:
+            amt = ExportArmature(name, options)
+            amt.parser = Parser(amt, human)
         amt.setup()
         log.message("Using rig with options %s" % options)
         return amt
@@ -74,31 +80,6 @@ class ExportArmature(Armature):
         self.visibleLayers = "0068056b"
         self.recalcRoll = []
         self.objectProps = [("MhxRig", '"MHX"')]
-
-
-    def writeDrivers(self, fp):
-        parser = self.parser
-        if parser.lrDrivers or parser.drivers:
-            fp.write("AnimationData %s True\n" % self.name)
-            mhx_drivers.writePropDrivers(fp, self, parser.lrDrivers, "L", "Mha")
-            mhx_drivers.writePropDrivers(fp, self, parser.lrDrivers, "R", "Mha")
-            mhx_drivers.writeDrivers(fp, True, parser.drivers)
-
-            fp.write(
-"""
-  action_blend_type 'REPLACE' ;
-  action_extrapolation 'HOLD' ;
-  action_influence 1 ;
-  use_nla True ;
-end AnimationData
-""")
-
-
-    def writeActions(self, fp):
-        #rig_arm.WriteActions(fp)
-        #rig_leg.WriteActions(fp)
-        #rig_finger.WriteActions(fp)
-        return
 
 
     def setup(self):
@@ -234,6 +215,32 @@ end Object
                 bone.customShape, bone.group,
                 bone.lockLocation, bone.lockRotation, bone.lockScale,
                 bone.ikDof, bone.flags, bone.constraints)
+
+
+    def writeDrivers(self, fp):
+        parser = self.parser
+        if parser.lrDrivers or parser.drivers:
+            fp.write("AnimationData %s True\n" % self.name)
+            mhx_drivers.writePropDrivers(fp, self, parser.lrDrivers, "L", "Mha")
+            mhx_drivers.writePropDrivers(fp, self, parser.lrDrivers, "R", "Mha")
+            mhx_drivers.writeDrivers(fp, True, parser.drivers)
+
+            fp.write(
+"""
+  action_blend_type 'REPLACE' ;
+  action_extrapolation 'HOLD' ;
+  action_influence 1 ;
+  use_nla True ;
+end AnimationData
+""")
+
+
+    def writeActions(self, fp):
+        #rig_arm.WriteActions(fp)
+        #rig_leg.WriteActions(fp)
+        #rig_finger.WriteActions(fp)
+        return
+
 
     def writeProperties(self, fp):
         for (key, val) in self.objectProps:
@@ -431,6 +438,10 @@ end Object
     def writeHideProp(self, fp, name):
         self.defProp(fp, "BOOLEAN", "Mhh%s"%name, False, "Control_%s_visibility"%name)
         #fp.write("  DefProp Bool Mhh%s False Control_%s_visibility ;\n" % (name, name))
+        return
+
+
+    def writeFinal(self, fp):
         return
 
 #-------------------------------------------------------------------------------

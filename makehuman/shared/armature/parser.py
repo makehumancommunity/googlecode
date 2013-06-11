@@ -96,29 +96,29 @@ class Parser:
             rig_control.HeadsTails,
         ])
 
-        self.constraints = mergeDicts([
-            rig_bones.Constraints,
-            rig_face.Constraints
-        ])
+        if options.useConstraints:
+            addDict(rig_bones.Constraints, self.constraints)
+            addDict(rig_face.Constraints, self.constraints)
 
-        self.rotationLimits = mergeDicts([
-            rig_bones.RotationLimits,
-            rig_face.RotationLimits
-        ])
+        if options.useRotationLimits:
+            addDict(rig_bones.RotationLimits, self.rotationLimits)
+            addDict(rig_face.RotationLimits, self.rotationLimits)
 
-        self.customShapes = mergeDicts([
-            rig_bones.CustomShapes,
-            rig_face.CustomShapes
-        ])
+        if options.useCustomShapes:
+            addDict(rig_bones.CustomShapes, self.customShapes)
+            addDict(rig_face.CustomShapes, self.customShapes)
 
         if options.useMuscles:
             self.joints += rig_muscle.Joints
             addDict(rig_muscle.HeadsTails, self.headsTails)
-            addDict(rig_muscle.Constraints, self.constraints)
-            addDict(rig_muscle.CustomShapes, self.customShapes)
-            addDict(rig_muscle.RotationLimits, self.rotationLimits)
+            if options.useConstraints:
+                addDict(rig_muscle.Constraints, self.constraints)
+            if options.useRotationLimits:
+                addDict(rig_muscle.CustomShapes, self.customShapes)
+            if options.useCustomShapes:
+                addDict(rig_muscle.RotationLimits, self.rotationLimits)
 
-        if options.useFingers:
+        if options.useFingers and options.useConstraints:
             addDict(rig_control.FingerConstraints, self.constraints)
             self.lrDrivers += rig_control.FingerPropLRDrivers
 
@@ -135,6 +135,8 @@ class Parser:
     def createBones(self, boneInfo):
         amt = self.armature
         options = amt.options
+
+        print "CB", self.splitBones
 
         if amt.done:
             halt
@@ -154,24 +156,23 @@ class Parser:
         if options.useMuscles:
             self.addBones(rig_muscle.Armature, boneInfo)
 
-        if options.useIkLegs:
+        if options.useIkLegs and options.useConstraints:
             self.addBones(rig_control.IkLegArmature, boneInfo)
             addDict(rig_control.IkLegConstraints, self.constraints)
-            addDict(rig_control.IkLegChains, self.ikChains)
+            #addDict(rig_control.IkLegChains, self.ikChains)
             addDict(rig_control.IkLegParents, self.parents)
             self.lrDrivers += rig_control.IkLegPropLRDrivers
+            self.addIkChains(rig_bones.Armature, boneInfo, rig_control.IkLegChains)
 
-        if options.useIkArms:
+        if options.useIkArms and options.useConstraints:
             self.addBones(rig_control.IkArmArmature, boneInfo)
             addDict(rig_control.IkArmConstraints, self.constraints)
-            addDict(rig_control.IkArmChains, self.ikChains)
+            #addDict(rig_control.IkArmChains, self.ikChains)
             addDict(rig_control.IkArmParents, self.parents)
             self.lrDrivers += rig_control.IkArmPropLRDrivers
+            self.addIkChains(rig_bones.Armature, boneInfo, rig_control.IkArmChains)
 
-        if options.useIkLegs or options.useIkArms:
-            self.addIkChains(rig_bones.Armature, boneInfo, self.ikChains)
-
-        if options.useFingers:
+        if options.useFingers and options.useConstraints:
             self.addBones(rig_control.FingerArmature, boneInfo)
 
         if options.useCorrectives:
@@ -622,17 +623,12 @@ class Parser:
 
         amt = self.armature
         options = amt.options
-
-        self.vertexGroupFiles += ["leftright"]
-        vgroupList = []
-        vgroups = {}
-        for file in self.vertexGroupFiles:
-            filepath = os.path.join("shared/armature/vertexgroups", file+".vgrp")
-            readVertexGroups(filepath, vgroups, vgroupList)
+        vgroupList = self.readVertexGroupFiles(self.vertexGroupFiles)
 
         if options.useDeformBones or options.useDeformNames:
             for bname,vgroup in vgroupList:
                 base = splitBoneName(bname)[0]
+                print "SPL", base, self.splitBones
                 if base in self.splitBones.keys():
                     self.splitVertexGroup(bname, vgroup)
                 elif not options.useSplitBones:
@@ -657,6 +653,19 @@ class Parser:
         else:
             for bname,vgroup in vgroupList:
                 amt.vertexWeights[bname] = vgroup
+
+        leftright = self.readVertexGroupFiles(["leftright"])
+        for name,vgroup in leftright:
+            amt.vertexWeights[name] = vgroup
+
+
+    def readVertexGroupFiles(self, files):
+        vgroupList = []
+        vgroups = {}
+        for file in files:
+            filepath = os.path.join("shared/armature/vertexgroups", file+".vgrp")
+            readVertexGroups(filepath, vgroups, vgroupList)
+        return vgroupList
 
 
     def splitVertexGroup(self, bname, vgroup):

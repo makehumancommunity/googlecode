@@ -53,6 +53,9 @@ class ArmatureOptions:
 
         # Options set by exporters
         self.useCustomShapes = False
+        self.useConstraints = False
+        self.useRotationLimits = False
+        self.useBoneGroups = False
         self.useCorrectives = False
         self.useExpressions = False
         self.feetOnGround = False
@@ -66,12 +69,18 @@ class ArmatureOptions:
 
     def setExportOptions(self,
             useCustomShapes = False,
+            useConstraints = False,
+            useRotationLimits = False,
+            useBoneGroups = False,
             useCorrectives = False,
             useExpressions = False,
             feetOnGround = False,
             useMasks = False,
             ):
         self.useCustomShapes = useCustomShapes
+        self.useConstraints = useConstraints
+        self.useRotationLimits = useRotationLimits
+        self.useBoneGroups = useBoneGroups
         self.useCorrectives = useCorrectives
         self.useExpressions = useExpressions
         self.feetOnGround = feetOnGround

@@ -19,21 +19,15 @@
 Abstract
 --------
 
-MHX armature
+Definitions for the Rigify rig, which is intended for use with Blender's Rigify plugin.
+Only works with MHX export.
+
 """
 
-import armature
 from armature.parser import Parser
+from armature.options import ArmatureOptions
 from .mhx_armature import ExportArmature
-
-from armature import rig_joints
 from armature import rig_bones
-from armature import rig_muscle
-from armature import rig_face
-from . import rig_rigify
-
-from armature.flags import *
-from armature.utils import *
 
 
 class RigifyArmature(ExportArmature):
@@ -45,24 +39,42 @@ class RigifyArmature(ExportArmature):
         self.objectProps = [("MhxRig", '"Rigify"')]
 
 
-    def setupCustomShapes(self, fp):
-        return
+    def writeFinal(self, fp):
+        fp.write('Rigify %s ;\n' % self.name)
+
+
+class RigifyOptions(ArmatureOptions):
+    def __init__(self, config):
+        ArmatureOptions.__init__(self)
+
+        self.description = (
+"""
+A rig intended for use with Blender's Rigify plugin.
+Only works with MHX export.
+""")
+
+        self.useMuscles = True
+        self.useSplitNames = True
+        self.useDeformNames = True
+
+        # Options set by MHX exporter
+        self.useCustomShapes = False
+        self.useConstraints = True
+        self.useRotationLimits = False
+        self.useBoneGroups = False
+        self.useCorrectives = config.bodyShapes
+        self.useExpressions = config.expressions
+        self.feetOnGround = config.feetOnGround
+        self.useMasks = config.useMasks
+
+
 
 
 class RigifyParser(Parser):
 
     def __init__(self, amt, human):
         Parser.__init__(self, amt, human)
-        if amt.options.useMuscles:
-            self.vertexGroupFiles = ["head", "muscles", "hand"]
-        else:
-            self.vertexGroupFiles = ["head", "bones", "hand"]
-        self.master = None
-        self.headName = 'head'
 
-        self.useDeformBones = False
-        self.useDeformNames = True
-        self.useSplitBones = False
         self.splitBones = {
             "upper_arm" :   (2, "forearm", False),
             "forearm" :     (2, "hand", False),
@@ -76,42 +88,10 @@ class RigifyParser(Parser):
             "f_pinky.01" :  (2, "f_pinky.02", True),
         }
 
-        self.joints = (
-            rig_joints.Joints +
-            rig_bones.Joints +
-            rig_rigify.Joints +
-            rig_muscle.Joints +
-            rig_face.Joints
-        )
-
-        self.headsTails = mergeDicts([
-            rig_bones.HeadsTails,
-            rig_rigify.HeadsTails,
-            rig_muscle.HeadsTails,
-            rig_face.HeadsTails
-        ])
-
-        self.constraints = mergeDicts([
-            rig_bones.Constraints,
-            rig_muscle.Constraints,
-            rig_face.Constraints
-        ])
-
         self.objectProps = (
             rig_bones.ObjectProps +
             [("MhxRig", '"Rigify"'),
              ("MhxRigify", True)]
         )
-        self.armatureProps = rig_bones.ArmatureProps
 
-        self.boneGroups = []
-        self.rotationLimits = {}
-        self.customShapes = {}
-        self.constraints = {}
-
-
-    def createBones(self, boneInfo):
-        self.addBones(rig_bones.Armature, boneInfo)
-        self.addBones(rig_muscle.Armature, boneInfo)
-        self.addBones(rig_face.Armature, boneInfo)
-        Parser.createBones(self, boneInfo)
+        print "RB", self.splitBones

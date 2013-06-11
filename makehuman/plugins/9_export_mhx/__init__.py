@@ -31,6 +31,7 @@ class MhxConfig(Config):
 
     def __init__(self, exporter):
         from armature.options import ArmatureOptions
+        from .mhx_rigify import RigifyOptions
 
         Config.__init__(self)
         self.selectedOptions(exporter)
@@ -48,15 +49,22 @@ class MhxConfig(Config):
         self.useCustomTargets =     exporter.useCustomTargets.selected
 
         self.rigOptions =           exporter.getRigOptions()
-        if not self.rigOptions:
-            self.rigOptions = ArmatureOptions()
-        self.rigOptions.setExportOptions(
-            useCustomShapes = True,
-            useCorrectives = self.bodyShapes,
-            useExpressions = self.expressions,
-            feetOnGround = self.feetOnGround,
-            useMasks = self.useMasks,
-        )
+        if exporter.rigify.selected:
+            self.rigOptions = RigifyOptions(self)
+        else:
+            if not self.rigOptions:
+                self.rigOptions = ArmatureOptions()
+
+            self.rigOptions.setExportOptions(
+                useCustomShapes = True,
+                useConstraints = True,
+                useRotationLimits = True,
+                useBoneGroups = True,
+                useCorrectives = self.bodyShapes,
+                useExpressions = self.expressions,
+                feetOnGround = self.feetOnGround,
+                useMasks = self.useMasks,
+            )
 
 
 class ExporterMHX(Exporter):
@@ -81,6 +89,7 @@ class ExporterMHX(Exporter):
         #self.cage           = options.addWidget(gui.CheckBox("Cage", False))
         #self.advancedSpine  = options.addWidget(gui.CheckBox("Advanced spine", False))
         #self.maleRig        = options.addWidget(gui.CheckBox("Male rig", False))
+        self.rigify          = options.addWidget(gui.CheckBox("Export for Rigify", False))
 
 
     def export(self, human, filename):

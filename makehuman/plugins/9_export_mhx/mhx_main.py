@@ -123,9 +123,7 @@ def exportMhx(human, filepath, config):
     mhx_pose.writePose(fp, env)
 
     writeGroups(fp, env)
-
-    if amt.options.rigtype == 'rigify':
-        fp.write("Rigify %s ;\n" % amt.name)
+    amt.writeFinal(fp)
 
     fp.close()
     log.message("%s exported" % filepath.encode('utf-8'))
