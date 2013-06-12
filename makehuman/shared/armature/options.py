@@ -254,6 +254,9 @@ class Locale:
 
 
     def rename(self, bname):
+        if bname[0:4] == "DEF-":
+            return "DEF-" + self.rename(bname[4:])
+
         try:
             return self.bones[bname]
         except KeyError:

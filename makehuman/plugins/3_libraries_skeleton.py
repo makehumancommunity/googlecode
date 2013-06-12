@@ -298,9 +298,7 @@ class SkeletonLibrary(gui3d.TaskView):
             oldSkelOptions = self.human.getSkeleton().file
         else:
             oldSkelOptions = None
-        print "uSS1", self.amtOptions.merge
         self.amtOptions.fromSelector(self.optionsSelector)
-        print "uSS2", self.amtOptions.merge
         gui3d.app.do(SkeletonAction("Change skeleton",
                                     self,
                                     oldSkelOptions,

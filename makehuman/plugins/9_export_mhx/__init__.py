@@ -96,7 +96,9 @@ class ExporterMHX(Exporter):
     def export(self, human, filename):
         from . import mhx_main
         #from mhx import mhx_main
-        mhx_main.exportMhx(human, filename("mhx"), MhxConfig(self))
+        config = MhxConfig(self)
+        mhx_main.exportMhx(human, filename("mhx"), config)
+        config.rigOptions.setExportOptions()
 
 
 def load(app):

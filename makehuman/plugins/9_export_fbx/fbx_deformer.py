@@ -164,7 +164,7 @@ def writeDeformer(fp, name):
     id,key = getId("Deformer::%s" % name)
 
     fp.write(
-'    Deformer: ¨%d, "%s", "Skin" {' % (id, key) +
+'    Deformer: %d, "%s", "Skin" {' % (id, key) +
 """
         Version: 101
         Properties70:  {

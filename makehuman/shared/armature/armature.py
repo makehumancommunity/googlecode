@@ -88,16 +88,17 @@ class Armature:
 
 
     def rename(self, locale):
-        print ("Ren", locale, self.locale)
         if self.locale == locale:
             return
         self.locale = locale
         if locale:
             locale.load()
+
         newbones = OrderedDict()
         for bone in self.bones.values():
             bone.rename(locale, newbones)
         self.bones = newbones
+
         for bname,vgroup in self.vertexWeights.items():
             newname = locale.rename(bname)
             if newname != bname:
@@ -175,7 +176,7 @@ class Bone:
 
 
     def __repr__(self):
-        return "<Bone %s>" % self.name
+        return "<Bone %s %s %s>" % (self.name, self.parent, self.children)
 
 
     def fromInfo(self, info):
@@ -222,23 +223,21 @@ class Bone:
         self.bindInverse = None
 
 
-    def rename(self, locale, bones):
+    def rename(self, locale, newbones):
         amt = self.armature
-        if locale:
-            self.name = locale.rename(self.origName)
-            if self.parent:
-                parent = amt.bones[self.parent]
-                self.parent = locale.rename(parent.origName)
-            for cns in self.constraints:
-                print "CNS", cns
-        else:
-            self.name = self.origName
-            if self.parent:
-                parent = amt.bones[self.parent]
-                self.parent = parent.origName
-            for cns in self.constraints:
-                print "CNS", cns
-        bones[self.name] = self
+        self.name = renameBone(self, locale)
+        if self.parent:
+            self.parent = renameBone(amt.bones[self.parent], locale)
+        constraints = []
+        for cns in self.constraints:
+            type,flags,inf,data = cns
+            if type in ["Transform", "StretchTo", "TrackTo", "IK"]:
+                newtrg = renameBone(amt.bones[data[1]], locale)
+                newdata = [data[0], newtrg] + data[2:]
+                cns = (type,flags,inf,newdata)
+            constraints.append(cns)
+        self.constraints = constraints
+        newbones[self.name] = self
 
 
     def calcRestMatrix(self):
@@ -267,6 +266,14 @@ class Bone:
         self.calcRestMatrix()
         self.bindInverse = np.transpose(self.matrixRest)
         self.bindMatrix = la.inv(self.bindInverse)
+
+
+def renameBone(bone, locale):
+    if locale:
+        return locale.rename(bone.name)
+    else:
+        return bone.origName
+
 
 
 

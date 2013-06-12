@@ -136,18 +136,12 @@ class Parser:
         amt = self.armature
         options = amt.options
 
-        print "CB", self.splitBones
-
         if amt.done:
             halt
         amt.done = True
 
         self.addBones(rig_bones.Armature, boneInfo)
         self.addBones(rig_face.Armature, boneInfo)
-
-        if options.useDeformBones:
-            self.addDeformBones(rig_bones.Armature, boneInfo)
-            self.addDeformBones(rig_face.Armature, boneInfo)
 
         if options.useMasterBone:
             self.master = 'master'
@@ -171,6 +165,7 @@ class Parser:
             addDict(rig_control.IkArmParents, self.parents)
             self.lrDrivers += rig_control.IkArmPropLRDrivers
             self.addIkChains(rig_bones.Armature, boneInfo, rig_control.IkArmChains)
+
 
         if options.useFingers and options.useConstraints:
             self.addBones(rig_control.FingerArmature, boneInfo)
@@ -200,30 +195,14 @@ class Parser:
                 if gizmo:
                     self.gizmos[gizmo] = struct[gizmo]
 
-        """
-        if options.skirtRig == "own":
-            self.joints += rig_skirt.Joints
-            self.headsTails += rig_skirt.HeadsTails
-            self.boneDefs += rig_skirt.Armature
-
-        if options.maleRig:
-            self.boneDefs += rig_body.MaleArmature
-
-        if options.facepanel:
-            self.joints += rig_panel.Joints
-            self.headsTails += rig_panel.HeadsTails
-            self.boneDefs += rig_panel.Armature
-
         if False and options.custom:
             (custJoints, custHeadsTails, custArmature, self.customProps) = exportutils.custom.setupCustomRig(options)
             self.joints += custJoints
             self.headsTails += custHeadsTails
             self.boneDefs += custArmature
-        """
 
-        self.getVertexGroups(boneInfo)
+        vgroupList = self.getVertexGroups(boneInfo)
 
-        print "MMM", options.rigtype, options.merge, options.mergePalms
         if options.merge:
             self.mergeBones(options.merge, boneInfo)
         else:
@@ -236,7 +215,26 @@ class Parser:
             if options.mergeHead:
                 self.mergeBones(rig_merge.HeadMergers, boneInfo)
 
-        for bone in boneInfo.values():
+        if options.useDeformNames or options.useDeformBones:
+            generic = mergeDicts([
+                rig_bones.Armature,
+                rig_face.Armature,
+            ])
+            if options.useDeformBones:
+                self.addDeformBones(generic, boneInfo)
+                self.renameDeformBones(rig_muscle.Armature, boneInfo)
+            self.addDeformVertexGroups(generic, vgroupList)
+            self.renameDeformVertexGroups(rig_muscle.Armature)
+
+        elif options.useSplitBones or options.useSplitNames:
+            self.addSplitVertexGroups(vgroupList)
+
+        if options.useLeftRight:
+            leftright = self.readVertexGroupFiles(["leftright"])
+            for name,vgroup in leftright:
+                amt.vertexWeights[name] = vgroup
+
+        for bname,bone in boneInfo.items():
             if bone.parent:
                 parent = boneInfo[bone.parent]
                 parent.children.append(bone)
@@ -467,7 +465,7 @@ class Parser:
             bone = boneInfo[bname]
             headTail = self.headsTails[bname]
             base,ext = splitBoneName(bname)
-            bone.parent = self.getParent(bone)
+            #bone.parent = self.getParent(bone)
 
             if base in ikChains.keys():
                 pbase,pext = splitBoneName(bone.parent)
@@ -533,9 +531,6 @@ class Parser:
                     cns = ('IK', 0, 1, ['IK', ikTarget, count, (poleAngle, poleTarget), (True, False,False)])
                     safeAppendToDict(self.constraints, ikName, cns)
 
-            else:
-                bone.deform = False
-
 
     def addDeformBones(self, generic, boneInfo):
         """
@@ -553,9 +548,15 @@ class Parser:
             return
 
         for bname in generic.keys():
-            bone = boneInfo[bname]
-            if not bone.deform:
+            try:
+                bone = boneInfo[bname]
+            except KeyError:
+                log.debug("Warning: deform bone %s does not exist" % bname)
                 continue
+            if not bone.deform:
+                log.debug("Not deform: %s" % bname)
+                continue
+
             headTail = self.headsTails[bname]
             base,ext = splitBoneName(bname)
             bone.deform = False
@@ -616,52 +617,62 @@ class Parser:
         return boneInfo
 
 
-    def getVertexGroups(self, boneInfo):
-        """
-        Read vertex groups from specified files, and do some manipulations.
-        If the rig has deform bones, prefix vertex group names with "DEF-".
-        If some bones are split, split the vertex groups into two or three.
-        Rigify uses deform and split names but not bones, because the rigify
-        script will fix that in Blender.
-        """
+    def renameDeformBones(self, muscles, boneInfo):
+        amt = self.armature
+        for bname in muscles.keys():
+            try:
+                bone = boneInfo[bname]
+            except KeyError:
+                log.debug("Warning: deform bone %s does not exist" % bname)
+                continue
+            if not bone.deform:
+                continue
+            defName = "DEF-"+bname
+            self.headsTails[defName] = self.headsTails[bname]
+            del self.headsTails[bname]
+            bone = boneInfo[defName] = boneInfo[bname]
+            bone.name = defName
+            del boneInfo[bname]
+            parbone = boneInfo[bone.parent]
+            if parbone.deform and parbone.name[0:4] != "DEF-":
+                bone.parent = "DEF-" + bone.parent
 
+
+    def getVertexGroups(self, boneInfo):
+        amt = self.armature
+        vgroupList = self.readVertexGroupFiles(self.vertexGroupFiles)
+        for bname,vgroup in vgroupList:
+            amt.vertexWeights[bname] = vgroup
+        return vgroupList
+
+
+    def addDeformVertexGroups(self, generic, vgroupList):
         amt = self.armature
         options = amt.options
-        vgroupList = self.readVertexGroupFiles(self.vertexGroupFiles)
+        for bname,vgroup in vgroupList:
+            base = splitBoneName(bname)[0]
+            if base in self.splitBones.keys():
+                self.splitVertexGroup(bname, vgroup)
+                del amt.vertexWeights[bname]
+            else:
+                defName = "DEF-"+bname
+                amt.vertexWeights[defName] = vgroup
+                try:
+                    del amt.vertexWeights[bname]
+                except:
+                    pass
 
-        if options.useDeformBones or options.useDeformNames:
-            for bname,vgroup in vgroupList:
-                base = splitBoneName(bname)[0]
-                print "SPL", base, self.splitBones
-                if base in self.splitBones.keys():
-                    self.splitVertexGroup(bname, vgroup)
-                elif not options.useSplitBones:
-                    defName = "DEF-"+bname
-                    amt.vertexWeights[defName] = vgroup
-                else:
-                    defName = "DEF-"+bname
-                    try:
-                        boneInfo[defName]
-                        amt.vertexWeights[defName] = vgroup
-                    except KeyError:
-                        amt.vertexWeights[bname] = vgroup
 
-        elif options.useSplitBones or options.useSplitNames:
-            for bname,vgroup in vgroupList:
-                base = splitBoneName(bname)[0]
-                if base in self.splitBones.keys():
-                    self.splitVertexGroup(bname, vgroup)
-                else:
-                    amt.vertexWeights[bname] = vgroup
-
-        else:
-            for bname,vgroup in vgroupList:
-                amt.vertexWeights[bname] = vgroup
-
-        if options.useLeftRight:
-            leftright = self.readVertexGroupFiles(["leftright"])
-            for name,vgroup in leftright:
-                amt.vertexWeights[name] = vgroup
+    def renameDeformVertexGroups(self, muscles):
+        amt = self.armature
+        options = amt.options
+        for bname in muscles.keys():
+            try:
+                amt.vertexWeights[bname]
+            except KeyError:
+                continue
+            amt.vertexWeights["DEF-"+bname] = amt.vertexWeights[bname]
+            del amt.vertexWeights[bname]
 
 
     def readVertexGroupFiles(self, files):
@@ -671,6 +682,15 @@ class Parser:
             filepath = os.path.join("shared/armature/vertexgroups", file+".vgrp")
             readVertexGroups(filepath, vgroups, vgroupList)
         return vgroupList
+
+
+    def addSplitVertexGroups(self, vgroupList):
+        amt = self.armature
+        for bname,vgroup in vgroupList:
+            base = splitBoneName(bname)[0]
+            if base in self.splitBones.keys():
+                self.splitVertexGroup(bname, vgroup)
+                del amt.vertexWeights[bname]
 
 
     def splitVertexGroup(self, bname, vgroup):
@@ -685,13 +705,19 @@ class Parser:
         defName1,defName2,defName3 = splitBonesNames(base, ext, numAfter)
 
         head,tail = self.headsTails[bname]
-        vec = getUnitVector(self.locations[head] - self.locations[tail])
+        vec = self.locations[tail] - self.locations[head]
+        vec /= np.dot(vec,vec)
         orig = self.locations[head] + self.origin
 
         vgroup1 = []
         vgroup2 = []
         vgroup3 = []
         obj = self.human.meshData
+
+        #splice = [vw[0] for vw in vgroup]
+        #deltas = obj.coord[splice] - orig
+        #factors = np.dot(deltas, vec)
+
         if npieces == 2:
             for vn,w in vgroup:
                 y = obj.coord[vn] - orig
@@ -727,10 +753,8 @@ class Parser:
     def mergeBones(self, mergers, boneInfo):
         amt = self.armature
         for bname, merged in mergers.items():
-            print "Merge", bname, merged
             vgroup = amt.vertexWeights[bname]
             for mbone in merged:
-                print "  ", bname, mbone
                 if mbone != bname:
                     vgroup += amt.vertexWeights[mbone]
                     del amt.vertexWeights[mbone]
