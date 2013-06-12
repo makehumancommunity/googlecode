@@ -24,6 +24,7 @@ Fbx exporter
 
 import os.path
 import sys
+import codecs
 
 import gui3d
 import exportutils
@@ -63,7 +64,7 @@ def exportFbx(human, filepath, config):
 
     gui3d.app.progress(0, text="Exporting %s" % filepath)
 
-    fp = open(filepath, "w")
+    fp = codecs.open(filepath, "w", encoding="utf-8")
     fbx_utils.resetId()
     fbx_utils.setAbsolutePath(filepath)
     fbx_header.writeHeader(fp, filepath)

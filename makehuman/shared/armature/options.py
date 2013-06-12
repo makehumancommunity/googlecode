@@ -63,16 +63,12 @@ class ArmatureOptions:
         self.useExpressions = False
         self.feetOnGround = False
         self.useMasks = False
+        self.useLeftRight = False
 
         # Obsolete options once used by mhx
         self.facepanel = False
         self.advancedSpine = False
         self.clothesRig = False
-
-
-    def setLocale(self, filepath):
-        self.locale = Locale()
-        self.locale.load(filepath)
 
 
     def setExportOptions(self,
@@ -84,6 +80,7 @@ class ArmatureOptions:
             useExpressions = False,
             feetOnGround = False,
             useMasks = False,
+            useLeftRight = False,
             ):
         self.useCustomShapes = useCustomShapes
         self.useConstraints = useConstraints
@@ -93,6 +90,7 @@ class ArmatureOptions:
         self.useExpressions = useExpressions
         self.feetOnGround = feetOnGround
         self.useMasks = useMasks
+        self.useLeftRight = useLeftRight
 
 
     def __repr__(self):
@@ -133,7 +131,6 @@ class ArmatureOptions:
         self.mergeFingers = selector.mergeFingers.selected
         self.mergePalms = selector.mergePalms.selected
         self.mergeHead = selector.mergeHead.selected
-        self.merge = None
 
         self.useSplitBones = selector.useSplitBones.selected
         self.useSplitNames = selector.useSplitBones.selected
@@ -179,12 +176,14 @@ class ArmatureOptions:
             exec(expr)
 
         print "Preset", self.rigtype, self.description
-        print "  ", self.merge
 
         selector.fromOptions(self)
-        if hasattr(struct, "bones"):
-            self.locale = Locale()
-            self.locale.bones = bones
+        try:
+            bones = struct["bones"]
+        except KeyError:
+            bones = None
+        if bones:
+            self.locale = Locale(bones=bones)
         return self.description
 
 
@@ -232,15 +231,15 @@ class ArmatureSelector:
 
 
 class Locale:
-    def __init__(self):
-        self.filepath = None
-        self.bones = []
+    def __init__(self, filepath=None, bones=[]):
+        self.filepath = filepath
+        self.bones = bones
 
 
     def __repr__(self):
         string = "<Locale %s:" % (self.filepath)
-        for key,bone in self.bones.items():
-            string += "\n    %s %s" % (key,bone)
+        #for key,bone in self.bones.items():
+        #    string += "\n    %s %s" % (key,bone)
         return string + ">"
 
 

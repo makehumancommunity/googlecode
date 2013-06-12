@@ -167,6 +167,7 @@ class SkeletonLibrary(gui3d.TaskView):
         def onClicked(event):
             descr = self.amtOptions.loadPreset("second_life", self.optionsSelector)
             self.descrLbl.setText("Description: %s" % descr)
+            print "2L", self.amtOptions.merge
             self.updateSkeleton()
 
         self.presetXonoticBtn = self.presetBox.addWidget(gui.Button("Xonotic"))
@@ -195,7 +196,9 @@ class SkeletonLibrary(gui3d.TaskView):
             @button.mhEvent
             def onClicked(event):
                 print "Language", language
-                self.amtOptions.setLocale(filepath)
+                locale = armature.options.Locale(filepath=filepath)
+                self.amtOptions.locale = locale
+                locale.load()
                 self.updateSkeleton()
 
         #
@@ -295,7 +298,9 @@ class SkeletonLibrary(gui3d.TaskView):
             oldSkelOptions = self.human.getSkeleton().file
         else:
             oldSkelOptions = None
+        print "uSS1", self.amtOptions.merge
         self.amtOptions.fromSelector(self.optionsSelector)
+        print "uSS2", self.amtOptions.merge
         gui3d.app.do(SkeletonAction("Change skeleton",
                                     self,
                                     oldSkelOptions,

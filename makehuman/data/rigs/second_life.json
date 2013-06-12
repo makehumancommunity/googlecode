@@ -37,7 +37,8 @@
     "merge" : {
             "chest":        ["chest", "chest-1"],
 
-            "head":         ["uplid.L", "lolid.L", "uplid.R", "lolid.R", "jaw"],
+            "head":         ["uplid.L", "lolid.L", "uplid.R", "lolid.R", "jaw",
+                             "tongue_base", "tongue_mid", "tongue_tip"],
 
             "hand.L":       ["hand.L", "palm.01.L", "palm.02.L", "palm.03.L", "palm.04.L",
                              "thumb.01.L", "thumb.02.L", "thumb.03.L",

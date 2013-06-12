@@ -23,6 +23,7 @@ Exports proxy mesh to obj
 """
 
 import os
+import codecs
 import math
 import exportutils
 
@@ -48,9 +49,10 @@ def exportObj(human, filepath, config=None):
         lashes=config.lashes,
         subdivide=config.subdivide)
 
-    fp = open(filepath, 'w')
-    mtlfile = "%s.mtl" % os.path.splitext(filepath)[0]
-    mtlfile = mtlfile.encode(config.encoding, 'replace')
+    fp = codecs.open(filepath, 'w', encoding="utf-8")
+    #mtlfile = "%s.mtl" % os.path.splitext(filepath)[0]
+    #mtlfile = mtlfile.encode(config.encoding, 'replace')
+    mtlfile = filepath.replace(".obj",".mtl")
     fp.write(
         "# MakeHuman exported OBJ\n" +
         "# www.makehuman.org\n\n" +
@@ -123,7 +125,7 @@ def exportObj(human, filepath, config=None):
 
     fp.close()
 
-    fp = open(mtlfile, 'w')
+    fp = codecs.open(mtlfile, 'w', encoding="utf-8")
     fp.write(
         '# MakeHuman exported MTL\n' +
         '# www.makehuman.org\n\n')

@@ -30,6 +30,7 @@ import module3d
 import gui3d
 import os
 import time
+import codecs
 import numpy
 import math
 import log
@@ -67,7 +68,6 @@ class MhxEnvironment:
 
 def exportMhx(human, filepath, config):
     from .mhx_armature import setupArmature
-    import codecs
 
     gui3d.app.progress(0, text="Exporting MHX")
     log.message("Exporting %s" % filepath.encode('utf-8'))

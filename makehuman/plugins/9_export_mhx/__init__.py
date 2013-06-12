@@ -64,6 +64,7 @@ class MhxConfig(Config):
                 useExpressions = self.expressions,
                 feetOnGround = self.feetOnGround,
                 useMasks = self.useMasks,
+                useLeftRight = True,
             )
 
 

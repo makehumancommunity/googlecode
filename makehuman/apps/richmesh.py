@@ -58,8 +58,6 @@ class CStuff:
             mat.bumpMapTexture = "data/textures/bump.png"
             mat.bumpMatIntensity = 0.2
 
-        print "CStuff", self.name, self.material, self.material.name
-
 
     def __repr__(self):
         return "<CStuff %s %s mat %s tex %s>" % (self.name, self.type, self.material, self.texture)

@@ -30,6 +30,7 @@ A description of this format can be found here: https://bitbucket.org/sinbad/ogr
 __docformat__ = 'restructuredtext'
 
 import os
+import codecs
 import numpy as np
 import transformations
 import exportutils
@@ -66,7 +67,7 @@ def writeMeshFile(human, filepath, stuffs, config):
     filename = os.path.basename(filepath)
     name = formatName(config.goodName(os.path.splitext(filename)[0]))
 
-    f = open(filepath, 'w')
+    f = codecs.open(filepath, 'w', encoding="utf-8")
     f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
     f.write('<!-- Exported from MakeHuman (www.makehuman.org) -->\n')
     f.write('<mesh>\n')
@@ -193,7 +194,7 @@ def writeSkeletonFile(human, filepath, config):
 
     skel = human.getSkeleton()
 
-    f = open(filepath, 'w')
+    f = codecs.open(filepath, 'w', encoding="utf-8")
     f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
     f.write('<!-- Exported from MakeHuman (www.makehuman.org) -->\n')
     f.write('<skeleton>\n')
@@ -232,7 +233,7 @@ def writeMaterialFile(human, filepath, stuffs, config):
     filename = name + ".material"
     filepath = os.path.join(folderpath, filename)
 
-    f = open(filepath, 'w')
+    f = codecs.open(filepath, 'w', encoding="utf-8")
     for stuffIdx, stuff in enumerate(stuffs):
         texfolder, texfile = stuff.texture
         texpath = os.path.join(texfolder, texfile)

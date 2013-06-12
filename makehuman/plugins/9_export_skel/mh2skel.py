@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -22,6 +22,7 @@ Abstract
 TODO
 """
 
+import codecs
 import gui3d
 
 def exportSkel(filename):
@@ -31,11 +32,11 @@ def exportSkel(filename):
         gui3d.app.prompt('Error', 'You did not select a skeleton from the library.', 'OK')
         return
 
-    f = open(filename, 'w')
-    
+    f = codecs.open(filename, 'w', encoding="utf-8")
+
     for bone in human.getSkeleton().getBones():
         writeBone(f, bone)
-    
+
     f.close()
 
 def writeBone(f, bone):

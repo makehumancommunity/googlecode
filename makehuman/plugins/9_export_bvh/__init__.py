@@ -46,7 +46,7 @@ class BvhConfig(Config):
         self.encoding           = "ascii"
         self.scale,self.unit    = exporter.taskview.getScale()
         return self
-    
+
 class ExporterBVH(Exporter):
     def __init__(self):
         Exporter.__init__(self)

@@ -23,8 +23,8 @@ Bone mergers
 """
 
 PalmMergers = {
-    "hand.L" : ("hand.L", "palm.01.L", "palm.02.L", "palm.03.L", "palm.04.L", "thumb.01.L"),
-    "hand.R" : ("hand.R", "palm.01.R", "palm.02.R", "palm.03.R", "palm.04.R", "thumb.01.R"),
+    "hand.L" : ("palm.01.L", "palm.02.L", "palm.03.L", "palm.04.L", "thumb.01.L"),
+    "hand.R" : ("palm.01.R", "palm.02.R", "palm.03.R", "palm.04.R", "thumb.01.R"),
 }
 
 FingerMergers = {

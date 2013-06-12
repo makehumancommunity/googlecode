@@ -27,6 +27,7 @@ TODO
 
 import os.path
 import time
+import codecs
 import math
 import numpy as np
 import transformations as tm
@@ -55,7 +56,7 @@ def exportCollada(human, filepath, config):
     config.setHuman(human)
     config.setupTexFolder(filepath)
     try:
-        fp = open(filepath, 'w')
+        fp = codecs.open(filepath, 'w', encoding="utf-8")
         log.message("Writing Collada file %s" % filepath)
     except:
         log.error("Unable to open file for writing %s" % filepath)

@@ -33,6 +33,7 @@ Requires:
 __docformat__ = 'restructuredtext'
 
 import os
+import codecs
 import numpy as np
 import numpy.linalg as la
 import aljabr
@@ -84,7 +85,7 @@ def exportMd5(human, filepath, config):
     else:
         numJoints = 1
 
-    f = open(filepath, 'w')
+    f = codecs.open(filepath, 'w', encoding="utf-8")
     f.write('MD5Version 10\n')
     f.write('commandline ""\n\n')
     f.write('numJoints %d\n' % numJoints)
@@ -305,7 +306,7 @@ def writeAnimation(filepath, human, config, animTrack):
     animfilename = animfilename + "_%s.md5anim" % (animTrack.name)
     foldername = os.path.dirname(filepath)
     animfilepath = os.path.join(foldername, animfilename)
-    f = open(animfilepath, 'w')
+    f = codecs.open(animfilepath, 'w', encoding="utf-8")
     f.write('MD5Version 10\n')
     f.write('commandline ""\n\n')
     f.write('numFrames %d\n' % animTrack.nFrames)

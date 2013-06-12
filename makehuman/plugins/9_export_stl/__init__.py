@@ -32,7 +32,7 @@ class STLConfig(Config):
         Config.__init__(self)
         self.selectedOptions(exporter)
         self.useRelPaths = True
-    
+
 
 class ExporterSTL(Exporter):
     def __init__(self):

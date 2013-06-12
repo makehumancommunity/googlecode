@@ -78,10 +78,7 @@ class Armature:
     def setup(self):
         self.parser.setup()
         self.origin = self.parser.origin
-        options = self.options
-
-        if options.locale:
-            self.rename(options.locale)
+        self.rename(self.options.locale)
 
 
     def rescale(self, scale):
@@ -91,6 +88,7 @@ class Armature:
 
 
     def rename(self, locale):
+        print ("Ren", locale, self.locale)
         if self.locale == locale:
             return
         self.locale = locale

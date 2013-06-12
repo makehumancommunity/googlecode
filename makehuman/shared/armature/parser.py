@@ -223,6 +223,7 @@ class Parser:
 
         self.getVertexGroups(boneInfo)
 
+        print "MMM", options.rigtype, options.merge, options.mergePalms
         if options.merge:
             self.mergeBones(options.merge, boneInfo)
         else:
@@ -253,7 +254,10 @@ class Parser:
             self.sortBones(root, amt.hierarchy)
 
         for bname,data in self.customShapes.items():
-            amt.bones[bname].customShape = data
+            try:
+                amt.bones[bname].customShape = data
+            except KeyError:
+                log.message("Warning: custom shape for undefined bone %s" % bname)
 
         for bname,data in self.constraints.items():
             try:
@@ -654,9 +658,10 @@ class Parser:
             for bname,vgroup in vgroupList:
                 amt.vertexWeights[bname] = vgroup
 
-        leftright = self.readVertexGroupFiles(["leftright"])
-        for name,vgroup in leftright:
-            amt.vertexWeights[name] = vgroup
+        if options.useLeftRight:
+            leftright = self.readVertexGroupFiles(["leftright"])
+            for name,vgroup in leftright:
+                amt.vertexWeights[name] = vgroup
 
 
     def readVertexGroupFiles(self, files):
@@ -722,8 +727,10 @@ class Parser:
     def mergeBones(self, mergers, boneInfo):
         amt = self.armature
         for bname, merged in mergers.items():
+            print "Merge", bname, merged
             vgroup = amt.vertexWeights[bname]
             for mbone in merged:
+                print "  ", bname, mbone
                 if mbone != bname:
                     vgroup += amt.vertexWeights[mbone]
                     del amt.vertexWeights[mbone]
