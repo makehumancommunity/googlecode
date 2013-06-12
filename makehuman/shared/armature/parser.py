@@ -223,17 +223,17 @@ class Parser:
 
         self.getVertexGroups(boneInfo)
 
-        if options.mergeSpine:
-            self.mergeBones(rig_merge.SpineMergers, boneInfo)
-
-        if options.mergeFingers:
-            self.mergeBones(rig_merge.FingerMergers, boneInfo)
-
-        if options.mergePalms:
-            self.mergeBones(rig_merge.PalmMergers, boneInfo)
-
-        if options.mergeHead:
-            self.mergeBones(rig_merge.HeadMergers, boneInfo)
+        if options.merge:
+            self.mergeBones(options.merge, boneInfo)
+        else:
+            if options.mergeSpine:
+                self.mergeBones(rig_merge.SpineMergers, boneInfo)
+            if options.mergeFingers:
+                self.mergeBones(rig_merge.FingerMergers, boneInfo)
+            if options.mergePalms:
+                self.mergeBones(rig_merge.PalmMergers, boneInfo)
+            if options.mergeHead:
+                self.mergeBones(rig_merge.HeadMergers, boneInfo)
 
         for bone in boneInfo.values():
             if bone.parent:

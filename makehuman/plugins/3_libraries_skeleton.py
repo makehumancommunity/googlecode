@@ -137,28 +137,42 @@ class SkeletonLibrary(gui3d.TaskView):
         self.presetGameBtn = self.presetBox.addWidget(gui.Button("Game"))
         @self.presetGameBtn.mhEvent
         def onClicked(event):
-            descr = self.amtOptions.presetGame(self.optionsSelector)
+            descr = self.amtOptions.loadPreset("game", self.optionsSelector)
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
         self.presetSimpleBtn = self.presetBox.addWidget(gui.Button("Simple"))
         @self.presetSimpleBtn.mhEvent
         def onClicked(event):
-            descr = self.amtOptions.presetSimple(self.optionsSelector)
+            descr = self.amtOptions.loadPreset("simple", self.optionsSelector)
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
         self.presetMediumBtn = self.presetBox.addWidget(gui.Button("Medium"))
         @self.presetMediumBtn.mhEvent
         def onClicked(event):
-            descr = self.amtOptions.presetMedium(self.optionsSelector)
+            descr = self.amtOptions.loadPreset("medium", self.optionsSelector)
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
         self.presetAdvancedBtn = self.presetBox.addWidget(gui.Button("Advanced"))
         @self.presetAdvancedBtn.mhEvent
         def onClicked(event):
-            descr = self.amtOptions.presetAdvanced(self.optionsSelector)
+            descr = self.amtOptions.loadPreset("advanced", self.optionsSelector)
+            self.descrLbl.setText("Description: %s" % descr)
+            self.updateSkeleton()
+
+        self.presetSecondLifeBtn = self.presetBox.addWidget(gui.Button("Second Life"))
+        @self.presetSecondLifeBtn.mhEvent
+        def onClicked(event):
+            descr = self.amtOptions.loadPreset("second_life", self.optionsSelector)
+            self.descrLbl.setText("Description: %s" % descr)
+            self.updateSkeleton()
+
+        self.presetXonoticBtn = self.presetBox.addWidget(gui.Button("Xonotic"))
+        @self.presetXonoticBtn.mhEvent
+        def onClicked(event):
+            descr = self.amtOptions.loadPreset("xonotic", self.optionsSelector)
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
@@ -181,7 +195,7 @@ class SkeletonLibrary(gui3d.TaskView):
             @button.mhEvent
             def onClicked(event):
                 print "Language", language
-                self.amtOptions.setLocale(language, filepath)
+                self.amtOptions.setLocale(filepath)
                 self.updateSkeleton()
 
         #

@@ -23,13 +23,14 @@ Armature options
 
 """
 
+import os
 import gui
-
+import io_json
 
 class ArmatureOptions:
     def __init__(self):
 
-        self.rigtype = "python"
+        self.rigtype = "Default"
         self.description = ""
         self.locale = None
         self.scale = 1.0
@@ -43,6 +44,7 @@ class ArmatureOptions:
         self.mergeFingers = False
         self.mergePalms = False
         self.mergeHead = False
+        self.merge = None
 
         self.useSplitBones = False
         self.useSplitNames = False
@@ -68,9 +70,9 @@ class ArmatureOptions:
         self.clothesRig = False
 
 
-    def setLocale(self, language, filepath):
-        self.locale = Locale(language, filepath)
-        self.locale.load()
+    def setLocale(self, filepath):
+        self.locale = Locale()
+        self.locale.load(filepath)
 
 
     def setExportOptions(self,
@@ -117,6 +119,8 @@ class ArmatureOptions:
             "   useCorrectives : %s\n" % self.useCorrectives +
             "   feetOnGround : %s\n" % self.feetOnGround +
             "   useMasks : %s\n" % self.useMasks +
+            "   merge : %s\n" % self.merge +
+            "   locale : %s\n" % self.locale +
             ">")
 
 
@@ -129,6 +133,7 @@ class ArmatureOptions:
         self.mergeFingers = selector.mergeFingers.selected
         self.mergePalms = selector.mergePalms.selected
         self.mergeHead = selector.mergeHead.selected
+        self.merge = None
 
         self.useSplitBones = selector.useSplitBones.selected
         self.useSplitNames = selector.useSplitBones.selected
@@ -149,74 +154,37 @@ class ArmatureOptions:
         selector.fromOptions(self)
 
 
-    def presetGame(self, selector):
+    def loadPreset(self, filename, selector):
+        filepath = os.path.join("data/rigs/", filename + ".json")
+        struct = io_json.loadJson(filepath)
         self.__init__()
-        self.description = (
-"""
-A minimal rig intended for games.
-"""
-        )
+        try:
+            self.rigtype = struct["name"]
+        except KeyError:
+            pass
+        try:
+            self.description = struct["description"]
+        except KeyError:
+            pass
+        try:
+            self.merge = struct["merge"]
+        except KeyError:
+            pass
+        try:
+            settings = struct["settings"]
+        except KeyError:
+            settings = {}
+        for key,value in settings.items():
+            expr = ("self.%s = %s" % (key, value))
+            exec(expr)
 
-        self.mergeSpine = True
-        self.mergeFingers = True
-        self.mergePalms = True
-        self.mergeHead = True
+        print "Preset", self.rigtype, self.description
+        print "  ", self.merge
 
         selector.fromOptions(self)
-        return self.description
-
-
-    def presetSimple(self, selector):
-        self.__init__()
-        self.description = (
-"""
-A simple rig with only bone deformation.
-"""
-        )
-
-        self.mergePalms = True
-
-        selector.fromOptions(self)
-        return self.description
-
-
-    def presetMedium(self, selector):
-        self.__init__()
-        self.description = (
-"""
-A medium-complicated rig.
-Some features only work with mhx export.
-"""
-        )
-
-        self.useSplitBones = True
-        self.useDeformBones = True
-        self.useMuscles = True
-        self.mergePalms = True
-
-        selector.fromOptions(self)
-        return self.description
-
-
-    def presetAdvanced(self, selector):
-        self.__init__()
-        self.description = (
-"""
-An advanced rig intended for rendered applications.
-It has muscle bones and corrective shapekeys.
-Some features only work with mhx export or not at all.
-"""
-        )
-
-        self.useMasterBone = True
-        self.useSplitBones = True
-        self.useDeformBones = True
-        self.useMuscles = True
-        self.useIkArms = True
-        self.useIkLegs = True
-        self.useFingers = True
-
-        selector.fromOptions(self)
+        if hasattr(struct, "bones"):
+            self.locale = Locale()
+            self.locale.bones = bones
         return self.description
 
 
@@ -264,21 +232,23 @@ class ArmatureSelector:
 
 
 class Locale:
-    def __init__(self, language, filepath):
-        self.filepath = filepath
-        self.language = language
-        self.bones = None
-        print "CLL", self
+    def __init__(self):
+        self.filepath = None
+        self.bones = []
 
 
     def __repr__(self):
-        return ("<Locale %s %s>" % (self.language, self.filepath))
+        string = "<Locale %s:" % (self.filepath)
+        for key,bone in self.bones.items():
+            string += "\n    %s %s" % (key,bone)
+        return string + ">"
 
 
-    def load(self):
-        import io_json
+    def load(self, filepath=None):
         if self.bones:
             return
+        if filepath:
+            self.filepath = filepath
         struct = io_json.loadJson(self.filepath)
         #self.language = struct["language"]
         self.bones = struct["bones"]

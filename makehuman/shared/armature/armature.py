@@ -63,6 +63,7 @@ class Armature:
         self.roots = []
         self.bones = OrderedDict()
         self.hierarchy = []
+        self.locale = None
 
         self.done = False
 
@@ -80,7 +81,6 @@ class Armature:
         options = self.options
 
         if options.locale:
-            print "Rename %s" % options.locale
             self.rename(options.locale)
 
 
@@ -91,7 +91,11 @@ class Armature:
 
 
     def rename(self, locale):
-        locale.load()
+        if self.locale == locale:
+            return
+        self.locale = locale
+        if locale:
+            locale.load()
         newbones = OrderedDict()
         for bone in self.bones.values():
             bone.rename(locale, newbones)
@@ -135,6 +139,7 @@ class Armature:
 class Bone:
     def __init__(self, amt, name):
         self.name = name
+        self.origName = name
         self.armature = amt
         self.head = None
         self.tail = None
@@ -220,12 +225,21 @@ class Bone:
 
 
     def rename(self, locale, bones):
-        print "REN", self
-        self.name = locale.rename(self.name)
-        if self.parent:
-            self.parent = locale.rename(self.parent)
-        for cns in self.constraints:
-            print "CNS", cns
+        amt = self.armature
+        if locale:
+            self.name = locale.rename(self.origName)
+            if self.parent:
+                parent = amt.bones[self.parent]
+                self.parent = locale.rename(parent.origName)
+            for cns in self.constraints:
+                print "CNS", cns
+        else:
+            self.name = self.origName
+            if self.parent:
+                parent = amt.bones[self.parent]
+                self.parent = parent.origName
+            for cns in self.constraints:
+                print "CNS", cns
         bones[self.name] = self
 
 

@@ -67,6 +67,7 @@ class MhxEnvironment:
 
 def exportMhx(human, filepath, config):
     from .mhx_armature import setupArmature
+    import codecs
 
     gui3d.app.progress(0, text="Exporting MHX")
     log.message("Exporting %s" % filepath.encode('utf-8'))
@@ -80,7 +81,7 @@ def exportMhx(human, filepath, config):
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
     amt = setupArmature(name, human, config.rigOptions)
-    fp = open(filepath, 'w')
+    fp = codecs.open(filepath, 'w', encoding='utf-8')
     fp.write(
         "# MakeHuman exported MHX\n" +
         "# www.makeinfo.human.org\n" +

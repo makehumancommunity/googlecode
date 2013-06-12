@@ -658,8 +658,11 @@ def loadRig(options, mesh):
     Weights are of format: {"boneName": [ (vertIdx, weight), ...], ...}
     """
     import os
+    from armature.options import ArmatureOptions
 
     #rigName = os.path.splitext(os.path.basename(filename))[0]
+    if not isinstance(options, ArmatureOptions):
+        options = ArmatureOptions()
     skel = Skeleton("python")
     weights = skel.fromOptions(options, mesh)
     return skel, weights
