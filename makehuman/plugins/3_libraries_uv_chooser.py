@@ -78,9 +78,9 @@ class UvTaskView(gui3d.TaskView):
         
     def onHumanChanging(self, event):
         human = event.human
-        if event.change == 'reset':
-            human.setUVMap(None)
-            gui3d.app.redraw()
+        #if event.change == 'reset':
+        #    human.setUVMap(None)
+        #    gui3d.app.redraw()
             
     def onHumanChanged(self, event):
         human = event.human

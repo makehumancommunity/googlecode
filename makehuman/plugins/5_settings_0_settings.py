@@ -168,7 +168,8 @@ class SettingsTaskView(gui3d.TaskView):
         def onClicked(event):
             human = gui3d.app.selectedHuman
             self.setShader("data/shaders/glsl/normalmap")
-            human.setShaderParameter("normalmapTexture", "data/textures/normal.jpg")
+            #human.setShaderParameter("normalmapTexture", "data/textures/normal.jpg")
+            human.material.normalMapTexture = "data/textures/normal.jpg"
             
         #@self.shaderSkin.mhEvent
         #def onClicked(event):

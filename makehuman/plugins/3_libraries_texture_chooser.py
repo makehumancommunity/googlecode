@@ -401,8 +401,8 @@ def load(app):
     app.addLoadHandler('eyeTexture', taskview.loadHandler)
     app.addSaveHandler(taskview.saveHandler)
 
-    log.message("Applying A7 UV map to human as temporary fix for lack of new textures.")
-    setHumanUVMap(gui3d.app.selectedHuman, 'data/uvs/a7/A7.mhuv')
+    #log.message("Applying A7 UV map to human as temporary fix for lack of new textures.")
+    #setHumanUVMap(gui3d.app.selectedHuman, 'data/uvs/a7/A7.mhuv')
 
 
 # This method is called when the plugin is unloaded from makehuman

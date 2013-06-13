@@ -80,8 +80,9 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
     def configureShading(self):
         if os.path.isfile("data/textures/caucasian-female-young-minmuscle-maxweight1-NM.png"):
             self.human.material.normalMapTexture = "data/textures/caucasian-female-young-minmuscle-maxweight1-NM.png"
+            #self.human.material.diffuseTexture = "data/textures/caucasian-female-young-minmuscle-maxweight1-NM.png"
         else:
-            self.human.material.normalMapTexture = "data/textures/normal.png"
+            self.human.material.normalMapTexture = "data/textures/normal.jpg"
         self.human.mesh.configureShading(diffuse=self.diffuseChk.selected, normal=self.normalChk.selected)
 
     def onShow(self, event):
@@ -94,10 +95,13 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
         self.diffuseChk.setChecked("DIFFUSE" in self.human.mesh.shaderDefines)
 
     def onHumanChanging(self, event):
+        # TODO move this someplace else (in Human maybe?) In the future we probably want a more generic mechanism for blending textures
         if "litsphereTexture" not in self.human.meshData.shaderParameters:
             return
+
         current = self.human.meshData.shaderParameters["litsphereTexture"]
-        if isinstance(current, image.Image) or os.path.abspath(current) == os.path.abspath("data/litspheres/adaptive_skin_tone.png"):
+        if current and (isinstance(current, image.Image) or \
+           os.path.abspath(current) == os.path.abspath("data/litspheres/adaptive_skin_tone.png"):
             if event.change == "caucasian" or event.change == "african" or \
               event.change == "asian":
                 self.updateAdaptiveSkin()
@@ -136,8 +140,8 @@ def load(app):
     # Set default litsphere mat at startup
     taskview.updateAdaptiveSkin()
     # Enable litsphere shading without texture at startup
-    taskview.human.mesh.configureShading(diffuse=False)
-    taskview.human.setShader("data/shaders/glsl/litsphere")
+    #taskview.human.mesh.configureShading(diffuse=False)
+    #taskview.human.setShader("data/shaders/glsl/litsphere")
 
 
 def unload(app):
