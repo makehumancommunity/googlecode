@@ -343,6 +343,15 @@ class Object(events3d.EventHandler):
         mesh.updateIndexBuffer()
 
     def setUVMap(self, filename):
+        subdivided = self.isSubdivided()
+
+        if subdivided:
+            # Re-generate the subdivided mesh
+            self.setSubdivided(False)
+
+        # Remove stale subdivision cache if present
+        self.__subdivisionMesh = None
+
         # Set uv map on original, unsubdivided, unproxied mesh
         self._setMeshUVMap(filename, self.__seedMesh)
 
@@ -350,14 +359,9 @@ class Object(events3d.EventHandler):
             # TODO transfer UV coordinates to proxy mesh
             pass
 
-        if self.isSubdivided():
-            # Re-generate the subdivided mesh
-            self.setSubdivided(False)
-            self.__subdivisionMesh = None
+        if subdivided:
+            # Re-generate the subdivided mesh with new UV coordinates
             self.setSubdivided(True)
-        else:
-            # Remove stale subdivision cache if present
-            self.__subdivisionMesh = None
 
     def setMaterial(self, material):
         self.setUVMap(material.uvMap)
