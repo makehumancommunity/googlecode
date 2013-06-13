@@ -101,7 +101,7 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
 
         current = self.human.meshData.shaderParameters["litsphereTexture"]
         if current and (isinstance(current, image.Image) or \
-           os.path.abspath(current) == os.path.abspath("data/litspheres/adaptive_skin_tone.png"):
+           os.path.abspath(current) == os.path.abspath("data/litspheres/adaptive_skin_tone.png")):
             if event.change == "caucasian" or event.change == "african" or \
               event.change == "asian":
                 self.updateAdaptiveSkin()
