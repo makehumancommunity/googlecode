@@ -399,7 +399,7 @@ def getShader(path, defines=[], cache=None):
         if shader is False:
             return shader
 
-        if mtime >= shader.modified:
+        if mtime > shader.modified:
             log.message('reloading %s', cacheName)
             try:
                 shader.initShader()
