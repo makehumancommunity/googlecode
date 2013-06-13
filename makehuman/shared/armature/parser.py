@@ -29,6 +29,7 @@ import log
 from collections import OrderedDict
 import io_json
 
+import posemode
 import numpy as np
 import numpy.linalg as la
 import transformations as tm
@@ -74,6 +75,8 @@ class Parser:
         self.master = None
         self.headName = 'head'
         self.root = "hips"
+
+        debugCoords("Parser")
 
         if options.useMuscles:
             self.vertexGroupFiles = ["head", "muscles", "hand"]
@@ -380,8 +383,7 @@ class Parser:
             p0,plane,dist = data
             x0 = self.locations[p0]
             p1,p2,p3 = self.planes[plane]
-            vec = self.locations[p3] - self.locations[p1]
-            vec /= math.sqrt(np.dot(vec,vec))
+            vec = getUnitVector(self.locations[p3] - self.locations[p1])
             n = self.normals[plane]
             t = np.cross(n, vec)
             self.locations[key] = x0 + dist*t

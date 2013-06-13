@@ -36,6 +36,7 @@ import numpy as np
 import warpmodifier
 
 from .flags import *
+from .armature import Armature
 from .parser import Parser
 from .options import ArmatureOptions
 from .utils import *
@@ -59,7 +60,7 @@ class Pose:
         amt = self.armature = Armature("Armature", options)
         amt.parser = Parser(amt, human)
         amt.setup()
-        amt.normalizeVertexWeights()
+        amt.normalizeVertexWeights(human)
         self.matrixGlobal = tm.identity_matrix()
 
         self.deforms = []
@@ -69,11 +70,19 @@ class Pose:
             if pb.bone.deform:
                 self.deforms.append(pb)
 
-        print "PB", self.posebones.keys()
-        nVerts = len(self.human.meshData.coord)
+        self.storeCoords()
+        nVerts = len(self._storedCoord)
         self.restCoords = np.zeros((nVerts,4), float)
         self.restCoords[:,3] = 1
         self.syncRestVerts("rest")
+
+
+    def storeCoords(self):
+        self._storedCoord = np.array(self.human.meshData.coord)
+
+
+    def restoreCoords(self):
+        self.human.meshData.coord = self._storedCoord
 
 
     def __repr__(self):
@@ -226,7 +235,6 @@ class Pose:
         amt = self.armature
         coords = np.zeros((nVerts,4), float)
         print("UO", amt.vertexWeights.keys())
-        print([pb.name for pb in self.deforms])
         for pb in self.deforms:
             try:
                 verts,weights = amt.vertexWeights[pb.name]
@@ -419,6 +427,7 @@ class PoseBone:
         self.vector4 = self.tail4 - self.head4
         self.yvector4 = np.array((0, self.bone.length, 0, 1))
 
+        self.bone.calcRestMatrix()
         if self.parent:
             self.matrixGlobal = np.dot(self.parent.matrixGlobal, self.bone.matrixRelative)
         else:
@@ -709,9 +718,7 @@ class PoseBone:
 
 
 def createPoseRig(human, rigtype):
-    options = ArmatureOptions(
-                rigtype = rigtype,
-                feetOnGround = False)
+    options = ArmatureOptions()
     amt = Pose(human, options)
     return amt
 

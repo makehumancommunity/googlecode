@@ -65,7 +65,7 @@ def _getSkeleton(self):
         log.debug("Rebuilding skeleton.")
         # Rebuild skeleton (when human has changed)
         # Loads new skeleton, creates new skeleton mesh and new animatedMesh object (with up-to-date rest coords)
-        self._skeleton._library.chooseSkeleton(self._skeleton.file)
+        self._skeleton._library.chooseSkeleton(self._skeleton.options)
         # TODO have a more efficient way of adapting skeleton to new joint positions without re-reading rig files
         # TODO Also, currently a tiny change in joints positions causes a new animatedMesh to be constructed, requiring all BVH motions to be reloaded (which is not necessary if the rig structure does not change). It should be enough to re-sync the rest coordinates in the animatedMesh and move the coord positions of the skeleton mesh.
         self._skeleton.dirty = False
@@ -185,7 +185,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
         self.languages = OrderedDict()
         self.languages["English"] = None
-        folder = "data/rigs/bonenames"
+        folder = "data/rigs/languages"
         for filename in os.listdir(folder):
             name,ext = os.path.splitext(filename)
             filepath = os.path.join(folder, filename)
@@ -223,7 +223,7 @@ class SkeletonLibrary(gui3d.TaskView):
         @self.filechooser.mhEvent
         def onFileSelected(filename):
             if self.human.getSkeleton():
-                oldSkelFile = self.human.getSkeleton().file
+                oldSkelFile = self.human.getSkeleton().options
             else:
                 oldSkelFile = None
             gui3d.app.do(SkeletonAction("Change skeleton",
@@ -295,7 +295,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
     def updateSkeleton(self):
         if self.human.getSkeleton():
-            oldSkelOptions = self.human.getSkeleton().file
+            oldSkelOptions = self.human.getSkeleton().options
         else:
             oldSkelOptions = None
         self.amtOptions.fromSelector(self.optionsSelector)
@@ -333,6 +333,7 @@ class SkeletonLibrary(gui3d.TaskView):
             self.drawJointHelpers()
             self.humanChanged = False
 
+
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
 
@@ -349,19 +350,18 @@ class SkeletonLibrary(gui3d.TaskView):
         # Reset smooth setting
         self.human.setSubdivided(self.oldSmoothValue)
 
-    def chooseSkeleton(self, filename):
+    def chooseSkeleton(self, options):
         """
-        Load skeleton from rig definition in a .rig file.
+        Load skeleton from an options set.
         """
-        log.debug("Loading skeleton with options %s", filename)
+        log.debug("Loading skeleton with options %s", options)
 
         try:
             self.removeBoneHighlights()
         except:
             pass
 
-        """
-        if not filename or os.path.basename(filename) == 'clear.rig':
+        if not options:
             # Unload current skeleton
             self.human._skeleton = None
             self.human.animated = None
@@ -377,17 +377,16 @@ class SkeletonLibrary(gui3d.TaskView):
             self.descrLbl.setText("Description: ")
             self.filechooser.selectItem(os.path.join(self.rigPaths[0], 'clear.rig'))
             return
-        """
 
-        # Load skeleton definition from .rig file
-        self.human._skeleton, boneWeights = skeleton.loadRig(filename, self.human.meshData)
+        # Load skeleton definition from options
+        self.human._skeleton, boneWeights = skeleton.loadRig(options, self.human.meshData)
 
         # Store a reference to the currently loaded rig
-        self.human._skeleton.file = filename
+        self.human._skeleton.options = options
         self.human._skeleton.dirty = False   # Flag used for deferred updating
         self.human._skeleton._library = self  # Temporary member, used for rebuilding skeleton
 
-        #self.filechooser.selectItem(filename)
+        #self.filechooser.selectItem(options)
 
         # Created an AnimatedMesh object to manage the skeletal animation on the
         # human mesh and optionally additional meshes.
@@ -633,7 +632,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
     def saveHandler(self, human, file):
         if human.getSkeleton():
-            file.write('skeleton %s ' % os.path.basename(human.getSkeleton().file))
+            file.write('skeleton %s ' % human.getSkeleton().options)
 
 
 def load(app):

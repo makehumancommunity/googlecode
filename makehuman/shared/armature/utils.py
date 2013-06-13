@@ -22,6 +22,7 @@ Abstract
 Armature utilities
 """
 
+import log
 import math
 import numpy as np
 import transformations as tm
@@ -40,6 +41,11 @@ def calcJointPos(obj, joint):
 #   Utilities
 #-------------------------------------------------------------------------------
 
+def debugCoords(string):
+    import gui3d
+    obj = gui3d.app.selectedHuman.meshData
+    log.debug("%s %s" % (string, obj.coord[[3630,3631,3632,3633,13634,13635,13636,13637]]))
+
 
 def m2b(vec):
     return np.array((vec[0], -vec[2], vec[1]))
@@ -49,10 +55,7 @@ def b2m(vec):
 
 def getUnitVector(vec):
     length = math.sqrt(np.dot(vec,vec))
-    if length > 1e-6:
-        return vec/length
-    else:
-        return None
+    return vec/length
 
 
 def splitBoneName(bone):

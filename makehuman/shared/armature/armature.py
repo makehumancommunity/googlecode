@@ -106,11 +106,11 @@ class Armature:
                 del self.vertexWeights[bname]
 
 
-    def normalizeVertexWeights(self):
+    def normalizeVertexWeights(self, human):
         if self.isNormalized:
             return
 
-        nVerts = len(self.human.meshData.coord)
+        nVerts = len(human.meshData.coord)
         wtot = np.zeros(nVerts, float)
         for vgroup in self.vertexWeights.values():
             for vn,w in vgroup:

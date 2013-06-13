@@ -24,19 +24,17 @@ TODO
 
 import gui3d
 from armature.pose import createPoseRig
-import warpmodifier
 import humanmodifier
 import log
 
 def resetPoseMode():
-    global InPoseMode, theShadowBones
+    global _InPoseMode
     log.message("Reset pose mode")
-    InPoseMode = False
-    theShadowBones = {}
+    _InPoseMode = False
     if gui3d.app:
         human = gui3d.app.selectedHuman
         if human:
-            human.armature = None
+            human.restoreUnposedCoords()
 
 resetPoseMode()
 
@@ -45,69 +43,40 @@ def printVert(human):
     return
     for vn in [8202]:
         x = human.meshData.coord[vn]
-        if warpmodifier.shadowCoords is None:
+        if human.unposedCoords is None:
             y = (0,0,0)
         else:
-            y = warpmodifier.shadowCoords[vn]
+            y = human.unposedCoords[vn]
         log.debug("  %d: (%.3f %.3f %.3f) (%.3f %.3f %.3f)", vn,x[0],x[1],x[2],y[0],y[1],y[2])
 
 
 def enterPoseMode():
-    global InPoseMode, theShadowBones
-    if InPoseMode:
+    global _InPoseMode
+    if _InPoseMode:
         return
     log.message("Enter pose mode")
+    _InPoseMode = True
     human = gui3d.app.selectedHuman
-    printVert(human)
-    InPoseMode = True
-    warpmodifier.shadowCoords = human.meshData.coord.copy()
-    warpmodifier.clearRefObject()
-    human.warpsNeedReset = False
-    if False and theShadowBones:
-        amt = createPoseRig(human, "Soft1", False)
-        human.armature = amt
-        amt.restore(theShadowBones)
-        amt.update()
+    human.setUnposedCoords()
     log.message("Pose mode entered")
-    #gui3d.app.poseModeBox.selected = True
     printVert(human)
 
 
 def exitPoseMode():
-    global InPoseMode, theShadowBones
-    if not InPoseMode:
+    global _InPoseMode
+    if not _InPoseMode:
         return
     log.message("Exit pose mode")
     human = gui3d.app.selectedHuman
-    printVert(human)
-
-    amt = human.armature
-    obj = human.meshData
-    if amt:
-        theShadowBones = amt.store()
-
-    InPoseMode = False
-    if warpmodifier.shadowCoords == None:
-        halt
-    warpmodifier.removeAllWarpTargets(human)
-    obj.changeCoords(warpmodifier.shadowCoords)
-    obj.calcNormals()
-    obj.update()
-
-    if amt:
-        amt.update()
-        amt.dirty = True
-        #amt.removeModifier()
-        human.armature = None
-    warpmodifier.shadowCoords = None
+    human.restoreUnposedCoords()
+    _InPoseMode = False
     log.message("Pose mode exited")
-    #gui3d.app.poseModeBox.selected = False
     printVert(human)
 
 
 def changePoseMode(event):
     human = event.human
-    #log.debug("Change pose mode %s w=%s e=%s", InPoseMode, human.warpsNeedReset, event.change)
+    #log.debug("Change pose mode %s w=%s e=%s", _InPoseMode, human.warpsNeedReset, event.change)
     if human and human.warpsNeedReset:
         exitPoseMode()
     elif event.change not in ["targets", "warp"]:

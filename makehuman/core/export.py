@@ -59,7 +59,7 @@ class Exporter(object):
             return None
         skel = gui3d.app.selectedHuman.getSkeleton()
         if skel:
-            return skel.file
+            return skel.options
         else:
             return None
 

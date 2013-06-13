@@ -42,10 +42,11 @@ class Human(gui3d.Object):
         self.MIN_AGE = 1.0
         self.MAX_AGE = 90.0
         self.MID_AGE = 25.0
-        
+
         self.warpsNeedReset = True
         self.armature = None
-        
+        self.unposedCoords = None
+
         self.mesh.setCameraProjection(0)
         self.mesh.setShadeless(0)
         self.mesh.setCull(1)
@@ -64,7 +65,7 @@ class Human(gui3d.Object):
 
         self.enableUVInterpolation = 0
         self.targetUVBuffer = {}
-        
+
         self.uvset = None
 
         self.meshStored = []
@@ -74,7 +75,7 @@ class Human(gui3d.Object):
 
         self.bodyZones = ['l-eye','r-eye', 'jaw', 'nose', 'mouth', 'head', 'neck', 'torso', 'hip', 'pelvis', 'r-upperarm', 'l-upperarm', 'r-lowerarm', 'l-lowerarm', 'l-hand',
                           'r-hand', 'r-upperleg', 'l-upperleg', 'r-lowerleg', 'l-lowerleg', 'l-foot', 'r-foot', 'ear']
-        
+
         self.setTexture("data/textures/texture.png")
         self._defaultMaterial = material.Material().copyFrom(self.mesh.material)
 
@@ -90,6 +91,28 @@ class Human(gui3d.Object):
     def maskFaces(self):
         self.meshData.changeFaceMask(self.getFaceMask())
         self.meshData.updateIndexBufferFaces()
+
+    def setUnposedCoords(self):
+        import warpmodifier
+        if self.unposedCoords is not None:
+            raise NameError("Failed to set unposed coords")
+        obj = self.meshData
+        self.unposedCoords = np.array(obj.coord)
+        warpmodifier.clearRefObject()
+        self.warpsNeedReset = False
+
+    def restoreUnposedCoords(self):
+        import warpmodifier
+        if self.unposedCoords is not None:
+            obj = self.meshData
+            obj.changeCoords(self.unposedCoords)
+            obj.calcNormals()
+            obj.update()
+        self.unposedCoords = None
+        warpmodifier.removeAllWarpTargets(self)
+        self.armature = None
+
+
 
     # Overriding hide and show to account for both human base and the hairs!
 
@@ -124,7 +147,7 @@ class Human(gui3d.Object):
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setPosition([x+y for x, y in zip(obj.getPosition(), dv)])
-                
+
         self.callEvent('onTranslated', self)
 
     def setRotation(self, rotation):
@@ -134,9 +157,9 @@ class Human(gui3d.Object):
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setRotation(rotation)
-                
+
         self.callEvent('onRotated', self)
-            
+
     def setSolid(self, *args, **kwargs):
         gui3d.Object.setSolid(self, *args, **kwargs)
         if self.hairObj:
@@ -144,7 +167,7 @@ class Human(gui3d.Object):
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setSolid(*args, **kwargs)
-            
+
     def setSubdivided(self, *args, **kwargs):
         gui3d.Object.setSubdivided(self, *args, **kwargs)
         if self.hairObj:
@@ -209,7 +232,7 @@ class Human(gui3d.Object):
 
     def setAge(self, age):
         """
-        Sets the age of the model. 0 for 0 years old, 1 is 70. To set a 
+        Sets the age of the model. 0 for 0 years old, 1 is 70. To set a
         particular age in years, use the formula age_value = age_in_years / 70.
 
         Parameters
@@ -266,7 +289,7 @@ class Human(gui3d.Object):
 
         val ^     child young     old
           1 |baby\ / \ /   \    /
-            |     \   \      /  
+            |     \   \      /
             |    / \ / \  /    \ young
             ______________________________> age
                0  0.1875 0.5      1
@@ -402,10 +425,10 @@ class Human(gui3d.Object):
             self.asianVal *= new / old
             self.africanVal *= new / old
         self.callEvent('onChanging', events3d.HumanEvent(self, 'caucasian'))
-        
+
     def getCaucasian(self):
         return self.caucasianVal
-            
+
     def setAfrican(self, african, sync=True):
         african = min(max(african, 0.0), 1.0)
         old = 1 - self.africanVal
@@ -420,10 +443,10 @@ class Human(gui3d.Object):
             self.caucasianVal *= new / old
             self.asianVal *= new / old
         self.callEvent('onChanging', events3d.HumanEvent(self, 'african'))
-        
+
     def getAfrican(self):
         return self.africanVal
-            
+
     def setAsian(self, asian, sync=True):
         asian = min(max(asian, 0.0), 1.0)
         old = 1 - self.asianVal
@@ -441,7 +464,7 @@ class Human(gui3d.Object):
 
     def getAsian(self):
         return self.asianVal
-            
+
     def syncRace(self):
         total = self.caucasianVal + self.asianVal + self.africanVal
         if total < 1e-6:
@@ -451,7 +474,7 @@ class Human(gui3d.Object):
             self.caucasianVal *= scale
             self.asianVal *= scale
             self.africanVal *= scale
-            
+
     def setDetail(self, name, value):
         if value:
             self.targetsDetailStack[name] = value
@@ -483,7 +506,7 @@ class Human(gui3d.Object):
 
         **Parameters:** None.
 
-        """        
+        """
         algos3d.resetObj(self.meshData)
 
         if progressCallback:
@@ -493,12 +516,12 @@ class Human(gui3d.Object):
 
         for (targetPath, morphFactor) in self.targetsDetailStack.iteritems():
             algos3d.loadTranslationTarget(self.meshData, targetPath, morphFactor, None, 0, 0)
-            
+
             progressVal += progressIncr
             if progressCallback:
                 progressCallback(progressVal)
-                
-        
+
+
         # Update all verts
         self.getSeedMesh().update()
         self.updateProxyMesh()
@@ -517,13 +540,13 @@ class Human(gui3d.Object):
                 progressCallback(0.8)
             if update:
                 self.meshData.update()
-                
+
         if progressCallback:
             progressCallback(1.0)
-            
+
         self.callEvent('onChanged', events3d.HumanEvent(self, 'targets'))
-        
-   
+
+
     def getPartNameForGroupName(self, groupName):
         for k in self.bodyZones:
             if k in groupName:
@@ -599,8 +622,8 @@ class Human(gui3d.Object):
                     targetSym = targetSym.replace('trans-out', 'trans-in')
                 algos3d.loadTranslationTarget(self.meshData, targetSym, targetSymVal, None, 1, 1)
                 self.targetsDetailStack[targetSym] = targetSymVal
-        
-        self.updateProxyMesh()        
+
+        self.updateProxyMesh()
         if self.isSubdivided():
             self.getSubdivisionMesh()
 
@@ -641,14 +664,14 @@ class Human(gui3d.Object):
         self.setDefaultValues()
 
         self.targetsDetailStack = {}
-        
+
         self.setMaterial(self._defaultMaterial)
-        
+
         self.callEvent('onChanging', events3d.HumanEvent(self, 'reset'))
         self.callEvent('onChanged', events3d.HumanEvent(self, 'reset'))
 
     def load(self, filename, update=True, progressCallback=None):
-        
+
         self.resetMeshValues()
 
         f = open(filename, 'r')
@@ -677,14 +700,14 @@ class Human(gui3d.Object):
             self.applyAllTargets(progressCallback)
 
     def save(self, filename, tags):
-        
+
         f = open(filename, 'w')
         f.write('# Written by makehuman 1.0.0 alpha 8\n')
         f.write('version 1.0.0\n')
         f.write('tags %s\n' % tags)
-               
+
         for handler in gui3d.app.saveHandlers:
             handler(self, f)
-               
+
         f.close()
 

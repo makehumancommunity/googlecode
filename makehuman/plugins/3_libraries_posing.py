@@ -31,6 +31,7 @@ import log
 
 #import cProfile
 
+import armature
 from armature.pose import createPoseRig
 import warpmodifier
 import posemode
@@ -94,7 +95,7 @@ class PoseLoadTaskView(gui3d.TaskView):
                 self,
                 oldFile,
                 filepath))
-            mh.changeCategory('Modelling')
+            #mh.changeCategory('Modelling')
 
         @self.update.mhEvent
         def onClicked(event):
@@ -152,7 +153,9 @@ class PoseLoadTaskView(gui3d.TaskView):
 
 
     def onHide(self, event):
+        posemode.exitPoseMode()
         gui3d.TaskView.onHide(self, event)
+
 
     def onHumanChanging(self, event):
         posemode.changePoseMode(event)
