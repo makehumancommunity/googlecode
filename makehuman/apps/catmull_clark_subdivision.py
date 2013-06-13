@@ -53,12 +53,13 @@ class SubdivisionObject(Object3D):
         self.cull = object.cull
 
     def create(self, progressCallback):
+        log.debug('Applying Catmull-Clark subdivision on %s.', self.parent.name)
         total = 19
         now = [time.time()]
         def progress(x):
             last = now[0]
             now[0] = time.time()
-            log.debug('%d: %f', x, now[0] - last)
+            log.debug('Step %d: %f seconds processed', x, now[0] - last)
             if progressCallback:
                 progressCallback(float(x)/total)
 
