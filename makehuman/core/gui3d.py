@@ -327,7 +327,7 @@ class Object(events3d.EventHandler):
             mesh._originalUVMap = None
         else:
             uvset = material.UVMap(filename)
-            uvset.read(self.mesh, filename)
+            uvset.read(self.__seedMesh, filename)
 
             mesh._materials = []
             if len(uvset.materials) == 0:
