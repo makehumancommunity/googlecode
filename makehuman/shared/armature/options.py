@@ -124,7 +124,7 @@ class ArmatureOptions:
 
     def fromSelector(self, selector):
         self.useMuscles = selector.useMuscles.selected
-        self.useCorrectives = selector.useCorrectives.selected
+        #self.useCorrectives = selector.useCorrectives.selected
         self.addConnectingBones = selector.addConnectingBones.selected
 
         self.mergeSpine = selector.mergeSpine.selected
@@ -175,8 +175,6 @@ class ArmatureOptions:
             expr = ("self.%s = %s" % (key, value))
             exec(expr)
 
-        print "Preset", self.rigtype, self.description
-
         selector.fromOptions(self)
         try:
             bones = struct["bones"]
@@ -192,8 +190,7 @@ class ArmatureSelector:
     def __init__(self, box):
         self.box = box
 
-        self.useMuscles = box.addWidget(gui.ToggleButton("Muscle bones"))
-        self.useCorrectives = box.addWidget(gui.ToggleButton("Corrective shapekeys"))
+        self.useMuscles = box.addWidget(gui.ToggleButton("Muscle bones (MHX only)"))
         self.addConnectingBones = box.addWidget(gui.ToggleButton("Connecting bones"))
 
         self.mergeSpine = box.addWidget(gui.ToggleButton("Merge spine"))
@@ -201,17 +198,16 @@ class ArmatureSelector:
         self.mergePalms = box.addWidget(gui.ToggleButton("Merge palms"))
         self.mergeHead = box.addWidget(gui.ToggleButton("Merge head"))
 
-        self.useSplitBones = box.addWidget(gui.ToggleButton("Split forearm"))
-        self.useIkArms = box.addWidget(gui.ToggleButton("Arm IK"))
-        self.useIkLegs = box.addWidget(gui.ToggleButton("Leg IK"))
-        self.useFingers = box.addWidget(gui.ToggleButton("Finger controls"))
+        self.useSplitBones = box.addWidget(gui.ToggleButton("Split forearm (MHX only)"))
+        self.useIkArms = box.addWidget(gui.ToggleButton("Arm IK (MHX only)"))
+        self.useIkLegs = box.addWidget(gui.ToggleButton("Leg IK (MHX only)"))
+        self.useFingers = box.addWidget(gui.ToggleButton("Finger controls (MHX only)"))
 
         self.useMasterBone = box.addWidget(gui.ToggleButton("Master bone"))
 
 
     def fromOptions(self, options):
         self.useMuscles.setSelected(options.useMuscles)
-        self.useCorrectives.setSelected(options.useCorrectives)
         self.addConnectingBones.setSelected(options.addConnectingBones)
 
         self.mergeSpine.setSelected(options.mergeSpine)
@@ -224,7 +220,7 @@ class ArmatureSelector:
         self.useIkLegs.setSelected(options.useIkLegs)
         self.useFingers.setSelected(options.useFingers)
 
-        self.useMasterBone.setSelected(options.useFingers)
+        self.useMasterBone.setSelected(options.useMasterBone)
 
         for child in self.box.children:
             child.update()

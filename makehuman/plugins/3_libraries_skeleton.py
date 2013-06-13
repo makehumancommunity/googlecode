@@ -117,15 +117,47 @@ class SkeletonLibrary(gui3d.TaskView):
         self.oldHumanTransp = self.human.meshData.transparentPrimitives
 
         #
-        #   TL additions: Preset box and options box
-        #   Presets should probably be defined in data files eventually
+        #   Display box
         #
 
+        displayBox = self.addLeftWidget(gui.GroupBox('Display'))
+        self.showHumanTggl = displayBox.addWidget(gui.ToggleButton("Show human"))
+        @self.showHumanTggl.mhEvent
+        def onClicked(event):
+            if self.showHumanTggl.selected:
+                self.human.show()
+            else:
+                self.human.hide()
+        self.showHumanTggl.setSelected(True)
+
+        self.showJointsTggl = displayBox.addWidget(gui.ToggleButton("Show joints"))
+        @self.showJointsTggl.mhEvent
+        def onClicked(event):
+            if not self.jointsObj:
+                return
+            if self.showJointsTggl.selected:
+                self.jointsObj.show()
+            else:
+                self.jointsObj.hide()
+        self.showJointsTggl.setSelected(True)
+
+        self.showWeightsTggl = displayBox.addWidget(gui.ToggleButton("Show bone weights"))
+        @self.showWeightsTggl.mhEvent
+        def onClicked(event):
+            if self.showWeightsTggl.selected:
+                # Highlight bone selected in bone explorer again
+                for rdio in self.boneSelector:
+                    if rdio.selected:
+                        self.highlightBone(str(rdio.text()))
+            else:
+                self.clearBoneWeights()
+        self.showWeightsTggl.setSelected(True)
+
         #
-        #   Preset. Currently hardcoded, should be data files
+        #   Preset box
         #
 
-        self.presetBox = self.addRightWidget(gui.GroupBox('Rig Presets'))
+        self.presetBox = self.addLeftWidget(gui.GroupBox('Rig Presets'))
 
         self.presetDefaultBtn = self.presetBox.addWidget(gui.Button("Default"))
         @self.presetDefaultBtn.mhEvent
@@ -167,7 +199,6 @@ class SkeletonLibrary(gui3d.TaskView):
         def onClicked(event):
             descr = self.amtOptions.loadPreset("second_life", self.optionsSelector)
             self.descrLbl.setText("Description: %s" % descr)
-            print "2L", self.amtOptions.merge
             self.updateSkeleton()
 
         self.presetXonoticBtn = self.presetBox.addWidget(gui.Button("Xonotic"))
@@ -177,10 +208,10 @@ class SkeletonLibrary(gui3d.TaskView):
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
+        '''
         #
         #   Bone names. Different languages and target apps.
         #
-
         self.languageBox = self.addRightWidget(gui.GroupBox('Bone names'))
 
         self.languages = OrderedDict()
@@ -200,7 +231,7 @@ class SkeletonLibrary(gui3d.TaskView):
                 self.amtOptions.locale = locale
                 locale.load()
                 self.updateSkeleton()
-
+        '''
         #
         #   Options. For fine-tuning
         #
@@ -210,13 +241,14 @@ class SkeletonLibrary(gui3d.TaskView):
         self.amtOptions = armature.options.ArmatureOptions()
         self.optionsSelector.fromOptions(self.amtOptions)
 
-        self.amtShowBtn = self.optionsBox.addWidget(gui.Button("Show Bones"))
-        @self.amtShowBtn.mhEvent
+        self.amtUpdateBtn = self.optionsBox.addWidget(gui.Button("Update Bones"))
+        @self.amtUpdateBtn.mhEvent
         def onClicked(event):
             self.updateSkeleton()
+            self.descrLbl.setText("No description available")
 
 
-        """
+        '''
         self.filechooser = self.addRightWidget(fc.ListFileChooser(self.rigPaths, self.extension, 'Skeleton rig'))
         self.addLeftWidget(self.filechooser.createSortBox())
 
@@ -239,43 +271,12 @@ class SkeletonLibrary(gui3d.TaskView):
                 self.filechooser.selectItem(noSkelPath)
 
         self.filechooser.refresh()
-        """
+        '''
 
-        displayBox = self.addLeftWidget(gui.GroupBox('Display'))
-        self.showHumanTggl = displayBox.addWidget(gui.ToggleButton("Show human"))
-        @self.showHumanTggl.mhEvent
-        def onClicked(event):
-            if self.showHumanTggl.selected:
-                self.human.show()
-            else:
-                self.human.hide()
-        self.showHumanTggl.setSelected(True)
-
-        self.showJointsTggl = displayBox.addWidget(gui.ToggleButton("Show joints"))
-        @self.showJointsTggl.mhEvent
-        def onClicked(event):
-            if not self.jointsObj:
-                return
-            if self.showJointsTggl.selected:
-                self.jointsObj.show()
-            else:
-                self.jointsObj.hide()
-        self.showJointsTggl.setSelected(True)
-
-        self.showWeightsTggl = displayBox.addWidget(gui.ToggleButton("Show bone weights"))
-        @self.showWeightsTggl.mhEvent
-        def onClicked(event):
-            if self.showWeightsTggl.selected:
-                # Highlight bone selected in bone explorer again
-                for rdio in self.boneSelector:
-                    if rdio.selected:
-                        self.highlightBone(str(rdio.text()))
-            else:
-                self.clearBoneWeights()
-        self.showWeightsTggl.setSelected(True)
-
+        '''
         self.boneBox = self.addLeftWidget(gui.GroupBox('Bones'))
         self.boneSelector = []
+        '''
 
         self.infoBox = self.addRightWidget(gui.GroupBox('Rig info'))
         self.boneCountLbl = self.infoBox.addWidget(gui.TextView('Bones: '))
@@ -283,6 +284,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.descrLbl.setSizePolicy(gui.QtGui.QSizePolicy.Ignored, gui.QtGui.QSizePolicy.Preferred)
         self.descrLbl.setWordWrap(True)
 
+        '''
         self.rigDescriptions = {
             "soft1":       "Soft skinned rig. Simple version of the MHX reference rig containing only its deforming bones.",
             "xonotic":     "Rig compatible with the open-source game Xonotic.",
@@ -291,6 +293,7 @@ class SkeletonLibrary(gui3d.TaskView):
             "humanik":     "Rig compatible with the HumanIK software.",
             "rigid":       "Same as soft1 a simple version of the MHX reference rig, but with rigid weighting.",
         }
+        '''
 
 
     def updateSkeleton(self):
@@ -370,12 +373,14 @@ class SkeletonLibrary(gui3d.TaskView):
                 gui3d.app.removeObject(self.skelObj)
                 self.skelObj = None
                 self.skelMesh = None
+            '''
             self.filechooser.deselectAll()
             self.selectedBone = None
             self.reloadBoneExplorer()
             self.boneCountLbl.setText("Bones: ")
             self.descrLbl.setText("Description: ")
             self.filechooser.selectItem(os.path.join(self.rigPaths[0], 'clear.rig'))
+            '''
             return
 
         # Load skeleton definition from options
@@ -397,6 +402,7 @@ class SkeletonLibrary(gui3d.TaskView):
         # (Re-)draw the skeleton
         self.drawSkeleton(self.human.getSkeleton())
 
+        '''
         self.reloadBoneExplorer()
         self.boneCountLbl.setText("Bones: %s" % self.human.getSkeleton().getBoneCount())
         if self.human.getSkeleton().name in self.rigDescriptions.keys():
@@ -404,6 +410,8 @@ class SkeletonLibrary(gui3d.TaskView):
         else:
             descr = "None available"
         self.descrLbl.setText("Description: %s" % descr)
+        '''
+
 
     def drawSkeleton(self, skel):
         if self.skelObj:
@@ -431,6 +439,7 @@ class SkeletonLibrary(gui3d.TaskView):
         # Store a reference to the skeleton mesh object for other plugins
         self.human._skeleton.object = self.skelObj
 
+        '''
         # Add event listeners to skeleton mesh for bone highlighting
         @self.skelObj.mhEvent
         def onMouseEntered(event):
@@ -484,6 +493,7 @@ class SkeletonLibrary(gui3d.TaskView):
             self.selectedBone = None
 
             gui3d.app.redraw()
+    '''
 
     def drawJointHelpers(self):
         """
@@ -514,6 +524,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.jointsMesh.markCoords(colr=True)
         self.jointsMesh.sync_color()
 
+        '''
         # Add event listeners to joint mesh for joint highlighting
         @self.jointsObj.mhEvent
         def onMouseEntered(event):
@@ -540,6 +551,7 @@ class SkeletonLibrary(gui3d.TaskView):
                 setColorForFaceGroup(self.jointsMesh, self.selectedJoint.name, [255,255,0,255])
                 gui3d.app.statusPersist('')
                 gui3d.app.redraw()
+        '''
 
     def showBoneWeights(self, boneName, boneWeights):
         mesh = self.human.meshData
