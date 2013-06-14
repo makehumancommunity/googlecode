@@ -159,19 +159,19 @@ class Material(object):
             log.error("Failed to load material from file %s.", filename)
             return
 
+        shaderConfig_diffuse = True
+        shaderConfig_bump = True
+        shaderConfig_normal = True
+        shaderConfig_displacement = True
+        shaderConfig_spec = True
+        shaderConfig_vertexColors = True
+
         for line in f:
             words = line.split()
             if len(words) == 0:
                 continue
             if words[0] in ["#", "//"]:
                 continue
-
-            shaderConfig_diffuse = True
-            shaderConfig_bump = True
-            shaderConfig_normal = True
-            shaderConfig_displacement = True
-            shaderConfig_spec = True
-            shaderConfig_vertexColors = True
 
             if words[0] == "name":
                 self.name = words[1]
