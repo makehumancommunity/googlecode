@@ -63,6 +63,12 @@ class Color(object):
     def asTuple(self):
         return (self.r, self.g, self.b)
 
+# Protected shaderDefine parameters that are set exclusively by means of shaderConfig options (configureShading())
+_shaderConfigDefines = ['DIFFUSE', 'BUMPMAP', 'NORMALMAP', 'DISPLACEMENT', 'SPECULARMAP', 'VERTEX_COLOR']
+
+# Protected shader parameters that are set exclusively by means of material properties (configureShading())
+_materialShaderParams = ['ambient', 'ambient', 'specular', 'emissive', 'diffuseTexture', 'bumpmapTexture', 'bumpmapIntensity', 'normalmapTexture', 'normalmapIntensity', 'displacementmapTexture', 'displacementmapTexture', 'specularmapTexture', 'specularmapIntensity']
+
 class Material(object):
     """
     Material definition.
@@ -104,7 +110,7 @@ class Material(object):
         self._shaderConfig = {}
         self._shaderParameters = {}
         self._shaderDefines = []
-        self.shaderChanged = True
+        self.shaderChanged = True   # Determines whether shader should be recompiled
 
         if performConfig:
             self.configureShading()
@@ -141,7 +147,7 @@ class Material(object):
         self._shaderConfig = dict(material._shaderConfig)
         self._shaderParameters = dict(material.shaderParameters)
         self._shaderDefines = list(material.shaderDefines)
-        self._shaderChanged = True
+        self.shaderChanged = True
 
         self.uvMap = material.uvMap
 
@@ -392,60 +398,68 @@ class Material(object):
         self._updateShaderConfig()
 
     def _updateShaderConfig(self):
+        global _shaderConfigDefines
+        global _materialShaderParams
+
         import numpy as np
 
         if not self.shader:
             return
 
-        self.setShaderParameter('ambient', self.ambientColor.values)
-        self.setShaderParameter('diffuse', list(np.asarray(self.diffuseColor.values, dtype=np.float32) * self.diffuseIntensity) + [self.opacity])
-        self.setShaderParameter('specular', list(np.asarray(self.specularColor.values, dtype=np.float32) * self.specularIntensity) + [self.specularHardness])
-        self.setShaderParameter('emissive', self.emissiveColor)
+        self._shaderParameters['ambient']  = self.ambientColor.values
+        self._shaderParameters['diffuse'] = list(np.asarray(self.diffuseColor.values, dtype=np.float32) * self.diffuseIntensity) + [self.opacity]
+        self._shaderParameters['specular'] = list(np.asarray(self.specularColor.values, dtype=np.float32) * self.specularIntensity) + [self.specularHardness]
+        self._shaderParameters['emissive'] = self.emissiveColor
 
-        #self.clearShaderDefines()
-        # Don't remove custom defines
-        self.removeShaderDefine('DIFFUSE')
-        self.removeShaderDefine('BUMPMAP')
-        self.removeShaderDefine('NORMALMAP')
-        self.removeShaderDefine('DISPLACEMENT')
-        self.removeShaderDefine('SPECULARMAP')
-        self.removeShaderDefine('VERTEX_COLOR')
+        # Remove (non-custom) shader config defines (those set by shader config)
+        for shaderDefine in _shaderConfigDefines:
+            try:
+                self._shaderDefines.remove(shaderDefine)
+            except:
+                pass
+
+        # Reset shader (non-custom) shader parameters controlled by material properties
+        for shaderParam in _materialShaderParams:
+            try:
+                del self._shaderParameters[shaderParam]
+            except:
+                pass
 
         if self._shaderConfig['vertexColors']:
             log.debug("Enabling vertex colors.")
-            self.addShaderDefine('VERTEX_COLOR')
+            self._shaderDefines.append('VERTEX_COLOR')
         if self._shaderConfig['diffuse'] and self.supportsDiffuse():
             log.debug("Enabling diffuse texturing.")
-            self.addShaderDefine('DIFFUSE')
-            self.setShaderParameter('diffuseTexture', self.diffuseTexture)
+            self._shaderDefines.append('DIFFUSE')
+            self._shaderParameters['diffuseTexture'] = self.diffuseTexture
         bump = self._shaderConfig['bump'] and self.supportsBump()
         normal = self._shaderConfig['normal'] and self.supportsNormal()
         if bump and not normal:
             log.debug("Enabling bump mapping.")
-            self.addShaderDefine('BUMPMAP')
-            self.setShaderParameter('bumpmapTexture', self.bumpMapTexture)
-            self.setShaderParameter('bumpmapIntensity', self.bumpMapIntensity)
+            self._shaderDefines.append('BUMPMAP')
+            self._shaderParameters['bumpmapTexture'] = self.bumpMapTexture
+            self._shaderParameters['bumpmapIntensity'] = self.bumpMapIntensity
         if normal:
             log.debug("Enabling normal mapping.")
-            self.addShaderDefine('NORMALMAP')
-            self.setShaderParameter('normalmapTexture', self.normalMapTexture)
-            self.setShaderParameter('normalmapIntensity', self.normalMapIntensity)
+            self._shaderDefines.append('NORMALMAP')
+            self._shaderParameters['normalmapTexture'] = self.normalMapTexture
+            self._shaderParameters['normalmapIntensity'] = self.normalMapIntensity
         if self._shaderConfig['displacement'] and self.supportsDisplacement():
             log.debug("Enabling displacement mapping.")
-            self.addShaderDefine('DISPLACEMENT')
-            self.setShaderParameter('displacementmapTexture', self.displacementMapTexture)
-            self.setShaderParameter('displacementmapIntensity', self.displacementMapIntensity)
+            self._shaderDefines.append('DISPLACEMENT')
+            self._shaderParameters['displacementmapTexture'] = self.displacementMapTexture
+            self._shaderParameters['displacementmapIntensity'] = self.displacementMapIntensity
         if self._shaderConfig['spec'] and self.supportsSpecular():
             log.debug("Enabling specular mapping.")
-            self.addShaderDefine('SPECULARMAP')
-            self.setShaderParameter('specularmapTexture', self.specularMapTexture)
-            self.setShaderParameter('specularmapIntensity', self._specularMapIntensity)
+            self._shaderDefines.append('SPECULARMAP')
+            self._shaderParameters['specularmapTexture'] = self.specularMapTexture
+            self._shaderParameters['specularmapIntensity'] = self._specularMapIntensity
 
+        self._shaderDefines.sort()   # This is important for shader caching
+        self.shaderChanged = True
 
     def setShader(self, shader):
         self._shader = shader
-        #self.shaderParameters = {}
-        #self.clearShaderDefines()
         self._updateShaderConfig()
         self.shaderChanged = True
 
@@ -457,18 +471,45 @@ class Material(object):
 
     @property
     def shaderParameters(self):
-        return self._shaderParameters
+        return dict(self._shaderParameters)
 
     def setShaderParameter(self, name, value):
-        # TODO protect against setting parameters defined from material properties?
+        global _materialShaderParams
+
+        if name in _materialShaderParams:
+            raise RuntimeError('The shader parameter "%s" is protected and should be set by means of material properties.' % name)
         self._shaderParameters[name] = value
+
+    def removeShaderParameter(self, name):
+        global _materialShaderParams
+
+        if name in _materialShaderParams:
+            raise RuntimeError('The shader parameter "%s" is protected and should be set by means of material properties.' % name)
+        try:
+            del self._shaderParameters[name]
+        except:
+            pass
+
+    def clearShaderParameters(self):
+        """
+        Remove all custom set shader parameters.
+        """
+        global _materialShaderParams
+
+        for shaderParam in self.shaderParameters:
+            if shaderParam not in _materialShaderParams:
+                self.removeShaderParameter(shaderParam)
 
 
     @property
     def shaderDefines(self):
-        return self._shaderDefines
+        return list(self._shaderDefines)
 
     def addShaderDefine(self, defineStr):
+        global _shaderConfigDefines
+
+        if defineStr in _shaderConfigDefines:
+            raise RuntimeError('The shader define "%s" is protected and should be set by means of configureShading().' % defineStr)
         if defineStr in self.shaderDefines:
             return
         self._shaderDefines.append(defineStr)
@@ -477,6 +518,10 @@ class Material(object):
         self.shaderChanged = True
 
     def removeShaderDefine(self, defineStr):
+        global _shaderConfigDefines
+
+        if defineStr in _shaderConfigDefines:
+            raise RuntimeError('The shader define %s is protected and should be set by means of configureShading().' % defineStr)
         try:
             self._shaderDefines.remove(defineStr)
         except:
@@ -485,8 +530,14 @@ class Material(object):
         self.shaderChanged = True
 
     def clearShaderDefines(self):
-        self._shaderDefines = []
+        """
+        Remove all custom set shader defines.
+        """
+        global _shaderConfigDefines
 
+        for shaderDefine in self._shaderDefines:
+            if shaderDefine not in _shaderConfigDefines:
+                self.removeShaderDefine(shaderDefine)
         self.shaderChanged = True
 
 
