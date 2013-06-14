@@ -106,18 +106,8 @@ class PoseLoadTaskView(gui3d.TaskView):
     def loadMhpFile(self, filepath):
 
         human = gui3d.app.selectedHuman
-
         self.filepath = filepath
-
-        if os.path.basename(filepath) == "clear.mhp":
-            posemode.exitPoseMode()
-            posemode.resetPoseMode()
-            log.debug("Clearing MHP")
-            return
-
-        posemode.enterPoseMode()
         folder = os.path.dirname(filepath)
-
         hasTargets = False
         for file in os.listdir(folder):
             if os.path.splitext(file)[1] == ".target":
@@ -134,17 +124,17 @@ class PoseLoadTaskView(gui3d.TaskView):
         else:
             modifier = None
 
-        pose = self.pose = createPoseRig(human)
-        pose.setModifier(modifier)
-        pose.readMhpFile(filepath)
+        if not self.pose:
+            self.pose = createPoseRig(human)
+        self.pose.setModifier(modifier)
+        self.pose.readMhpFile(filepath)
 
 
     def onShow(self, event):
-        debugCoords("onShow1")
         gui3d.TaskView.onShow(self, event)
         self.filechooser.setFocus()
 
-        debugCoords("onShow2")
+        self.pose = None
         self.filepath = posemode.enterPoseMode()
         if self.filepath:
             self.loadMhpFile(self.filepath)
@@ -153,7 +143,6 @@ class PoseLoadTaskView(gui3d.TaskView):
     def onHide(self, event):
         posemode.exitPoseMode(self.filepath)
         gui3d.TaskView.onHide(self, event)
-        debugCoords("onHide")
 
 
     def onHumanChanging(self, event):

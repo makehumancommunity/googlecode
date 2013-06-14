@@ -42,15 +42,15 @@ class Storage:
 
     def store(self, human):
         debugCoords("store")
-        if self.filepath and not self.dirty:
-            return self.filepath
-
         if self.coord is not None:
             raise NameError("Failed to set unposed coords")
         obj = human.meshData
         self.coord = obj.coord.copy()
-        warpmodifier.clearRefObject()
+        #warpmodifier.clearRefObject()
         human.warpsNeedReset = False
+        if self.filepath and not self.dirty:
+            return self.filepath
+
         self.dirty = False
         self.filepath = None
         self.targetBuffer = {}
@@ -66,7 +66,8 @@ class Storage:
             obj.calcNormals()
             obj.update()
             self.coord = None
-        warpmodifier.removeAllWarpTargets(human)
+            debugCoords("restore1")
+        #warpmodifier.removeAllWarpTargets(human)
         if self.targetBuffer is not None:
             algos3d.targetBuffer = self.targetBuffer
             self.targetBuffer = None
@@ -109,7 +110,6 @@ def enterPoseMode():
 def exitPoseMode(filepath=None):
     global _inPoseMode, _storage
     if not _inPoseMode:
-        halt
         return
     log.message("Exit pose mode: %s" % filepath)
     _storage.restore(gui3d.app.selectedHuman, filepath)

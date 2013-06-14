@@ -57,7 +57,7 @@ class Pose:
 
         amt = self.armature = Armature("Armature", options)
         amt.parser = Parser(amt, human)
-        debugCoords("Pose")
+        debugCoords("Pose1")
         amt.setup()
         log.debug("Head %s" % amt.bones["head"].head)
         amt.normalizeVertexWeights(human)
@@ -75,6 +75,7 @@ class Pose:
         self.restCoords = np.zeros((nVerts,4), float)
         self.restCoords[:,3] = 1
         self.syncRestVerts("rest")
+        debugCoords("Pose2")
 
 
     def storeCoords(self):
@@ -424,8 +425,8 @@ class PoseBone:
             log.debug("%s", self.matrixGlobal)
             halt
 
-        if self.name == "head":
-            log.debug("Build matrices:\n%s\n%s" % (self.bone.matrixRest, self.matrixVerts))
+        #if self.name == "head":
+        #    log.debug("Build matrices:\n%s\n%s" % (self.bone.matrixRest, self.matrixVerts))
 
     def getHead(self):
         return self.matrixGlobal[:3,3]
