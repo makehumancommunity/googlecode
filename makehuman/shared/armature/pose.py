@@ -33,8 +33,6 @@ import numpy.linalg as la
 import transformations as tm
 import numpy as np
 
-import warpmodifier
-
 from .flags import *
 from .armature import Armature
 from .parser import Parser
@@ -73,7 +71,7 @@ class Pose:
                 self.deforms.append(pb)
 
         self.storeCoords()
-        nVerts = len(self._storedCoord)
+        nVerts = len(human.meshData.coord)
         self.restCoords = np.zeros((nVerts,4), float)
         self.restCoords[:,3] = 1
         self.syncRestVerts("rest")
@@ -148,29 +146,12 @@ class Pose:
         self.restore(shadowBones)
         self.update()
 
-    """
-    def rebuild(self, update=True):
-        log.message("Rebuild %s %s %s", self, update, self.options.rigtype)
-        obj = self.human.meshData
-        self.setupArmature()
-        log.debug("RHT %s %s", self.heads["Root"], self.tails["Root"])
-        for bone in self.bones.values():
-            bone.rebuild()
-            if bone.name in []:
-                log.debug("%s %s %s", bone.name, bone.head, bone.tail)
-                #print "R", bone.matrixRest
-                #print "P", bone.matrixPose
-                #print "G", bone.matrixGlobal
-        if self.modifier:
-            self.modifier.updateValue(self.human, 1.0)
-        self.syncRestVerts("rebuild")
-        if update:
-            self.update()
-    """
 
     def syncRestVerts(self, caller):
+        #import warpmodifier
         log.message("Sync rest verts: %s", caller)
-        self.restCoords[:,:3] = warpmodifier.getWarpedCoords(self.human)
+        #self.restCoords[:,:3] = warpmodifier.getWarpedCoords(self.human)
+        self.restCoords[:,:3] = self._storedCoord
 
 
     def removeModifier(self):

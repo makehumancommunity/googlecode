@@ -223,6 +223,8 @@ class Parser:
             if options.useDeformBones:
                 self.addDeformBones(generic, boneInfo)
                 self.renameDeformBones(rig_muscle.Armature, boneInfo)
+                if options.useConstraints:
+                    self.renameConstraints(rig_muscle.Constraints, boneInfo)
             self.addDeformVertexGroups(generic, vgroupList)
             self.renameDeformVertexGroups(rig_muscle.Armature)
 
@@ -635,6 +637,38 @@ class Parser:
             parbone = boneInfo[bone.parent]
             if parbone.deform and parbone.name[0:4] != "DEF-":
                 bone.parent = "DEF-" + bone.parent
+
+
+    def renameConstraints(self, constraints, boneInfo):
+        log.debug("BNS %s" % boneInfo.keys())
+        for bname in constraints.keys():
+            try:
+                self.constraints[bname]
+            except KeyError:
+                log.debug("No attr %s" % bname)
+                continue
+
+            for cns in self.constraints[bname]:
+                type,flags,inf,data = cns
+                target = data[1]
+                try:
+                    boneInfo[target]
+                    ignore = True
+                except KeyError:
+                    ignore = False
+                if not ignore:
+                    defTarget = "DEF-" + target
+                    try:
+                        boneInfo[defTarget]
+                        data[1] = defTarget
+                    except:
+                        log.debug("Bone %s constraint %s has neither target %s nor %s" % (bname, cns, target, defTarget))
+                log.debug("CNS %s" % (cns,))
+
+            defname = "DEF-" + bname
+            self.constraints[defname] = self.constraints[bname]
+            del self.constraints[bname]
+
 
 
     def getVertexGroups(self, boneInfo):

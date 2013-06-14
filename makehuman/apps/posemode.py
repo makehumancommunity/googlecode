@@ -25,6 +25,7 @@ TODO
 import os
 import gui3d
 from armature.pose import createPoseRig
+from armature.utils import debugCoords
 import humanmodifier
 import warpmodifier
 import algos3d
@@ -40,6 +41,7 @@ class Storage:
 
 
     def store(self, human):
+        debugCoords("store")
         if self.filepath and not self.dirty:
             return self.filepath
 
@@ -70,6 +72,7 @@ class Storage:
             self.targetBuffer = None
         self.filepath = filepath
         self.dirty = False
+        debugCoords("restore2")
 
 
 def compromiseStorage():
@@ -106,6 +109,7 @@ def enterPoseMode():
 def exitPoseMode(filepath=None):
     global _inPoseMode, _storage
     if not _inPoseMode:
+        halt
         return
     log.message("Exit pose mode: %s" % filepath)
     _storage.restore(gui3d.app.selectedHuman, filepath)

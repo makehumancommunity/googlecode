@@ -44,7 +44,11 @@ def calcJointPos(obj, joint):
 def debugCoords(string):
     import gui3d
     obj = gui3d.app.selectedHuman.meshData
-    log.debug("%s %s" % (string, obj.coord[[3630,3631,3632,3633,13634,13635,13636,13637]]))
+    selection = obj.coord[[3630,3631,3632,3633,13634,13635,13636,13637]]
+    log.debug("%s:\n%s" % (string, selection))
+    vec = selection[4] - selection[5]
+    if np.dot(vec,vec) < 1e-10:
+        raise NameError("Dead joint")
 
 
 def m2b(vec):

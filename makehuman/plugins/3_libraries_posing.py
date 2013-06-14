@@ -33,6 +33,7 @@ import log
 
 import armature
 from armature.pose import createPoseRig
+from armature.utils import debugCoords
 import warpmodifier
 import posemode
 
@@ -139,9 +140,11 @@ class PoseLoadTaskView(gui3d.TaskView):
 
 
     def onShow(self, event):
+        debugCoords("onShow1")
         gui3d.TaskView.onShow(self, event)
         self.filechooser.setFocus()
 
+        debugCoords("onShow2")
         self.filepath = posemode.enterPoseMode()
         if self.filepath:
             self.loadMhpFile(self.filepath)
@@ -150,6 +153,7 @@ class PoseLoadTaskView(gui3d.TaskView):
     def onHide(self, event):
         posemode.exitPoseMode(self.filepath)
         gui3d.TaskView.onHide(self, event)
+        debugCoords("onHide")
 
 
     def onHumanChanging(self, event):
