@@ -48,8 +48,8 @@ Delta = [0,0.01,0]
 #
 
 def exportCollada(human, filepath, config):
-    posemode.exitPoseMode()
-    posemode.enterPoseMode()
+    #posemode.exitPoseMode()
+    #posemode.enterPoseMode()
     gui3d.app.progress(0, text="Exporting %s" % filepath)
 
     time1 = time.clock()
@@ -69,7 +69,7 @@ def exportCollada(human, filepath, config):
     time2 = time.clock()
     log.message("Wrote Collada file in %g s: %s" % (time2-time1, filepath))
     gui3d.app.progress(1)
-    posemode.exitPoseMode()
+    #posemode.exitPoseMode()
     return
 
 

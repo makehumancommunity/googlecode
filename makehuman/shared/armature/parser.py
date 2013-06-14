@@ -29,7 +29,6 @@ import log
 from collections import OrderedDict
 import io_json
 
-import posemode
 import numpy as np
 import numpy.linalg as la
 import transformations as tm
@@ -75,8 +74,6 @@ class Parser:
         self.master = None
         self.headName = 'head'
         self.root = "hips"
-
-        debugCoords("Parser")
 
         if options.useMuscles:
             self.vertexGroupFiles = ["head", "muscles", "hand"]

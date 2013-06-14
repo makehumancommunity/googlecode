@@ -69,7 +69,9 @@ class PoseLoadTaskView(gui3d.TaskView):
         self.userPoses = os.path.join(mh.getPath(''), 'data', 'poses')
         self.paths = [self.systemPoses, self.userPoses]
 
+        self.filepath = None
         self.dirty = False
+        self.pose = None
 
         gui3d.TaskView.__init__(self, category, 'Poses')
         if not os.path.exists(self.userPoses):
@@ -82,12 +84,10 @@ class PoseLoadTaskView(gui3d.TaskView):
         self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
         self.mediaSync = None
 
-        self.lastPose = None
-
         @self.filechooser.mhEvent
         def onFileSelected(filepath):
-            if self.lastPose:
-                oldFile = self.lastPose
+            if self.filepath:
+                oldFile = self.filepath
             else:
                 oldFile = "clear.mhp"
 
@@ -104,15 +104,14 @@ class PoseLoadTaskView(gui3d.TaskView):
 
     def loadMhpFile(self, filepath):
 
-        log.message("Load Mhp: %s", filepath)
-
         human = gui3d.app.selectedHuman
 
-        self.lastPose = filepath
+        self.filepath = filepath
 
         if os.path.basename(filepath) == "clear.mhp":
             posemode.exitPoseMode()
             posemode.resetPoseMode()
+            log.debug("Clearing MHP")
             return
 
         posemode.enterPoseMode()
@@ -134,37 +133,34 @@ class PoseLoadTaskView(gui3d.TaskView):
         else:
             modifier = None
 
-        pose = human.armature
-        print("AMT", pose)
-        if not pose:
-            pose = human.armature = createPoseRig(human, "soft1")
-        print("New", pose)
-        print(pose.posebones.keys())
+        pose = self.pose = createPoseRig(human)
         pose.setModifier(modifier)
         pose.readMhpFile(filepath)
-        #pose.listPose()
 
 
     def onShow(self, event):
-
-        # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
         self.filechooser.setFocus()
 
+        self.filepath = posemode.enterPoseMode()
+        if self.filepath:
+            self.loadMhpFile(self.filepath)
+
 
     def onHide(self, event):
-        posemode.exitPoseMode()
+        posemode.exitPoseMode(self.filepath)
         gui3d.TaskView.onHide(self, event)
 
 
     def onHumanChanging(self, event):
-        posemode.changePoseMode(event)
-
+        posemode.compromiseStorage()
         if event.change == 'reset':
-            self.lastPose = None
+            self.filepath = None
+
 
     def onHumanChanged(self, event):
-        posemode.changePoseMode(event)
+        posemode.compromiseStorage()
+        #posemode.changePoseMode(event)
 
     def loadHandler(self, human, values):
         pass

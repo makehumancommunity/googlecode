@@ -41,8 +41,8 @@ from . import fbx_anim
 
 
 def exportFbx(human, filepath, config):
-    posemode.exitPoseMode()
-    posemode.enterPoseMode()
+    #posemode.exitPoseMode()
+    #posemode.enterPoseMode()
 
     config.setHuman(human)
     config.setupTexFolder(filepath)
@@ -104,7 +104,7 @@ def exportFbx(human, filepath, config):
     fp.close()
 
     gui3d.app.progress(1)
-    posemode.exitPoseMode()
+    #posemode.exitPoseMode()
     log.message("%s written" % filepath)
 
 

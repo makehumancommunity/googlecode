@@ -72,8 +72,8 @@ def exportMhx(human, filepath, config):
     gui3d.app.progress(0, text="Exporting MHX")
     log.message("Exporting %s" % filepath.encode('utf-8'))
     time1 = time.clock()
-    posemode.exitPoseMode()
-    posemode.enterPoseMode()
+    #posemode.exitPoseMode()
+    #posemode.enterPoseMode()
 
     config.setHuman(human)
     config.setupTexFolder(filepath)

@@ -22,21 +22,63 @@ Abstract
 TODO
 """
 
+import os
 import gui3d
 from armature.pose import createPoseRig
 import humanmodifier
+import warpmodifier
+import algos3d
 import log
 
-def resetPoseMode():
-    global _InPoseMode
-    log.message("Reset pose mode")
-    _InPoseMode = False
-    if gui3d.app:
-        human = gui3d.app.selectedHuman
-        if human:
-            human.restoreUnposedCoords()
 
-resetPoseMode()
+class Storage:
+    def __init__(self):
+        self.coord = None
+        self.targetBuffer = None
+        self.filepath = None
+        self.dirty = False
+
+
+    def store(self, human):
+        if self.filepath and not self.dirty:
+            return self.filepath
+
+        if self.coord is not None:
+            raise NameError("Failed to set unposed coords")
+        obj = human.meshData
+        self.coord = obj.coord.copy()
+        warpmodifier.clearRefObject()
+        human.warpsNeedReset = False
+        self.dirty = False
+        self.filepath = None
+        self.targetBuffer = {}
+        for trgpath, target in algos3d.targetBuffer.items():
+            self.targetBuffer[trgpath] = target
+        return None
+
+
+    def restore(self, human, filepath):
+        if self.coord is not None:
+            obj = human.meshData
+            obj.changeCoords(self.coord)
+            obj.calcNormals()
+            obj.update()
+            self.coord = None
+        warpmodifier.removeAllWarpTargets(human)
+        if self.targetBuffer is not None:
+            algos3d.targetBuffer = self.targetBuffer
+            self.targetBuffer = None
+        self.filepath = filepath
+        self.dirty = False
+
+
+def compromiseStorage():
+    _storage.dirty = True
+    _storage.filepath = None
+    log.debug("Storage compromised")
+
+_storage = Storage()
+_inPoseMode = False
 
 
 def printVert(human):
@@ -51,38 +93,44 @@ def printVert(human):
 
 
 def enterPoseMode():
-    global _InPoseMode
-    if _InPoseMode:
+    global _inPoseMode, _storage
+    if _inPoseMode:
         return
     log.message("Enter pose mode")
-    _InPoseMode = True
-    human = gui3d.app.selectedHuman
-    human.setUnposedCoords()
-    log.message("Pose mode entered")
-    printVert(human)
+    _inPoseMode = True
+    filepath = _storage.store(gui3d.app.selectedHuman)
+    log.message("Pose mode entered: %s" % filepath)
+    return filepath
 
 
-def exitPoseMode():
-    global _InPoseMode
-    if not _InPoseMode:
+def exitPoseMode(filepath=None):
+    global _inPoseMode, _storage
+    if not _inPoseMode:
         return
-    log.message("Exit pose mode")
-    human = gui3d.app.selectedHuman
-    human.restoreUnposedCoords()
-    _InPoseMode = False
+    log.message("Exit pose mode: %s" % filepath)
+    _storage.restore(gui3d.app.selectedHuman, filepath)
+    _inPoseMode = False
     log.message("Pose mode exited")
-    printVert(human)
+
+
+def resetPoseMode():
+    global _inPoseMode, _storage
+    exitPoseMode()
+    log.message("Reset pose mode")
+    _storage.__init__()
+    enterPoseMode()
 
 
 def changePoseMode(event):
     human = event.human
-    #log.debug("Change pose mode %s w=%s e=%s", _InPoseMode, human.warpsNeedReset, event.change)
+    #log.debug("Change pose mode %s w=%s e=%s", _inPoseMode, human.warpsNeedReset, event.change)
     if human and human.warpsNeedReset:
         exitPoseMode()
     elif event.change not in ["targets", "warp"]:
         exitPoseMode()
     if event.change == "reset":
         resetPoseMode()
+
 
 #----------------------------------------------------------
 #   class PoseModifierSlider

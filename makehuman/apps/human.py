@@ -44,8 +44,7 @@ class Human(gui3d.Object):
         self.MID_AGE = 25.0
 
         self.warpsNeedReset = True
-        self.armature = None
-        self.unposedCoords = None
+        #self.pose = None
 
         self.mesh.setCameraProjection(0)
         self.mesh.setShadeless(0)
@@ -92,27 +91,6 @@ class Human(gui3d.Object):
     def maskFaces(self):
         self.meshData.changeFaceMask(self.getFaceMask())
         self.meshData.updateIndexBufferFaces()
-
-    def setUnposedCoords(self):
-        import warpmodifier
-        if self.unposedCoords is not None:
-            raise NameError("Failed to set unposed coords")
-        obj = self.meshData
-        self.unposedCoords = np.array(obj.coord)
-        warpmodifier.clearRefObject()
-        self.warpsNeedReset = False
-
-    def restoreUnposedCoords(self):
-        import warpmodifier
-        if self.unposedCoords is not None:
-            obj = self.meshData
-            obj.changeCoords(self.unposedCoords)
-            obj.calcNormals()
-            obj.update()
-        self.unposedCoords = None
-        warpmodifier.removeAllWarpTargets(self)
-        self.armature = None
-
 
 
     # Overriding hide and show to account for both human base and the hairs!

@@ -49,8 +49,47 @@ def saveJson(struct, filepath, binary=False):
         with gzip.open(realpath, 'wb') as fp:
             fp.write(bytes)
     else:
+        string = encodeJsonData(data, "    ")
         with open(filepath, "w", encoding="utf-8") as fp:
-            json.dump(struct, fp,
-                sort_keys=False,
-                indent=4,
-                separators=(',', ':'))
+            fp.write(string)
+            fp.write("\n")
+
+
+def encodeJsonData(data, pad=""):
+    if isinstance(data, bool):
+        if data == True:
+            return "true"
+        else:
+            return "false"
+    elif isinstance(data, float):
+        if abs(data) < 1e-6:
+            return "0"
+        else:
+            return "%.5g" % data
+    elif isinstance(data, int):
+        return str(data)
+    elif isinstance(data, str):
+        return "\"%s\"" % data
+    elif isinstance(data, (list, tuple)):
+        if leafList(data):
+            string = "["
+            for elt in data:
+                string += encodeJsonData(elt) + ","
+            return string[:-1] + "]"
+        else:
+            string = "["
+            for elt in data:
+                string += "\n    " + pad + encodeJsonData(elt, pad+"    ") + ","
+            return string[:-1] + "\n%s]" % pad
+    elif isinstance(data, dict):
+        string = "{"
+        for key,value in data.items():
+            string += "\n    %s\"%s\" : " % (pad, key) + encodeJsonData(value, pad+"    ") + ","
+        return string[:-1] + "\n%s}" % pad
+
+
+def leafList(data):
+    for elt in data:
+        if isinstance(elt, (list,tuple,dict)):
+            return False
+    return True
