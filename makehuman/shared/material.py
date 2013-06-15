@@ -397,6 +397,10 @@ class Material(object):
 
         self._updateShaderConfig()
 
+    @property
+    def shaderConfig(self):
+        return dict(self._shaderConfig)
+
     def _updateShaderConfig(self):
         global _shaderConfigDefines
         global _materialShaderParams
@@ -418,7 +422,7 @@ class Material(object):
             except:
                 pass
 
-        # Reset shader (non-custom) shader parameters controlled by material properties
+        # Reset (non-custom) shader parameters controlled by material properties
         for shaderParam in _materialShaderParams:
             try:
                 del self._shaderParameters[shaderParam]
