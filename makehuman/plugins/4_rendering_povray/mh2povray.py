@@ -463,16 +463,15 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     matlines = matlines.replace('%%spec%%', str(settings['skinoil']*settings['moist']))
     matlines = matlines.replace('%%edss%%', str(settings['skinoil']*(1-settings['moist'])))
     matlines = matlines.replace('%%rough%%', str(settings['rough']))
-    if settings['usebump']:
-        _, imgtype = getChannelData(stuffs[0].bump)
+    if settings['usebump'] and stuffs[0].material.supportsBump():
+        bumpDef = getImageDef(stuffs[0].name, stuffs[0].material.bumpMapTexture, 'bump')
         matlines = matlines.replace(
-            '%%normal%%','bump_map {%s "%s_bump.%s" bump_size %s interpolate 2}' % (
-                imgtype, stuffs[0].name,(stuffs[0].bump[1].split("."))[1],str(
-                    settings['wrinkles'])))
+            '%%normal%%','bump_map {%s bump_size %s interpolate 2}' % (
+                bumpDef, str(settings['wrinkles'])))
         if settings['SSS']:
             matlines = matlines.replace(
-                '%%bluenormal%%','bump_map {%s "%s_bump.%s" bump_size 3*%s interpolate 2}' % (
-                    imgtype, stuffs[0].name,(stuffs[0].bump[1].split("."))[1],str(settings['wrinkles'])))
+                '%%bluenormal%%','bump_map {%s bump_size 3*%s interpolate 2}' % (
+                    bumpDef, str(settings['wrinkles'])))
             matlines = matlines.replace(
                 '%%greennormal%%','bump_map {png "%s_sss_greenbump.png" bump_size 3*%s interpolate 2}' % (
                     stuffs[0].name, str(settings['wrinkles'])))
@@ -521,8 +520,8 @@ def writeTextures(stuffs, outDir, progressCallback = None):
     for stuff in stuffs:
         if stuff.textureImage:
             teximg = stuff.textureImage
-        elif stuff.texture:
-            teximg = mh.Image(path = collect.getpath(stuff.texture))
+        elif stuff.material.supportsDiffuse():
+            teximg = mh.Image(path = stuff.material.diffuseTexture)
         # Export diffuse texture, with subtextures.
         teximg.save(os.path.join(
             outDir,"%s_texture.png" % stuff.name))
@@ -530,15 +529,13 @@ def writeTextures(stuffs, outDir, progressCallback = None):
         # Export transparency map.
         imgop.getAlpha(teximg).save(path = os.path.join(outDir,"%s_alpha.png" % stuff.name))
         progress((i+0.8)/stuffnum)
-        # Export bump map.
-        if stuff.bump:
-            collect.copy(stuff.bump, os.path.join(
-                outDir, "%s_bump.%s" % (stuff.name,(
-                    stuff.bump[1].split("."))[1])))
-        elif stuff.displacement:
-            collect.copy(stuff.displacement, os.path.join(
-                outDir, "%s_bump.%s" % (stuff.name,(
-                    stuff.displacement[1].split("."))[1])))
+        # Export bump map / displacement map. They are the same in povray.
+        if stuff.material.supportsBump():
+            collect.copy(stuff.material.bumpMapTexture, os.path.join(
+                outDir, getImageFname(stuff.name, stuff.material.bumpMapTexture, 'bump')))
+        elif stuff.material.supportsDisplacement():
+            collect.copy(stuff.displacementMapTexture, os.path.join(
+                outDir, getImageFname(stuff.name, stuff.material.displacementMapTexture, 'bump')))
         i += 1.0
         progress(i/stuffnum)
 
@@ -547,10 +544,10 @@ def writeItemsMaterials(hfile, stuffs, settings, outDir):
         texdata = getChannelData(stuff.texture)
         if settings['usebump'] == False:
             bumpdata = None
-        elif stuff.bump:
+        elif stuff.material.supportsBump():
             bumpdata = getChannelData(stuff.bump)
             bumpext = stuff.bump[1].split(".")[1]
-        elif stuff.displacement:
+        elif stuff.material.supportsDisplacement():
             bumpdata = getChannelData(stuff.displacement)
             bumpext = stuff.displacement[1].split(".")[1]
         else:
@@ -843,4 +840,25 @@ def getHumanName():
 def invx(pos):
     return (-pos[0],pos[1],pos[2])
 
+def getImageFname(name, file, type = None)
+    out = str(name)
+    if type is not None:
+        out += '_' + type
+    return out + os.path.splitext(file)[-1]
+    
+def getImageDef(name, file, type = None)
+    out = str(name)
+    if type is not None:
+        out += '_' + type
+    ext = os.path.splitext(file)[-1]
+    out += ext
+    
+    ext = ext.lower()
+    if ext == ".tif":
+        type = "tiff"
+    elif ext == ".jpg":
+        type = "jpeg"
+    else:
+        type = ext[1:]
 
+    return type + ' "' + out + '"'
