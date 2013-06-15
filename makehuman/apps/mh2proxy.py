@@ -363,7 +363,6 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
     tails = {}
     proxy = CProxy(pfile.file, pfile.type, pfile.layer)
     proxy.deleteVerts = numpy.zeros(len(obj.coord), bool)
-    material = proxy.material
 
     useProjection = True
     ignoreOffset = False
@@ -432,9 +431,10 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
             else:
                 layer = 0
                 uvFile = words[1]
-            uvMap = material.UVMap(proxy.name+"UV"+str(layer))
-            uvMap.read(proxy.mesh, getFileName(folder, uvFile, ".mhuv"))
-            proxy.uvLayers[layer] = uvMap
+            #uvMap = material.UVMap(proxy.name+"UV"+str(layer))
+            #uvMap.read(proxy.mesh, getFileName(folder, uvFile, ".mhuv"))
+            # Delayed load, only store path here
+            proxy.uvLayers[layer] = getFileName(folder, uvFile, ".mhuv")
 
         elif key == 'x_scale':
             proxy.xScaleData = getScaleData(words)
