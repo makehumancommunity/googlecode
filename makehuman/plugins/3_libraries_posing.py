@@ -45,11 +45,13 @@ class PoseAction(gui3d.Action):
         self.after = after
 
     def do(self):
-        self.library.loadMhpFile(self.after)
+        self.library.pose = posemode.loadMhpFile(self.after, self.library.pose)
+        self.library.posefile = self.after
         return True
 
     def undo(self):
-        self.library.loadMhpFile(self.before)
+        self.library.pose = posemode.loadMhpFile(self.before, self.library.pose)
+        self.library.posefile = self.before
         return True
 
 #
@@ -59,7 +61,6 @@ class PoseAction(gui3d.Action):
 class PoseModifier(warpmodifier.WarpModifier):
     def __init__(self, template):
         warpmodifier.WarpModifier.__init__(self, template, "body", "GenderAgeToneWeight")
-        self.isPose = True
 
 
 class PoseLoadTaskView(gui3d.TaskView):
@@ -70,8 +71,7 @@ class PoseLoadTaskView(gui3d.TaskView):
         self.userPoses = os.path.join(mh.getPath(''), 'data', 'poses')
         self.paths = [self.systemPoses, self.userPoses]
 
-        self.filepath = None
-        self.dirty = False
+        self.posefile = None
         self.pose = None
 
         gui3d.TaskView.__init__(self, category, 'Poses')
@@ -87,8 +87,8 @@ class PoseLoadTaskView(gui3d.TaskView):
 
         @self.filechooser.mhEvent
         def onFileSelected(filepath):
-            if self.filepath:
-                oldFile = self.filepath
+            if self.posefile:
+                oldFile = self.posefile
             else:
                 oldFile = "clear.mhp"
 
@@ -103,52 +103,27 @@ class PoseLoadTaskView(gui3d.TaskView):
             self.syncMedia()
 
 
-    def loadMhpFile(self, filepath):
-
-        human = gui3d.app.selectedHuman
-        self.filepath = filepath
-        folder = os.path.dirname(filepath)
-        hasTargets = False
-        for file in os.listdir(folder):
-            if os.path.splitext(file)[1] == ".target":
-                hasTargets = True
-                break
-
-        if hasTargets:
-            (fname, ext) = os.path.splitext(os.path.basename(filepath))
-            filenamePattern = "${gender}-${age}-${tone}-${weight}-%s.target" % fname
-            modpath = os.path.join(folder, filenamePattern)
-            log.debug('PoseLoadTaskView.loadMhpFile: %s %s', filepath, modpath)
-            modifier = PoseModifier(modpath)
-            modifier.updateValue(human, 1.0)
-        else:
-            modifier = None
-
-        if not self.pose:
-            self.pose = createPoseRig(human)
-        self.pose.setModifier(modifier)
-        self.pose.readMhpFile(filepath)
-
-
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
         self.filechooser.setFocus()
 
-        self.pose = None
-        self.filepath = posemode.enterPoseMode()
-        if self.filepath:
-            self.loadMhpFile(self.filepath)
+        self.posefile = posemode.enterPoseMode()
+        if self.posefile:
+            self.pose = posemode.loadMhpFile(self.posefile)
+        else:
+            self.pose = None
 
 
     def onHide(self, event):
-        posemode.exitPoseMode(self.filepath)
+        posemode.exitPoseMode(self.posefile)
         gui3d.TaskView.onHide(self, event)
 
 
     def onHumanChanging(self, event):
         posemode.compromiseStorage()
         if event.change == 'reset':
-            self.filepath = None
+            self.posefile = None
+            self.pose = None
 
 
     def onHumanChanged(self, event):

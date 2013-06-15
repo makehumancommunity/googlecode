@@ -55,7 +55,7 @@ def setupExpressions(folder, prefix):
     return(expressions)
 
 
-ExpressionUnits = setupExpressions("./data/targets/expression/units/caucasian/female_young", "")
+ExpressionUnits = setupExpressions("./data/targets/expression/units/caucasian", "")
 
 #----------------------------------------------------------
 #   Loop

@@ -39,20 +39,20 @@ class GroupBoxRadioButton(gui.RadioButton):
         super(GroupBoxRadioButton, self).__init__(group, label, selected)
         self.groupBox = groupBox
         self.task = task
-        
+
     def onClicked(self, event):
         self.task.groupBox.showWidget(self.groupBox)
 
 class ExpressionSlider(posemode.PoseModifierSlider):
-    def __init__(self, label, modifier):        
-        posemode.PoseModifierSlider.__init__(self, label, modifier)        
+    def __init__(self, label, modifier):
+        posemode.PoseModifierSlider.__init__(self, label, modifier)
 
 
 class ExpressionTaskView(gui3d.TaskView):
 
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Expression tuning')
-        
+
         self.expressions = [
             ('eyebrows-left', ['down', 'extern-up', 'inner-up', 'up']),
             ('eyebrows-right', ['down', 'extern-up', 'inner-up', 'up']),
@@ -64,21 +64,21 @@ class ExpressionTaskView(gui3d.TaskView):
             ]
 
         self.include = "All"
-        
+
         self.groupBoxes = []
         self.radioButtons = []
         self.sliders = []
-        
+
         self.modifiers = {}
-        
+
         self.categoryBox = self.addRightWidget(gui.GroupBox('Category'))
         self.groupBox = self.addLeftWidget(gui.StackedBox())
-        
+
         for name, subnames in self.expressions:
             # Create box
             box = self.groupBox.addWidget(gui.SliderBox(name.capitalize()))
             self.groupBoxes.append(box)
-            
+
             # Create sliders
             for subname in subnames:
                 modifier = warpmodifier.WarpModifier(
@@ -96,7 +96,7 @@ class ExpressionTaskView(gui3d.TaskView):
         self.groupBox.showWidget(self.groupBoxes[0])
         # self.hideAllBoxes()
         # self.groupBoxes[0].show()
-  
+
     def hideAllBoxes(self):
         for box in self.groupBoxes:
             box.hide()
@@ -105,22 +105,20 @@ class ExpressionTaskView(gui3d.TaskView):
         gui3d.TaskView.onShow(self, event)
         for slider in self.sliders:
             slider.update()
-        
-    def onHumanChanging(self, event):
-        posemode.changePoseMode(event)
 
-    def onHumanChanged(self, event):        
-        posemode.changePoseMode(event)
+    def onHumanChanged(self, event):
+        log.debug("OHC %s %s" % (event, dir(event)))
+        warpmodifier.compromiseWarps()
         for slider in self.sliders:
             slider.update()
-                
+
     def loadHandler(self, human, values):
         modifier = self.modifiers.get(values[1], None)
         if modifier:
             value = float(values[2])
             modifier.setValue(human, value)
             modifier.updateValue(human, value)  # Force recompilation
-       
+
     def saveHandler(self, human, file):
         for name, modifier in self.modifiers.iteritems():
             value = modifier.getValue(human)
@@ -143,7 +141,7 @@ class ExpressionTaskView(gui3d.TaskView):
                 #print "  R", name
                 if name in include:
                     modifier.setValue(human, 0.0)
-                    
+
 
     def loadExpression(self, filename, include):
         human = gui3d.app.selectedHuman
@@ -161,6 +159,7 @@ class ExpressionTaskView(gui3d.TaskView):
                         modifier.setValue(human, value)
                         modifier.updateValue(human, value)  # Force recompilation
         gui3d.app.setFaceCamera()
+
 
 class ExpressionAction(gui3d.Action):
 
@@ -193,6 +192,7 @@ class ExpressionAction(gui3d.Action):
         for slider in self.taskView.sliders:
             slider.update()
         return True
+
 
 class MhmLoadTaskView(gui3d.TaskView):
 
@@ -236,7 +236,7 @@ class VisemeLoadTaskView(MhmLoadTaskView):
 
     def __init__(self, category, visemeTaskView):
         MhmLoadTaskView.__init__(self, category, visemeTaskView, 'Visemes', 'visemes')
-        
+
         self.include = []
         for (cat, names) in visemeTaskView.expressions:
             if cat == "mouth":
@@ -254,7 +254,7 @@ def load(app):
     expressionTuning = ExpressionTaskView(category)
     expressionTuning.sortOrder = 0.5
     category.addTask(expressionTuning)
-    
+
     app.addLoadHandler('expression', expressionTuning.loadHandler)
     app.addSaveHandler(expressionTuning.saveHandler)
 

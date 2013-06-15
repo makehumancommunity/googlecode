@@ -70,8 +70,9 @@ class ExporterCollada(Exporter):
 
     def export(self, human, filename):
         from .mh2collada import exportCollada
-
+        self.taskview.exitPoseMode()
         exportCollada(human, filename("dae"), DaeConfig(self))
+        self.taskview.enterPoseMode()
 
 
 def load(app):

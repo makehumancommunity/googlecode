@@ -19,7 +19,7 @@
 Abstract
 --------
 
-This module implements the 'Files > Export' tab 
+This module implements the 'Files > Export' tab
 """
 
 import os
@@ -27,11 +27,12 @@ import os
 import mh
 import gui
 import gui3d
+import posemode
 import log
 
 class ExportTaskView(gui3d.TaskView):
     def __init__(self, category):
-        
+
         gui3d.TaskView.__init__(self, category, 'Export')
 
         self.formats = []
@@ -45,7 +46,9 @@ class ExportTaskView(gui3d.TaskView):
 
         self.exportBodyGroup = []
         self.exportHairGroup = []
-        
+
+        self.posefile = None
+
         # Mesh Formats
         self.formatBox = self.addLeftWidget(gui.GroupBox('Mesh Format'))
 
@@ -63,10 +66,6 @@ class ExportTaskView(gui3d.TaskView):
         # Scales
         self.scaleBox = self.addRightWidget(gui.GroupBox('Scale units'))
         self.scaleButtons = self.addScales(self.scaleBox)
-        
-        # Encodings
-        self.encodingBox = self.addRightWidget(gui.GroupBox('Encoding'))
-        self.encodingButtons = self.addEncodings(self.encodingBox)
 
         self.boxes = {
             'mesh': self.formatBox,
@@ -76,7 +75,7 @@ class ExportTaskView(gui3d.TaskView):
             }
 
         self.updateGui()
-        
+
         @self.fileentry.mhEvent
         def onFileSelected(filename):
             path = os.path.normpath(os.path.join(exportPath, filename))
@@ -105,7 +104,7 @@ class ExportTaskView(gui3d.TaskView):
             gui3d.app.prompt('Info', u'The mesh has been exported to %s.' % dir, 'OK', helpId='exportHelp')
 
             mh.changeCategory('Modelling')
-            
+
 
     _scales = {
         "decimeter": 1.0,
@@ -130,22 +129,6 @@ class ExportTaskView(gui3d.TaskView):
                 return (self._scales[name], name)
         return (1, "decimeter")
 
-
-    def addEncodings(self, encodingBox):
-        buttons = []
-        encodings = []
-        for name,check in [("ascii",False), ("latin-1",False), ("utf-8",True)]:
-            button = encodingBox.addWidget(gui.RadioButton(encodings, name, check))
-            buttons.append((button,name))
-        return buttons
-
-    def getEncoding(self):
-        for (button, name) in self.encodingButtons:
-            if button.selected:
-                return name
-        return "ascii"
-
-
     def addExporter(self, exporter):
         checked = self.empty and exporter.group == "mesh"
         radio = self.boxes[exporter.group].addWidget(gui.RadioButton(self.exportBodyGroup, exporter.name, checked))
@@ -161,7 +144,7 @@ class ExportTaskView(gui3d.TaskView):
         def onClicked(event):
             self.updateGui()
             self.fileentry.setFilter(exporter.filter)
-    
+
     def updateGui(self):
         for exporter, radio, options in self.formats:
             if radio.selected:
@@ -174,12 +157,12 @@ class ExportTaskView(gui3d.TaskView):
     def onShow(self, event):
 
         gui3d.TaskView.onShow(self, event)
-        
+
         self.fileentry.setFocus()
 
         human = gui3d.app.selectedHuman
         camera = mh.cameras[0]
-        
+
         self.pan = human.getPosition()
         self.eye = camera.eye
         self.focus = camera.focus
@@ -189,23 +172,22 @@ class ExportTaskView(gui3d.TaskView):
         camera.eyeZ = 70
         human.setRotation([0.0, 0.0, 0.0])
 
-        for exporter, radio, _ in self.formats:
-            if radio.selected:
-                self.recentlyShown = exporter
-                exporter.onShow(self)
-                break
+        self.enterPoseMode()
+
 
     def onHide(self, event):
-        
+
         gui3d.TaskView.onHide(self, event)
-        
+
         human = gui3d.app.selectedHuman
         camera = mh.cameras[0]
-        
+
         human.setPosition(self.pan)
         camera.eye = self.eye
         camera.focus = self.focus
         human.setRotation(self.rotation)
+
+        self.exitPoseMode()
 
         for exporter, radio, _ in self.formats:
             if radio.selected:
@@ -213,3 +195,12 @@ class ExportTaskView(gui3d.TaskView):
                 break
         self.recentlyShown = None
 
+
+    def enterPoseMode(self):
+        self.posefile = posemode.enterPoseMode()
+        if self.posefile:
+            posemode.loadMhpFile(self.posefile)
+
+
+    def exitPoseMode(self):
+        posemode.exitPoseMode(self.posefile)

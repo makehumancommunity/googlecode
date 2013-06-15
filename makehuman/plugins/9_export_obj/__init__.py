@@ -25,6 +25,7 @@ TODO
 import gui
 from export import Exporter
 from exportutils.config import Config
+import posemode
 
 class ObjConfig(Config):
 
@@ -33,8 +34,8 @@ class ObjConfig(Config):
         self.selectedOptions(exporter)
         self.useRelPaths = True
         self.useNormals = exporter.useNormals.selected
-    
-    
+
+
 class ExporterOBJ(Exporter):
     def __init__(self):
         Exporter.__init__(self)

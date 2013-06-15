@@ -36,16 +36,15 @@ class MD5Config(Config):
         self.useTexFolder = exporter.useTexFolder
 
     def selectedOptions(self, exporter):
-        self.encoding           = "ascii"
         self.useTexFolder       = exporter.useTexFolder.selected
         self.eyebrows           = exporter.eyebrows.selected
         self.lashes             = exporter.lashes.selected
         self.helpers            = exporter.helpers.selected
         #self.scale,self.unit    = exporter.taskview.getScale()
         self.smooth = self.subdivide = gui3d.app.selectedHuman.isSubdivided()
-        
+
         return self
-    
+
 
 class ExporterMD5(Exporter):
     def __init__(self):
@@ -67,11 +66,9 @@ class ExporterMD5(Exporter):
         mh2md5.exportMd5(human, filename("md5mesh"), cfg)
 
     def onShow(self, exportTaskView):
-        exportTaskView.encodingBox.hide()
         exportTaskView.scaleBox.hide()
 
     def onHide(self, exportTaskView):
-        exportTaskView.encodingBox.show()
         exportTaskView.scaleBox.show()
 
 def load(app):

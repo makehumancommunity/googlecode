@@ -136,6 +136,33 @@ def changePoseMode(event):
         resetPoseMode()
 
 
+def loadMhpFile(filepath, pose=None):
+
+    human = gui3d.app.selectedHuman
+    folder = os.path.dirname(filepath)
+    hasTargets = False
+    for file in os.listdir(folder):
+        if os.path.splitext(file)[1] == ".target":
+            hasTargets = True
+            break
+
+    if hasTargets:
+        (fname, ext) = os.path.splitext(os.path.basename(filepath))
+        filenamePattern = "${gender}-${age}-${tone}-${weight}-%s.target" % fname
+        modpath = os.path.join(folder, filenamePattern)
+        log.debug('PoseLoadTaskView.loadMhpFile: %s %s', filepath, modpath)
+        modifier = PoseModifier(modpath)
+        modifier.updateValue(human, 1.0)
+    else:
+        modifier = None
+
+    if not pose:
+        pose = createPoseRig(human)
+    pose.setModifier(modifier)
+    pose.readMhpFile(filepath)
+
+    return pose
+
 #----------------------------------------------------------
 #   class PoseModifierSlider
 #----------------------------------------------------------

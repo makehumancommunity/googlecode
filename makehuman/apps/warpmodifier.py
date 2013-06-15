@@ -25,7 +25,7 @@ TODO
 __docformat__ = 'restructuredtext'
 
 import math
-import numpy
+import numpy as np
 from operator import mul
 import mh
 import os
@@ -35,8 +35,6 @@ import warp
 import humanmodifier
 import log
 from core import G
-
-shadowCoords = None
 
 #----------------------------------------------------------
 #   class WarpTarget
@@ -88,26 +86,6 @@ def saveWarpedTarget(shape, path):
 #   class WarpModifier
 #----------------------------------------------------------
 
-theModifierTypes = {
-    "GenderAge" : [
-        ("macrodetails", None, "Gender"),
-        ("macrodetails", None, "Age"),
-    ],
-    "GenderAgeEthnic" : [
-        ("macrodetails", None, "Gender"),
-        ("macrodetails", None, "Age"),
-        ("macrodetails", None, "African"),
-        ("macrodetails", None, "Asian"),
-    ],
-    "GenderAgeToneWeight" : [
-        ("macrodetails", None, "Gender"),
-        ("macrodetails", None, "Age"),
-        ("macrodetails", "universal", "Muscle"),
-        ("macrodetails", "universal", "Weight"),
-        #("macrodetails", "universal-stature", "Height"),
-    ],
-}
-
 
 class BaseSpec:
     def __init__(self, path, factors):
@@ -131,7 +109,7 @@ class TargetSpec:
 class WarpModifier (humanmodifier.SimpleModifier):
 
     def __init__(self, template, bodypart, modtype):
-        global theModifierTypes, theBaseCharacterParts
+        global _warpGlobals
 
         string = template.replace('$','').replace('{','').replace('}','')
         warppath = os.path.join(mh.getPath(""), "warp", string)
@@ -153,7 +131,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         self.modtype = modtype
 
         self.fallback = None
-        for (tlabel, tname, tvar) in theModifierTypes[modtype]:
+        for (tlabel, tname, tvar) in _warpGlobals.modifierTypes[modtype]:
             self.fallback = humanmodifier.MacroModifier(tlabel, tname, tvar)
             break
 
@@ -168,29 +146,20 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
 
     def setupBaseCharacters(self, genders, ages, ethnics, tones, weights):
+        global _warpGlobals
 
-        baseCharacterParts = {
-            "Gender" : ("male", "female"),
-            "Age" : ("child", "young", "old"),
-            "Ethnic" : ("caucasian", "african", "asian"),
-            "NoEthnic" : [None],
-            "Tone" : ("minmuscle", None, "maxmuscle"),
-            "Weight" : ("minweight", None, "maxweight"),
-            "NoUniv" : [None]
-        }
-
-        for gender in baseCharacterParts[genders]:
-            for age in baseCharacterParts[ages]:
-                for ethnic1 in baseCharacterParts[ethnics]:
+        for gender in _warpGlobals.baseCharacterParts[genders]:
+            for age in _warpGlobals.baseCharacterParts[ages]:
+                for ethnic1 in _warpGlobals.baseCharacterParts[ethnics]:
                     path1 = self.template
 
                     if ethnic1 is None:
-                        base1 = "data/targets/macrodetails/neutral-%s-%s.target" % (gender, age)
+                        base1 = "data/targets/macrodetails/caucasian-%s-%s.target" % (gender, age)
                         key1 = "%s-%s" % (gender, age)
                         factors1 = [gender, age]
                     else:
                         if ethnic1 == "caucasian":
-                            ethnic2 = "neutral"
+                            ethnic2 = "caucasian"
                         else:
                             ethnic2 = ethnic1
                         base1 = "data/targets/macrodetails/%s-%s-%s.target" % (ethnic2, gender, age)
@@ -201,8 +170,8 @@ class WarpModifier (humanmodifier.SimpleModifier):
                     self.bases[key1] = BaseSpec(base1, factors1)
                     path1 = path1.replace("${gender}", gender).replace("${age}",age)
 
-                    for tone in baseCharacterParts[tones]:
-                        for weight in baseCharacterParts[weights]:
+                    for tone in _warpGlobals.baseCharacterParts[tones]:
+                        for weight in _warpGlobals.baseCharacterParts[weights]:
                             if tone and weight:
                                 base2 = "data/targets/macrodetails/universal-%s-%s-%s-%s.target" % (gender, age, tone, weight)
                                 key2 = "universal-%s-%s-%s-%s" % (gender, age, tone, weight)
@@ -258,13 +227,20 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
 
     def compileWarpTarget(self, human):
-        global shadowCoords
+        global _warpGlobals
         log.message("Compile %s", self)
-        landmarks = theLandMarks()[self.bodypart]
+        landmarks = _warpGlobals.getLandMarks(self.bodypart)
         objectChanged = self.getRefObject(human)
         self.getRefTarget(human, objectChanged)
-        if self.refTargetVerts and _theRefObjectVerts[self.modtype] is not None:
-            shape = warp.warp_target(self.refTargetVerts, _theRefObjectVerts[self.modtype], shadowCoords, landmarks)
+        roVerts = _warpGlobals.getRefObjectVerts(self.modtype)
+        unwarpedCoords = _warpGlobals.getUnwarpedCoords(human)
+        if (self.refTargetVerts and roVerts is not None):
+            log.debug("BP %s" % self.bodypart)
+            log.debug("RTV %s" % self.refTargetVerts)
+            log.debug("ROV %s" % roVerts)
+            log.debug("SHC %s" % unwarpedCoords)
+            log.debug("LMK %s" % landmarks)
+            shape = warp.warp_target(self.refTargetVerts, roVerts, unwarpedCoords, landmarks)
         else:
             shape = {}
         log.message("...done")
@@ -309,13 +285,13 @@ class WarpModifier (humanmodifier.SimpleModifier):
             if cval > 0:
                 log.debug("  reftrg %s %s", target.path, cval)
                 madeRefTarget = True
-                verts = self.getTargetInsist(target.path)
+                verts = self.getRefTargetVertsInsist(target.path)
                 if verts is not None:
                     addVerts(self.refTargetVerts, cval, verts)
         return madeRefTarget
 
 
-    def getTargetInsist(self, path):
+    def getRefTargetVertsInsist(self, path):
         verts = self.getTarget(path)
         if verts is not None:
             self.refTargets[path] = verts
@@ -326,29 +302,35 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 log.message("  Did not find %s", path)
                 return None
 
-        path1 = path.replace("asian", "caucasian").replace("neutral", "caucasian").replace("african", "caucasian")
-        path1 = path1.replace("cauccaucasian", "caucasian")
+        path1 = path.replace("/asian", "/caucasian").replace("/african", "/caucasian")
         verts = self.getTarget(path1)
         if verts is not None:
             self.refTargets[path] = verts
             log.message("   Replaced %s\n  -> %s", path, path1)
             return verts
 
-        path2 = path1.replace("child", "young").replace("old", "young")
+        path2 = path1.replace("/baby", "/young").replace("/child", "/young").replace("/old", "/young")
         verts = self.getTarget(path2)
         if verts is not None:
             self.refTargets[path] = verts
             log.message("   Replaced %s\n  -> %s", path, path2)
             return verts
 
-        path3 = path2.replace("male", "female")
-        path3 = path3.replace("fefemale", "female")
-        verts = self.getTarget(path3)
+        path3 = path2.replace("/male", "/female")
+        if verts is not None:
+            self.refTargets[path] = verts
+            log.message("   Replaced %s\n  -> %s", path, path2)
+            return verts
+
+        path4 = path3.replace("/female_young", "")
+        verts = self.getTarget(path4)
         self.refTargets[path] = verts
+
         if verts is None:
-            log.message("Warning: Found none of:\n    %s\n    %s\n    %s\n    %s", path, path1, path2, path3)
+            log.message("Warning: Found none of:\n    %s\n    %s\n    %s\n    %s\n    %s" %
+                (path, path1, path2, path3, path4))
         else:
-            log.message("   Replaced %s\n  -> %s", path, path3)
+            log.message("   Replaced %s\n  -> %s" % (path, path4))
         return verts
 
 
@@ -390,33 +372,33 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
 
     def getRefObject(self, human):
-        global _theRefObjectVerts
+        global _warpGlobals
 
-        if _theRefObjectVerts[self.modtype] is not None:
+        if _warpGlobals.getRefObjectVerts(self.modtype) is not None:
             return False
         else:
             log.message("Reset warps")
-            refverts = numpy.array(G.app.selectedHuman.meshData.orig_coord)
-            for char in theRefObjects().keys():
+            refverts = np.array(G.app.selectedHuman.meshData.orig_coord)
+            for char in _warpGlobals.getRefObjects().keys():
                 cval = human.getDetail(char)
                 if cval:
                     log.debug("  refobj %s %s", os.path.basename(char), cval)
                     verts = self.getRefObjectVerts(char)
                     if verts is not None:
                         addVerts(refverts, cval, verts)
-            _theRefObjectVerts[self.modtype] = refverts
+            _warpGlobals.setRefObjectVerts(self.modtype, refverts)
             return True
 
 
     def getRefObjectVerts(self, path):
-        refObjects = theRefObjects()
-
+        global _warpGlobals
+        refObjects = _warpGlobals.getRefObjects()
         if refObjects[path]:
             return refObjects[path]
         else:
             verts = readTarget(path)
             if verts is not None:
-                refObjects[path] = verts
+                _warpGlobals.sefRefObject(path, verts)
             return verts
 
 
@@ -433,19 +415,6 @@ def removeAllWarpTargets(human):
             if target.modifier.slider:
                 target.modifier.slider.update()
             del algos3d.targetBuffer[target.name]
-
-
-def getWarpedCoords(human):
-    global shadowCoords
-
-    if shadowCoords == None:
-        shadowCoords = human.meshData.coord.copy()
-    coords = shadowCoords.copy()
-    for target in algos3d.targetBuffer.values():
-        if hasattr(target, "isWarp") and not hasattr(target, "isPose"):
-            verts = algos3d.targetBuffer[target.name].verts
-            coords[verts] += target.morphFactor * target.data
-    return coords
 
 
 #----------------------------------------------------------
@@ -472,7 +441,7 @@ def readTarget(path):
             if len(words) >= 4 and words[0][0] != '#':
                 n = int(words[0])
                 if n < algos3d.NMHVerts:
-                    target[n] = numpy.array([float(words[1]), float(words[2]), float(words[3])])
+                    target[n] = np.array([float(words[1]), float(words[2]), float(words[3])])
         fp.close()
         return target
     else:
@@ -480,16 +449,9 @@ def readTarget(path):
         return None
 
 #----------------------------------------------------------
-#   For testing numpy
+#   For testing np
 #----------------------------------------------------------
 
-"""
-import numpy
-
-def addVerts(targetVerts, cval, verts):
-    return targetVerts + cval*verts
-
-"""
 def addVerts(targetVerts, cval, verts):
     for n,v in verts.items():
         dr = cval*v
@@ -499,72 +461,160 @@ def addVerts(targetVerts, cval, verts):
             targetVerts[n] = dr
 
 #----------------------------------------------------------
-#   Init globals
+#   Global warp data
 #----------------------------------------------------------
 
-def clearRefObject():
-    global _theRefObjectVerts
-    _theRefObjectVerts = {}
-    for mtype in theModifierTypes.keys():
-        _theRefObjectVerts[mtype] = None
+class GlobalWarpData:
+    def __init__(self):
+        self._refObjectVerts = None
+        self._landMarks = None
+        self._refObjects = None
+        self._unwarpedCoords = None
+        self._warpedCoords = None
+        self.dirty = False
+
+        self.modifierTypes = {
+            "GenderAge" : [
+                ("macrodetails", None, "Gender"),
+                ("macrodetails", None, "Age"),
+            ],
+            "GenderAgeEthnic" : [
+                ("macrodetails", None, "Gender"),
+                ("macrodetails", None, "Age"),
+                ("macrodetails", None, "African"),
+                ("macrodetails", None, "Asian"),
+            ],
+            "GenderAgeToneWeight" : [
+                ("macrodetails", None, "Gender"),
+                ("macrodetails", None, "Age"),
+                ("macrodetails", "universal", "Muscle"),
+                ("macrodetails", "universal", "Weight"),
+                #("macrodetails", "universal-stature", "Height"),
+            ],
+        }
+
+        self.baseCharacterParts = {
+            "Gender" : ("male", "female"),
+            "Age" : ("child", "young", "old"),
+            "Ethnic" : ("caucasian", "african", "asian"),
+            "NoEthnic" : [None],
+            "Tone" : ("minmuscle", None, "maxmuscle"),
+            "Weight" : ("minweight", None, "maxweight"),
+            "NoUniv" : [None]
+        }
 
 
-def theLandMarks():
-    global _theLandMarks
-
-    if _theLandMarks is not None:
-        return _theLandMarks
-
-    _theLandMarks = {}
-    folder = "data/landmarks"
-    for file in os.listdir(folder):
-        (name, ext) = os.path.splitext(file)
-        if ext != ".lmk":
-            continue
-        path = os.path.join(folder, file)
-        with open(path, "r") as fp:
-            landmark = []
-            for line in fp:
-                words = line.split()
-                if len(words) > 0:
-                    m = int(words[0])
-                    landmark.append(m)
-
-        _theLandMarks[name] = landmark
-
-    return _theLandMarks
+    def reset(self):
+        self._unwarpedCoords = None
+        self._warpedCoords = None
+        self.dirty = False
 
 
-def theRefObjects():
-    global _theRefObjects
+    def getUnwarpedCoords(self, human):
+        if self.dirty:
+            self.reset()
+        elif self._unwarpedCoords is not None:
+            return self._unwarpedCoords
+        coords = np.array(G.app.selectedHuman.meshData.orig_coord)
+        for target in algos3d.targetBuffer.values():
+            if not hasattr(target, "isWarp"):
+                verts = algos3d.targetBuffer[target.name].verts
+                coords[verts] += target.morphFactor * target.data
+        self._unwarpedCoords = coords
+        return coords
 
-    if _theRefObjects is not None:
-        return _theRefObjects
 
-    clearRefObject()
-    _theRefObjects = {}
+    def getWarpedCoords(self, human):
+        if self.dirty:
+            self.reset()
+        elif self._warpedCoords is not None:
+            return self._warpedCoords
+        coords = np.array(G.app.selectedHuman.meshData.orig_coord)
+        for target in algos3d.targetBuffer.values():
+            if hasattr(target, "isWarp"):
+                verts = algos3d.targetBuffer[target.name].verts
+                coords[verts] += target.morphFactor * target.data
+        self._warpedCoords = coords
+        return coords
 
-    for ethnic in ["african", "asian", "neutral"]:
-        for age in ["child", "young", "old"]:
+
+    def getRefObjectVerts(self, modtype):
+        if self._refObjectVerts is None:
+            return None
+        else:
+            return self._refObjectVerts[modtype]
+
+
+    def setRefObjectVerts(self, modtype, refverts):
+        self._refObjectVerts[modtype] = refverts
+
+
+    def getLandMarks(self, bodypart):
+        if self._landMarks is not None:
+            return self._landMarks[bodypart]
+
+        self._landMarks = {}
+        folder = "data/landmarks"
+        for file in os.listdir(folder):
+            (name, ext) = os.path.splitext(file)
+            if ext != ".lmk":
+                continue
+            path = os.path.join(folder, file)
+            with open(path, "r") as fp:
+                landmark = []
+                for line in fp:
+                    words = line.split()
+                    if len(words) > 0:
+                        m = int(words[0])
+                        landmark.append(m)
+            self._landMarks[name] = landmark
+
+        return self._landMarks[bodypart]
+
+
+    def clearRefObject(self):
+        self._refObjectVerts = {}
+        for mtype in self.modifierTypes.keys():
+            self._refObjectVerts[mtype] = None
+
+
+    def getRefObjects(self):
+        if self._refObjects is not None:
+            return self._refObjects
+
+        self.clearRefObject()
+        self._refObjects = {}
+
+        for ethnic in ["african", "asian", "caucasian"]:
+            for age in ["baby", "child", "young", "old"]:
+                for gender in ["female", "male"]:
+                    path = "data/targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age)
+                    self._refObjects[path] = None
+
+        for age in ["baby", "child", "young", "old"]:
             for gender in ["female", "male"]:
-                path = "data/targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age)
-                _theRefObjects[path] = None
-
-    for age in ["child", "young", "old"]:
-        for gender in ["female", "male"]:
-            for tone in ["minmuscle", "maxmuscle"]:
-                path = "data/targets/macrodetails/universal-%s-%s-%s.target" % (gender, age, tone)
-                _theRefObjects[path] = None
+                for tone in ["minmuscle", "maxmuscle"]:
+                    path = "data/targets/macrodetails/universal-%s-%s-%s.target" % (gender, age, tone)
+                    self._refObjects[path] = None
+                    for weight in ["minweight", "maxweight"]:
+                        path = "data/targets/macrodetails/universal-%s-%s-%s-%s.target" % (gender, age, tone, weight)
+                        self._refObjects[path] = None
                 for weight in ["minweight", "maxweight"]:
-                    path = "data/targets/macrodetails/universal-%s-%s-%s-%s.target" % (gender, age, tone, weight)
-                    _theRefObjects[path] = None
-            for weight in ["minweight", "maxweight"]:
-                path = "data/targets/macrodetails/universal-%s-%s-%s.target" % (gender, age, weight)
-                _theRefObjects[path] = None
+                    path = "data/targets/macrodetails/universal-%s-%s-%s.target" % (gender, age, weight)
+                    self._refObjects[path] = None
 
-    return _theRefObjects
+        return self._refObjects
 
 
-_theRefObjectVerts = None
-_theLandMarks = None
-_theRefObjects = None
+    def sefRefObject(self, path, verts):
+        self._refObjects[path] = verts
+
+
+def compromiseWarps():
+    global _warpGlobals
+    _warpGlobals.dirty = True
+
+
+_warpGlobals = GlobalWarpData()
+
+

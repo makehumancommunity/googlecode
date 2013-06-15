@@ -70,8 +70,10 @@ class ExporterFBX(Exporter):
 
     def export(self, human, filename):
         from . import mh2fbx
-
+        self.taskview.exitPoseMode()
         mh2fbx.exportFbx(human, filename("fbx"), FbxConfig(self))
+        self.taskview.enterPoseMode()
+
 
 def load(app):
     app.addExporter(ExporterFBX())

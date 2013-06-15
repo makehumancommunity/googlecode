@@ -43,7 +43,6 @@ class BvhConfig(Config):
         self.useRelPaths = True
 
     def selectedOptions(self, exporter):
-        self.encoding           = "ascii"
         self.scale,self.unit    = exporter.taskview.getScale()
         return self
 
@@ -84,11 +83,9 @@ class ExporterBVH(Exporter):
             bvhData.writeToFile(fn)
 
     def onShow(self, exportTaskView):
-        exportTaskView.encodingBox.hide()
-        #exportTaskView.scaleBox.hide()
+        exportTaskView.scaleBox.hide()
 
     def onHide(self, exportTaskView):
-        exportTaskView.encodingBox.show()
         exportTaskView.scaleBox.show()
 
 def load(app):

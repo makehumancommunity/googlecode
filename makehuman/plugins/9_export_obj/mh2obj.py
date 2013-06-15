@@ -50,8 +50,6 @@ def exportObj(human, filepath, config=None):
         subdivide=config.subdivide)
 
     fp = codecs.open(filepath, 'w', encoding="utf-8")
-    #mtlfile = "%s.mtl" % os.path.splitext(filepath)[0]
-    #mtlfile = mtlfile.encode(config.encoding, 'replace')
     mtlfile = filepath.replace(".obj",".mtl")
     fp.write(
         "# MakeHuman exported OBJ\n" +

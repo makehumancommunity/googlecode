@@ -35,14 +35,13 @@ class OgreConfig(Config):
         self.useRelPaths = True
 
     def selectedOptions(self, exporter):
-        self.encoding           = "utf-8"
         self.useTexFolder       = exporter.useTexFolder.selected
         self.eyebrows           = exporter.eyebrows.selected
         self.lashes             = exporter.lashes.selected
         self.helpers            = exporter.helpers.selected
         #self.scale,self.unit    = exporter.taskview.getScale()
         self.subdivide          = gui3d.app.selectedHuman.isSubdivided()
-        
+
         return self
 
 class ExporterOgre(Exporter):
@@ -64,11 +63,9 @@ class ExporterOgre(Exporter):
         #self.scales         = self.addScales(options)
 
     def onShow(self, exportTaskView):
-        exportTaskView.encodingBox.hide()
         exportTaskView.scaleBox.hide()
 
     def onHide(self, exportTaskView):
-        exportTaskView.encodingBox.show()
         exportTaskView.scaleBox.show()
 
 def load(app):

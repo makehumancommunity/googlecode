@@ -40,7 +40,6 @@ class MhxConfig(Config):
         self.scale,self.unit =      exporter.taskview.getScale()
         self.useRelPaths =          True
         self.helpers =              True
-        self.encoding =             exporter.taskview.getEncoding()
 
         self.feetOnGround =         exporter.feetOnGround.selected
         self.useMasks =             exporter.masks.selected
@@ -96,9 +95,11 @@ class ExporterMHX(Exporter):
     def export(self, human, filename):
         from . import mhx_main
         #from mhx import mhx_main
+        self.taskview.exitPoseMode()
         config = MhxConfig(self)
-        mhx_main.exportMhx(human, filename("mhx"), config)
         config.rigOptions.setExportOptions()
+        mhx_main.exportMhx(human, filename("mhx"), config)
+        self.taskview.enterPoseMode()
 
 
 def load(app):
