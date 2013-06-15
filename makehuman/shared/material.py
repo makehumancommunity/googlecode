@@ -82,6 +82,9 @@ class Material(object):
     def __init__(self, name="UnnamedMaterial", performConfig=True):
         self.name = name
 
+        self.filename = None
+        self.filepath = None
+
         self._ambientColor = Color(1.0, 1.0, 1.0)
         self._diffuseColor = Color(1.0, 1.0, 1.0)
         self._diffuseIntensity = 0.8    # TODO is this useful?
@@ -115,10 +118,13 @@ class Material(object):
         if performConfig:
             self.configureShading()
 
-        self.uvMap = None
+        self._uvMap = None
 
     def copyFrom(self, material):
         self.name = material.name
+
+        self.filename = material.filename
+        self.filepath = material.filepath
 
         self._ambientColor.copyFrom(material.ambientColor)
         self._diffuseColor.copyFrom(material.diffuseColor)
@@ -149,7 +155,7 @@ class Material(object):
         self._shaderDefines = list(material.shaderDefines)
         self.shaderChanged = True
 
-        self.uvMap = material.uvMap
+        self._uvMap = material.uvMap
 
         return self
 
@@ -164,6 +170,10 @@ class Material(object):
         if f == None:
             log.error("Failed to load material from file %s.", filename)
             return
+
+        import os
+        self.filename = filename
+        self.filepath = os.path.dirname(filename)
 
         shaderConfig_diffuse = True
         shaderConfig_bump = True
@@ -224,7 +234,7 @@ class Material(object):
             if words[0] == "shader":
                 self._shader = words[1]
             if words[0] == "uvMap":
-                self.uvMap = words[1]
+                self._uvMap = words[1]
             if words[0] == "shaderParam":
                 if len(words) > 3:
                     self.setShaderParameter(words[1], words[2:])
@@ -248,6 +258,14 @@ class Material(object):
 
         self.configureShading(diffuse=shaderConfig_diffuse, bump=shaderConfig_bump, normal=shaderConfig_normal, displacement=shaderConfig_displacement, spec=shaderConfig_spec, vertexColors=shaderConfig_vertexColors)
 
+
+    def getUVMap(self):
+        return self._uvMap
+
+    def setUVMap(self, uvMap):
+        self._uvMap = getFilePath(uvMap, self.filepath)
+
+    uvMap = property(getUVMap, setUVMap)
 
     def getAmbientColor(self):
         #return self._ambientColor.values
@@ -549,7 +567,7 @@ class Material(object):
         return self._diffuseTexture
 
     def setDiffuseTexture(self, texture):
-        self._diffuseTexture = texture
+        self._diffuseTexture = getFilePath(texture, self.filepath)
         self._updateShaderConfig()
 
     diffuseTexture = property(getDiffuseTexture, setDiffuseTexture)
@@ -559,7 +577,7 @@ class Material(object):
         return self._bumpMapTexture
 
     def setBumpMapTexture(self, texture):
-        self._bumpMapTexture = texture
+        self._bumpMapTexture = getFilePath(texture, self.filepath)
         self._updateShaderConfig()
 
     bumpMapTexture = property(getBumpMapTexture, setBumpMapTexture)
@@ -579,7 +597,7 @@ class Material(object):
         return self._normalMapTexture
 
     def setNormalMapTexture(self, texture):
-        self._normalMapTexture = texture
+        self._normalMapTexture = getFilePath(texture, self.filepath)
         self._updateShaderConfig()
 
     normalMapTexture = property(getNormalMapTexture, setNormalMapTexture)
@@ -599,7 +617,7 @@ class Material(object):
         return self._displacementMapTexture
 
     def setDisplacementMapTexture(self, texture):
-        self._displacementMapTexture = texture
+        self._displacementMapTexture = getFilePath(texture, self.filepath)
         self._updateShaderConfig()
 
     displacementMapTexture = property(getDisplacementMapTexture, setDisplacementMapTexture)
@@ -625,7 +643,7 @@ class Material(object):
         """
         Set the specular or reflectivity map texture.
         """
-        self._specularMapTexture = texture
+        self._specularMapTexture = getFilePath(texture, self.filepath)
         self._updateShaderConfig()
 
     specularMapTexture = property(getSpecularMapTexture, setSpecularMapTexture)
@@ -651,7 +669,7 @@ class Material(object):
         """
         Set the transparency or reflectivity map texture.
         """
-        self._transparencyMapTexture = texture
+        self._transparencyMapTexture = getFilePath(texture, self.filepath)
         self._updateShaderConfig()
 
     transparencyMapTexture = property(getTransparencyMapTexture, setTransparencyMapTexture)
@@ -674,6 +692,26 @@ def fromFile(filename):
     mat = Material(performConfig=False)
     mat.fromFile(filename)
     return mat
+
+def getFilePath(filename, folder = None):
+    import os
+
+    # Search within current folder
+    if folder:
+        path = os.path.join(folder, filename)
+        if os.path.isfile(path):
+            return path
+    # Treat as absolute path or search relative to application path
+    if os.path.isfile(filename):
+        return filename
+    # Search in user data folder
+    import mh
+    userPath = os.path.join(mh.getPath(''), filename)
+    if os.path.isfile(userPath):
+        return userPath
+
+    # Nothing found
+    return filename
 
 
 # TODO this is a duplicate from mh2proxy, but I hope to remove this code from mh2proxy some time. mh2proxy is too bloated
