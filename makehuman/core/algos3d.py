@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
-MakeHuman 3D Transformation functions. 
+"""
+MakeHuman 3D Transformation functions.
 
 **Project Name:**      MakeHuman
 
@@ -21,19 +21,19 @@ MakeHuman 3D Transformation functions.
 Abstract
 --------
 
-This module contains algorithms used to perform high-level 3D 
-transformations on the 3D mesh that is used to represent the human 
+This module contains algorithms used to perform high-level 3D
+transformations on the 3D mesh that is used to represent the human
 figure in the MakeHuman application.
- 
-These currently include: 
 
-  - morphing for anatomical variations 
+These currently include:
+
+  - morphing for anatomical variations
   - pose deformations
   - mesh coherency tests (for use during the development cycle)
   - visualisation functions (for use during the development cycle)
-  
-This will also be where any future mesh transformation 
-algorithms will be coded. For example: 
+
+This will also be where any future mesh transformation
+algorithms will be coded. For example:
 
   - collision deformations
   - etc..
@@ -49,6 +49,8 @@ import log
 NMHVerts = 18528
 
 targetBuffer = {}
+warpTargetBuffer = {}
+poseTargetBuffer = {}
 
 class Target:
 
@@ -59,21 +61,21 @@ class Target:
     def __init__(self, obj, name):
         """
         This method initializes an instance of the Target class.
-            
+
         Parameters
         ----------
-        
+
         obj:
             *3d object*. The base object (to which a target can be applied).
             This object is read to determine the number of vertices to
             use when initializing this data structure.
-        
+
         name:
             *string*. The name of this target.
-        
-        
+
+
         """
-        
+
         self.name = name
         self.morphFactor = -1
 
@@ -179,12 +181,12 @@ class Target:
         logger.debug('loaded target %s', name)
 
     def apply(self, obj, morphFactor, update=True, calcNormals=True, faceGroupToUpdateName=None, scale=(1.0,1.0,1.0)):
-        self.morphFactor = morphFactor                
+        self.morphFactor = morphFactor
 
         if len(self.verts):
-            
+
             if morphFactor or calcNormals or update:
-            
+
                 if faceGroupToUpdateName:
                     # if a facegroup is provided, apply it ONLY to the verts used
                     # by the specified facegroup.
@@ -214,70 +216,113 @@ class Target:
                 obj.update(dstVerts)
 
             return True
-            
+
         return False
 
 def getTarget(obj, targetPath):
     """
-    This function retrieves a set of translation vectors from a morphing 
-    target file and stores them in a buffer. It is usually only called if 
-    the translation vectors from this file have not yet been buffered during 
-    the current session. 
-    
-    The translation target files contain lists of vertex indices and corresponding 
-    3D translation vectors. The buffer is structured as a list of lists 
+    This function retrieves a set of translation vectors from a morphing
+    target file and stores them in a buffer. It is usually only called if
+    the translation vectors from this file have not yet been buffered during
+    the current session.
+
+    The translation target files contain lists of vertex indices and corresponding
+    3D translation vectors. The buffer is structured as a list of lists
     (a dictionary of dictionaries) indexed using the morph target file name, so:
-    \"targetBuffer[targetPath] = targetData\" and targetData is a list of vectors 
-    keyed on their vertex indices. 
-    
+    \"targetBuffer[targetPath] = targetData\" and targetData is a list of vectors
+    keyed on their vertex indices.
+
     For example, a translation direction vector
-    of [0,5.67,2.34] for vertex 345 would be stored using 
+    of [0,5.67,2.34] for vertex 345 would be stored using
     \"targetData[345] = [0,5.67,2.34]\".
     If this is taken from target file \"foo.target\", then this targetData could be
-    assigned to the buffer with 'targetBuffer[\"c:/MH/foo.target\"] = targetData'. 
-    
+    assigned to the buffer with 'targetBuffer[\"c:/MH/foo.target\"] = targetData'.
+
     Parameters
     ----------
 
     obj:
         *3d object*. The target object to which the translations are to be applied.
-        This object is read by this function to define a list of the vertices 
+        This object is read by this function to define a list of the vertices
         affected by this morph target file.
 
     targetPath:
-        *string*. The file system path to the file containing the morphing targets. 
+        *string*. The file system path to the file containing the morphing targets.
         The precise format of this string will be operating system dependant.
     """
 
     try:
-        target = targetBuffer[targetPath]
+        return targetBuffer[targetPath]
     except KeyError:
-        target = None
-        
+        pass
+
+    target = getWarpTarget(targetPath)
     if target:
-        if hasattr(target, "isWarp"):
-            target.reinit()
+        target.reinit()
+        return target
+
+    target = getPoseTarget(targetPath)
+    if target:
+        target.reinit()
         return target
 
     target = Target(obj, targetPath)
     targetBuffer[targetPath] = target
-    
     return target
+
+
+def getWarpTarget(targetPath):
+    try:
+        return warpTargetBuffer[targetPath]
+    except KeyError:
+        return None
+
+
+def setWarpTarget(targetPath, target):
+    warpTargetBuffer[targetPath] = target
+
+
+def removeWarpTarget(targetPath):
+    try:
+        target = warpTargetBuffer[targetPath]
+    except KeyError:
+        return
+    del warpTargetBuffer[targetPath]
+
+
+def getPoseTarget(targetPath):
+    try:
+        return poseTargetBuffer[targetPath]
+    except KeyError:
+        return None
+
+
+def setPoseTarget(targetPath, target):
+    poseTargetBuffer[targetPath] = target
+
+
+def removePoseTarget(targetPath):
+    try:
+        target = poseTargetBuffer[targetPath]
+    except KeyError:
+        return
+    del poseTargetBuffer[targetPath]
+
 
 def loadTranslationTarget(obj, targetPath, morphFactor, faceGroupToUpdateName=None, update=1, calcNorm=1, scale=[1.0,1.0,1.0]):
     """
-    This function retrieves a set of translation vectors and applies those 
-    translations to the specified vertices of the mesh object. This set of 
-    translations corresponds to a particular morph target file.  
-    If the file has already been loaded into memory then the translation 
-    vectors are read from the target data buffer, otherwise a function is 
-    first called to load the target data from disk into a buffer for 
+    This function retrieves a set of translation vectors and applies those
+    translations to the specified vertices of the mesh object. This set of
+    translations corresponds to a particular morph target file.
+    If the file has already been loaded into memory then the translation
+    vectors are read from the target data buffer, otherwise a function is
+    first called to load the target data from disk into a buffer for
     future use.
-    
-    The translation target files contain lists of vertex indices and corresponding 
-    3D translation vectors. The translation vector for each vertex is multiplied 
+
+    The translation target files contain lists of vertex indices and corresponding
+    3D translation vectors. The translation vector for each vertex is multiplied
     by a common factor (morphFactor) before being applied to the specified vertex.
-    
+
     Parameters
     ----------
 
@@ -286,30 +331,30 @@ def loadTranslationTarget(obj, targetPath, morphFactor, faceGroupToUpdateName=No
         This object is read and updated by this function.
 
     targetPath:
-        *string*. The file system path to the file containing the morphing targets. 
+        *string*. The file system path to the file containing the morphing targets.
         The precise format of this string will be operating system dependant.
 
     morphFactor:
-        *float*. A factor between 0 and 1 controlling the proportion of the translations 
+        *float*. A factor between 0 and 1 controlling the proportion of the translations
         to be applied. If 0 then the object remains unmodified. If 1 the 'full' translations
-        are applied. This parameter would normally be in the range 0-1 but can be greater 
-        than 1 or less than 0 when used to produce extreme deformations (deformations 
+        are applied. This parameter would normally be in the range 0-1 but can be greater
+        than 1 or less than 0 when used to produce extreme deformations (deformations
         that extend beyond those modelled by the original artist).
 
     faceGroupToUpdateName:
         *string*. Optional: The name of a single facegroup to be affected by the target.
-        If specified, then only transformations to faces contained by the specified 
+        If specified, then only transformations to faces contained by the specified
         facegroup are applied. If not specified, all transformations contained within the
         morph target file are applied. This permits a single morph target file to contain
-        transformations that affect multiple facegroups, but to only be selectively applied 
+        transformations that affect multiple facegroups, but to only be selectively applied
         to individual facegroups.
 
     update:
         *int flag*. A flag to indicate whether the update method on the object should be called.
 
     calcNorm:
-        *int flag*. A flag to indicate whether the normals are to be recalculated (1/true) 
-        or not (0/false).   
+        *int flag*. A flag to indicate whether the normals are to be recalculated (1/true)
+        or not (0/false).
 
     """
 
@@ -322,7 +367,7 @@ def loadTranslationTarget(obj, targetPath, morphFactor, faceGroupToUpdateName=No
 
 def saveTranslationTarget(obj, targetPath, groupToSave=None, epsilon=0.001):
     """
-    This function analyses an object to determine the differences between the current 
+    This function analyses an object to determine the differences between the current
     set of vertices and the vertices contained in the *originalVerts* list, writing the
     differences out to disk as a morphing target file.
 
@@ -337,16 +382,16 @@ def saveTranslationTarget(obj, targetPath, groupToSave=None, epsilon=0.001):
         will be written.
 
     groupToSave:
-        *faceGroup*. It's possible to save only the changes made to a specific part of the 
+        *faceGroup*. It's possible to save only the changes made to a specific part of the
         mesh object by indicating the face group to save.
 
     epsilon:
-        *float*. The distance that a vertex has to have been moved for it to be 
+        *float*. The distance that a vertex has to have been moved for it to be
         considered 'moved'
         by this function. The difference between the original vertex position and
         the current vertex position is compared to this value. If that difference is greater
-        than the value of epsilon, the vertex is considered to have been modified and will be 
-        saved in the output file as a morph target.   
+        than the value of epsilon, the vertex is considered to have been modified and will be
+        saved in the output file as a morph target.
 
     """
 
@@ -381,10 +426,10 @@ def saveTranslationTarget(obj, targetPath, groupToSave=None, epsilon=0.001):
 def resetObj(obj, update=None, calcNorm=None):
     """
     This function resets the positions of the vertices of an object to their original base positions.
-    
+
     Parameters
     ----------
-    
+
     obj:
         *3D object*. The object whose vertices are to be reset.
 

@@ -233,8 +233,10 @@ def readExpressionUnits(human, t0, t1):
         gui3d.app.progress(t, text="Reading expression %s" % name)
 
         shape = warpmodifier.compileWarpTarget(
-                'data/targets/expression/units/${ethnic}/${gender}_${age}/%s.target' % name,
-                "GenderAgeEthnic",
+                #'data/targets/expression/units/${ethnic}/${gender}_${age}/%s.target' % name,
+                #"GenderAgeEthnic",
+                'data/targets/expression/units/${ethnic}/%s.target' % name,
+                "Ethnic",
                 human,
                 "face")
 

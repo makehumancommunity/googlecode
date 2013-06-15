@@ -135,10 +135,20 @@ class WarpModifier (humanmodifier.SimpleModifier):
             self.fallback = humanmodifier.MacroModifier(tlabel, tname, tvar)
             break
 
+        self.remaps = {}
+        for ethnic in _warpGlobals.ethnics:
+            self.remaps[ethnic] = ethnic
+        for age in _warpGlobals.ages:
+            self.remaps[age] = age
+        for gender in _warpGlobals.genders:
+            self.remaps[gender] = gender
+
         self.bases = {}
         self.targetSpecs = {}
         if modtype == "GenderAge":
             self.setupBaseCharacters("Gender", "Age", "NoEthnic", "NoUniv", "NoUniv")
+        elif modtype == "Ethnic":
+            self.setupBaseCharacters("NoGender", "NoAge", "Ethnic", "NoUniv", "NoUniv")
         elif modtype == "GenderAgeEthnic":
             self.setupBaseCharacters("Gender", "Age", "Ethnic", "NoUniv", "NoUniv")
         elif modtype == "GenderAgeToneWeight":
@@ -150,25 +160,53 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
         for gender in _warpGlobals.baseCharacterParts[genders]:
             for age in _warpGlobals.baseCharacterParts[ages]:
-                for ethnic1 in _warpGlobals.baseCharacterParts[ethnics]:
-                    path1 = self.template
+                for ethnic in _warpGlobals.baseCharacterParts[ethnics]:
+                    path1 = str(self.template)
+                    key1 = ""
+                    factors1 = []
+                    base1 = "data/targets/macrodetails/"
 
-                    if ethnic1 is None:
-                        base1 = "data/targets/macrodetails/caucasian-%s-%s.target" % (gender, age)
-                        key1 = "%s-%s" % (gender, age)
-                        factors1 = [gender, age]
+                    if ethnic is None:
+                        base1 += "caucasian-"
+                        for e in _warpGlobals.ethnics:
+                            self.remaps[e] = "caucasian"
                     else:
-                        if ethnic1 == "caucasian":
-                            ethnic2 = "caucasian"
-                        else:
-                            ethnic2 = ethnic1
-                        base1 = "data/targets/macrodetails/%s-%s-%s.target" % (ethnic2, gender, age)
-                        key1 = "%s-%s-%s" % (ethnic1, gender, age)
-                        factors1 = [ethnic1, gender, age]
-                        path1 = path1.replace("${ethnic}", ethnic1)
+                        base1 += ethnic + "-"
+                        key1 += ethnic + "-"
+                        factors1.append(ethnic)
+                        path1 = path1.replace("${ethnic}", ethnic)
 
+                    if True:    # Hack for expressions
+                        for e in _warpGlobals.ethnics:
+                            self.remaps[e] = "caucasian"
+
+                    if gender is None:
+                        base1 += "female-"
+                        for g in _warpGlobals.genders:
+                            self.remaps[g] = "female"
+                    else:
+                        base1 += gender + "-"
+                        key1 += gender + "-"
+                        factors1.append(gender)
+                        path1 = path1.replace("${gender}", gender)
+
+                    if age is None:
+                        base1 += "young.target"
+                        for a in _warpGlobals.ages:
+                            self.remaps[a] = "young"
+                    else:
+                        base1 += age + ".target"
+                        key1 += age
+                        factors1.append(age)
+                        path1 = path1.replace("${age}", age)
+
+                    if key1[-1] == "-":
+                        key1 = key1[:-1]
                     self.bases[key1] = BaseSpec(base1, factors1)
-                    path1 = path1.replace("${gender}", gender).replace("${age}",age)
+                    self.targetSpecs[key1] = TargetSpec(path1, factors1)
+                    if gender is None or age is None:
+                        log.debug("Bases %s" % self.bases.items())
+                        return
 
                     for tone in _warpGlobals.baseCharacterParts[tones]:
                         for weight in _warpGlobals.baseCharacterParts[weights]:
@@ -277,13 +315,27 @@ class WarpModifier (humanmodifier.SimpleModifier):
     def makeRefTarget(self, human):
         self.refTargetVerts = {}
         madeRefTarget = False
-        factors = self.fallback.getFactors(human, 1.0)
-        print factors.keys()
+
+        factors = {}
+        for key,value in self.fallback.getFactors(human, 1.0).items():
+            try:
+                key1 = self.remaps[key]
+            except KeyError:
+                key1 = key
+            try:
+                factors[key1] += value
+            except KeyError:
+                factors[key1] = value
+            log.debug("  %s %s %s" % (key, key1, factors[key1]))
+        log.debug("Factors %s" % factors.items())
 
         for target in self.targetSpecs.values():
-            cval = reduce(mul, [factors[factor] for factor in target.factors])
-            if cval > 0:
-                log.debug("  reftrg %s %s", target.path, cval)
+            cval = 1.0
+            for factor in target.factors:
+                cval *= factors[factor]
+            log.debug("  reftrg %s %s", target.path, cval)
+            if cval > 1e-6:
+                log.debug("  ***")
                 madeRefTarget = True
                 verts = self.getRefTargetVertsInsist(target.path)
                 if verts is not None:
@@ -345,30 +397,16 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
 
     def getWarpTarget(self, human):
-        try:
-            target = algos3d.targetBuffer[self.warppath]
-        except KeyError:
-            target = None
-
+        target = algos3d.getWarpTarget(self.warppath)
         if target:
-            if not hasattr(target, "isWarp"):
-                log.message("Found non-warp target: %s. Deleted", target.name)
-                del algos3d.targetBuffer[self.warppath]
-                return None
-                #raise NameError("%s should be warp" % target)
             return target
-
         target = WarpTarget(self, human)
-        algos3d.targetBuffer[self.warppath] = target
+        algos3d.setWarpTarget(self.warppath, target)
         return target
 
 
     def removeTarget(self):
-        try:
-            target = algos3d.targetBuffer[self.warppath]
-        except KeyError:
-            return
-        del algos3d.targetBuffer[self.warppath]
+        algos3d.removeWarpTarget(self.warppath)
 
 
     def getRefObject(self, human):
@@ -473,10 +511,18 @@ class GlobalWarpData:
         self._warpedCoords = None
         self.dirty = False
 
+        self.ethnics = ["african", "asian", "caucasian"]
+        self.genders = ["female", "male"]
+        self.ages = ["baby", "child", "young", "old"]
+
         self.modifierTypes = {
             "GenderAge" : [
                 ("macrodetails", None, "Gender"),
                 ("macrodetails", None, "Age"),
+            ],
+            "Ethnic" : [
+                ("macrodetails", None, "African"),
+                ("macrodetails", None, "Asian"),
             ],
             "GenderAgeEthnic" : [
                 ("macrodetails", None, "Gender"),
@@ -495,7 +541,9 @@ class GlobalWarpData:
 
         self.baseCharacterParts = {
             "Gender" : ("male", "female"),
+            "NoGender" : [None],
             "Age" : ("child", "young", "old"),
+            "NoAge" : [None],
             "Ethnic" : ("caucasian", "african", "asian"),
             "NoEthnic" : [None],
             "Tone" : ("minmuscle", None, "maxmuscle"),
@@ -585,14 +633,14 @@ class GlobalWarpData:
         self.clearRefObject()
         self._refObjects = {}
 
-        for ethnic in ["african", "asian", "caucasian"]:
-            for age in ["baby", "child", "young", "old"]:
-                for gender in ["female", "male"]:
+        for ethnic in self.ethnics:
+            for age in self.ages:
+                for gender in self.genders:
                     path = "data/targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age)
                     self._refObjects[path] = None
 
-        for age in ["baby", "child", "young", "old"]:
-            for gender in ["female", "male"]:
+        for age in self.ages:
+            for gender in self.genders:
                 for tone in ["minmuscle", "maxmuscle"]:
                     path = "data/targets/macrodetails/universal-%s-%s-%s.target" % (gender, age, tone)
                     self._refObjects[path] = None
