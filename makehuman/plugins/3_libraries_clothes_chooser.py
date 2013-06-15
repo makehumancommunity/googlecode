@@ -250,12 +250,6 @@ class ClothesTaskView(gui3d.TaskView):
             return
 
         mat = mesh.material = proxy.material
-        if mat.diffuseTexture:
-            mesh.setTexture( self.getClothesTexture(mat.diffuseTexture) )
-        #if proxy.normal:
-        #    mesh.material.normalTexture = self.getClothesTexture(proxy.normal)
-        #if proxy.displacement:
-        #    mesh.material.displacementTexture = self.getClothesTexture(proxy.displacement)
 
         clo = gui3d.app.addObject(gui3d.Object(human.getPosition(), mesh))
         clo.setRotation(human.getRotation())
@@ -474,12 +468,6 @@ class ClothesTaskView(gui3d.TaskView):
     def syncMediaFinished(self):
 
         self.mediaSync = None
-
-
-    def getClothesTexture(self, filepath):
-        if not os.path.exists(filepath):
-            filepath = os.path.join(self.systemClothes, "textures", os.path.basename(filepath))
-        return filepath
 
 
 # This method is called when the plugin is loaded into makehuman
