@@ -210,31 +210,31 @@ class Material(object):
             if words[0] == "translucency":
                 self._translucency = max(0.0, min(1.0, float(words[1])))
             if words[0] == "diffuseTexture":
-                self._diffuseTexture = words[1]
+                self._diffuseTexture = getFilePath(words[1], self.filepath)
             if words[0] == "bumpmapTexture":
-                self._bumpMapTexture = words[1]
+                self._bumpMapTexture = getFilePath(words[1], self.filepath)
             if words[0] == "bumpmapIntensity":
                 self._bumpMapIntensity = max(0.0, min(1.0, float(words[1])))
             if words[0] == "normalmapTexture":
-                self._normalMapTexture = words[1]
+                self._normalMapTexture = getFilePath(words[1], self.filepath)
             if words[0] == "normalmapIntensity":
                 self._normalMapIntensity = max(0.0, min(1.0, float(words[1])))
             if words[0] == "displacementmapTexture":
-                self._displacementMapTexture = words[1]
+                self._displacementMapTexture = getFilePath(words[1], self.filepath)
             if words[0] == "displacementmapIntensity":
                 self._displacementMapIntensity = max(0.0, min(1.0, float(words[1])))
             if words[0] == "specularmapTexture":
-                self._specularMapTexture = words[1]
+                self._specularMapTexture = getFilePath(words[1], self.filepath)
             if words[0] == "specularmapIntensity":
                 self._specularMapIntensity = max(0.0, min(1.0, float(words[1])))
             if words[0] == "transparencymapTexture":
-                self._transparencyMapTexture = words[1]
+                self._transparencyMapTexture = getFilePath(words[1], self.filepath)
             if words[0] == "transparencymapIntensity":
                 self._transparencyMapIntensity = max(0.0, min(1.0, float(words[1])))
             if words[0] == "shader":
-                self._shader = words[1]
+                self._shader = getFilePath(words[1], self.filepath)
             if words[0] == "uvMap":
-                self._uvMap = words[1]
+                self._uvMap = getFilePath(words[1], self.filepath)
             if words[0] == "shaderParam":
                 if len(words) > 3:
                     self.setShaderParameter(words[1], words[2:])
@@ -694,21 +694,24 @@ def fromFile(filename):
     return mat
 
 def getFilePath(filename, folder = None):
+    if not filename:
+        return filename
+
     import os
 
     # Search within current folder
     if folder:
         path = os.path.join(folder, filename)
         if os.path.isfile(path):
-            return path
+            return os.path.abspath(path)
     # Treat as absolute path or search relative to application path
     if os.path.isfile(filename):
-        return filename
+        return os.path.abspath(filename)
     # Search in user data folder
     import mh
     userPath = os.path.join(mh.getPath(''), filename)
     if os.path.isfile(userPath):
-        return userPath
+        return os.path.abspath(userPath)
 
     # Nothing found
     return filename
