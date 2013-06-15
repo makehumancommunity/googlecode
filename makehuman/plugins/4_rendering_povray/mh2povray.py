@@ -840,13 +840,13 @@ def getHumanName():
 def invx(pos):
     return (-pos[0],pos[1],pos[2])
 
-def getImageFname(name, file, type = None)
+def getImageFname(name, file, type = None):
     out = str(name)
     if type is not None:
         out += '_' + type
     return out + os.path.splitext(file)[-1]
     
-def getImageDef(name, file, type = None)
+def getImageDef(name, file, type = None):
     out = str(name)
     if type is not None:
         out += '_' + type
