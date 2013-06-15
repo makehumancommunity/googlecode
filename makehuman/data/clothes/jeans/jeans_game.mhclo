@@ -1,33 +1,28 @@
 # author Jonas Hauquier
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid cd4e4e8c-3519-4dd6-b131-410e58a99026
-# basemesh alpha_7
-# tag Trousers
 
-# name Jeans_Game
-# obj_file jeans_game.obj
-# x_scale 3936 3972 1.4664
-# z_scale 3840 3957 1.6373
-# y_scale 14165 14175 8.8847
-# z_depth 40
-# backface_culling no
-# transparent no
-# uvtex_layer 0 Texture
-# uvtex_layer 1 Mask
-# objfile_layer 0
-# texture jeans_texture.png 0
-# mask jeans_mask.png 1
-# normal jeans_normal.png 0 1.000
-# displacement jeans_displacement.png 0 0.200
-# material JeansMaterial
-diffuse_color 0.0426 0.0557 0.2079
-diffuse_intensity 0.5
-specular_color 1.0000 1.0000 1.0000
-specular_intensity 0.0
-alpha 1.0
-# use_projection 0
-# verts 0
+name Jeans_Game
+uuid cd4e4e8c-3519-4dd6-b131-410e58a99026
+
+basemesh alpha_7
+tag Trousers
+
+obj_file jeans_game.obj
+material jeans.mhmat
+z_depth 40
+
+x_scale 3936 3972 1.4664
+z_scale 3840 3957 1.6373
+y_scale 14165 14175 8.8847
+use_projection 0
+
+backface_culling no
+transparent no
+
+mask_uv_layer 1
+
+verts 0
 16902 18087 18096 0.00859 0.60190 0.38951 0.00046 -0.00250 0.01470
 16843 16852 16582 0.60641 0.32536 0.06823 -0.00079 -0.00260 0.01532
 17949 17824 17825 0.58107 0.28925 0.12968 0.00176 -0.00104 0.00710
@@ -1044,7 +1039,7 @@ alpha 1.0
 18355 18322 18337 0.11774 0.40650 0.47576 -0.13155 -0.00846 0.14591
 17147 17132 17165 0.26070 0.62433 0.11497 0.17347 -0.01116 0.19240
 
-# delete_verts
+delete_verts
 2786 - 2849 2936 - 2941 2962 3476 - 3477 3523 - 3527 3713 3747 - 3749 3776 - 3989 4010 - 4070 
 4090 - 4091 4094 4096 - 4097 4100 - 4102 4105 4107 - 4108 4111 4113 - 4115 4197 - 4201 4473 - 4506 
 5655 - 5669 5673 5681 - 5688 5699 - 5714 5722 - 5724 6498 - 6499 6557 6563 6569 6575 

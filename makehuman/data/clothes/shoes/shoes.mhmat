@@ -1,6 +1,6 @@
-# Material definition for Jeans MakeHuman clothes
+# Material definition for MakeHuman shoes
 
-name JeansMaterial
+name ShoesMaterial
 
 // Color shading attributes
 ambientColor 1.0 1.0 1.0
@@ -13,21 +13,17 @@ emissiveColor 0.0 0.0 0.4
 opacity 1.0
 
 // Textures and properties
-diffuseTexture jeans_texture.png
-normalmapTexture jeans_normal.png
-normalmapIntensity 1.0
-displacementmapTexture jeans_displacement.png
-displacementmapIntensity 0.2
-transparencymapTexture jeans_mask.png
+diffuseTexture shoes_texture.png
+transparencymapTexture shoes_mask.png
 transparencymapIntensity 1.0
 
 // Shader programme
-shader data/shaders/glsl/normalmap
+shader data/shaders/glsl/phong
 
 // Configure built-in shader defines
 shaderConfig diffuse true
 shaderConfig bump false
-shaderConfig normal true
-shaderConfig displacement true
-shaderConfig spec true
+shaderConfig normal false
+shaderConfig displacement false
+shaderConfig spec false
 shaderConfig vertexColors true

@@ -1,25 +1,22 @@
 # author Jonas Hauquier
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 8894f8c4-f4a0-4103-b5f4-be5ff070d0be
-# basemesh alpha_7
-# tag Hat
 
-# name Fedora
-# obj_file fedora.obj
-# x_scale 4302 8697 1.2768
-# z_scale 8208 8220 1.8527
-# y_scale 8223 6827 1.8024
-# z_depth 100
-# backface_culling yes
-# uvtex_layer 0 UVMap
-# objfile_layer 0
-# texture fedora_texture.png 0
-# normal fedora_normal.png 0 1.000
-# displacement fedora_disp.png 0 0.200
-# material Fedora
-# use_projection 0
-# verts 0
+name Fedora
+uuid 8894f8c4-f4a0-4103-b5f4-be5ff070d0be
+basemesh alpha_7
+tag Hat
+
+obj_file fedora.obj
+material fedora.mhmat
+x_scale 4302 8697 1.2768
+z_scale 8208 8220 1.8527
+y_scale 8223 6827 1.8024
+z_depth 100
+backface_culling yes
+use_projection 0
+
+verts 0
  2203  2247  4271 0.09466 0.18886 0.71648 0.00976 0.01573 0.04092
  8719  8990  9020 0.62417 0.28065 0.09519 -0.01004 0.01617 0.04208
  9022  8208  8213 0.00000 0.05309 0.94691 -0.00293 0.01567 0.04355

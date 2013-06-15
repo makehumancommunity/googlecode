@@ -1,6 +1,6 @@
-# Material definition for Jeans MakeHuman clothes
+# Material definition for MakeHuman Jacket
 
-name JeansMaterial
+name Jacket_Medium_Material
 
 // Color shading attributes
 ambientColor 1.0 1.0 1.0
@@ -13,12 +13,12 @@ emissiveColor 0.0 0.0 0.4
 opacity 1.0
 
 // Textures and properties
-diffuseTexture jeans_texture.png
-normalmapTexture jeans_normal.png
+diffuseTexture jacket_texture.png
+normalmapTexture jacket_medium_normal.png
 normalmapIntensity 1.0
-displacementmapTexture jeans_displacement.png
+displacementmapTexture jacket_medium_disp.png
 displacementmapIntensity 0.2
-transparencymapTexture jeans_mask.png
+transparencymapTexture jacket_mask.png
 transparencymapIntensity 1.0
 
 // Shader programme

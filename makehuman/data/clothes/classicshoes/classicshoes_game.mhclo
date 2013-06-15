@@ -1,29 +1,23 @@
 # author Jonas Hauquier
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 949eda4a-5f01-4af9-be68-2bf8128d6388
-# basemesh alpha_7
-# tag Shoes
 
-# name ClassicShoes_game
-# obj_file classicshoes_game.obj
-# x_scale 4302 8697 1.3742
-# z_scale 8208 8220 2.0187
-# y_scale 8223 6827 1.9414
-# z_depth 50
-# backface_culling yes
-# uvtex_layer 0 Texture
-# objfile_layer 0
-# texture classicshoes_texture.png 0
-# mask classicshoes_mask.png 0
-# material ClassicShoes
-diffuse_color 0.1 0.1 0.1
-diffuse_intensity 0.5
-specular_color 1.0000 1.0000 1.0000
-specular_intensity 0.05
-alpha 1.0
-# use_projection 0
-# verts 0
+name ClassicShoes_game
+uuid 949eda4a-5f01-4af9-be68-2bf8128d6388
+basemesh alpha_7
+tag Shoes
+
+obj_file classicshoes_game.obj
+material classicshoes.mhmat
+x_scale 4302 8697 1.3742
+z_scale 8208 8220 2.0187
+y_scale 8223 6827 1.9414
+z_depth 50
+backface_culling yes
+objfile_layer 0
+use_projection 0
+
+verts 0
  5726     0     1 1.00000 0.00000 0.00000 0.20346 -0.22597 -0.18310
 13336     0     1 1.00000 0.00000 0.00000 -0.20346 -0.22597 -0.18310
  5096     0     1 1.00000 0.00000 0.00000 0.19419 -0.08413 0.17802
@@ -538,5 +532,4 @@ alpha 1.0
 13996 13687 13686 0.80377 0.13920 0.05703 -0.03075 -0.04464 -0.01371
 13677 13753 14003 0.19244 0.61076 0.19680 -0.03371 -0.04709 -0.01727
 13856 13862 13869 0.46506 0.36563 0.16931 -0.04246 -0.02865 0.01179
-
 

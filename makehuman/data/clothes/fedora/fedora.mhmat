@@ -1,6 +1,6 @@
-# Material definition for Jeans MakeHuman clothes
+# Material definition for MakeHuman Fedora
 
-name JeansMaterial
+name FedoraMaterial
 
 // Color shading attributes
 ambientColor 1.0 1.0 1.0
@@ -13,13 +13,11 @@ emissiveColor 0.0 0.0 0.4
 opacity 1.0
 
 // Textures and properties
-diffuseTexture jeans_texture.png
-normalmapTexture jeans_normal.png
+diffuseTexture fedora_texture.png
+normalmapTexture fedora_normal.png
 normalmapIntensity 1.0
-displacementmapTexture jeans_displacement.png
+displacementmapTexture fedora_disp.png
 displacementmapIntensity 0.2
-transparencymapTexture jeans_mask.png
-transparencymapIntensity 1.0
 
 // Shader programme
 shader data/shaders/glsl/normalmap
@@ -31,3 +29,4 @@ shaderConfig normal true
 shaderConfig displacement true
 shaderConfig spec true
 shaderConfig vertexColors true
+

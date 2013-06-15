@@ -1,24 +1,23 @@
 # author Jonas Hauquier
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 64269060-db2a-4658-99b7-34afaa82dee3
-# basemesh alpha_7
-# tag Shoes
 
-# name Shoes
-# obj_file shoes.obj
-# x_scale 4302 8697 1.3742
-# z_scale 8208 8220 2.0187
-# y_scale 8223 6827 1.9414
-# z_depth 50
-# backface_culling yes
-# uvtex_layer 0 Texture
-# objfile_layer 0
-# texture shoes_texture.png 0
-# mask shoes_mask.png 0
-# material Shoes
-# use_projection 0
-# verts 0
+name Shoes
+uuid 64269060-db2a-4658-99b7-34afaa82dee3
+basemesh alpha_7
+tag Shoes
+
+obj_file shoes.obj
+material shoes.mhmat
+x_scale 4302 8697 1.3742
+z_scale 8208 8220 2.0187
+y_scale 8223 6827 1.9414
+z_depth 50
+backface_culling yes
+objfile_layer 0
+use_projection 0
+
+verts 0
  4915  4697  4924 0.75659 0.10681 0.13660 0.09971 0.18888 0.06892
 13735 13962 13744 0.13660 0.10681 0.75659 -0.09971 0.18888 0.06892
  4934  4933  4932 0.03445 0.70367 0.26188 0.15790 0.14206 0.09053
