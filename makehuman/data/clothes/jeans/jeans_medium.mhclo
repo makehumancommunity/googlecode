@@ -1,30 +1,25 @@
 # author Jonas Hauquier
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 94e6691b-e1d6-4eb5-a1d9-bbb07ac6962e
-# basemesh alpha_7
-# tag Trousers
 
-# name Jeans_Medium
-# obj_file jeans_medium.obj
-# z_depth 40
-# uvtex_layer 0 Texture
-# uvtex_layer 1 Mask
-# backface_culling no
-# transparent no
-# objfile_layer 0
-# texture jeans_texture.png 0
-# mask jeans_mask.png 1
-# normal jeans_normal.png 0 1.000
-# displacement jeans_displacement.png 0 0.200
-# material JeansMaterial
-diffuse_color 0.0426 0.0557 0.2079
-diffuse_intensity 0.4667
-specular_color 1.0000 1.0000 1.0000
-specular_intensity 0.0
-alpha 1.0
-# use_projection 0
-# verts 0
+name Jeans_Medium
+uuid 94e6691b-e1d6-4eb5-a1d9-bbb07ac6962e
+
+basemesh alpha_7
+tag Trousers
+
+obj_file jeans_medium.obj
+material jeans.mhmat
+z_depth 40
+
+backface_culling no
+transparent no
+
+mask_uv_layer 1
+
+use_projection 0
+
+verts 0
 17826 18096 18087 0.00224 0.37539 0.62236 0.00065 -0.00214 0.01259
 16893 16902 18087 0.38836 0.15080 0.46084 0.00049 -0.00253 0.01581
 17826 18096 18087 0.03011 0.17616 0.79372 0.00118 -0.00389 0.02291
@@ -4021,7 +4016,7 @@ alpha 1.0
 18355 18322 18337 0.12596 0.38898 0.48506 -0.13297 -0.00855 0.14748
 17147 17132 17165 0.26275 0.61367 0.12358 0.17422 -0.01120 0.19323
 
-# delete_verts
+delete_verts
 2786 - 2849 2936 - 2941 2962 3476 - 3477 3523 - 3527 3713 3747 - 3749 3776 - 3989 4010 - 4070 
 4090 - 4091 4094 4096 - 4097 4100 - 4102 4105 4107 - 4108 4111 4113 - 4115 4197 - 4201 4473 - 4506 
 5655 - 5669 5673 5681 - 5688 5699 - 5714 5722 - 5724 6498 - 6499 6557 6563 6569 6575 

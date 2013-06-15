@@ -1,15 +1,17 @@
 # author Thomas Larsson
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 01d02c9b-c08a-493b-9106-7add473a5954
-# basemesh alpha8b
 
-# name A7_converter
-# obj_file a7_converter.obj
-# x_scale 3924 10589 3.2920
-# z_scale 1892 3946 2.1533
-# y_scale 1524 4370 6.7568
-# verts 0
+uuid 01d02c9b-c08a-493b-9106-7add473a5954
+basemesh alpha8b
+name A7_converter
+
+obj_file a7_converter.obj
+x_scale 3924 10589 3.2920
+z_scale 1892 3946 2.1533
+y_scale 1524 4370 6.7568
+
+verts 0
 13613 13612 13611 0.20671 0.41611 0.37718 0.00000 0.01120 -0.00000
 13608 13612 13613 0.37584 0.41744 0.20671 0.01110 0.00000 -0.00000
 13613 13612 13611 0.20671 0.41611 0.37718 0.00000 -0.06720 -0.00000

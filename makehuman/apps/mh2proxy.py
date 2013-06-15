@@ -29,7 +29,7 @@ import exportutils
 import log
 from collections import OrderedDict
 
-from material import Material
+import material
 
 _A7converter = None
 
@@ -134,36 +134,20 @@ class CProxy:
         self.transparent = False
         self.layer = layer
 
-        self.faces = []
-        self.texFaces = []
-        self.texVerts = []
-        self.texFacesLayers = {}
-        self.texVertsLayers = {}
+        self.uvLayers = {}
+
         self.useBaseMaterials = False
-        self.faceNumbers = []
         self.rig = None
         self.mask = None
 
-        self.material = Material(self.name + "Material")
-        """
-        self.texture = None
-        self.specular = None
-        self.bump = None
-        self.normal = None
-        self.displacement = None
-        self.transparency = None
-        self.specularStrength = 1.0
-        self.bumpStrength = 1.0
-        self.normalStrength = 1.0
-        self.dispStrength = 0.2
-        """
+        self.material = material.Material(self.name + "Material")
 
         self.obj_file = None
         self.material_file = None
+        self.mhxMaterial_file = None
         self.maskLayer = -1
         self.textureLayer = 0
-        self.objFileLayer = 0
-        self.uvtexLayerName = {0 : "UVTex"}
+        self.objFileLayer = 0   # TODO what is this used for?
 
         self.deleteGroups = []
         self.deleteVerts = None
@@ -352,15 +336,9 @@ class CMaterial:
 #    readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
 #
 
-doFaces = 2
-doMaterial = 3
-doTexVerts = 4
-doObjData = 5
-doWeights = 6
-doRefVerts = 7
-doFaceNumbers = 8
-doTexFaces = 9
-doDeleteVerts = 10
+doRefVerts = 1
+doWeights = 2
+doDeleteVerts = 3
 
 def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
     if not file:
@@ -370,7 +348,6 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
         pfile.file = file
     else:
         pfile = file
-    #print "Loading", pfile
     folder = os.path.realpath(os.path.expanduser(os.path.dirname(pfile.file)))
     objfile = None
 
@@ -381,9 +358,8 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
     if tmpl == None:
         log.error("*** Cannot open %s", pfile.file)
         return None
-        return CProxy(None, proxy.type, pfile.layer)
 
-    locations = {}
+    locations = {}  # TODO is this useful?
     tails = {}
     proxy = CProxy(pfile.file, pfile.type, pfile.layer)
     proxy.deleteVerts = numpy.zeros(len(obj.coord), bool)
@@ -395,165 +371,133 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
     status = 0
     vnum = 0
     for line in tmpl:
-        words= line.split()
+        words = line.split()
+
         if len(words) == 0:
+            # Reset status on empty line
+            #status = 0
+            continue
+
+        if words[0].startswith('#') or words[0].startswith('//'):
+            # Comment
+            continue
+
+        key = words[0]
+
+        if key == 'name':
+            proxy.name = " ".join(words[1:])
+        elif key == 'uuid':
+            proxy.uuid = " ".join(words[1:])
+        elif key == 'tag':
+            proxy.tags.append( " ".join(words[1:]) )
+        elif key == 'z_depth':
+            proxy.z_depth = int(words[1])
+
+        elif key == 'verts':
+            status = doRefVerts
+        elif key == 'weights':
+            status = doWeights
+            if proxy.weights == None:
+                proxy.weights = {}
+            weights = []
+            proxy.weights[words[1]] = weights
+        elif key == "delete_verts":
+            status = doDeleteVerts
+
+        elif key == 'obj_file':
+            proxy.obj_file = getFileName(folder, words[1], ".obj")
+        elif key == 'material':
+            matFile = getFileName(folder, words[1], ".mhmat")
+            proxy.material_file = matFile
+            proxy.material.fromFile(matFile)
+        elif key == 'mhx_material':
+            # Read .mhx material file (or only set a filepath reference to it)
+            # MHX material file is supposed to contain only shading parameters that are specific for blender export that are not stored in the .mhmat file
+            matFile = getFileName(folder, words[1], ".mhx")
+            proxy.mhxMaterial_file = matFile
+            #readMaterial(line, material, proxy, False)
             pass
+        elif key == 'useBaseMaterials':
+            proxy.useBaseMaterials = True
 
-        elif words[0] == '#':
-            theGroup = None
-            if len(words) == 1:
-                continue
-            key = words[1]
-            if key == 'verts':
-                status = doRefVerts
-            elif key == 'faces':
-                status = doFaces
-            elif key == 'weights':
-                status = doWeights
-                if proxy.weights == None:
-                    proxy.weights = {}
-                weights = []
-                proxy.weights[words[2]] = weights
-            elif key == 'material':
-                status = doMaterial
-                material.name = " ".join(words[2:])
-            elif key == 'useBaseMaterials':
-                proxy.useBaseMaterials = True
-            elif key == 'faceNumbers':
-                status = doFaceNumbers
-            elif key == 'texVerts':
-                status = doTexVerts
-                if len(words) > 2:
-                    layer = int(words[2])
-                else:
-                    layer = 0
-                proxy.texVerts = []
-                proxy.texVertsLayers[layer] = proxy.texVerts
-            elif key == 'texFaces':
-                status = doTexFaces
-                if len(words) > 2:
-                    layer = int(words[2])
-                else:
-                    layer = 0
-                proxy.texFaces = []
-                proxy.texFacesLayers[layer] = proxy.texFaces
-            elif key == 'name':
-                proxy.name = " ".join(words[2:])
-            elif key == 'uuid':
-                proxy.uuid = " ".join(words[2:])
-            elif key == 'tag':
-                proxy.tags.append( " ".join(words[2:]) )
-            elif key == 'z_depth':
-                proxy.z_depth = int(words[2])
-            elif key == 'wire':
-                proxy.wire = True
-            elif key == 'cage':
-                proxy.cage = True
-            elif key == 'x_scale':
-                proxy.xScaleData = getScaleData(words)
-                scales[0] = proxy.getScale(proxy.xScaleData, obj, 0)
-            elif key == 'y_scale':
-                proxy.yScaleData = getScaleData(words)
-                scales[1] = proxy.getScale(proxy.yScaleData, obj, 1)
-            elif key == 'z_scale':
-                proxy.zScaleData = getScaleData(words)
-                scales[2] = proxy.getScale(proxy.zScaleData, obj, 2)
-            elif key == 'use_projection':
-                useProjection = int(words[2])
-            elif key == 'ignoreOffset':
-                ignoreOffset = int(words[2])
-            elif key == 'delete':
-                proxy.deleteGroups.append(words[2])
-            elif key == 'delete_connected':
-                selectConnected(proxy, obj, int(words[2]))
-            elif key == "delete_verts":
-                status = doDeleteVerts
-            elif key == 'rig':
-                proxy.rig = getFileName(folder, words[2], ".rig")
-            elif key == 'mask':
-                proxy.mask = getFileName(folder, words[2], ".png")
-                if len(words) > 3:
-                    proxy.maskLayer = int(words[3])
+        elif key == 'backface_culling':
+            proxy.cull = words[1].lower() in ["1", "yes", "true", "enable", "enabled"]
+        elif key == 'transparent':
+            proxy.transparent = words[1].lower() in ["1", "yes", "true", "enable", "enabled"]
 
-            elif key == 'specular':
-                material.specularMapTexture = getFileName(folder, words[2], ".png")
-                if len(words) > 4:
-                    material.specularMapIntensity = float(words[4])
-            elif key == 'bump':
-                material.bumpMapTexture = getFileName(folder, words[2], ".png")
-                if len(words) > 4:
-                    material.bumpMapIntensity = float(words[4])
-            elif key == 'normal':
-                material.normalMapTexture = getFileName(folder, words[2], ".png")
-                if len(words) > 4:
-                    material.normalMapIntensity = float(words[4])
-            elif key == 'transparency':
-                material.transparencyTexture = getFileName(folder, words[2], ".png")
-            elif key == 'displacement':
-                material.displacementMapTexture = getFileName(folder, words[2], ".png")
-                if len(words) > 4:
-                    material.dispStrength = float(words[4])
-            elif key == 'texture':
-                material.diffuseTexture = getFileName(folder, words[2], ".png")
-                if len(words) > 3:
-                    proxy.textureLayer = int(words[3])
-
-            elif key == 'objfile_layer':
-                proxy.objFileLayer = int(words[2])
-            elif key == 'uvtex_layer':
-                proxy.uvtexLayerName[int(words[2])] = words[3]
-            elif key == 'material_file':
-                pass
-                #material_file = getFileName(folder, words[2], ".mhx")
-            elif key == 'obj_file':
-                proxy.obj_file = getFileName(folder, words[2], ".obj")
-            elif key == 'backface_culling':
-                proxy.cull = words[2].lower() in ["1", "yes", "true", "enable", "enabled"]
-            elif key == 'transparent':
-                proxy.transparent = words[2].lower() in ["1", "yes", "true", "enable", "enabled"]
-            elif key == 'clothing':
-                if len(words) > 3:
-                    clothingPiece = (words[2], words[3])
-                else:
-                    clothingPiece = (words[2], None)
-                proxy.clothings.append(clothingPiece)
-            elif key == 'transparencies':
-                uuid = words[2]
-                proxy.transparencies[uuid] = words[3].lower() in ["1", "yes", "true", "enable", "enabled"]
-            elif key == 'textures':
-                proxy.textures.append( (words[2], words[3]) )
-            elif key == 'subsurf':
-                levels = int(words[2])
-                if len(words) > 3:
-                    render = int(words[3])
-                else:
-                    render = levels+1
-                proxy.modifiers.append( ['subsurf', levels, render] )
-            elif key == 'shrinkwrap':
-                offset = float(words[2])
-                proxy.modifiers.append( ['shrinkwrap', offset] )
-            elif key == 'solidify':
-                thickness = float(words[2])
-                offset = float(words[3])
-                proxy.modifiers.append( ['solidify', thickness, offset] )
-            elif key == 'shapekey':
-                proxy.shapekeys.append( words[2] )
-            elif key == 'basemesh':
-                proxy.basemesh = words[2]
+        elif key == 'uvLayer':
+            if len(words) > 2:
+                layer = int(words[1])
+                uvFile = words[2]
             else:
-                pass
-                #print "Ignored proxy keyword", key
+                layer = 0
+                uvFile = words[1]
+            uvMap = material.UVMap(proxy.name+"UV"+str(layer))
+            uvMap.read(proxy.mesh, getFileName(folder, uvFile, ".mhuv"))
+            proxy.uvLayers[layer] = uvMap
 
-        elif status == doObjData:
-            if words[0] == 'vt':
-                newTexVert(1, words, proxy)
-            elif words[0] == 'f':
-                newFace(1, words, theGroup, proxy)
-            elif words[0] == 'g':
-                theGroup = words[1]
+        elif key == 'x_scale':
+            proxy.xScaleData = getScaleData(words)
+            scales[0] = proxy.getScale(proxy.xScaleData, obj, 0)
+        elif key == 'y_scale':
+            proxy.yScaleData = getScaleData(words)
+            scales[1] = proxy.getScale(proxy.yScaleData, obj, 1)
+        elif key == 'z_scale':
+            proxy.zScaleData = getScaleData(words)
+            scales[2] = proxy.getScale(proxy.zScaleData, obj, 2)
+        elif key == 'use_projection':
+            useProjection = int(words[1])
+        elif key == 'ignoreOffset':
+            ignoreOffset = int(words[1])
+        elif key == 'delete':
+            proxy.deleteGroups.append(words[1])
+        elif key == 'delete_connected':
+            selectConnected(proxy, obj, int(words[1]))
 
-        elif status == doFaceNumbers:
-            proxy.faceNumbers.append(line)
+        elif key == 'mask_uv_layer':
+            if len(words) > 1:
+                proxy.maskLayer = int(words[1])
+        elif key == 'texture_uv_layer':
+            if len(words) > 1:
+                proxy.textureLayer = int(words[1])
+
+        # TODO keep this costume stuff?
+        elif key == 'clothing':
+            if len(words) > 2:
+                clothingPiece = (words[1], words[2])
+            else:
+                clothingPiece = (words[1], None)
+            proxy.clothings.append(clothingPiece)
+        elif key == 'transparencies':
+            uuid = words[1]
+            proxy.transparencies[uuid] = words[2].lower() in ["1", "yes", "true", "enable", "enabled"]
+        elif key == 'textures':
+            proxy.textures.append( (words[1], words[2]) )
+
+        # Blender-only properties
+        elif key == 'wire':
+            proxy.wire = True
+        elif key == 'cage':
+            proxy.cage = True
+        elif key == 'subsurf':
+            levels = int(words[1])
+            if len(words) > 2:
+                render = int(words[2])
+            else:
+                render = levels+1
+            proxy.modifiers.append( ['subsurf', levels, render] )
+        elif key == 'shrinkwrap':
+            offset = float(words[1])
+            proxy.modifiers.append( ['shrinkwrap', offset] )
+        elif key == 'solidify':
+            thickness = float(words[1])
+            offset = float(words[2])
+            proxy.modifiers.append( ['solidify', thickness, offset] )
+        elif key == 'shapekey':
+            proxy.shapekeys.append( words[1] )
+        elif key == 'basemesh':
+            proxy.basemesh = words[1]
+
 
         elif status == doRefVerts:
             refVert = CProxyRefVert(obj, scales)
@@ -563,19 +507,6 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
             else:
                 refVert.fromTriple(words, vnum, proxy)
             vnum += 1
-
-        elif status == doFaces:
-            newFace(0, words, theGroup, proxy)
-
-        elif status == doTexVerts:
-            newTexVert(0, words, proxy)
-
-        elif status == doTexFaces:
-            newTexFace(words, proxy)
-
-        elif status == doMaterial:
-            pass
-            #readMaterial(line, material, proxy, False)
 
         elif status == doWeights:
             v = int(words[0])
@@ -597,6 +528,10 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
                         proxy.deleteVerts[v1] = True
                     v0 = v1
 
+        else:
+            pass
+            #print "Ignored proxy keyword", key
+
 
     if evalOnLoad and proxy.obj_file:
         if not copyObjFile(proxy):
@@ -612,6 +547,7 @@ def getFileName(folder, file, suffix):
         return os.path.join(folder, file+suffix)
 
 
+# TODO eliminate duplicate OBJ loaders, don't include OBJ data in .proxy files
 def copyObjFile(proxy):
     try:
         tmpl = open(proxy.obj_file, "rU")
@@ -640,9 +576,9 @@ def copyObjFile(proxy):
 
 
 def getScaleData(words):
-    v1 = int(words[2])
-    v2 = int(words[3])
-    den = float(words[4])
+    v1 = int(words[1])
+    v2 = int(words[2])
+    den = float(words[3])
     return (v1, v2, den)
 
 
