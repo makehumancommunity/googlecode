@@ -102,12 +102,7 @@ class HairTaskView(gui3d.TaskView):
             log.error("Failed to load %s", obj)
             return
 
-        mat = human.hairProxy.material
-        if mat.diffuseTexture:
-            mesh.setTexture(mat.diffuseTexture)
-        else:
-            tex = obj.replace('.obj', '_texture.png')
-            mesh.setTexture(tex)
+        mesh.material = human.hairProxy.material
 
         human.hairObj = gui3d.app.addObject(gui3d.Object(human.getPosition(), mesh))
         human.hairObj.setRotation(human.getRotation())
