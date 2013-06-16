@@ -74,13 +74,13 @@ def setSettings(context):
     else:
         print("Unknown mesh version with %d verts" % len(ob.data.vertices))
         ob.MhMeshVersion = ""
-        
+
 
 def getSettings(ob):
     return mt.settings[ob.MhMeshVersion]
 
 #----------------------------------------------------------
-#   
+#
 #----------------------------------------------------------
 
 def afterImport(context, filepath, deleteHelpers, useMaterials):
@@ -90,28 +90,28 @@ def afterImport(context, filepath, deleteHelpers, useMaterials):
     ob.MhUseMaterials = useMaterials
     setSettings(context)
     settings = getSettings(ob)
-    
+
     if ob.MhUseMaterials:
         addMaterial(ob, 0, "Skin", (1,1,1), (0, settings.nTotalVerts))
         addMaterial(ob, 1, "Tights", (1,0,0), settings.vertices["Tights"])
         addMaterial(ob, 2, "Joints", (0,1,0), settings.vertices["Joints"])
         addMaterial(ob, 3, "Skirt", (0,0,1), settings.vertices["Skirt"])
-        addMaterial(ob, 4, "Hair", (1,1,0), settings.vertices["Hair"])        
+        addMaterial(ob, 4, "Hair", (1,1,0), settings.vertices["Hair"])
         addMaterial(ob, 5, "Eyes", (0,1,1), settings.vertices["Eyes"])
         addMaterial(ob, 6, "Penis", (0.5,0,1), settings.vertices["Penis"])
         addMaterial(ob, 7, "UpTeeth", (0,0.5,1), settings.vertices["UpTeeth"])
         addMaterial(ob, 8, "LoTeeth", (0,0.5,0.5), settings.vertices["LoTeeth"])
         addMaterial(ob, 9, "Lashes", (1,0,1), settings.vertices["EyeLashes"])
         addMaterial(ob, 10, "Tongue", (0.5,0,0.5), settings.vertices["Tongue"])
-                    
+
     if ob.MhDeleteHelpers:
         affect = "Body"
     else:
         affect = "All"
     deleteIrrelevant(ob, affect)
-   
 
-def addMaterial(ob, index, name, color, verts):  
+
+def addMaterial(ob, index, name, color, verts):
     first,last = verts
     try:
         mat = bpy.data.materials[name]
@@ -171,8 +171,8 @@ class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
         ob["NTargets"] = 0
         ob["ProxyFile"] = 0
         ob["ObjFile"] =  0
-        ob["MhxMesh"] = True        
-        return{'FINISHED'}    
+        ob["MhxMesh"] = True
+        return{'FINISHED'}
 
 
 def deleteIrrelevant(ob, affect):
@@ -215,9 +215,9 @@ class VIEW3D_OT_DeleteIrrelevantButton(bpy.types.Operator):
     def execute(self, context):
         ob = context.object
         deleteIrrelevant(ob, ob.MhAffectOnly)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
- 
+
 class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
     bl_idname = "mh.load_target"
     bl_label = "Load Target File"
@@ -227,8 +227,8 @@ class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
     filename_ext = ".target"
     filter_glob = StringProperty(default="*.target", options={'HIDDEN'})
     filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for target file", 
+        name="File Path",
+        description="File path used for target file",
         maxlen= 1024, default= "")
 
     @classmethod
@@ -241,12 +241,12 @@ class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
         settings = getSettings(ob)
         if ob.MhMeshVertsDeleted:
             _,Comments = utils.loadTarget(
-                self.properties.filepath, 
-                context, 
-                irrelevant=settings.irrelevantVerts[ob.MhAffectOnly], 
+                self.properties.filepath,
+                context,
+                irrelevant=settings.irrelevantVerts[ob.MhAffectOnly],
                 offset=settings.offsetVerts[ob.MhAffectOnly])
         else:
-            _,Comments = utils.loadTarget(self.properties.filepath, context)       
+            _,Comments = utils.loadTarget(self.properties.filepath, context)
         print("Target loaded")
         return {'FINISHED'}
 
@@ -269,9 +269,9 @@ def loadTargetFromMesh(context):
             trg = ob1
             break
     if not trg:
-        raise NameError("Two meshes must be selected")        
+        raise NameError("Two meshes must be selected")
     bpy.ops.object.mode_set(mode='OBJECT')
-    
+
     scn.objects.active = trg
     bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
 
@@ -342,14 +342,16 @@ class VIEW3D_OT_NewTargetButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
+        global Comments
+        Comments = []
         newTarget(context)
         return {'FINISHED'}
 
 #----------------------------------------------------------
 #   saveTarget(context):
 #----------------------------------------------------------
-    
-def doSaveTarget(context, filepath):    
+
+def doSaveTarget(context, filepath):
     global Comments
     ob = context.object
     settings = getSettings(ob)
@@ -360,18 +362,18 @@ def doSaveTarget(context, filepath):
     if not checkValid(ob):
         return
     saveAll = not ob.SelectedOnly
-    skey = ob.active_shape_key    
+    skey = ob.active_shape_key
     if skey.name[0:6] == "Target":
         skey.name = utils.nameFromPath(filepath)
     verts = evalVertLocations(ob)
-    
+
     (fname,ext) = os.path.splitext(filepath)
     filepath = fname + ".target"
     print("Saving target %s to %s" % (ob, filepath))
     if False and ob.MhMeshVertsDeleted and ob.MhAffectOnly != 'All':
         first,last = settings.affectedVerts[ob.MhAffectOnly]
         before,after = readLines(filepath, first,last)
-        fp = open(filepath, "w", encoding="utf-8", newline="\n")  
+        fp = open(filepath, "w", encoding="utf-8", newline="\n")
         for line in before:
             fp.write(line)
         if ob.MhMeshVertsDeleted:
@@ -382,12 +384,27 @@ def doSaveTarget(context, filepath):
         for (vn, string) in after:
             fp.write("%d %s" % (vn, string))
     else:
-        fp = open(filepath, "w", encoding="utf-8", newline="\n") 
+        fp = open(filepath, "w", encoding="utf-8", newline="\n")
+        if Comments == []:
+            Comments = getDefaultComments()
         for line in Comments:
             fp.write(line)
         saveVerts(fp, ob, verts, saveAll, 0, len(verts), 0)
-    fp.close()    
+    fp.close()
     ob["FilePath"] = filepath
+
+
+def getDefaultComments():
+    filepath = os.path.expanduser("~/makehuman/settings/make_target.notice")
+    try:
+        fp = open(filepath, "rU")
+    except:
+        print("Could not open %s" % filepath)
+        return []
+    comments = []
+    for line in fp:
+        comments.append(line)
+    return comments
 
 
 def readLines(filepath, first, last):
@@ -407,8 +424,8 @@ def readLines(filepath, first, last):
                 after.append((vn, words[1]))
     fp.close()
     return before,after
-    
-    
+
+
 def saveVerts(fp, ob, verts, saveAll, first, last, offs):
     for n in range(first, last):
         vco = verts[n-offs]
@@ -417,25 +434,25 @@ def saveVerts(fp, ob, verts, saveAll, first, last, offs):
         if vec.length > Epsilon and (saveAll or bv.select):
             fp.write("%d %s %s %s\n" % (n, round(vec[0]), round(vec[2]), round(-vec[1])))
 
-          
-def evalVertLocations(ob):    
+
+def evalVertLocations(ob):
     verts = {}
     for v in ob.data.vertices:
         verts[v.index] = v.co.copy()
-        
+
     for skey in ob.data.shape_keys.key_blocks:
         if (skey.name == "Basis" or
             (ob.MhZeroOtherTargets and skey != ob.active_shape_key)):
             print("Skipped", skey.name)
-            continue       
+            continue
         print("Adding", skey.name)
         for n,v in enumerate(skey.data):
             bv = ob.data.vertices[n]
             vec = v.co - bv.co
             verts[n] += skey.value*vec
-    return verts            
+    return verts
 
-       
+
 class VIEW3D_OT_SaveTargetButton(bpy.types.Operator):
     bl_idname = "mh.save_target"
     bl_label = "Save Target"
@@ -457,7 +474,7 @@ class VIEW3D_OT_SaveTargetButton(bpy.types.Operator):
             mh.confirm = "mh.save_target"
             mh.confirmString = "Overwrite target file?"
             mh.confirmString2 = ' "%s?"' % os.path.basename(path)
-        return{'FINISHED'}            
+        return{'FINISHED'}
 
 
 class VIEW3D_OT_SaveasTargetButton(bpy.types.Operator, ExportHelper):
@@ -469,8 +486,8 @@ class VIEW3D_OT_SaveasTargetButton(bpy.types.Operator, ExportHelper):
     filename_ext = ".target"
     filter_glob = StringProperty(default="*.target", options={'HIDDEN'})
     filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for target file", 
+        name="File Path",
+        description="File path used for target file",
         maxlen= 1024, default= "")
 
     @classmethod
@@ -493,14 +510,14 @@ class VIEW3D_OT_SaveasTargetButton(bpy.types.Operator, ExportHelper):
 def applyTargets(context):
     ob = context.object
     bpy.ops.object.mode_set(mode='OBJECT')
-    verts = evalVertLocations(ob)   
+    verts = evalVertLocations(ob)
     utils.removeShapeKeys(ob)
     for prop in ob.keys():
         del ob[prop]
     for v in ob.data.vertices:
         v.co = verts[v.index]
     return
-    
+
 
 class VIEW3D_OT_ApplyTargetsButton(bpy.types.Operator):
     bl_idname = "mh.apply_targets"
@@ -514,10 +531,10 @@ class VIEW3D_OT_ApplyTargetsButton(bpy.types.Operator):
 
     def execute(self, context):
         applyTargets(context)
-        return{'FINISHED'}            
+        return{'FINISHED'}
 
 #----------------------------------------------------------
-#   
+#
 #----------------------------------------------------------
 
 def pruneTarget(ob, filepath):
@@ -529,13 +546,13 @@ def pruneTarget(ob, filepath):
             lines.append((vn, string))
     print("Pruning", len(before), len(after), len(lines))
     fp = open(filepath, "w", encoding="utf-8", newline="\n")
-    for vn,string in lines:            
+    for vn,string in lines:
         fp.write(str(vn) + " " + string)
     fp.close()
 
 
-def pruneFolder(ob, folder):            
-    for file in os.listdir(folder):    
+def pruneFolder(ob, folder):
+    for file in os.listdir(folder):
         path = os.path.join(folder, file)
         if os.path.isdir(path):
             if ob.MhPruneRecursively:
@@ -556,8 +573,8 @@ class VIEW3D_OT_PruneTargetFileButton(bpy.types.Operator, ExportHelper):
     filename_ext = ".target"
     filter_glob = StringProperty(default="*.target", options={'HIDDEN'})
     filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for target file", 
+        name="File Path",
+        description="File path used for target file",
         maxlen= 1024, default= "")
 
     @classmethod
@@ -588,18 +605,18 @@ def batchFitTargets(context, folder):
     print("Batch", folder)
     for fname in os.listdir(folder):
         (root, ext) = os.path.splitext(fname)
-        file = os.path.join(folder, fname)        
+        file = os.path.join(folder, fname)
         if os.path.isfile(file) and ext == ".target":
-            print(file)                        
-            _,Comments = utils.loadTarget(file, context)        
+            print(file)
+            _,Comments = utils.loadTarget(file, context)
             fitTarget(context)
             doSaveTarget(context, file)
-            discardTarget(context)  
+            discardTarget(context)
         elif os.path.isdir(file):
             batchFitTargets(context, file)
-    return            
+    return
 
-            
+
 class VIEW3D_OT_BatchFitButton(bpy.types.Operator):
     bl_idname = "mh.batch_fit"
     bl_label = "Batch Fit Targets"
@@ -617,7 +634,7 @@ class VIEW3D_OT_BatchFitButton(bpy.types.Operator):
             mh.confirmString = "Really batch fit targets?"
             mh.confirmString2 = None
             mh.confirm = "mh.batch_fit"
-            return {'FINISHED'} 
+            return {'FINISHED'}
         mh.confirm = None
         folder = os.path.realpath(os.path.expanduser(scn.MhTargetPath))
         batchFitTargets(context, folder)
@@ -625,8 +642,8 @@ class VIEW3D_OT_BatchFitButton(bpy.types.Operator):
         #    if scn["Mh%s" % subfolder]:
         #        batchFitTargets(context, os.path.join(folder, subfolder))
         print("All targets fited")
-        return {'FINISHED'}            
- 
+        return {'FINISHED'}
+
 #----------------------------------------------------------
 #   batch render
 #----------------------------------------------------------
@@ -636,19 +653,19 @@ def batchRenderTargets(context, folder, opengl, outdir):
     print("Batch render", folder)
     for fname in os.listdir(folder):
         (root, ext) = os.path.splitext(fname)
-        file = os.path.join(folder, fname)        
+        file = os.path.join(folder, fname)
         if os.path.isfile(file) and ext == ".target":
-            print(file)                    
+            print(file)
             context.scene.render.filepath = os.path.join(outdir, root)
-            _,Comments = utils.loadTarget(file, context)        
+            _,Comments = utils.loadTarget(file, context)
             if opengl:
                 bpy.ops.render.opengl(animation=True)
             else:
                 bpy.ops.render.render(animation=True)
-            discardTarget(context)  
+            discardTarget(context)
         elif os.path.isdir(file):
             batchRenderTargets(context, file, opengl, outdir)
-    return            
+    return
 
 
 class VIEW3D_OT_BatchRenderButton(bpy.types.Operator):
@@ -666,7 +683,7 @@ class VIEW3D_OT_BatchRenderButton(bpy.types.Operator):
         global TargetSubPaths
         scn = context.scene
         folder = os.path.expanduser(scn.MhTargetPath)
-        outdir = os.path.expanduser("~/makehuman/pictures/")        
+        outdir = os.path.expanduser("~/makehuman/pictures/")
         if not os.path.isdir(outdir):
             os.makedirs(outdir)
         scn.frame_start = 1
@@ -675,8 +692,8 @@ class VIEW3D_OT_BatchRenderButton(bpy.types.Operator):
             if scn["Mh%s" % subfolder]:
                 batchRenderTargets(context, os.path.join(folder, subfolder), self.opengl, outdir)
         print("All targets rendered")
-        return {'FINISHED'}            
-        
+        return {'FINISHED'}
+
 #----------------------------------------------------------
 #   fitTarget(context):
 #----------------------------------------------------------
@@ -720,8 +737,8 @@ class VIEW3D_OT_FitTargetButton(bpy.types.Operator):
 
     def execute(self, context):
         fitTarget(context)
-        return{'FINISHED'}      
-        
+        return{'FINISHED'}
+
 #----------------------------------------------------------
 #   discardTarget(context):
 #----------------------------------------------------------
@@ -738,14 +755,14 @@ def discardTarget(context):
     checkValid(ob)
     return
 
-    
+
 def discardAllTargets(context):
     ob = context.object
     while utils.isTarget(ob):
         discardTarget(context)
     return
-    
-    
+
+
 def checkValid(ob):
     nShapes = utils.shapeKeyLen(ob)
     if nShapes != ob["NTargets"]+1:
@@ -766,7 +783,7 @@ class VIEW3D_OT_DiscardTargetButton(bpy.types.Operator):
 
     def execute(self, context):
         discardTarget(context)
-        return{'FINISHED'}                
+        return{'FINISHED'}
 
 
 class VIEW3D_OT_DiscardAllTargetsButton(bpy.types.Operator):
@@ -781,7 +798,7 @@ class VIEW3D_OT_DiscardAllTargetsButton(bpy.types.Operator):
 
     def execute(self, context):
         discardAllTargets(context)
-        return{'FINISHED'}                
+        return{'FINISHED'}
 
 #----------------------------------------------------------
 # symmetrizeTarget(context, left2right, mirror):
@@ -792,13 +809,13 @@ class CPairing:
     def __init__(self):
         self.left = {}
         self.right = {}
-        self.mid = {}        
+        self.mid = {}
         self.epsilon = 1e-3
         self.verts = []
         self.nmax = 0
         self.notfound = []
-    
-    
+
+
     def setup(self, context, insist):
         if self.left.keys() and not insist:
             print("Vertex pair already set up")
@@ -810,9 +827,9 @@ class CPairing:
             y = v.co[1]
             z = v.co[2]
             self.verts.append((z,y,x,v.index))
-        self.verts.sort()     
+        self.verts.sort()
         self.nmax = len(self.verts)
-    
+
         self.left = {}
         self.right = {}
         self.mid = {}
@@ -820,8 +837,8 @@ class CPairing:
         for n,data in enumerate(self.verts):
             (z,y,x,vn) = data
             self.findMirrorVert(n, vn, x, y, z)
-    
-        if self.notfound:            
+
+        if self.notfound:
             print("Did not find mirror image for vertices:")
             for n,vn,x,y,z in self.notfound:
                 print("  %d at (%.4f %.4f %.4f)" % (vn, x, y, z))
@@ -829,8 +846,8 @@ class CPairing:
         print("left-right-mid", len(self.left), len(self.right), len(self.mid))
         return self
 
-    
-    def findMirrorVert(self, n, vn, x, y, z):        
+
+    def findMirrorVert(self, n, vn, x, y, z):
         n1 = n - 20
         n2 = n + 20
         if n1 < 0: n1 = 0
@@ -852,8 +869,8 @@ class CPairing:
         bpy.ops.object.mode_set(mode='OBJECT')
         for n,vn,x,y,z in self.notfound:
             ob.data.vertices[vn].select = True
-        return    
-    
+        return
+
 
     def findVert(self, n, verts, v, x, y, z):
         for (z1,y1,x1,v1) in verts:
@@ -863,9 +880,9 @@ class CPairing:
             dist = math.sqrt(dx*dx + dy*dy + dz*dz)
             if dist < self.epsilon:
                 return v1
-        if abs(x) > self.epsilon:            
+        if abs(x) > self.epsilon:
             self.notfound.append((n,v,x,y,z))
-        return -1            
+        return -1
 
 
 def symmetrizeTarget(context, left2right, mirror):
@@ -876,11 +893,11 @@ def symmetrizeTarget(context, left2right, mirror):
         return
     bpy.ops.object.mode_set(mode='OBJECT')
     verts = ob.active_shape_key.data
-    
+
     for vn in pairing.mid.keys():
         v = verts[vn]
         v.co[0] = 0
-        
+
     for (lvn,rvn) in pairing.left.items():
         lv = verts[lvn].co
         rv = verts[rvn].co
@@ -897,7 +914,7 @@ def symmetrizeTarget(context, left2right, mirror):
             lv[1] = rv[1]
             lv[2] = rv[2]
 
-    bverts = ob.data.vertices    
+    bverts = ob.data.vertices
     selected = {}
     for v in bverts:
         selected[v.index] = v.select
@@ -905,7 +922,7 @@ def symmetrizeTarget(context, left2right, mirror):
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
-        
+
     for vn in pairing.mid.keys():
         bverts[vn].select = selected[vn]
 
@@ -932,10 +949,10 @@ class VIEW3D_OT_SymmetrizeTargetButton(bpy.types.Operator):
     action = StringProperty()
 
     def execute(self, context):
-        
+
         symmetrizeTarget(context, (self.action=="Right"), (self.action=="Mirror"))
-        return{'FINISHED'}                
-                        
+        return{'FINISHED'}
+
 #----------------------------------------------------------
 #   Snapping
 #----------------------------------------------------------
@@ -964,14 +981,14 @@ class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
             halt
         bpy.ops.object.mode_set(mode='OBJECT')
         skey = ob.data.shape_keys.key_blocks[-1]
-        verts = skey.data        
+        verts = skey.data
         for n in range(nVerts):
             verts[settings.skirtWaist[n]-offset].co = verts[settings.tightsWaist[n]-offset].co
 
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='OBJECT')
-        return{'FINISHED'}            
+        return{'FINISHED'}
 
 
 class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
@@ -1008,7 +1025,7 @@ class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
             for vn in col:
                 verts[vn-offset].co[0] = x
                 verts[vn-offset].co[1] = y
-                
+
         for row in settings.ZSkirtRows:
             zsum = 0.0
             for vn in row:
@@ -1016,11 +1033,11 @@ class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
             z = zsum/len(row)
             for vn in row:
                 verts[vn-offset].co[2] = z
-                
+
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='OBJECT')
-        return{'FINISHED'}            
+        return{'FINISHED'}
 
 
 #----------------------------------------------------------
@@ -1043,7 +1060,7 @@ class VIEW3D_OT_FixInconsistencyButton(bpy.types.Operator):
 
     def execute(self, context):
         fixInconsistency(context)
-        return{'FINISHED'}            
+        return{'FINISHED'}
 
 class VIEW3D_OT_SkipButton(bpy.types.Operator):
     bl_idname = "mh.skip"
@@ -1052,7 +1069,7 @@ class VIEW3D_OT_SkipButton(bpy.types.Operator):
 
     def execute(self, context):
         utils.skipConfirm()
-        return{'FINISHED'}           
+        return{'FINISHED'}
 
 #----------------------------------------------------------
 #   Init
@@ -1063,17 +1080,17 @@ def init():
 
     bpy.types.Object.MhDeleteHelpers = BoolProperty(name="Delete Helpers", default = False)
     bpy.types.Object.MhUseMaterials = BoolProperty(name="Use Materials", default = False)
-    
+
     bpy.types.Object.MhPruneWholeDir = BoolProperty(name="Prune Entire Directory", default = False)
     bpy.types.Object.MhPruneEnabled = BoolProperty(name="Pruning Enabled", default = False)
     bpy.types.Object.MhPruneRecursively = BoolProperty(name="Prune Folders Recursively", default = False)
 
     bpy.types.Object.MhFilePath = StringProperty(default = "")
     bpy.types.Object.MhMeshVersion = StringProperty(default = "None")
-    
+
     #bpy.types.Object.MhTightsOnly = BoolProperty(default = False)
     #bpy.types.Object.MhSkirtOnly = BoolProperty(default = False)
-                 
+
     bpy.types.Object.MhAffectOnly = EnumProperty(
         items = [('Body','Body','Body'),
                  ('Tights','Tights','Tights'),
@@ -1081,7 +1098,7 @@ def init():
                  ('Hair','Hair','Hair'),
                  ('All','All','All')],
     default='All')
-    
+
     bpy.types.Object.MhIrrelevantDeleted = BoolProperty(name="Irrelevant deleted", default = False)
     bpy.types.Object.MhMeshVertsDeleted = BoolProperty(name="Cannot load", default = False)
 
@@ -1096,15 +1113,15 @@ def initBatch():
     TargetSubPaths = []
     folder = os.path.realpath(os.path.expanduser(scn.MhTargetPath))
     for fname in os.listdir(folder):
-        file = os.path.join(folder, fname)        
+        file = os.path.join(folder, fname)
         if os.path.isdir(file) and fname[0] != ".":
             TargetSubPaths.append(fname)
             expr = 'bpy.types.Scene.Mh%s = BoolProperty(name="%s")' % (fname,fname)
             exec(expr)
             scn["Mh%s" % fname] = False
-    return  
+    return
 
-    
+
 def isInited(scn):
     return True
     try:
@@ -1112,8 +1129,8 @@ def isInited(scn):
         scn.MhTargetPath
         return True
     except:
-        return False    
-        
+        return False
+
 
 class VIEW3D_OT_InitButton(bpy.types.Operator):
     bl_idname = "mh.init"
@@ -1127,5 +1144,5 @@ class VIEW3D_OT_InitButton(bpy.types.Operator):
 
     def execute(self, context):
         initScene(context.scene)
-        return{'FINISHED'}                
+        return{'FINISHED'}
 

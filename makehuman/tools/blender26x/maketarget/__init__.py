@@ -26,7 +26,7 @@
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.11",
+    "version": "1.12",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -36,7 +36,7 @@ bl_info = {
 
 if "bpy" in locals():
     print("Reloading maketarget")
-    import imp    
+    import imp
     imp.reload(mh_utils)
     imp.reload(utils)
     imp.reload(mt)
@@ -58,7 +58,7 @@ else:
     from . import convert
     from . import pose
     from . import export_mh_obj
-     
+
 Thomas = False
 
 #----------------------------------------------------------
@@ -70,11 +70,11 @@ class ConvertTargetPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
-    
+
     def draw(self, context):
         layout = self.layout
         scn = context.scene
-        
+
         layout.operator("mh.set_target_dir")
         layout.prop(scn, "MhTargetDir", text="")
 
@@ -83,7 +83,7 @@ class ConvertTargetPanel(bpy.types.Panel):
         layout.operator("mh.set_source_target")
         layout.prop(scn, "MhSourceTarget", text="")
         layout.operator("mh.convert_target")
-        
+
         return
 
         #layout.separator()
@@ -107,7 +107,7 @@ class MakeTargetPanel(bpy.types.Panel):
     bl_label = "Make Target  Version %s" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    
+
     def draw(self, context):
         layout = self.layout
         ob = context.object
@@ -135,8 +135,8 @@ class MakeTargetPanel(bpy.types.Panel):
         elif utils.isBase(ob):
             layout.label("Load Target")
             layout.operator("mh.new_target")
-            layout.operator("mh.load_target")            
-            layout.operator("mh.load_target_from_mesh")                        
+            layout.operator("mh.load_target")
+            layout.operator("mh.load_target_from_mesh")
 
         elif utils.isTarget(ob):
             if not ob.data.shape_keys:
@@ -161,8 +161,8 @@ class MakeTargetPanel(bpy.types.Panel):
 
             layout.label("Load Target")
             layout.operator("mh.new_target", text="New Secondary Target")
-            layout.operator("mh.load_target", text="Load Secondary From File")            
-            layout.operator("mh.load_target_from_mesh", text="Load Secondary From Mesh")    
+            layout.operator("mh.load_target", text="Load Secondary From File")
+            layout.operator("mh.load_target_from_mesh", text="Load Secondary From Mesh")
             ext = os.path.splitext(ob.MhFilePath)[1]
             if ext == ".mhclo":
                 layout.operator("mh.fit_target")
@@ -173,31 +173,31 @@ class MakeTargetPanel(bpy.types.Panel):
             layout.operator("mh.apply_targets")
 
             layout.label("Symmetry")
-            row = layout.row()            
+            row = layout.row()
             row.operator("mh.symmetrize_target", text="Left->Right").action = "Left"
             row.operator("mh.symmetrize_target", text="Right->Left").action = "Right"
             if Thomas:
                 row.operator("mh.symmetrize_target", text="Mirror").action = "Mirror"
 
-            layout.label("Save Target")            
+            layout.label("Save Target")
             layout.prop(ob, "SelectedOnly")
             layout.prop(ob, "MhZeroOtherTargets")
             if ob["FilePath"]:
-                layout.operator("mh.save_target")           
-            layout.operator("mh.saveas_target")       
+                layout.operator("mh.save_target")
+            layout.operator("mh.saveas_target")
 
             if not ob.MhDeleteHelpers:
                 layout.label("Skirt Editing")
                 layout.operator("mh.snap_waist")
-                layout.operator("mh.straighten_skirt")            
+                layout.operator("mh.straighten_skirt")
                 if ob.MhIrrelevantDeleted:
                     layout.separator()
                     layout.label("Only %s Affected" % ob.MhAffectOnly)
                 else:
                     layout.label("Affect Only:")
                     layout.prop(ob, "MhAffectOnly", expand=True)
-                    #layout.operator("mh.delete_irrelevant")  
-                
+                    #layout.operator("mh.delete_irrelevant")
+
 
         if rig and rig.type == 'ARMATURE':
             layout.separator()
@@ -215,7 +215,7 @@ class MakeTargetPanel(bpy.types.Panel):
             layout.label("Convert between rig weights")
             layout.prop(scn, "MhSourceRig")
             layout.prop(scn, "MhTargetRig")
-            layout.prop(scn, "MhPoseTargetDir")            
+            layout.prop(scn, "MhPoseTargetDir")
             layout.operator("mh.convert_rig")
 
 #----------------------------------------------------------
@@ -227,11 +227,11 @@ class MakeTargetBatchPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
-    
+
     @classmethod
     def poll(self, context):
         return context.scene.MhUnlock and maketarget.isInited(context.scene)
-        
+
     def draw(self, context):
         if utils.isBase(context.object):
             layout = self.layout
@@ -242,13 +242,13 @@ class MakeTargetBatchPanel(bpy.types.Panel):
             layout.operator("mh.batch_fix")
             layout.operator("mh.batch_render", text="Batch Render").opengl = False
             layout.operator("mh.batch_render", text="Batch OpenGL Render").opengl = True
-  
+
 #----------------------------------------------------------
 #   class ExportObj(bpy.types.Operator, ExportHelper):
 #----------------------------------------------------------
 
 class ExportObj(bpy.types.Operator, ExportHelper):
-    '''Export to OBJ file format (.obj)''' 
+    '''Export to OBJ file format (.obj)'''
     bl_idname = "mh.export_obj"
     bl_description = 'Export to OBJ file format (.obj)'
     bl_label = "Export MH OBJ"
@@ -258,17 +258,17 @@ class ExportObj(bpy.types.Operator, ExportHelper):
     filename_ext = ".obj"
     filter_glob = StringProperty(default="*.obj", options={'HIDDEN'})
     filepath = StringProperty(name="File Path", description="File path for the exported OBJ file", maxlen= 1024, default= "")
-    
+
     groupsAsMaterials = BoolProperty(name="Groups as materials", default=False)
- 
-    def execute(self, context):        
+
+    def execute(self, context):
         export_mh_obj.exportObjFile(self.properties.filepath, self.groupsAsMaterials, context)
         return {'FINISHED'}
- 
+
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
- 
+
 #----------------------------------------------------------
 #   Settings buttons
 #----------------------------------------------------------
@@ -279,7 +279,7 @@ class OBJECT_OT_FactorySettingsButton(bpy.types.Operator):
 
     def execute(self, context):
         mh_utils.settings.restoreFactorySettings(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 
 class OBJECT_OT_SaveSettingsButton(bpy.types.Operator):
@@ -288,7 +288,7 @@ class OBJECT_OT_SaveSettingsButton(bpy.types.Operator):
 
     def execute(self, context):
         mh_utils.settings.saveDefaultSettings(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 
 class OBJECT_OT_ReadSettingsButton(bpy.types.Operator):
@@ -297,7 +297,7 @@ class OBJECT_OT_ReadSettingsButton(bpy.types.Operator):
 
     def execute(self, context):
         mh_utils.settings.readDefaultSettings(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #----------------------------------------------------------
 #   Register
@@ -305,7 +305,7 @@ class OBJECT_OT_ReadSettingsButton(bpy.types.Operator):
 
 def menu_func(self, context):
     self.layout.operator(ExportObj.bl_idname, text="MakeHuman OBJ (.obj)...")
- 
+
 def register():
     mh_utils.init()
     maketarget.init()
@@ -317,10 +317,10 @@ def register():
         pass
     bpy.utils.register_module(__name__)
     bpy.types.INFO_MT_file_export.append(menu_func)
-  
+
 def unregister():
     bpy.utils.unregister_module(__name__)
     bpy.types.INFO_MT_file_export.remove(menu_func)
- 
+
 if __name__ == "__main__":
     register()
