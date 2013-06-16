@@ -1,32 +1,21 @@
 # author Manuel Bastioni
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# name afro
-# uuid 718dc1a5-f357-4a5a-abcf-55d4c1737f7d
-# subsurf 1 1
-# texture afro_texture.png
-# material afro
-diffuse_intensity 0.8
-specular_intensity 0.0
-specular_hardness 1
-use_shadows 1
-use_transparent_shadows 1
-use_raytrace 1
-use_transparency 1
-alpha 0.0
-specular_alpha 0.0
-use_map_color_diffuse 1
-use_map_alpha 1
-use_alpha 1
-diffuse_color_factor 1.0
-alpha_factor 1.0
-# transparent yes
-# obj_file afro.obj
-# x_scale 4302 8697 1.4986
-# z_scale 8208 8220 1.9328
-# y_scale 8289 8223 1.9968
-# use_projection 0
-# verts
+
+uuid 718dc1a5-f357-4a5a-abcf-55d4c1737f7d
+name afro
+
+subsurf 1 1
+
+transparent yes
+obj_file afro.obj
+material afro.mhmat
+x_scale 4302 8697 1.4986
+z_scale 8208 8220 1.9328
+y_scale 8289 8223 1.9968
+use_projection 0
+
+verts
  8220  8600  8226 0.58270 0.00596 0.41134 -0.00047 0.00379 -0.02653
  8666  8220  8194 -0.00352 0.87689 0.12663 -0.00036 -0.00135 -0.02360
  8666  8220  8194 -0.00349 0.10743 0.89606 -0.00036 -0.00134 -0.02342

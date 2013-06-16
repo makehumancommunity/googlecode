@@ -1,32 +1,22 @@
 # author Manuel Bastioni
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# name curly
-# uuid a1dcdb86-4506-4368-bb7a-a208acf89b30
-# subsurf 1 1
-# texture curly_texture.png
-# material curly
-diffuse_intensity 0.8
-specular_intensity 0.0
-specular_hardness 1
-use_shadows 1
-use_transparent_shadows 1
-use_raytrace 1
-use_transparency 1
-alpha 0.0
-specular_alpha 0.0
-use_map_color_diffuse 1
-use_map_alpha 1
-use_alpha 1
-diffuse_color_factor 1.0
-alpha_factor 1.0
-# transparent yes
-# obj_file curly.obj
-# x_scale 4302 8697 1.4986
-# z_scale 8208 8220 1.9328
-# y_scale 8289 8223 1.9968
-# use_projection 0
-# verts
+
+uuid a1dcdb86-4506-4368-bb7a-a208acf89b30
+name curly
+
+subsurf 1 1
+
+transparent yes
+
+obj_file curly.obj
+material curly.mhmat
+x_scale 4302 8697 1.4986
+z_scale 8208 8220 1.9328
+y_scale 8289 8223 1.9968
+use_projection 0
+
+verts
  8225  4389  8227 0.71874 0.23697 0.04429 0.00996 0.12219 -0.08573
  4382  4388  4389 0.00537 0.55678 0.43785 0.02267 0.17320 -0.05497
  4381  4387  4388 0.07436 0.35973 0.56591 0.02421 0.10651 -0.03471

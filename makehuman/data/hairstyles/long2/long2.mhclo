@@ -1,33 +1,23 @@
 # author Manuel Bastioni
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# name HairLong
-# uuid 96b009a8-119f-4e46-a6da-f5ab791dc305
-# subsurf 1 1
-# rig long2.rig
-# texture long2_texture.png
-# material long2
-diffuse_intensity 0.8
-specular_intensity 0.0
-specular_hardness 1
-use_shadows 1
-use_transparent_shadows 1
-use_raytrace 0
-use_transparency 1
-alpha 0.0
-specular_alpha 0.0
-use_map_color_diffuse 1
-use_map_alpha 1
-use_alpha 1
-# transparent yes
-diffuse_color_factor 1.0
-alpha_factor 1.0
-# obj_file long2.obj
-# x_scale 4302 8697 1.4986
-# z_scale 8208 8220 1.9328
-# y_scale 8289 8223 1.9968
-# use_projection 0
-# verts
+
+uuid 96b009a8-119f-4e46-a6da-f5ab791dc305
+name HairLong
+
+subsurf 1 1
+
+rig long2.rig
+
+obj_file long2.obj
+material long2.mhmat
+x_scale 4302 8697 1.4986
+z_scale 8208 8220 1.9328
+y_scale 8289 8223 1.9968
+
+use_projection 0
+
+verts
  2235  2237  2494 -0.04608 0.71379 0.33229 0.14537 -0.06944 0.17965
  4338  4339  4341 -0.10665 -0.11892 1.22557 0.65116 -0.25513 0.29903
  2494  4210  4337 0.12964 0.66348 0.20688 0.47075 -0.15756 0.32357

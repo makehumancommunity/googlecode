@@ -1,32 +1,22 @@
 # author Manuel Bastioni
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# name superafro
-# uuid d1988409-40bc-466f-a339-fa27fa0a86ab
-# subsurf 1 1
-# texture superafro_texture.png
-# material superafro
-diffuse_intensity 0.8
-specular_intensity 0.0
-specular_hardness 1
-use_shadows 1
-use_transparent_shadows 1
-use_raytrace 1
-use_transparency 1
-alpha 0.0
-specular_alpha 0.0
-use_map_color_diffuse 1
-use_map_alpha 1
-use_alpha 1
-# transparent yes
-diffuse_color_factor 1.0
-alpha_factor 1.0
-# obj_file superafro.obj
-# x_scale 4302 8697 1.4986
-# z_scale 8208 8220 1.9328
-# y_scale 8289 8223 1.9968
-# use_projection 0
-# verts
+
+uuid d1988409-40bc-466f-a339-fa27fa0a86ab
+name superafro
+
+subsurf 1 1
+
+transparent yes
+
+obj_file superafro.obj
+material superafro.mhmat
+x_scale 4302 8697 1.4986
+z_scale 8208 8220 1.9328
+y_scale 8289 8223 1.9968
+use_projection 0
+
+verts
  8629     0     1 1.00000 0.00000 0.00000 -0.67095 1.09532 0.41113
  8625     0     1 1.00000 0.00000 0.00000 -0.61254 1.19369 0.11036
  8628  8627  8622 -0.00379 1.07359 -0.06981 -0.20756 1.25921 0.41657
