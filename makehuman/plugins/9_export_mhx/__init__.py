@@ -22,6 +22,7 @@ Abstract
 TODO
 """
 
+import log
 import gui
 from export import Exporter
 from exportutils.config import Config
@@ -96,9 +97,7 @@ class ExporterMHX(Exporter):
         from . import mhx_main
         #from mhx import mhx_main
         self.taskview.exitPoseMode()
-        config = MhxConfig(self)
-        config.rigOptions.setExportOptions()
-        mhx_main.exportMhx(human, filename("mhx"), config)
+        mhx_main.exportMhx(human, filename("mhx"), MhxConfig(self))
         self.taskview.enterPoseMode()
 
 

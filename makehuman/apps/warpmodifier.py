@@ -48,7 +48,6 @@ class WarpTarget(algos3d.Target):
 
         self.human = human
         self.modifier = modifier
-        self.isWarp = True
         self.isDirty = True
         self.isObsolete = False
 
@@ -123,7 +122,6 @@ class WarpModifier (humanmodifier.SimpleModifier):
         self.eventType = 'warp'
         self.warppath = warppath
         self.template = template
-        self.isWarp = True
         self.bodypart = bodypart
         self.slider = None
         self.refTargets = {}
@@ -268,7 +266,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         global _warpGlobals
         log.message("Compile %s", self)
         landmarks = _warpGlobals.getLandMarks(self.bodypart)
-        objectChanged = self.getRefObject(human)
+        objectChanged = self.resetRefVertsIfChanged(human)
         self.getRefTarget(human, objectChanged)
         roVerts = _warpGlobals.getRefObjectVerts(self.modtype)
         unwarpedCoords = _warpGlobals.getUnwarpedCoords(human)
@@ -291,7 +289,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
             log.message("Reference target changed")
             if not self.makeRefTarget(human):
                 log.message("Updating character")
-                human.applyAllTargets()
+                #human.applyAllTargets()
                 self.getBases(human)
                 if not self.makeRefTarget(human):
                     raise NameError("Character is empty")
@@ -409,7 +407,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         algos3d.removeWarpTarget(self.warppath)
 
 
-    def getRefObject(self, human):
+    def resetRefVertsIfChanged(self, human):
         global _warpGlobals
 
         if _warpGlobals.getRefObjectVerts(self.modtype) is not None:
@@ -443,7 +441,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
 def removeAllWarpTargets(human):
     log.message("Removing all warp targets")
     for target in algos3d.targetBuffer.values():
-        if hasattr(target, "isWarp"):
+        if isinstance(target, WarpTarget):
             log.message("  %s", target)
             target.isDirty = True
             target.isObsolete = True
@@ -565,7 +563,7 @@ class GlobalWarpData:
             return self._unwarpedCoords
         coords = np.array(G.app.selectedHuman.meshData.orig_coord)
         for target in algos3d.targetBuffer.values():
-            if not hasattr(target, "isWarp"):
+            if not isinstance(target, WarpTarget):
                 verts = algos3d.targetBuffer[target.name].verts
                 coords[verts] += target.morphFactor * target.data
         self._unwarpedCoords = coords
@@ -579,7 +577,7 @@ class GlobalWarpData:
             return self._warpedCoords
         coords = np.array(G.app.selectedHuman.meshData.orig_coord)
         for target in algos3d.targetBuffer.values():
-            if hasattr(target, "isWarp"):
+            if isinstance(target, WarpTarget):
                 verts = algos3d.targetBuffer[target.name].verts
                 coords[verts] += target.morphFactor * target.data
         self._warpedCoords = coords

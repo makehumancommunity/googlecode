@@ -136,12 +136,8 @@ class ArmatureOptions:
         self.useSplitNames = selector.useSplitBones.selected
         self.useIkArms = selector.useIkArms.selected
         self.useIkLegs = selector.useIkLegs.selected
-        if self.useSplitBones:
-            self.useDeformBones = True
-            self.useDeformNames = True
-        else:
-            self.useDeformBones = False
-            self.useDeformNames = False
+        self.useDeformBones = selector.useDeformBones.selected
+        self.useDeformNames = selector.useDeformBones.selected
 
         self.useMasterBone = selector.useMasterBone.selected
 
@@ -199,6 +195,7 @@ class ArmatureSelector:
         self.mergeHead = box.addWidget(gui.ToggleButton("Merge head"))
 
         self.useSplitBones = box.addWidget(gui.ToggleButton("Split forearm (MHX only)"))
+        self.useDeformBones = box.addWidget(gui.ToggleButton("Deform bones (MHX only)"))
         self.useIkArms = box.addWidget(gui.ToggleButton("Arm IK (MHX only)"))
         self.useIkLegs = box.addWidget(gui.ToggleButton("Leg IK (MHX only)"))
         self.useFingers = box.addWidget(gui.ToggleButton("Finger controls (MHX only)"))
@@ -216,6 +213,7 @@ class ArmatureSelector:
         self.mergeHead.setSelected(options.mergeHead)
 
         self.useSplitBones.setSelected(options.useSplitBones)
+        self.useDeformBones.setSelected(options.useDeformBones)
         self.useIkArms.setSelected(options.useIkArms)
         self.useIkLegs.setSelected(options.useIkLegs)
         self.useFingers.setSelected(options.useFingers)

@@ -79,15 +79,15 @@ def getIkName(base, ext):
     return (base + ".ik" + ext)
 
 
-def splitBonesNames(base, ext, numAfter):
+def splitBonesNames(base, ext, prefix, numAfter):
     if numAfter:
-        defname1 = "DEF-"+base+ext+".01"
-        defname2 = "DEF-"+base+ext+".02"
-        defname3 = "DEF-"+base+ext+".03"
+        defname1 = prefix+base+ext+".01"
+        defname2 = prefix+base+ext+".02"
+        defname3 = prefix+base+ext+".03"
     else:
-        defname1 = "DEF-"+base+".01"+ext
-        defname2 = "DEF-"+base+".02"+ext
-        defname3 = "DEF-"+base+".03"+ext
+        defname1 = prefix+base+".01"+ext
+        defname2 = prefix+base+".02"+ext
+        defname3 = prefix+base+".03"+ext
     return defname1, defname2, defname3
 
 

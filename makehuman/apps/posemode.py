@@ -46,8 +46,6 @@ class Storage:
             raise NameError("Failed to set unposed coords")
         obj = human.meshData
         self.coord = obj.coord.copy()
-        #warpmodifier.clearRefObject()
-        human.warpsNeedReset = False
         if self.filepath and not self.dirty:
             return self.filepath
 

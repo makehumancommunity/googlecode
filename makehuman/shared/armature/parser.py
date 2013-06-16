@@ -75,6 +75,10 @@ class Parser:
         self.headName = 'head'
         self.root = "hips"
 
+        self.deformPrefix = ""
+        if options.useDeformBones or options.useDeformNames:
+            self.deformPrefix = "DEF-"
+
         if options.useMuscles:
             self.vertexGroupFiles = ["head", "muscles", "hand"]
         else:
@@ -228,7 +232,9 @@ class Parser:
             self.addDeformVertexGroups(generic, vgroupList)
             self.renameDeformVertexGroups(rig_muscle.Armature)
 
-        elif options.useSplitBones or options.useSplitNames:
+        if options.useSplitBones or options.useSplitNames:
+            if options.useSplitBones:
+                self.addSplitBones(boneInfo)
             self.addSplitVertexGroups(vgroupList)
 
         if options.useLeftRight:
@@ -238,7 +244,11 @@ class Parser:
 
         for bname,bone in boneInfo.items():
             if bone.parent:
-                parent = boneInfo[bone.parent]
+                try:
+                    parent = boneInfo[bone.parent]
+                except KeyError:
+                    log.debug(str(boneInfo.keys()))
+                    halt
                 parent.children.append(bone)
             elif self.master:
                 if bone.name == self.master:
@@ -536,17 +546,12 @@ class Parser:
     def addDeformBones(self, generic, boneInfo):
         """
         Add deform bones with CopyTransform constraints to the original bone.
-        Deform bones start with "DEF-", as in Rigify.
-        Also split selected bones into two or three parts for better deformation,
-        and constrain them to copy the partially.
-        E.g. forearm.L => DEF-forearm.01.L, DEF-forearm.02.L, DEF-forearm.03.L
+        Deform bones start with self.deformPrefix, as in Rigify.
+        Don't add deform bones for split forearms, becaues that is done elsewhere.
         """
 
         amt = self.armature
         options = amt.options
-
-        if not (options.useDeformBones or options.useSplitBones):
-            return
 
         for bname in generic.keys():
             try:
@@ -558,64 +563,80 @@ class Parser:
                 log.debug("Not deform: %s" % bname)
                 continue
 
-            headTail = self.headsTails[bname]
             base,ext = splitBoneName(bname)
-            bone.deform = False
-            bone.parent = self.getParent(bone)
-            if bone.parent and options.useDeformBones:
-                pbase, pext = splitBoneName(bone.parent)
-                if pbase in self.splitBones.keys():
-                    npieces = self.splitBones[pbase][0]
-                    defParent = "DEF-" + pbase + ".0" + str(npieces) + pext
-                else:
-                    parbone = boneInfo[bone.parent]
-                    if parbone.deform:
-                        defParent = "DEF-" + bone.parent
-                    else:
-                        defParent = bone.parent
-            else:
-                defParent = bone.parent
-
-            if options.useSplitBones and (base in self.splitBones.keys()):
-                npieces,target,numAfter = self.splitBones[base]
-                defName1,defName2,defName3 = splitBonesNames(base, ext, numAfter)
-                head,tail = headTail
-                fkName = base + ".fk" + ext
-                ikName = base + ".ik" + ext
-                self.constraints[defName1] = [
-                    ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)])
-                ]
-                if npieces == 2:
-                    self.headsTails[defName1] = (head, ((0.5,head),(0.5,tail)))
-                    self.headsTails[defName2] = (((0.5,head),(0.5,tail)), tail)
-                    defBone1 = boneInfo[defName1] = Bone(amt, defName1)
-                    defBone1.fromInfo((bone, defParent, F_DEF+F_CON, L_DEF))
-                    defBone2 = boneInfo[defName2] = Bone(amt, defName2)
-                    defBone2.fromInfo((bone, bone.name, F_DEF, L_DEF))
-                elif npieces == 3:
-                    self.headsTails[defName1] = (head, ((0.667,head),(0.333,tail)))
-                    self.headsTails[defName2] = (((0.667,head),(0.333,tail)), ((0.333,head),(0.667,tail)))
-                    self.headsTails[defName3] = (((0.333,head),(0.667,tail)), tail)
-                    defBone1 = boneInfo[defName1] = Bone(amt, defName1)
-                    defBone1.fromInfo((bone, defParent, F_DEF+F_CON, L_DEF))
-                    defBone3 = boneInfo[defName3] = Bone(amt, defName3)
-                    defBone3.fromInfo((bone, bone.name, F_DEF, L_DEF))
-                    defBone2 = boneInfo[defName2] = Bone(amt, defName2)
-                    defBone2.fromInfo((bone, defParent, F_DEF, L_DEF))
-                    self.constraints[defName2] = [
-                        ('CopyLoc', 0, 1, ["CopyLoc", defName1, (1,1,1), (0,0,0), 1, False]),
-                        ('CopyRot', 0, 1, [defName1, defName1, (1,1,1), (0,0,0), False]),
-                        ('CopyRot', 0, 0.5, [bone.name, bone.name, (1,1,1), (0,0,0), False])
-                    ]
-
-            elif options.useDeformBones:
-                defName = "DEF-"+bname
+            if not (options.useSplitBones and base in self.splitBones.keys()):
+                headTail = self.headsTails[bname]
+                bone.deform = False
+                defParent = self.getDeformParent(bname, boneInfo)
+                defName = self.deformPrefix+bname
                 self.headsTails[defName] = headTail
                 defBone = boneInfo[defName] = Bone(amt, defName)
                 defBone.fromInfo((bone, defParent, F_DEF, L_DEF))
                 self.constraints[defName] = [copyTransform(bone.name, bone.name)]
 
-        return boneInfo
+
+    def getDeformParent(self, bname, boneInfo):
+        options = self.armature.options
+        bone = boneInfo[bname]
+        bone.parent = self.getParent(bone)
+        if bone.parent and options.useDeformBones:
+            pbase, pext = splitBoneName(bone.parent)
+            if pbase in self.splitBones.keys():
+                npieces = self.splitBones[pbase][0]
+                return self.deformPrefix + pbase + ".0" + str(npieces) + pext
+            else:
+                parbone = boneInfo[bone.parent]
+                if parbone.deform:
+                    return self.deformPrefix + bone.parent
+                else:
+                    return bone.parent
+        else:
+            return bone.parent
+
+
+    def addSplitBones(self, boneInfo):
+        """
+            Split selected bones into two or three parts for better deformation,
+            and constrain them to copy the partially.
+            E.g. forearm.L => DEF-forearm.01.L, DEF-forearm.02.L, DEF-forearm.03.L
+        """
+
+        amt = self.armature
+        options = amt.options
+
+        for base in self.splitBones.keys():
+            for ext in [".L", ".R"]:
+                npieces,target,numAfter = self.splitBones[base]
+                defName1,defName2,defName3 = splitBonesNames(base, ext, self.deformPrefix, numAfter)
+                bname = base + ext
+                head,tail = self.headsTails[bname]
+                self.constraints[defName1] = [
+                    ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)])
+                ]
+                defParent = self.getDeformParent(bname, boneInfo)
+                print(str((defName1,defName2,defName3,defParent)))
+                if npieces == 2:
+                    self.headsTails[defName1] = (head, ((0.5,head),(0.5,tail)))
+                    self.headsTails[defName2] = (((0.5,head),(0.5,tail)), tail)
+                    defBone1 = boneInfo[defName1] = Bone(amt, defName1)
+                    defBone1.fromInfo((bname, defParent, F_DEF+F_CON, L_DEF))
+                    defBone2 = boneInfo[defName2] = Bone(amt, defName2)
+                    defBone2.fromInfo((bname, bname, F_DEF, L_DEF))
+                elif npieces == 3:
+                    self.headsTails[defName1] = (head, ((0.667,head),(0.333,tail)))
+                    self.headsTails[defName2] = (((0.667,head),(0.333,tail)), ((0.333,head),(0.667,tail)))
+                    self.headsTails[defName3] = (((0.333,head),(0.667,tail)), tail)
+                    defBone1 = boneInfo[defName1] = Bone(amt, defName1)
+                    defBone1.fromInfo((bname, defParent, F_DEF+F_CON, L_DEF))
+                    defBone3 = boneInfo[defName3] = Bone(amt, defName3)
+                    defBone3.fromInfo((bname, bname, F_DEF, L_DEF))
+                    defBone2 = boneInfo[defName2] = Bone(amt, defName2)
+                    defBone2.fromInfo((bname, defParent, F_DEF, L_DEF))
+                    self.constraints[defName2] = [
+                        ('CopyLoc', 0, 1, ["CopyLoc", defName1, (1,1,1), (0,0,0), 1, False]),
+                        ('CopyRot', 0, 1, [defName1, defName1, (1,1,1), (0,0,0), False]),
+                        ('CopyRot', 0, 0.5, [bname, bname, (1,1,1), (0,0,0), False])
+                    ]
 
 
     def renameDeformBones(self, muscles, boneInfo):
@@ -628,19 +649,18 @@ class Parser:
                 continue
             if not bone.deform:
                 continue
-            defName = "DEF-"+bname
+            defName = self.deformPrefix+bname
             self.headsTails[defName] = self.headsTails[bname]
             del self.headsTails[bname]
             bone = boneInfo[defName] = boneInfo[bname]
             bone.name = defName
             del boneInfo[bname]
             parbone = boneInfo[bone.parent]
-            if parbone.deform and parbone.name[0:4] != "DEF-":
-                bone.parent = "DEF-" + bone.parent
+            if parbone.deform and parbone.name[0:4] != self.deformPrefix:
+                bone.parent = self.deformPrefix + bone.parent
 
 
     def renameConstraints(self, constraints, boneInfo):
-        log.debug("BNS %s" % boneInfo.keys())
         for bname in constraints.keys():
             try:
                 self.constraints[bname]
@@ -657,15 +677,14 @@ class Parser:
                 except KeyError:
                     ignore = False
                 if not ignore:
-                    defTarget = "DEF-" + target
+                    defTarget = self.deformPrefix + target
                     try:
                         boneInfo[defTarget]
                         data[1] = defTarget
                     except:
                         log.debug("Bone %s constraint %s has neither target %s nor %s" % (bname, cns, target, defTarget))
-                log.debug("CNS %s" % (cns,))
 
-            defname = "DEF-" + bname
+            defname = self.deformPrefix + bname
             self.constraints[defname] = self.constraints[bname]
             del self.constraints[bname]
 
@@ -682,13 +701,15 @@ class Parser:
     def addDeformVertexGroups(self, generic, vgroupList):
         amt = self.armature
         options = amt.options
+        useSplit = (options.useSplitBones or options.useSplitNames)
         for bname,vgroup in vgroupList:
             base = splitBoneName(bname)[0]
-            if base in self.splitBones.keys():
-                self.splitVertexGroup(bname, vgroup)
-                del amt.vertexWeights[bname]
+            if useSplit and base in self.splitBones.keys():
+                pass
+                #self.splitVertexGroup(bname, vgroup)
+                #del amt.vertexWeights[bname]
             else:
-                defName = "DEF-"+bname
+                defName = self.deformPrefix+bname
                 amt.vertexWeights[defName] = vgroup
                 try:
                     del amt.vertexWeights[bname]
@@ -704,7 +725,7 @@ class Parser:
                 amt.vertexWeights[bname]
             except KeyError:
                 continue
-            amt.vertexWeights["DEF-"+bname] = amt.vertexWeights[bname]
+            amt.vertexWeights[self.deformPrefix+bname] = amt.vertexWeights[bname]
             del amt.vertexWeights[bname]
 
 
@@ -735,7 +756,7 @@ class Parser:
         amt = self.armature
         base,ext = splitBoneName(bname)
         npieces,target,numAfter = self.splitBones[base]
-        defName1,defName2,defName3 = splitBonesNames(base, ext, numAfter)
+        defName1,defName2,defName3 = splitBonesNames(base, ext, self.deformPrefix, numAfter)
 
         head,tail = self.headsTails[bname]
         vec = self.locations[tail] - self.locations[head]

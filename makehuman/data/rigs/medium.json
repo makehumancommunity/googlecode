@@ -5,7 +5,6 @@
 
     "settings" : {
         "useSplitBones" : true,
-        "useDeformBones" : true,
         "useMuscles" : true,
         "mergePalms" : true
     }
