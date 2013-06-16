@@ -1,26 +1,23 @@
 # author Thomas Larsson
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 04ae8fff-1f9a-43ff-959b-ffaecc70a34e
-# basemesh alpha_7
 
-# name Eve_Leg_Warmers
-# obj_file eve_leg_warmers.obj
-# x_scale 3936 3972 1.1829
-# z_scale 3840 3957 1.3652
-# y_scale 14165 14175 7.6910
-# z_depth 30
-# uvtex_layer 0 base
-# objfile_layer 0
-# texture mono_grey.png 0
-# material Eve_Sporty
-diffuse_color 0.8000 0.0000 0.6032
-diffuse_intensity 0.8
-specular_color 1.0000 1.0000 1.0000
-specular_intensity 0.01
-alpha 1.0
-# use_projection 0
-# verts 0
+uuid 04ae8fff-1f9a-43ff-959b-ffaecc70a34e
+name Eve_Leg_Warmers
+basemesh alpha_7
+
+obj_file eve_leg_warmers.obj
+material eve_leg_warmers.mhmat
+x_scale 3936 3972 1.1829
+z_scale 3840 3957 1.3652
+y_scale 14165 14175 7.6910
+z_depth 30
+uvtex_layer 0 base
+
+objfile_layer 0
+use_projection 0
+
+verts 0
 16804
 16805
 16806

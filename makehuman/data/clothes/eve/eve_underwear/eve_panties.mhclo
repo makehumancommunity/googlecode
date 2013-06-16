@@ -1,29 +1,26 @@
 # author Thomas Larsson
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid f8a7f2e1-e68e-4e10-a5d9-097013ae9fe7
-# basemesh alpha_7
 
-# name Eve_Panties
-# obj_file eve_panties.obj
-# x_scale 3464 10305 2.5128
-# z_scale 6930 7245 1.6554
-# y_scale 14022 14040 4.5292
-# z_depth 30
-# subsurf 0 1
-# solidify 0.080 -1.000
-# shapekey Breathe
-# uvtex_layer 0 base
-# objfile_layer 0
-# texture mono_white.png 0
-# material Eve_Underwear
-diffuse_color 0.8006 0.8006 0.8006
-diffuse_intensity 0.8
-specular_color 1.0000 1.0000 1.0000
-specular_intensity 0.1
-alpha 1.0
-# use_projection 0
-# verts 0
+uuid f8a7f2e1-e68e-4e10-a5d9-097013ae9fe7
+name Eve_Panties
+basemesh alpha_7
+
+obj_file eve_panties.obj
+material eve_panties.mhmat
+x_scale 3464 10305 2.5128
+z_scale 6930 7245 1.6554
+y_scale 14022 14040 4.5292
+z_depth 30
+
+subsurf 0 1
+solidify 0.080 -1.000
+shapekey Breathe
+
+objfile_layer 0
+use_projection 0
+
+verts 0
 17940 17939 17879 0.38771 0.20305 0.40923 0.00008 0.00003 -0.00003
 17943 17944 17889 0.60607 0.19905 0.19488 0.00002 0.00000 0.00001
 17830 17942 17941 0.17644 0.60814 0.21542 -0.00522 -0.00116 -0.00096

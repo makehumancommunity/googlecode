@@ -1,28 +1,23 @@
 # author Thomas Larsson
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 30ddc2fe-4cd9-43b0-b818-a909b81f4ff2
-# basemesh alpha_7
-# tag Shoes
 
-# name Boots
-# obj_file boots.obj
-# z_depth 70
-# subsurf 1 2
-# texture boots_texture.png
-# mask boots_mask.png
-# x_scale 4909 4943 0.8168
-# z_scale 5728 12226 2.0109
-# y_scale 4684 5732 0.5911
-# material Boots
-diffuse_color 0.0204 0.0071 0.0076
-diffuse_shader LAMBERT
-diffuse_intensity 0.8000
-specular_color 1.0000 1.0000 1.0000
-specular_shader COOKTORR
-specular_intensity 0.9560
-# use_projection 0
-# verts
+name Boots
+uuid 30ddc2fe-4cd9-43b0-b818-a909b81f4ff2
+basemesh alpha_7
+tag Shoes
+
+obj_file boots.obj
+material boots.mhmat
+z_depth 70
+x_scale 4909 4943 0.8168
+z_scale 5728 12226 2.0109
+y_scale 4684 5732 0.5911
+use_projection 0
+
+subsurf 1 2
+
+verts
  3796  3943  3782 0.15952 0.47210 0.36838 0.02161 0.00053 0.25222
  3819  3818  3827 0.72347 0.16549 0.11105 -0.06786 -0.00162 0.04967
  3957  3985  3986 1.15179 -0.01233 -0.13946 0.04633 -0.06306 0.41941

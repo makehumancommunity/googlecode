@@ -1,28 +1,23 @@
 # author Thomas Larsson
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 27ac014d-7ce1-47d2-b320-10eeae13db55
-# basemesh alpha_7
-# tag Stockings
 
-# name Stockings
-# obj_file stockings.obj
-# z_depth 20
-# subsurf 1 2
-# texture stockings_texture.png
-# mask stockings_mask.png
-# x_scale 3936 3972 1.4342
-# z_scale 3840 3957 1.5772
-# y_scale 14165 14175 8.0271
-# material Stockings
-diffuse_color 0.8275 0.8275 0.8275
-diffuse_shader LAMBERT
-diffuse_intensity 0.8000
-specular_color 1.0000 1.0000 1.0000
-specular_shader COOKTORR
-specular_intensity 0.9556
-# use_projection 0
-# verts
+uuid 27ac014d-7ce1-47d2-b320-10eeae13db55
+name Stockings
+basemesh alpha_7
+tag Stockings
+
+obj_file stockings.obj
+material stockings.mhmat
+x_scale 3936 3972 1.4342
+z_scale 3840 3957 1.5772
+y_scale 14165 14175 8.0271
+z_depth 20
+
+subsurf 1 2
+use_projection 0
+
+verts
  7235  7234  7215 0.15429 0.60962 0.23609 -0.02445 0.02115 0.12763
  3796  3777  3776 0.17017 0.68259 0.14724 0.02480 0.02145 0.12944
  7221  7220  7213 0.80599 0.16159 0.03242 0.05033 0.00614 0.07406

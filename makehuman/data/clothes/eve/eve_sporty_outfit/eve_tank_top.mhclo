@@ -1,29 +1,26 @@
 # author Thomas Larsson
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 66ef7d8e-e97b-4a92-a3d1-b319f8e49d9d
-# basemesh alpha_7
 
-# name Eve_Tank_Top
-# obj_file eve_tank_top.obj
-# x_scale 3464 10305 2.5128
-# z_scale 6930 7245 1.6554
-# y_scale 14022 14040 4.5292
-# z_depth 30
-# subsurf 0 1
-# solidify 0.020 -1.000
-# shapekey Breathe
-# uvtex_layer 0 base
-# objfile_layer 0
-# texture mono_pink.png 0
-# material Eve_Sporty
-diffuse_color 0.8000 0.0000 0.6032
-diffuse_intensity 0.8
-specular_color 1.0000 1.0000 1.0000
-specular_intensity 0.01
-alpha 1.0
-# use_projection 0
-# verts 0
+uuid 66ef7d8e-e97b-4a92-a3d1-b319f8e49d9d
+name Eve_Tank_Top
+basemesh alpha_7
+
+obj_file eve_tank_top.obj
+material eve_tank_top.mhmat
+x_scale 3464 10305 2.5128
+z_scale 6930 7245 1.6554
+y_scale 14022 14040 4.5292
+z_depth 30
+
+subsurf 0 1
+solidify 0.020 -1.000
+shapekey Breathe
+
+objfile_layer 0
+use_projection 0
+
+verts 0
 17709 17591 17380 -0.00473 -0.01222 1.01695 0.00681 0.01400 -0.01195
 17707 17706 17381 -0.01916 0.01853 1.00063 0.00708 0.01806 0.00272
 17382 17662 17661 1.00198 0.00921 -0.01119 0.00468 0.01869 -0.00453

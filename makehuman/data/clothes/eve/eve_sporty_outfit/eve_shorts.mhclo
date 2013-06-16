@@ -1,29 +1,26 @@
 # author Thomas Larsson
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 17b3ba56-9226-45a4-890d-58072d2609c0
-# basemesh alpha_7
 
-# name Eve_Shorts
-# obj_file eve_shorts.obj
-# x_scale 3464 10305 2.5128
-# z_scale 6930 7245 1.6554
-# y_scale 14022 14040 4.5292
-# z_depth 30
-# subsurf 0 1
-# solidify 0.020 -1.000
-# shapekey Breathe
-# uvtex_layer 0 base
-# objfile_layer 0
-# texture mono_pink.png 0
-# material Eve_Sporty
-diffuse_color 0.8000 0.0000 0.6032
-diffuse_intensity 0.8
-specular_color 1.0000 1.0000 1.0000
-specular_intensity 0.01
-alpha 1.0
-# use_projection 0
-# verts 0
+uuid 17b3ba56-9226-45a4-890d-58072d2609c0
+name Eve_Shorts
+basemesh alpha_7
+
+obj_file eve_shorts.obj
+material eve_shorts.mhmat
+x_scale 3464 10305 2.5128
+z_scale 6930 7245 1.6554
+y_scale 14022 14040 4.5292
+z_depth 30
+
+subsurf 0 1
+solidify 0.020 -1.000
+shapekey Breathe
+
+objfile_layer 0
+use_projection 0
+
+verts 0
 17949 17824 17825 0.00839 0.98151 0.01010 0.00387 -0.00357 0.01984
 17950 17825 17826 0.04433 0.94297 0.01269 0.00226 -0.00508 0.02336
 18087 17951 17826 0.01003 0.07065 0.91933 0.00092 -0.00627 0.02736

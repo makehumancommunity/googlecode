@@ -1,28 +1,23 @@
 # author Thomas Larsson
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 323c8965-547b-4833-948d-10fd98ee8d08
-# basemesh alpha_7
-# tag Gloves
 
-# name Gloves
-# obj_file gloves.obj
-# z_depth 45
-# subsurf 1 2
-# texture gloves_texture.png
-# mask gloves_mask.png
-# x_scale 14058 14158 4.5797
-# z_scale 4550 4555 0.7497
-# y_scale 4543 4544 0.7808
-# material Material
-diffuse_color 0.2395 0.0941 0.1155
-diffuse_shader LAMBERT
-diffuse_intensity 0.4022
-specular_color 1.0000 1.0000 1.0000
-specular_shader COOKTORR
-specular_intensity 0.5000
-# use_projection 0
-# verts
+uuid 323c8965-547b-4833-948d-10fd98ee8d08
+name Gloves
+basemesh alpha_7
+tag Gloves
+
+obj_file gloves.obj
+material gloves.mhmat
+x_scale 14058 14158 4.5797
+z_scale 4550 4555 0.7497
+y_scale 4543 4544 0.7808
+z_depth 45
+
+subsurf 1 2
+use_projection 0
+
+verts
  3617  3447  3010 0.05586 0.44687 0.49727 -0.00000 -0.00002 -0.00033
  4513  3501  4510 0.24165 0.71923 0.03912 0.00048 0.01941 0.02053
  2987  4509  4510 0.03951 0.65704 0.30345 0.00492 0.02094 0.06118

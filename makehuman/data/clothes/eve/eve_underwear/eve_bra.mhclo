@@ -1,29 +1,26 @@
 # author Thomas Larsson
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid ee202a9e-5892-4708-8008-96d983e73349
-# basemesh alpha_7
 
-# name Eve_Bra
-# obj_file eve_bra.obj
-# x_scale 3464 10305 2.5128
-# z_scale 6930 7245 1.6554
-# y_scale 14022 14040 4.5292
-# z_depth 30
-# subsurf 0 1
-# solidify 0.050 -1.000
-# shapekey Breathe
-# uvtex_layer 0 base
-# objfile_layer 0
-# texture mono_white.png 0
-# material Eve_Underwear
-diffuse_color 0.8006 0.8006 0.8006
-diffuse_intensity 0.8
-specular_color 1.0000 1.0000 1.0000
-specular_intensity 0.1
-alpha 1.0
-# use_projection 0
-# verts 0
+uuid ee202a9e-5892-4708-8008-96d983e73349
+name Eve_Bra
+basemesh alpha_7
+
+obj_file eve_bra.obj
+material eve_bra.mhmat
+x_scale 3464 10305 2.5128
+z_scale 6930 7245 1.6554
+y_scale 14022 14040 4.5292
+z_depth 30
+
+subsurf 0 1
+solidify 0.050 -1.000
+shapekey Breathe
+
+objfile_layer 0
+use_projection 0
+
+verts 0
 17634 17637 17636 0.08120 0.81601 0.10279 -0.00000 0.00003 0.00003
 17637 17636 17635 0.17649 0.68011 0.14340 -0.00286 0.01676 0.01973
 18126 17744 18470 0.03316 0.28586 0.68098 -0.00001 -0.00000 0.00054

@@ -1,30 +1,27 @@
 # author Thomas Larsson
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 38652fc8-203f-462e-a718-ac65b49fe45b
-# basemesh alpha_7
-# tag Eve
 
-# name Eve_T_Shirt
-# obj_file eve_t_shirt.obj
-# x_scale 3464 10305 2.9562
-# z_scale 6930 7245 1.9476
-# y_scale 14022 14040 5.3285
-# z_depth 30
-# subsurf 0 1
-# solidify 0.020 -1.000
-# shapekey Breathe
-# uvtex_layer 0 base
-# objfile_layer 0
-# texture mono_white.png 0
-# material Eve_T_Shirt.001
-diffuse_color 0.4265 0.7898 0.8000
-diffuse_intensity 0.8
-specular_color 1.0000 1.0000 1.0000
-specular_intensity 0
-alpha 1.0
-# use_projection 0
-# verts 0
+name Eve_T_Shirt
+uuid 38652fc8-203f-462e-a718-ac65b49fe45b
+basemesh alpha_7
+tag Eve
+
+obj_file eve_t_shirt.obj
+material eve_t_shirt.mhmat
+x_scale 3464 10305 2.9562
+z_scale 6930 7245 1.9476
+y_scale 14022 14040 5.3285
+z_depth 30
+
+subsurf 0 1
+solidify 0.020 -1.000
+shapekey Breathe
+
+objfile_layer 0
+use_projection 0
+
+verts 0
 16376 16126 16127 0.35178 0.45647 0.19174 -0.00794 0.01175 0.02047
 16375 16127 16128 0.16017 0.76702 0.07281 -0.01020 0.01030 0.01518
 16374 16128 16481 0.01472 0.96622 0.01906 -0.00760 0.01135 0.01279
@@ -934,7 +931,7 @@ alpha 1.0
 18496 18497 18174 0.99799 0.00266 -0.00065 0.00480 0.00901 -0.01719
 17815 18497 18496 -0.00405 1.00439 -0.00034 0.00709 0.00958 -0.01605
 
-# delete_verts
+delete_verts
 2113 2129 2543 - 2554 2573 2582 - 2583 2585 - 2590 2592 - 2595 2601 - 2653 2850 - 2853 
 2861 - 2862 2873 - 2879 2895 - 2897 2899 - 2900 2903 - 2910 2942 - 2950 2955 2960 - 2961 2973 - 2974 3033 
 3044 - 3050 3141 3340 - 3343 3347 - 3349 3371 - 3375 3377 3384 - 3392 3394 - 3415 3425 3455 

@@ -1,26 +1,21 @@
 # author Thomas Larsson
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid d4d380fe-c36c-4c7b-8a49-d59f654fba40
-# basemesh alpha_7
 
-# name Benchmark_Tights
-# obj_file benchmark_tights.obj
-# x_scale 3464 10305 2.5128
-# z_scale 6930 7245 1.6554
-# y_scale 14022 14040 4.5292
-# z_depth 30
-# uvtex_layer 0 base
-# objfile_layer 0
-# texture uvgrid.png 0
-# material Material
-diffuse_color 0.8000 0.0184 0.0000
-diffuse_intensity 0.8
-specular_color 1.0000 1.0000 1.0000
-specular_intensity 0.5
-alpha 1.0
-# use_projection 0
-# verts 0
+name Benchmark_Tights
+uuid d4d380fe-c36c-4c7b-8a49-d59f654fba40
+basemesh alpha_7
+
+obj_file benchmark_tights.obj
+material ../benchmark.mhmat
+x_scale 3464 10305 2.5128
+z_scale 6930 7245 1.6554
+y_scale 14022 14040 4.5292
+z_depth 30
+objfile_layer 0
+use_projection 0
+
+verts 0
 16096
 16097
 16098
