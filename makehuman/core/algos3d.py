@@ -118,7 +118,7 @@ class Target:
         if iname not in Target.npzfile:
             log.message('compiled file missing: %s', iname)
             raise RuntimeError()
-        if vector not in Target.npzfile:
+        if vname not in Target.npzfile:
             log.message('compiled file missing: %s', vname)
             raise RuntimeError()
         self.verts = Target.npzfile[iname]
@@ -134,10 +134,10 @@ class Target:
         if not os.path.exists(vname):
             log.message('compiled file missing: %s', name)
             raise RuntimeError()
-        if os.path.getmtime(iname) < path.getmtime(name):
+        if os.path.getmtime(iname) < os.path.getmtime(name):
             log.message('compiled file out of date: %s', iname)
             raise RuntimeError()
-        if os.path.getmtime(vname) < path.getmtime(name):
+        if os.path.getmtime(vname) < os.path.getmtime(name):
             log.message('compiled file out of date: %s', vname)
             raise RuntimeError()
         self.verts = np.load(iname)
