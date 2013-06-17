@@ -37,6 +37,7 @@ class ArmatureOptions:
         self.boneMap = None
 
         self.useMasterBone = False
+        self.useReverseHip = False
         self.useMuscles = False
         self.addConnectingBones = False
 
@@ -124,6 +125,7 @@ class ArmatureOptions:
 
     def fromSelector(self, selector):
         self.useMuscles = selector.useMuscles.selected
+        self.useReverseHip = selector.useReverseHip.selected
         #self.useCorrectives = selector.useCorrectives.selected
         self.addConnectingBones = selector.addConnectingBones.selected
 
@@ -187,6 +189,7 @@ class ArmatureSelector:
         self.box = box
 
         self.useMuscles = box.addWidget(gui.ToggleButton("Muscle bones (MHX only)"))
+        self.useReverseHip = box.addWidget(gui.ToggleButton("Reverse hips"))
         self.addConnectingBones = box.addWidget(gui.ToggleButton("Connecting bones"))
 
         self.mergeSpine = box.addWidget(gui.ToggleButton("Merge spine"))
@@ -205,6 +208,7 @@ class ArmatureSelector:
 
     def fromOptions(self, options):
         self.useMuscles.setSelected(options.useMuscles)
+        self.useReverseHip.setSelected(options.useReverseHip)
         self.addConnectingBones.setSelected(options.addConnectingBones)
 
         self.mergeSpine.setSelected(options.mergeSpine)

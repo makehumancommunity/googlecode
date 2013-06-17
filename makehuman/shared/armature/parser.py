@@ -151,6 +151,21 @@ class Parser:
             self.master = 'master'
             self.addBones(rig_control.MasterArmature, boneInfo)
 
+        if options.useReverseHip:
+            hiphead, hiptail = self.headsTails["hips"]
+            self.headsTails["root"] = (hiptail, (hiptail,(0,0,-2)))
+            self.headsTails["hips"] = (hiptail, hiphead)
+            self.root = "root"
+            root = boneInfo["root"] = Bone(amt, "root")
+            root.fromInfo((0, None, F_WIR, L_MAIN))
+            hips = boneInfo["hips"]
+            hips.parent = "root"
+            hips.conn = False
+            hips.lockLocation = (1,1,1)
+            spine = boneInfo["spine"]
+            spine.parent = "root"
+            spine.conn = False
+
         if options.useMuscles:
             self.addBones(rig_muscle.Armature, boneInfo)
 

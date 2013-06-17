@@ -5,6 +5,7 @@
 
     "settings" : {
         "useMasterBone" : true,
+        "useReverseHip" : true,
         "useSplitBones" : true,
         "useDeformBones" : true,
         "useMuscles" : true,
