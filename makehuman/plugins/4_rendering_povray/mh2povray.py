@@ -534,24 +534,22 @@ def writeTextures(stuffs, outDir, progressCallback = None):
             collect.copy(stuff.material.bumpMapTexture, os.path.join(
                 outDir, getImageFname(stuff.name, stuff.material.bumpMapTexture, 'bump')))
         elif stuff.material.supportsDisplacement():
-            collect.copy(stuff.displacementMapTexture, os.path.join(
+            collect.copy(stuff.material.displacementMapTexture, os.path.join(
                 outDir, getImageFname(stuff.name, stuff.material.displacementMapTexture, 'bump')))
         i += 1.0
         progress(i/stuffnum)
 
 def writeItemsMaterials(hfile, stuffs, settings, outDir):
     for stuff in stuffs[1:]:
-        texdata = getChannelData(stuff.texture)
-        if settings['usebump'] == False:
-            bumpdata = None
-        elif stuff.material.supportsBump():
-            bumpdata = getChannelData(stuff.bump)
-            bumpext = stuff.bump[1].split(".")[1]
-        elif stuff.material.supportsDisplacement():
-            bumpdata = getChannelData(stuff.displacement)
-            bumpext = stuff.displacement[1].split(".")[1]
-        else:
-            bumpdata = None
+        texdata = None
+        if stuff.material.supportsDiffuse():
+            texdata = stuff.material.diffuseTexture
+        bumpdata = None
+        if settings['usebump']:
+            if stuff.material.supportsBump():
+                bumpdata = stuff.material.bumpMapTexture
+            elif stuff.material.supportsDisplacement():
+                bumpdata = stuff.material.displacementMapTexture
         if stuff.type == 'Hair':
             if settings['hairShine']:
                 hinfile = open ("data/povray/hair_2.inc",'r')
@@ -571,46 +569,31 @@ def writeItemsMaterials(hfile, stuffs, settings, outDir):
                 inlines = inlines.replace ("%%hard%%",str(settings['hairHard']))
                 inlines = inlines.replace ("%%rough%%",str(settings['hairRough']))
             inlines = inlines.replace (
-                "%%texture%%", '%s "%s_texture.%s"' %
-                (texdata[1], stuff.name, stuff.texture[1].split(".")[1]))
+                "%%texture%%",
+                getImageDef(stuff.name, texdata, 'texture'))
             if bumpdata:
                 inlines = inlines.replace (
-                    "%%bumpmap%%", '%s "%s_bump.%s"' %
-                    (bumpdata[1], stuff.name, bumpext))
-            elif settings['hairShine']:
+                    "%%bumpmap%%",
+                    getImageDef(stuff.name, bumpdata, 'bump'))
+            else:
                 inlines = inlines.replace (
-                    "%%bumpmap%%", 'png "%s_alpha.png"' % stuff.name)
+                    "%%bumpmap%%",
+                    'png "%s_alpha.png"' % stuff.name)
         else:
             if texdata:
                 inlines = inlines.replace (
-                    "%%texture%%", 'image_map {%s "%s_texture.%s" interpolate 2}' %
-                    (texdata[1], stuff.name, stuff.texture[1].split(".")[1]))
+                    "%%texture%%", 'image_map {%s interpolate 2}' %
+                    getImageDef(stuff.name, texdata, 'texture'))
             else:
                 inlines = inlines.replace ("%%texture%%", 'rgb <1,1,1>')
             if bumpdata:
                 inlines = inlines.replace (
-                    "%%bumpmap%%", 'bump_map {%s "%s_bump.%s" interpolate 2}' %
-                    (bumpdata[1], stuff.name, bumpext))
+                    "%%bumpmap%%", 'bump_map {%s interpolate 2}' %
+                    getImageDef(stuff.name, bumpdata, 'bump'))
             else:
                 inlines = inlines.replace (
                     "%%bumpmap%%", 'wrinkles 0.2 scale 0.0001')
         hfile.write(inlines)
-
-
-def getChannelData(value):
-    if value:
-        (folder, file) = value
-        (fname, ext) = os.path.splitext(file)
-        ext = ext.lower()
-        if ext == ".tif":
-            type = "tiff"
-        elif ext == ".jpg":
-            type = "jpeg"
-        else:
-            type = ext[1:]
-        return file,type
-    else:
-        return None
 
 def povrayWriteMesh2(hfile, stuffs, progressCallback = None):
 
@@ -818,16 +801,22 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
     progbase = nextpb
     progress(progbase)
     if settings['usebump']:
-        # Export blurred bump maps
-        lmap = imgop.Image(os.path.join(stuffs[0].bump[0], stuffs[0].bump[1]))
-        lmap = imgop.getChannel(lmap,1)
-        lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*1.6*sssa, 15,
-                             lambda p: progress(progbase+0.5*p*(1-progbase)))
-        progress(progbase+0.5*(1-progbase))
-        lmap.save(os.path.join(outDir, '%s_sss_greenbump.png' % stuffs[0].name))
-        lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*3.2*sssa, 15,
-                             lambda p: progress(progbase+(0.5+0.5*p)*(1-progbase)))
-        lmap.save(os.path.join(outDir, '%s_sss_redbump.png' % stuffs[0].name))
+        bumpdata = None
+        if stuffs[0].material.supportsBump():
+            bumpdata = stuffs[0].material.bumpMapTexture
+        elif stuffs[0].material.supportsDisplacement():
+            bumpdata = stuffs[0].material.displacementMapTexture
+        if bumpdata:
+            # Export blurred bump maps
+            lmap = imgop.Image(bumpdata)
+            lmap = imgop.getChannel(lmap,1)
+            lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*1.6*sssa, 15,
+                                 lambda p: progress(progbase+0.5*p*(1-progbase)))
+            progress(progbase+0.5*(1-progbase))
+            lmap.save(os.path.join(outDir, '%s_sss_greenbump.png' % stuffs[0].name))
+            lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*3.2*sssa, 15,
+                                 lambda p: progress(progbase+(0.5+0.5*p)*(1-progbase)))
+            lmap.save(os.path.join(outDir, '%s_sss_redbump.png' % stuffs[0].name))
         progress(1.0)
 
 def getHumanName():
