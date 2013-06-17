@@ -5,25 +5,25 @@
 Name:	Eyes Japan
 
 Armature:
-	hips		Root		0
-	lefthip		UpLeg_L		0
-	leftknee	LoLeg_L		0
-	leftankle	Foot_L		0
-	righthip	UpLeg_R		0
-	rightknee	LoLeg_R		0
-	rightankle	Foot_R		0
-	chest		Spine1		0
-	chest2		Spine2		0
-	cs_bvh		Spine3		0
-	leftcollar	Clavicle_L	0
-	leftshoulder	UpArm_L		90
-	leftelbow	LoArm_L		90
-	leftwrist	Hand_L		90
-	rightcollar	Clavicle_R	0
-	rightshoulder	UpArm_R		-90
-	rightelbow	LoArm_R		-90
-	rightwrist	Hand_R		-90
-	neck		Neck		0
-	head		Head		0
+	hips		hips		0
+	lefthip		thigh.L		0
+	leftknee	shin.L		0
+	leftankle	foot.L		0
+	righthip	thigh.R		0
+	rightknee	shin.R		0
+	rightankle	foot.R		0
+	spine-1		spine		0
+	chest2		spine-1		0
+	cs_bvh		chest		0
+	leftcollar	shoulder.L	0
+	leftshoulder	upper_arm.L		90
+	leftelbow	forearm.L		90
+	leftwrist	hand.L		90
+	rightcollar	shoulder.R	0
+	rightshoulder	upper_arm.R		-90
+	rightelbow	forearm.R		-90
+	rightwrist	hand.R		-90
+	neck		neck		0
+	head		head		0
 
 

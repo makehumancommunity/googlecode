@@ -38,7 +38,7 @@ from .utils import MocapError
 
 Deg2Rad = math.pi/180
 D = 180/math.pi
-    
+
 #
 #   class CBoneData:
 #
@@ -46,9 +46,9 @@ D = 180/math.pi
 class CBoneData:
     def __init__(self, srcBone, trgBone):
         self.name = srcBone.name
-        self.parent = None        
-        self.srcMatrices = {}        
-        self.srcPoseBone = srcBone        
+        self.parent = None
+        self.srcMatrices = {}
+        self.srcPoseBone = srcBone
         self.trgPoseBone = trgBone
         self.trgRestMat = None
         self.trgRestInv = None
@@ -60,17 +60,17 @@ class CBoneData:
         self.rollMat = None
         self.rollInv = None
         return
-        
+
 #class CMatrixGroup:
 #    def __init__(self, srcMat, frame):
 #        self.frame = frame
 #        self.srcMatrix = srcMat.copy()
 #        return
-#        
+#
 #    def __repr__(self):
 #        return "<CMat %d %s>" % (self.frame, self.srcMatrix)
-        
-        
+
+
 class CAnimation:
     def __init__(self, srcRig, trgRig):
         self.srcRig = srcRig
@@ -83,13 +83,13 @@ class CAnimation:
 #
 #
 
-KeepRotationOffset = ["Root", "Pelvis", "Hips", "Hip_L", "Hip_R"]
-ClavBones = ["Clavicle_L", "Clavicle_R"]
-SpineBones = ["Spine1", "Spine2", "Spine3", "Neck", "Head"]
+KeepRotationOffset = ["hips", "pelvis", "hips", "hip.L", "hip.R"]
+ClavBones = ["shoulder.L", "shoulder.R"]
+SpineBones = ["spine", "spine-1", "chest", "chest-1", "neck", "head"]
 #FootBones = []
 #IgnoreBones = []
-FootBones = ["Foot_L", "Foot_R", "Toe_L", "Toe_R"]
-IgnoreBones = ["Toe_L", "Toe_R"]
+FootBones = ["foot.L", "foot.R", "toe.L", "toe.R"]
+IgnoreBones = ["toe.L", "toe.R"]
 
 #
 #
@@ -110,8 +110,8 @@ def setRotation(mat, rot):
     for m in range(3):
         for n in range(3):
             mat[m][n] = rot[m][n]
-        
-        
+
+
 def keepRollOnly(mat):
     for n in range(4):
         mat[1][n] = 0
@@ -119,7 +119,7 @@ def keepRollOnly(mat):
         mat[3][n] = 0
         mat[n][3] = 0
     mat[1][1] = 1
-            
+
 #
 #   retargetFkBone(boneData, frame):
 #
@@ -156,17 +156,17 @@ def retargetFkBone(boneData, frame):
     else:
         parMat = None
         parRotInv = None
-        
-    # Set rotation offset        
+
+    # Set rotation offset
     if boneData.rotOffset:
         rot = boneData.rotOffset
         if parent and parent.rotOffsInv:
-            rot = rot * parent.rotOffsInv        
+            rot = rot * parent.rotOffsInv
         bakeRot = bakeMat * rot
         setRotation(bakeMat, bakeRot)
     else:
         rot = None
-        
+
     trgMat = boneData.trgRestInv * bakeMat
 
     if boneData.rollMat:
@@ -187,15 +187,15 @@ def retargetFkBone(boneData, frame):
         utils.printMat4(" BM", bakeMat, "  ")
         utils.printMat4(" Trg", trgMat, "  ")
         #halt
-    
+
     if trgBone.name in IgnoreBones:
         trgBone.rotation_quaternion = (1,0,0,0)
-    
+
     utils.insertRotationKeyFrame(trgBone, frame)
     if not boneData.parent:
         trgBone.keyframe_insert("location", frame=frame, group=trgBone.name)
-    return        
-   
+    return
+
 #
 #   collectSrcMats(anim, frames, scn):
 #
@@ -207,17 +207,17 @@ def hideObjects(scn, rig):
             objects.append((ob, list(ob.layers)))
             ob.layers = 20*[False]
     return objects
-    
-    
+
+
 def unhideObjects(objects):
     for (ob,layers) in objects:
         ob.layers = layers
     return
-    
-    
+
+
 def collectSrcMats(anim, frames, scn):
     objects = hideObjects(scn, anim.srcRig)
-    try:            
+    try:
         for frame in frames:
             scn.frame_set(frame)
             if frame % 100 == 0:
@@ -226,7 +226,7 @@ def collectSrcMats(anim, frames, scn):
                 boneData.srcMatrices[frame] = boneData.srcPoseBone.matrix.copy()
     finally:
         unhideObjects(objects)
-    return                
+    return
 
 #
 #   retargetMatrices(anim, frames, first, doFK, doIK, scn):
@@ -242,14 +242,14 @@ def retargetMatrices(anim, frames, first, doFK, doIK, scn):
         else:
             scn.frame_set(frame)
         if doIK:
-            retargetIkBones(anim.trgRig, frame, first) 
+            retargetIkBones(anim.trgRig, frame, first)
             first = False
-    return                
-  
+    return
+
 #
 #   setupFkBones(srcRig, trgRig, boneAssoc, parAssoc, anim, scn):
 #
-    
+
 def getParent(parName, parAssoc, trgRig, anim):
     if not parName:
         return None
@@ -258,13 +258,13 @@ def getParent(parName, parAssoc, trgRig, anim):
     except KeyError:
         return None
     try:
-        anim.boneDatas[trgParent.name]        
+        anim.boneDatas[trgParent.name]
         return trgParent
     except        :
         pass
     return getParent(parAssoc[trgParent.name], parAssoc, trgRig, anim)
-    
-    
+
+
 def setupFkBones(srcRig, trgRig, boneAssoc, parAssoc, anim, scn):
     keepOffsets = KeepRotationOffset + FootBones
     keepOffsInverts = []
@@ -274,7 +274,7 @@ def setupFkBones(srcRig, trgRig, boneAssoc, parAssoc, anim, scn):
     if scn.McpUseClavOffset:
         keepOffsets += ClavBones
         keepOffsInverts += ClavBones
-        
+
     for (trgName, srcName) in boneAssoc:
         try:
             trgBone = trgRig.pose.bones[trgName]
@@ -283,14 +283,14 @@ def setupFkBones(srcRig, trgRig, boneAssoc, parAssoc, anim, scn):
             print("  -", trgName, srcName)
             continue
         boneData = CBoneData(srcBone, trgBone)
-        anim.boneDatas[trgName] = boneData   
+        anim.boneDatas[trgName] = boneData
         anim.boneDataList.append(boneData)
         boneData.trgRestMat = trgBone.bone.matrix_local
 
         boneData.trgRestInv = trgBone.bone.matrix_local.inverted()
-        boneData.trgBakeMat = boneData.trgRestMat  
+        boneData.trgBakeMat = boneData.trgRestMat
 
-        trgParent = None        
+        trgParent = None
         if trgBone.parent:  #trgBone.bone.use_inherit_rotation:
             trgParent = getParent(parAssoc[trgName], parAssoc, trgRig, anim)
             if trgParent:
@@ -307,16 +307,16 @@ def setupFkBones(srcRig, trgRig, boneAssoc, parAssoc, anim, scn):
         srcRoll = source.getSourceRoll(srcName) * Deg2Rad
         diff = srcRoll - trgRoll
 
-        if srcName in keepOffsets:        
+        if srcName in keepOffsets:
             offs = trgBone.bone.matrix_local*srcBone.bone.matrix_local.inverted()
             boneData.rotOffset = boneData.trgRestInv * offs * boneData.trgRestMat
             if trgName in keepOffsInverts:
-                boneData.rotOffsInv = boneData.rotOffset.inverted()                        
-        elif abs(diff) > 0.02:            
-            boneData.rollMat = Matrix.Rotation(diff, 4, 'Y') 
+                boneData.rotOffsInv = boneData.rotOffset.inverted()
+        elif abs(diff) > 0.02:
+            boneData.rollMat = Matrix.Rotation(diff, 4, 'Y')
             boneData.rollInv = boneData.rollMat.inverted()
-        
-        boneData.trgBakeInv = boneData.trgBakeMat.inverted()   
+
+        boneData.trgBakeInv = boneData.trgBakeMat.inverted()
     return
 
 
@@ -324,7 +324,7 @@ def setupFkBones(srcRig, trgRig, boneAssoc, parAssoc, anim, scn):
 #    retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
 #
 
-def clearPose():    
+def clearPose():
     bpy.ops.object.mode_set(mode='POSE')
     bpy.ops.pose.select_all(action='SELECT')
     bpy.ops.pose.rot_clear()
@@ -346,7 +346,7 @@ def setupMhxAnimation(scn, srcRig, trgRig):
     #(boneAssoc, ikBoneAssoc, parAssoc, rolls, mats, ikBones, ikParents) = target.makeTargetAssoc(trgRig, scn)
     setupFkBones(srcRig, trgRig, boneAssoc, parAssoc, anim, scn)
     return anim
-    
+
 
 def retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
     scn = context.scene
@@ -376,11 +376,11 @@ def retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
             index += 100
             first = False
             frameBlock = frames[index:index+100]
-            
+
         scn.frame_current = frames[0]
-    finally:                
+    finally:
         restoreTargetData(trgRig, oldData)
-            
+
     utils.setInterpolation(trgRig)
     if doFK:
         act = trgRig.animation_data.action
@@ -392,11 +392,11 @@ def retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
     return
 
 #
-#   changeTargetData(rig, anim):    
+#   changeTargetData(rig, anim):
 #   restoreTargetData(rig, data):
 #
-    
-def changeTargetData(rig, anim):    
+
+def changeTargetData(rig, anim):
     tempProps = [
         ("MhaRotationLimits", 0.0),
         ("MhaArmIk_L", 0.0),
@@ -428,7 +428,7 @@ def changeTargetData(rig, anim):
     for (key, value) in permProps:
         rig[key+"_L"] = value
         rig[key+"_R"] = value
- 
+
     layers = list(rig.data.layers)
     rig.data.layers = 32*[True]
     locks = []
@@ -444,8 +444,8 @@ def changeTargetData(rig, anim):
         pb.lock_location = [False, False, False]
         pb.lock_rotation = [False, False, False]
         pb.lock_scale = [False, False, False]
-        
-    norotBones = []    
+
+    norotBones = []
     """
     if mcp.target == 'MHX':
         for (name, parent) in [("UpLegRot_L", "Hip_L"), ("UpLegRot_R", "Hip_R")]:
@@ -461,16 +461,16 @@ def changeTargetData(rig, anim):
     """
     return (props, layers, locks, norotBones)
 
-    
+
 def restoreTargetData(rig, data):
     (props, rig.data.layers, locks, norotBones) = data
-    
+
     for (key,value) in props:
         rig[key] = value
 
     for b in norotBones:
         b.use_inherit_rotation = True
-    
+
     for lock in locks:
         (pb, lockLoc, lockRot, lockScale, constraints) = lock
         pb.lock_location = lockLoc
@@ -478,13 +478,13 @@ def restoreTargetData(rig, data):
         pb.lock_scale = lockScale
         for (cns, mute) in constraints:
             cns.mute = mute
-            
-    return        
-        
+
+    return
+
 
 #########################################
 #
-#   FK-IK snapping. 
+#   FK-IK snapping.
 #
 #########################################
 
@@ -502,7 +502,7 @@ def getPoseMatrix(mat, pb):
     else:
         return restInv * mat
 
-        
+
 def getGlobalMatrix(mat, pb):
     gmat = pb.bone.matrix_local * mat
     if pb.parent:
@@ -516,9 +516,9 @@ def getGlobalMatrix(mat, pb):
 def matchPoseTranslation(pb, fkPb, frame):
     mat = getPoseMatrix(fkPb.matrix, pb)
     insertLocation(pb, mat, frame)
-    
 
-def insertLocation(pb, mat, frame):    
+
+def insertLocation(pb, mat, frame):
     pb.location = mat.to_translation()
     pb.keyframe_insert("location", frame=frame, group=pb.name)
 
@@ -526,9 +526,9 @@ def insertLocation(pb, mat, frame):
 def matchPoseRotation(pb, fkPb, frame):
     mat = getPoseMatrix(fkPb.matrix, pb)
     insertRotation(pb, mat, frame)
-    
 
-def insertRotation(pb, mat, frame):    
+
+def insertRotation(pb, mat, frame):
     q = mat.to_quaternion()
     if pb.rotation_mode == 'QUATERNION':
         pb.rotation_quaternion = q
@@ -550,7 +550,7 @@ def makePlanar(pb, rig, frame):
     pmat = pb.parent.matrix.to_3x3()
     phead = pb.parent.matrix.to_translation()
     ptail = phead + pmat.col[1]*pb.parent.bone.length
-    
+
     zmaster = mmat.col[2]
     yvec = pmat.col[1].copy()
     proj = zmaster.dot(yvec)
@@ -562,12 +562,12 @@ def makePlanar(pb, rig, frame):
         proj = 0
     elif proj < ymin:
         proj = 2*ymin-proj
-    yvec -= proj*zmaster    
+    yvec -= proj*zmaster
     yvec.normalize()
     xvec = pmat.col[0].normalized()
     zvec = xvec.cross(yvec)
     head = ptail - yvec*pb.bone.length
-    
+
     nmat = Matrix()
     for i in range(3):
         nmat[i][0] = xvec[i]
@@ -576,8 +576,8 @@ def makePlanar(pb, rig, frame):
         nmat[i][3] = head[i]
     mat = getPoseMatrix(nmat, pb)
     insertRotation(pb, mat, frame)
-    insertLocation(pb, mat, frame)  
-    
+    insertLocation(pb, mat, frame)
+
 
 def matchPoseReverse(pb, fkPb, frame):
     updateScene()
@@ -587,7 +587,7 @@ def matchPoseReverse(pb, fkPb, frame):
     pb.matrix_basis = mat
     insertLocation(pb, mat, frame)
     insertRotation(pb, mat, frame)
-    
+
 
 def matchPoseScale(pb, fkPb, frame):
     mat = getPoseMatrix(fkPb.matrix, pb)
@@ -619,8 +619,8 @@ def ik2fkLeg(rig, ikBones, fkBones, legIkToAnkle, suffix, frame, first):
         matchPoseTranslation(ankleIk, footFk, frame)
     #halt
     return
-   
-   
+
+
 def retargetIkBones(rig, frame, first):
     if mcp.target == 'MHX':
         lArmIkBones = getSnapBones(rig, "ArmIK", "_L")
@@ -640,10 +640,10 @@ def retargetIkBones(rig, frame, first):
         for (ik,fk) in mcp.ikBones:
             ikPb = rig.pose.bones[ik]
             fkPb = rig.pose.bones[fk]
-            matchPoseTranslation(ikPb, fkPb, frame)  
-            matchPoseRotation(ikPb, fkPb, frame)          
-    return        
-        
+            matchPoseTranslation(ikPb, fkPb, frame)
+            matchPoseRotation(ikPb, fkPb, frame)
+    return
+
 #
 #
 #
@@ -705,7 +705,7 @@ class VIEW3D_OT_NewRetargetMhxButton(bpy.types.Operator):
                     retargetMhxRig(context, srcRig, trgRig, True, scn.McpRetargetIK)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 
 class VIEW3D_OT_RetargetIKButton(bpy.types.Operator):
@@ -721,7 +721,7 @@ class VIEW3D_OT_RetargetIKButton(bpy.types.Operator):
             retargetMhxRig(context, rig, rig, False, True)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 
 class VIEW3D_OT_LoadAndRetargetButton(bpy.types.Operator, ImportHelper):
@@ -738,9 +738,9 @@ class VIEW3D_OT_LoadAndRetargetButton(bpy.types.Operator, ImportHelper):
             loadRetargetSimplify(context, self.properties.filepath)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}    
+        return {'RUNNING_MODAL'}
 

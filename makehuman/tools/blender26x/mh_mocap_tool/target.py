@@ -31,8 +31,6 @@ import math
 import os
 
 from . import utils
-#from . import target_rigs
-#from .target_rigs import rig_mhx, rig_simple, rig_game, rig_second_life
 from . import mcp
 from .utils import MocapError
 
@@ -47,8 +45,8 @@ def getTrgBone(b):
         return mcp.trgBone[b]
     except:
         return None
-        
-        
+
+
 def renameBone(b):
     try:
         return mcp.renames[b]
@@ -69,13 +67,13 @@ def getTargetArmature(rig, scn):
             name = scn.McpTargetRig
         except:
             raise MocapError("Initialize Target Panel first")
-    mcp.target = name        
+    mcp.target = name
     (boneAssoc, mcp.renames, mcp.ikBones) = mcp.targetInfo[name]
     if not testTargetRig(name, bones, boneAssoc):
         print("Bones", bones)
         raise MocapError("Target armature %s does not match armature %s" % (rig.name, name))
     print("Target armature %s" % name)
-    parAssoc = assocParents(rig, boneAssoc, mcp.renames)                        
+    parAssoc = assocParents(rig, boneAssoc, mcp.renames)
     return (boneAssoc, parAssoc, None)
 
 
@@ -87,13 +85,13 @@ def guessArmature(rig, bones, scn):
     else:
         for (name, info) in mcp.targetInfo.items():
             (boneAssoc, mcp.renames, mcp.ikBones) = info
-            if testTargetRig(name, bones, boneAssoc):           
+            if testTargetRig(name, bones, boneAssoc):
                 return name
     print("Bones", bones)
-    raise MocapError("Did not recognize target armature %s" % rig.name)        
+    raise MocapError("Did not recognize target armature %s" % rig.name)
 
 
-def assocParents(rig, boneAssoc, names):          
+def assocParents(rig, boneAssoc, names):
     parAssoc = {}
     mcp.trgBone = {}
     taken = [ None ]
@@ -111,10 +109,10 @@ def assocParents(rig, boneAssoc, names):
                 break
             else:
                 parent = rig.pose.bones[pname].parent
-    return parAssoc                 
+    return parAssoc
 
 
-def getName(name, names):        
+def getName(name, names):
     try:
         return names[name]
     except:
@@ -128,7 +126,7 @@ def testTargetRig(name, bones, rigBones):
             #print("Failed to find", b, mb)
             return False
     return True
-        
+
 #
 #   findTargetKey(mhx, list):
 #
@@ -137,8 +135,8 @@ def findTargetKey(mhx, list):
     for (bone, mhx1) in list:
         if mhx1 == mhx:
             return bone
-    return None            
-    
+    return None
+
 ###############################################################################
 #
 #    Target armatures
@@ -148,36 +146,34 @@ def findTargetKey(mhx, list):
 #    (mhx bone, text)
 
 TargetBoneNames = [
-    ('Root',        'Root bone'),
-    ('Spine1',        'Lower spine'),
-    ('Spine2',        'Middle spine'),
+    ('hips',        'Root bone'),
+    ('spine',        'Lower spine'),
+    ('spine-1',        'Middle spine'),
     ('Spine3',        'Upper spine'),
-    ('Neck',        'Neck'),
-    ('Head',        'Head'),
+    ('chest',        'Neck'),
+    ('head',        'Head'),
     None,
-    ('Clavicle_L',    'L clavicle'),
-    ('UpArm_L',        'L upper arm'),
-    ('LoArm_L',        'L forearm'),
-    ('Hand_L',        'L hand'),
+    ('shoulder.L',    'L clavicle'),
+    ('upper_arm.L',        'L upper arm'),
+    ('forearm.L',        'L forearm'),
+    ('hand.L',        'L hand'),
     None,
-    ('Clavicle_R',    'R clavicle'),
-    ('UpArm_R',        'R upper arm'),
-    ('LoArm_R',        'R forearm'),
-    ('Hand_R',        'R hand'),
+    ('shoulder.R',    'R clavicle'),
+    ('upper_arm.R',        'R upper arm'),
+    ('forearm.R',        'R forearm'),
+    ('hand.R',        'R hand'),
     None,
-    ('Hips',        'Hips'),
+    ('hip.L',        'L hip'),
+    ('thigh.L',        'L thigh'),
+    ('shin.L',        'L shin'),
+    ('foot.L',        'L foot'),
+    ('toe.L',        'L toes'),
     None,
-    ('Hip_L',        'L hip'),
-    ('UpLeg_L',        'L thigh'),
-    ('LoLeg_L',        'L shin'),
-    ('Foot_L',        'L foot'),
-    ('Toe_L',        'L toes'),
-    None,
-    ('Hip_R',        'R hip'),
-    ('UpLeg_R',        'R thigh'),
-    ('LoLeg_R',        'R shin'),
-    ('Foot_R',        'R foot'),
-    ('Toe_R',        'R toes'),
+    ('hip.R',        'R hip'),
+    ('thigh.R',        'R thigh'),
+    ('shin.R',        'R shin'),
+    ('foot.R',        'R foot'),
+    ('toe.R',        'R toes'),
 ]
 
 ###############################################################################
@@ -189,7 +185,7 @@ TargetBoneNames = [
 
 def loadTargets():
     mcp.targetInfo = {}
-    
+
 def isTargetInited(scn):
     try:
         scn.McpTargetRig
@@ -198,7 +194,7 @@ def isTargetInited(scn):
         return False
 
 
-def initTargets(scn):        
+def initTargets(scn):
     mcp.targetInfo = {}
     path = os.path.join(os.path.dirname(__file__), "target_rigs")
     for fname in os.listdir(path):
@@ -213,20 +209,20 @@ def initTargets(scn):
     keys.sort()
     for key in keys:
         mcp.trgArmatureEnums.append((key,key,key))
-        
+
     bpy.types.Scene.McpTargetRig = EnumProperty(
         items = mcp.trgArmatureEnums,
         name = "Target rig",
-        default = 'MHX')
-    scn.McpTargetRig = 'MHX'
+        default = 'Xonotic')
+    scn.McpTargetRig = 'Xonotic'
     print("Defined McpTargetRig")
-    return    
-       
+    return
+
 
 def readTrgArmature(file, name):
     print("Read target file", file)
     fp = open(file, "r")
-    status = 0    
+    status = 0
     bones = []
     renames = {}
     ikbones = []
@@ -252,14 +248,14 @@ def readTrgArmature(file, name):
                 ikbones.append( (words[0], utils.nameOrNone(words[1])) )
             elif status == 3:
                 renames[words[0]] = utils.nameOrNone(words[1])
-    fp.close()                
-    return (name, (bones,renames,ikbones))                
-  
-  
+    fp.close()
+    return (name, (bones,renames,ikbones))
+
+
 def ensureTargetInited(scn):
     if not isTargetInited(scn):
         initTargets(scn)
-        
+
 
 class VIEW3D_OT_McpInitTargetsButton(bpy.types.Operator):
     bl_idname = "mcp.init_targets"
@@ -269,4 +265,4 @@ class VIEW3D_OT_McpInitTargetsButton(bpy.types.Operator):
 
     def execute(self, context):
         initTargets(context.scene)
-        return{'FINISHED'}    
+        return{'FINISHED'}
