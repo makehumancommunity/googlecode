@@ -196,7 +196,7 @@ class Action:
     """
     Base action class, does nothing
     """
-    def __init__():
+    def __init__(self):
         pass
 
     def set(self, alpha):
