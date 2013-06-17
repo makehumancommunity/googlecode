@@ -617,8 +617,8 @@ def quaternionSlerp(q1, q2, alpha):
                 q1[2] * 0.5 + q2[2] * 0.5,
                 q1[3] * 0.5 + q2[3] * 0.5]
 
-    ratioA = sin((1 - t) * halfTheta) / sinHalfTheta;
-    ratioB = sin(t * halfTheta) / sinHalfTheta; 
+    ratioA = sin((1 - alpha) * halfTheta) / sinHalfTheta;
+    ratioB = sin(alpha * halfTheta) / sinHalfTheta; 
 
     return [q1[0] * ratioA + q2[0] * ratioB,
             q1[1] * ratioA + q2[1] * ratioB,
