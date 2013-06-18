@@ -30,7 +30,7 @@
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.900",
+    "version": "0.901",
     "blender": (2, 6, 5),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -64,19 +64,6 @@ else:
 #    class MakeClothesPanel(bpy.types.Panel):
 #
 
-Confirm = None
-ConfirmString = "?"
-
-def isInited(scn):
-    global Confirm
-    try:
-        scn.MCDirectory
-        Confirm
-        return True
-    except:
-        return False
-
-
 
 class MakeClothesPanel(bpy.types.Panel):
     bl_label = "Make Clothes version %s" % bl_info["version"]
@@ -88,128 +75,129 @@ class MakeClothesPanel(bpy.types.Panel):
         return (context.object and context.object.type == 'MESH')
 
     def draw(self, context):
-        global Confirm, ConfirmString
         layout = self.layout
         scn = context.scene
-        if not isInited(scn):
-            layout.operator("mhclo.init_interface", text="Initialize")
-            return
-        if Confirm:
-            layout.label(ConfirmString)
-            layout.operator(Confirm, text="yes").answer="yes"
-            layout.operator(Confirm, text="no").answer="no"
-            return
-        layout.label("Initialization")
-        layout.operator("mhclo.init_interface", text="ReInitialize")
-        layout.operator("mhclo.factory_settings")
-        layout.operator("mhclo.save_settings")
-        layout.separator()
-        layout.prop(scn, "MCDirectory")
+
+        layout.prop(scn, "MCShowInit")
+        if scn.MCShowInit:
+            layout.operator("mhclo.init_interface", text="ReInitialize")
+            layout.operator("mhclo.factory_settings")
+            layout.operator("mhclo.save_settings")
+            layout.separator()
+            layout.prop(scn, "MCDirectory")
+            layout.separator()
 
         #layout.operator("mhclo.snap_selected_verts")
 
-        layout.separator()
-        layout.label("Vertex groups")
-        layout.operator("mhclo.print_vnums")
-        layout.operator("mhclo.copy_vert_locs")
-        layout.separator()
-        layout.prop(scn, "MCRemoveGroupType", expand=True)
-        layout.operator("mhclo.remove_vertex_groups")
-        layout.separator()
-        layout.prop(scn, "MCAutoGroupType", expand=True)
-        if scn.MCAutoGroupType == 'Helpers':
-            layout.prop(scn, "MCAutoHelperType", expand=True)
-        layout.operator("mhclo.auto_vertex_groups")
-        layout.separator()
-        layout.prop(scn, "MCKeepVertsUntil", expand=True)
-        layout.operator("mhclo.delete_helpers")
+        layout.prop(scn, "MCShowUtils")
+        if scn.MCShowUtils:
+            layout.operator("mhclo.print_vnums")
+            layout.operator("mhclo.copy_vert_locs")
+            layout.separator()
 
-        """
-        layout.separator()
-        layout.label("Materials")
-        layout.prop(scn, "MCMaterials")
-        #layout.prop(scn, "MCBlenderMaterials")
-        layout.prop(scn, "MCHairMaterial")
-        """
+        layout.prop(scn, "MCShowAutoVertexGroups")
+        if scn.MCShowAutoVertexGroups:
+            layout.prop(scn, "MCRemoveGroupType", expand=True)
+            layout.operator("mhclo.remove_vertex_groups")
+            layout.separator()
+            layout.prop(scn, "MCAutoGroupType", expand=True)
+            if scn.MCAutoGroupType == 'Helpers':
+                layout.prop(scn, "MCAutoHelperType", expand=True)
+            layout.operator("mhclo.auto_vertex_groups")
+            layout.separator()
+            layout.prop(scn, "MCKeepVertsUntil", expand=True)
+            layout.operator("mhclo.delete_helpers")
+            layout.separator()
 
-        layout.separator()
-        layout.label("Textures")
-        row = layout.row()
-        col = row.column()
-        col.prop(scn, "MCUseTexture")
-        col.prop(scn, "MCUseMask")
-        col.prop(scn, "MCUseBump")
-        col.prop(scn, "MCUseNormal")
-        col.prop(scn, "MCUseDisp")
-        col.prop(scn, "MCUseTrans")
-        col = row.column()
-        col.prop(scn, "MCTextureLayer", text = "")
-        col.prop(scn, "MCMaskLayer", text="")
-        col.prop(scn, "MCBumpStrength", text="")
-        col.prop(scn, "MCNormalStrength", text="")
-        col.prop(scn, "MCDispStrength", text="")
-        layout.prop(scn, "MCAllUVLayers")
+        layout.prop(scn, "MCShowMaterials")
+        if scn.MCShowMaterials:
+            """
+            layout.prop(scn, "MCMaterials")
+            #layout.prop(scn, "MCBlenderMaterials")
+            layout.prop(scn, "MCHairMaterial")
+            """
 
-        layout.separator()
-        layout.label("Mesh type")
-        layout.prop(scn, "MCMHVersion", expand=True)
+            row = layout.row()
+            col = row.column()
+            col.prop(scn, "MCShowTexture")
+            col.prop(scn, "MCShowMask")
+            col.prop(scn, "MCShowBump")
+            col.prop(scn, "MCShowNormal")
+            col.prop(scn, "MCShowDisp")
+            col.prop(scn, "MCShowTrans")
+            col = row.column()
+            col.prop(scn, "MCTextureLayer", text = "")
+            col.prop(scn, "MCMaskLayer", text="")
+            col.prop(scn, "MCBumpStrength", text="")
+            col.prop(scn, "MCNormalStrength", text="")
+            col.prop(scn, "MCDispStrength", text="")
+            layout.prop(scn, "MCAllUVLayers")
+            layout.separator()
+
         row = layout.row()
         row.operator("mhclo.make_human", text="Human").isHuman = True
         row.operator("mhclo.make_human", text="Clothing").isHuman = False
-        row = layout.row()
-        row.prop(scn, "MCThreshold")
-        row.prop(scn, "MCListLength")
-
+        layout.label("Human Mesh Type")
+        layout.prop(scn, "MCMHVersion", expand=True)
         layout.separator()
-        layout.label("Make clothes")
-
         layout.operator("mhclo.make_clothes")
-        layout.operator("mhclo.print_clothes")
         layout.separator()
-        layout.operator("mhclo.export_obj_file")
-        #layout.operator("mhclo.export_blender_material")
 
-        layout.separator()
-        layout.label("UV projection")
-        layout.operator("mhclo.recover_seams")
-        layout.operator("mhclo.set_seams")
-        layout.operator("mhclo.project_uvs")
-        layout.operator("mhclo.reexport_mhclo")
-        layout.separator()
-        layout.operator("mhclo.export_delete_verts")
+        layout.prop(scn, "MCShowAdvanced")
+        if scn.MCShowAdvanced:
+            layout.operator("mhclo.print_clothes")
+            layout.operator("mhclo.export_obj_file")
+            layout.operator("mhclo.export_delete_verts")
+            layout.label("Algorithm Control")
+            row = layout.row()
+            row.prop(scn, "MCThreshold")
+            row.prop(scn, "MCListLength")
+            layout.separator()
 
-        layout.separator()
-        layout.label("Shapekeys")
-        for skey in makeclothes.theShapeKeys:
-            layout.prop(scn, "MC%s" % skey)
+        layout.prop(scn, "MCShowUVProject")
+        if scn.MCShowUVProject:
+            layout.operator("mhclo.recover_seams")
+            layout.operator("mhclo.set_seams")
+            layout.operator("mhclo.project_uvs")
+            layout.operator("mhclo.reexport_mhclo")
+            layout.separator()
 
-        layout.separator()
-        layout.label("Z depth")
-        layout.prop(scn, "MCZDepthName")
-        layout.operator("mhclo.set_zdepth")
-        layout.prop(scn, "MCZDepth")
+        layout.prop(scn, "MCShowExportDetails")
+        if scn.MCShowExportDetails:
+            layout.label("Shapekeys")
+            for skey in makeclothes.theShapeKeys:
+                layout.prop(scn, "MC%s" % skey)
 
-        layout.separator()
-        layout.label("Boundary")
-        row = layout.row()
-        row.prop(scn, "MCUseBoundary")
-        if scn.MCUseBoundary:
-            row.prop(scn, "MCScaleUniform")
-            layout.prop(scn, "MCScaleCorrect")
-            layout.prop(scn, "MCBodyPart")
-            vnums = makeclothes.theSettings.bodyPartVerts[scn.MCBodyPart]
-            if scn.MCScaleUniform:
-                self.drawXYZ(vnums[0], "XYZ", layout)
-            else:
-                self.drawXYZ(vnums[0], "X", layout)
-                self.drawXYZ(vnums[1], "Y", layout)
-                self.drawXYZ(vnums[2], "Z", layout)
-            layout.operator("mhclo.examine_boundary")
+            layout.separator()
+            layout.label("Z depth")
+            layout.prop(scn, "MCZDepthName")
+            layout.operator("mhclo.set_zdepth")
+            layout.prop(scn, "MCZDepth")
 
-        layout.separator()
-        drawLicenseInfo(layout, scn)
+            layout.separator()
+            layout.label("Boundary")
+            row = layout.row()
+            row.prop(scn, "MCShowBoundary")
+            if scn.MCShowBoundary:
+                row.prop(scn, "MCScaleUniform")
+                layout.prop(scn, "MCScaleCorrect")
+                layout.prop(scn, "MCBodyPart")
+                vnums = makeclothes.theSettings.bodyPartVerts[scn.MCBodyPart]
+                if scn.MCScaleUniform:
+                    self.drawXYZ(vnums[0], "XYZ", layout)
+                else:
+                    self.drawXYZ(vnums[0], "X", layout)
+                    self.drawXYZ(vnums[1], "Y", layout)
+                    self.drawXYZ(vnums[2], "Z", layout)
+                layout.operator("mhclo.examine_boundary")
+            layout.separator()
 
-        if not scn.MCUseInternal:
+        layout.prop(scn, "MCShowLicense")
+        if scn.MCShowLicense:
+            drawLicenseInfo(layout, scn)
+            layout.separator()
+
+        if not scn.MCShowInternal:
             return
         layout.separator()
         layout.label("For internal use")
@@ -248,29 +236,24 @@ class MakeUVsPanel(bpy.types.Panel):
     bl_label = "Make UVS"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
+    bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
     def poll(cls, context):
         return (context.object and context.object.type == 'MESH')
 
     def draw(self, context):
-        global Confirm, ConfirmString
         layout = self.layout
         scn = context.scene
-        if not isInited(scn):
-            layout.operator("mhclo.init_interface", text="Initialize")
-            return
-        if Confirm:
-            layout.label(ConfirmString)
-            layout.operator(Confirm, text="yes").answer="yes"
-            layout.operator(Confirm, text="no").answer="no"
-            return
-        layout.label("Initialization")
-        layout.operator("mhclo.init_interface", text="ReInitialize")
-        layout.operator("mhclo.factory_settings")
-        layout.operator("mhclo.save_settings")
-        layout.separator()
-        layout.prop(scn, "MCDirectory")
+
+        layout.prop(scn, "MCShowInit")
+        if scn.MCShowInit:
+            layout.label("Initialization")
+            layout.operator("mhclo.init_interface", text="ReInitialize")
+            layout.operator("mhclo.factory_settings")
+            layout.operator("mhclo.save_settings")
+            layout.separator()
+            layout.prop(scn, "MCDirectory")
 
         layout.separator()
         layout.operator("mhclo.recover_seams")
@@ -279,9 +262,10 @@ class MakeUVsPanel(bpy.types.Panel):
         layout.separator()
         layout.operator("mhclo.export_uvs")
 
-        layout.separator()
-        drawLicenseInfo(layout, scn)
-        return
+        layout.prop(scn, "MCShowLicense")
+        if scn.MCShowLicense:
+            drawLicenseInfo(layout, scn)
+
 #
 #    class OBJECT_OT_InitInterfaceButton(bpy.types.Operator):
 #
@@ -641,21 +625,11 @@ class VIEW3D_OT_DeleteHelpersButton(bpy.types.Operator):
     answer = StringProperty()
 
     def execute(self, context):
-        global Confirm, ConfirmString
         makeclothes.setSettings(context)
         ob = context.object
         scn = context.scene
         if makeclothes.isHuman(ob):
-            ConfirmString = "?"
-            if self.answer == "":
-                _,nmax = makeclothes.settings.vertices[scn.MCKeepVertsUntil]
-                ConfirmString = "Delete vertices until %d?" % nmax
-                Confirm = self.bl_idname
-            elif self.answer == "yes":
-                Confirm = ""
-                makeclothes.deleteHelpers(context)
-            else:
-                Confirm = ""
+            makeclothes.deleteHelpers(context)
         return{'FINISHED'}
 
 #

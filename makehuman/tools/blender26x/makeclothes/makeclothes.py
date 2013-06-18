@@ -746,7 +746,7 @@ def printStuff(fp, pob, context):
                 uvtex1 = me.uv_textures[scn.MCMaskLayer]
             except IndexError:
                 uvtex1 = uvtex0
-            if scn.MCUseMask and uvtex1 != uvtex0:
+            if scn.MCShowMask and uvtex1 != uvtex0:
                 fp.write("uvtex_layer 1 %s\n" % uvtex1.name.replace(" ","_"))
             fp.write("objfile_layer 0\n")
         writeTextures(fp, goodName(pob.name), scn)
@@ -785,7 +785,7 @@ def printStuff(fp, pob, context):
             #fp.write('diffuse_shader %s\n' % mat.diffuse_shader)
             writeColor(fp, 'specular_color', 'specular_intensity', mat.specular_color, mat.specular_intensity)
             #fp.write('specular_shader %s\n' % mat.specular_shader)
-            if scn.MCUseTrans:
+            if scn.MCShowTrans:
                 alpha = 0
             else:
                 alpha = mat.alpha
@@ -797,7 +797,7 @@ def printStuff(fp, pob, context):
             fp.write("material_file %s\n" % mhxfile)
     elif not scn.MCHairMaterial:
         fp.write("material %s\n" % pob.name.replace(" ","_"))
-        if scn.MCUseTrans:
+        if scn.MCShowTrans:
             fp.write("  alpha 0\n")
 
     fp.write("use_projection 0\n")
@@ -805,15 +805,15 @@ def printStuff(fp, pob, context):
 
 def writeTextures(fp, name, scn):
     fp.write("texture %s_texture.png %d\n" % (name, scn.MCTextureLayer))
-    if scn.MCUseMask:
+    if scn.MCShowMask:
         fp.write("mask %s_mask.png %d\n" % (name, scn.MCMaskLayer))
-    if scn.MCUseBump:
+    if scn.MCShowBump:
         fp.write("bump %s_bump.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCBumpStrength))
-    if scn.MCUseNormal:
+    if scn.MCShowNormal:
         fp.write("normal %s_normal.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCNormalStrength))
-    if scn.MCUseDisp:
+    if scn.MCShowDisp:
         fp.write("displacement %s_disp.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCDispStrength))
-    if scn.MCUseTrans:
+    if scn.MCShowTrans:
         fp.write("transparency %s_trans.png %d\n" % (name, scn.MCTextureLayer))
     return
 
@@ -895,7 +895,7 @@ def writeColor(fp, string1, string2, color, intensity):
         "%s %.4g\n" % (string2, intensity))
 
 def printScale(fp, bob, scn, name, index, vnums):
-    if not scn.MCUseBoundary:
+    if not scn.MCShowBoundary:
         return
     verts = bob.data.vertices
     n1,n2 = vnums
@@ -2415,32 +2415,32 @@ def initInterface():
         description="Use materials",
         default=False)
 
-    bpy.types.Scene.MCUseBump = BoolProperty(
+    bpy.types.Scene.MCShowBump = BoolProperty(
         name="Bump",
         description="Use bump map",
         default=False)
 
-    bpy.types.Scene.MCUseNormal = BoolProperty(
+    bpy.types.Scene.MCShowNormal = BoolProperty(
         name="Normal",
         description="Use normal map",
         default=False)
 
-    bpy.types.Scene.MCUseDisp = BoolProperty(
+    bpy.types.Scene.MCShowDisp = BoolProperty(
         name="Displace",
         description="Use displacement map",
         default=False)
 
-    bpy.types.Scene.MCUseTrans = BoolProperty(
+    bpy.types.Scene.MCShowTrans = BoolProperty(
         name="Transparency",
         description="Use transparency map",
         default=False)
 
-    bpy.types.Scene.MCUseMask = BoolProperty(
+    bpy.types.Scene.MCShowMask = BoolProperty(
         name="Mask",
         description="Use mask map",
         default=True)
 
-    bpy.types.Scene.MCUseTexture = BoolProperty(
+    bpy.types.Scene.MCShowTexture = BoolProperty(
         name="Texture",
         description="Use texture",
         default=True)
@@ -2511,7 +2511,7 @@ def initInterface():
     scn['MCForbidFailures'] = True
     """
 
-    bpy.types.Scene.MCUseInternal = BoolProperty(
+    bpy.types.Scene.MCShowInternal = BoolProperty(
         name="Use Internal",
         description="Access internal settings",
         default=False)
@@ -2540,7 +2540,7 @@ def initInterface():
         description="Last clothing to keep vertices for",
         default="Tights")
 
-    bpy.types.Scene.MCUseBoundary = BoolProperty(
+    bpy.types.Scene.MCShowBoundary = BoolProperty(
         name="Scale Offsets",
         default=True)
 
@@ -2635,6 +2635,13 @@ def initInterface():
         default="",
         maxlen=32)
 
+    bpy.types.Scene.MCShowInit = BoolProperty(name = "Show Initialization", default=False)
+    bpy.types.Scene.MCShowUtils = BoolProperty(name = "Show Utilities", default=False)
+    bpy.types.Scene.MCShowAutoVertexGroups = BoolProperty(name = "Show Automatic Vertex Groups", default=False)
+    bpy.types.Scene.MCShowMaterials = BoolProperty(name = "Show Materials", default=False)
+    bpy.types.Scene.MCShowAdvanced = BoolProperty(name = "Show Advanced", default=False)
+    bpy.types.Scene.MCShowUVProject = BoolProperty(name = "Show UV Projection", default=False)
+    bpy.types.Scene.MCShowExportDetails = BoolProperty(name = "Show Export Details", default=False)
+    bpy.types.Scene.MCShowLicense = BoolProperty(name = "Show License", default=False)
 
-    return
 
