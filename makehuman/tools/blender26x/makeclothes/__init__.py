@@ -30,7 +30,7 @@
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.8",
+    "version": "0.900",
     "blender": (2, 6, 5),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -59,7 +59,7 @@ else:
     from . import makeclothes
     from . import makeuvs
     from . import base_uv
-  
+
 #
 #    class MakeClothesPanel(bpy.types.Panel):
 #
@@ -75,14 +75,14 @@ def isInited(scn):
         return True
     except:
         return False
-    
+
 
 
 class MakeClothesPanel(bpy.types.Panel):
-    bl_label = "Make Clothes"
+    bl_label = "Make Clothes version %s" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    
+
     @classmethod
     def poll(cls, context):
         return (context.object and context.object.type == 'MESH')
@@ -105,7 +105,7 @@ class MakeClothesPanel(bpy.types.Panel):
         layout.operator("mhclo.save_settings")
         layout.separator()
         layout.prop(scn, "MCDirectory")
-        
+
         #layout.operator("mhclo.snap_selected_verts")
 
         layout.separator()
@@ -118,36 +118,37 @@ class MakeClothesPanel(bpy.types.Panel):
         layout.separator()
         layout.prop(scn, "MCAutoGroupType", expand=True)
         if scn.MCAutoGroupType == 'Helpers':
-            layout.prop(scn, "MCAutoHelperType", expand=True)        
-        layout.operator("mhclo.auto_vertex_groups")        
+            layout.prop(scn, "MCAutoHelperType", expand=True)
+        layout.operator("mhclo.auto_vertex_groups")
         layout.separator()
         layout.prop(scn, "MCKeepVertsUntil", expand=True)
-        layout.operator("mhclo.delete_helpers")  
-        
-        
+        layout.operator("mhclo.delete_helpers")
+
+        """
         layout.separator()
         layout.label("Materials")
         layout.prop(scn, "MCMaterials")
         #layout.prop(scn, "MCBlenderMaterials")
         layout.prop(scn, "MCHairMaterial")
-        
+        """
+
         layout.separator()
         layout.label("Textures")
         row = layout.row()
         col = row.column()
-        col.prop(scn, "MCUseTexture")   
-        col.prop(scn, "MCUseMask")           
-        col.prop(scn, "MCUseBump")   
-        col.prop(scn, "MCUseNormal")   
-        col.prop(scn, "MCUseDisp")   
-        col.prop(scn, "MCUseTrans")   
+        col.prop(scn, "MCUseTexture")
+        col.prop(scn, "MCUseMask")
+        col.prop(scn, "MCUseBump")
+        col.prop(scn, "MCUseNormal")
+        col.prop(scn, "MCUseDisp")
+        col.prop(scn, "MCUseTrans")
         col = row.column()
-        col.prop(scn, "MCTextureLayer", text = "")   
-        col.prop(scn, "MCMaskLayer", text="")   
-        col.prop(scn, "MCBumpStrength", text="")   
-        col.prop(scn, "MCNormalStrength", text="")   
-        col.prop(scn, "MCDispStrength", text="")   
-        layout.prop(scn, "MCAllUVLayers")   
+        col.prop(scn, "MCTextureLayer", text = "")
+        col.prop(scn, "MCMaskLayer", text="")
+        col.prop(scn, "MCBumpStrength", text="")
+        col.prop(scn, "MCNormalStrength", text="")
+        col.prop(scn, "MCDispStrength", text="")
+        layout.prop(scn, "MCAllUVLayers")
 
         layout.separator()
         layout.label("Mesh type")
@@ -158,35 +159,35 @@ class MakeClothesPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(scn, "MCThreshold")
         row.prop(scn, "MCListLength")
-    
+
         layout.separator()
         layout.label("Make clothes")
-        
+
         layout.operator("mhclo.make_clothes")
         layout.operator("mhclo.print_clothes")
         layout.separator()
         layout.operator("mhclo.export_obj_file")
         #layout.operator("mhclo.export_blender_material")
-        
+
         layout.separator()
         layout.label("UV projection")
         layout.operator("mhclo.recover_seams")
         layout.operator("mhclo.set_seams")
         layout.operator("mhclo.project_uvs")
-        layout.operator("mhclo.reexport_mhclo")        
+        layout.operator("mhclo.reexport_mhclo")
         layout.separator()
         layout.operator("mhclo.export_delete_verts")
-        
+
         layout.separator()
         layout.label("Shapekeys")
         for skey in makeclothes.theShapeKeys:
-            layout.prop(scn, "MC%s" % skey)   
-        
+            layout.prop(scn, "MC%s" % skey)
+
         layout.separator()
         layout.label("Z depth")
-        layout.prop(scn, "MCZDepthName")   
+        layout.prop(scn, "MCZDepthName")
         layout.operator("mhclo.set_zdepth")
-        layout.prop(scn, "MCZDepth")   
+        layout.prop(scn, "MCZDepth")
 
         layout.separator()
         layout.label("Boundary")
@@ -194,8 +195,8 @@ class MakeClothesPanel(bpy.types.Panel):
         row.prop(scn, "MCUseBoundary")
         if scn.MCUseBoundary:
             row.prop(scn, "MCScaleUniform")
-            layout.prop(scn, "MCScaleCorrect")   
-            layout.prop(scn, "MCBodyPart")   
+            layout.prop(scn, "MCScaleCorrect")
+            layout.prop(scn, "MCBodyPart")
             vnums = makeclothes.theSettings.bodyPartVerts[scn.MCBodyPart]
             if scn.MCScaleUniform:
                 self.drawXYZ(vnums[0], "XYZ", layout)
@@ -203,11 +204,11 @@ class MakeClothesPanel(bpy.types.Panel):
                 self.drawXYZ(vnums[0], "X", layout)
                 self.drawXYZ(vnums[1], "Y", layout)
                 self.drawXYZ(vnums[2], "Z", layout)
-            layout.operator("mhclo.examine_boundary")        
+            layout.operator("mhclo.examine_boundary")
 
         layout.separator()
         drawLicenseInfo(layout, scn)
-            
+
         if not scn.MCUseInternal:
             return
         layout.separator()
@@ -221,15 +222,15 @@ class MakeClothesPanel(bpy.types.Panel):
         #layout.prop(scn, "MCVertexGroups")
         #layout.operator("mhclo.offset_clothes")
         return
-        
+
     def drawXYZ(self, pair, name, layout):
         m,n = pair
         row = layout.row()
         row.label("%s1:   %d" % (name,m))
         row.label("%s2:   %d" % (name,n))
-              
 
-def drawLicenseInfo(layout, scn):        
+
+def drawLicenseInfo(layout, scn):
         layout.label("Licensing")
         layout.prop(scn, "MCAuthor")
         layout.prop(scn, "MCLicense")
@@ -240,14 +241,14 @@ def drawLicenseInfo(layout, scn):
         layout.prop(scn, "MCTag3")
         layout.prop(scn, "MCTag4")
         layout.prop(scn, "MCTag5")
-        return        
+        return
 
-        
+
 class MakeUVsPanel(bpy.types.Panel):
     bl_label = "Make UVS"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    
+
     @classmethod
     def poll(cls, context):
         return (context.object and context.object.type == 'MESH')
@@ -275,9 +276,9 @@ class MakeUVsPanel(bpy.types.Panel):
         layout.operator("mhclo.recover_seams")
         layout.operator("mhclo.set_seams")
 
-        layout.separator()        
+        layout.separator()
         layout.operator("mhclo.export_uvs")
-       
+
         layout.separator()
         drawLicenseInfo(layout, scn)
         return
@@ -293,7 +294,7 @@ class OBJECT_OT_InitInterfaceButton(bpy.types.Operator):
         makeclothes.initInterface()
         makeclothes.readDefaultSettings(context)
         print("Interface initialized")
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #    class OBJECT_OT_FactorySettingsButton(bpy.types.Operator):
@@ -307,7 +308,7 @@ class OBJECT_OT_FactorySettingsButton(bpy.types.Operator):
     def execute(self, context):
         makeclothes.setSettings(context)
         makeclothes.initInterface()
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #    class OBJECT_OT_SaveSettingsButton(bpy.types.Operator):
@@ -320,7 +321,7 @@ class OBJECT_OT_SaveSettingsButton(bpy.types.Operator):
     def execute(self, context):
         makeclothes.setSettings(context)
         makeclothes.saveDefaultSettings(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #    class OBJECT_OT_SnapSelectedVertsButton(bpy.types.Operator):
@@ -334,7 +335,7 @@ class OBJECT_OT_SnapSelectedVertsButton(bpy.types.Operator):
     def execute(self, context):
         makeclothes.setSettings(context)
         makeclothes.snapSelectedVerts(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #    class OBJECT_OT_RecoverSeamsButton(bpy.types.Operator):
@@ -351,7 +352,7 @@ class OBJECT_OT_RecoverSeamsButton(bpy.types.Operator):
             makeclothes.recoverSeams(context)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 
 class OBJECT_OT_SetSeamsButton(bpy.types.Operator):
@@ -365,7 +366,7 @@ class OBJECT_OT_SetSeamsButton(bpy.types.Operator):
             makeclothes.setSeams(context)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #    class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
@@ -376,28 +377,28 @@ class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
     bl_label = "Make clothes"
     bl_options = {'UNDO'}
 
-    def execute(self, context): 
+    def execute(self, context):
         makeclothes.setSettings(context)
         try:
             makeclothes.makeClothes(context, True)
             makeclothes.exportObjFile(context)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
-        
+        return{'FINISHED'}
+
 class OBJECT_OT_PrintClothesButton(bpy.types.Operator):
     bl_idname = "mhclo.print_clothes"
     bl_label = "Print mhclo file"
     bl_options = {'UNDO'}
 
-    def execute(self, context):   
+    def execute(self, context):
         makeclothes.setSettings(context)
         try:
             makeclothes.makeClothes(context, False)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
-        
+        return{'FINISHED'}
+
 #
 #    class OBJECT_OT_ProjectUVsButton(bpy.types.Operator):
 #
@@ -416,8 +417,8 @@ class OBJECT_OT_ProjectUVsButton(bpy.types.Operator):
             print("UVs projected")
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
-        
+        return{'FINISHED'}
+
 #
 #   class OBJECT_OT_CopyVertLocsButton(bpy.types.Operator):
 #
@@ -437,9 +438,9 @@ class OBJECT_OT_CopyVertLocsButton(bpy.types.Operator):
                     tv = trg.data.vertices[n]
                     tv.co = sv.co
                 print("Vertex locations copied")
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
-        
+
 #
 #   class OBJECT_OT_ExportDeleteVertsButton(bpy.types.Operator):
 #
@@ -455,7 +456,7 @@ class OBJECT_OT_ExportDeleteVertsButton(bpy.types.Operator):
             makeclothes.exportDeleteVerts(context)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #   class OBJECT_OT_ExportObjFileButton(bpy.types.Operator):
@@ -472,7 +473,7 @@ class OBJECT_OT_ExportObjFileButton(bpy.types.Operator):
             makeclothes.exportObjFile(context)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #   class OBJECT_OT_ReexportMhcloButton(bpy.types.Operator):
@@ -489,7 +490,7 @@ class OBJECT_OT_ReexportMhcloButton(bpy.types.Operator):
             makeclothes.reexportMhclo(context)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #   class OBJECT_OT_ExportBaseUvsPyButton(bpy.types.Operator):
@@ -507,8 +508,8 @@ class OBJECT_OT_ExportBaseUvsPyButton(bpy.types.Operator):
             makeclothes.exportBaseUvsPy(context)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
-        
+        return{'FINISHED'}
+
 class OBJECT_OT_SelectHelpersButton(bpy.types.Operator):
     bl_idname = "mhclo.select_helpers"
     bl_label = "Select Helpers"
@@ -520,8 +521,8 @@ class OBJECT_OT_SelectHelpersButton(bpy.types.Operator):
             makeclothes.selectHelpers(context)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
-                
+        return{'FINISHED'}
+
 #
 #    class OBJECT_OT_ExportBlenderMaterialsButton(bpy.types.Operator):
 #
@@ -539,7 +540,7 @@ class OBJECT_OT_ExportBlenderMaterialButton(bpy.types.Operator):
             makeclothes.exportBlenderMaterial(pob.data, outpath)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #    class OBJECT_OT_MakeHumanButton(bpy.types.Operator):
@@ -559,7 +560,7 @@ class OBJECT_OT_MakeHumanButton(bpy.types.Operator):
             print("Object %s: Human = %s" % (ob.name, ob["MhxMesh"]))
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #    class OBJECT_OT_ExamineBoundaryButton(bpy.types.Operator):
@@ -573,10 +574,10 @@ class OBJECT_OT_ExamineBoundaryButton(bpy.types.Operator):
     def execute(self, context):
         makeclothes.setSettings(context)
         try:
-            makeclothes.examineBoundary(context.object, context.scene)        
+            makeclothes.examineBoundary(context.object, context.scene)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #    class OBJECT_OT_OffsetClothesButton(bpy.types.Operator):
@@ -587,13 +588,13 @@ class OBJECT_OT_OffsetClothesButton(bpy.types.Operator):
     bl_label = "Offset clothes"
     bl_options = {'UNDO'}
 
-    def execute(self, context):     
+    def execute(self, context):
         makeclothes.setSettings(context)
         try:
             makeclothes.offsetCloth(context)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #    class OBJECT_OT_SetZDepthButton(bpy.types.Operator):
@@ -610,8 +611,8 @@ class OBJECT_OT_SetZDepthButton(bpy.types.Operator):
             makeclothes.setZDepth(context.scene)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
-   
+        return{'FINISHED'}
+
 #
 #    class VIEW3D_OT_PrintVnumsButton(bpy.types.Operator):
 #
@@ -627,7 +628,7 @@ class VIEW3D_OT_PrintVnumsButton(bpy.types.Operator):
             makeclothes.printVertNums(context)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #    class VIEW3D_OT_DeleteHelpersButton(bpy.types.Operator):
@@ -655,7 +656,7 @@ class VIEW3D_OT_DeleteHelpersButton(bpy.types.Operator):
                 makeclothes.deleteHelpers(context)
             else:
                 Confirm = ""
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #    class VIEW3D_OT_RemoveVertexGroupsButton(bpy.types.Operator):
@@ -672,7 +673,7 @@ class VIEW3D_OT_RemoveVertexGroupsButton(bpy.types.Operator):
             makeclothes.removeVertexGroups(context, context.scene.MCRemoveGroupType)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #   class VIEW3D_OT_AutoVertexGroupsButton(bpy.types.Operator):
@@ -690,9 +691,9 @@ class VIEW3D_OT_AutoVertexGroupsButton(bpy.types.Operator):
             makeclothes.autoVertexGroups(context)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}   
+        return{'FINISHED'}
 
-    
+
 #
 #    class OBJECT_OT_ExportUVsButton(bpy.types.Operator):
 #
@@ -704,11 +705,11 @@ class OBJECT_OT_ExportUVsButton(bpy.types.Operator):
 
     def execute(self, context):
         makeclothes.setSettings(context)
-        try:    
+        try:
             makeuvs.exportUVs(context)
         except error.MhcloError:
             error.handleError(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 
 #

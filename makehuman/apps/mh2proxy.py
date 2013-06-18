@@ -148,6 +148,8 @@ class CProxy:
         self.maskLayer = -1
         self.textureLayer = 0
         self.objFileLayer = 0   # TODO what is this used for?
+        self.texVertsLayers = {}
+        self.texFacesLayers = {}
 
         self.deleteGroups = []
         self.deleteVerts = None
@@ -194,7 +196,7 @@ class CProxy:
                 _A7converter = readProxyFile(gui3d.app.selectedHuman.meshData, "data/3dobjs/a7_converter.proxy")
             print "Converting clothes with", _A7converter
             return _A7converter
-        elif self.basemesh[:6] == "alpha8":
+        elif self.basemesh == "hm08":
             return None
         else:
             raise NameError("Unknown basemesh for mhclo file: %s" % self.basemesh)
@@ -581,46 +583,6 @@ def getScaleData(words):
     den = float(words[3])
     return (v1, v2, den)
 
-
-"""
-Ignoring material settings in proxy file atm.
-
-def readMaterial(line, mat, proxy, multiTex):
-    words= line.split()
-    key = words[0]
-    if key in ['diffuse_color', 'specular_color', 'ambient', 'emit']:
-        mat.settings.append( (key, [float(words[1]), float(words[2]), float(words[3])]) )
-    elif key in ['diffuse_shader', 'specular_shader']:
-        mat.settings.append( (key, words[1]) )
-    elif key in ['use_shadows', 'use_transparent_shadows', 'use_transparency', 'use_raytrace']:
-        mat.settings.append( (key, int(words[1])) )
-    elif key in ['diffuse_intensity', 'specular_intensity', 'specular_hardness', 'translucency',
-        'alpha', 'specular_alpha']:
-        mat.settings.append( (key, float(words[1])) )
-    elif key in ['diffuse_color_factor', 'alpha_factor', 'translucency_factor']:
-        mat.mtexSettings.append( (key, float(words[1])) )
-    elif key in ['use_map_color_diffuse', 'use_map_alpha']:
-        mat.mtexSettings.append( (key, int(words[1])) )
-    elif key in ['use_alpha']:
-        mat.textureSettings.append( (key, int(words[1])) )
-    elif key == 'texture':
-        fname = os.path.realpath(os.path.expanduser(words[1]))
-        if multiTex:
-            tex = CTexture(fname)
-            nmax = len(words)
-            n = 2
-            while n < nmax:
-                tex.types.append((words[n], words[n+1]))
-                n += 2
-            mat.textures.append(tex)
-        else:
-            proxy.texture = os.path.split(fname)
-    else:
-        raise NameError("Material %s?" % key)
-    if key == 'alpha':
-        mat.alpha = float(words[1])
-        mat.use_transparency = True
-"""
 
 def newFace(first, words, group, proxy):
     face = []

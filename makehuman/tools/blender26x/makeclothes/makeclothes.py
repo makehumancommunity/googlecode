@@ -46,7 +46,7 @@ from . import error
 
 Epsilon = 1e-4
 
-theSettings = mc.settings["alpha7"]
+theSettings = mc.settings["hm08"]
 
 ClothingEnums = [
     ("Body", "Body", "Body"),
@@ -65,33 +65,33 @@ ClothingEnums = [
 def setSettings(context):
     global theSettings
     theSettings = mc.settings[context.scene.MCMHVersion]
-    
+
 
 def isHuman(ob):
     try:
         return ob["MhxMesh"]
     except:
-        return False                
+        return False
 
-        
+
 def isClothing(ob):
     return ((ob.type == 'MESH') and (not isHuman(ob)))
 
-    
+
 def getHuman(context):
     for ob in context.scene.objects:
         if ob.select and isHuman(ob):
             return ob
     raise error.MhcloError("No human selected")
 
-        
-def getClothing(context):        
+
+def getClothing(context):
     for ob in context.scene.objects:
         if ob.select and isClothing(ob):
             return ob
     raise error.MhcloError("No clothing selected")
-    
-    
+
+
 def getObjectPair(context):
     human = None
     clothing = None
@@ -112,9 +112,9 @@ def getObjectPair(context):
         raise error.MhcloError("No human selected")
     if not clothing:
         raise error.MhcloError("No clothing selected")
-    return (human, clothing)  
+    return (human, clothing)
 
-    
+
 def selectHelpers(context):
     ob = context.object
     bpy.ops.object.mode_set(mode='EDIT')
@@ -146,10 +146,10 @@ def snapSelectedVerts(context):
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.transform.translate(
-            snap=True, 
-            snap_target='CLOSEST', 
-            snap_point=(0, 0, 0), 
-            snap_align=False, 
+            snap=True,
+            snap_target='CLOSEST',
+            snap_point=(0, 0, 0),
+            snap_align=False,
             snap_normal=(0, 0, 0))
     return
 
@@ -162,18 +162,18 @@ def selectVerts(verts, ob):
         v.select = False
     for v in verts:
         v.select = True
-    return    
+    return
 
 #
-#   goodName(name):    
-#   getFileName(pob, context, ext):            
+#   goodName(name):
+#   getFileName(pob, context, ext):
 #
 
-def goodName(name):    
+def goodName(name):
     newName = name.replace('-','_').replace(' ','_')
     return newName.lower()
-    
-def getFileName(pob, context, ext):            
+
+def getFileName(pob, context, ext):
     name = goodName(pob.name)
     outdir = '%s/%s' % (context.scene.MCDirectory, name)
     outdir = os.path.realpath(os.path.expanduser(outdir))
@@ -182,7 +182,7 @@ def getFileName(pob, context, ext):
         os.makedirs(outdir)
     outfile = os.path.join(outdir, "%s.%s" % (name, ext))
     return (outdir, outfile)
-    
+
 #
 #
 #
@@ -199,7 +199,7 @@ def findClothes(context, bob, pob, log):
     base = bob.data
     proxy = pob.data
     scn = context.scene
-    
+
     bestVerts = []
     for pv in proxy.vertices:
         try:
@@ -216,7 +216,7 @@ def findClothes(context, bob, pob, log):
             if bvg.name == gname:
                 bindex = bvg.index
         if bindex == None:
-            raise error.MhcloError("Did not find vertex group %s in base mesh" % gname)            
+            raise error.MhcloError("Did not find vertex group %s in base mesh" % gname)
 
         mverts = []
         for n in range(scn.MCListLength):
@@ -269,11 +269,11 @@ def findClothes(context, bob, pob, log):
         if gname[0:3] != "Mid" and gname[-2:] != "_M":
             bindex = -1
         bestVerts.append((pv, bindex, exact, mverts, []))
-    
+
     print("Setting up face table")
     vfaces = {}
     for v in base.vertices:
-        vfaces[v.index] = []            
+        vfaces[v.index] = []
     baseFaces = getFaces(base)
     for f in baseFaces:
         v0 = f.vertices[0]
@@ -294,7 +294,7 @@ def findClothes(context, bob, pob, log):
             vfaces[v0].append(t)
             vfaces[v1].append(t)
             vfaces[v2].append(t)
-    
+
     print("Finding weights")
     for (pv, bindex, exact, mverts, fcs) in bestVerts:
         if exact:
@@ -306,7 +306,7 @@ def findClothes(context, bob, pob, log):
                     v1 = base.vertices[f[1]]
                     v2 = base.vertices[f[2]]
                     if (bindex >= 0) and (pv.co[0] < 0.01) and (pv.co[0] > -0.01):
-                        wts = midWeights(pv, bindex, v0, v1, v2, bob, pob)    
+                        wts = midWeights(pv, bindex, v0, v1, v2, bob, pob)
                     else:
                         wts = cornerWeights(pv, v0, v1, v2, bob, pob)
                     fcs.append((f, wts))
@@ -315,7 +315,7 @@ def findClothes(context, bob, pob, log):
     alwaysOutside = False
     minOffset = 0.0
     useProjection = False
-    
+
     bestFaces = []
     badVerts = []
     for (pv, bindex, exact, mverts, fcs) in bestVerts:
@@ -350,7 +350,7 @@ def findClothes(context, bob, pob, log):
         v0 = base.vertices[bVerts[0]]
         v1 = base.vertices[bVerts[1]]
         v2 = base.vertices[bVerts[2]]
-    
+
         est = bWts[0]*v0.co + bWts[1]*v1.co + bWts[2]*v2.co
         norm = bWts[0]*v0.normal + bWts[1]*v1.normal + bWts[2]*v2.normal
         diff = pv.co - est
@@ -358,9 +358,9 @@ def findClothes(context, bob, pob, log):
             proj = diff.dot(norm)
             if alwaysOutside and proj < minOffset:
                 proj = minOffset
-            bestFaces.append((pv, False, bVerts, bWts, proj))    
+            bestFaces.append((pv, False, bVerts, bWts, proj))
         else:
-            bestFaces.append((pv, False, bVerts, bWts, diff))    
+            bestFaces.append((pv, False, bVerts, bWts, diff))
 
     if badVerts:
         print("Optimal triangles not found for the following verts")
@@ -373,7 +373,7 @@ def findClothes(context, bob, pob, log):
             if n%8 == 0:
                 print(string)
                 string = ""
-        print(string)                
+        print(string)
         print("Done")
     return bestFaces
 
@@ -428,24 +428,24 @@ def cornerWeights(pv, v0, v1, v2, bob, pob):
     a11 = r1[1]-r2[1]
     b0 = r[0]-r2[0]
     b1 = r[1]-r2[1]
-    """    
-    
+    """
+
     e0 = u01
     e0.normalize()
     e1 = n.cross(e0)
     e1.normalize()
-    
+
     u20 = r0-r2
     u21 = r1-r2
     ur2 = r-r2
-    
+
     a00 = u20.dot(e0)
     a01 = u21.dot(e0)
     a10 = u20.dot(e1)
     a11 = u21.dot(e1)
     b0 = ur2.dot(e0)
     b1 = ur2.dot(e1)
-    
+
     det = a00*a11 - a01*a10
     if abs(det) < 1e-20:
         print("Clothes vert %d mapped to degenerate triangle (det = %g) with corners" % (pv.index, det))
@@ -459,7 +459,7 @@ def cornerWeights(pv, v0, v1, v2, bob, pob):
 
     w0 = (a11*b0 - a01*b1)/det
     w1 = (-a10*b0 + a00*b1)/det
-    
+
     return (w0, w1, 1-w0-w1)
 
 #
@@ -472,28 +472,28 @@ def midWeights(pv, bindex, v0, v1, v2, bob, pob):
     if isInGroup(v0, bindex):
         v0.select = True
         if isInGroup(v1, bindex):
-            v1.select = True    
+            v1.select = True
             return midWeight(pv, v0.co, v1.co)
         elif isInGroup(v2, bindex):
             (w1, w0, w2) = midWeight(pv, v0.co, v2.co)
             v2.select = True
             return (w0, w1, w2)
-    elif isInGroup(v1, bindex) and isInGroup(v2, bindex):            
+    elif isInGroup(v1, bindex) and isInGroup(v2, bindex):
         (w1, w2, w0) = midWeight(pv, v1.co, v2.co)
         v1.select = True
         v2.select = True
         return (w0, w1, w2)
     #print("  Failed mid")
     return cornerWeights(pv, v0, v1, v2, bob, pob)
-    
+
 def isInGroup(v, bindex):
     for g in v.groups:
         if g.group == bindex:
             return True
-    return False            
-    
+    return False
+
 def midWeight(pv, r0, r1):
-    u01 = r1-r0    
+    u01 = r1-r0
     d01 = u01.length
     u = pv.co-r0
     s = u.dot(u01)
@@ -503,20 +503,20 @@ def midWeight(pv, r0, r1):
 #
 #    printClothes(context, bob, pob, data):
 #
-        
+
 def printClothesHeader(fp, scn):
     fp.write(
         "# author %s\n" % scn.MCAuthor +
         "# license %s\n" % scn.MCLicense +
         "# homepage %s\n" % scn.MCHomePage +
-        "# uuid %s\n" % uuid.uuid4())
+        "uuid %s\n" % uuid.uuid4())
     if theSettings:
-        fp.write("# basemesh %s\n" % theSettings.version)
+        fp.write("basemesh %s\n" % theSettings.baseMesh)
     for n in range(1,6):
         tag = getattr(scn, "MCTag%d" % n)
         if tag:
-            fp.write("# tag %s\n" % tag)
-    fp.write("\n")            
+            fp.write("tag %s\n" % tag)
+    fp.write("\n")
 
 
 def printClothes(context, bob, pob, data):
@@ -526,8 +526,8 @@ def printClothes(context, bob, pob, data):
     print("Creating clothes file %s" % outfile)
     fp = open(outfile, "w", encoding="utf-8", newline="\n")
     printClothesHeader(fp, scn)
-    fp.write("# name %s\n" % pob.name.replace(" ","_"))
-    fp.write("# obj_file %s.obj\n" % goodName(pob.name))
+    fp.write("name %s\n" % pob.name.replace(" ","_"))
+    fp.write("obj_file %s.obj\n" % goodName(pob.name))
     vnums = theSettings.bodyPartVerts[scn.MCBodyPart]
     if scn.MCScaleUniform:
         printScale(fp, bob, scn, 'x_scale', 0, vnums[0])
@@ -540,8 +540,8 @@ def printClothes(context, bob, pob, data):
 
     printStuff(fp, pob, context)
     printFaceNumbers(fp, pob)
-    
-    fp.write("# verts %d\n" % (firstVert))
+
+    fp.write("verts %d\n" % (firstVert))
 
     if scn.MCSelfClothed:
         for n in range(theSettings.vertices["Penis"][0]):
@@ -558,14 +558,14 @@ def printClothes(context, bob, pob, data):
     printDeleteVerts(fp, bob)
     printMhcloUvLayers(fp, pob, scn, True)
     fp.close()
-    print("%s done" % outfile)    
+    print("%s done" % outfile)
     return
-    
+
 
 def printFaceNumbers(fp, ob):
     if len(ob.data.materials) <= 1:
         return
-    fp.write("# faceNumbers\n")
+    fp.write("faceNumbers\n")
     meFaces = getFaces(ob.data)
     mi = -1
     us = -1
@@ -587,10 +587,10 @@ def printFaceNumbers(fp, ob):
         fp.write("    ft %d %d ;\n" % (mi, us))
     return
 
-    
+
 def printMhcloUvLayers(fp, pob, scn, hasObj):
     me = pob.data
-    if me.uv_textures:      
+    if me.uv_textures:
         for layer,uvtex in enumerate(me.uv_textures):
             if hasObj and (layer == scn.MCTextureLayer):
                 continue
@@ -604,11 +604,11 @@ def printMhcloUvLayers(fp, pob, scn, hasObj):
             texVerts = texVertsList[layer]
             uvFaceVerts = uvFaceVertsList[layer]
             nTexVerts = len(texVerts)
-            fp.write("# texVerts %d\n" % printLayer)
+            fp.write("texVerts %d\n" % printLayer)
             for vtn in range(nTexVerts):
                 vt = texVerts[vtn]
                 fp.write("%.4f %.4f\n" % (vt[0], vt[1]))
-            fp.write("# texFaces %d\n" % printLayer)
+            fp.write("texFaces %d\n" % printLayer)
             meFaces = getFaces(me)
             for f in meFaces:
                 uvVerts = uvFaceVerts[f.index]
@@ -624,24 +624,24 @@ def printMhcloUvLayers(fp, pob, scn, hasObj):
 def reexportMhclo(context):
     pob = getClothing(context)
     scn = context.scene
-    scn.objects.active = pob    
+    scn.objects.active = pob
     bpy.ops.object.mode_set(mode='OBJECT')
     (outpath, outfile) = getFileName(pob, context, "mhclo")
-        
+
     lines = []
     print("Reading clothes file %s" % outfile)
     fp = open(outfile, "r")
     for line in fp:
         lines.append(line)
-    fp.close()        
-            
+    fp.close()
+
     print("Creating new clothes file %s" % outfile)
     fp = open(outfile, "w", encoding="utf-8", newline="\n")
     doingStuff = False
     for line in lines:
         words = line.split()
         if len(words) == 0:
-            fp.write(line)                
+            fp.write(line)
         elif (words[0] == "#"):
             if words[1] in ["texVerts", "texFaces"]:
                 break
@@ -652,16 +652,16 @@ def reexportMhclo(context):
                 doingStuff = False
             elif doingStuff:
                 pass
-            else:            
-                fp.write(line)                
-        elif not doingStuff:                
-            fp.write(line)                
+            else:
+                fp.write(line)
+        elif not doingStuff:
+            fp.write(line)
     printMhcloUvLayers(fp, pob, scn, True)
     fp.close()
-    print("%s written" % outfile)    
+    print("%s written" % outfile)
     return
-    
-     
+
+
 def exportDeleteVerts(context):
     bob = getHuman(context)
     path = os.path.realpath(os.path.expanduser("~/killverts.txt"))
@@ -669,7 +669,7 @@ def exportDeleteVerts(context):
     printDeleteVerts(fp, bob)
     fp.close()
     print("Delete verts written to %s" % path)
-    
+
 
 def printDeleteVerts(fp, bob):
     kill = None
@@ -679,16 +679,16 @@ def printDeleteVerts(fp, bob):
             break
     if not kill:
         return
-        
-    killList = []        
+
+    killList = []
     for v in bob.data.vertices:
         for vg in v.groups:
             if vg.group == kill.index:
-                killList.append(v.index)    
+                killList.append(v.index)
     if not killList:
         return
 
-    fp.write("# delete_verts\n")
+    fp.write("delete_verts\n")
     n = 0
     vn0 = -100
     sequence = False
@@ -698,7 +698,7 @@ def printDeleteVerts(fp, bob):
                 fp.write("- %d " % vn0)
             n += 1
             if n % 10 == 0:
-                fp.write("\n")  
+                fp.write("\n")
             sequence = False
             fp.write("%d " % vn)
         else:
@@ -709,45 +709,50 @@ def printDeleteVerts(fp, bob):
     if sequence:
         fp.write("- %d" % vn)
     fp.write("\n")
-                
+
 #
-#   printStuff(fp, pob, context): 
+#   printStuff(fp, pob, context):
 #   From z_depth to use_projection
 #
 
 def printStuff(fp, pob, context):
     scn = context.scene
-    fp.write("# z_depth %d\n" % scn.MCZDepth)
-    
+    fp.write("z_depth %d\n" % scn.MCZDepth)
+
     for mod in pob.modifiers:
         if mod.type == 'SHRINKWRAP':
-            fp.write("# shrinkwrap %.3f\n" % (mod.offset))
+            fp.write("shrinkwrap %.3f\n" % (mod.offset))
         elif mod.type == 'SUBSURF':
-            fp.write("# subsurf %d %d\n" % (mod.levels, mod.render_levels))
+            fp.write("subsurf %d %d\n" % (mod.levels, mod.render_levels))
         elif mod.type == 'SOLIDIFY':
-            fp.write("# solidify %.3f %.3f\n" % (mod.thickness, mod.offset))
-            
-    for skey in theShapeKeys:            
+            fp.write("solidify %.3f %.3f\n" % (mod.thickness, mod.offset))
+
+    for skey in theShapeKeys:
         if getattr(scn, "MC" + skey):
-            fp.write("# shapekey %s\n" % skey)            
-            
-    me = pob.data            
+            fp.write("shapekey %s\n" % skey)
+
+    me = pob.data
     if scn.MCAllUVLayers:
         if me.uv_textures:
             for layer,uvtex in enumerate(me.uv_textures):
-                fp.write("# uvtex_layer %d %s\n" % (layer, uvtex.name.replace(" ","_")))
-            fp.write("# objfile_layer %d\n" % scn.MCTextureLayer)
+                fp.write("uvtex_layer %d %s\n" % (layer, uvtex.name.replace(" ","_")))
+            fp.write("objfile_layer %d\n" % scn.MCTextureLayer)
         writeTextures(fp, goodName(pob.name), scn)
-    else:        
+    else:
         if me.uv_textures:
             uvtex0 = me.uv_textures[scn.MCTextureLayer]
-            fp.write("# uvtex_layer 0 %s\n" % uvtex0.name.replace(" ","_"))
-            uvtex1 = me.uv_textures[scn.MCMaskLayer]
+            fp.write("uvtex_layer 0 %s\n" % uvtex0.name.replace(" ","_"))
+            try:
+                uvtex1 = me.uv_textures[scn.MCMaskLayer]
+            except IndexError:
+                uvtex1 = uvtex0
             if scn.MCUseMask and uvtex1 != uvtex0:
-                fp.write("# uvtex_layer 1 %s\n" % uvtex1.name.replace(" ","_"))
-            fp.write("# objfile_layer 0\n")
+                fp.write("uvtex_layer 1 %s\n" % uvtex1.name.replace(" ","_"))
+            fp.write("objfile_layer 0\n")
         writeTextures(fp, goodName(pob.name), scn)
-           
+
+    return
+
     if scn.MCHairMaterial:
         fp.write(
 "# material %s\n" % pob.name +
@@ -774,7 +779,7 @@ def printStuff(fp, pob, context):
     alphaDone = False
     if me.materials and (useMats or useBlender) and me.materials[0]:
         mat = me.materials[0]
-        fp.write("# material %s\n" % mat.name)
+        fp.write("material %s\n" % mat.name)
         if useMats:
             writeColor(fp, 'diffuse_color', 'diffuse_intensity', mat.diffuse_color, mat.diffuse_intensity)
             #fp.write('diffuse_shader %s\n' % mat.diffuse_shader)
@@ -783,35 +788,35 @@ def printStuff(fp, pob, context):
             if scn.MCUseTrans:
                 alpha = 0
             else:
-                alpha = mat.alpha            
+                alpha = mat.alpha
             fp.write("alpha %s\n" % alpha)
             alphaDone = True
         if useBlender:
             (outpath, outfile) = getFileName(pob, context, "mhx")
             mhxfile = exportBlenderMaterial(me, outpath)
-            fp.write("# material_file %s\n" % mhxfile)
+            fp.write("material_file %s\n" % mhxfile)
     elif not scn.MCHairMaterial:
-        fp.write("# material %s\n" % pob.name.replace(" ","_"))
+        fp.write("material %s\n" % pob.name.replace(" ","_"))
         if scn.MCUseTrans:
             fp.write("  alpha 0\n")
-            
-    fp.write("# use_projection 0\n")            
-    return  
-    
-def writeTextures(fp, name, scn):        
-    fp.write("# texture %s_texture.png %d\n" % (name, scn.MCTextureLayer))
+
+    fp.write("use_projection 0\n")
+
+
+def writeTextures(fp, name, scn):
+    fp.write("texture %s_texture.png %d\n" % (name, scn.MCTextureLayer))
     if scn.MCUseMask:
-        fp.write("# mask %s_mask.png %d\n" % (name, scn.MCMaskLayer))
+        fp.write("mask %s_mask.png %d\n" % (name, scn.MCMaskLayer))
     if scn.MCUseBump:
-        fp.write("# bump %s_bump.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCBumpStrength))
+        fp.write("bump %s_bump.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCBumpStrength))
     if scn.MCUseNormal:
-        fp.write("# normal %s_normal.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCNormalStrength))
+        fp.write("normal %s_normal.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCNormalStrength))
     if scn.MCUseDisp:
-        fp.write("# displacement %s_disp.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCDispStrength))
+        fp.write("displacement %s_disp.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCDispStrength))
     if scn.MCUseTrans:
-        fp.write("# transparency %s_trans.png %d\n" % (name, scn.MCTextureLayer))
+        fp.write("transparency %s_trans.png %d\n" % (name, scn.MCTextureLayer))
     return
-    
+
 #
 #   deleteStrayVerts(context, ob):
 #
@@ -832,7 +837,7 @@ def deleteStrayVerts(context, ob):
         if not onFaces[v.index]:
             raise NameError("Mesh %s has stray vert %d" % (ob.name, v.index))
         return
-    
+
 #
 #   exportObjFile(context):
 #
@@ -843,16 +848,16 @@ def exportObjFile(context):
     (objpath, objfile) = getFileName(ob, context, "obj")
     print("Open", objfile)
     fp = open(objfile, "w", encoding="utf-8", newline="\n")
-    fp.write("# Exported from make_clothes.py\n")
-    
+    fp.write("Exported from make_clothes.py\n")
+
     scn = context.scene
     me = ob.data
     for v in me.vertices:
         fp.write("v %.4f %.4f %.4f\n" % (v.co[0], v.co[2], -v.co[1]))
-        
+
     for v in me.vertices:
         fp.write("vn %.4f %.4f %.4f\n" % (v.normal[0], v.normal[2], -v.normal[1]))
-        
+
     if me.uv_textures:
         (vertEdges, vertFaces, edgeFaces, faceEdges, faceNeighbors, uvFaceVertsList, texVertsList) = setupTexVerts(ob)
         layer = scn.MCTextureLayer
@@ -868,8 +873,8 @@ def exportObjFile(context):
     fp.close()
     print(objfile, "closed")
     return
-        
-def writeObjTextureData(fp, me, texVerts, uvFaceVerts):    
+
+def writeObjTextureData(fp, me, texVerts, uvFaceVerts):
     nTexVerts = len(texVerts)
     for vtn in range(nTexVerts):
         vt = texVerts[vtn]
@@ -882,7 +887,7 @@ def writeObjTextureData(fp, me, texVerts, uvFaceVerts):
             (vt, uv) = uvVerts[n]
             fp.write("%d/%d " % (v+1, vt+1))
         fp.write("\n")
-    return        
+    return
 
 def writeColor(fp, string1, string2, color, intensity):
     fp.write(
@@ -902,12 +907,12 @@ def printScale(fp, bob, scn, name, index, vnums):
             dy = v1[1]-v2[1]
             dz = v1[2]-v2[2]
             dr = math.sqrt(dx*dx + dy*dy + dz*dz)
-            fp.write("# r_scale %d %d %.4f\n" % (n1, n2, dr/scn.MCScaleCorrect))            
+            fp.write("r_scale %d %d %.4f\n" % (n1, n2, dr/scn.MCScaleCorrect))
     else:
         if n1 >=0 and n2 >= 0:
-            x1 = verts[n1].co[index]     
+            x1 = verts[n1].co[index]
             x2 = verts[n2].co[index]
-            fp.write("# %s %d %d %.4f\n" % (name, n1, n2, abs(x1-x2)/scn.MCScaleCorrect))
+            fp.write("%s %d %d %.4f\n" % (name, n1, n2, abs(x1-x2)/scn.MCScaleCorrect))
     return
 
 #
@@ -928,7 +933,7 @@ def setupTexVerts(ob):
     for f in meFaces:
         for vn in f.vertices:
             vertFaces[vn].append(f)
-    
+
     edgeFaces = {}
     for e in me.edges:
         edgeFaces[e.index] = []
@@ -945,7 +950,7 @@ def setupTexVerts(ob):
                         edgeFaces[e.index].append(f)
                     if e not in faceEdges[f.index]:
                         faceEdges[f.index].append(e)
-            
+
     faceNeighbors = {}
     for f in meFaces:
         faceNeighbors[f.index] = []
@@ -963,7 +968,7 @@ def setupTexVerts(ob):
         for f in meFaces:
             uvFaceVerts[f.index] = []
         vtn = 0
-        texVerts = {}    
+        texVerts = {}
         texVertsList.append(texVerts)
         if BMeshAware:
             uvloop = me.uv_layers[index]
@@ -981,14 +986,14 @@ def setupTexVerts(ob):
                 vtn = findTexVert(uvf.uv3, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob)
                 if len(f.vertices) > 3:
                     vtn = findTexVert(uvf.uv4, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob)
-    return (vertEdges, vertFaces, edgeFaces, faceEdges, faceNeighbors, uvFaceVertsList, texVertsList)     
+    return (vertEdges, vertFaces, edgeFaces, faceEdges, faceNeighbors, uvFaceVertsList, texVertsList)
 
 def findTexVert(uv, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob):
     for (e,f1) in faceNeighbors[f.index]:
         for (vtn1,uv1) in uvFaceVerts[f1.index]:
             vec = uv - uv1
             if vec.length < 1e-8:
-                uvFaceVerts[f.index].append((vtn1,uv))                
+                uvFaceVerts[f.index].append((vtn1,uv))
                 return vtn
     uvFaceVerts[f.index].append((vtn,uv))
     texVerts[vtn] = uv
@@ -1005,7 +1010,7 @@ def exportBaseUvsPy(context):
     (vertEdges, vertFaces, edgeFaces, faceEdges, faceNeighbors, uvFaceVertsList, texVertsList) = setupTexVerts(ob)
     maskLayer = scn.MCMaskLayer
     texVerts = texVertsList[maskLayer]
-    uvFaceVerts = uvFaceVertsList[maskLayer]    
+    uvFaceVerts = uvFaceVertsList[maskLayer]
     nTexVerts = len(texVerts)
 
     folder = scn.MCMakeHumanDirectory
@@ -1026,11 +1031,11 @@ def exportBaseUvsPy(context):
     fp.write("]\n")
     fp.close()
     return
-        
+
 
 #
 #   storeData(pob, bob, data):
-#   restoreData(context):    
+#   restoreData(context):
 #
 
 def storeData(pob, bob, data):
@@ -1049,11 +1054,11 @@ def storeData(pob, bob, data):
             fp.write("(%s,%s,%s)\n" % (diff[0],diff[1],diff[2]))
     fp.close()
     return
-    
+
 def parse(string):
     return ast.literal_eval(string)
 
-def restoreData(context): 
+def restoreData(context):
     (bob, pob) = getObjectPair(context)
     fname = settingsFile("stored")
     fp = open(fname, "rU")
@@ -1110,15 +1115,15 @@ def unwrapObject(ob, context):
     scn = context.scene
     old = scn.objects.active
     scn.objects.active = ob
-    
+
     n = len(ob.data.uv_textures)-1
     if n < scn.MCMaskLayer:
         while n < scn.MCMaskLayer:
             ob.data.uv_textures.new()
             n += 1
         ob.data.uv_textures[n].name = "Mask"
-    ob.data.uv_textures.active_index = scn.MCMaskLayer        
-    
+    ob.data.uv_textures.active_index = scn.MCMaskLayer
+
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='SELECT')
     bpy.ops.uv.unwrap(method='ANGLE_BASED', fill_holes=True, correct_aspect=True)
@@ -1134,7 +1139,7 @@ def unwrapObject(ob, context):
 def printItems(struct):
     for (key,value) in struct.items():
         print(key, value)
-    
+
 
 def projectUVs(bob, pob, context):
     print("Projecting %s => %s" % (bob.name, pob.name))
@@ -1152,7 +1157,7 @@ def projectUVs(bob, pob, context):
         modifyTexFaces(bFaces, bTexFaces)
     for (pv, exact, verts, wts, diff) in data:
         if exact:
-            (v0, x) = verts[0]            
+            (v0, x) = verts[0]
             vn0 = v0.index
             for f0 in bVertFaces[vn0]:
                 uvf = bTexFaces[f0.index].uvs
@@ -1181,7 +1186,7 @@ def projectUVs(bob, pob, context):
                                 uv1 = getUvLoc(vn1, f0, uvf)
                                 uv2 = getUvLoc(vn2, f0, uvf)
                                 table[pv.index] = (0, [uv0,uv1,uv2], wts)
-        
+
     (pVertEdges, pVertFaces, pEdgeFaces, pFaceEdges, pFaceNeighbors, pUvFaceVertsList, pTexVertsList) = setupTexVerts(pob)
     maskLayer = context.scene.MCMaskLayer
     pUvFaceVerts = pUvFaceVertsList[maskLayer]
@@ -1191,7 +1196,7 @@ def projectUVs(bob, pob, context):
     pTexVertUv = {}
     for vtn in range(pNTexVerts):
         pTexVertUv[vtn] = None
-        
+
     pTexFaces = getTexFaces(pob.data, maskLayer)
     pverts = pob.data.vertices
     bverts = bob.data.vertices
@@ -1208,15 +1213,15 @@ def projectUVs(bob, pob, context):
         rmd[2] = None
         rmd[3] = None
         remains[fn] = rmd
-        
+
         uvf = pTexFaces[fn]
         for n,pvn in enumerate(pf.vertices):
             uv = getSingleUvLoc(pvn, table)
             uv = trySetUv(pvn, fn, uvf, rmd, n, uv, pVertTexVerts, pTexVertUv, pSeamVertEdges)
-            if uv: 
+            if uv:
                 uvf.set(n, uv)
 
-    (bVertList, bPairList, bEdgeList) = getSeams(bob, bTexFaces, context.scene)  
+    (bVertList, bPairList, bEdgeList) = getSeams(bob, bTexFaces, context.scene)
     for (en,fcs) in pSeamEdgeFaces.items():
         pe = pob.data.edges[en]
         for m in range(2):
@@ -1235,7 +1240,7 @@ def projectUVs(bob, pob, context):
                                 pTexVertUv[vt] = uv
                             uvf.set(n, uv)
                             remains[fn][n] = None
-    
+
     for pf in pMeFaces:
         rmd = remains[pf.index]
         for n in range(4):
@@ -1247,7 +1252,7 @@ def projectUVs(bob, pob, context):
                 else:
                     pTexVertUv[vt] = uv
                 uvf.set(n, uv)
-    return                
+    return
 
 
 def modifyTexFaces(meFaces, texFaces):
@@ -1258,9 +1263,9 @@ def modifyTexFaces(meFaces, texFaces):
     for n in range(nModFaces):
         tf = base_uv.texFaces[n]
         texFaces[n+theSettings.nBodyFaces].uvs = [Vector(tf[0]), Vector(tf[1]), Vector(tf[2]), Vector(tf[3])]
-     
 
-def trySetUv(pvn, fn, uvf, rmd, n, uv, vertTexVerts, texVertUv, seamVertEdges):        
+
+def trySetUv(pvn, fn, uvf, rmd, n, uv, vertTexVerts, texVertUv, seamVertEdges):
     (vt, uv_old) = vertTexVerts[pvn][fn]
     if texVertUv[vt]:
         return texVertUv[vt]
@@ -1282,7 +1287,7 @@ def findClosestEdge(pv, edgeList, verts, edges):
             mindist = dist
             best = e
     return best
-        
+
 
 def getSeamVertFaceUv(pv, pe, pf, pVertTexVerts, pTexVertUv, be, bEdgeFaces, bTexFaces, pverts, bverts):
     dist = {}
@@ -1305,7 +1310,7 @@ def getSeamVertFaceUv(pv, pe, pf, pVertTexVerts, pTexVertUv, be, bEdgeFaces, bTe
         if dist[bf.index] < mindist:
             mindist = dist[bf.index]
             best = bf
-            
+
     bv0 = bverts[be.vertices[0]]
     bv1 = bverts[be.vertices[1]]
     m0 = getFaceIndex(bv0.index, best)
@@ -1320,10 +1325,10 @@ def getSeamVertFaceUv(pv, pe, pf, pVertTexVerts, pTexVertUv, be, bEdgeFaces, bTe
     vec = bv0.co - bv1.co
     dist0 = abs(vec.dot(vec0))
     dist1 = abs(vec.dot(vec1))
-    eps = dist1/(dist0+dist1)    
+    eps = dist1/(dist0+dist1)
     uv = eps*buv0 + (1-eps)*buv1
     return uv
-    
+
     best.select = True
     pf.select = True
     bv0.select = True
@@ -1333,21 +1338,21 @@ def getSeamVertFaceUv(pv, pe, pf, pVertTexVerts, pTexVertUv, be, bEdgeFaces, bTe
     print("  ", buv0)
     print("  ", buv1)
     foo
-    
+
     return uv
 
-    
+
 def getFaceIndex(vn, f):
     n = 0
     for vn1 in f.vertices:
         if vn1 == vn:
-            #print(v.index, n, list(f.vertices))            
+            #print(v.index, n, list(f.vertices))
             return n
         n += 1
     raise error.MhcloError("Vert %d not in face %d %s" % (vn, f.index, list(f.vertices)))
 
 
-def getSeamData(me, uvFaceVerts, edgeFaces):    
+def getSeamData(me, uvFaceVerts, edgeFaces):
     seamEdgeFaces = {}
     seamVertEdges = {}
     boundaryEdges = {}
@@ -1384,7 +1389,7 @@ def getSeamData(me, uvFaceVerts, edgeFaces):
                 seamVertEdges[vn1].append(e)
             else:
                 e.select = False
-    return (seamEdgeFaces, seamVertEdges, boundaryEdges, vertTexVerts)            
+    return (seamEdgeFaces, seamVertEdges, boundaryEdges, vertTexVerts)
 
 
 def isSeam(vn0, vn1, f0, f1, vertTexVerts):
@@ -1417,7 +1422,7 @@ def createFaceTable(verts, faces):
     for f in faces:
         for v in f.vertices:
             table[v].append(f)
-    return table            
+    return table
 
 
 def getSingleUvLoc(vn, table):
@@ -1433,7 +1438,7 @@ def getSingleUvLoc(vn, table):
             for n in range(3):
                 print(buvs[n], wts[n])
             halt
-        
+
 
 def getUvLoc(vn, f, uvface):
     for n,vk in enumerate(f.vertices):
@@ -1457,9 +1462,9 @@ def recoverSeams(context):
     sme.update(calc_edges=True)
     sob = bpy.data.objects.new("Seams", sme)
     sob.show_x_ray = True
-    scn.objects.link(sob)            
+    scn.objects.link(sob)
     print("Seams recovered for object %s\n" % ob.name)
-    return    
+    return
 
 
 def setSeams(context):
@@ -1480,7 +1485,7 @@ def setSeams(context):
 
     for e in clothing.data.edges:
         e.use_seam = False
-        
+
     for se in seams.data.edges:
         dist = 1e6
         sv0 = seams.data.vertices[se.vertices[0]]
@@ -1505,16 +1510,16 @@ def setSeams(context):
         if se.index % 100 == 0:
             print(se.index)
     print("Seams set for object %s\n" % clothing.name)
-    return        
-    
-            
+    return
+
+
 def coordList(vertList, verts):
     coords = []
     for vn in vertList:
         coords.append(verts[vn].co)
-    return coords        
+    return coords
 
-    
+
 def getSeams(ob, texFaces, scn):
     verts = ob.data.vertices
     meFaces = getFaces(ob.data)
@@ -1536,13 +1541,13 @@ def getSeams(ob, texFaces, scn):
         e.use_seam = (onEdges[v0] and onEdges[v1])
         if e.use_seam:
             vertList += [v0, v1]
-            pairList.append((n,n+1))            
+            pairList.append((n,n+1))
             n += 2
             edgeList.append(e)
-    return (vertList, pairList, edgeList)            
+    return (vertList, pairList, edgeList)
 
-        
-def isOnEdge(v, faceTable, texFaces):  
+
+def isOnEdge(v, faceTable, texFaces):
     if v.index >= theSettings.nBodyVerts:
         return False
     uvloc = None
@@ -1558,7 +1563,7 @@ def isOnEdge(v, faceTable, texFaces):
                         return True
                 else:
                     uvloc = uvnloc
-    return False                            
+    return False
 
 #
 #    makeClothes(context, doFindClothes):
@@ -1586,7 +1591,7 @@ def makeClothes(context, doFindClothes):
     if log:
         log.close()
     return
-    
+
 
 def checkNoTriangles(ob):
     for f in ob.data.polygons:
@@ -1594,7 +1599,7 @@ def checkNoTriangles(ob):
             msg = "Object %s can not be used for clothes creation because it has non-quad faces.\n" % (ob.name)
             print(msg)
             raise error.MhcloError(msg)
-        
+
 
 def checkObjectOK(ob, context):
     old = context.object
@@ -1632,7 +1637,7 @@ def checkObjectOK(ob, context):
             print(msg)
             print("Fixed automatically")
     context.scene.objects.active = old
-    return    
+    return
 
 #
 #   checkSingleVGroups(pob):
@@ -1651,8 +1656,8 @@ def checkSingleVGroups(pob):
                     if vg.index == g.group:
                         print("  ", vg.name)
             raise error.MhcloError("Vertex %d in %s belongs to %d groups. Must be exactly one" % (v.index, pob.name, n))
-    return            
-        
+    return
+
 #
 #   offsetCloth(context):
 #
@@ -1660,7 +1665,7 @@ def checkSingleVGroups(pob):
 def offsetCloth(context):
     (bob, pob) = getObjectPair(context)
     bverts = bob.data.vertices
-    pverts = pob.data.vertices    
+    pverts = pob.data.vertices
     print("Offset %s to %s" % (bob.name, pob.name))
 
     inpath = '%s/%s.mhclo' % (context.scene.MCDirectory, goodName(bob.name))
@@ -1679,7 +1684,7 @@ def offsetCloth(context):
         words = line.split()
         if len(words) < 1:
             outfp.write(line)
-        elif words[0] == "#":    
+        elif words[0] == "#":
             if len(words) < 2:
                 status = 0
                 outfp.write(line)
@@ -1689,7 +1694,7 @@ def offsetCloth(context):
             elif words[1] == "obj_data":
                 if context.scene.MCVertexGroups:
                     infp.close()
-                    writeFaces(pob, outfp) 
+                    writeFaces(pob, outfp)
                     writeVertexGroups(pob, outfp)
                     outfp.close()
                     print("Clothes file modified %s => %s" % (infile, outfile))
@@ -1697,7 +1702,7 @@ def offsetCloth(context):
                 outfp.write(line)
                 status = 0
             elif words[1] == "name":
-                outfp.write("# name %s\n" % pob.name.replace(" ","_"))
+                outfp.write("name %s\n" % pob.name.replace(" ","_"))
             else:
                 outfp.write(line)
             vn = 0
@@ -1725,7 +1730,7 @@ def offsetCloth(context):
     return
 
 def writeFaces(pob, fp):
-    fp.write("# faces\n")
+    fp.write("faces\n")
     meFaces = getFaces(pob.data)
     for f in meFaces:
         for v in f.vertices:
@@ -1735,18 +1740,18 @@ def writeFaces(pob, fp):
 
 def writeVertexGroups(pob, fp):
     for vg in pob.vertex_groups:
-        fp.write("# weights %s\n" % vg.name)
+        fp.write("weights %s\n" % vg.name)
         for v in pob.data.vertices:
             for g in v.groups:
                 if g.group == vg.index and g.weight > 1e-4:
                     fp.write(" %d %.4g \n" % (v.index, g.weight))
     return
 
-###################################################################################    
+###################################################################################
 #
 #   Export of clothes material
 #
-###################################################################################    
+###################################################################################
 
 def exportBlenderMaterial(me, path):
     mats = []
@@ -1759,7 +1764,7 @@ def exportBlenderMaterial(me, path):
                     tex = mtex.texture
                     if tex and (tex not in texs):
                         texs.append(tex)
-    
+
     matname = goodName(mats[0].name)
     mhxfile = "%s_material.mhx" % matname
     mhxpath = os.path.join(path, mhxfile)
@@ -1784,7 +1789,7 @@ def exportMaterial(mat, fp):
     for (n,mtex) in enumerate(mat.texture_slots):
         if mtex:
             exportMTex(n, mtex, mat.use_textures[n], fp)
-    prio = ['diffuse_color', 'diffuse_shader', 'diffuse_intensity', 
+    prio = ['diffuse_color', 'diffuse_shader', 'diffuse_intensity',
         'specular_color', 'specular_shader', 'specular_intensity']
     writePrio(mat, prio, "  ", fp)
     exportRamp(mat.diffuse_ramp, 'diffuse_ramp', fp)
@@ -1798,7 +1803,7 @@ def exportMaterial(mat, fp):
     exclude = ['use_surface_diffuse']
     exportDefault("Strand", mat.strand, [], [], exclude, [], '  ', fp)
     writeDir(mat, prio+['texture_slots', 'volume', 'node_tree',
-        'diffuse_ramp', 'specular_ramp', 'use_diffuse_ramp', 'use_specular_ramp', 
+        'diffuse_ramp', 'specular_ramp', 'use_diffuse_ramp', 'use_specular_ramp',
         'halo', 'raytrace_transparency', 'subsurface_scattering', 'strand',
         'is_updated', 'is_updated_data'], "  ", fp)
     fp.write("end Material\n\n")
@@ -1816,14 +1821,14 @@ MapToTypes = {
     'use_map_diffuse' : 'DIFFUSE',
     'use_map_displacement' : 'DISPLACEMENT',
     'use_map_emission' : 'EMISSION',
-    'use_map_emit' : 'EMIT', 
+    'use_map_emit' : 'EMIT',
     'use_map_hardness' : 'HARDNESS',
     'use_map_mirror' : 'MIRROR',
     'use_map_normal' : 'NORMAL',
     'use_map_raymir' : 'RAYMIR',
     'use_map_reflect' : 'REFLECTION',
     'use_map_scatter' : 'SCATTERING',
-    'use_map_specular' : 'SPECULAR_COLOR', 
+    'use_map_specular' : 'SPECULAR_COLOR',
     'use_map_translucency' : 'TRANSLUCENCY',
     'use_map_warp' : 'WARP',
 }
@@ -1837,7 +1842,7 @@ def exportMTex(index, mtex, use, fp):
         if getattr(mtex, ext):
             if mapto == None:
                 mapto = MapToTypes[ext]
-            prio.append(ext)    
+            prio.append(ext)
     fp.write("  MTex %d %s %s %s\n" % (index, texname, mtex.texture_coords, mapto))
     writePrio(mtex, ['texture']+prio, "    ", fp)
     writeDir(mtex, list(MapToTypes.keys()) + [
@@ -1857,7 +1862,7 @@ def exportTexture(tex, matname, fp):
 
     exportRamp(tex.color_ramp, "color_ramp", fp)
     writeDir(tex, [
-        'color_ramp', 'node_tree', 'image_user', 'use_nodes', 'use_textures', 'type', 
+        'color_ramp', 'node_tree', 'image_user', 'use_nodes', 'use_textures', 'type',
         'users_material', 'is_updated', 'is_updated_data'], "  ", fp)
     fp.write("end Texture\n\n")
 
@@ -1937,13 +1942,13 @@ def stringQuote(string):
         else:
             s += c
     return s
-        
-            
+
+
 #
-#    writeExt(ext, data, exclude, pad, depth, fp):        
+#    writeExt(ext, data, exclude, pad, depth, fp):
 #
 
-def writeExt(ext, data, exclude, pad, depth, fp):        
+def writeExt(ext, data, exclude, pad, depth, fp):
     if hasattr(data, ext):
         writeValue(ext, getattr(data, ext), exclude, pad, depth, fp)
 
@@ -1963,7 +1968,7 @@ def writeValue(ext, arg, exclude, pad, depth, fp):
         ext in excludeList or
         ext in exclude):
         return
-        
+
     if ext == 'end':
         print("RENAME end", arg)
         ext = '\\ end'
@@ -2001,7 +2006,7 @@ def writeValue(ext, arg, exclude, pad, depth, fp):
         if (type(r) == float) and (type(g) == float) and (type(b) == float):
             fp.write("%s%s (%.4f,%.4f,%.4f) ;\n" % (pad, ext, r, g, b))
             print(ext, arg)
-    return 
+    return
 
 #
 #    exportDefault(typ, data, header, prio, exclude, arrays, pad, fp):
@@ -2035,11 +2040,11 @@ def exportDefault(typ, data, header, prio, exclude, arrays, pad, fp):
     fp.write("%send %s\n" % (pad,typ))
     return
 
-###################################################################################    
+###################################################################################
 #
 #   Boundary parts
 #
-###################################################################################    
+###################################################################################
 
 def examineBoundary(ob, scn):
     verts = ob.data.vertices
@@ -2051,17 +2056,17 @@ def examineBoundary(ob, scn):
         verts[m].select = True
         verts[n].select = True
     bpy.ops.object.mode_set(mode='EDIT')
-    return    
+    return
 
-###################################################################################    
+###################################################################################
 #
 #   Z depth
 #
-###################################################################################    
+###################################################################################
 
 #
 #   getZDepthItems():
-#   setZDepth(scn):    
+#   setZDepth(scn):
 #
 
 ZDepth = {
@@ -2075,29 +2080,29 @@ ZDepth = {
     "Coat" : 80,
     "Backpack" : 100,
     }
-    
+
 def setZDepthItems():
     global ZDepthItems
     zlist = sorted(list(ZDepth.items()), key=lambda z: z[1])
     ZDepthItems = []
     for (name, val) in zlist:
         ZDepthItems.append((name,name,name))
-    return            
+    return
 
-def setZDepth(scn):    
+def setZDepth(scn):
     scn.MCZDepth = ZDepth[scn.MCZDepthName]
     return
-    
- 
-###################################################################################    
+
+
+###################################################################################
 #
 #   Utilities
 #
-###################################################################################    
+###################################################################################
 #
 #    printVertNums(context):
 #
- 
+
 def printVertNums(context):
     ob = context.object
     print("Verts in ", ob)
@@ -2125,11 +2130,11 @@ def deleteHelpers(context):
         if v.index >= nmax:
             v.select = True
     bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.mesh.delete(type='VERT')    
+    bpy.ops.mesh.delete(type='VERT')
     bpy.ops.object.mode_set(mode='OBJECT')
     print("Vertices deleted")
-    return                
-       
+    return
+
 #
 #    removeVertexGroups(context, removeType):
 #
@@ -2172,7 +2177,7 @@ def autoVertexGroups(context):
             right.add([vn], 1.0, 'REPLACE')
         else:
             mid.add([vn], 1.0, 'REPLACE')
-            if (ishuman and 
+            if (ishuman and
                 (theSettings is None or vn < theSettings.nTotalVerts)):
                 left.add([vn], 1.0, 'REPLACE')
                 right.add([vn], 1.0, 'REPLACE')
@@ -2193,8 +2198,8 @@ def getHumanVerts(me, scn):
     elif scn.MCAutoGroupType == 'All':
         addHelperVerts(me, 'All', verts)
         addBodyVerts(me, verts)
-    return verts        
-        
+    return verts
+
 
 def addHelperVerts(me, htype, verts):
     vnums = theSettings.vertices
@@ -2206,7 +2211,7 @@ def addHelperVerts(me, htype, verts):
             verts[vn] = me.vertices[vn]
     elif htype == 'Coat':
         zmax = -1e6
-        for vn in TopOfSkirt1:
+        for vn in theSettings.topOfSkirt:
             zn = me.vertices[vn].co[2]
             if zn > zmax:
                 zmax = zn
@@ -2217,7 +2222,7 @@ def addHelperVerts(me, htype, verts):
             if zn > zmax:
                 verts[vn] = me.vertices[vn]
 
-    
+
 def addBodyVerts(me, verts):
     meFaces = getFaces(me)
     for f in meFaces:
@@ -2226,7 +2231,7 @@ def addBodyVerts(me, verts):
         for vn in f.vertices:
             if vn < theSettings.nBodyVerts:
                 verts[vn] = me.vertices[vn]
-    return                
+    return
 
 #
 #   checkAndVertexDiamonds(scn, ob):
@@ -2245,16 +2250,17 @@ def checkAndVertexDiamonds(scn, ob):
             vertlines += ("\n  %d" % n)
         raise error.MhcloError(
             "Base object %s has %d vertices. \n" % (ob, nverts) +
-            "The number of verts in an %s MH human must be one of:" % theSettings.version +
+            "The number of verts in an %s MH human must be one of:" % theSettings.baseMesh +
             vertlines)
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.object.vertex_group_remove_from(all=True)
     bpy.ops.object.mode_set(mode='OBJECT')
-    return            
+    return
 
 
 def getLastVertices():
     vlist = [ vs[1] for vs in theSettings.vertices.values()]
+    vlist.append(theSettings.nTotalVerts)
     vlist.sort()
     return vlist
 
@@ -2265,11 +2271,11 @@ def getLastVertices():
 #
 
 def settingsFile(name):
-    outdir = os.path.expanduser("~/makehuman/settings/")        
+    outdir = os.path.expanduser("~/makehuman/settings/")
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
     return os.path.join(outdir, "make_clothes.%s" % name)
-    
+
 def readDefaultSettings(context):
     fname = settingsFile("settings")
     try:
@@ -2277,14 +2283,14 @@ def readDefaultSettings(context):
     except:
         print("Did not find %s. Using default settings" % fname)
         return
-    
+
     scn = context.scene
     for line in fp:
         words = line.split()
         if len(words) < 3:
             continue
         prop = words[0]
-        type = words[1]        
+        type = words[1]
         if type == "int":
             scn[prop] = int(words[2])
         elif type == "float":
@@ -2296,7 +2302,7 @@ def readDefaultSettings(context):
             scn[prop] = string
     fp.close()
     return
-    
+
 def saveDefaultSettings(context):
     fname = settingsFile("settings")
     fp = open(fname, "w", encoding="utf-8", newline="\n")
@@ -2311,12 +2317,12 @@ def saveDefaultSettings(context):
                 fp.write("%s str %s\n" % (prop, value))
     fp.close()
     return
-    
+
 #
 #   BMesh
 #
 
-    
+
 def getFaces(me):
     global BMeshAware
     try:
@@ -2332,7 +2338,7 @@ class CTextureFace:
         self.uvs = []
         self.data = data
         self.index = n
-        
+
     def set(self, n, uv):
         global BMeshAware
         if BMeshAware:
@@ -2346,7 +2352,7 @@ class CTextureFace:
                 self.data.uv3 = uv
             elif n==3:
                 self.data.uv4 = uv
-        
+
     def get(self, n):
         global BMeshAware
         if BMeshAware:
@@ -2360,8 +2366,8 @@ class CTextureFace:
                 return self.data.uv3
             elif n==3:
                 return self.data.uv4
-        
-        
+
+
 def getTexFaces(me, ln):
     global BMeshAware
     texFaces = {}
@@ -2383,8 +2389,8 @@ def getTexFaces(me, ln):
             if len(f.vertices) == 4:
                 tf.uvs.append(uvface.uv4)
             texFaces[f.index] = tf
-    return texFaces            
-      
+    return texFaces
+
 #
 #   initInterface():
 #
@@ -2399,130 +2405,130 @@ def initInterface():
         exec(expr)
 
     bpy.types.Scene.MCDirectory = StringProperty(
-        name="Directory", 
-        description="Directory", 
+        name="Directory",
+        description="Directory",
         maxlen=1024,
         default="~")
-    
+
     bpy.types.Scene.MCMaterials = BoolProperty(
-        name="Materials", 
+        name="Materials",
         description="Use materials",
         default=False)
 
     bpy.types.Scene.MCUseBump = BoolProperty(
-        name="Bump", 
+        name="Bump",
         description="Use bump map",
         default=False)
 
     bpy.types.Scene.MCUseNormal = BoolProperty(
-        name="Normal", 
+        name="Normal",
         description="Use normal map",
         default=False)
 
     bpy.types.Scene.MCUseDisp = BoolProperty(
-        name="Displace", 
+        name="Displace",
         description="Use displacement map",
         default=False)
 
     bpy.types.Scene.MCUseTrans = BoolProperty(
-        name="Transparency", 
+        name="Transparency",
         description="Use transparency map",
         default=False)
 
     bpy.types.Scene.MCUseMask = BoolProperty(
-        name="Mask", 
+        name="Mask",
         description="Use mask map",
         default=True)
 
     bpy.types.Scene.MCUseTexture = BoolProperty(
-        name="Texture", 
+        name="Texture",
         description="Use texture",
         default=True)
 
     bpy.types.Scene.MCMaskLayer = IntProperty(
-        name="Mask UV layer", 
+        name="Mask UV layer",
         description="UV layer for mask, starting with 0",
         default=0)
 
     bpy.types.Scene.MCTextureLayer = IntProperty(
-        name="Texture UV layer", 
+        name="Texture UV layer",
         description="UV layer for textures, starting with 0",
         default=0)
 
     bpy.types.Scene.MCBumpStrength = FloatProperty(
-        name="Bump strength", 
+        name="Bump strength",
         description="Bump strength",
         default=1.0,
         min=0.0, max=1.0)
 
     bpy.types.Scene.MCNormalStrength = FloatProperty(
-        name="Normal strength", 
+        name="Normal strength",
         description="Normal strength",
         default=1.0,
         min=0.0, max=1.0)
 
     bpy.types.Scene.MCDispStrength = FloatProperty(
-        name="Disp strength", 
+        name="Disp strength",
         description="Displacement strength",
         default=0.2,
         min=0.0, max=1.0)
 
     bpy.types.Scene.MCAllUVLayers = BoolProperty(
-        name="All UV layers", 
+        name="All UV layers",
         description="Include all UV layers in export",
         default=False)
 
     bpy.types.Scene.MCBlenderMaterials = BoolProperty(
-        name="Blender materials", 
+        name="Blender materials",
         description="Save materials as mhx file",
         default=False)
 
     bpy.types.Scene.MCHairMaterial = BoolProperty(
-        name="Hair material", 
+        name="Hair material",
         description="Fill in hair material",
         default=False)
 
     bpy.types.Scene.MCVertexGroups = BoolProperty(
-        name="Save vertex groups", 
+        name="Save vertex groups",
         description="Save vertex groups but not texverts",
         default=True)
 
     bpy.types.Scene.MCThreshold = FloatProperty(
-        name="Threshold", 
+        name="Threshold",
         description="Minimal allowed value of normal-vector dot product",
         min=-1.0, max=0.0,
         default=-0.2)
 
     bpy.types.Scene.MCListLength = IntProperty(
-        name="List length", 
+        name="List length",
         description="Max number of verts considered",
         default=4)
 
     """
     bpy.types.Scene.MCForbidFailures = BoolProperty(
-        name="Forbid failures", 
+        name="Forbid failures",
         description="Raise error if not found optimal triangle")
     scn['MCForbidFailures'] = True
     """
-    
+
     bpy.types.Scene.MCUseInternal = BoolProperty(
-        name="Use Internal", 
+        name="Use Internal",
         description="Access internal settings",
         default=False)
 
     bpy.types.Scene.MCLogging = BoolProperty(
-        name="Log", 
+        name="Log",
         description="Write a log file for debugging",
         default=False)
 
     bpy.types.Scene.MCMHVersion = EnumProperty(
-        items = [("alpha7", "alpha7", "alpha7"), ("alpha8", "alpha8", "alpha8"), ("None", "None", "None")],
-        name="MakeHuman mesh version", 
+        items = [("hm08", "hm08", "hm08"), ("None", "None", "None")],
+        name="MakeHuman mesh version",
         description="The human is the MakeHuman base mesh",
-        default="alpha7")
+        default="hm08")
 
     bpy.types.Scene.MCMakeHumanDirectory = StringProperty(
-        name="MakeHuman Directory", 
+        name="MakeHuman Directory",
         maxlen=1024,
         default="/home/svn/makehuman")
 
@@ -2530,21 +2536,21 @@ def initInterface():
 
     bpy.types.Scene.MCKeepVertsUntil = EnumProperty(
         items = ClothingEnums,
-        name="Keep verts untils", 
+        name="Keep verts untils",
         description="Last clothing to keep vertices for",
         default="Tights")
 
     bpy.types.Scene.MCUseBoundary = BoolProperty(
-        name="Scale Offsets", 
+        name="Scale Offsets",
         default=True)
 
     bpy.types.Scene.MCScaleUniform = BoolProperty(
-        name="Uniform Scaling", 
+        name="Uniform Scaling",
         description="Scale offset uniformly in the XYZ directions",
         default=False)
 
     bpy.types.Scene.MCScaleCorrect = FloatProperty(
-        name="Scale Correction", 
+        name="Scale Correction",
         default=0.85,
         min=0.5, max=1.5)
 
@@ -2558,7 +2564,7 @@ def initInterface():
                  ('Eye', 'Eye', 'Eye'),
                  ('Body', 'Body', 'Body'),
                  ],
-        default='Head')                 
+        default='Head')
 
     setZDepthItems()
     bpy.types.Scene.MCZDepthName = EnumProperty(
@@ -2566,69 +2572,69 @@ def initInterface():
         default='Sweater')
 
     bpy.types.Scene.MCZDepth = IntProperty(
-        name="Z depth", 
+        name="Z depth",
         description="Location in the Z buffer",
         default=ZDepth['Sweater'])
-    
+
     bpy.types.Scene.MCAutoGroupType = EnumProperty(
         items = [('Helpers','Helpers','Helpers'),
                  ('Body','Body','Body'),
                  ('Selected','Selected','Selected'),
                  ('All','All','All')],
     default='Helpers')
-                 
+
     bpy.types.Scene.MCAutoHelperType = EnumProperty(
         items = [('Skirt','Skirt','Skirt'),
                  ('Tights','Tights','Tights'),
                  ('Coat','Coat','Coat'),
                  ('All','All','All')],
     default='All')
-                 
+
     bpy.types.Scene.MCRemoveGroupType = EnumProperty(
         items = [('Selected','Selected','Selected'),
                  ('All','All','All')],
         default='All')
-    
+
     bpy.types.Scene.MCAuthor = StringProperty(
-        name="Author", 
+        name="Author",
         default="Unknown",
         maxlen=32)
-    
+
     bpy.types.Scene.MCLicense = StringProperty(
-        name="License", 
+        name="License",
         default="AGPL3 (see also http://www.makehuman.org/node/320)",
         maxlen=256)
-    
+
     bpy.types.Scene.MCHomePage = StringProperty(
-        name="HomePage", 
+        name="HomePage",
         default="http://www.makehuman.org/",
         maxlen=256)
 
     bpy.types.Scene.MCTag1 = StringProperty(
-        name="Tag1", 
+        name="Tag1",
         default="",
         maxlen=32)
-    
+
     bpy.types.Scene.MCTag2 = StringProperty(
-        name="Tag2", 
+        name="Tag2",
         default="",
         maxlen=32)
-    
+
     bpy.types.Scene.MCTag3 = StringProperty(
-        name="Tag3", 
+        name="Tag3",
         default="",
         maxlen=32)
-    
+
     bpy.types.Scene.MCTag4 = StringProperty(
-        name="Tag4", 
+        name="Tag4",
         default="",
         maxlen=32)
-    
+
     bpy.types.Scene.MCTag5 = StringProperty(
-        name="Tag5", 
+        name="Tag5",
         default="",
         maxlen=32)
-    
+
 
     return
-    
+

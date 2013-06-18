@@ -26,6 +26,8 @@ from .flags import *
 from .rig_joints import *
 
 Joints = [
+    ('spine-23',            'l', ((0.5, 'spine-2'), (0.5, 'spine-3'))),
+
     ('l-heel',              'v', 12820),
     ('r-heel',              'v', 6223),
 
@@ -41,7 +43,8 @@ Joints = [
 
 HeadsTails = {
     'hips' :               ('pelvis', 'spine-3'),
-    'spine' :              ('spine-3', 'spine-2'),
+    'spine' :              ('spine-3', 'spine-23'),
+    'spine-1' :            ('spine-23', 'spine-2'),
     'chest' :              ('spine-2', 'spine-1'),
     'chest-1' :            ('spine-1', 'neck'),
     'neck' :               ('neck', 'head'),
@@ -135,7 +138,8 @@ Planes = {
 Armature = {
     'hips' :               (0, None, F_DEF, L_UPSPNFK),
     'spine' :              (0, 'hips', F_DEF+F_CON, L_UPSPNFK),
-    'chest' :              (0, 'spine', F_DEF+F_CON, L_UPSPNFK),
+    'spine-1' :            (0, 'spine', F_DEF+F_CON, L_UPSPNFK),
+    'chest' :              (0, 'spine-1', F_DEF+F_CON, L_UPSPNFK),
     'chest-1' :            (0, 'chest', F_DEF+F_CON, L_TWEAK),
     'neck' :               (0, 'chest-1', F_DEF+F_CON, L_UPSPNFK),
     'head' :               (0, 'neck', F_DEF+F_CON, L_UPSPNFK),

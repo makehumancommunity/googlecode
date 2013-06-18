@@ -29,11 +29,11 @@
 #----------------------------------------------------------
 
 class CSettings:
-    
+
     def __init__(self, version):
         self.version = version
 
-        if version == "alpha7":                    
+        if version == "alpha7":
             self.vertices = {
                 "Body"      : (0, 15340),
                 "Skirt"     : (15340, 16096),
@@ -43,7 +43,8 @@ class CSettings:
             self.clothesVerts   = (self.vertices["Skirt"][0], self.vertices["Tights"][1])
             self.nTotalVerts    = self.vertices["Tights"][1]
             self.nBodyVerts     = self.vertices["Body"][1]
-            self.nBodyFaces     = 14812           
+            self.nBodyFaces     = 14812
+            self.baseMesh       = "alpha7"
 
         elif version == "alpha8a":
             self.vertices = {
@@ -64,8 +65,9 @@ class CSettings:
             self.nTotalVerts    = 19174
             self.nBodyVerts     = self.vertices["Body"][1]
             self.nBodyFaces     = 13606
+            self.baseMesh       = "hm08-obsolete"
 
-        elif version == "alpha8b":
+        elif version in ["alpha8b", "hm08"]:
             self.vertices = {
                 "Body"      : (0, 13380),
                 "Tongue"    : (13380, 13606),
@@ -83,6 +85,7 @@ class CSettings:
             self.nTotalVerts    = 19158
             self.nBodyVerts     = self.vertices["Body"][1]
             self.nBodyFaces     = 13606
+            self.baseMesh       = "hm08"
 
 
 #----------------------------------------------------------
@@ -91,5 +94,5 @@ class CSettings:
 
 proxy = None
 confirm = None
-confirmString = "" 
+confirmString = ""
 confirmString2 = ""

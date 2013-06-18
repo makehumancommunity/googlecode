@@ -3,7 +3,7 @@
 # homepage http://www.makehuman.org/
 
 uuid 01d02c9b-c08a-493b-9106-7add473a5954
-basemesh alpha8b
+basemesh hm08
 name A7_converter
 
 obj_file a7_converter.obj
