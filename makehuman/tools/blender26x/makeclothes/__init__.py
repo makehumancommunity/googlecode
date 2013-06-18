@@ -65,6 +65,12 @@ else:
 #
 
 
+def inset(layout):
+    split = layout.split(0.05)
+    split.label("")
+    return split.column()
+
+
 class MakeClothesPanel(bpy.types.Panel):
     bl_label = "Make Clothes version %s" % bl_info["version"]
     bl_space_type = "VIEW_3D"
@@ -80,59 +86,62 @@ class MakeClothesPanel(bpy.types.Panel):
 
         layout.prop(scn, "MCShowInit")
         if scn.MCShowInit:
-            layout.operator("mhclo.init_interface", text="ReInitialize")
-            layout.operator("mhclo.factory_settings")
-            layout.operator("mhclo.save_settings")
-            layout.separator()
-            layout.prop(scn, "MCDirectory")
-            layout.separator()
+            ins = inset(layout)
+            ins.operator("mhclo.init_interface", text="ReInitialize")
+            ins.operator("mhclo.factory_settings")
+            ins.operator("mhclo.save_settings")
+            ins.separator()
+            ins.prop(scn, "MCDirectory")
+            ins.separator()
 
         #layout.operator("mhclo.snap_selected_verts")
 
         layout.prop(scn, "MCShowUtils")
         if scn.MCShowUtils:
-            layout.operator("mhclo.print_vnums")
-            layout.operator("mhclo.copy_vert_locs")
-            layout.separator()
+            ins = inset(layout)
+            ins.operator("mhclo.print_vnums")
+            ins.operator("mhclo.copy_vert_locs")
+            ins.separator()
 
         layout.prop(scn, "MCShowAutoVertexGroups")
         if scn.MCShowAutoVertexGroups:
             layout.prop(scn, "MCRemoveGroupType", expand=True)
-            layout.operator("mhclo.remove_vertex_groups")
+            inset(layout).operator("mhclo.remove_vertex_groups")
             layout.separator()
             layout.prop(scn, "MCAutoGroupType", expand=True)
             if scn.MCAutoGroupType == 'Helpers':
                 layout.prop(scn, "MCAutoHelperType", expand=True)
-            layout.operator("mhclo.auto_vertex_groups")
+            inset(layout).operator("mhclo.auto_vertex_groups")
             layout.separator()
             layout.prop(scn, "MCKeepVertsUntil", expand=True)
-            layout.operator("mhclo.delete_helpers")
+            inset(layout).operator("mhclo.delete_helpers")
             layout.separator()
 
         layout.prop(scn, "MCShowMaterials")
         if scn.MCShowMaterials:
+            ins = inset(layout)
             """
-            layout.prop(scn, "MCMaterials")
-            #layout.prop(scn, "MCBlenderMaterials")
-            layout.prop(scn, "MCHairMaterial")
+            ins.prop(scn, "MCMaterials")
+            #ins.prop(scn, "MCBlenderMaterials")
+            ins.prop(scn, "MCHairMaterial")
             """
 
-            row = layout.row()
+            row = ins.row()
             col = row.column()
-            col.prop(scn, "MCShowTexture")
-            col.prop(scn, "MCShowMask")
-            col.prop(scn, "MCShowBump")
-            col.prop(scn, "MCShowNormal")
-            col.prop(scn, "MCShowDisp")
-            col.prop(scn, "MCShowTrans")
+            col.prop(scn, "MCUseTexture")
+            col.prop(scn, "MCUseMask")
+            col.prop(scn, "MCUseBump")
+            col.prop(scn, "MCUseNormal")
+            col.prop(scn, "MCUseDisp")
+            col.prop(scn, "MCUseTrans")
             col = row.column()
             col.prop(scn, "MCTextureLayer", text = "")
             col.prop(scn, "MCMaskLayer", text="")
             col.prop(scn, "MCBumpStrength", text="")
             col.prop(scn, "MCNormalStrength", text="")
             col.prop(scn, "MCDispStrength", text="")
-            layout.prop(scn, "MCAllUVLayers")
-            layout.separator()
+            ins.prop(scn, "MCAllUVLayers")
+            ins.separator()
 
         row = layout.row()
         row.operator("mhclo.make_human", text="Human").isHuman = True
@@ -145,70 +154,74 @@ class MakeClothesPanel(bpy.types.Panel):
 
         layout.prop(scn, "MCShowAdvanced")
         if scn.MCShowAdvanced:
-            layout.operator("mhclo.print_clothes")
-            layout.operator("mhclo.export_obj_file")
-            layout.operator("mhclo.export_delete_verts")
-            layout.label("Algorithm Control")
-            row = layout.row()
+            ins = inset(layout)
+            ins.operator("mhclo.print_clothes")
+            ins.operator("mhclo.export_obj_file")
+            ins.operator("mhclo.export_delete_verts")
+            ins.label("Algorithm Control")
+            row = ins.row()
             row.prop(scn, "MCThreshold")
             row.prop(scn, "MCListLength")
-            layout.separator()
+            ins.separator()
 
         layout.prop(scn, "MCShowUVProject")
         if scn.MCShowUVProject:
-            layout.operator("mhclo.recover_seams")
-            layout.operator("mhclo.set_seams")
-            layout.operator("mhclo.project_uvs")
-            layout.operator("mhclo.reexport_mhclo")
-            layout.separator()
+            ins = inset(layout)
+            ins.operator("mhclo.recover_seams")
+            ins.operator("mhclo.set_seams")
+            ins.operator("mhclo.project_uvs")
+            ins.operator("mhclo.reexport_mhclo")
+            ins.separator()
 
         layout.prop(scn, "MCShowExportDetails")
         if scn.MCShowExportDetails:
-            layout.label("Shapekeys")
+            ins = inset(layout)
+            ins.label("Shapekeys")
             for skey in makeclothes.theShapeKeys:
-                layout.prop(scn, "MC%s" % skey)
+                ins.prop(scn, "MC%s" % skey)
 
-            layout.separator()
-            layout.label("Z depth")
-            layout.prop(scn, "MCZDepthName")
-            layout.operator("mhclo.set_zdepth")
-            layout.prop(scn, "MCZDepth")
+            ins.separator()
+            ins.label("Z depth")
+            ins.prop(scn, "MCZDepthName")
+            ins.operator("mhclo.set_zdepth")
+            ins.prop(scn, "MCZDepth")
 
-            layout.separator()
-            layout.label("Boundary")
-            row = layout.row()
-            row.prop(scn, "MCShowBoundary")
-            if scn.MCShowBoundary:
+            ins.separator()
+            ins.label("Boundary")
+            row = ins.row()
+            row.prop(scn, "MCUseBoundary")
+            if scn.MCUseBoundary:
                 row.prop(scn, "MCScaleUniform")
-                layout.prop(scn, "MCScaleCorrect")
-                layout.prop(scn, "MCBodyPart")
+                ins.prop(scn, "MCScaleCorrect")
+                ins.prop(scn, "MCBodyPart")
                 vnums = makeclothes.theSettings.bodyPartVerts[scn.MCBodyPart]
                 if scn.MCScaleUniform:
-                    self.drawXYZ(vnums[0], "XYZ", layout)
+                    self.drawXYZ(vnums[0], "XYZ", ins)
                 else:
-                    self.drawXYZ(vnums[0], "X", layout)
-                    self.drawXYZ(vnums[1], "Y", layout)
-                    self.drawXYZ(vnums[2], "Z", layout)
-                layout.operator("mhclo.examine_boundary")
-            layout.separator()
+                    self.drawXYZ(vnums[0], "X", ins)
+                    self.drawXYZ(vnums[1], "Y", ins)
+                    self.drawXYZ(vnums[2], "Z", ins)
+                ins.operator("mhclo.examine_boundary")
+            ins.separator()
 
         layout.prop(scn, "MCShowLicense")
         if scn.MCShowLicense:
-            drawLicenseInfo(layout, scn)
-            layout.separator()
+            ins = inset(layout)
+            drawLicenseInfo(ins, scn)
+            ins.separator()
 
-        if not scn.MCShowInternal:
+        if not scn.MCUseInternal:
             return
-        layout.separator()
-        layout.label("For internal use")
-        layout.prop(scn, "MCLogging")
-        layout.prop(scn, "MCMakeHumanDirectory")
-        layout.prop(scn, "MCSelfClothed")
-        layout.operator("mhclo.select_helpers")
-        layout.operator("mhclo.export_base_uvs_py")
+        ins.separator()
+        ins.label("For internal use")
+        ins.prop(scn, "MCLogging")
+        ins.prop(scn, "MCMakeHumanDirectory")
+        ins.prop(scn, "MCSelfClothed")
+        ins.operator("mhclo.select_helpers")
+        ins.operator("mhclo.export_base_uvs_py")
 
-        #layout.prop(scn, "MCVertexGroups")
-        #layout.operator("mhclo.offset_clothes")
+        #ins.prop(scn, "MCVertexGroups")
+        #ins.operator("mhclo.offset_clothes")
         return
 
     def drawXYZ(self, pair, name, layout):
@@ -219,7 +232,6 @@ class MakeClothesPanel(bpy.types.Panel):
 
 
 def drawLicenseInfo(layout, scn):
-        layout.label("Licensing")
         layout.prop(scn, "MCAuthor")
         layout.prop(scn, "MCLicense")
         layout.prop(scn, "MCHomePage")

@@ -746,7 +746,7 @@ def printStuff(fp, pob, context):
                 uvtex1 = me.uv_textures[scn.MCMaskLayer]
             except IndexError:
                 uvtex1 = uvtex0
-            if scn.MCShowMask and uvtex1 != uvtex0:
+            if scn.MCUseMask and uvtex1 != uvtex0:
                 fp.write("uvtex_layer 1 %s\n" % uvtex1.name.replace(" ","_"))
             fp.write("objfile_layer 0\n")
         writeTextures(fp, goodName(pob.name), scn)
@@ -785,7 +785,7 @@ def printStuff(fp, pob, context):
             #fp.write('diffuse_shader %s\n' % mat.diffuse_shader)
             writeColor(fp, 'specular_color', 'specular_intensity', mat.specular_color, mat.specular_intensity)
             #fp.write('specular_shader %s\n' % mat.specular_shader)
-            if scn.MCShowTrans:
+            if scn.MCUseTrans:
                 alpha = 0
             else:
                 alpha = mat.alpha
@@ -797,7 +797,7 @@ def printStuff(fp, pob, context):
             fp.write("material_file %s\n" % mhxfile)
     elif not scn.MCHairMaterial:
         fp.write("material %s\n" % pob.name.replace(" ","_"))
-        if scn.MCShowTrans:
+        if scn.MCUseTrans:
             fp.write("  alpha 0\n")
 
     fp.write("use_projection 0\n")
@@ -805,15 +805,15 @@ def printStuff(fp, pob, context):
 
 def writeTextures(fp, name, scn):
     fp.write("texture %s_texture.png %d\n" % (name, scn.MCTextureLayer))
-    if scn.MCShowMask:
+    if scn.MCUseMask:
         fp.write("mask %s_mask.png %d\n" % (name, scn.MCMaskLayer))
-    if scn.MCShowBump:
+    if scn.MCUseBump:
         fp.write("bump %s_bump.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCBumpStrength))
-    if scn.MCShowNormal:
+    if scn.MCUseNormal:
         fp.write("normal %s_normal.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCNormalStrength))
-    if scn.MCShowDisp:
+    if scn.MCUseDisp:
         fp.write("displacement %s_disp.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCDispStrength))
-    if scn.MCShowTrans:
+    if scn.MCUseTrans:
         fp.write("transparency %s_trans.png %d\n" % (name, scn.MCTextureLayer))
     return
 
@@ -895,7 +895,7 @@ def writeColor(fp, string1, string2, color, intensity):
         "%s %.4g\n" % (string2, intensity))
 
 def printScale(fp, bob, scn, name, index, vnums):
-    if not scn.MCShowBoundary:
+    if not scn.MCUseBoundary:
         return
     verts = bob.data.vertices
     n1,n2 = vnums
@@ -1603,34 +1603,48 @@ def checkNoTriangles(ob):
 
 def checkObjectOK(ob, context):
     old = context.object
-    context.scene.objects.active = ob
+    scn = context.scene
+    scn.objects.active = ob
     word = None
-    error = False
+    err = False
+
     if ob.location.length > Epsilon:
         word = "object translation"
         bpy.ops.object.transform_apply(location=True, rotation=False, scale=False)
     eu = ob.rotation_euler
+
     if abs(eu.x) + abs(eu.y) + abs(eu.z) > Epsilon:
         word = "object rotation"
         bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
     vec = ob.scale - Vector((1,1,1))
+
     if vec.length > Epsilon:
         word = "object scaling"
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+
     if ob.constraints:
         word = "constraints"
-        error = True
+        err = True
+
     for mod in ob.modifiers:
         if (mod.type in ['CHILD_OF', 'ARMATURE']) and mod.show_viewport:
             word = "an enabled %s modifier" % mod.type
             mod.show_viewport = False
+
     if ob.parent:
         word = "parent"
         ob.parent = None
+
+    try:
+        ob.data.uv_layers[scn.MCTextureLayer]
+    except:
+        word = "no texture layers"
+        err = True
+
     if word:
         msg = "Object %s can not be used for clothes creation because it has %s.\n" % (ob.name, word)
-        if error:
-            msg +=  "Apply or delete before continuing.\n"
+        if err:
+            msg +=  "Apply, create or delete before continuing.\n"
             print(msg)
             raise error.MhcloError(msg)
         else:
@@ -2415,32 +2429,32 @@ def initInterface():
         description="Use materials",
         default=False)
 
-    bpy.types.Scene.MCShowBump = BoolProperty(
+    bpy.types.Scene.MCUseBump = BoolProperty(
         name="Bump",
         description="Use bump map",
         default=False)
 
-    bpy.types.Scene.MCShowNormal = BoolProperty(
+    bpy.types.Scene.MCUseNormal = BoolProperty(
         name="Normal",
         description="Use normal map",
         default=False)
 
-    bpy.types.Scene.MCShowDisp = BoolProperty(
+    bpy.types.Scene.MCUseDisp = BoolProperty(
         name="Displace",
         description="Use displacement map",
         default=False)
 
-    bpy.types.Scene.MCShowTrans = BoolProperty(
+    bpy.types.Scene.MCUseTrans = BoolProperty(
         name="Transparency",
         description="Use transparency map",
         default=False)
 
-    bpy.types.Scene.MCShowMask = BoolProperty(
+    bpy.types.Scene.MCUseMask = BoolProperty(
         name="Mask",
         description="Use mask map",
-        default=True)
+        default=False)
 
-    bpy.types.Scene.MCShowTexture = BoolProperty(
+    bpy.types.Scene.MCUseTexture = BoolProperty(
         name="Texture",
         description="Use texture",
         default=True)
@@ -2511,7 +2525,7 @@ def initInterface():
     scn['MCForbidFailures'] = True
     """
 
-    bpy.types.Scene.MCShowInternal = BoolProperty(
+    bpy.types.Scene.MCUseInternal = BoolProperty(
         name="Use Internal",
         description="Access internal settings",
         default=False)
@@ -2540,7 +2554,7 @@ def initInterface():
         description="Last clothing to keep vertices for",
         default="Tights")
 
-    bpy.types.Scene.MCShowBoundary = BoolProperty(
+    bpy.types.Scene.MCUseBoundary = BoolProperty(
         name="Scale Offsets",
         default=True)
 
