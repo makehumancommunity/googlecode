@@ -30,7 +30,7 @@
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.901",
+    "version": "0.902",
     "blender": (2, 6, 5),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -84,14 +84,14 @@ class MakeClothesPanel(bpy.types.Panel):
         layout = self.layout
         scn = context.scene
 
-        layout.prop(scn, "MCShowInit")
-        if scn.MCShowInit:
+        layout.prop(scn, "MCShowOutdir")
+        if scn.MCShowOutdir:
             ins = inset(layout)
             ins.operator("mhclo.init_interface", text="ReInitialize")
             ins.operator("mhclo.factory_settings")
             ins.operator("mhclo.save_settings")
-            ins.separator()
-            ins.prop(scn, "MCDirectory")
+            ins.label("Output Directory")
+            ins.prop(scn, "MCOutdir", text="")
             ins.separator()
 
         #layout.operator("mhclo.snap_selected_verts")
@@ -258,14 +258,14 @@ class MakeUVsPanel(bpy.types.Panel):
         layout = self.layout
         scn = context.scene
 
-        layout.prop(scn, "MCShowInit")
-        if scn.MCShowInit:
+        layout.prop(scn, "MCShowOutdir")
+        if scn.MCShowOutdir:
             layout.label("Initialization")
             layout.operator("mhclo.init_interface", text="ReInitialize")
             layout.operator("mhclo.factory_settings")
             layout.operator("mhclo.save_settings")
             layout.separator()
-            layout.prop(scn, "MCDirectory")
+            layout.prop(scn, "MCOutdir")
 
         layout.separator()
         layout.operator("mhclo.recover_seams")

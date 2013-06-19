@@ -36,6 +36,7 @@ import ast
 from bpy.props import *
 from mathutils import Vector
 
+from mh_utils.utils import getMyDocuments
 from . import mc
 from . import base_uv
 from . import error
@@ -47,12 +48,6 @@ from . import error
 Epsilon = 1e-4
 
 theSettings = mc.settings["hm08"]
-
-ClothingEnums = [
-    ("Body", "Body", "Body"),
-    ("Skirt", "Skirt", "Skirt"),
-    ("Tights", "Tights", "Tights")
-]
 
 #
 #   isHuman(ob):
@@ -175,7 +170,7 @@ def goodName(name):
 
 def getFileName(pob, context, ext):
     name = goodName(pob.name)
-    outdir = '%s/%s' % (context.scene.MCDirectory, name)
+    outdir = '%s/%s' % (context.scene.MCOutdir, name)
     outdir = os.path.realpath(os.path.expanduser(outdir))
     if not os.path.exists(outdir):
         print("Creating directory %s" % outdir)
@@ -1578,7 +1573,7 @@ def makeClothes(context, doFindClothes):
     checkObjectOK(pob, context)
     checkSingleVGroups(pob)
     if scn.MCLogging:
-        logfile = '%s/clothes.log' % scn.MCDirectory
+        logfile = '%s/clothes.log' % scn.MCOutdir
         log = open(logfile, "w", encoding="utf-8", newline="\n")
     else:
         log = None
@@ -1682,9 +1677,9 @@ def offsetCloth(context):
     pverts = pob.data.vertices
     print("Offset %s to %s" % (bob.name, pob.name))
 
-    inpath = '%s/%s.mhclo' % (context.scene.MCDirectory, goodName(bob.name))
+    inpath = '%s/%s.mhclo' % (context.scene.MCOutdir, goodName(bob.name))
     infile = os.path.realpath(os.path.expanduser(inpath))
-    outpath = '%s/%s.mhclo' % (context.scene.MCDirectory, goodName(pob.name))
+    outpath = '%s/%s.mhclo' % (context.scene.MCOutdir, goodName(pob.name))
     outfile = os.path.realpath(os.path.expanduser(outpath))
     print("Modifying clothes file %s => %s" % (infile, outfile))
     infp = open(infile, "r")
@@ -2285,7 +2280,7 @@ def getLastVertices():
 #
 
 def settingsFile(name):
-    outdir = os.path.expanduser("~/makehuman/settings/")
+    outdir = os.path.join(getMyDocuments(), "makehuman/settings")
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
     return os.path.join(outdir, "make_clothes.%s" % name)
@@ -2418,11 +2413,11 @@ def initInterface():
     '   default=False)')
         exec(expr)
 
-    bpy.types.Scene.MCDirectory = StringProperty(
+    bpy.types.Scene.MCOutdir = StringProperty(
         name="Directory",
         description="Directory",
         maxlen=1024,
-        default="~")
+        default=os.path.join(getMyDocuments(), "makehuman/data/clothes"))
 
     bpy.types.Scene.MCMaterials = BoolProperty(
         name="Materials",
@@ -2548,8 +2543,12 @@ def initInterface():
 
     bpy.types.Scene.MCSelfClothed = BoolProperty(default=False)
 
+    enums = []
+    for name in theSettings.vertices.keys():
+        enums.append((name,name,name))
+
     bpy.types.Scene.MCKeepVertsUntil = EnumProperty(
-        items = ClothingEnums,
+        items = enums,
         name="Keep verts untils",
         description="Last clothing to keep vertices for",
         default="Tights")
@@ -2649,7 +2648,7 @@ def initInterface():
         default="",
         maxlen=32)
 
-    bpy.types.Scene.MCShowInit = BoolProperty(name = "Show Initialization", default=False)
+    bpy.types.Scene.MCShowOutdir = BoolProperty(name = "Show Output Directory", default=False)
     bpy.types.Scene.MCShowUtils = BoolProperty(name = "Show Utilities", default=False)
     bpy.types.Scene.MCShowAutoVertexGroups = BoolProperty(name = "Show Automatic Vertex Groups", default=False)
     bpy.types.Scene.MCShowMaterials = BoolProperty(name = "Show Materials", default=False)
