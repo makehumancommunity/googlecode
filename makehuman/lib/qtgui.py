@@ -1565,10 +1565,23 @@ class ImageView(QtGui.QLabel, Widget):
             self._pixmap.save (fname)
 
     def mousePressEvent(self, event):
+        if not self._pixmap:
+            return
         self.mdown = event.pos()
-        self.mdownrect = self.pixmap.rect()
+        self.mdownrect = self._pixmap.rect()
+        self.callEvent('onMousePress', event)
         
     def mouseMoveEvent(self, event):
-        self.pixmap.scroll(event.pos.x()-self.mdown.x(),
-                           event.pos.y()-self.mdown.y(),
-                           self.mdownrect, shownarea)                          
+        if not self._pixmap:
+            return
+        self._pixmap.scroll(event.pos.x()-self.mdown.x(),
+                            event.pos.y()-self.mdown.y(),
+                            self.mdownrect, shownarea)
+        self.refreshImage()
+        self.callEvent('onMouseDrag', event)
+
+    def onMousePress(self, event):
+        pass
+
+    def onMouseDrag(self, event):
+        pass
