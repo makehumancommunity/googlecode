@@ -70,3 +70,26 @@ settings = {
     "hm08"   : CSettings("hm08"),
     "None"   : None
 }
+
+
+#
+#   goodName(name):
+#   getFileName(pob, context, ext):
+#
+
+def goodName(name):
+    newName = name.replace('-','_').replace(' ','_')
+    return newName.lower()
+
+
+def getFileName(pob, context, ext):
+    import os
+    name = goodName(pob.name)
+    outdir = '%s/%s' % (context.scene.MCOutdir, name)
+    outdir = os.path.realpath(os.path.expanduser(outdir))
+    if not os.path.exists(outdir):
+        print("Creating directory %s" % outdir)
+        os.makedirs(outdir)
+    outfile = os.path.join(outdir, "%s.%s" % (name, ext))
+    return (outdir, outfile)
+

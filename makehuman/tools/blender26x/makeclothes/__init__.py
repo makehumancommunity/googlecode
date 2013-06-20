@@ -30,8 +30,8 @@
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.902",
-    "blender": (2, 6, 5),
+    "version": "0.903",
+    "blender": (2, 6, 7),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
     "warning": "",
@@ -40,22 +40,28 @@ bl_info = {
 
 
 if "bpy" in locals():
-    print("Reloading makeclothes")
+    print("Reloading makeclothes v %s" % bl_info["version"])
     import imp
     imp.reload(mh_utils)
     imp.reload(error)
     imp.reload(mc)
+    imp.reload(materials)
     imp.reload(makeclothes)
     imp.reload(makeuvs)
     imp.reload(base_uv)
 else:
-    print("Loading makeclothes")
+    print("Loading makeclothes v %s" % bl_info["version"])
     import bpy
     import os
     from bpy.props import *
     import mh_utils
+    print("A")
     from . import error
+    print("B")
     from . import mc
+    print("C")
+    from . import materials
+    print("D")
     from . import makeclothes
     from . import makeuvs
     from . import base_uv
@@ -117,6 +123,7 @@ class MakeClothesPanel(bpy.types.Panel):
             inset(layout).operator("mhclo.delete_helpers")
             layout.separator()
 
+        '''
         layout.prop(scn, "MCShowMaterials")
         if scn.MCShowMaterials:
             ins = inset(layout)
@@ -142,6 +149,7 @@ class MakeClothesPanel(bpy.types.Panel):
             col.prop(scn, "MCDispStrength", text="")
             ins.prop(scn, "MCAllUVLayers")
             ins.separator()
+        '''
 
         row = layout.row()
         row.operator("mhclo.make_human", text="Human").isHuman = True

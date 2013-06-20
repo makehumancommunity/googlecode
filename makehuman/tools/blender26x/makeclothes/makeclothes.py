@@ -38,6 +38,7 @@ from mathutils import Vector
 
 from mh_utils.utils import getMyDocuments
 from . import mc
+from . import materials
 from . import base_uv
 from . import error
 
@@ -158,25 +159,6 @@ def selectVerts(verts, ob):
     for v in verts:
         v.select = True
     return
-
-#
-#   goodName(name):
-#   getFileName(pob, context, ext):
-#
-
-def goodName(name):
-    newName = name.replace('-','_').replace(' ','_')
-    return newName.lower()
-
-def getFileName(pob, context, ext):
-    name = goodName(pob.name)
-    outdir = '%s/%s' % (context.scene.MCOutdir, name)
-    outdir = os.path.realpath(os.path.expanduser(outdir))
-    if not os.path.exists(outdir):
-        print("Creating directory %s" % outdir)
-        os.makedirs(outdir)
-    outfile = os.path.join(outdir, "%s.%s" % (name, ext))
-    return (outdir, outfile)
 
 #
 #
@@ -517,12 +499,12 @@ def printClothesHeader(fp, scn):
 def printClothes(context, bob, pob, data):
     scn = context.scene
     firstVert = 0
-    (outpath, outfile) = getFileName(pob, context, "mhclo")
+    (outpath, outfile) = mc.getFileName(pob, context, "mhclo")
     print("Creating clothes file %s" % outfile)
     fp = open(outfile, "w", encoding="utf-8", newline="\n")
     printClothesHeader(fp, scn)
     fp.write("name %s\n" % pob.name.replace(" ","_"))
-    fp.write("obj_file %s.obj\n" % goodName(pob.name))
+    fp.write("obj_file %s.obj\n" % mc.goodName(pob.name))
     vnums = theSettings.bodyPartVerts[scn.MCBodyPart]
     if scn.MCScaleUniform:
         printScale(fp, bob, scn, 'x_scale', 0, vnums[0])
@@ -621,7 +603,7 @@ def reexportMhclo(context):
     scn = context.scene
     scn.objects.active = pob
     bpy.ops.object.mode_set(mode='OBJECT')
-    (outpath, outfile) = getFileName(pob, context, "mhclo")
+    (outpath, outfile) = mc.getFileName(pob, context, "mhclo")
 
     lines = []
     print("Reading clothes file %s" % outfile)
@@ -732,7 +714,7 @@ def printStuff(fp, pob, context):
             for layer,uvtex in enumerate(me.uv_textures):
                 fp.write("uvtex_layer %d %s\n" % (layer, uvtex.name.replace(" ","_")))
             fp.write("objfile_layer %d\n" % scn.MCTextureLayer)
-        writeTextures(fp, goodName(pob.name), scn)
+        writeTextures(fp, mc.goodName(pob.name), scn)
     else:
         if me.uv_textures:
             uvtex0 = me.uv_textures[scn.MCTextureLayer]
@@ -744,73 +726,12 @@ def printStuff(fp, pob, context):
             if scn.MCUseMask and uvtex1 != uvtex0:
                 fp.write("uvtex_layer 1 %s\n" % uvtex1.name.replace(" ","_"))
             fp.write("objfile_layer 0\n")
-        writeTextures(fp, goodName(pob.name), scn)
 
-    return
-
-    if scn.MCHairMaterial:
-        fp.write(
-"# material %s\n" % pob.name +
-"  texture data/hairstyles/%s_texture.tif %d\n" % (pob.name, scn.MCTextureLayer) +
-"  diffuse_intensity 0.8\n" +
-"  specular_intensity 0.0\n" +
-"  specular_hardness 1\n" +
-"  use_shadows 1\n" +
-"  use_transparent_shadows 1\n" +
-"  use_raytrace 1\n" +
-"  use_transparency 1\n" +
-"  alpha 0.0\n" +
-"  specular_alpha 0.0\n" +
-"  use_map_color_diffuse 1\n" +
-"  use_map_alpha 1\n" +
-"  use_alpha 1\n" +
-"  diffuse_color_factor 1.0\n" +
-"  alpha_factor 1.0\n")
-
-    me = pob.data
-
-    useMats = scn.MCMaterials
-    useBlender = scn.MCBlenderMaterials
-    alphaDone = False
-    if me.materials and (useMats or useBlender) and me.materials[0]:
-        mat = me.materials[0]
-        fp.write("material %s\n" % mat.name)
-        if useMats:
-            writeColor(fp, 'diffuse_color', 'diffuse_intensity', mat.diffuse_color, mat.diffuse_intensity)
-            #fp.write('diffuse_shader %s\n' % mat.diffuse_shader)
-            writeColor(fp, 'specular_color', 'specular_intensity', mat.specular_color, mat.specular_intensity)
-            #fp.write('specular_shader %s\n' % mat.specular_shader)
-            if scn.MCUseTrans:
-                alpha = 0
-            else:
-                alpha = mat.alpha
-            fp.write("alpha %s\n" % alpha)
-            alphaDone = True
-        if useBlender:
-            (outpath, outfile) = getFileName(pob, context, "mhx")
-            mhxfile = exportBlenderMaterial(me, outpath)
-            fp.write("material_file %s\n" % mhxfile)
-    elif not scn.MCHairMaterial:
-        fp.write("material %s\n" % pob.name.replace(" ","_"))
-        if scn.MCUseTrans:
-            fp.write("  alpha 0\n")
-
+    matfile = materials.writeMaterial(fp, pob, context)
+    if matfile:
+        fp.write("material %s\n" % matfile)
     fp.write("use_projection 0\n")
 
-
-def writeTextures(fp, name, scn):
-    fp.write("texture %s_texture.png %d\n" % (name, scn.MCTextureLayer))
-    if scn.MCUseMask:
-        fp.write("mask %s_mask.png %d\n" % (name, scn.MCMaskLayer))
-    if scn.MCUseBump:
-        fp.write("bump %s_bump.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCBumpStrength))
-    if scn.MCUseNormal:
-        fp.write("normal %s_normal.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCNormalStrength))
-    if scn.MCUseDisp:
-        fp.write("displacement %s_disp.png %d %.3f\n" % (name, scn.MCTextureLayer, scn.MCDispStrength))
-    if scn.MCUseTrans:
-        fp.write("transparency %s_trans.png %d\n" % (name, scn.MCTextureLayer))
-    return
 
 #
 #   deleteStrayVerts(context, ob):
@@ -840,7 +761,7 @@ def deleteStrayVerts(context, ob):
 def exportObjFile(context):
     ob = getClothing(context)
     deleteStrayVerts(context, ob)
-    (objpath, objfile) = getFileName(ob, context, "obj")
+    (objpath, objfile) = mc.getFileName(ob, context, "obj")
     print("Open", objfile)
     fp = open(objfile, "w", encoding="utf-8", newline="\n")
     fp.write("Exported from make_clothes.py\n")
@@ -1677,9 +1598,9 @@ def offsetCloth(context):
     pverts = pob.data.vertices
     print("Offset %s to %s" % (bob.name, pob.name))
 
-    inpath = '%s/%s.mhclo' % (context.scene.MCOutdir, goodName(bob.name))
+    inpath = '%s/%s.mhclo' % (context.scene.MCOutdir, mc.goodName(bob.name))
     infile = os.path.realpath(os.path.expanduser(inpath))
-    outpath = '%s/%s.mhclo' % (context.scene.MCOutdir, goodName(pob.name))
+    outpath = '%s/%s.mhclo' % (context.scene.MCOutdir, mc.goodName(pob.name))
     outfile = os.path.realpath(os.path.expanduser(outpath))
     print("Modifying clothes file %s => %s" % (infile, outfile))
     infp = open(infile, "r")
@@ -1774,7 +1695,7 @@ def exportBlenderMaterial(me, path):
                     if tex and (tex not in texs):
                         texs.append(tex)
 
-    matname = goodName(mats[0].name)
+    matname = mc.goodName(mats[0].name)
     mhxfile = "%s_material.mhx" % matname
     mhxpath = os.path.join(path, mhxfile)
     print("Open %s" % mhxpath)
