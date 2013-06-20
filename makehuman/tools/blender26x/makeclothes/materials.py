@@ -33,6 +33,18 @@ import shutil
 from . import mc
 
 
+def checkObjectHasDiffuseTexture(ob):
+    if ob.data.materials:
+        mat = ob.data.materials[0]
+        if mat is not None:
+            for mtex in mat.texture_slots:
+                if mtex is None:
+                    continue
+                if mtex.use_map_color_diffuse:
+                    return True
+    return False
+
+
 def writeMaterial(fp, ob, context):
     scn = context.scene
     if ob.data.materials:
@@ -46,7 +58,7 @@ def writeMaterial(fp, ob, context):
                 with open(filepath, "w", encoding="utf-8") as fp:
                     matfile = writeMaterialFile(fp, mat, name, outdir)
             except IOError:
-                raise MCError("Cannot create material file %s" % filepath)
+                raise error.MhcloError("Cannot create material file %s" % filepath)
             print("%s created" % filepath)
             return os.path.basename(filepath)
     return None
@@ -79,12 +91,9 @@ def writeMaterialFile(fp, mat, name, outdir):
         if mtex is None:
             continue
         tex = mtex.texture
-        home = os.path.expanduser("~")
-        print(home)
-        relpath = bpy.path.relpath(tex.image.filepath, home)
-        print("Relpath", relpath)
-        filepath = os.path.join(home, relpath)
-        print("Filepath", filepath)
+        blenddir = os.path.dirname(bpy.data.filepath)
+        relpath =  bpy.path.relpath(tex.image.filepath)     # starts with //
+        filepath = os.path.join(blenddir, relpath[2:])
         texpath = os.path.basename(filepath)
 
         if mtex.use_map_color_diffuse:
@@ -107,7 +116,7 @@ def writeMaterialFile(fp, mat, name, outdir):
             useDisplacement = "true"
 
         print("Copy texture %s => %s" % (filepath, outdir))
-        #shutil.copy(filepath, outdir)
+        shutil.copy(filepath, outdir)
 
     fp.write(
         '\n' +

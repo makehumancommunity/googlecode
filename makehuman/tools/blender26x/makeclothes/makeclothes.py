@@ -1396,8 +1396,8 @@ def setSeams(context):
                 seams = ob
     if not (clothing and seams):
         raise error.MhcloError("A clothing and a seam object must be selected")
-    checkObjectOK(clothing, context)
-    checkObjectOK(seams, context)
+    checkObjectOK(clothing, context, True)
+    checkObjectOK(seams, context, False)
 
     for e in clothing.data.edges:
         e.use_seam = False
@@ -1489,9 +1489,9 @@ def makeClothes(context, doFindClothes):
     (bob, pob) = getObjectPair(context)
     scn = context.scene
     checkNoTriangles(pob)
-    checkObjectOK(bob, context)
+    checkObjectOK(bob, context, False)
     checkAndVertexDiamonds(scn, bob)
-    checkObjectOK(pob, context)
+    checkObjectOK(pob, context, True)
     checkSingleVGroups(pob)
     if scn.MCLogging:
         logfile = '%s/clothes.log' % scn.MCOutdir
@@ -1517,7 +1517,7 @@ def checkNoTriangles(ob):
             raise error.MhcloError(msg)
 
 
-def checkObjectOK(ob, context):
+def checkObjectOK(ob, context, isClothing):
     old = context.object
     scn = context.scene
     scn.objects.active = ob
@@ -1552,9 +1552,13 @@ def checkObjectOK(ob, context):
         ob.parent = None
 
     try:
-        ob.data.uv_layers[scn.MCTextureLayer]
+        (isClothing and ob.data.uv_layers[scn.MCTextureLayer])
     except:
         word = "no texture layers"
+        err = True
+
+    if isClothing and not materials.checkObjectHasDiffuseTexture(ob):
+        word = "no diffuse texture"
         err = True
 
     if word:
