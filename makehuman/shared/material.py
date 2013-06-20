@@ -63,11 +63,14 @@ class Color(object):
     def asTuple(self):
         return (self.r, self.g, self.b)
 
+    def asStr(self):
+        return "%d %d %d" % self.asTuple()
+
 # Protected shaderDefine parameters that are set exclusively by means of shaderConfig options (configureShading())
 _shaderConfigDefines = ['DIFFUSE', 'BUMPMAP', 'NORMALMAP', 'DISPLACEMENT', 'SPECULARMAP', 'VERTEX_COLOR']
 
 # Protected shader parameters that are set exclusively by means of material properties (configureShading())
-_materialShaderParams = ['ambient', 'ambient', 'specular', 'emissive', 'diffuseTexture', 'bumpmapTexture', 'bumpmapIntensity', 'normalmapTexture', 'normalmapIntensity', 'displacementmapTexture', 'displacementmapTexture', 'specularmapTexture', 'specularmapIntensity']
+_materialShaderParams = ['diffuse', 'ambient', 'specular', 'emissive', 'diffuseTexture', 'bumpmapTexture', 'bumpmapIntensity', 'normalmapTexture', 'normalmapIntensity', 'displacementmapTexture', 'displacementmapTexture', 'specularmapTexture', 'specularmapIntensity']
 
 class Material(object):
     """
@@ -256,8 +259,101 @@ class Material(object):
                 if words[1] == "vertexColors":
                     shaderConfig_vertexColors = words[2].lower() in ["yes", "enabled", "true"]
 
+        f.close()
         self.configureShading(diffuse=shaderConfig_diffuse, bump=shaderConfig_bump, normal=shaderConfig_normal, displacement=shaderConfig_displacement, spec=shaderConfig_spec, vertexColors=shaderConfig_vertexColors)
 
+    def _texPath(self, filename):
+        import os
+
+        if self.filepath:
+            return os.path.relpath(filename, self.filepath)
+        else:
+            return filename
+
+    def toFile(self, filename, comments = []):
+        import codecs
+        import os
+
+        try:
+            f = codecs.open(filename, 'w', encoding='utf-8')
+        except:
+            f = None
+        if f == None:
+            log.error("Failed to open material file %s for writing.", filename)
+            return
+
+        f.write('# Material definition for %s\n\n' % self.name)
+        for comment in comments:
+            if not (comment.strip.startswith('//') or comment.strip.startswith('#')):
+                comment = "# " + comment
+            f.write(comment+"\n")
+
+        f.write("name %s\n" % self.name)
+        f.write("ambientColor %s\n" % self.ambientColor.asStr())
+        f.write("diffuseColor %s\n" % self.diffuseColor.asStr())
+        f.write("diffuseIntensity %s\n" % self.diffuseIntensity)
+        f.write("specularColor %s\n" % self.specularColor.asStr())
+        f.write("specularIntensity %s\n" % self.specularIntensity)
+        f.write("specularHardness %s\n" % self.specularHardness)
+        f.write("emissiveColor %s\n" % self.emissiveColor.asStr())
+        f.write("opacity %s\n" % self.opacity)
+        f.write("translucency %s\n\n" % self.translucency)
+
+        hasTexture = False
+        if self.diffuseTexture:
+            f.write("diffuseTexture %s\n" % self._texPath(self.diffuseTexture) )
+            hasTexture = True
+        if self.bumpMapTexture:
+            f.write("bumpmapTexture %s\n" % self._texPath(self.bumpMapTexture) )
+            f.write("bumpmapIntensity %s\n" % self.bumpMapIntensity)
+            hasTexture = True
+        if self.normalMapTexture:
+            f.write("normalmapTexture %s\n" % self._texPath(self.normalMapTexture) )
+            f.write("normalmapIntensity %s\n" % self.normalMapIntensity)
+            hasTexture = True
+        if self.displacementMapTexture:
+            f.write("displacementmapTexture %s\n" % self._texPath(self.displacementMapTexture) )
+            f.write("displacementmapIntensity %s\n" % self.displacementMapIntensity)
+            hasTexture = True
+        if self.specularMapTexture:
+            f.write("specularmapTexture %s\n" % self._texPath(self.specularMapTexture) )
+            f.write("specularmapIntensity %s\n" % self.specularMapIntensity)
+            hasTexture = True
+        if self.transparencyMapTexture:
+            f.write("transparencymapTexture %s\n" % self._texPath(self.transparencyMapTexture) )
+            f.write("transparencymapIntensity %s\n" % self.transparencyMapIntensity)
+            hasTexture = True
+        if hasTexture: f.write('\n')
+
+        if self.uvMap:
+            f.write("uvMap %s\n\n" % self._texPath(self.uvMap) )
+
+        if self.shader:
+            f.write("shader %s\n\n" % self.shader)
+
+        hasShaderParam = False
+        global _materialShaderParams
+        for name, param in self.shaderParameters.items():
+            if name not in _materialShaderParams:
+                hasShaderParam = True
+                if isinstance(param, list):
+                    f.write("shaderParam %s %s\n" % (name, " ".join([str(p) for p in param])) )
+                else:
+                    f.write("shaderParam %s %s\n" % (name, param) )
+        if hasShaderParam: f.write('\n')
+
+        hasShaderDefine = False
+        global _shaderConfigDefines
+        for define in self.shaderDefines:
+            if define not in _shaderConfigDefines:
+                hasShaderDefine = True
+                f.write("shaderDefine %s\n" % define)
+        if hasShaderDefine: f.write('\n')
+
+        for name, value in self.shaderConfig.items():
+            f.write("shaderConfig %s %s\n" % (name, value) )
+
+        f.close()
 
     def getUVMap(self):
         return self._uvMap
