@@ -282,11 +282,12 @@ class Material(object):
             log.error("Failed to open material file %s for writing.", filename)
             return
 
-        f.write('# Material definition for %s\n\n' % self.name)
+        f.write('# Material definition for %s\n' % self.name)
         for comment in comments:
-            if not (comment.strip.startswith('//') or comment.strip.startswith('#')):
+            if not (comment.strip().startswith('//') or comment.strip().startswith('#')):
                 comment = "# " + comment
             f.write(comment+"\n")
+        f.write("\n")
 
         f.write("name %s\n" % self.name)
         f.write("ambientColor %s\n" % self.ambientColor.asStr())
