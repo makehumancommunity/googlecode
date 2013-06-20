@@ -86,41 +86,63 @@ NoScale False ;
   Faces
 """)
 
-    for (f,g) in proxy.faces:
-        fp.write("    f")
-        for v in f:
-            fp.write(" %s" % v)
-        fp.write(" ;\n")
-    if proxy.faceNumbers:
-        for ftn in proxy.faceNumbers:
-            fp.write(ftn)
-    else:
-        fp.write("    ftall 0 1 ;\n")
+    obj = proxy.getObject()
+    for fv in obj.fvert:
+        fp.write("    f %d %d %d %d ;\n" % (fv[0], fv[1], fv[2], fv[3]))
+    #if False and proxy.faceNumbers:
+    #    for ftn in proxy.faceNumbers:
+    #        fp.write(ftn)
+    #else:
+    fp.write("    ftall 0 1 ;\n")
 
     fp.write("  end Faces\n")
 
     # Proxy layers
 
-    layers = list(proxy.uvtexLayerName.keys())
-    layers.sort()
+    fp.write(
+        "  MeshTextureFaceLayer %s\n" % "Texture" +
+        "    Data \n")
+    for fuv in obj.fuvs:
+        fp.write("    vt")
+        for vt in fuv:
+            uv = obj.texco[vt]
+            fp.write(" %.4g %.4g" % tuple(uv))
+        fp.write(" ;\n")
+    fp.write(
+        "    end Data\n" +
+        "  end MeshTextureFaceLayer\n")
+
+    '''
+    #Support for multiple texture layers currently disabled.
+
+    layers = list( proxy.uvtexLayerName.keys())
+    list.sort()
     for layer in layers:
+        if layer == proxy.objFileLayer
+            continue
         try:
             texfaces = proxy.texFacesLayers[layer]
             texverts = proxy.texVertsLayers[layer]
         except KeyError:
             continue
         fp.write(
-            '  MeshTextureFaceLayer %s\n' % proxy.uvtexLayerName[layer] +
-            '    Data \n')
-        for f in texfaces:
-            fp.write("    vt")
-            for v in f:
-                uv = texverts[v]
-                fp.write(" %.4g %.4g" % (uv[0], uv[1]))
-            fp.write(" ;\n")
+            "  MeshTextureFaceLayer %s\n" % proxy.uvtexLayerName[layer] +
+            "    Data \n")
+
+        if layer == proxy.objFileLayer:
+            for fuv in obj.fuvs:
+                fp.write("    vt")
+                for vt in fuv:
+                    uv = obj.texco[vt]
+                    fp.write(" %.4g %.4g" % (uv[0], uv[1]))
+                fp.write(" ;\n")
+        else:
+            pass
+
         fp.write(
-            '    end Data\n' +
-            '  end MeshTextureFaceLayer\n')
+            "    end Data\n" +
+            "  end MeshTextureFaceLayer\n")
+    '''
 
     # Proxy vertex groups
 
@@ -256,7 +278,6 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, env):
 def writeProxyTexture(fp, filepath, mat, extra, env):
     config = env.config
 
-    log.debug("Tex %s", filepath)
     texname = getTextureName(filepath, env)
     newpath = config.copyTextureToNewLocation(filepath)
     fp.write(
@@ -327,7 +348,8 @@ def writeProxyMaterial(fp, proxy, env):
     fp.write("Material %s%s \n" % (env.name, mat.name))
     addProxyMaskMTexs(fp, mat, proxy, prxList)
     #writeProxyMaterialSettings(fp, mat.settings)
-    uvlayer = proxy.uvtexLayerName[proxy.textureLayer]
+    #uvlayer = proxy.uvtexLayerName[proxy.textureLayer]
+    uvlayer = "Texture"
 
     if diffpath:
         texname = getTextureName(diffpath, env)

@@ -25,6 +25,7 @@ TODO
 """
 
 import os
+import log
 import module3d
 
 from material import Material, Color
@@ -94,9 +95,8 @@ class RichMesh:
         return self
 
 
-    def fromObject(self, object3d, weights, shapes):
-        self.object = object3d
-        self.name = object3d.name
+    def fromObject(self, obj, weights, shapes):
+        self.object = obj
         self.weights = weights
         self.shapes = shapes
         return self
@@ -127,6 +127,11 @@ class RichMesh:
 
 def getRichMesh(obj, proxy, rawWeights, rawShapes, amt, scale=1.0):
     if proxy:
+        obj = proxy.getObject()
+        weights = proxy.getWeights(rawWeights)
+        shapes = proxy.getShapes(rawShapes, scale)
+        return RichMesh(proxy.name, amt).fromObject(obj, weights, shapes)
+        '''
         coords = proxy.getCoords()
         faceVerts = [[v for v in f] for (f,g) in proxy.faces]
 
@@ -142,7 +147,6 @@ def getRichMesh(obj, proxy, rawWeights, rawShapes, amt, scale=1.0):
         weights = proxy.getWeights(rawWeights)
         shapes = proxy.getShapes(rawShapes, scale)
         richMesh = RichMesh(proxy.name, amt).fromProxy(coords, texVerts, faceVerts, texFaces, weights, shapes, scale=scale)
-
+        '''
     else:
-        richMesh = RichMesh(obj.name, amt).fromObject(obj, rawWeights, rawShapes)
-    return richMesh
+        return RichMesh(obj.name, amt).fromObject(obj, rawWeights, rawShapes)

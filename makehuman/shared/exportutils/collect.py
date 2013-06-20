@@ -95,9 +95,9 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
     theStuff = stuff
     deleteGroups = []
     deleteVerts = None  # Don't load deleteVerts from proxies directly, we use the facemask set in the gui module3d
-    _,deleteVerts = setupProxies('Clothes', None, obj, stuffs, richMesh, config, deleteGroups, deleteVerts)
-    _,deleteVerts = setupProxies('Hair', None, obj, stuffs, richMesh, config, deleteGroups, deleteVerts)
-    foundProxy,deleteVerts = setupProxies('Proxy', name, obj, stuffs, richMesh, config, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Clothes', None, human, stuffs, richMesh, config, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Hair', None, human, stuffs, richMesh, config, deleteGroups, deleteVerts)
+    foundProxy,deleteVerts = setupProxies('Proxy', name, human, stuffs, richMesh, config, deleteGroups, deleteVerts)
     progress(0.06*(3-2*subdivide))
     if not foundProxy:
         if helpers:     # helpers override everything
@@ -137,36 +137,33 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
     return stuffs,amt
 
 #
-#    setupProxies(typename, name, obj, stuffs, richMesh, config, deleteGroups, deleteVerts):
+#    setupProxies(typename, name, human, stuffs, richMesh, config, deleteGroups, deleteVerts):
 #
 
-def setupProxies(typename, name, obj, stuffs, richMesh, config, deleteGroups, deleteVerts):
+def setupProxies(typename, name, human, stuffs, richMesh, config, deleteGroups, deleteVerts):
     # TODO document that this method does not only return values, it also modifies some of the passed parameters (deleteGroups and stuffs, deleteVerts is modified only if it is not None)
     global theStuff
 
     foundProxy = False
-    for pfile in config.getProxyList():
-        if pfile.type == typename and pfile.file:
-            proxy = mh2proxy.readProxyFile(obj, pfile, evalOnLoad=True)
-            if proxy and proxy.name and proxy.texVerts:
-                foundProxy = True
-                deleteGroups += proxy.deleteGroups
-                if deleteVerts != None:
-                    deleteVerts = deleteVerts | proxy.deleteVerts
-                if name:
-                    stuff = richmesh.CStuff(name, proxy, pfile.obj)
+    for proxy in config.getProxies().values():
+        if proxy.type == typename:
+            foundProxy = True
+            deleteGroups += proxy.deleteGroups
+            if deleteVerts != None:
+                deleteVerts = deleteVerts | proxy.deleteVerts
+            if not name:
+                name = proxy.name
+            stuff = richmesh.CStuff(name, proxy, human)
+            if stuff:
+                if proxy.type == 'Proxy':
+                     theStuff = stuff
+                if theStuff:
+                    stuffname = theStuff.name
                 else:
-                    stuff = richmesh.CStuff(proxy.name, proxy, pfile.obj)
-                if stuff:
-                    if pfile.type == 'Proxy':
-                        theStuff = stuff
-                    if theStuff:
-                        stuffname = theStuff.name
-                    else:
-                        stuffname = None
+                    stuffname = None
 
-                    stuff.richMesh = richmesh.getRichMesh(obj, proxy, richMesh.weights, richMesh.shapes, richMesh.armature)
-                    stuffs.append(stuff)
+                stuff.richMesh = richmesh.getRichMesh(None, proxy, richMesh.weights, richMesh.shapes, richMesh.armature)
+                stuffs.append(stuff)
     return foundProxy, deleteVerts
 
 #

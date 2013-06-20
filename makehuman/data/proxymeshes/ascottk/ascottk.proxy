@@ -1,23 +1,15 @@
 # author AscottK
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# name ascottk
-# uuid c8699c89-7735-4239-a982-8fdd54a439b2
-# obj_file ascottk.obj
-# material Skin
+name ascottk
+uuid c8699c89-7735-4239-a982-8fdd54a439b2
+obj_file ascottk.obj
 texture ./data/textures/texture.png
-diffuse_color 0.8 0.54 0.35
-diffuse_shader LAMBERT
-diffuse_intensity 0.7
-specular_color 1.0000 1.0000 1.0000
-specular_shader COOKTORR
-specular_intensity 0.25
-specular_hardness 10
-# x_scale 4302 8697 1.3379
-# z_scale 8208 8220 1.7896
-# y_scale 8223 6827 1.7689
-# use_projection 0
-# verts
+x_scale 4302 8697 1.3379
+z_scale 8208 8220 1.7896
+y_scale 8223 6827 1.7689
+use_projection 0
+verts
  8050  8049  8057 0.01243 0.10355 0.88402 -0.00008 -0.00037 -0.00251
  8100  8099  8143 0.02857 0.96495 0.00648 -0.00008 -0.00273 0.00081
  8102  8101  8128 0.01931 0.97636 0.00433 -0.00027 -0.00283 0.00018

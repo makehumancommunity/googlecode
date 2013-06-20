@@ -166,8 +166,7 @@ class ClothesTaskView(gui3d.TaskView):
             return
 
         if filepath not in self.cache:
-            proxy = mh2proxy.readProxyFile(human.meshData, filepath)
-            proxy.type = 'Clothes'
+            proxy = mh2proxy.readProxyFile(human.meshData, filepath, type="Clothes", layer=2)
             self.cache[filepath] = proxy
             proxy.toggleEnabled = False
         else:
@@ -225,7 +224,7 @@ class ClothesTaskView(gui3d.TaskView):
         obj = proxy.obj_file
         try:
             clo = human.clothesObjs[obj]
-        except:
+        except KeyError:
             clo = None
         if clo:
             gui3d.app.removeObject(clo)

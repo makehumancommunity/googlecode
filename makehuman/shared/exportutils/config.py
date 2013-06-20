@@ -81,50 +81,43 @@ class Config:
         self.human = human
 
 
-    def getProxyList(self):
+    def getProxies(self):
         """
         Get the proxy list from the current state of the set human object.
         Proxy list will contain all proxy items such as proxy mesh and clothes,
         hair and cages.
         """
-        proxyList = []
         if not self.human:
-            return proxyList
+            return {}
 
+        proxies = {}
         if self.human.hairProxy:
-            words = self.human.hairObj.mesh.name.split('.')
-            pfile = CProxyFile()
-            pfile.set('Hair', 2)
-            pfile.obj = self.human.hairObj
-            name = self.goodName(words[0])
-            pfile.file = self.human.hairProxy.file
-            proxyList.append(pfile)
+            proxy = self.human.hairProxy
+            proxy.layer = 2
+            name = self.goodName(proxy.name)
+            proxies[name] = proxy
 
         for (key,clo) in self.human.clothesObjs.items():
             if clo:
-                name = self.goodName(key)
-                pfile = CProxyFile()
-                pfile.set('Clothes', 3)
-                pfile.obj = clo
                 proxy = self.human.clothesProxies[key]
-                pfile.file = proxy.file
-                proxyList.append(pfile)
+                proxy.layer = 3
+                name = self.goodName(key)
+                proxies[name] = proxy
 
         if self.human.proxy:
-            name = self.goodName(self.human.proxy.name)
-            pfile = CProxyFile()
-            pfile.set('Proxy', 4)
-            pfile.obj = self.human
-            pfile.file = self.human.proxy.file
-            proxyList.append(pfile)
+            proxy = self.human.proxy
+            proxy.layer = 4
+            name = self.goodName(proxy.name)
+            proxies[name] = proxy
 
         if self.cage:
-            pfile = CProxyFile()
-            pfile.set('Cage', 4)
-            pfile.file = os.path.realpath("./data/cages/cage/cage.mhclo")
-            proxyList.append(pfile)
+            obj = gui3d.app.selectedHuman
+            filepath = "./data/cages/cage/cage.mhclo"
+            proxy = mh2proxy.readProxyFile(obj, filepath, type="Cage", layer=4)
+            proxy.update(obj)
+            proxies[name] = proxy
 
-        return proxyList
+        return proxies
 
 
     def setupTexFolder(self, filepath):
@@ -188,6 +181,7 @@ class Config:
         string = name.replace(" ", "_").replace("-","_").lower()
         return string
 
+'''
 #
 #   class CProxyFile:
 #
@@ -205,7 +199,7 @@ class CProxyFile:
 
     def __repr__(self):
         return ("<CProxyFile %s %d \"%s\">" % (self.type, self.layer, self.file))
-
+'''
 #
 #
 #

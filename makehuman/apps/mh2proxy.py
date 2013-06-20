@@ -169,6 +169,32 @@ class CProxy:
         return ("<CProxy %s %s %s %s>" % (self.name, self.type, self.file, self.uuid))
 
 
+    def getObject(self):
+        import gui3d, object3d, module3d
+
+        human = gui3d.app.selectedHuman
+        if self.type == "Clothes":
+            obj = human.clothesObjs[self.getUuid()]
+        elif self.type == "Proxy":
+            if not human.proxy:
+                return None
+            obj = human.mesh
+        elif self.type == "Hair":
+            obj = human.hairObj
+        elif self.type == "Cage":
+            return None
+        elif self.type == "Converter":
+            return None
+        else:
+            raise NameError("Unknown proxy type %s" % self.type)
+
+        if isinstance(obj, gui3d.Object):
+            obj = obj.mesh
+        if not (isinstance(obj, module3d.Object3D) or isinstance(obj, object3d.Object3D)):
+            raise NameError("%s is not an object" % obj)
+        return obj
+
+
     def getCoords(self):
         converter = self.getConverter()
         if converter:
@@ -193,7 +219,7 @@ class CProxy:
         if self.basemesh in ["alpha_7", "alpha7"]:
             global _A7converter
             if _A7converter is None:
-                _A7converter = readProxyFile(gui3d.app.selectedHuman.meshData, "data/3dobjs/a7_converter.proxy")
+                _A7converter = readProxyFile(gui3d.app.selectedHuman.meshData, "data/3dobjs/a7_converter.proxy", type="Converter")
             print "Converting clothes with", _A7converter
             return _A7converter
         elif self.basemesh == "hm08":
@@ -301,40 +327,6 @@ class CProxy:
         return fixedShape
 
 #
-#    classes CMaterial, CTexture
-#
-"""
-class CTexture:
-    def __init__(self, fname):
-        self.file = fname
-        self.types = []
-
-
-class CMaterial:
-    def __init__(self):
-        self.name = None
-        self.settings = []
-        self.textureSettings = []
-        self.mtexSettings = []
-
-        self.diffuse_color = (0.8,0.8,0.8)
-        self.diffuse_intensity = 0.8
-        self.specular_color = (1,1,1)
-        self.specular_intensity = 0.1
-        self.specular_hardness = 25
-        self.transparency = 1
-        self.translucency = 0.0
-        self.ambient_color = (0,0,0)
-        self.emit_color = (0,0,0)
-        self.use_transparency = False
-        self.alpha = 1
-
-        self.textures = []
-
-
-"""
-
-#
 #    readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
 #
 
@@ -342,28 +334,20 @@ doRefVerts = 1
 doWeights = 2
 doDeleteVerts = 3
 
-def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
-    if not file:
-        return CProxy(None, 'Proxy', 2)
-    elif isinstance(file, basestring):
-        pfile = exportutils.config.CProxyFile()
-        pfile.file = file
-    else:
-        pfile = file
-    folder = os.path.realpath(os.path.expanduser(os.path.dirname(pfile.file)))
+def readProxyFile(obj, filepath, type="Clothes", layer=4):
+    if not isinstance(filepath, basestring):
+        raise NameError("Bug readProxyFile %s" % filepath)
+    folder = os.path.realpath(os.path.expanduser(os.path.dirname(filepath)))
     objfile = None
 
     try:
-        tmpl = open(pfile.file, "rU")
-    except:
-        tmpl = None
-    if tmpl == None:
-        log.error("*** Cannot open %s", pfile.file)
+        fp = open(filepath, "rU")
+    except IOError:
+        log.error("*** Cannot open %s", filepath)
         return None
 
-    locations = {}  # TODO is this useful?
     tails = {}
-    proxy = CProxy(pfile.file, pfile.type, pfile.layer)
+    proxy = CProxy(filepath, type, layer)
     proxy.deleteVerts = numpy.zeros(len(obj.coord), bool)
 
     useProjection = True
@@ -371,7 +355,7 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
     scales = numpy.array((1.0,1.0,1.0), float)
     status = 0
     vnum = 0
-    for line in tmpl:
+    for line in fp:
         words = line.split()
 
         if len(words) == 0:
@@ -534,10 +518,6 @@ def readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
             pass
             #print "Ignored proxy keyword", key
 
-
-    if evalOnLoad and proxy.obj_file:
-        if not copyObjFile(proxy):
-            return None
     return proxy
 
 
@@ -548,11 +528,11 @@ def getFileName(folder, file, suffix):
     else:
         return os.path.join(folder, file+suffix)
 
-
+'''
 # TODO eliminate duplicate OBJ loaders, don't include OBJ data in .proxy files
 def copyObjFile(proxy):
     try:
-        tmpl = open(proxy.obj_file, "rU")
+        fp = open(proxy.obj_file, "rU")
     except:
         log.error("*** Cannot open %s", proxy.obj_file)
         return False
@@ -563,7 +543,7 @@ def copyObjFile(proxy):
     proxy.texVertsLayers[layer] = proxy.texVerts
     proxy.texFacesLayers[layer] = proxy.texFaces
     theGroup = None
-    for line in tmpl:
+    for line in fp:
         words= line.split()
         if len(words) == 0:
             pass
@@ -573,9 +553,9 @@ def copyObjFile(proxy):
             newFace(1, words, theGroup, proxy)
         elif words[0] == 'g':
             theGroup = words[1]
-    tmpl.close()
+    fp.close()
     return True
-
+'''
 
 def getScaleData(words):
     v1 = int(words[1])

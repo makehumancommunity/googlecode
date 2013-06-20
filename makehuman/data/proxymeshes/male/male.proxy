@@ -1,24 +1,16 @@
 # author Manuel Bastioni
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# name Male
-# uuid 75b34bae-e818-4d4e-bd75-3d310711f22e
-# obj_file male.obj
-# x_scale 4302 8697 1.2768
-# z_scale 8208 8220 1.8526
-# y_scale 8289 6827 0.0312
-# use_projection 0
-# material Skin
+ name Male
+ uuid 75b34bae-e818-4d4e-bd75-3d310711f22e
+ obj_file male.obj
+ x_scale 4302 8697 1.2768
+ z_scale 8208 8220 1.8526
+ y_scale 8289 6827 0.0312
+ use_projection 0
 texture ./data/textures/texture.png
-diffuse_color 0.8 0.54 0.35
-diffuse_shader LAMBERT
-diffuse_intensity 0.7
-specular_color 1.0000 1.0000 1.0000
-specular_shader COOKTORR
-specular_intensity 0.25
-specular_hardness 10
-# useBaseMaterials
-# faceNumbers
+ useBaseMaterials
+ faceNumbers
     ftn 427 0 1 ;
     ftn 166 1 1 ;
     ftn 150 0 1 ;
@@ -48,7 +40,7 @@ specular_hardness 10
     ftn 672 0 1 ;
     ftn 180 3 1 ;
     ftn 182 0 1 ;
-# verts 0
+verts 0
  7365  7364  7361 0.00000 0.40010 0.59990 -0.00005 0.04066 -0.02592
  7362  7237  7238 0.49470 0.05465 0.45066 0.00611 0.03619 -0.01977
  3748  3749  2849 0.45066 0.05465 0.49470 -0.00611 0.03619 -0.01977

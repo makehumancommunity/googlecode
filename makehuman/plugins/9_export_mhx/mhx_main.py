@@ -90,7 +90,7 @@ def exportMhx(human, filepath, config):
         "  error 'This file can only be read with Blender 2.5' ;\n" +
         "#endif\n")
 
-    proxies = scanProxies(human, config)
+    proxies = config.getProxies()
     env = MhxEnvironment(name, human, amt, config, proxies)
 
     if not config.cage:
@@ -130,19 +130,6 @@ def exportMhx(human, filepath, config):
     log.message("%s exported" % filepath.encode('utf-8'))
     gui3d.app.progress(1.0)
     return
-
-#-------------------------------------------------------------------------------
-#   Scan proxies
-#-------------------------------------------------------------------------------
-
-def scanProxies(human, config):
-    proxies = {}
-    for pfile in config.getProxyList():
-        if pfile.file:
-            proxy = mh2proxy.readProxyFile(human.meshData, pfile, True)
-            if proxy:
-                proxies[proxy.name] = proxy
-    return proxies
 
 #-------------------------------------------------------------------------------
 #   Groups
