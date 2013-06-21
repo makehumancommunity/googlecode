@@ -30,7 +30,7 @@
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.903",
+    "version": "0.904",
     "blender": (2, 6, 7),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -55,13 +55,9 @@ else:
     import os
     from bpy.props import *
     import mh_utils
-    print("A")
     from . import error
-    print("B")
     from . import mc
-    print("C")
     from . import materials
-    print("D")
     from . import makeclothes
     from . import makeuvs
     from . import base_uv
@@ -90,25 +86,27 @@ class MakeClothesPanel(bpy.types.Panel):
         layout = self.layout
         scn = context.scene
 
-        layout.prop(scn, "MCShowOutdir")
-        if scn.MCShowOutdir:
+        layout.prop(scn, "MCShowSettings")
+        if scn.MCShowSettings:
             ins = inset(layout)
             ins.operator("mhclo.init_interface", text="ReInitialize")
             ins.operator("mhclo.factory_settings")
             ins.operator("mhclo.save_settings")
             ins.label("Output Directory")
             ins.prop(scn, "MCOutdir", text="")
-            ins.separator()
+            ins.label("Human Mesh Type")
+            layout.prop(scn, "MCMHVersion", expand=True)
+            layout.separator()
 
         #layout.operator("mhclo.snap_selected_verts")
-
+        '''
         layout.prop(scn, "MCShowUtils")
         if scn.MCShowUtils:
             ins = inset(layout)
             ins.operator("mhclo.print_vnums")
             ins.operator("mhclo.copy_vert_locs")
             ins.separator()
-
+        '''
         layout.prop(scn, "MCShowAutoVertexGroups")
         if scn.MCShowAutoVertexGroups:
             layout.prop(scn, "MCRemoveGroupType", expand=True)
@@ -117,11 +115,12 @@ class MakeClothesPanel(bpy.types.Panel):
             layout.prop(scn, "MCAutoGroupType", expand=True)
             if scn.MCAutoGroupType == 'Helpers':
                 layout.prop(scn, "MCAutoHelperType", expand=True)
-            inset(layout).operator("mhclo.auto_vertex_groups")
-            layout.separator()
-            layout.prop(scn, "MCKeepVertsUntil", expand=True)
-            inset(layout).operator("mhclo.delete_helpers")
-            layout.separator()
+            ins = inset(layout)
+            ins.operator("mhclo.auto_vertex_groups")
+            ins.separator()
+            ins.prop(scn, "MCKeepVertsUntil", expand=False)
+            ins.operator("mhclo.delete_helpers")
+            ins.separator()
 
         '''
         layout.prop(scn, "MCShowMaterials")
@@ -151,15 +150,15 @@ class MakeClothesPanel(bpy.types.Panel):
             ins.separator()
         '''
 
+        layout.separator()
         row = layout.row()
         row.operator("mhclo.make_human", text="Human").isHuman = True
         row.operator("mhclo.make_human", text="Clothing").isHuman = False
-        layout.label("Human Mesh Type")
-        layout.prop(scn, "MCMHVersion", expand=True)
         layout.separator()
         layout.operator("mhclo.make_clothes")
         layout.separator()
 
+        '''
         layout.prop(scn, "MCShowAdvanced")
         if scn.MCShowAdvanced:
             ins = inset(layout)
@@ -171,6 +170,7 @@ class MakeClothesPanel(bpy.types.Panel):
             row.prop(scn, "MCThreshold")
             row.prop(scn, "MCListLength")
             ins.separator()
+        '''
 
         layout.prop(scn, "MCShowUVProject")
         if scn.MCShowUVProject:

@@ -2573,7 +2573,7 @@ def initInterface():
         default="",
         maxlen=32)
 
-    bpy.types.Scene.MCShowOutdir = BoolProperty(name = "Show Output Directory", default=False)
+    bpy.types.Scene.MCShowSettings = BoolProperty(name = "Show Settings", default=False)
     bpy.types.Scene.MCShowUtils = BoolProperty(name = "Show Utilities", default=False)
     bpy.types.Scene.MCShowAutoVertexGroups = BoolProperty(name = "Show Automatic Vertex Groups", default=False)
     bpy.types.Scene.MCShowMaterials = BoolProperty(name = "Show Materials", default=False)

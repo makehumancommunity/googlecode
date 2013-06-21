@@ -34,9 +34,15 @@ from . import mc
 
 
 def checkObjectHasDiffuseTexture(ob):
+    """
+    An object must either lack material, or have a diffuse texture.
+    """
     if ob.data.materials:
         mat = ob.data.materials[0]
-        if mat is not None:
+        if mat is None:
+            return True
+        else:
+            hasMat = True
             for mtex in mat.texture_slots:
                 if mtex is None:
                     continue
@@ -46,10 +52,15 @@ def checkObjectHasDiffuseTexture(ob):
 
 
 def writeMaterial(fp, ob, context):
+    """
+    Create an mhmat file and write material settings there.
+    """
     scn = context.scene
     if ob.data.materials:
         mat = ob.data.materials[0]
-        if mat is not None:
+        if mat is None:
+            return None
+        else:
             name = mc.goodName(mat.name)
             _,filepath = mc.getFileName(ob, context, "mhmat")
             outdir = os.path.dirname(filepath)
