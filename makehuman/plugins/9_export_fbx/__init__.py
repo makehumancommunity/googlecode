@@ -47,7 +47,8 @@ class FbxConfig(Config):
         self.rigOptions.setExportOptions(
             useExpressions = self.expressions,
             feetOnGround = self.feetOnGround,
-            useLeftRight = True,
+            useHelpers = self.helpers,
+            useLeftRight = False,
         )
 
 

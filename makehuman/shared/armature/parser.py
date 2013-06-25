@@ -84,6 +84,9 @@ class Parser:
         else:
             self.vertexGroupFiles = ["head", "bones", "hand"]
 
+        if options.useHelpers:
+            self.vertexGroupFiles.append("helpers")
+
         self.joints = (
             rig_joints.Joints +
             rig_bones.Joints +
