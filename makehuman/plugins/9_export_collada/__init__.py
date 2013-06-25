@@ -48,7 +48,6 @@ class DaeConfig(Config):
         self.rigOptions.setExportOptions(
             useExpressions = self.expressions,
             feetOnGround = self.feetOnGround,
-            useHelpers = self.helpers,
         )
 
 

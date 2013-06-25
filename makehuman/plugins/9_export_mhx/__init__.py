@@ -63,7 +63,6 @@ class MhxConfig(Config):
                 useCorrectives = self.bodyShapes,
                 useExpressions = self.expressions,
                 feetOnGround = self.feetOnGround,
-                useHelpers = self.helpers,
                 useMasks = self.useMasks,
                 useLeftRight = True,
             )

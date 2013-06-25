@@ -80,12 +80,9 @@ class Parser:
             self.deformPrefix = "DEF-"
 
         if options.useMuscles:
-            self.vertexGroupFiles = ["head", "muscles", "hand"]
+            self.vertexGroupFiles = ["head", "muscles", "hand", "helpers"]
         else:
-            self.vertexGroupFiles = ["head", "bones", "hand"]
-
-        if options.useHelpers:
-            self.vertexGroupFiles.append("helpers")
+            self.vertexGroupFiles = ["head", "bones", "hand", "helpers"]
 
         self.joints = (
             rig_joints.Joints +
