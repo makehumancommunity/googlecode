@@ -32,6 +32,7 @@ import os
 import shutil
 from . import mc
 
+print("Reload materials")
 
 def checkObjectHasDiffuseTexture(ob):
     """
@@ -42,13 +43,14 @@ def checkObjectHasDiffuseTexture(ob):
         if mat is None:
             return True
         else:
-            hasMat = True
             for mtex in mat.texture_slots:
                 if mtex is None:
                     continue
                 if mtex.use_map_color_diffuse:
                     return True
-    return False
+        return False
+    else:
+        return True
 
 
 def writeMaterial(fp, ob, context):

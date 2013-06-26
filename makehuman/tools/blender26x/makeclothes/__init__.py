@@ -30,7 +30,7 @@
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.905",
+    "version": "0.906",
     "blender": (2, 6, 7),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -77,10 +77,6 @@ class MakeClothesPanel(bpy.types.Panel):
     bl_label = "Make Clothes version %s" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object and context.object.type == 'MESH')
 
     def draw(self, context):
         layout = self.layout
