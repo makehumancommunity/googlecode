@@ -518,8 +518,12 @@ def writeTextures(stuffs, outDir, progressCallback = None):
     i = 0.0
     stuffnum = float(len(stuffs))
     for stuff in stuffs:
-        # Export diffuse texture.
-        teximg = mh.Image(stuff.material.diffuseTexture)
+        if stuff.material.diffuseTexture:
+            if isinstance(stuff.material.diffuseTexture, str):
+                teximg = mh.Image(path = stuff.material.diffuseTexture)
+            else:
+                teximg = stuff.material.diffuseTexture
+        # Export diffuse texture, with subtextures.
         teximg.save(os.path.join(
             outDir,"%s_texture.png" % stuff.name))
         progress((i+0.4)/stuffnum)
@@ -801,7 +805,7 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
             bumpdata = stuffs[0].material.displacementMapTexture
         if bumpdata:
             # Export blurred bump maps
-            lmap = imgop.Image(bumpdata)
+            lmap = imgop.Image(bumpdata) if isinstance(bumpdata, str) else bumpdata
             lmap = imgop.getChannel(lmap,1)
             lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*1.6*sssa, 15,
                                  lambda p: progress(progbase+0.5*p*(1-progbase)))
@@ -826,13 +830,14 @@ def getImageFname(name, file, type = None):
     out = str(name)
     if type is not None:
         out += '_' + type
-    return out + os.path.splitext(file)[-1]
+    ext = os.path.splitext(file)[-1] if isinstance(file, str) else ".png"
+    return out + ext
     
 def getImageDef(name, file, type = None):
     out = str(name)
     if type is not None:
         out += '_' + type
-    ext = os.path.splitext(file)[-1]
+    ext = os.path.splitext(file)[-1] if isinstance(file, str) else ".png"
     out += ext
     
     ext = ext.lower()
