@@ -29,17 +29,17 @@ import os
 import mh
 
 def combine(image, mhstx):
+    img = mh.Image(image)
     f = open(mhstx, 'rU')
     try:
         subTextures = mh.parseINI(f.read(), [("(","["), (")","]")])
     except:
         log.warning("subtextures.combine(%s)", mhstx, exc_info=True)
         f.close()
-        return mh.Image()
+        return img
     f.close()
     
     texdir = os.path.dirname(mhstx)
-    img = mh.Image(data = image.data)
     for subTexture in subTextures:
         path = os.path.join(texdir, subTexture['txt'])
         subImg = mh.Image(path)

@@ -28,7 +28,10 @@ import image_qt
 class Image(object):
     def __init__(self, path = None, width = 0, height = 0, bitsPerPixel = 32, components = None, data = None):
         if path is not None:
-            self._data = image_qt.load(path)
+            if isinstance(path, Image):
+                self._data = path.data
+            else:   # Path string.
+                self._data = image_qt.load(path)
         elif data is not None:
             self._data = data
         else:
