@@ -37,10 +37,9 @@ from mathutils import Vector, Quaternion, Matrix
 from bpy.props import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
-import mh_utils
-from mh_utils import mh
-from mh_utils import utils
-from mh_utils.utils import round
+from . import mh
+from . import utils
+from .utils import round
 
 #----------------------------------------------------------
 #   saveMhpFile(context, filepath):
@@ -51,20 +50,20 @@ def saveMhpFile(context, filepath):
     ob = context.object
     rig = ob.parent
     scn = context.scene
-    if rig and rig.type == 'ARMATURE': 
+    if rig and rig.type == 'ARMATURE':
         roots = rigRoots(rig)
         if len(roots) > 1:
             raise NameError("Armature %s has multiple roots: %s" % (rig.name, roots))
         (pname, ext) = os.path.splitext(filepath)
         mhppath = pname + ".mhp"
-        
+
         fp = open(mhppath, "w", encoding="utf-8", newline="\n")
         root = rig.pose.bones[roots[0]]
         writeMhpBones(fp, root)
         fp.close()
         print("Mhp file %s saved" % mhppath)
-        
-        
+
+
 def writeMhpBones(fp, pb):
     b = pb.bone
     if pb.parent:
@@ -90,7 +89,7 @@ def loadMhpFile(context, filepath):
     if rig and rig.type == 'ARMATURE':
         (pname, ext) = os.path.splitext(filepath)
         mhppath = pname + ".mhp"
-        
+
         fp = open(mhppath, "rU")
         for line in fp:
             words = line.split()
@@ -112,8 +111,8 @@ def loadMhpFile(context, filepath):
                 pb.matrix_basis = pb.bone.matrix_local.inverted() * mat
         fp.close()
         print("Mhp file %s loaded" % mhppath)
-                
-                
+
+
 
 class VIEW3D_OT_LoadMhpButton(bpy.types.Operator):
     bl_idname = "mh.load_mhp"
@@ -124,8 +123,8 @@ class VIEW3D_OT_LoadMhpButton(bpy.types.Operator):
     filename_ext = ".mhp"
     filter_glob = StringProperty(default="*.mhp", options={'HIDDEN'})
     filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for mhp file", 
+        name="File Path",
+        description="File path used for mhp file",
         maxlen= 1024, default= "")
 
     @classmethod
@@ -150,8 +149,8 @@ class VIEW3D_OT_SaveasMhpFileButton(bpy.types.Operator, ExportHelper):
     filename_ext = ".mhp"
     filter_glob = StringProperty(default="*.mhp", options={'HIDDEN'})
     filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for mhp file", 
+        name="File Path",
+        description="File path used for mhp file",
         maxlen= 1024, default= "")
 
     @classmethod
@@ -178,21 +177,21 @@ def saveBvhFile(context, filepath):
     ob = context.object
     rig = ob.parent
     scn = context.scene
-    if rig and rig.type == 'ARMATURE': 
+    if rig and rig.type == 'ARMATURE':
         roots = rigRoots(rig)
         if len(roots) > 1:
             raise NameError("Armature %s has multiple roots: %s" % (rig.name, roots))
         scn.objects.active = rig
         (pname, ext) = os.path.splitext(filepath)
         bvhpath = pname + ".bvh"
-        
+
         export_bvh.write_armature(context, bvhpath,
            frame_start = scn.frame_current,
            frame_end = scn.frame_current,
            global_scale = 1.0,
            rotate_mode = scn.MhExportRotateMode,
            root_transform_only = True
-           )    
+           )
         scn.objects.active = ob
         print("Saved %s" % bvhpath)
         return True
@@ -206,8 +205,8 @@ def rigRoots(rig):
         if not bone.parent:
             roots.append(bone.name)
     return roots
-    
-    
+
+
 def loadBvhFile(context, filepath):
     ob = context.object
     rig = ob.parent
@@ -255,7 +254,7 @@ def copyPose(src, trg):
             for j in range(3):
                 t[i][j] = s[i][j]
         trgBone.matrix_basis = t
-        
+
 
 class VIEW3D_OT_LoadBvhButton(bpy.types.Operator):
     bl_idname = "mh.load_bvh"
@@ -266,8 +265,8 @@ class VIEW3D_OT_LoadBvhButton(bpy.types.Operator):
     filename_ext = ".bvh"
     filter_glob = StringProperty(default="*.bvh", options={'HIDDEN'})
     filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for bvh file", 
+        name="File Path",
+        description="File path used for bvh file",
         maxlen= 1024, default= "")
 
     @classmethod
@@ -292,8 +291,8 @@ class VIEW3D_OT_SaveasBvhFileButton(bpy.types.Operator, ExportHelper):
     filename_ext = ".bvh"
     filter_glob = StringProperty(default="*.bvh", options={'HIDDEN'})
     filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for bvh file", 
+        name="File Path",
+        description="File path used for bvh file",
         maxlen= 1024, default= "")
 
     @classmethod
@@ -331,8 +330,8 @@ def readWeights(filepath, nVerts):
             vn = int(words[0])
             if vn < mh.NBodyVerts:
                 weights[vn].append( (bone, float(words[1])) )
-    fp.close()           
-    
+    fp.close()
+
     normedWeights = {}
     for vn,data in weights.items():
         wsum = 0.0
@@ -343,7 +342,7 @@ def readWeights(filepath, nVerts):
             ndata.append((bone,w/wsum))
         normedWeights[vn] = ndata
 
-    return normedWeights            
+    return normedWeights
 
 
 def defineMatrices(rig):
@@ -351,7 +350,7 @@ def defineMatrices(rig):
     for pb in rig.pose.bones:
         mats[pb.name] = pb.matrix * pb.bone.matrix_local.inverted()
     return mats
-        
+
 
 def getPoseLocs(mats, restLocs, weights, nVerts):
     locs = {}
@@ -362,8 +361,8 @@ def getPoseLocs(mats, restLocs, weights, nVerts):
         else:
             locs[n] = restLocs[n]
     return locs
-    
-    
+
+
 def getRestLocs(mats, poseLocs, weights, nVerts):
     locs = {}
     for n in range(nVerts):
@@ -373,9 +372,9 @@ def getRestLocs(mats, poseLocs, weights, nVerts):
         else:
             locs[n] = poseLocs[n]
     return locs
-    
-    
-def getMatrix(mats, weight):        
+
+
+def getMatrix(mats, weight):
     mat = Matrix()
     mat.zero()
     for bname,w in weight:
@@ -390,15 +389,15 @@ def getShapeLocs(ob, nVerts):
         locs[n] = Vector((0,0,0))
     for skey in ob.data.shape_keys.key_blocks:
         if skey.name == "Basis":
-            continue       
+            continue
         filename = skey.name
         for n,v in enumerate(skey.data):
             bv = ob.data.vertices[n]
             vec = v.co - bv.co
             locs[n] += skey.value*vec
     return locs, filename
-    
-    
+
+
 def addLocs(locs1, locs2, nVerts):
     locs = {}
     for n in range(nVerts):
@@ -422,7 +421,7 @@ def saveNewTarget(filepath, locs, nVerts):
             fp.write("%d %s %s %s\n" % (n, round(dr[0]), round(dr[2]), round(-dr[1])))
     fp.close()
     return
-        
+
 
 class VIEW3D_OT_ConvertRigButton(bpy.types.Operator):
     bl_idname = "mh.convert_rig"
@@ -452,7 +451,7 @@ class VIEW3D_OT_ConvertRigButton(bpy.types.Operator):
         newShapeDiffs = subLocs(newRestLocs, restLocs, nVerts)
         saveNewTarget(os.path.join(scn.MhProgramPath, "data/poses", scn.MhPoseTargetDir, filename + ".target"), newShapeDiffs, nVerts)
 
-        return{'FINISHED'}           
+        return{'FINISHED'}
 
 #----------------------------------------------------------
 #   Init
@@ -462,7 +461,7 @@ def init():
     bpy.types.Scene.MhSourceRig = StringProperty(default = "rigid")
     bpy.types.Scene.MhTargetRig = StringProperty(default = "soft1")
     bpy.types.Scene.MhPoseTargetDir = StringProperty(default = "dance1-soft1")
-    
+
     bpy.types.Scene.MhImportRotateMode = EnumProperty(
             name="Rotation",
             description="Rotation conversion",
@@ -494,4 +493,3 @@ def init():
                    ),
             default='ZYX',
             )
-    

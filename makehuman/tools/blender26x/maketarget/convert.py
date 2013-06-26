@@ -37,18 +37,17 @@ from mathutils import Vector
 from bpy.props import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
-from mh_utils import mh
-from mh_utils.utils import round
-from mh_utils import proxy as proxyfile
-
+from . import mh
 from . import mt
+from .utils import round
+from .proxy import CProxy
 
 theSettings = mt.CSettings("alpha7")
 
 Epsilon = 1e-4
 
 #----------------------------------------------------------
-#   
+#
 #----------------------------------------------------------
 
 
@@ -59,8 +58,8 @@ class VIEW3D_OT_SetTargetDirButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for target", 
+        name="File Path",
+        description="File path used for target",
         maxlen= 1024, default= "")
 
     def execute(self, context):
@@ -81,8 +80,8 @@ class VIEW3D_OT_SetSourceTargetButton(bpy.types.Operator):
     filename_ext = ".target"
     filter_glob = StringProperty(default="*.target", options={'HIDDEN'})
     filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for target", 
+        name="File Path",
+        description="File path used for target",
         maxlen= 1024, default= "")
 
     def execute(self, context):
@@ -102,8 +101,8 @@ class VIEW3D_OT_SetSourceClothingButton(bpy.types.Operator):
     filename_ext = ".mhclo"
     filter_glob = StringProperty(default="*.mhclo;*.proxy", options={'HIDDEN'})
     filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for clothing", 
+        name="File Path",
+        description="File path used for clothing",
         maxlen= 1024, default= "")
 
     def execute(self, context):
@@ -123,8 +122,8 @@ class VIEW3D_OT_SetSourceVGroupButton(bpy.types.Operator):
     filename_ext = ".vgrp"
     filter_glob = StringProperty(default="*.vgrp;*.rig", options={'HIDDEN'})
     filepath = bpy.props.StringProperty(
-        name="File Path", 
-        description="File path used for vertex groups", 
+        name="File Path",
+        description="File path used for vertex groups",
         maxlen= 1024, default= "")
 
     def execute(self, context):
@@ -137,19 +136,19 @@ class VIEW3D_OT_SetSourceVGroupButton(bpy.types.Operator):
 
 
 #----------------------------------------------------------
-#   
+#
 #----------------------------------------------------------
- 
-def readConverter(scn):    
+
+def readConverter(scn):
     print("Reading %s" % mt.baseObjFile)
     baseVerts = readBaseObj(mt.baseObjFile)
 
     print("Reading %s" % mt.convertMhcloFile)
-    proxy = proxyfile.CProxy()
+    proxy = CProxy()
     proxy.read(mt.convertMhcloFile)
 
     return proxy, baseVerts
-    
+
 
 def readBaseObj(filepath):
     fp = open(filepath, "rU")
@@ -161,8 +160,8 @@ def readBaseObj(filepath):
             x,y,z = float(words[1]), float(words[2]), float(words[3])
             verts[vn] = CVertex(x,y,z)
             vn += 1
-    fp.close()            
-    return verts            
+    fp.close()
+    return verts
 
 
 def copyVerts(verts):
@@ -185,7 +184,7 @@ def subVerts(verts1, verts2):
         verts1[n].sub(verts2[n])
 
 #----------------------------------------------------------
-#   Convert target   
+#   Convert target
 #----------------------------------------------------------
 
 class VIEW3D_OT_ConvertTargetButton(bpy.types.Operator):
@@ -193,7 +192,7 @@ class VIEW3D_OT_ConvertTargetButton(bpy.types.Operator):
     bl_label = "Convert Target File"
     bl_description = ""
     bl_options = {'UNDO'}
-    
+
     def execute(self, context):
         convertTargetFile(context)
         return {'FINISHED'}
@@ -201,20 +200,20 @@ class VIEW3D_OT_ConvertTargetButton(bpy.types.Operator):
 
 def convertTargetFile(context):
     scn = context.scene
-    proxy,baseVerts = readConverter(scn)  
-    
+    proxy,baseVerts = readConverter(scn)
+
     srcVerts = zeroVerts(theSettings.nTotalVerts)
-    diffVerts = copyVerts(baseVerts) 
-    proxy.update(srcVerts, diffVerts)    
-    
+    diffVerts = copyVerts(baseVerts)
+    proxy.update(srcVerts, diffVerts)
+
     srcFile = scn.MhSourceTarget
     srcVerts = zeroVerts(theSettings.nTotalVerts)
-    readTarget(srcFile, srcVerts)    
+    readTarget(srcFile, srcVerts)
 
-    trgFile = os.path.join(scn.MhTargetDir, os.path.basename(srcFile))    
-    trgVerts = copyVerts(baseVerts)   
+    trgFile = os.path.join(scn.MhTargetDir, os.path.basename(srcFile))
+    trgVerts = copyVerts(baseVerts)
     proxy.update(srcVerts, trgVerts)
-    subVerts(trgVerts, diffVerts)    
+    subVerts(trgVerts, diffVerts)
     saveTarget(trgVerts, trgFile)
 
 
@@ -225,8 +224,8 @@ def readTarget(filepath, verts):
         if len(words) == 4:
             x,y,z = float(words[1]), float(words[2]), float(words[3])
             verts[int(words[0])] = CVertex(x,y,z)
-    fp.close()            
-    return verts            
+    fp.close()
+    return verts
 
 
 def saveTarget(trgVerts, filepath):
@@ -237,9 +236,9 @@ def saveTarget(trgVerts, filepath):
             fp.write("%d %s %s %s\n" % (vn, round(co[0]), round(co[1]), round(co[2])))
     fp.close()
     print("Target %s saved" % (filepath))
-    
+
 #----------------------------------------------------------
-#   Convert vertex groups   
+#   Convert vertex groups
 #----------------------------------------------------------
 
 class VIEW3D_OT_ConvertVGroupButton(bpy.types.Operator):
@@ -247,7 +246,7 @@ class VIEW3D_OT_ConvertVGroupButton(bpy.types.Operator):
     bl_label = "Convert VGroup File"
     bl_description = ""
     bl_options = {'UNDO'}
-    
+
     def execute(self, context):
         convertVGroupFile(context)
         return {'FINISHED'}
@@ -255,10 +254,10 @@ class VIEW3D_OT_ConvertVGroupButton(bpy.types.Operator):
 
 def convertVGroupFile(context):
     scn = context.scene
-    proxy,baseVerts = readConverter(scn)    
+    proxy,baseVerts = readConverter(scn)
     srcFile = scn.MhSourceVGroup
-    trgFile = os.path.join(scn.MhTargetDir, os.path.basename(srcFile))        
-    srcGroups,before,after = readVGroups(srcFile) 
+    trgFile = os.path.join(scn.MhTargetDir, os.path.basename(srcFile))
+    srcGroups,before,after = readVGroups(srcFile)
     trgGroups = []
     for name,srcGroup in srcGroups:
         trgGroup = proxy.updateWeights(srcGroup)
@@ -287,7 +286,7 @@ def readVGroups(filepath):
             vgrp[int(words[0])] = float(words[1])
         else:
             lines.append(line)
-    fp.close()            
+    fp.close()
     return vgroups,before,after
 
 
@@ -307,9 +306,9 @@ def saveVGroups(vgroups, before, after, filepath):
         fp.write(line)
     fp.close()
     print("VGroup file %s saved" % (filepath))
- 
+
 #----------------------------------------------------------
-#   Convert clothes   
+#   Convert clothes
 #----------------------------------------------------------
 
 class VIEW3D_OT_ConvertMhcloButton(bpy.types.Operator):
@@ -317,7 +316,7 @@ class VIEW3D_OT_ConvertMhcloButton(bpy.types.Operator):
     bl_label = "Convert Mhclo File"
     bl_description = ""
     bl_options = {'UNDO'}
-    
+
     def execute(self, context):
         convertMhcloFile(context)
         return {'FINISHED'}
@@ -331,19 +330,19 @@ class CVertex:
 
     def __init__(self, x, y, z):
         self.co = Vector((x,y,z))
-    
+
     def __repr__(self):
         return ("<CVertex %s %s %s>" % (round(self.co[0]), round(self.co[1]), round(self.co[2])))
-        
+
     def copy(self):
         return CVertex(self.co[0], self.co[1], self.co[2])
-                
+
     def sub(self, v):
         self.co -= v.co
 
     def length(self):
         return self.co.length
-        
+
 #----------------------------------------------------------
 #   Init
 #----------------------------------------------------------
@@ -355,12 +354,11 @@ def init():
 
     bpy.types.Scene.MhSourceTarget = StringProperty(
         description = "Target file to be converted")
-    
+
     bpy.types.Scene.MhSourceMhclo = StringProperty(
         description = "Mhclo file to be converted")
-    
+
     bpy.types.Scene.MhSourceVGroup = StringProperty(
         description = "Vgrp file to be converted")
-    
+
     return
-    

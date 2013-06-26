@@ -30,7 +30,7 @@
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.904",
+    "version": "0.905",
     "blender": (2, 6, 7),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -42,7 +42,7 @@ bl_info = {
 if "bpy" in locals():
     print("Reloading makeclothes v %s" % bl_info["version"])
     import imp
-    imp.reload(mh_utils)
+    imp.reload(maketarget)
     imp.reload(error)
     imp.reload(mc)
     imp.reload(materials)
@@ -54,7 +54,7 @@ else:
     import bpy
     import os
     from bpy.props import *
-    import mh_utils
+    import maketarget
     from . import error
     from . import mc
     from . import materials
@@ -92,11 +92,13 @@ class MakeClothesPanel(bpy.types.Panel):
             ins.operator("mhclo.init_interface", text="ReInitialize")
             ins.operator("mhclo.factory_settings")
             ins.operator("mhclo.save_settings")
+            ins.label("MakeHuman Program Directory")
+            ins.prop(scn, "MhProgramPath", text="")
             ins.label("Output Directory")
-            ins.prop(scn, "MCOutdir", text="")
+            ins.prop(scn, "MhClothesDir", text="")
             ins.label("Human Mesh Type")
-            layout.prop(scn, "MCMHVersion", expand=True)
-            layout.separator()
+            #layout.prop(scn, "MCMHVersion", expand=True)
+            ins.separator()
 
         #layout.operator("mhclo.snap_selected_verts")
         '''
@@ -118,9 +120,9 @@ class MakeClothesPanel(bpy.types.Panel):
             ins = inset(layout)
             ins.operator("mhclo.auto_vertex_groups")
             ins.separator()
-            ins.prop(scn, "MCKeepVertsUntil", expand=False)
-            ins.operator("mhclo.delete_helpers")
-            ins.separator()
+            #ins.prop(scn, "MCKeepVertsUntil", expand=False)
+            #ins.operator("mhclo.delete_helpers")
+            #ins.separator()
 
         '''
         layout.prop(scn, "MCShowMaterials")
@@ -151,9 +153,9 @@ class MakeClothesPanel(bpy.types.Panel):
         '''
 
         layout.separator()
-        row = layout.row()
-        row.operator("mhclo.make_human", text="Human").isHuman = True
-        row.operator("mhclo.make_human", text="Clothing").isHuman = False
+        layout.prop(scn, "MhBodyType", text="Human Type")
+        layout.operator("mhclo.load_human", text="Load Nude Human").helpers = False
+        layout.operator("mhclo.load_human", text="Load Human With Helpers").helpers = True
         layout.separator()
         layout.operator("mhclo.make_clothes")
         layout.separator()
@@ -172,18 +174,16 @@ class MakeClothesPanel(bpy.types.Panel):
             ins.separator()
         '''
 
-        layout.prop(scn, "MCShowUVProject")
-        if scn.MCShowUVProject:
-            ins = inset(layout)
-            ins.operator("mhclo.recover_seams")
-            ins.operator("mhclo.set_seams")
-            ins.operator("mhclo.project_uvs")
-            ins.operator("mhclo.reexport_mhclo")
-            ins.separator()
-
         layout.prop(scn, "MCShowExportDetails")
         if scn.MCShowExportDetails:
             ins = inset(layout)
+
+            row = ins.row()
+            row.operator("mhclo.set_human", text="Set Human").isHuman = True
+            row.operator("mhclo.set_human", text="Set Clothing").isHuman = False
+            ins.separator()
+
+            '''
             ins.label("Shapekeys")
             for skey in makeclothes.theShapeKeys:
                 ins.prop(scn, "MC%s" % skey)
@@ -193,6 +193,7 @@ class MakeClothesPanel(bpy.types.Panel):
             ins.prop(scn, "MCZDepthName")
             ins.operator("mhclo.set_zdepth")
             ins.prop(scn, "MCZDepth")
+            '''
 
             ins.separator()
             ins.label("Boundary")
@@ -223,7 +224,7 @@ class MakeClothesPanel(bpy.types.Panel):
         ins.separator()
         ins.label("For internal use")
         ins.prop(scn, "MCLogging")
-        ins.prop(scn, "MCMakeHumanDirectory")
+        ins.prop(scn, "MhProgramPath")
         ins.prop(scn, "MCSelfClothed")
         ins.operator("mhclo.select_helpers")
         ins.operator("mhclo.export_base_uvs_py")
@@ -266,20 +267,24 @@ class MakeUVsPanel(bpy.types.Panel):
         layout = self.layout
         scn = context.scene
 
-        layout.prop(scn, "MCShowOutdir")
-        if scn.MCShowOutdir:
+        layout.prop(scn, "MCShowSettings")
+        if scn.MCShowSettings:
             layout.label("Initialization")
             layout.operator("mhclo.init_interface", text="ReInitialize")
             layout.operator("mhclo.factory_settings")
             layout.operator("mhclo.save_settings")
             layout.separator()
-            layout.prop(scn, "MCOutdir")
+            layout.prop(scn, "MhClothesDir")
 
-        layout.separator()
-        layout.operator("mhclo.recover_seams")
-        layout.operator("mhclo.set_seams")
+        layout.prop(scn, "MCShowUVProject")
+        if scn.MCShowUVProject:
+            ins = inset(layout)
+            ins.operator("mhclo.recover_seams")
+            ins.operator("mhclo.set_seams")
+            ins.operator("mhclo.project_uvs")
+            ins.operator("mhclo.reexport_mhclo")
+            ins.separator()
 
-        layout.separator()
         layout.operator("mhclo.export_uvs")
 
         layout.prop(scn, "MCShowLicense")
@@ -551,7 +556,7 @@ class OBJECT_OT_ExportBlenderMaterialButton(bpy.types.Operator):
 #
 
 class OBJECT_OT_MakeHumanButton(bpy.types.Operator):
-    bl_idname = "mhclo.make_human"
+    bl_idname = "mhclo.set_human"
     bl_label = "Make human"
     bl_options = {'UNDO'}
     isHuman = BoolProperty()
@@ -560,8 +565,52 @@ class OBJECT_OT_MakeHumanButton(bpy.types.Operator):
         makeclothes.setSettings(context)
         try:
             ob = context.object
-            ob["MhxMesh"] = self.isHuman
-            print("Object %s: Human = %s" % (ob.name, ob["MhxMesh"]))
+            ob.MhHuman = self.isHuman
+            print("Object %s: Human = %s" % (ob.name, ob.MhHuman))
+        except error.MhcloError:
+            error.handleError(context)
+        return{'FINISHED'}
+
+#
+#    class OBJECT_OT_LoadHumanButton(bpy.types.Operator):
+#
+
+class OBJECT_OT_LoadHumanButton(bpy.types.Operator):
+    bl_idname = "mhclo.load_human"
+    bl_label = "Load human"
+    bl_options = {'UNDO'}
+    helpers = BoolProperty()
+
+    def execute(self, context):
+        from maketarget import mt, import_obj, utils
+        scn = context.scene
+
+        print("BODY", scn.MhBodyType)
+        try:
+            if self.helpers:
+                basepath = mt.baseMhcloFile
+                import_obj.importBaseMhclo(context, basepath)
+                maketarget.maketarget.afterImport(context, basepath, False, True)
+                scn.MCAutoGroupType = 'Helpers'
+                scn.MCAutoHelperType = 'All'
+            else:
+                basepath = mt.baseObjFile
+                import_obj.importBaseObj(context, basepath)
+                maketarget.maketarget.afterImport(context, basepath, True, False)
+                scn.MCAutoGroupType = 'Body'
+
+            if scn.MhBodyType == 'None':
+                maketarget.maketarget.newTarget(context)
+            else:
+                trgpath = os.path.join(scn.MhProgramPath, "data/targets/macrodetails", scn.MhBodyType + ".target")
+                utils.loadTarget(trgpath, context)
+            maketarget.maketarget.applyTargets(context)
+            ob = context.object
+            ob.name = "Human"
+            ob.MhHuman = True
+            makeclothes.removeVertexGroups(context, 'All')
+            makeclothes.autoVertexGroups(ob, scn)
+
         except error.MhcloError:
             error.handleError(context)
         return{'FINISHED'}
@@ -682,7 +731,7 @@ class VIEW3D_OT_AutoVertexGroupsButton(bpy.types.Operator):
         makeclothes.setSettings(context)
         try:
             makeclothes.removeVertexGroups(context, 'All')
-            makeclothes.autoVertexGroups(context)
+            makeclothes.autoVertexGroups(context.object, context.scene)
         except error.MhcloError:
             error.handleError(context)
         return{'FINISHED'}

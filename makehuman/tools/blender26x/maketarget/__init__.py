@@ -26,7 +26,7 @@
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.12",
+    "version": "1.13",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -35,10 +35,15 @@ bl_info = {
     "category": "MakeHuman"}
 
 if "bpy" in locals():
-    print("Reloading maketarget")
+    print("Reloading maketarget v %s" % bl_info["version"])
     import imp
-    imp.reload(mh_utils)
+
+    imp.reload(mh)
     imp.reload(utils)
+    imp.reload(settings)
+    imp.reload(proxy)
+    imp.reload(import_obj)
+
     imp.reload(mt)
     imp.reload(maketarget)
     imp.reload(convert)
@@ -51,8 +56,12 @@ else:
     from bpy.props import *
     from bpy_extras.io_utils import ImportHelper, ExportHelper
 
-    import mh_utils
-    from mh_utils import utils
+    from . import mh
+    from . import utils
+    from . import settings
+    from . import proxy
+    from . import import_obj
+
     from . import mt
     from . import maketarget
     from . import convert
@@ -278,7 +287,7 @@ class OBJECT_OT_FactorySettingsButton(bpy.types.Operator):
     bl_label = "Restore Factory Settings"
 
     def execute(self, context):
-        mh_utils.settings.restoreFactorySettings(context)
+        settings.restoreFactorySettings(context)
         return{'FINISHED'}
 
 
@@ -287,7 +296,7 @@ class OBJECT_OT_SaveSettingsButton(bpy.types.Operator):
     bl_label = "Save Settings"
 
     def execute(self, context):
-        mh_utils.settings.saveDefaultSettings(context)
+        settings.saveDefaultSettings(context)
         return{'FINISHED'}
 
 
@@ -296,7 +305,7 @@ class OBJECT_OT_ReadSettingsButton(bpy.types.Operator):
     bl_label = "Read Settings"
 
     def execute(self, context):
-        mh_utils.settings.readDefaultSettings(context)
+        settings.readDefaultSettings(context)
         return{'FINISHED'}
 
 #----------------------------------------------------------
@@ -306,8 +315,15 @@ class OBJECT_OT_ReadSettingsButton(bpy.types.Operator):
 def menu_func(self, context):
     self.layout.operator(ExportObj.bl_idname, text="MakeHuman OBJ (.obj)...")
 
+
 def register():
-    mh_utils.init()
+    mh.confirm = None
+    mh.confirmString = "?"
+
+    settings.init()
+    import_obj.init()
+    #character.init()
+
     maketarget.init()
     convert.init()
     pose.init()
@@ -318,9 +334,11 @@ def register():
     bpy.utils.register_module(__name__)
     bpy.types.INFO_MT_file_export.append(menu_func)
 
+
 def unregister():
     bpy.utils.unregister_module(__name__)
     bpy.types.INFO_MT_file_export.remove(menu_func)
+
 
 if __name__ == "__main__":
     register()

@@ -36,7 +36,7 @@ import ast
 from bpy.props import *
 from mathutils import Vector
 
-from mh_utils.utils import getMyDocuments
+from maketarget.utils import getMyDocuments
 from . import mc
 from . import materials
 from . import base_uv
@@ -51,7 +51,6 @@ Epsilon = 1e-4
 theSettings = mc.settings["hm08"]
 
 #
-#   isHuman(ob):
 #   isClothing(ob):
 #   getHuman(context):
 #   getClothing(context):
@@ -63,20 +62,13 @@ def setSettings(context):
     theSettings = mc.settings[context.scene.MCMHVersion]
 
 
-def isHuman(ob):
-    try:
-        return ob["MhxMesh"]
-    except:
-        return False
-
-
 def isClothing(ob):
-    return ((ob.type == 'MESH') and (not isHuman(ob)))
+    return ((ob.type == 'MESH') and (not ob.MhHuman))
 
 
 def getHuman(context):
     for ob in context.scene.objects:
-        if ob.select and isHuman(ob):
+        if ob.select and ob.MhHuman:
             return ob
     raise error.MhcloError("No human selected")
 
@@ -94,7 +86,7 @@ def getObjectPair(context):
     scn = context.scene
     for ob in scn.objects:
         if ob.select:
-            if isHuman(ob):
+            if ob.MhHuman:
                 if human:
                     raise error.MhcloError("Two humans selected: %s and %s" % (human.name, ob.name))
                 else:
@@ -929,7 +921,7 @@ def exportBaseUvsPy(context):
     uvFaceVerts = uvFaceVertsList[maskLayer]
     nTexVerts = len(texVerts)
 
-    folder = scn.MCMakeHumanDirectory
+    folder = scn.MhProgramPath
     fname = os.path.join(folder, "utils/makeclothes/base_uv.py")
     print("Creating", fname)
     fp = open(fname, "w", encoding="utf-8", newline="\n")
@@ -1388,7 +1380,7 @@ def setSeams(context):
     clothing = None
     seams = None
     for ob in scn.objects:
-        if ob.select and not isHuman(ob):
+        if ob.select and not ob.MhHuman:
             faces = getFaces(ob.data)
             if faces:
                 clothing = ob
@@ -1492,9 +1484,9 @@ def makeClothes(context, doFindClothes):
     checkObjectOK(bob, context, False)
     checkAndVertexDiamonds(scn, bob)
     checkObjectOK(pob, context, True)
-    checkSingleVGroups(pob)
+    checkSingleVGroups(pob, scn)
     if scn.MCLogging:
-        logfile = '%s/clothes.log' % scn.MCOutdir
+        logfile = '%s/clothes.log' % scn.MhClothesDir
         log = open(logfile, "w", encoding="utf-8", newline="\n")
     else:
         log = None
@@ -1574,10 +1566,13 @@ def checkObjectOK(ob, context, isClothing):
     return
 
 #
-#   checkSingleVGroups(pob):
+#   checkSingleVGroups(pob, scn):
 #
 
-def checkSingleVGroups(pob):
+def checkSingleVGroups(pob, scn):
+    if len(pob.vertex_groups) == 0:
+        autoVertexGroups(pob, scn)
+
     for v in pob.data.vertices:
         n = 0
         for g in v.groups:
@@ -1602,9 +1597,9 @@ def offsetCloth(context):
     pverts = pob.data.vertices
     print("Offset %s to %s" % (bob.name, pob.name))
 
-    inpath = '%s/%s.mhclo' % (context.scene.MCOutdir, mc.goodName(bob.name))
+    inpath = '%s/%s.mhclo' % (context.scene.MhClothesDir, mc.goodName(bob.name))
     infile = os.path.realpath(os.path.expanduser(inpath))
-    outpath = '%s/%s.mhclo' % (context.scene.MCOutdir, mc.goodName(pob.name))
+    outpath = '%s/%s.mhclo' % (context.scene.MhClothesDir, mc.goodName(pob.name))
     outfile = os.path.realpath(os.path.expanduser(outpath))
     print("Modifying clothes file %s => %s" % (infile, outfile))
     infp = open(infile, "r")
@@ -2054,7 +2049,7 @@ def deleteHelpers(context):
         return
     ob = context.object
     scn = context.scene
-    #if not isHuman(ob):
+    #if not ob.MhHuman:
     #    return
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='DESELECT')
@@ -2088,18 +2083,15 @@ def removeVertexGroups(context, removeType):
     return
 
 #
-#   autoVertexGroups(context):
+#   autoVertexGroups(ob, scn):
 #
 
-def autoVertexGroups(context):
-    ob = context.object
-    scn = context.scene
-    ishuman = isHuman(ob)
+def autoVertexGroups(ob, scn):
     mid = ob.vertex_groups.new("Mid")
     left = ob.vertex_groups.new("Left")
     right = ob.vertex_groups.new("Right")
-    ob.vertex_groups.new("Delete")
-    if ishuman:
+    if ob.MhHuman:
+        ob.vertex_groups.new("Delete")
         verts = getHumanVerts(ob.data, scn)
     else:
         verts = ob.data.vertices
@@ -2111,7 +2103,7 @@ def autoVertexGroups(context):
             right.add([vn], 1.0, 'REPLACE')
         else:
             mid.add([vn], 1.0, 'REPLACE')
-            if (ishuman and
+            if (ob.MhHuman and
                 (theSettings is None or vn < theSettings.nTotalVerts)):
                 left.add([vn], 1.0, 'REPLACE')
                 right.add([vn], 1.0, 'REPLACE')
@@ -2338,12 +2330,6 @@ def initInterface():
     '   default=False)')
         exec(expr)
 
-    bpy.types.Scene.MCOutdir = StringProperty(
-        name="Directory",
-        description="Directory",
-        maxlen=1024,
-        default=os.path.join(getMyDocuments(), "makehuman/data/clothes"))
-
     bpy.types.Scene.MCMaterials = BoolProperty(
         name="Materials",
         description="Use materials",
@@ -2460,11 +2446,6 @@ def initInterface():
         name="MakeHuman mesh version",
         description="The human is the MakeHuman base mesh",
         default="hm08")
-
-    bpy.types.Scene.MCMakeHumanDirectory = StringProperty(
-        name="MakeHuman Directory",
-        maxlen=1024,
-        default="/home/svn/makehuman")
 
     bpy.types.Scene.MCSelfClothed = BoolProperty(default=False)
 

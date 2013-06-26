@@ -49,10 +49,11 @@ from mathutils import Vector, Quaternion, Matrix
 from bpy.props import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
-import mh_utils
-from mh_utils import mh
-from mh_utils import utils
-from mh_utils.utils import round
+from . import mh
+from . import utils
+from .utils import round
+from . import import_obj
+from .proxy import CProxy
 
 Epsilon = 1e-4
 Comments = []
@@ -134,7 +135,7 @@ class VIEW3D_OT_ImportBaseMhcloButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        mh_utils.import_obj.importBaseMhclo(context, filepath=mt.baseMhcloFile)
+        import_obj.importBaseMhclo(context, filepath=mt.baseMhcloFile)
         afterImport(context, mt.baseMhcloFile, False, True)
         return {'FINISHED'}
 
@@ -146,7 +147,7 @@ class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        mh_utils.import_obj.importBaseObj(context, filepath=mt.baseObjFile)
+        import_obj.importBaseObj(context, filepath=mt.baseObjFile)
         afterImport(context, mt.baseObjFile, True, False)
         return {'FINISHED'}
 
@@ -169,9 +170,9 @@ class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
         utils.removeShapeKeys(ob)
         ob.shape_key_add(name="Basis")
         ob["NTargets"] = 0
-        ob["ProxyFile"] = 0
-        ob["ObjFile"] =  0
-        ob["MhxMesh"] = True
+        ob.ProxyFile = ""
+        ob.ObjFile =  ""
+        ob.MhHuman = True
         return{'FINISHED'}
 
 
@@ -709,10 +710,10 @@ def fitTarget(context):
     if not checkValid(ob):
         return
     if not mh.proxy:
-        path = ob["ProxyFile"]
+        path = ob.ProxyFile
         if path:
             print("Rereading %s" % path)
-            mh.proxy = mh_utils.proxy.CProxy()
+            mh.proxy = CProxy()
             mh.proxy.read(path)
         else:
             raise NameError("Object %s has no associated mhclo file. Cannot fit" % ob.name)
@@ -1077,6 +1078,19 @@ class VIEW3D_OT_SkipButton(bpy.types.Operator):
 
 def init():
     bpy.types.Scene.MhUnlock = BoolProperty(default = False)
+
+    bpy.types.Scene.MhBodyType = EnumProperty(
+        items = [('None', 'Base Mesh', 'None'),
+                 ('caucasian-male-young', 'Average Male', 'caucasian-male-young'),
+                 ('caucasian-female-young', 'Average Female', 'caucasian-female-young'),
+                 ('caucasian-male-child', 'Average Child', 'caucasian-male-child'),
+                 ('caucasian-male-baby', 'Average Baby', 'caucasian-male-baby'),
+                 ],
+    default='None')
+
+    bpy.types.Object.ProxyFile = StringProperty(default = "")
+    bpy.types.Object.ObjFile = StringProperty(default = "")
+    bpy.types.Object.MhHuman = BoolProperty(default = False)
 
     bpy.types.Object.MhDeleteHelpers = BoolProperty(name="Delete Helpers", default = False)
     bpy.types.Object.MhUseMaterials = BoolProperty(name="Use Materials", default = False)
