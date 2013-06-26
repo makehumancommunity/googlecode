@@ -463,7 +463,7 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     matlines = matlines.replace('%%spec%%', str(settings['skinoil']*settings['moist']))
     matlines = matlines.replace('%%edss%%', str(settings['skinoil']*(1-settings['moist'])))
     matlines = matlines.replace('%%rough%%', str(settings['rough']))
-    if settings['usebump'] and stuffs[0].material.supportsBump():
+    if settings['usebump'] and stuffs[0].material.bumpMapTexture:
         bumpDef = getImageDef(stuffs[0].name, stuffs[0].material.bumpMapTexture, 'bump')
         matlines = matlines.replace(
             '%%normal%%','bump_map {%s bump_size %s interpolate 2}' % (
@@ -518,10 +518,11 @@ def writeTextures(stuffs, outDir, progressCallback = None):
     i = 0.0
     stuffnum = float(len(stuffs))
     for stuff in stuffs:
-        if stuff.textureImage:
-            teximg = stuff.textureImage
-        elif stuff.material.supportsDiffuse():
-            teximg = mh.Image(path = stuff.material.diffuseTexture)
+        if stuff.material.diffuseTexture:
+            if isinstance(stuff.material.diffuseTexture, str):
+                teximg = mh.Image(path = stuff.material.diffuseTexture)
+            else:
+                teximg = stuff.material.diffuseTexture
         # Export diffuse texture, with subtextures.
         teximg.save(os.path.join(
             outDir,"%s_texture.png" % stuff.name))
@@ -530,10 +531,10 @@ def writeTextures(stuffs, outDir, progressCallback = None):
         imgop.getAlpha(teximg).save(path = os.path.join(outDir,"%s_alpha.png" % stuff.name))
         progress((i+0.8)/stuffnum)
         # Export bump map / displacement map. They are the same in povray.
-        if stuff.material.supportsBump():
+        if stuff.material.bumpMapTexture:
             collect.copy(stuff.material.bumpMapTexture, os.path.join(
                 outDir, getImageFname(stuff.name, stuff.material.bumpMapTexture, 'bump')))
-        elif stuff.material.supportsDisplacement():
+        elif stuff.material.displacementMapTexture:
             collect.copy(stuff.material.displacementMapTexture, os.path.join(
                 outDir, getImageFname(stuff.name, stuff.material.displacementMapTexture, 'bump')))
         i += 1.0
@@ -541,15 +542,13 @@ def writeTextures(stuffs, outDir, progressCallback = None):
 
 def writeItemsMaterials(hfile, stuffs, settings, outDir):
     for stuff in stuffs[1:]:
-        texdata = None
-        if stuff.material.supportsDiffuse():
-            texdata = stuff.material.diffuseTexture
-        bumpdata = None
+        texdata = stuff.material.diffuseTexture
         if settings['usebump']:
-            if stuff.material.supportsBump():
-                bumpdata = stuff.material.bumpMapTexture
-            elif stuff.material.supportsDisplacement():
+            bumpdata = stuff.material.bumpMapTexture
+            if bumpdata is None:
                 bumpdata = stuff.material.displacementMapTexture
+        else:
+            bumpdata = None
         if stuff.type == 'Hair':
             if settings['hairShine']:
                 hinfile = open ("data/povray/hair_2.inc",'r')
@@ -801,14 +800,12 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
     progbase = nextpb
     progress(progbase)
     if settings['usebump']:
-        bumpdata = None
-        if stuffs[0].material.supportsBump():
-            bumpdata = stuffs[0].material.bumpMapTexture
-        elif stuffs[0].material.supportsDisplacement():
+        bumpdata = stuffs[0].material.bumpMapTexture
+        if bumpdata is None:
             bumpdata = stuffs[0].material.displacementMapTexture
         if bumpdata:
             # Export blurred bump maps
-            lmap = imgop.Image(bumpdata)
+            lmap = imgop.Image(bumpdata) if isinstance(bumpdata, str) else bumpdata
             lmap = imgop.getChannel(lmap,1)
             lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*1.6*sssa, 15,
                                  lambda p: progress(progbase+0.5*p*(1-progbase)))
