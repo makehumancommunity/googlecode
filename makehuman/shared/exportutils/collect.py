@@ -114,13 +114,11 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
     progbase = 0.12*(3-2*subdivide)
     progress(progbase)
 
-    # Apply textures, and subdivide, if requested.
+    # Subdivide, if requested.
     stuffnum = float(len(stuffs))
     i = 0.0
     for stuff in stuffs:
         progress(progbase+(i/stuffnum)*(1-progbase))
-        texture = stuff.human.mesh.texture
-        stuff.texture = (os.path.dirname(texture), os.path.basename(texture))
         if subdivide:
             subMesh = cks.createSubdivisionObject(
                 stuff.richMesh.object, lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
@@ -128,10 +126,10 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
         i += 1.0
 
     # Apply subtextures.
-    stuffs[0].textureImage = mh.Image(os.path.join(stuffs[0].texture[0], stuffs[0].texture[1]))
     mhstx = mh.G.app.getCategory('Textures').getTaskByName('Texture').eyeTexture
     if mhstx:
-        stuffs[0].textureImage = subtextures.combine(stuffs[0].textureImage, mhstx)
+        stuffs[0].material.diffuseTexture = subtextures.combine(
+            stuffs[0].material.diffuseTexture, mhstx)
 
     progress(1)
     return stuffs,amt
@@ -157,10 +155,7 @@ def setupProxies(typename, name, human, stuffs, richMesh, config, deleteGroups, 
             if stuff:
                 if proxy.type == 'Proxy':
                      theStuff = stuff
-                if theStuff:
-                    stuffname = theStuff.name
-                else:
-                    stuffname = None
+                stuffname = theStuff.name if theStuff else None
 
                 stuff.richMesh = richmesh.getRichMesh(None, proxy, richMesh.weights, richMesh.shapes, richMesh.armature)
                 stuffs.append(stuff)

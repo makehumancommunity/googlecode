@@ -37,31 +37,30 @@ class CStuff:
         self.name = os.path.basename(name)
         self.proxy = proxy
         self.human = human
-        self.richMesh = None
+        self._richMesh = None
         self.vertexWeights = None
         self.skinWeights = None
-        self.textureImage = None
         if proxy:
             self.type = proxy.type
             self.material = proxy.material
             self.material.name = proxy.name + "Material"
         else:
             self.type = None
-            #self.material = human.material
-            mat = self.material = Material(self.name + "Material")
-            self.material.name = os.path.splitext(self.name)[0] + "Material"
-            mat.diffuseTexture = "data/textures/texture.png"
-            mat.diffuseColor = Color(1,1,1)
-            mat.diffuseIntensity = 0.8
-            mat.specularMapTexture = "data/textures/texture_ref.png"
-            mat.specularColor = Color(1,1,1)
-            mat.specularIntensity = 0.05
-            mat.bumpMapTexture = "data/textures/bump.png"
-            mat.bumpMatIntensity = 0.2
+            self.material = human.material
+            self.material.name = self.name + "Material"
 
+    @property
+    def richMesh(self):
+        return self._richMesh
+
+    @richMesh.setter
+    def richMesh(self, newRichMesh):
+        self._richMesh = newRichMesh
+        if newRichMesh.material:
+            self.material = newRichMesh.material
 
     def __repr__(self):
-        return "<CStuff %s %s mat %s tex %s>" % (self.name, self.type, self.material, self.texture)
+        return "<CStuff %s %s mat %s>" % (self.name, self.type, self.material)
 
 
 class RichMesh:
@@ -99,6 +98,7 @@ class RichMesh:
         self.object = obj
         self.weights = weights
         self.shapes = shapes
+        self.material = obj.material
         return self
 
 
