@@ -163,6 +163,30 @@ class VIEW3D_OT_PrintFnumsButton(bpy.types.Operator):
         printFaceNums(context)
         return{'FINISHED'}
 
+
+class VIEW3D_OT_PrintFnumsToFileButton(bpy.types.Operator):
+    bl_idname = "mhw.print_fnums_to_file"
+    bl_label = "Print Fnums To File"
+
+    def execute(self, context):
+        ob = context.object
+        scn = context.scene
+        polys = []
+        for f in ob.data.polygons:
+            if f.select:
+                polys.append(f.index)
+        polys.sort()
+
+        path = os.path.expanduser(scn.MhxVertexGroupFile)
+        fp = open(path, "w")
+        fp.write("  [")
+        for fn in polys:
+            fp.write("%d, " % fn)
+        fp.write("]\n")
+        fp.close()
+        print(path, "written")
+        return{'FINISHED'}
+
 #
 #    selectQuads():
 #    class VIEW3D_OT_SelectQuadsButton(bpy.types.Operator):

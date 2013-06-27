@@ -32,7 +32,6 @@ import os
 import random
 from bpy.props import *
 from mathutils import Vector
-from . import base_uv
 import makeclothes
 from makeclothes import mc
 from makeclothes.makeclothes import *
@@ -62,7 +61,29 @@ def exportUVs(context):
     printMhcloUvLayers(fp, ob, scn, False, offset=1)
     fp.close()
     print("File %s written" % outfile)
-    return
+
+
+def exportHelperUVs(context):
+    filepath = os.path.join(os.path.dirname(__file__), "helpers.py")
+    pob = context.object
+    fp = open(filepath, "w", encoding="utf-8", newline="\n")
+    fp.write(
+        "from mathutils import Vector as V\n\n" +
+        "TexFaces = {\n")
+    n = 0
+    uvlayer = pob.data.uv_layers[0]
+    for f in pob.data.polygons:
+        if f.select:
+            fp.write("    %d: (" % f.index)
+            for vn in f.vertices:
+                fp.write("V((%.4f, %4f)), " % tuple(uvlayer.data[n].uv))
+                n += 1
+            fp.write("),\n")
+        else:
+            n += 4
+    fp.write("}\n")
+    fp.close()
+
 
 #
 #   unwrapObject(ob, context):
@@ -212,14 +233,37 @@ def projectUVs(bob, pob, context):
     return
 
 
+class CTextureFace:
+    def __init__(self, f, data, n):
+        self.uvs = []
+        self.data = data
+        self.index = n
+
+    def set(self, n, uv):
+        self.data[self.index+n].uv = uv
+
+    def get(self, n):
+        return self.data[self.index+n].uv
+
+
+def getTexFaces(me, ln):
+    texFaces = {}
+    uvlayer = me.uv_layers[ln]
+    n = 0
+    for f in me.polygons:
+        tf = CTextureFace(f, uvlayer.data, n)
+        for vn in f.vertices:
+            tf.uvs.append(uvlayer.data[n].uv)
+            n += 1
+        texFaces[f.index]= tf
+    return texFaces
+
+
 def modifyTexFaces(meFaces, texFaces):
-    nFaces = len(meFaces)
-    nModFaces = len(base_uv.texFaces)
-    if nFaces < theSettings.nBodyFaces + nModFaces:
-        nModFaces = nFaces - theSettings.nBodyFaces
-    for n in range(nModFaces):
-        tf = base_uv.texFaces[n]
-        texFaces[n+theSettings.nBodyFaces].uvs = [Vector(tf[0]), Vector(tf[1]), Vector(tf[2]), Vector(tf[3])]
+    global theSettings
+    from . import helpers
+    for idx,uvs in helpers.TexFaces.items():
+        texFaces[idx].uvs = uvs
 
 
 def trySetUv(pvn, fn, uvf, rmd, n, uv, vertTexVerts, texVertUv, seamVertEdges):
@@ -525,39 +569,6 @@ def isOnEdge(v, faceTable, texFaces):
 
 def writeTexVert(fp, uv):
     fp.write("%.4f %.4f\n" % (uv[0], uv[1]))
-
-#
-#   exportBaseUvsPy(context):
-#
-
-def exportBaseUvsPy(context):
-    ob = context.object
-    bpy.ops.object.mode_set(mode='OBJECT')
-    scn = context.scene
-    (vertEdges, vertFaces, edgeFaces, faceEdges, faceNeighbors, uvFaceVertsList, texVertsList) = setupTexVerts(ob)
-    maskLayer = scn.MCMaskLayer
-    texVerts = texVertsList[maskLayer]
-    uvFaceVerts = uvFaceVertsList[maskLayer]
-    nTexVerts = len(texVerts)
-
-    fname = os.path.join(os.path.dirname(__file__), "base_uv.py")
-    print("Creating", fname)
-    fp = open(fname, "w", encoding="utf-8", newline="\n")
-    fp.write("firstVert = %d\n" % theSettings.nBodyVerts)
-    fp.write("firstFace = %d\n" % theSettings.nBodyFaces)
-    fp.write("texFaces = [\n")
-    meFaces = getFaces(ob.data)
-    for f in meFaces:
-        uvVerts = uvFaceVerts[f.index]
-        fp.write("  ( ")
-        for n,v in enumerate(f.vertices):
-            (vt, uv) = uvVerts[n]
-            fp.write("(%.4f, %.4f), " % (uv[0], uv[1]))
-        fp.write("),\n")
-    fp.write("]\n")
-    fp.close()
-    return
-
 
 #
 #   initInterface():

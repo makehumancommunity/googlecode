@@ -150,6 +150,7 @@ class MhxWeightToolsPanel(bpy.types.Panel):
             layout.operator("mhw.export_sum_groups")
             layout.operator("mhw.print_vnums_to_file")
             layout.operator("mhw.read_vnums_from_file")
+            layout.operator("mhw.print_fnums_to_file")
             layout.separator()
             layout.operator("mhw.shapekeys_from_objects")
             layout.operator("mhw.export_shapekeys")

@@ -872,23 +872,16 @@ def setupTexVerts(ob):
         vtn = 0
         texVerts = {}
         texVertsList.append(texVerts)
-        if BMeshAware:
-            uvloop = me.uv_layers[index]
-            n = 0
-            for f in me.polygons:
-                for vn in f.vertices:
-                    uvv = uvloop.data[n]
-                    n += 1
-                    vtn = findTexVert(uvv.uv, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob)
-        else:
-            for f in me.faces:
-                uvf = uvtex.data[f.index]
-                vtn = findTexVert(uvf.uv1, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob)
-                vtn = findTexVert(uvf.uv2, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob)
-                vtn = findTexVert(uvf.uv3, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob)
-                if len(f.vertices) > 3:
-                    vtn = findTexVert(uvf.uv4, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob)
+
+        uvloop = me.uv_layers[index]
+        n = 0
+        for f in me.polygons:
+            for vn in f.vertices:
+                uvv = uvloop.data[n]
+                n += 1
+                vtn = findTexVert(uvv.uv, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob)
     return (vertEdges, vertFaces, edgeFaces, faceEdges, faceNeighbors, uvFaceVertsList, texVertsList)
+
 
 def findTexVert(uv, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob):
     for (e,f1) in faceNeighbors[f.index]:
@@ -1760,65 +1753,6 @@ def getFaces(me):
     except:
         BMeshAware = False
         return me.faces
-
-
-class CTextureFace:
-    def __init__(self, f, data, n):
-        self.uvs = []
-        self.data = data
-        self.index = n
-
-    def set(self, n, uv):
-        global BMeshAware
-        if BMeshAware:
-            self.data[self.index+n].uv = uv
-        else:
-            if n==0:
-                self.data.uv1 = uv
-            elif n==1:
-                self.data.uv2 = uv
-            elif n==2:
-                self.data.uv3 = uv
-            elif n==3:
-                self.data.uv4 = uv
-
-    def get(self, n):
-        global BMeshAware
-        if BMeshAware:
-            return self.data[self.index+n].uv
-        else:
-            if n==0:
-                return self.data.uv1
-            elif n==1:
-                return self.data.uv2
-            elif n==2:
-                return self.data.uv3
-            elif n==3:
-                return self.data.uv4
-
-
-def getTexFaces(me, ln):
-    global BMeshAware
-    texFaces = {}
-    if BMeshAware:
-        uvlayer = me.uv_layers[ln]
-        n = 0
-        for f in me.polygons:
-            tf = CTextureFace(f, uvlayer.data, n)
-            for vn in f.vertices:
-                tf.uvs.append(uvlayer.data[n].uv)
-                n += 1
-            texFaces[f.index]= tf
-    else:
-        uvtex = me.uv_textures[ln]
-        for f in me.faces:
-            uvface = uvtex.data[f.index]
-            tf = CTextureFace(f, uvface, 0)
-            tf.uvs = [uvface.uv1, uvface.uv2, uvface.uv3]
-            if len(f.vertices) == 4:
-                tf.uvs.append(uvface.uv4)
-            texFaces[f.index] = tf
-    return texFaces
 
 #
 #   initInterface():

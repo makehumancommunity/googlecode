@@ -85,6 +85,7 @@ class CSettings:
             self.nTotalVerts    = 19158
             self.nBodyVerts     = self.vertices["Body"][1]
             self.nBodyFaces     = 13606
+            self.firstHelperFace = 13378
             self.baseMesh       = "hm08"
 
 

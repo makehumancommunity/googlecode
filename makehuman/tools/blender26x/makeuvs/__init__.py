@@ -89,6 +89,7 @@ class MakeUVsPanel(bpy.types.Panel):
             ins.separator()
 
         layout.operator("mhuv.export_uvs")
+        layout.operator("mhuv.export_helper_uvs")
 
         layout.prop(scn, "MUVShowLicense")
         if scn.MUVShowLicense:
@@ -162,22 +163,8 @@ class OBJECT_OT_ReexportMhcloButton(bpy.types.Operator):
         return{'FINISHED'}
 
 #
-#   class OBJECT_OT_ExportBaseUvsPyButton(bpy.types.Operator):
 #   class OBJECT_OT_SplitHumanButton(bpy.types.Operator):
 #
-
-class OBJECT_OT_ExportBaseUvsPyButton(bpy.types.Operator):
-    bl_idname = "mhuv.export_base_uvs_py"
-    bl_label = "Export base UV py file"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        try:
-            makeuvs.exportBaseUvsPy(context)
-        except MHError:
-            handleMHError(context)
-        return{'FINISHED'}
-
 
 class OBJECT_OT_SelectHelpersButton(bpy.types.Operator):
     bl_idname = "mhuv.select_helpers"
@@ -204,6 +191,19 @@ class OBJECT_OT_ExportUVsButton(bpy.types.Operator):
     def execute(self, context):
         try:
             makeuvs.exportUVs(context)
+        except MHError:
+            handleMHError(context)
+        return{'FINISHED'}
+
+
+class OBJECT_OT_ExportHelperUVsButton(bpy.types.Operator):
+    bl_idname = "mhuv.export_helper_uvs"
+    bl_label = "Export Helper UVs"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        try:
+            makeuvs.exportHelperUVs(context)
         except MHError:
             handleMHError(context)
         return{'FINISHED'}
