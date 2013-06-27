@@ -1522,7 +1522,7 @@ class TableView(QtGui.QTableWidget, Widget):
     def getItemData(self, row, col):
         return self.item(row, col).getUserData()
 
-class ImageView(QtGui.QLabel, Widget):
+class ImageView(QtGui.QLabel, QtGui.QScrollArea, Widget):
     def __init__(self):
         super(ImageView, self).__init__()
         Widget.__init__(self)
@@ -1530,6 +1530,7 @@ class ImageView(QtGui.QLabel, Widget):
         self.setMinimumSize(50,50)
         self.setSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.MinimumExpanding)
         #self.setScaledContents(True)
+        self.ratio = 1.0
         self._pixmap = None
 
     def setImage(self, path):
@@ -1556,6 +1557,7 @@ class ImageView(QtGui.QLabel, Widget):
         pixmap = self._pixmap
         w = pixmap.width()
         h = pixmap.height()
+        size *= self.ratio
         if w > size.width() or h > size.height():
             pixmap = pixmap.scaled(size.width(), size.height(), QtCore.Qt.KeepAspectRatio)
         self.setPixmap(pixmap)
@@ -1569,7 +1571,6 @@ class ImageView(QtGui.QLabel, Widget):
             return
         self.mdown = event.pos()
         self.mdownrect = self._pixmap.rect()
-        self.callEvent('onMousePress', event)
         
     def mouseMoveEvent(self, event):
         if not self._pixmap:
@@ -1578,10 +1579,10 @@ class ImageView(QtGui.QLabel, Widget):
                             event.pos.y()-self.mdown.y(),
                             self.mdownrect, shownarea)
         self.refreshImage()
-        self.callEvent('onMouseDrag', event)
 
-    def onMousePress(self, event):
-        pass
+    def wheelEvent(self, event):
+        if (event.delta() < 0 or
+            self.sizeHint().width()*self.ratio < self._pixmap.width()):
+            self.ratio *= 1 + event.delta()*0.0005
+        self.refreshImage()
 
-    def onMouseDrag(self, event):
-        pass

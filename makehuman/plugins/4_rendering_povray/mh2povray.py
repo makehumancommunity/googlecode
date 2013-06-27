@@ -503,11 +503,11 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     progbase = nextpb
 
     nextpb = 1.0
-    writeTextures(stuffs, outputDirectory, lambda p: progress(progbase+p*(nextpb-progbase),"Writing Textures"))
+    writeTextures(stuffs, settings, outputDirectory, lambda p: progress(progbase+p*(nextpb-progbase),"Writing Textures"))
 
     progress(1,"Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
 
-def writeTextures(stuffs, outDir, progressCallback = None):
+def writeTextures(stuffs, settings, outDir, progressCallback = None):
     def progress(prog):
         if progressCallback == None:
             gui3d.app.progress(prog)
@@ -518,25 +518,22 @@ def writeTextures(stuffs, outDir, progressCallback = None):
     i = 0.0
     stuffnum = float(len(stuffs))
     for stuff in stuffs:
-        if stuff.material.diffuseTexture:
-            if isinstance(stuff.material.diffuseTexture, str):
-                teximg = mh.Image(path = stuff.material.diffuseTexture)
-            else:
-                teximg = stuff.material.diffuseTexture
+        teximg = mh.Image(stuff.material.diffuseTexture)
         # Export diffuse texture, with subtextures.
         teximg.save(os.path.join(
             outDir,"%s_texture.png" % stuff.name))
-        progress((i+0.4)/stuffnum)
+        progress((i+0.4+0.1*(1-settings['usebump']))/stuffnum)
         # Export transparency map.
         imgop.getAlpha(teximg).save(path = os.path.join(outDir,"%s_alpha.png" % stuff.name))
-        progress((i+0.8)/stuffnum)
+        progress((i+0.8+0.2*(1-settings['usebump']))/stuffnum)
         # Export bump map / displacement map. They are the same in povray.
-        if stuff.material.bumpMapTexture:
-            collect.copy(stuff.material.bumpMapTexture, os.path.join(
-                outDir, getImageFname(stuff.name, stuff.material.bumpMapTexture, 'bump')))
-        elif stuff.material.displacementMapTexture:
-            collect.copy(stuff.material.displacementMapTexture, os.path.join(
-                outDir, getImageFname(stuff.name, stuff.material.displacementMapTexture, 'bump')))
+        if settings['usebump']:
+            if stuff.material.bumpMapTexture:
+                collect.copy(stuff.material.bumpMapTexture, os.path.join(
+                    outDir, getImageFname(stuff.name, stuff.material.bumpMapTexture, 'bump')))
+            elif stuff.material.displacementMapTexture:
+                collect.copy(stuff.material.displacementMapTexture, os.path.join(
+                    outDir, getImageFname(stuff.name, stuff.material.displacementMapTexture, 'bump')))
         i += 1.0
         progress(i/stuffnum)
 
