@@ -23,7 +23,6 @@
 # Script copyright (C) MakeHuman Team 2001-2013
 # Coding Standards:    See http://www.makehuman.org/node/165
 
-
 from maketarget import mh
 
 class CSettings(mh.CSettings):
@@ -82,14 +81,13 @@ def goodName(name):
     return newName.lower()
 
 
-def getFileName(pob, context, ext):
+def getFileName(pob, folder, ext):
     import os
     name = goodName(pob.name)
-    outdir = '%s/%s' % (context.scene.MhClothesDir, name)
+    outdir = '%s/%s' % (folder, name)
     outdir = os.path.realpath(os.path.expanduser(outdir))
     if not os.path.exists(outdir):
         print("Creating directory %s" % outdir)
         os.makedirs(outdir)
     outfile = os.path.join(outdir, "%s.%s" % (name, ext))
     return (outdir, outfile)
-

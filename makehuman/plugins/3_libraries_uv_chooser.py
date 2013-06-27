@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -25,7 +25,6 @@ TODO
 import os
 import gui3d
 import mh
-import mh2proxy
 import filechooser as fc
 import log
 import numpy as np
@@ -75,13 +74,13 @@ class UvTaskView(gui3d.TaskView):
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
-        
+
     def onHumanChanging(self, event):
         human = event.human
         #if event.change == 'reset':
         #    human.setUVMap(None)
         #    gui3d.app.redraw()
-            
+
     def onHumanChanged(self, event):
         human = event.human
 
@@ -92,7 +91,7 @@ class UvTaskView(gui3d.TaskView):
             return
         human.setUVMap(mhuv)
         gui3d.app.redraw()
-        
+
     def saveHandler(self, human, file):
         if human.uvset:
             file.write('uvset %s\n' % human.uvset.filename)

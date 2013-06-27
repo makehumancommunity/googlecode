@@ -1,13 +1,13 @@
 # author Jonas Hauquier
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 87b320c9-4e25-47bc-829b-ee8ba6526978
-# basemesh alpha7
-# tag A7
-# tag base
+uuid 87b320c9-4e25-47bc-829b-ee8ba6526978
+basemesh alpha7
+tag A7
+tag base
 
-# name A7_uv_map
-# texVerts
+name A7_uv_map
+texVerts
 0.216267 0.289216
 0.216867 0.289416
 0.217267 0.291816
@@ -21343,7 +21343,7 @@
 0.022700 0.325100
 0.000000 0.000000
 
-# texFaces
+texFaces
 1 2 3 4
 5 6 7 8
 9 1 6 10

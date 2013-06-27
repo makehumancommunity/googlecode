@@ -844,22 +844,22 @@ class UVMap:
         status = 0
         for line in fp:
             words = line.split()
-            if words == []:
+            if words == [] or words[0][0] == '#':
                 continue
-            elif words[0] == '#':
-                if words[1] == "name":
-                    self.name = words[2]
-                # TODO allow multiple materials for one mesh?
-                #elif words[1] == "material":
-                #    mat = Material(words[2])
-                #    self.materials.append(mat)
-                #    status = doMaterial
-                elif words[1] == "faceNumbers":
-                    status = doFaceNumbers
-                elif words[1] == "texVerts":
-                    status = doTexVerts
-                elif words[1] == "texFaces":
-                    status = doTexFaces
+
+            if words[0] == "name":
+                self.name = words[1]
+            # TODO allow multiple materials for one mesh?
+            #elif words[1] == "material":
+            #    mat = Material(words[1])
+            #    self.materials.append(mat)
+            #    status = doMaterial
+            elif words[0] == "faceNumbers":
+                status = doFaceNumbers
+            elif words[0] == "texVerts":
+                status = doTexVerts
+            elif words[0] == "texFaces":
+                status = doTexFaces
             #elif status == doMaterial:
             #    readMaterial(line, mat, self, True)
             elif status == doFaceNumbers:

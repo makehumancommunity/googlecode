@@ -32,20 +32,19 @@ from .utils import getMyDocuments
 #   Settings
 #----------------------------------------------------------
 
-
-def drawDirectories(layout, scn):
-    layout.label("Directories")
+def drawDirectories(layout, scn, outdir):
     layout.operator("mh.factory_settings")
-    layout.operator("mh.save_settings")
     layout.operator("mh.read_settings")
-    layout.prop(scn, "MhProgramPath")
-    layout.prop(scn, "MhUserPath")
+    layout.operator("mh.save_settings")
+    layout.label("MakeHuman Program Directory")
+    layout.prop(scn, "MhProgramPath", text="")
+    layout.label("Output Directory")
+    layout.prop(scn, outdir, text="")
     layout.separator()
-    return
 
 
 def settingsFile(name):
-    outdir = os.path.expanduser("~/makehuman/settings/")
+    outdir = os.path.join(getMyDocuments(), "makehuman/settings/")
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
     return os.path.join(outdir, "make_target.%s" % name)
@@ -78,6 +77,7 @@ def saveDefaultSettings(context):
         ("MhUserPath", scn.MhUserPath),
         ("MhTargetPath", scn.MhTargetPath),
         ("MhClothesDir", scn.MhClothesDir),
+        ("MhUvsDir", scn.MhUvsDir),
         ]:
         fp.write("%s %s\n" % (key, value.replace(" ", "\%20")))
     fp.close()
@@ -90,6 +90,7 @@ def restoreFactorySettings(context):
     scn.MhUserPath = os.path.join(getMyDocuments(), "makehuman")
     scn.MhTargetPath = "/program/makehuman/data/correctives"
     scn.MhClothesDir = os.path.join(getMyDocuments(), "makehuman/data/clothes")
+    scn.MhUvsDir = os.path.join(getMyDocuments(), "makehuman/data/uvs")
 
 
 def init():
@@ -113,6 +114,12 @@ def init():
         description="Path to the directory where clothes are stored",
         maxlen=1024,
         default=os.path.join(getMyDocuments(), "makehuman/data/clothes")
+    )
+    bpy.types.Scene.MhUvsDir = StringProperty(
+        name="Directory",
+        description="Path to the directory where UV sets are stored",
+        maxlen=1024,
+        default=os.path.join(getMyDocuments(), "makehuman/data/uvs")
     )
 
 

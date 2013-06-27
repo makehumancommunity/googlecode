@@ -53,18 +53,17 @@ def checkObjectHasDiffuseTexture(ob):
         return True
 
 
-def writeMaterial(fp, ob, context):
+def writeMaterial(fp, ob, folder):
     """
     Create an mhmat file and write material settings there.
     """
-    scn = context.scene
     if ob.data.materials:
         mat = ob.data.materials[0]
         if mat is None:
             return None
         else:
             name = mc.goodName(mat.name)
-            _,filepath = mc.getFileName(ob, context, "mhmat")
+            _,filepath = mc.getFileName(ob, folder, "mhmat")
             outdir = os.path.dirname(filepath)
             print("Create material file %s" % filepath)
             try:
