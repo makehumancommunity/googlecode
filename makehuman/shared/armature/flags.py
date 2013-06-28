@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -101,8 +101,10 @@ F_NOROT = 0x0400
 
 F_SCALE = 0x0800
 
+F_NOLOCK = 0x1000
+
 if MuscleBones:
-    F_DEF1 = F_DEF   
+    F_DEF1 = F_DEF
 else:
     F_DEF1 = 0
 

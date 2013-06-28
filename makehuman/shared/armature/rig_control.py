@@ -151,24 +151,24 @@ HeadArmature = {
 
 IkLegArmature = {
     'hip.L' :          (0, 'hips', F_WIR, L_TWEAK),
-    'foot.ik.L' :      (0, None, F_WIR, L_LLEGIK),
+    'foot.ik.L' :      (0, None, F_WIR|F_NOLOCK, L_LLEGIK),
     'toe.rev.L' :      (0, 'foot.ik.L', F_WIR, L_LLEGIK),
     'foot.rev.L' :     (0, 'toe.rev.L', F_WIR, L_LLEGIK),
     'ankle.L' :        (0, None, F_WIR, L_LEXTRA),
-    'ankle.ik.L' :     (0, 'foot.rev.L', 0, L_HELP2),
+    'ankle.ik.L' :     (0, 'foot.rev.L', F_NOLOCK, L_HELP2),
 
     'hip.R' :          (0, 'hips', F_WIR, L_TWEAK),
-    'foot.ik.R' :      (0, None, F_WIR, L_RLEGIK),
+    'foot.ik.R' :      (0, None, F_WIR|F_NOLOCK, L_RLEGIK),
     'toe.rev.R' :      (0, 'foot.ik.R', F_WIR, L_RLEGIK),
     'foot.rev.R' :     (0, 'toe.rev.R', F_WIR, L_RLEGIK),
     'ankle.R' :        (0, None, F_WIR, L_REXTRA),
-    'ankle.ik.R' :     (0, 'foot.rev.R', 0, L_HELP2),
+    'ankle.ik.R' :     (0, 'foot.rev.R', F_NOLOCK, L_HELP2),
 
-    'knee.pt.ik.L' :   (0, 'foot.rev.L', F_WIR, L_LLEGIK+L_LEXTRA),
+    'knee.pt.ik.L' :   (0, 'foot.rev.L', F_WIR|F_NOLOCK, L_LLEGIK+L_LEXTRA),
     'knee.pt.fk.L' :   (0, 'thigh.L', 0, L_HELP2),
     'knee.link.L' :    (0, 'thigh.ik.L', F_RES, L_LLEGIK+L_LEXTRA),
 
-    'knee.pt.ik.R' :   (0, 'foot.rev.R', F_WIR, L_RLEGIK+L_REXTRA),
+    'knee.pt.ik.R' :   (0, 'foot.rev.R', F_WIR|F_NOLOCK, L_RLEGIK+L_REXTRA),
     'knee.pt.fk.R' :   (0, 'thigh.R', 0, L_HELP2),
     'knee.link.R' :    (0, 'thigh.ik.R', F_RES, L_RLEGIK+L_REXTRA),
 }
@@ -181,13 +181,13 @@ IkArmArmature = {
     'arm_hinge.L' :    (0, 'arm_socket.L', 0, L_HELP),
     'arm_hinge.R' :    (0, 'arm_socket.R', 0, L_HELP),
 
-    'hand.ik.L' :      ('hand.L', None, F_WIR, L_LARMIK),
-    'elbow.pt.ik.L' :  (0, 'shoulder.L', F_WIR, L_LARMIK+L_LEXTRA),
+    'hand.ik.L' :      ('hand.L', None, F_WIR|F_NOLOCK, L_LARMIK),
+    'elbow.pt.ik.L' :  (0, 'shoulder.L', F_WIR|F_NOLOCK, L_LARMIK+L_LEXTRA),
     'elbow.pt.fk.L' :  (0, 'upper_arm.L', 0, L_HELP2),
     'elbow.link.L' :   (0, 'upper_arm.ik.L', F_RES, L_LARMIK+L_LEXTRA),
 
-    'hand.ik.R' :      ('hand.R', None, F_WIR, L_RARMIK),
-    'elbow.pt.ik.R' :  (0, 'shoulder.R', F_WIR, L_RARMIK+L_REXTRA),
+    'hand.ik.R' :      ('hand.R', None, F_WIR|F_NOLOCK, L_RARMIK),
+    'elbow.pt.ik.R' :  (0, 'shoulder.R', F_WIR|F_NOLOCK, L_RARMIK+L_REXTRA),
     'elbow.pt.fk.R' :  (0, 'upper_arm.R', 0, L_HELP2),
     'elbow.link.R' :   (0, 'upper_arm.ik.R', F_RES, L_RARMIK+L_REXTRA),
 }
@@ -216,7 +216,6 @@ IkLegParents = {
     'thigh.L' :         'hip.L',
     'thigh.R' :         'hip.R',
 }
-
 
 CoordinateSystems = [
     ("upper_arm.L", "forearm.L"),

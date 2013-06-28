@@ -181,7 +181,7 @@ class Bone:
 
     def fromInfo(self, info):
         self.roll, self.parent, flags, self.layers = info
-        if self.parent:
+        if self.parent and not flags & F_NOLOCK:
             self.lockLocation = (1,1,1)
         self.setFlags(flags)
         if self.roll == None:
