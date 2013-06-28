@@ -33,7 +33,6 @@ from armature.armature import Armature
 
 from . import posebone
 from . import mhx_drivers
-from . import mhx_constraints
 
 #-------------------------------------------------------------------------------
 #   Setup Armature

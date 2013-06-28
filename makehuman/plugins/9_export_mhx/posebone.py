@@ -22,9 +22,9 @@ Abstract
 TODO
 """
 
+import log
 import armature
 from armature.flags import *
-from . import mhx_constraints
 
 
 def addCSlider(fp, amt, bone, mx):
@@ -64,7 +64,7 @@ def addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScal
     hide = (flags & P_HID != 0)
 
     if not fp:
-        amt.createdArmature.bones[bone].constraints = mhx_constraints.getConstraints(bone, constraints, lockLoc, lockRot)
+        #amt.createdArmature.bones[bone].constraints = mhx_constraints.getConstraints(bone, constraints, lockLoc, lockRot)
         return
 
     fp.write("\n  Posebone %s %s \n" % (bone, True))
@@ -73,7 +73,12 @@ def addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScal
         index = boneGroupIndex(boneGroup, amt)
         fp.write("    bone_group Refer BoneGroup %s ;\n" % boneGroup)
 
-    (uses, mins, maxs) = mhx_constraints.writeConstraints(fp, amt, bone, constraints, lockLoc, lockRot)
+    uses = (0,0,0)
+    mins = (-pi, -pi, -pi)
+    maxs = (pi, pi, pi)
+    for cns in amt.bones[bone].constraints:
+        cns.writeMhx(amt, fp)
+
 
     ik_stretch = None
     ik_stiff = None
