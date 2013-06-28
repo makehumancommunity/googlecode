@@ -22,6 +22,7 @@ Abstract
 TODO
 """
 import log
+import image
 
 class Color(object):
     def __init__(self, r=0.00, g=0.00, b=0.00):
@@ -490,7 +491,7 @@ class Material(object):
     def supportsSpecular(self):
         return self.specularMapTexture != None
 
-    def supportstransparency(self):
+    def supportsTransparency(self):
         return self.transparencyMapTexture != None
 
 
@@ -660,11 +661,18 @@ class Material(object):
         self.shaderChanged = True
 
 
+    def _getTexture(self, texture):
+        if isinstance(texture, image.Image):
+            return texture
+        else:
+            return getFilePath(texture, self.filepath)
+
+            
     def getDiffuseTexture(self):
         return self._diffuseTexture
 
     def setDiffuseTexture(self, texture):
-        self._diffuseTexture = getFilePath(texture, self.filepath)
+        self._diffuseTexture = self._getTexture(texture)
         self._updateShaderConfig()
 
     diffuseTexture = property(getDiffuseTexture, setDiffuseTexture)
@@ -674,7 +682,7 @@ class Material(object):
         return self._bumpMapTexture
 
     def setBumpMapTexture(self, texture):
-        self._bumpMapTexture = getFilePath(texture, self.filepath)
+        self._bumpMapTexture = self._getTexture(texture)
         self._updateShaderConfig()
 
     bumpMapTexture = property(getBumpMapTexture, setBumpMapTexture)
@@ -694,7 +702,7 @@ class Material(object):
         return self._normalMapTexture
 
     def setNormalMapTexture(self, texture):
-        self._normalMapTexture = getFilePath(texture, self.filepath)
+        self._normalMapTexture = self._getTexture(texture)
         self._updateShaderConfig()
 
     normalMapTexture = property(getNormalMapTexture, setNormalMapTexture)
@@ -714,7 +722,7 @@ class Material(object):
         return self._displacementMapTexture
 
     def setDisplacementMapTexture(self, texture):
-        self._displacementMapTexture = getFilePath(texture, self.filepath)
+        self._displacementMapTexture = self._getTexture(texture)
         self._updateShaderConfig()
 
     displacementMapTexture = property(getDisplacementMapTexture, setDisplacementMapTexture)
@@ -740,7 +748,7 @@ class Material(object):
         """
         Set the specular or reflectivity map texture.
         """
-        self._specularMapTexture = getFilePath(texture, self.filepath)
+        self._specularMapTexture = self._getTexture(texture)
         self._updateShaderConfig()
 
     specularMapTexture = property(getSpecularMapTexture, setSpecularMapTexture)
@@ -766,7 +774,7 @@ class Material(object):
         """
         Set the transparency or reflectivity map texture.
         """
-        self._transparencyMapTexture = getFilePath(texture, self.filepath)
+        self._transparencyMapTexture = self._getTexture(texture)
         self._updateShaderConfig()
 
     transparencyMapTexture = property(getTransparencyMapTexture, setTransparencyMapTexture)
