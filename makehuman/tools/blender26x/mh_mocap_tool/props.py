@@ -245,6 +245,11 @@ def initInterface(context):
 
     # T_Pose
 
+    bpy.types.Scene.McpUseTPose = BoolProperty(
+        name = "Auto Rest T-Pose",
+        description = "Automatically change rest pose to T-pose",
+        default = True)
+
     bpy.types.Object.McpHasTPose = BoolProperty(
         default = False)
 

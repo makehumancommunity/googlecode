@@ -260,6 +260,14 @@ class LoadPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(scn, "McpUseSpineOffset")
         row.prop(scn, "McpUseClavOffset")
+        layout.prop(scn, "McpUseTPose")
+
+        layout.separator()
+        layout.operator("mcp.load_and_retarget")
+        layout.separator()
+        layout.prop(scn, "McpAdvanced")
+        if not scn.McpAdvanced:
+            return
 
         layout.separator()
         layout.label("T-pose")
@@ -270,12 +278,6 @@ class LoadPanel(bpy.types.Panel):
         row.operator("mcp.clear_t_pose")
 
         layout.separator()
-        layout.operator("mcp.load_and_retarget")
-        layout.separator()
-        layout.prop(scn, "McpAdvanced")
-        if not scn.McpAdvanced:
-            return
-
         layout.label("Debugging")
         #layout.prop(scn, "McpRot90Anim")
         layout.prop(scn, "McpFlipYAxis")

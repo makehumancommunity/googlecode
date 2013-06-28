@@ -58,7 +58,7 @@ def createTPose(context):
                 children.append((ob, mod.name))
                 scn.objects.active = ob
                 bpy.ops.object.modifier_apply(apply_as='SHAPE', modifier=mod.name)
-                bpy.data.shape_keys["Key"].key_blocks[mod.name].value = 1
+                ob.data.shape_keys.key_blocks[mod.name].value = 1
 
     scn.objects.active = rig
     bpy.ops.pose.armature_apply()
@@ -72,6 +72,7 @@ def createTPose(context):
 
     scn.objects.active = rig
     rig.McpHasTPose = True
+    print("Created T-pose")
 
 
 def setShapeKey(ob, name, value):
@@ -97,6 +98,7 @@ def clearTPose(context):
             continue
         quat = Quaternion((qw,qx,qy,qz))
         pb.matrix_basis = quat.to_matrix().to_4x4()
+    print("Cleared T-pose")
 
 
 def setTPose(context):
@@ -113,6 +115,7 @@ def setTPose(context):
         except KeyError:
             continue
         pb.matrix_basis = mat
+    print("Set T-pose")
 
 
 class VIEW3D_OT_McpCreateTPoseButton(bpy.types.Operator):
@@ -125,7 +128,6 @@ class VIEW3D_OT_McpCreateTPoseButton(bpy.types.Operator):
             createTPose(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        print("Created T-pose")
         return{'FINISHED'}
 
 
@@ -139,7 +141,6 @@ class VIEW3D_OT_McpSetTPoseButton(bpy.types.Operator):
             setTPose(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        print("Set T-pose")
         return{'FINISHED'}
 
 
@@ -153,7 +154,6 @@ class VIEW3D_OT_McpClearTPoseButton(bpy.types.Operator):
             clearTPose(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        print("Cleared T-pose")
         return{'FINISHED'}
 
 
