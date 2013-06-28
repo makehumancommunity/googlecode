@@ -49,27 +49,27 @@ bl_info = {
 
 """
 Properties:
-Scale:    
+Scale:
     for BVH import. Choose scale so that the vertical distance between hands and feet
     are the same for MHX and BVH rigs.
     Good values are: CMU: 0.6, OSU: 0.1
-Start frame:    
+Start frame:
     for BVH import
-Rot90:    
+Rot90:
     for BVH import. Rotate armature 90 degrees, so Z points up.
-Simplify FCurves:    
+Simplify FCurves:
     Include FCurve simplifcation.
-Max loc error:    
+Max loc error:
     Max error allowed for simplification of location FCurves
-Max rot error:    
+Max rot error:
     Max error allowed for simplification of rotation FCurves
 
 Buttons:
-Load BVH file (.bvh): 
+Load BVH file (.bvh):
     Load bvh file with Z up
 Silence constraints:
     Turn off constraints that may conflict with mocap data.
-Retarget selected to MHX: 
+Retarget selected to MHX:
     Retarget actions of selected BVH rigs to the active MHX rig.
 Simplify FCurves:
     Simplifiy FCurves of active action, allowing max errors specified above.
@@ -87,10 +87,12 @@ if "bpy" in locals():
     #imp.reload(source_rigs)
     #imp.reload(target_rigs)
     imp.reload(utils)
+    imp.reload(io_json)
     imp.reload(mcp)
     imp.reload(props)
     imp.reload(load)
     imp.reload(new_retarget)
+    imp.reload(t_pose)
     imp.reload(source)
     imp.reload(target)
     imp.reload(toggle)
@@ -109,10 +111,12 @@ else:
     #from . import source_rigs
     #from . import target_rigs
     from . import utils
+    from . import io_json
     from . import mcp
     from . import props
     from . import load
     from . import new_retarget
+    from . import t_pose
     from . import source
     from . import target
     from . import toggle
@@ -124,7 +128,7 @@ else:
     from . import sigproc
 
 
-#        
+#
 #    class MhxSourceBonesPanel(bpy.types.Panel):
 #
 
@@ -133,7 +137,7 @@ class MhxSourceBonesPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
-    
+
     @classmethod
     def poll(cls, context):
         return (context.object and context.object.type == 'ARMATURE')
@@ -149,7 +153,7 @@ class MhxSourceBonesPanel(bpy.types.Panel):
         layout.operator("mcp.init_sources", text="Reinit Source Panel")
         layout.prop(scn, 'McpGuessSourceRig')
         layout.prop(scn, "McpSourceRig")
-        
+
         if scn.McpSourceRig:
             bones = mcp.sourceArmatures[scn.McpSourceRig]
             box = layout.box()
@@ -167,10 +171,10 @@ class MhxSourceBonesPanel(bpy.types.Panel):
                     split.label(bone)
                     #split.alignment = 'RIGHT'
                     split.label(str(twist))
-        
-    
+
+
 ########################################################################
-#        
+#
 #    class MhxTargetBonesPanel(bpy.types.Panel):
 #
 
@@ -179,7 +183,7 @@ class MhxTargetBonesPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
-    
+
     @classmethod
     def poll(cls, context):
         return (context.object and context.object.type == 'ARMATURE')
@@ -231,7 +235,7 @@ class LoadPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     #bl_options = {'DEFAULT_CLOSED'}
-    
+
     @classmethod
     def poll(cls, context):
         if context.object and context.object.type == 'ARMATURE':
@@ -256,11 +260,19 @@ class LoadPanel(bpy.types.Panel):
         row = layout.row()
         row.prop(scn, "McpUseSpineOffset")
         row.prop(scn, "McpUseClavOffset")
-        
+
+        layout.separator()
+        layout.label("T-pose")
+        #layout.operator("mcp.save_t_pose")
+        layout.operator("mcp.create_t_pose")
+        row = layout.row()
+        row.operator("mcp.set_t_pose")
+        row.operator("mcp.clear_t_pose")
+
         layout.separator()
         layout.operator("mcp.load_and_retarget")
         layout.separator()
-        layout.prop(scn, "McpAdvanced")        
+        layout.prop(scn, "McpAdvanced")
         if not scn.McpAdvanced:
             return
 
@@ -300,7 +312,7 @@ class LoadPanel(bpy.types.Panel):
         row.prop(scn, "McpSimplifyVisible")
         row.prop(scn, "McpSimplifyMarkers")
         layout.operator("mcp.simplify_fcurves")
-        
+
         return
 
         layout.separator()
@@ -329,7 +341,7 @@ class EditPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
-    
+
     @classmethod
     def poll(cls, context):
         if context.object and context.object.type == 'ARMATURE':
@@ -343,7 +355,7 @@ class EditPanel(bpy.types.Panel):
         if mcp.editConfirm:
             confirmPanel(layout, mcp.editConfirm, mcp.editString)
             return
-            
+
         layout.label("Plant keys")
         row = layout.row()
         row.label("Source")
@@ -357,7 +369,7 @@ class EditPanel(bpy.types.Panel):
         row.prop(scn, "McpPlantRotY")
         row.prop(scn, "McpPlantRotZ")
         layout.operator("mcp.plant")
-        
+
         layout.separator()
         layout.label("Global Edit")
         layout.operator("mcp.shift_bone")
@@ -373,7 +385,7 @@ class EditPanel(bpy.types.Panel):
         layout.operator("mcp.confirm_edit")
 
         layout.separator()
-        layout.label("Signal Processing")        
+        layout.label("Signal Processing")
         layout.operator("mcp.calc_filters")
         try:
             fd = mcp.filterData[ob.name]
@@ -402,7 +414,7 @@ class EditPanel(bpy.types.Panel):
         layout.operator("mcp.repeat_fcurves")
 
         layout.separator()
-        layout.label("Stitch Animations")        
+        layout.label("Stitch Animations")
         layout.operator("mcp.update_action_list")
         layout.prop(scn, "McpFirstAction")
         row = layout.row()
@@ -411,10 +423,10 @@ class EditPanel(bpy.types.Panel):
         layout.prop(scn, "McpSecondAction")
         row = layout.row()
         row.prop(scn, "McpSecondStartFrame")
-        row.operator("mcp.set_current_action").prop = "McpSecondAction"        
+        row.operator("mcp.set_current_action").prop = "McpSecondAction"
         layout.prop(scn, "McpLoopBlendRange")
         layout.prop(scn, "McpActionTarget")
-        layout.prop(scn, "McpOutputActionName")        
+        layout.prop(scn, "McpOutputActionName")
         layout.operator("mcp.stitch_actions")
 
 ########################################################################
@@ -426,8 +438,8 @@ class UtilityPanel(bpy.types.Panel):
     bl_label = "MH Mocap: Utilities"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_options = {'DEFAULT_CLOSED'}    
-    
+    bl_options = {'DEFAULT_CLOSED'}
+
     @classmethod
     def poll(cls, context):
         if context.object and context.object.type == 'ARMATURE':
@@ -437,11 +449,11 @@ class UtilityPanel(bpy.types.Panel):
         layout = self.layout
         scn = context.scene
         ob = context.object
-        
+
         if mcp.utilityConfirm:
             confirmPanel(layout, mcp.utilityConfirm, mcp.utilityString)
             return
-            
+
         layout.label("Initialization")
         layout.operator("mcp.init_interface")
         layout.operator("mcp.save_defaults")
@@ -475,7 +487,7 @@ mcp.editString = "?"
 mcp.utilityConfirm = None
 mcp.utilityString = "?"
 
-def confirmPanel(layout, confirm, string):            
+def confirmPanel(layout, confirm, string):
     layout.label(string)
     layout.operator(confirm, text="yes").answer="yes"
     layout.operator(confirm, text="no").answer="no"
@@ -483,7 +495,7 @@ def confirmPanel(layout, confirm, string):
 
 
 #
-#    init 
+#    init
 #
 
 props.initInterface(bpy.context)

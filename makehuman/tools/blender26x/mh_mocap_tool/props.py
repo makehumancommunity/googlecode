@@ -32,16 +32,16 @@ from . import action
 def initInterface(context):
 
     # Load and retarget
-    
+
     bpy.types.Scene.McpAdvanced = BoolProperty(
-        name="Advanced options", 
-        description="Show advanced options", 
+        name="Advanced options",
+        description="Show advanced options",
         default=False)
-    
+
     bpy.types.Scene.McpBvhScale = FloatProperty(
-        name="Scale", 
-        description="Scale the BVH by this value", 
-        min=0.0001, max=1000000.0, 
+        name="Scale",
+        description="Scale the BVH by this value",
+        min=0.0001, max=1000000.0,
         soft_min=0.001, soft_max=100.0,
         default=0.65)
 
@@ -51,59 +51,61 @@ def initInterface(context):
         default=True)
 
     bpy.types.Scene.McpStartFrame = IntProperty(
-        name="Start Frame", 
+        name="Start Frame",
         description="Starting frame for the animation",
         default=1)
 
     bpy.types.Scene.McpEndFrame = IntProperty(
-        name="Last Frame", 
+        name="Last Frame",
         description="Last frame for the animation",
         default=250)
 
     bpy.types.Scene.McpRot90Anim = BoolProperty(
-        name="Rotate 90 deg", 
+        name="Rotate 90 deg",
         description="Rotate 90 degress so Z points up",
         default=True)
 
     bpy.types.Scene.McpFlipYAxis = BoolProperty(
-        name="Flix Y Axis", 
+        name="Flix Y Axis",
         description="Rotate 180 degress so Y points down (for Ni-Mate)",
         default=False)
 
     bpy.types.Scene.McpDoSimplify = BoolProperty(
-        name="Simplify FCurves", 
+        name="Simplify FCurves",
         description="Simplify FCurves",
         default=True)
 
     bpy.types.Scene.McpUseSpineOffset = BoolProperty(
-        name="Spine Offsets", 
+        name="Spine Offsets",
         description="Use offset for spine bones",
-        default=True)        
-        
+        default=True)
+
     bpy.types.Scene.McpUseClavOffset = BoolProperty(
-        name="Clavicle Offsets", 
+        name="Clavicle Offsets",
         description="Use offset for clavicles",
-        default=True)        
-        
+        default=True)
+
     bpy.types.Scene.McpRetargetIK = BoolProperty(
-        name="Retarget IK Automatically", 
+        name="Retarget IK Automatically",
         description="Include IK bones in retargeting",
-        default=False)        
+        default=False)
 
     bpy.types.Scene.McpNewRetarget = BoolProperty(
-        name="New Retarget", 
+        name="New Retarget",
         description="Use new retarget",
         default=True)
 
 
+
+
     # Subsample and rescale
-    
+
     bpy.types.Scene.McpSubsample = BoolProperty(
         name="Subsample",
         default=False)
 
     bpy.types.Scene.McpSSFactor = IntProperty(
-        name="Subsample Factor", 
+        name="Subsample Factor",
         description="Sample only every n:th frame",
         min=1, default=1)
 
@@ -113,7 +115,7 @@ def initInterface(context):
         default=False)
 
     bpy.types.Scene.McpRescaleFactor = IntProperty(
-        name="Rescale Factor", 
+        name="Rescale Factor",
         description="Factor for rescaling time",
         min=1, default=1)
 
@@ -124,125 +126,130 @@ def initInterface(context):
     # Simplify
 
     bpy.types.Scene.McpSimplifyVisible = BoolProperty(
-        name="Only Visible", 
+        name="Only Visible",
         description="Simplify only visible F-curves",
         default=False)
 
     bpy.types.Scene.McpSimplifyMarkers = BoolProperty(
-        name="Only Between Markers", 
+        name="Only Between Markers",
         description="Simplify only between markers",
         default=False)
 
     bpy.types.Scene.McpErrorLoc = FloatProperty(
-        name="Max Loc Error", 
+        name="Max Loc Error",
         description="Max error for location FCurves when doing simplification",
         min=0.001,
         default=0.01)
 
     bpy.types.Scene.McpErrorRot = FloatProperty(
-        name="Max Rot Error", 
+        name="Max Rot Error",
         description="Max error for rotation (degrees) FCurves when doing simplification",
         min=0.001,
         default=0.1)
 
     # Loop
-    
+
     bpy.types.Scene.McpLoopBlendRange = IntProperty(
-        name="Blend Range", 
+        name="Blend Range",
         min=1,
         default=5)
-    
+
     bpy.types.Scene.McpLoopLoc = BoolProperty(
-        name="Loc", 
+        name="Loc",
         description="Looping Affects Location",
         default=True)
 
     bpy.types.Scene.McpLoopRot = BoolProperty(
-        name="Rot", 
+        name="Rot",
         description="Looping Affects Rotation",
         default=True)
 
     bpy.types.Scene.McpLoopInPlace = BoolProperty(
-        name="Loop in place", 
+        name="Loop in place",
         description="Remove Location F-curves",
         default=False)
 
     bpy.types.Scene.McpLoopZInPlace = BoolProperty(
-        name="In Place Affects Z", 
+        name="In Place Affects Z",
         default=False)
 
     bpy.types.Scene.McpRepeatNumber = IntProperty(
-        name="Repeat Number", 
+        name="Repeat Number",
         min=1,
         default=1)
-        
+
     bpy.types.Scene.McpFirstEndFrame = IntProperty(
         name="First End Frame",
         default=1)
-        
+
     bpy.types.Scene.McpSecondStartFrame = IntProperty(
         name="Second Start Frame",
         default=1)
-        
+
     bpy.types.Scene.McpActionTarget = EnumProperty(
         items = [('Stitch new', 'Stitch new', 'Stitch new'),
                  ('Prepend second', 'Prepend second', 'Prepend second')],
         name = "Action Target")
 
     bpy.types.Scene.McpOutputActionName = StringProperty(
-        name="Output Action Name", 
+        name="Output Action Name",
         maxlen=24,
         default="")
-       
+
 
     # Plant
-    
+
     bpy.types.Scene.McpPlantFrom = EnumProperty(
-        items = [('0', 'X', 'Plant from X location'), 
-                 ('1', 'Y', 'Plant from Y location'), 
+        items = [('0', 'X', 'Plant from X location'),
+                 ('1', 'Y', 'Plant from Y location'),
                  ('2', 'Z', 'Plant from Z location')],
         name = "Plant From",
         default = '2')
-        
-    bpy.types.Scene.McpPlantLocX = BoolProperty(name = "Loc X", default = False)        
-    bpy.types.Scene.McpPlantLocY = BoolProperty(name = "Loc Y", default = False)        
-    bpy.types.Scene.McpPlantLocZ = BoolProperty(name = "Loc Z", default = True)        
- 
-    bpy.types.Scene.McpPlantRotX = BoolProperty(name = "Rot X", default = False)        
-    bpy.types.Scene.McpPlantRotY = BoolProperty(name = "Rot Y", default = True)        
-    bpy.types.Scene.McpPlantRotZ = BoolProperty(name = "Rot Z", default = False)        
- 
+
+    bpy.types.Scene.McpPlantLocX = BoolProperty(name = "Loc X", default = False)
+    bpy.types.Scene.McpPlantLocY = BoolProperty(name = "Loc Y", default = False)
+    bpy.types.Scene.McpPlantLocZ = BoolProperty(name = "Loc Z", default = True)
+
+    bpy.types.Scene.McpPlantRotX = BoolProperty(name = "Rot X", default = False)
+    bpy.types.Scene.McpPlantRotY = BoolProperty(name = "Rot Y", default = True)
+    bpy.types.Scene.McpPlantRotZ = BoolProperty(name = "Rot Z", default = False)
+
     bpy.types.Scene.McpPlantCurrent = BoolProperty(
-        name="Use Current", 
+        name="Use Current",
         description="Plant at current",
         default=True)
 
     bpy.types.Scene.McpPlantLoc = BoolProperty(
-        name="Loc", 
+        name="Loc",
         description="Plant location keys",
         default=True)
 
     bpy.types.Scene.McpPlantRot = BoolProperty(
-        name="Rot", 
+        name="Rot",
         description="Plant rotation keys",
         default=False)
 
     # Props
-    
+
     bpy.types.Scene.McpDirectory = StringProperty(
-        name="Directory", 
-        description="Directory", 
+        name="Directory",
+        description="Directory",
         maxlen=1024,
         default="")
 
     bpy.types.Scene.McpPrefix = StringProperty(
-        name="Prefix", 
-        description="Prefix", 
+        name="Prefix",
+        description="Prefix",
         maxlen=24,
         default="")
 
+    # T_Pose
+
+    bpy.types.Object.McpHasTPose = BoolProperty(
+        default = False)
+
     # Source and Target
-    
+
     bpy.types.Scene.McpGuessSourceRig = BoolProperty(
         name = "Guess source rig",
         default = True)
@@ -250,17 +257,17 @@ def initInterface(context):
 
     bpy.types.Scene.McpGuessTargetRig = BoolProperty(
         name = "Guess target rig",
-        default = True)        
+        default = True)
 
     # Manage actions
-    
+
     bpy.types.Scene.McpFilterActions = BoolProperty(
-        name="Filter", 
+        name="Filter",
         description="Filter action names",
         default=False)
 
     bpy.types.Scene.McpReallyDelete = BoolProperty(
-        name="Really Delete", 
+        name="Really Delete",
         description="Delete button deletes action permanently",
         default=False)
 
@@ -275,11 +282,11 @@ def initInterface(context):
     bpy.types.Scene.McpSecondAction = EnumProperty(
         items = [],
         name = "Second Action")
-            
-    bpy.types.Object.McpArmature = StringProperty()    
+
+    bpy.types.Object.McpArmature = StringProperty()
     bpy.types.Object.McpLimitsOn = BoolProperty(default=True)
     bpy.types.Object.McpChildOfsOn = BoolProperty(default=False)
- 
+
 
 #
 #    ensureInited(context):
@@ -300,7 +307,7 @@ def ensureInited(context):
 #
 
 def settingsFile():
-    outdir = os.path.expanduser("~/makehuman/settings/")        
+    outdir = os.path.expanduser("~/makehuman/settings/")
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
     return os.path.join(outdir, "mocap.defaults")
@@ -346,7 +353,7 @@ def saveDefaults(context):
     fp.close()
     print("Defaults saved to %s" % filename)
     return
-    
+
 
 ########################################################################
 #
@@ -363,7 +370,7 @@ class VIEW3D_OT_McpInitInterfaceButton(bpy.types.Operator):
     def execute(self, context):
         initInterface(context)
         print("Interface initialized")
-        return{"FINISHED"}    
+        return{"FINISHED"}
 
 class VIEW3D_OT_McpSaveDefaultsButton(bpy.types.Operator):
     bl_idname = "mcp.save_defaults"
@@ -372,7 +379,7 @@ class VIEW3D_OT_McpSaveDefaultsButton(bpy.types.Operator):
 
     def execute(self, context):
         saveDefaults(context)
-        return{"FINISHED"}    
+        return{"FINISHED"}
 
 class VIEW3D_OT_McpLoadDefaultsButton(bpy.types.Operator):
     bl_idname = "mcp.load_defaults"
@@ -381,7 +388,7 @@ class VIEW3D_OT_McpLoadDefaultsButton(bpy.types.Operator):
 
     def execute(self, context):
         loadDefaults(context)
-        return{"FINISHED"}    
+        return{"FINISHED"}
 
 #
 #    class VIEW3D_OT_McpCopyAnglesIKButton(bpy.types.Operator):
@@ -395,7 +402,7 @@ class VIEW3D_OT_McpCopyAnglesIKButton(bpy.types.Operator):
     def execute(self, context):
         copyAnglesIK(context)
         print("Angles copied")
-        return{"FINISHED"}    
+        return{"FINISHED"}
 
 
 #
@@ -425,6 +432,6 @@ class VIEW3D_OT_McpBatchButton(bpy.types.Operator):
         for filepath in paths:
             context.scene.objects.active = trgRig
             loadRetargetSimplify(context, filepath)
-        return{"FINISHED"}    
+        return{"FINISHED"}
 
 

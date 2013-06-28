@@ -36,7 +36,7 @@ from . import mcp
 from .utils import MocapError
 
 ###################################################################################
-#    BVH importer. 
+#    BVH importer.
 #    The importer that comes with Blender had memory leaks which led to instability.
 #    It also creates a weird skeleton from CMU data, with hands theat start at the wrist
 #    and ends at the elbow.
@@ -51,7 +51,7 @@ class CNode:
         name = words[1]
         for word in words[2:]:
             name += ' '+word
-        
+
         self.name = name
         self.parent = parent
         self.children = []
@@ -82,9 +82,9 @@ class CNode:
         self.head = orig + self.offset
         if not self.children:
             return self.head
-        
+
         zero = (self.offset.length < Epsilon)
-        eb = amt.edit_bones.new(self.name)        
+        eb = amt.edit_bones.new(self.name)
         if parent:
             eb.parent = parent
         eb.head = self.head
@@ -97,10 +97,10 @@ class CNode:
         (loc, rot, scale) = eb.matrix.decompose()
         self.matrix = rot.to_matrix()
         self.inverse = self.matrix.copy()
-        self.inverse.invert()        
+        self.inverse.invert()
         if zero:
             return eb.tail
-        else:        
+        else:
             return eb.head
 
 #
@@ -150,11 +150,11 @@ def readBvhFile(context, filepath, scn, scan):
     nErrors = 0
     scn = context.scene
     rig = None
-            
+
     fp = open(fileName, "rU")
     print( "Reading skeleton" )
     lineNo = 0
-    for line in fp: 
+    for line in fp:
         words= line.split()
         lineNo += 1
         if len(words) == 0:
@@ -165,7 +165,7 @@ def readBvhFile(context, filepath, scn, scan):
             ended = False
         elif key == 'MOTION':
             if level != 0:
-                raise MocapError("Tokenizer out of kilter %d" % level)    
+                raise MocapError("Tokenizer out of kilter %d" % level)
             if scan:
                 return root
             amt = bpy.data.armatures.new("BvhAmt")
@@ -181,7 +181,7 @@ def readBvhFile(context, filepath, scn, scan):
             status = Motion
             print("Reading motion")
         elif status == Hierarchy:
-            if key == 'ROOT':    
+            if key == 'ROOT':
                 node = CNode(words, None)
                 root = node
                 nodes = [root]
@@ -335,7 +335,7 @@ def channelZup(word):
 
 ###################################################################################
 
-#            
+#
 #    class CEditBone():
 #
 
@@ -378,7 +378,7 @@ def renameBones(srcRig, scn):
     ebones = srcRig.data.edit_bones
     for bone in ebones:
         srcBones.append( CEditBone(bone) )
-    
+
     setbones = []
     adata = srcRig.animation_data
     if adata is None:
@@ -406,10 +406,10 @@ def renameBones(srcRig, scn):
     return
 
 
-def getTargetFromSource(srcName):    
+def getTargetFromSource(srcName):
     lname = source.canonicalSrcName(srcName)
     try:
-        return mcp.srcArmature[lname]     
+        return mcp.srcArmature[lname]
     except KeyError:
         pass
     raise MocapError("No target bone corresponding to source bone %s (%s)" % (srcName, lname))
@@ -436,7 +436,7 @@ def createExtraBones(ebones, trgBones):
             toe.tail = toe.head - Vector((0, 0.5*foot.length, 0))
             toe.parent = foot
             trgBones[nameSrc] = CEditBone(toe)
-            
+
         nameSrc = 'Leg'+suffix
         eb = ebones.new(name=nameSrc)
         eb.head = 2*toe.head - toe.tail
@@ -477,8 +477,8 @@ def renameBvhRig(srcRig, filepath):
     adata = srcRig.animation_data
     if adata:
         adata.action.name = name
-    return 
-    
+    return
+
 #
 #    deleteSourceRig(context, rig, prefix):
 #
@@ -488,7 +488,7 @@ def deleteSourceRig(context, rig, prefix):
     scn = context.scene
     scn.objects.active = rig
     bpy.ops.object.mode_set(mode='OBJECT')
-    scn.objects.active = ob    
+    scn.objects.active = ob
     scn.objects.unlink(rig)
     if rig.users == 0:
         bpy.data.objects.remove(rig)
@@ -500,8 +500,8 @@ def deleteSourceRig(context, rig, prefix):
                     bpy.data.actions.remove(act)
                     del act
     return
-    
-  
+
+
 #
 #    rescaleRig(scn, trgRig, srcRig):
 #
@@ -509,13 +509,13 @@ def deleteSourceRig(context, rig, prefix):
 def rescaleRig(scn, trgRig, srcRig):
     if not scn.McpAutoScale:
         return
-    upleg = target.getTrgBone('UpLeg_L')
+    upleg = target.getTrgBone('thigh.L')
     trgScale = trgRig.data.bones[upleg].length
-    srcScale = srcRig.data.bones['UpLeg_L'].length
+    srcScale = srcRig.data.bones['thigh.L'].length
     scale = trgScale/srcScale
     print("Rescale %s with factor %f" % (scn.objects.active, scale))
     scn.McpBvhScale = scale
-    
+
     bpy.ops.object.mode_set(mode='EDIT')
     ebones = srcRig.data.edit_bones
     for eb in ebones:
@@ -544,7 +544,7 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
             raise MocapError("%s already renamed and rescaled." % srcRig.name)
     except:
         pass
-        
+
     scn = context.scene
     scn.objects.active = srcRig
     scn.update()
@@ -555,7 +555,7 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
     utils.setInterpolation(srcRig)
     rescaleRig(context.scene, trgRig, srcRig)
     srcRig["McpRenamed"] = True
-    return 
+    return
 
 ########################################################################
 #
@@ -573,14 +573,14 @@ class VIEW3D_OT_LoadBvhButton(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         try:
-            readBvhFile(context, self.properties.filepath, context.scene, False)        
+            readBvhFile(context, self.properties.filepath, context.scene, False)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}    
+        return {'RUNNING_MODAL'}
 
 #
 #   class VIEW3D_OT_RenameBvhButton(bpy.types.Operator):
@@ -608,7 +608,7 @@ class VIEW3D_OT_RenameBvhButton(bpy.types.Operator):
             print("%s renamed" % srcRig.name)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #   class VIEW3D_OT_LoadAndRenameBvhButton(bpy.types.Operator, ImportHelper):
@@ -626,15 +626,15 @@ class VIEW3D_OT_LoadAndRenameBvhButton(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         scn = context.scene
         try:
-            (srcRig, trgRig) = readBvhFile(context, self.properties.filepath, context.scene, False)        
+            (srcRig, trgRig) = readBvhFile(context, self.properties.filepath, context.scene, False)
             renameAndRescaleBvh(context, srcRig, trgRig)
             if scn.McpRescale:
                 simplify.rescaleFCurves(context, srcRig, scn.McpRescaleFactor)
             print("%s loaded and renamed" % srcRig.name)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}    
+        return {'RUNNING_MODAL'}
