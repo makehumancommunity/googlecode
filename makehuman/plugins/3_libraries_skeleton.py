@@ -194,6 +194,13 @@ class SkeletonLibrary(gui3d.TaskView):
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
+        self.presetHumanIkBtn = self.presetBox.addWidget(gui.Button("HumanIK"))
+        @self.presetHumanIkBtn.mhEvent
+        def onClicked(event):
+            descr = self.amtOptions.loadPreset("humanik", self.optionsSelector)
+            self.descrLbl.setText("Description: %s" % descr)
+            self.updateSkeleton()
+
         self.presetSecondLifeBtn = self.presetBox.addWidget(gui.Button("Second Life"))
         @self.presetSecondLifeBtn.mhEvent
         def onClicked(event):

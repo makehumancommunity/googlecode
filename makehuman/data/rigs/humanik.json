@@ -1,0 +1,56 @@
+{
+    "name" :            "HumanIK",
+
+    "description" :     "Rig for use with Maya HumanIK",
+
+    "bones" : {
+        "hips":         "Hips",
+        "spine":        "Spine",
+        "chest":        "Spine1",
+        "chest-1":      "Spine2",
+        "neck":         "Neck",
+        "head":         "Head",
+
+        "eye.L":        "EyeLeft",
+        "eye.R":        "EyeRight",
+
+        "shoulder.L":   "LeftShoulder",
+        "upper_arm.L":  "LeftArm",
+        "forearm.L":    "LeftForeArm",
+        "hand.L":       "LeftHand",
+
+        "shoulder.R":   "RightShoulder",
+        "upper_arm.R":  "RightArm",
+        "forearm.R":    "RightForeArm",
+        "hand.R":       "RightHand",
+
+        "thigh.L":      "LeftUpLeg",
+        "shin.L":       "LeftLeg",
+        "foot.L":       "LeftFoot",
+        "toe.L":        "LeftToe",
+
+        "thigh.R":      "RightUpLeg",
+        "shin.R":       "RightLeg",
+        "foot.R":       "RightFoot",
+        "toe.R":        "RightToe"
+    },
+
+    "merge" : {
+            "head":         ["uplid.L", "lolid.L", "uplid.R", "lolid.R", "jaw",
+                             "tongue_base", "tongue_mid", "tongue_tip"],
+
+            "hand.L":       ["hand.L", "palm.01.L", "palm.02.L", "palm.03.L", "palm.04.L",
+                             "thumb.01.L", "thumb.02.L", "thumb.03.L",
+                             "f_index.01.L", "f_index.02.L", "f_index.03.L",
+                             "f_middle.01.L", "f_middle.02.L", "f_middle.03.L",
+                             "f_ring.01.L", "f_ring.02.L", "f_ring.03.L",
+                             "f_pinky.01.L", "f_pinky.02.L", "f_pinky.03.L"],
+
+            "hand.R":       ["hand.R", "palm.01.R", "palm.02.R", "palm.03.R", "palm.04.R",
+                             "thumb.01.R", "thumb.02.R", "thumb.03.R",
+                             "f_index.01.R", "f_index.02.R", "f_index.03.R",
+                             "f_middle.01.R", "f_middle.02.R", "f_middle.03.R",
+                             "f_ring.01.R", "f_ring.02.R", "f_ring.03.R",
+                             "f_pinky.01.R", "f_pinky.02.R", "f_pinky.03.R"]
+    }
+}
