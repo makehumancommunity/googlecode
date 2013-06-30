@@ -518,7 +518,7 @@ def writeTextures(stuffs, settings, outDir, progressCallback = None):
     i = 0.0
     stuffnum = float(len(stuffs))
     for stuff in stuffs:
-        teximg = mh.Image(stuff.material.diffuseTexture)
+        teximg = mh.Image(data = stuff.material.diffuseTexture)
         # Export diffuse texture, with subtextures.
         teximg.save(os.path.join(
             outDir,"%s_texture.png" % stuff.name))
@@ -802,7 +802,7 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
             bumpdata = stuffs[0].material.displacementMapTexture
         if bumpdata:
             # Export blurred bump maps
-            lmap = imgop.Image(bumpdata) if isinstance(bumpdata, str) else bumpdata
+            lmap = imgop.Image(data = bumpdata)
             lmap = imgop.getChannel(lmap,1)
             lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*1.6*sssa, 15,
                                  lambda p: progress(progbase+0.5*p*(1-progbase)))

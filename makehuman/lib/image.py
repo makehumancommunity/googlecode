@@ -29,11 +29,18 @@ class Image(object):
     def __init__(self, path = None, width = 0, height = 0, bitsPerPixel = 32, components = None, data = None):
         if path is not None:
             if isinstance(path, Image):
-                self._data = path.data
+                # Create a copy of the image.
+                self._data = path.data.copy()
             else:   # Path string.
                 self._data = image_qt.load(path)
         elif data is not None:
-            self._data = data
+            if isinstance(data, Image):
+                # Share data between images.
+                self._data = data.data
+            elif isinstance(data, basestring):
+                self._data = image_qt.load(data)
+            else:   # Data array.
+                self._data = data
         else:
             if components is None:
                 if bitsPerPixel == 32:

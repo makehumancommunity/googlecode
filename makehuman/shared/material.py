@@ -22,7 +22,6 @@ Abstract
 TODO
 """
 import log
-import image
 
 class Color(object):
     def __init__(self, r=0.00, g=0.00, b=0.00):
@@ -662,10 +661,10 @@ class Material(object):
 
 
     def _getTexture(self, texture):
-        if isinstance(texture, image.Image):
-            return texture
-        else:
+        if isinstance(texture, basestring):
             return getFilePath(texture, self.filepath)
+        else:
+            return texture
 
             
     def getDiffuseTexture(self):
