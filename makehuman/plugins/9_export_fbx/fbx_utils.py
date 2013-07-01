@@ -106,7 +106,7 @@ def writeMatrix(fp, name, mat, pad=""):
     for i in range(4):
         fp.write("%.4f,%.4f,%.4f,%.4f" % (mat[i,0],mat[i,1],mat[i,2],mat[i,3]))
         if i < 3:
-            fp.write(',')
+            fp.write(',\n%s               ' % pad)
     fp.write('\n%s        }\n' % pad)
 
 

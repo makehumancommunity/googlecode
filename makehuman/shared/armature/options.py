@@ -64,6 +64,7 @@ class ArmatureOptions:
         self.useExpressions = False
         self.feetOnGround = False
         self.useMasks = False
+        self.useTPose = False
         self.useLeftRight = False
 
         # Obsolete options once used by mhx
@@ -81,6 +82,7 @@ class ArmatureOptions:
             useExpressions = False,
             feetOnGround = False,
             useMasks = False,
+            useTPose = False,
             useLeftRight = False,
             ):
         self.useCustomShapes = useCustomShapes
@@ -91,6 +93,7 @@ class ArmatureOptions:
         self.useExpressions = useExpressions
         self.feetOnGround = feetOnGround
         self.useMasks = useMasks
+        self.useTPose = useTPose
         self.useLeftRight = useLeftRight
 
 

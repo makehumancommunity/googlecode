@@ -44,11 +44,12 @@ def exportFbx(human, filepath, config):
     #posemode.exitPoseMode()
     #posemode.enterPoseMode()
 
+    gui3d.app.progress(0, text="Preparing")
+
     config.setHuman(human)
     config.setupTexFolder(filepath)
 
     log.message("Write FBX file %s" % filepath)
-    print(config)
 
     rawTargets = exportutils.collect.readTargets(human, config)
     filename = os.path.basename(filepath)
@@ -62,7 +63,9 @@ def exportFbx(human, filepath, config):
         eyebrows=config.eyebrows,
         lashes=config.lashes)
 
-    gui3d.app.progress(0, text="Exporting %s" % filepath)
+    amt.calcBindMatrices()
+
+    gui3d.app.progress(0.5, text="Exporting %s" % filepath)
 
     fp = codecs.open(filepath, "w", encoding="utf-8")
     fbx_utils.resetId()

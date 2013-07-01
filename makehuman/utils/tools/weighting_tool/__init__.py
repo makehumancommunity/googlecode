@@ -38,6 +38,7 @@ if "bpy" in locals():
     imp.reload(helpers)
     imp.reload(export)
     imp.reload(varia)
+    imp.reload(io_json)
 else:
     print("Loading MH weighting tools v %s" % bl_info["version"])
     import bpy
@@ -49,6 +50,7 @@ else:
     from . import helpers
     from . import export
     from . import varia
+    from . import io_json
 
 #
 #    class MhxWeightToolsPanel(bpy.types.Panel):

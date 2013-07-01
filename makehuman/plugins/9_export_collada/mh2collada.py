@@ -50,30 +50,14 @@ Delta = [0,0.01,0]
 def exportCollada(human, filepath, config):
     #posemode.exitPoseMode()
     #posemode.enterPoseMode()
-    gui3d.app.progress(0, text="Exporting %s" % filepath)
+    gui3d.app.progress(0, text="Preparing")
 
     time1 = time.clock()
     config.setHuman(human)
     config.setupTexFolder(filepath)
-    try:
-        fp = codecs.open(filepath, 'w', encoding="utf-8")
-        log.message("Writing Collada file %s" % filepath)
-    except:
-        log.error("Unable to open file for writing %s" % filepath)
-
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
-    exportDae(human, name, fp, config)
 
-    fp.close()
-    time2 = time.clock()
-    log.message("Wrote Collada file in %g s: %s" % (time2-time1, filepath))
-    gui3d.app.progress(1)
-    #posemode.exitPoseMode()
-    return
-
-
-def exportDae(human, name, fp, config):
     rawTargets = exportutils.collect.readTargets(human, config)
     stuffs,amt = exportutils.collect.setupObjects(
         name,
@@ -83,6 +67,16 @@ def exportDae(human, name, fp, config):
         helpers=config.helpers,
         eyebrows=config.eyebrows,
         lashes=config.lashes)
+
+    amt.calcBindMatrices()
+
+    gui3d.app.progress(0.5, text="Exporting %s" % filepath)
+
+    try:
+        fp = codecs.open(filepath, 'w', encoding="utf-8")
+        log.message("Writing Collada file %s" % filepath)
+    except:
+        log.error("Unable to open file for writing %s" % filepath)
 
     date = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime())
     fp.write('<?xml version="1.0" encoding="utf-8"?>\n' +
@@ -172,6 +166,12 @@ def exportDae(human, name, fp, config):
         '    <instance_visual_scene url="#Scene"/>\n' +
         '  </scene>\n' +
         '</COLLADA>\n')
+
+    fp.close()
+    time2 = time.clock()
+    log.message("Wrote Collada file in %g s: %s" % (time2-time1, filepath))
+    gui3d.app.progress(1)
+    #posemode.exitPoseMode()
     return
 
 #
@@ -368,7 +368,7 @@ def writeController(fp, stuff, amt, config):
     """
 
     for bone in amt.bones.values():
-        bone.calcBindMatrix()
+        #bone.calcBindMatrix()
         mat = bone.bindMatrix
         mat = bone.getBindMatrixCollada()
         for i in range(4):

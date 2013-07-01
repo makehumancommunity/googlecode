@@ -220,7 +220,7 @@ class Parser:
             self.headsTails += custHeadsTails
             self.boneDefs += custArmature
 
-        vgroupList = self.getVertexGroups(boneInfo)
+        vgroups = self.getVertexGroups(boneInfo)
 
         if options.merge:
             self.mergeBones(options.merge, boneInfo)
@@ -244,17 +244,17 @@ class Parser:
                 self.renameDeformBones(rig_muscle.Armature, boneInfo)
                 if options.useConstraints:
                     self.renameConstraints(rig_muscle.Constraints, boneInfo)
-            self.addDeformVertexGroups(generic, vgroupList)
+            self.addDeformVertexGroups(generic, vgroups)
             self.renameDeformVertexGroups(rig_muscle.Armature)
 
         if options.useSplitBones or options.useSplitNames:
             if options.useSplitBones:
                 self.addSplitBones(boneInfo)
-            self.addSplitVertexGroups(vgroupList)
+            self.addSplitVertexGroups(vgroups)
 
         if options.useLeftRight:
             leftright = self.readVertexGroupFiles(["leftright"])
-            for name,vgroup in leftright:
+            for name,vgroup in leftright.items():
                 amt.vertexWeights[name] = vgroup
 
         for bname,bone in boneInfo.items():
@@ -262,8 +262,8 @@ class Parser:
                 try:
                     parent = boneInfo[bone.parent]
                 except KeyError:
-                    log.debug("Missing %s from %s" % (bone.parent, bone))
-                    log.debug(str(boneInfo.keys()))
+                    log.message("Missing %s from %s" % (bone.parent, bone))
+                    log.message(str(boneInfo.keys()))
                     halt
                 parent.children.append(bone)
             elif self.master:
@@ -572,10 +572,10 @@ class Parser:
             try:
                 bone = boneInfo[bname]
             except KeyError:
-                log.debug("Warning: deform bone %s does not exist" % bname)
+                log.message("Warning: deform bone %s does not exist" % bname)
                 continue
             if not bone.deform:
-                log.debug("Not deform: %s" % bname)
+                log.message("Not deform: %s" % bname)
                 continue
 
             base,ext = splitBoneName(bname)
@@ -664,7 +664,7 @@ class Parser:
             try:
                 bone = boneInfo[bname]
             except KeyError:
-                log.debug("Warning: deform bone %s does not exist" % bname)
+                log.message("Warning: deform bone %s does not exist" % bname)
                 continue
             if not bone.deform:
                 continue
@@ -684,7 +684,7 @@ class Parser:
             try:
                 self.constraints[bname]
             except KeyError:
-                log.debug("No attr %s" % bname)
+                log.message("No attr %s" % bname)
                 continue
 
             for cns in self.constraints[bname]:
@@ -699,7 +699,7 @@ class Parser:
                         boneInfo[defTarget]
                         cns.subtar = defTarget
                     except:
-                        log.debug("Bone %s constraint %s has neither target %s nor %s" % (bname, cns, cns.subtar, defTarget))
+                        log.message("Bone %s constraint %s has neither target %s nor %s" % (bname, cns, cns.subtar, defTarget))
 
             defname = self.deformPrefix + bname
             self.constraints[defname] = self.constraints[bname]
@@ -709,17 +709,17 @@ class Parser:
 
     def getVertexGroups(self, boneInfo):
         amt = self.armature
-        vgroupList = self.readVertexGroupFiles(self.vertexGroupFiles)
-        for bname,vgroup in vgroupList:
+        vgroups = self.readVertexGroupFiles(self.vertexGroupFiles)
+        for bname,vgroup in vgroups.items():
             amt.vertexWeights[bname] = vgroup
-        return vgroupList
+        return vgroups
 
 
-    def addDeformVertexGroups(self, generic, vgroupList):
+    def addDeformVertexGroups(self, generic, vgroups):
         amt = self.armature
         options = amt.options
         useSplit = (options.useSplitBones or options.useSplitNames)
-        for bname,vgroup in vgroupList:
+        for bname,vgroup in vgroups.items():
             base = splitBoneName(bname)[0]
             if useSplit and base in self.splitBones.keys():
                 pass
@@ -747,24 +747,30 @@ class Parser:
 
 
     def readVertexGroupFiles(self, files):
-        vgroupList = []
-        vgroups = {}
+        vgroups = OrderedDict()
         for file in files:
-            filepath = os.path.join("shared/armature/vertexgroups", file+".vgrp")
-            readVertexGroups(filepath, vgroups, vgroupList)
-        return vgroupList
+            filepath = os.path.join("shared/armature/data", "vgrp_"+file+".json")
+            log.message("Loading %s" % filepath)
+            struct = io_json.loadJson(filepath)
+            for key,data in struct.items():
+                try:
+                    vgroups[key] += data
+                except KeyError:
+                    vgroups[key] = data
+            #readVertexGroups(filepath, vgroups, vgroups)
+        return vgroups
 
 
-    def addSplitVertexGroups(self, vgroupList):
+    def addSplitVertexGroups(self, vgroups):
         amt = self.armature
-        for bname,vgroup in vgroupList:
+        for bname,vgroup in vgroups.items():
             base = splitBoneName(bname)[0]
             if base in self.splitBones.keys():
                 self.splitVertexGroup(bname, vgroup)
                 try:
                     del amt.vertexWeights[bname]
                 except KeyError:
-                    log.debug("No VG %s" % bname)
+                    log.message("No VG %s" % bname)
 
 
     def splitVertexGroup(self, bname, vgroup):

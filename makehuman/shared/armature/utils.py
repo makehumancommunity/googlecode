@@ -167,7 +167,7 @@ def computeRoll(head, tail, normal):
 #-------------------------------------------------------------------------------
 #
 #-------------------------------------------------------------------------------
-
+"""
 def readVertexGroups(file, vgroups, vgroupList):
     #file = os.path.join("shared/armature/vertexgroups", name)
     fp = open(file, "rU")
@@ -186,7 +186,7 @@ def readVertexGroups(file, vgroups, vgroupList):
         else:
             vgroup.append((int(words[0]), float(words[1])))
     fp.close()
-
+"""
 
 def mergeWeights(vgroup):
     vgroup.sort()

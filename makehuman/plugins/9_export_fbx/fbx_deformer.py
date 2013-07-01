@@ -222,7 +222,6 @@ def writeBindPose(fp, stuffs, amt):
 '        NbPoseNodes: %d\n' % (1+nMeshes+nBones))
 
     startLinking()
-    amt.calcBindMatrix()
     poseNode(fp, "Model::%s" % amt.name, amt.bindMatrix)
 
     for stuff in stuffs:
@@ -230,7 +229,6 @@ def writeBindPose(fp, stuffs, amt):
         poseNode(fp, "Model::%sMesh" % name, amt.bindMatrix)
 
     for bone in amt.bones.values():
-        bone.calcBindMatrix()
         poseNode(fp, "Model::%s" % bone.name, bone.bindMatrix)
 
     stopLinking()

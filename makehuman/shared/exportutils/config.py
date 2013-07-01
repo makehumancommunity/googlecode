@@ -38,6 +38,7 @@ class Config:
         self.eyebrows           = True
         self.lashes             = True
         self.helpers            = False
+        self.useTPose           = False
         self.scale              = 1.0
         self.unit               = "dm"
 
@@ -55,6 +56,7 @@ class Config:
         self.eyebrows           = exporter.eyebrows.selected
         self.lashes             = exporter.lashes.selected
         self.helpers            = exporter.helpers.selected
+        self.useTPose           = False # exporter.useTPose.selected
         self.scale,self.unit    = exporter.taskview.getScale()
         return self
 
@@ -181,25 +183,6 @@ class Config:
         string = name.replace(" ", "_").replace("-","_").lower()
         return string
 
-'''
-#
-#   class CProxyFile:
-#
-
-class CProxyFile:
-    def __init__(self):
-        self.type = 'Clothes'
-        self.layer = 0
-        self.file = ""
-        self.obj = None
-
-    def set(self, type, layer):
-        self.type = type
-        self.layer = layer
-
-    def __repr__(self):
-        return ("<CProxyFile %s %d \"%s\">" % (self.type, self.layer, self.file))
-'''
 #
 #
 #

@@ -130,9 +130,24 @@ class Armature:
         self.isNormalized = True
 
 
-    def calcBindMatrix(self):
+    def calcBindMatrices(self):
+        import io_json
         self.bindMatrix = tm.rotation_matrix(math.pi/2, XUnit)
         self.bindInverse = la.inv(self.bindMatrix)
+
+        if self.options.useTPose:
+            filepath = "tools/blender26x/mh_mocap_tool/t_pose.json"
+            blist = io_json.loadJson(filepath)
+            for bname,quat in blist:
+                pmat = tm.quaternion_matrix(quat)
+                log.debug("TPose %s %s" % ( bname, pmat))
+                self.bones[bname].matrixTPose = pmat
+        else:
+            for bone in self.bones.values():
+                bone.matrixTPose = None
+
+        for bone in self.bones.values():
+            bone.calcBindMatrix()
 
 
 class Bone:
@@ -173,6 +188,8 @@ class Bone:
         self.matrixRelative = None
         self.bindMatrix = None
         self.bindInverse = None
+        self.matrixTPose = None
+        self.matrixPosedRest = None
 
 
     def __repr__(self):
@@ -253,6 +270,7 @@ class Bone:
             self.matrixRelative = np.dot(la.inv(parbone.matrixRest), self.matrixRest)
         else:
             self.matrixRelative = self.matrixRest
+        log.debug("RM %s" % self.name)
 
 
     def getBindMatrixCollada(self):
@@ -265,7 +283,20 @@ class Bone:
     def calcBindMatrix(self):
         if self.bindMatrix is not None:
             return
+
         self.calcRestMatrix()
+
+        if self.matrixTPose is None:
+            self.matrixPosedRest = self.matrixRest
+        else:
+            self.matrixPosedRest = np.dot(self.matrixRest, self.matrixTPose)
+            if self.parent:
+                parbone = self.armature.bones[self.parent]
+                self.matrixRelative = np.dot(la.inv(parbone.matrixPosedRest), self.matrixPosedRest)
+            else:
+                self.matrixRelative = self.matrixRest
+            log.debug("TM %s" % self.name)
+
         self.bindInverse = np.transpose(self.matrixRest)
         self.bindMatrix = la.inv(self.bindInverse)
 

@@ -149,9 +149,7 @@ def writeObjectDefs(fp, stuffs, amt):
 def writeObjectProps(fp, stuffs, amt):
     for bone in amt.bones.values():
         writeNodeAttributeProp(fp, bone)
-
     writeNodeProp(fp, amt)
-
     for bone in amt.bones.values():
         writeBoneProp(fp, bone)
 
@@ -201,7 +199,6 @@ def writeBoneProp(fp, bone):
             P: "DefaultAttributeIndex", "int", "Integer", "",0
 """)
 
-    bone.calcRestMatrix()
     mat = bone.matrixRelative
     trans = mat[:3,3]
     e = tm.euler_from_matrix(mat, axes='sxyz')

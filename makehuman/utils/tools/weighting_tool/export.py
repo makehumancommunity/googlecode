@@ -20,6 +20,8 @@ Export
 
 import bpy
 import os
+from collections import OrderedDict
+from . import io_json
 
 #
 #    exportVertexGroups(filePath)
@@ -54,23 +56,29 @@ def sortBoneVGroups(bone, ob):
 
 def exportVertexGroups(context):
     scn = context.scene
-    filePath = scn.MhxVertexGroupFile
     exportAllVerts = not scn.MhxExportSelectedOnly
-    fileName = os.path.expanduser(filePath)
-    fp = open(fileName, "w")
     ob = context.object
     me = ob.data
     vgroups = sortVertexGroups(ob)
+    filePath = scn.MhxVertexGroupFile
+
+    struct = OrderedDict()
     for vg in vgroups:
         index = vg.index
-        weights = []
+        weights = struct[vg.name] = []
         for v in me.vertices:
             if exportAllVerts or v.select:
                 for grp in v.groups:
                     if grp.group == index and grp.weight > 0.005:
                         weights.append((v.index, grp.weight))
+
+    fileName = os.path.expanduser(filePath)
+    io_json.saveJson(struct, fileName)
+    """
+    fp = open(fileName, "w")
         exportList(context, weights, vg.name, fp)
     fp.close()
+    """
     print("Vertex groups exported to %s" % fileName)
     return
 
