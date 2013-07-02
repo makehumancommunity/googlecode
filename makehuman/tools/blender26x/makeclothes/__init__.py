@@ -30,7 +30,7 @@
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.907",
+    "version": "0.908",
     "blender": (2, 6, 7),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -135,9 +135,20 @@ class MakeClothesPanel(bpy.types.Panel):
         '''
 
         layout.separator()
-        layout.prop(scn, "MhBodyType", text="Human Type")
-        layout.operator("mhclo.load_human", text="Load Nude Human").helpers = False
-        layout.operator("mhclo.load_human", text="Load Human With Helpers").helpers = True
+        '''
+        split = layout.split(0.5)
+        split.label("MH Program Path")
+        row = split.row()
+        row.operator("mh.read_settings")
+        row.operator("mh.save_settings")
+        layout.prop(scn, "MhProgramPath", text="")
+        '''
+        split = layout.split(0.3)
+        split.label("Load")
+        split.prop(scn, "MhBodyType", text="Type")
+        row = layout.row()
+        row.operator("mhclo.load_human", text="Nude Human").helpers = False
+        row.operator("mhclo.load_human", text="Human With Helpers").helpers = True
         layout.separator()
         layout.operator("mhclo.make_clothes")
         layout.separator()
@@ -460,9 +471,16 @@ class OBJECT_OT_LoadHumanButton(bpy.types.Operator):
 
             if scn.MhBodyType == 'None':
                 maketarget.maketarget.newTarget(context)
+                found = True
             else:
                 trgpath = os.path.join(scn.MhProgramPath, "data/targets/macrodetails", scn.MhBodyType + ".target")
-                utils.loadTarget(trgpath, context)
+                try:
+                    utils.loadTarget(trgpath, context)
+                    found = True
+                except FileNotFoundError:
+                    found = False
+            if not found:
+                raise MHError("Target \"%s\" not found.\nPath \"%s\" does not seem to be the path to the MakeHuman program" % (trgpath, scn.MhProgramPath))
             maketarget.maketarget.applyTargets(context)
             ob = context.object
             ob.name = "Human"
