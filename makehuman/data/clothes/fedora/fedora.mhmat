@@ -16,7 +16,7 @@ opacity 1.0
 diffuseTexture fedora_texture.png
 normalmapTexture fedora_normal.png
 normalmapIntensity 1.0
-displacementmapTexture fedora_disp.png
+displacementmapTexture fedora_displacement.png
 displacementmapIntensity 0.2
 
 // Shader programme
