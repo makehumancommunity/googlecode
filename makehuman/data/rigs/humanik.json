@@ -30,22 +30,22 @@
         "thumb.02.L":       "LeftHandThumb2",
         "thumb.03.L":       "LeftHandThumb3",
 
-        "palm.01.L":        "LeftInHandIndex",
+        "palm_index.L":     "LeftInHandIndex",
         "f_index.01.L":     "LeftHandIndex1",
         "f_index.02.L":     "LeftHandIndex2",
         "f_index.03.L":     "LeftHandIndex3",
 
-        "palm.02.L":        "LeftInHandMiddle",
+        "palm_middle.L":    "LeftInHandMiddle",
         "f_middle.01.L":    "LeftHandMiddle1",
         "f_middle.02.L":    "LeftHandMiddle2",
         "f_middle.03.L":    "LeftHandMiddle3",
 
-        "palm.03.L":        "LeftInHandRing",
+        "palm_ring.L":    "LeftInHandRing",
         "f_ring.01.L":      "LeftHandRing1",
         "f_ring.02.L":      "LeftHandRing2",
         "f_ring.03.L":      "LeftHandRing3",
 
-        "palm.04.L":        "LeftInHandPinky",
+        "palm_pinky.L":     "LeftInHandPinky",
         "f_pinky.01.L":     "LeftHandPinky1",
         "f_pinky.02.L":     "LeftHandPinky2",
         "f_pinky.03.L":     "LeftHandPinky3",
@@ -54,22 +54,22 @@
         "thumb.02.R":       "RightHandThumb2",
         "thumb.03.R":       "RightHandThumb3",
 
-        "palm.01.R":        "RightInHandIndex",
+        "palm_index.R":     "RightInHandIndex",
         "f_index.01.R":     "RightHandIndex1",
         "f_index.02.R":     "RightHandIndex2",
         "f_index.03.R":     "RightHandIndex3",
 
-        "palm.02.R":        "RightInHandMiddle",
+        "palm_middle.R":      "RightInHandMiddle",
         "f_middle.01.R":    "RightHandMiddle1",
         "f_middle.02.R":    "RightHandMiddle2",
         "f_middle.03.R":    "RightHandMiddle3",
 
-        "palm.03.R":        "RightInHandRing",
+        "palm_ring.R":      "RightInHandRing",
         "f_ring.01.R":      "RightHandRing1",
         "f_ring.02.R":      "RightHandRing2",
         "f_ring.03.R":      "RightHandRing3",
 
-        "palm.04.R":        "RightInHandPinky",
+        "palm_pinky.R":     "RightInHandPinky",
         "f_pinky.01.R":     "RightHandPinky1",
         "f_pinky.02.R":     "RightHandPinky2",
         "f_pinky.03.R":     "RightHandPinky3",

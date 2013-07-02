@@ -115,8 +115,8 @@
     "merge" : {
         "head":         ["uplid.L", "lolid.L", "uplid.R", "lolid.R", "jaw",
                          "tongue_base", "tongue_mid", "tongue_tip", "eye.L", "eye.R"],
-        "hand.L":       ["hand.L", "palm.01.L", "palm.02.L", "palm.03.L", "palm.04.L"],
-        "hand.R":       ["hand.R", "palm.01.R", "palm.02.R", "palm.03.R", "palm.04.R"]
+        "hand.L":       ["hand.L", "palm_index.L", "palm_middle.L", "palm_ring.L", "palm_pinky.L"],
+        "hand.R":       ["hand.R", "palm_index.R", "palm_middle.R", "palm_ring.R", "palm_pinky.R"]
     },
     
     "settings" : {
