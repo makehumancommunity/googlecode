@@ -518,22 +518,25 @@ def writeTextures(stuffs, settings, outDir, progressCallback = None):
     i = 0.0
     stuffnum = float(len(stuffs))
     for stuff in stuffs:
-        teximg = mh.Image(data = stuff.material.diffuseTexture)
-        # Export diffuse texture, with subtextures.
-        teximg.save(os.path.join(
-            outDir,"%s_texture.png" % stuff.name))
-        progress((i+0.4+0.1*(1-settings['usebump']))/stuffnum)
-        # Export transparency map.
-        imgop.getAlpha(teximg).save(path = os.path.join(outDir,"%s_alpha.png" % stuff.name))
-        progress((i+0.8+0.2*(1-settings['usebump']))/stuffnum)
-        # Export bump map / displacement map. They are the same in povray.
+        copyTexture(stuff.material.diffuseTexture, os.path.join(
+            outDir,getImageFname(stuff.name, stuff.material.diffuseTexture, 'texture')))
+        progress((i+0.3)/stuffnum)
+        # Export bump map / displacement map.
         if settings['usebump']:
             if stuff.material.bumpMapTexture:
-                collect.copy(stuff.material.bumpMapTexture, os.path.join(
+                copyTexture(stuff.material.bumpMapTexture, os.path.join(
                     outDir, getImageFname(stuff.name, stuff.material.bumpMapTexture, 'bump')))
             elif stuff.material.displacementMapTexture:
-                collect.copy(stuff.material.displacementMapTexture, os.path.join(
+                copyTexture(stuff.material.displacementMapTexture, os.path.join(
                     outDir, getImageFname(stuff.name, stuff.material.displacementMapTexture, 'bump')))
+        progress((i+0.6)/stuffnum)
+        # Export transparency map.
+        if stuff.material.transparencyMapTexture:
+            copyTexture(stuff.material.transparencyMapTexture, os.path.join(
+                outDir,getImageFname(stuff.name, stuff.material.transparencyMapTexture, 'alpha')))
+        else:
+            imgop.getAlpha(imgop.Image(data = stuff.material.diffuseTexture)).save(
+                path = os.path.join(outDir,"%s_alpha.png" % stuff.name))
         i += 1.0
         progress(i/stuffnum)
 
@@ -571,6 +574,10 @@ def writeItemsMaterials(hfile, stuffs, settings, outDir):
                 inlines = inlines.replace (
                     "%%bumpmap%%",
                     getImageDef(stuff.name, bumpdata, 'bump'))
+            elif stuff.material.transparencyMapTexture:
+                inlines = inlines.replace (
+                    "%%bumpmap%%",
+                    getImageDef(stuff.name, stuff.material.transparencyMapTexture, 'alpha'))
             else:
                 inlines = inlines.replace (
                     "%%bumpmap%%",
@@ -823,26 +830,26 @@ def getHumanName():
 def invx(pos):
     return (-pos[0],pos[1],pos[2])
 
-def getImageFname(name, file, type = None):
+def getImageFname(name, file, type = None, getext = False):
     out = str(name)
     if type is not None:
         out += '_' + type
-    ext = os.path.splitext(file)[-1] if isinstance(file, str) else ".png"
-    return out + ext
+    ext = os.path.splitext(file)[-1] if isinstance(file, basestring) else ".png"
+    if getext:
+        return (out + ext, ext.lower()[1:])
+    else:
+        return out + ext
     
 def getImageDef(name, file, type = None):
-    out = str(name)
-    if type is not None:
-        out += '_' + type
-    ext = os.path.splitext(file)[-1] if isinstance(file, str) else ".png"
-    out += ext
-    
-    ext = ext.lower()
-    if ext == ".tif":
-        type = "tiff"
-    elif ext == ".jpg":
-        type = "jpeg"
-    else:
-        type = ext[1:]
+    (out, ext) = getImageFname(name, file, type, True)
+    if ext == "tif":
+        ext = "tiff"
+    elif ext == "jpg":
+        ext = "jpeg"
+    return ext + ' "' + out + '"'
 
-    return type + ' "' + out + '"'
+def copyTexture(tex, dst):
+    if isinstance(tex, basestring):
+        shutil.copy(tex, dst)
+    else:
+        tex.save(dst)
