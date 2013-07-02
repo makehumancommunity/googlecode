@@ -40,7 +40,7 @@
         "f_middle.02.L":    "LeftHandMiddle2",
         "f_middle.03.L":    "LeftHandMiddle3",
 
-        "palm_ring.L":    "LeftInHandRing",
+        "palm_ring.L":      "LeftInHandRing",
         "f_ring.01.L":      "LeftHandRing1",
         "f_ring.02.L":      "LeftHandRing2",
         "f_ring.03.L":      "LeftHandRing3",
@@ -59,7 +59,7 @@
         "f_index.02.R":     "RightHandIndex2",
         "f_index.03.R":     "RightHandIndex3",
 
-        "palm_middle.R":      "RightInHandMiddle",
+        "palm_middle.R":    "RightInHandMiddle",
         "f_middle.01.R":    "RightHandMiddle1",
         "f_middle.02.R":    "RightHandMiddle2",
         "f_middle.03.R":    "RightHandMiddle3",

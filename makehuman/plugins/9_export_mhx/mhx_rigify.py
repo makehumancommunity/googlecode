@@ -25,7 +25,7 @@ Only works with MHX export.
 """
 
 from armature.parser import Parser
-from armature.options import ArmatureOptions
+from armature.options import ArmatureOptions, Locale
 from .mhx_armature import ExportArmature
 from armature import rig_bones
 
@@ -56,6 +56,7 @@ Only works with MHX export.
         self.useMuscles = True
         self.useSplitNames = True
         self.useDeformNames = True
+        self.mergeShoulders = True
 
         # Options set by MHX exporter
         self.useCustomShapes = False
@@ -67,6 +68,18 @@ Only works with MHX export.
         self.feetOnGround = config.feetOnGround
         self.useMasks = config.useMasks
 
+        renameBones = {
+            "palm_index.L" : "palm.01.L",
+            "palm_middle.L" : "palm.02.L",
+            "palm_ring.L" : "palm.03.L",
+            "palm_pinky.L" : "palm.04.L",
+
+            "palm_index.R" : "palm.01.R",
+            "palm_middle.R" : "palm.02.R",
+            "palm_ring.R" : "palm.03.R",
+            "palm_pinky.R" : "palm.04.R",
+        }
+        self.locale = Locale(bones=renameBones)
 
 
 
@@ -94,4 +107,3 @@ class RigifyParser(Parser):
              ("MhxRigify", True)]
         )
 
-        print "RB", self.splitBones

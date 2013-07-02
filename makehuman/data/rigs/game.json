@@ -6,6 +6,7 @@
 
     "settings" : {
         "mergeSpine" : true,
+        "mergeShoulders" : true,
         "mergeFingers" : true,
         "mergePalms" : true,
         "mergeHead" : true

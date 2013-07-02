@@ -40,7 +40,12 @@ HeadMergers = {
 
 SpineMergers = {
     "chest" : ("chest", "chest-1"),
+    "spine" : ("spine", "spine-1"),
 }
 
+ShoulderMergers = {
+    "shoulder.L" : ("shoulder.L", "deltoid.L"),
+    "shoulder.R" : ("shoulder.R", "deltoid.R"),
+}
 
 

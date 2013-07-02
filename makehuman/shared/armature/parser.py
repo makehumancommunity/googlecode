@@ -227,6 +227,8 @@ class Parser:
         else:
             if options.mergeSpine:
                 self.mergeBones(rig_merge.SpineMergers, boneInfo)
+            if options.mergeShoulders:
+                self.mergeBones(rig_merge.ShoulderMergers, boneInfo)
             if options.mergeFingers:
                 self.mergeBones(rig_merge.FingerMergers, boneInfo)
             if options.mergePalms:
@@ -837,6 +839,7 @@ class Parser:
             for mbone in merged:
                 if mbone != bname:
                     vgroup += amt.vertexWeights[mbone]
+                    log.debug("Merge %s to %s" % (mbone, bname))
                     del amt.vertexWeights[mbone]
                     del boneInfo[mbone]
                     for child in boneInfo.values():

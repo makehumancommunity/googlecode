@@ -247,15 +247,9 @@ class Bone:
         self.name = renameBone(self, locale)
         if self.parent:
             self.parent = renameBone(amt.bones[self.parent], locale)
-        constraints = []
         for cns in self.constraints:
-            type,flags,inf,data = cns
-            if type in ["Transform", "StretchTo", "TrackTo", "IK"]:
-                newtrg = renameBone(amt.bones[data[1]], locale)
-                newdata = [data[0], newtrg] + data[2:]
-                cns = (type,flags,inf,newdata)
-            constraints.append(cns)
-        self.constraints = constraints
+            if cns.type in ["Transform", "StretchTo", "TrackTo", "IK"]:
+                cns.subtar = renameBone(amt.bones[cns.subtar], locale)
         newbones[self.name] = self
 
 
@@ -270,7 +264,6 @@ class Bone:
             self.matrixRelative = np.dot(la.inv(parbone.matrixRest), self.matrixRest)
         else:
             self.matrixRelative = self.matrixRest
-        log.debug("RM %s" % self.name)
 
 
     def getBindMatrixCollada(self):

@@ -42,6 +42,7 @@ class ArmatureOptions:
         self.addConnectingBones = False
 
         self.mergeSpine = False
+        self.mergeShoulders = False
         self.mergeFingers = False
         self.mergePalms = False
         self.mergeHead = False
@@ -107,6 +108,7 @@ class ArmatureOptions:
             "   useMuscles : %s\n" % self.useMuscles +
             "   addConnectingBones : %s\n" % self.addConnectingBones +
             "   mergeSpine : %s\n" % self.mergeSpine +
+            "   mergeShoulders : %s\n" % self.mergeShoulders +
             "   mergeFingers : %s\n" % self.mergeFingers +
             "   mergePalms : %s\n" % self.mergePalms +
             "   mergeHead : %s\n" % self.mergeHead +
@@ -133,6 +135,7 @@ class ArmatureOptions:
         self.addConnectingBones = selector.addConnectingBones.selected
 
         self.mergeSpine = selector.mergeSpine.selected
+        self.mergeShoulders = selector.mergeShoulders.selected
         self.mergeFingers = selector.mergeFingers.selected
         self.mergePalms = selector.mergePalms.selected
         self.mergeHead = selector.mergeHead.selected
@@ -196,6 +199,7 @@ class ArmatureSelector:
         self.addConnectingBones = box.addWidget(gui.ToggleButton("Connecting bones"))
 
         self.mergeSpine = box.addWidget(gui.ToggleButton("Merge spine"))
+        self.mergeShoulders = box.addWidget(gui.ToggleButton("Merge shoulders"))
         self.mergeFingers = box.addWidget(gui.ToggleButton("Merge fingers"))
         self.mergePalms = box.addWidget(gui.ToggleButton("Merge palms"))
         self.mergeHead = box.addWidget(gui.ToggleButton("Merge head"))
@@ -215,6 +219,7 @@ class ArmatureSelector:
         self.addConnectingBones.setSelected(options.addConnectingBones)
 
         self.mergeSpine.setSelected(options.mergeSpine)
+        self.mergeShoulders.setSelected(options.mergeShoulders)
         self.mergeFingers.setSelected(options.mergeFingers)
         self.mergePalms.setSelected(options.mergePalms)
         self.mergeHead.setSelected(options.mergeHead)
