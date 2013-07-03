@@ -204,6 +204,13 @@ class Pose:
             if human.hairObj.isSubdivided():
                 human.hairObj.getSubdivisionMesh()
 
+        if human.eyesObj and human.eyesProxy:
+            mesh = human.eyesObj.getSeedMesh()
+            human.eyesProxy.update(mesh)
+            mesh.update()
+            if human.eyesObj.isSubdivided():
+                human.eyesObj.getSubdivisionMesh()
+
         for (name,clo) in human.clothesObjs.items():
             if clo:
                 mesh = clo.getSeedMesh()

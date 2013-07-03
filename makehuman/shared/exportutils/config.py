@@ -99,6 +99,12 @@ class Config:
             name = self.goodName(proxy.name)
             proxies[name] = proxy
 
+        if self.human.eyesProxy:
+            proxy = self.human.eyesProxy
+            proxy.layer = 2
+            name = self.goodName(proxy.name)
+            proxies[name] = proxy
+
         for (key,clo) in self.human.clothesObjs.items():
             if clo:
                 proxy = self.human.clothesProxies[key]

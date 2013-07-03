@@ -35,7 +35,7 @@ import material
 
 class Human(gui3d.Object):
 
-    def __init__(self, mesh, hairObj=None):
+    def __init__(self, mesh, hairObj=None, eyesObj=None):
 
         gui3d.Object.__init__(self, [0, 0, 0], mesh, True)
 
@@ -56,6 +56,8 @@ class Human(gui3d.Object):
         self.hairModelling = False #temporary variable for easier integration of makehair, will be cleaned later.
         self.hairObj = hairObj
         self.hairProxy = None
+        self.eyesObj = eyesObj
+        self.eyesProxy = None
         self.clothesObjs = {}
         self.clothesProxies = {}
         self.activeClothing = None

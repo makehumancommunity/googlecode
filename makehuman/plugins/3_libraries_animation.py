@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -279,7 +279,7 @@ class AnimationLibrary(gui3d.TaskView):
             return
 
         self.selectAnimation(anim)
-    
+
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
 
@@ -313,7 +313,7 @@ class AnimationLibrary(gui3d.TaskView):
 
             if self.showSkeletonTggl.selected:
                 self.skelObj.show()
-                # Show skeleton through human 
+                # Show skeleton through human
                 self.setHumanTransparency(True)
             else:
                 self.skelObj.hide()
@@ -342,7 +342,7 @@ class AnimationLibrary(gui3d.TaskView):
         if self.skelObj:
             self.skelObj.hide()
 
-        self.skelObj = None 
+        self.skelObj = None
         self.skelMesh = None
 
         # Restore possible hidden proxies (clothes and hair)
@@ -430,7 +430,7 @@ class AnimationLibrary(gui3d.TaskView):
 
         self.filechooser.deselectItem( (anim.collection.uuid, anim.name) )
         self.printAnimationsStatus()
-        
+
     def printAnimationsStatus(self):
         nAnimations = len(self.human.animations)
         if nAnimations == 1:
@@ -530,12 +530,20 @@ class AnimationLibrary(gui3d.TaskView):
                 weights = skeleton.getProxyWeights(self.human.hairProxy, bodyWeights, self.human.hairObj.mesh)
                 self.human.animated.addMesh(self.human.hairObj.mesh, weights)
                 self.human.hairObj.show()
+
+            # Eyes
+            if self.human.eyesObj and self.human.eyesProxy:
+                weights = skeleton.getProxyWeights(self.human.eyesProxy, bodyWeights, self.human.eyesObj.mesh)
+                self.human.animated.addMesh(self.human.eyesObj.mesh, weights)
+                self.human.eyesObj.show()
         else:
-            # Hide not animated proxies (clothes and hair)
+            # Hide not animated proxies (clothes and hair and eyes)
             for (name,obj) in self.human.clothesObjs.items():
                 obj.hide()
             if self.human.hairObj:
                 self.human.hairObj.hide()
+            if self.human.eyesObj:
+                self.human.eyesObj.hide()
 
     def updateProxies(self):
         """
@@ -547,14 +555,21 @@ class AnimationLibrary(gui3d.TaskView):
         if self.human.proxy:
             self.human.updateProxyMesh()
 
-        if self.human.hairObj and self.human.hairProxy:            
+        if self.human.hairObj and self.human.hairProxy:
             mesh = self.human.hairObj.getSeedMesh()
             self.human.hairProxy.update(mesh)
             mesh.update()
             if self.human.hairObj.isSubdivided():
                 self.human.hairObj.getSubdivisionMesh()
 
-        for (name,clo) in self.human.clothesObjs.items():            
+        if self.human.eyesObj and self.human.eyesProxy:
+            mesh = self.human.eyesObj.getSeedMesh()
+            self.human.eyesProxy.update(mesh)
+            mesh.update()
+            if self.human.eyesObj.isSubdivided():
+                self.human.eyesObj.getSubdivisionMesh()
+
+        for (name,clo) in self.human.clothesObjs.items():
             if clo:
                 mesh = clo.getSeedMesh()
                 self.human.clothesProxies[name].update(mesh)
@@ -713,7 +728,7 @@ def loadAnimationTrack(anim):
         # motion:
 
         # Load animation data from BVH file and add it to AnimatedMesh
-        # This is a list that references a joint name in the BVH for each 
+        # This is a list that references a joint name in the BVH for each
         # bone in the skeleton (breadth-first order):
         jointToBoneMap = [bone.name for bone in human.getSkeleton().getBones()]
         animTrack = bvhRig.createAnimationTrack(jointToBoneMap, anim.getAnimationTrackName())
