@@ -124,7 +124,7 @@ end Mesh
 """
   layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;
     Modifier Subsurf SUBSURF
-      levels 2 ;
+      levels 1 ;
       render_levels 2 ;
       subdivision_type 'CATMULL_CLARK' ;
       use_subsurf_uv True ;

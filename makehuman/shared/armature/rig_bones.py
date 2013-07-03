@@ -256,7 +256,9 @@ RotationLimits = {
 CustomShapes = {
     'hips' :            'GZM_Crown',
     'spine' :           'GZM_CircleSpine',
+    'spine-1' :         'GZM_CircleSpine',
     'chest' :           'GZM_CircleChest',
+    'chest-1' :         'GZM_CircleChest',
     'neck' :            'GZM_Neck',
     'head' :            'GZM_Head',
 
@@ -264,13 +266,15 @@ CustomShapes = {
     'thigh.R' :         'GZM_Circle025',
     'shin.L' :          'GZM_Circle025',
     'shin.R' :          'GZM_Circle025',
-    'foot.L' :          'GZM_Foot',
-    'foot.R' :          'GZM_Foot',
+    'foot.L' :          'GZM_Foot_L',
+    'foot.R' :          'GZM_Foot_R',
     'toe.L' :           'GZM_Toe_L',
     'toe.R' :           'GZM_Toe_R',
 
     'shoulder.L' :      'GZM_Shoulder',
     'shoulder.R' :      'GZM_Shoulder',
+    'deltoid.L' :       'GZM_Shoulder',
+    'deltoid.R' :       'GZM_Shoulder',
     'upper_arm.L' :     'GZM_Circle025',
     'upper_arm.R' :     'GZM_Circle025',
     'forearm.L' :       'GZM_Circle025',

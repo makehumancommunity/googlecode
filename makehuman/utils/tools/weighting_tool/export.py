@@ -126,6 +126,30 @@ class VIEW3D_OT_ExportLeftRightButton(bpy.types.Operator):
         exportLeftRight(context)
         return{'FINISHED'}
 
+
+class VIEW3D_OT_ExportCustomShapesButton(bpy.types.Operator):
+    bl_idname = "mhw.export_custom_shapes"
+    bl_label = "Export Custom Shapes"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        scn = context.scene
+        structs = OrderedDict()
+        objects = []
+        for ob in scn.objects:
+            if ob.type == 'MESH' and ob.select:
+                objects.append((ob.name,ob))
+        objects.sort()
+        for _,ob in objects:
+            struct = structs[ob.name] = OrderedDict()
+            struct["verts"] = [tuple(v.co) for v in ob.data.vertices]
+            struct["edges"] = [tuple(e.vertices) for e in ob.data.edges]
+        filepath = os.path.expanduser(scn.MhxVertexGroupFile)
+        io_json.saveJson(structs, filepath)
+        print(filepath, "saved")
+        return{'FINISHED'}
+
+
 #
 #    exportSumGroups(context):
 #    exportListAsVertexGroup(weights, name, fp):

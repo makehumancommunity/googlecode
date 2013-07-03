@@ -26,10 +26,12 @@ from .flags import *
 
 
 Joints = [
-    ('l-heel0',             'v', 12815),
-    ('l-heel',              'l', ((-2.5,'l-foot-2'), (3.5,'l-foot-1'))),
-    ('r-heel0',             'v', 6218),
-    ('r-heel',              'l', ((-2.5,'r-foot-2'), (3.5,'r-foot-1'))),
+    ('l-heel-y',            'v', 12877),
+    ('l-heel-z',            'l', ((-2.5,'l-foot-2'), (3.5,'l-foot-1'))),
+    ('l-heel',              'p', ('l-foot-2', 'l-heel-y', 'l-heel-z')),
+    ('r-heel-y',            'v', 6280),
+    ('r-heel-z',            'l', ((-2.5,'r-foot-2'), (3.5,'r-foot-1'))),
+    ('r-heel',              'p', ('r-foot-2', 'r-heel-y', 'r-heel-z')),
 
     ('l-ankle-tip',         'o', ('l-ankle', (0,0,-1))),
     ('r-ankle-tip',         'o', ('r-ankle', (0,0,-1))),
@@ -62,7 +64,7 @@ HeadsTails = {
 
     'ankle.L' :         ('l-ankle', 'l-ankle-tip'),
     'ankle.ik.L' :      ('l-ankle', 'l-ankle-tip'),
-    'foot.ik.L' :        ('l-heel', 'l-foot-2'),
+    'foot.ik.L' :       ('l-heel', 'l-foot-2'),
     'toe.rev.L' :       ('l-foot-2', 'l-foot-1'),
     'foot.rev.L' :      ('l-foot-1', 'l-ankle'),
 
@@ -194,16 +196,16 @@ IkArmArmature = {
 
 FingerArmature = {
     'thumb.L' :        ('thumb.02.L', 'thumb.01.L', F_WIR, L_LHANDIK),
-    'index.L' :        ('f_index.01.L', 'palm.01.L', F_WIR, L_LHANDIK),
-    'middle.L' :       ('f_middle.01.L', 'palm.02.L', F_WIR, L_LHANDIK),
-    'ring.L' :         ('f_ring.01.L', 'palm.03.L', F_WIR, L_LHANDIK),
-    'pinky.L' :        ('f_pinky.01.L', 'palm.04.L', F_WIR, L_LHANDIK),
+    'index.L' :        ('f_index.01.L', 'palm_index.L', F_WIR, L_LHANDIK),
+    'middle.L' :       ('f_middle.01.L', 'palm_middle.L', F_WIR, L_LHANDIK),
+    'ring.L' :         ('f_ring.01.L', 'palm_ring.L', F_WIR, L_LHANDIK),
+    'pinky.L' :        ('f_pinky.01.L', 'palm_pinky.L', F_WIR, L_LHANDIK),
 
     'thumb.R' :        ('thumb.02.R', 'thumb.01.R', F_WIR, L_RHANDIK),
-    'index.R' :        ('f_index.01.R', 'palm.01.R', F_WIR, L_RHANDIK),
-    'middle.R' :       ('f_middle.01.R', 'palm.02.R', F_WIR, L_RHANDIK),
-    'ring.R' :         ('f_ring.01.R', 'palm.03.R', F_WIR, L_RHANDIK),
-    'pinky.R' :        ('f_pinky.01.R', 'palm.04.R', F_WIR, L_RHANDIK),
+    'index.R' :        ('f_index.01.R', 'palm_index.R', F_WIR, L_RHANDIK),
+    'middle.R' :       ('f_middle.01.R', 'palm_middle.R', F_WIR, L_RHANDIK),
+    'ring.R' :         ('f_ring.01.R', 'palm_ring.R', F_WIR, L_RHANDIK),
+    'pinky.R' :        ('f_pinky.01.R', 'palm_pinky.R', F_WIR, L_RHANDIK),
 }
 
 
@@ -245,6 +247,8 @@ CustomShapes = {
     'hip.R' :           'GZM_Ball025',
     'foot.rev.L' :      'GZM_RevFoot',
     'foot.rev.R' :      'GZM_RevFoot',
+    'foot.ik.L' :       'GZM_FootIK',
+    'foot.ik.R' :       'GZM_FootIK',
     'toe.rev.L' :       'GZM_RevToe',
     'toe.rev.R' :       'GZM_RevToe',
     'ankle.L' :         'GZM_Ball025',
@@ -256,8 +260,8 @@ CustomShapes = {
 
     'arm_root.L' :      'GZM_Ball025',
     'arm_root.R' :      'GZM_Ball025',
-    'hand.ik.L' :       'GZM_Ball025',
-    'hand.ik.R' :       'GZM_Ball025',
+    'hand.ik.L' :       'GZM_HandIK_L',
+    'hand.ik.R' :       'GZM_HandIK_R',
     'elbow.pt.ik.L' :   'GZM_Cube025',
     'elbow.pt.ik.R' :   'GZM_Cube025',
 
