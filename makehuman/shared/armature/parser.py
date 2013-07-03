@@ -835,6 +835,10 @@ class Parser:
     def mergeBones(self, mergers, boneInfo):
         amt = self.armature
         for bname, merged in mergers.items():
+            if len(merged) == 2:
+                head,tail = self.headsTails[bname]
+                _,tail2 = self.headsTails[merged[1]]
+                self.headsTails[bname] = head,tail2
             vgroup = amt.vertexWeights[bname]
             for mbone in merged:
                 if mbone != bname:

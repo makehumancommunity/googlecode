@@ -4,29 +4,34 @@
     "description" :     "Rig for use with Second Life",
 
     "bones" : {
-        "hips":         "hip",
-        "spine":        "abdomen",
-        "chest":        "chest",
-        "neck":         "neck",
-        "head":         "head",
+        "hips":         "mPelvis",
+        "spine":        "mTorso",
+        "chest":        "mChest",
+        "neck":         "mNeck",
+        "head":         "mHead",
 
-        "shoulder.L":   "lCollar",
-        "upper_arm.L":  "lShldr",
-        "forearm.L":    "lForeArm",
-        "hand.L":       "lHand",
+        "eye.L":        "mEyeLeft",
+        "eye.R":        "mEyeRight",
 
-        "shoulder.R":   "rCollar",
-        "upper_arm.R":  "rShldr",
-        "forearm.R":    "rForeArm",
-        "hand.R":       "rHand",
+        "shoulder.L":   "mCollarLeft",
+        "upper_arm.L":  "mShoulderLeft",
+        "forearm.L":    "mElbowLeft",
+        "hand.L":       "mWristLeft",
 
-        "thigh.L":      "lThigh",
-        "shin.L":       "lShin",
-        "foot.L":       "lFoot",
+        "shoulder.R":   "mCollarRight",
+        "upper_arm.R":  "mShoulderRight",
+        "forearm.R":    "mElbowRight",
+        "hand.R":       "mWristRight",
 
-        "thigh.R":      "rThigh",
-        "shin.R":       "rShin",
-        "foot.R":       "rFoot"
+        "thigh.L":      "mHipLeft",
+        "shin.L":       "mKneeLeft",
+        "foot.L":       "mAnkleLeft",
+        "toe.L":        "mFootLeft",
+
+        "thigh.R":      "mHipRight",
+        "shin.R":       "mKneeRight",
+        "foot.R":       "mAnkleRight",
+        "toe.R":        "mFootRight"
     },
 
     "merge" : {
@@ -35,8 +40,8 @@
             "chest":        ["chest", "chest-1"],
 
             "head":         ["uplid.L", "lolid.L", "uplid.R", "lolid.R", "jaw",
-                             "tongue_base", "tongue_mid", "tongue_tip", "eye.L", "eye.R"],
-                             
+                             "tongue_base", "tongue_mid", "tongue_tip"],
+
             "shoulder.L":   ["shoulder.L", "deltoid.L"],                             
 
             "shoulder.R":   ["shoulder.R", "deltoid.R"],                             
@@ -53,10 +58,6 @@
                              "f_index.01.R", "f_index.02.R", "f_index.03.R",
                              "f_middle.01.R", "f_middle.02.R", "f_middle.03.R",
                              "f_ring.01.R", "f_ring.02.R", "f_ring.03.R",
-                             "f_pinky.01.R", "f_pinky.02.R", "f_pinky.03.R"],
-                             
-            "foot.L":       ["foot.L", "toe.L"],                             
-
-            "foot.R":       ["foot.R", "toe.R"]
+                             "f_pinky.01.R", "f_pinky.02.R", "f_pinky.03.R"]
     }
 }
