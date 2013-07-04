@@ -156,8 +156,10 @@ class Parser:
             hiphead, hiptail = self.headsTails["hips"]
             self.headsTails["root"] = (hiptail, (hiptail,(0,0,-2)))
             self.headsTails["hips"] = (hiptail, hiphead)
+            self.customShapes["hips"] = "GZM_CircleHips"
             self.root = "root"
             root = boneInfo["root"] = Bone(amt, "root")
+            root.type = "Null"
             root.fromInfo((0, None, F_WIR, L_MAIN))
             hips = boneInfo["hips"]
             hips.parent = "root"
@@ -196,14 +198,14 @@ class Parser:
             extras = []
             for bone in boneInfo.values():
                 if bone.parent:
-                    head,_ = self.getHeadTail(bone.name)
-                    _,ptail = self.getHeadTail(bone.parent)
+                    head,_ = self.headsTails[bone.name]
+                    _,ptail = self.headsTails[bone.parent]
                     if head != ptail:
                         connector = Bone(amt, "_"+bone.name)
                         connector.parent = bone.parent
-                        bone.parent = connector
+                        bone.parent = connector.name
                         extras.append(connector)
-                        self.setHeadTail(connector, ptail, head)
+                        self.headsTails[connector.name] = (ptail, head)
 
             for bone in extras:
                 boneInfo[bone.name] = bone
@@ -442,14 +444,6 @@ class Parser:
     def distance(self, joint1, joint2):
         vec = self.locations[joint2] - self.locations[joint1]
         return math.sqrt(np.dot(vec,vec))
-
-
-    def getHeadTail(self, bone):
-        return self.headsTails[bone]
-
-
-    def setHeadTail(self, bone, head, tail):
-        self.headsTails[bone] = (head,tail)
 
 
     def prefixWeights(self, weights, prefix):

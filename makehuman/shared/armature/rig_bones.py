@@ -254,7 +254,8 @@ RotationLimits = {
 }
 
 CustomShapes = {
-    'hips' :            'GZM_Crown',
+    'root' :            'GZM_Root',
+    'hips' :            'GZM_CrownHips',
     'spine' :           'GZM_CircleSpine',
     'spine-1' :         'GZM_CircleSpine',
     'chest' :           'GZM_CircleChest',

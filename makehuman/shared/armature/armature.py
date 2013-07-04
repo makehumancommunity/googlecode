@@ -154,12 +154,13 @@ class Bone:
     def __init__(self, amt, name):
         self.name = name
         self.origName = name
+        self.type = "LimbNode"
         self.armature = amt
         self.head = None
         self.tail = None
         self.roll = 0
         self.parent = None
-        self.flags = 0
+        self.setFlags(0)
         self.layers = L_MAIN
         self.length = 0
         self.customShape = None

@@ -235,7 +235,7 @@ IkLegRotationLimits = {
 }
 
 CustomShapes = {
-    'master' :          'GZM_Root',
+    'master' :          'GZM_Master',
 
     # Head
 

@@ -111,10 +111,8 @@ class RichMesh:
         self.object = newobj
 
         newshapes = []
-        print(self.shapes)
         for name,shape in self.shapes:
             newshape = {}
-            print name, shape
             for vn,dr in shape.items():
                 newshape[vn] = scale*dr
             newshapes.append((name, newshape))
@@ -131,22 +129,5 @@ def getRichMesh(obj, proxy, rawWeights, rawShapes, amt, scale=1.0):
         weights = proxy.getWeights(rawWeights)
         shapes = proxy.getShapes(rawShapes, scale)
         return RichMesh(proxy.name, amt).fromObject(obj, weights, shapes)
-        '''
-        coords = proxy.getCoords()
-        faceVerts = [[v for v in f] for (f,g) in proxy.faces]
-
-        if proxy.texVerts:
-            texVerts = proxy.texVertsLayers[proxy.objFileLayer]
-            texFaces = proxy.texFacesLayers[proxy.objFileLayer]
-            fnmax = len(texFaces)
-            faceVerts = faceVerts[:fnmax]
-        else:
-            texVerts = []
-            texFaces = []
-
-        weights = proxy.getWeights(rawWeights)
-        shapes = proxy.getShapes(rawShapes, scale)
-        richMesh = RichMesh(proxy.name, amt).fromProxy(coords, texVerts, faceVerts, texFaces, weights, shapes, scale=scale)
-        '''
     else:
         return RichMesh(obj.name, amt).fromObject(obj, rawWeights, rawShapes)

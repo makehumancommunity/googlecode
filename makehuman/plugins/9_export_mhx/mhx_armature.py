@@ -446,7 +446,7 @@ end Object
 #-------------------------------------------------------------------------------
 #   Setup custom shapes
 #-------------------------------------------------------------------------------
-
+'''
 def setupCircle(fp, name, r):
     """
     Write circle object to the MHX file. Circles are used as custom shapes.
@@ -554,3 +554,4 @@ def setupSimpleCustomTargets(fp):
     setupCube(fp, "GZM_Chest", (0.7,0.25,0.5), (0,0.5,0.35))
     setupCube(fp, "GZM_Root", (1.25,0.5,1.0), 1)
 
+'''
