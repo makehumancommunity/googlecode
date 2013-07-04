@@ -791,12 +791,12 @@ def povrayProcessSSS(stuffs, outDir, settings, progressCallback = None):
         os.path.join(outDir, '%s_sss_bluelmap.png' % stuffs[0].name))
     # green channel
     progress(0.4*nextpb)
-    lmap = imgop.blurred(lmap, 10*sssa, 13, lambda p: progress((0.4+0.3*p)*nextpb))
+    lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*1.6*sssa, 13, lambda p: progress((0.4+0.3*p)*nextpb))
     imgop.compose([black,lmap,black]).save(
         os.path.join(outDir, '%s_sss_greenlmap.png' % stuffs[0].name))
     # red channel
     progress(0.7*nextpb)
-    lmap = imgop.blurred(lmap, 20*sssa, 13, lambda p: progress((0.7+0.2*p)*nextpb))
+    lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*3.2*sssa, 13, lambda p: progress((0.7+0.2*p)*nextpb))
     alpha = imgop.blurred(alpha, 4, 13, lambda p: progress((0.9+0.1*p)*nextpb))
     alpha.save(os.path.join(outDir, '%s_sss_alpha.png' % stuffs[0].name))
     imgop.compose([lmap,black,black]).save(
