@@ -65,12 +65,14 @@ HeadsTails = {
     'ankle.L' :         ('l-ankle', 'l-ankle-tip'),
     'ankle.ik.L' :      ('l-ankle', 'l-ankle-tip'),
     'foot.ik.L' :       ('l-heel', 'l-foot-2'),
+    'foot_helper.L':    ('l-heel', 'l-foot-2'),
     'toe.rev.L' :       ('l-foot-2', 'l-foot-1'),
     'foot.rev.L' :      ('l-foot-1', 'l-ankle'),
 
     'ankle.R' :         ('r-ankle', 'r-ankle-tip'),
     'ankle.ik.R' :      ('r-ankle', 'r-ankle-tip'),
-    'foot.ik.R' :        ('r-heel', 'r-foot-2'),
+    'foot.ik.R' :       ('r-heel', 'r-foot-2'),
+    'foot_helper.R':    ('r-heel', 'r-foot-2'),
     'toe.rev.R' :       ('r-foot-2', 'r-foot-1'),
     'foot.rev.R' :      ('r-foot-1', 'r-ankle'),
 
@@ -78,14 +80,10 @@ HeadsTails = {
     'knee.pt.ik.L' :    ('l-knee-pt', ('l-knee-pt', ysmall)),
     'knee.pt.fk.L' :    ('l-knee-pt', ('l-knee-pt', ysmall)),
     'knee.link.L' :     ('l-knee', 'l-knee-pt'),
-    'FootPT.L' :        (('l-midfoot', (0,1,0.2)), ('l-midfoot', (0,1.3,0.2))),
-    'ToePT.L' :         (('l-midtoe', (0,1,0)), ('l-midtoe', (0,1.3,0))),
 
     'knee.pt.ik.R' :    ('r-knee-pt', ('r-knee-pt', ysmall)),
     'knee.pt.fk.R' :    ('r-knee-pt', ('r-knee-pt', ysmall)),
     'knee.link.R' :     ('r-knee', 'r-knee-pt'),
-    'FootPT.R' :        (('r-midfoot', (0,1,0.2)), ('r-midfoot', (0,1.3,0.2))),
-    'ToePT.R' :         (('r-midtoe', (0,1,0)), ('r-midtoe', (0,1.3,0))),
 
     # Arm
 
@@ -154,6 +152,7 @@ HeadArmature = {
 IkLegArmature = {
     'hip.L' :          (0, 'hips', F_WIR, L_TWEAK),
     'foot.ik.L' :      (0, None, F_WIR|F_NOLOCK, L_LLEGIK),
+    'foot_helper.L' :  (0, 'toe.fk.L', 0, L_HELP),
     'toe.rev.L' :      (0, 'foot.ik.L', F_WIR, L_LLEGIK),
     'foot.rev.L' :     (0, 'toe.rev.L', F_WIR, L_LLEGIK),
     'ankle.L' :        (0, None, F_WIR, L_LEXTRA),
@@ -161,6 +160,7 @@ IkLegArmature = {
 
     'hip.R' :          (0, 'hips', F_WIR, L_TWEAK),
     'foot.ik.R' :      (0, None, F_WIR|F_NOLOCK, L_RLEGIK),
+    'foot_helper.R' :  (0, 'toe.fk.R', 0, L_HELP),
     'toe.rev.R' :      (0, 'foot.ik.R', F_WIR, L_RLEGIK),
     'foot.rev.R' :     (0, 'toe.rev.R', F_WIR, L_RLEGIK),
     'ankle.R' :        (0, None, F_WIR, L_REXTRA),
