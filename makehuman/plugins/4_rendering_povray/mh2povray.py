@@ -554,6 +554,8 @@ def writeItemsMaterials(hfile, stuffs, settings, outDir):
                 hinfile = open ("data/povray/hair_2.inc",'r')
             else:
                 hinfile = open ("data/povray/hair_0.inc",'r')
+        elif stuff.type == 'Eyes':
+            hinfile = open ("data/povray/eyes.inc",'r')
         else:
             hinfile = open ("data/povray/clothes.inc",'r')
         inlines = hinfile.read()
@@ -589,13 +591,22 @@ def writeItemsMaterials(hfile, stuffs, settings, outDir):
                     getImageDef(stuff.name, texdata, 'texture'))
             else:
                 inlines = inlines.replace ("%%texture%%", 'rgb <1,1,1>')
-            if bumpdata:
-                inlines = inlines.replace (
-                    "%%bumpmap%%", 'bump_map {%s interpolate 2}' %
-                    getImageDef(stuff.name, bumpdata, 'bump'))
+            if stuff.type == 'Eyes':
+                if bumpdata:
+                    inlines = inlines.replace (
+                        "%%normal%%", 'normal {bump_map {%s interpolate 2}}' %
+                        getImageDef(stuff.name, bumpdata, 'bump'))
+                else:
+                    inlines = inlines.replace (
+                        "%%normal%%", '// No bumpmap used.')
             else:
-                inlines = inlines.replace (
-                    "%%bumpmap%%", 'wrinkles 0.2 scale 0.0001')
+                if bumpdata:
+                    inlines = inlines.replace (
+                        "%%bumpmap%%", 'bump_map {%s interpolate 2}' %
+                        getImageDef(stuff.name, bumpdata, 'bump'))
+                else:
+                    inlines = inlines.replace (
+                        "%%bumpmap%%", 'wrinkles 0.2 scale 0.0001')
         hfile.write(inlines)
 
 def povrayWriteMesh2(hfile, stuffs, progressCallback = None):
