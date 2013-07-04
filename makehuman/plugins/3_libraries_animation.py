@@ -206,7 +206,7 @@ class AnimationLibrary(gui3d.TaskView):
                 self.setHumanTransparency(False)
         self.showSkeletonTggl.setSelected(True)
 
-        self.skinProxiesTggl = displayBox.addWidget(gui.ToggleButton("Skin clothes and hair"))
+        self.skinProxiesTggl = displayBox.addWidget(gui.ToggleButton("Skin clothes, hair and eyes"))
         @self.skinProxiesTggl.mhEvent
         def onClicked(event):
             self.setupProxySkinning()
@@ -350,6 +350,8 @@ class AnimationLibrary(gui3d.TaskView):
             obj.show()
         if self.human.hairObj:
             self.human.hairObj.show()
+        if self.human.eyesObj:
+            self.human.eyesObj.show()
 
         # Reset smooth setting
         self.human.setSubdivided(self.oldSmoothValue)

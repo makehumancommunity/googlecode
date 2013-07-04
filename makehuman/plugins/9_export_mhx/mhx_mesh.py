@@ -233,7 +233,7 @@ def writeFaceNumbers(fp, env):
                 fmats[fmask] = 3
             elif fg.name in ["helper-hair", "helper-genital"]:
                 fmats[fmask] = 6
-            elif fg.name == "helper-skirt":
+            elif fg.name in ["helper-skirt", "helper-l-eye", "helper-r-eye"]:
                 fmats[fmask] = 5
             elif fg.name[0:7] == "helper-":
                 fmats[fmask] = 1

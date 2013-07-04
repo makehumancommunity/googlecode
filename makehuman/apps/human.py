@@ -101,6 +101,8 @@ class Human(gui3d.Object):
         self.visible = True
         if self.hairObj:
             self.hairObj.show()
+        if self.eyesObj:
+            self.eyesObj.show()
         for obj in self.clothesObjs.values():
             if obj:
                 obj.show()
@@ -112,6 +114,8 @@ class Human(gui3d.Object):
         self.visible = False
         if self.hairObj:
             self.hairObj.hide()
+        if self.eyesObj:
+            self.eyesObj.hide()
         for obj in self.clothesObjs.values():
             if obj:
                 obj.hide()
@@ -125,6 +129,8 @@ class Human(gui3d.Object):
         gui3d.Object.setPosition(self, position)
         if self.hairObj:
             self.hairObj.setPosition([x+y for x, y in zip(self.hairObj.getPosition(), dv)])
+        if self.eyesObj:
+            self.eyesObj.setPosition([x+y for x, y in zip(self.eyesObj.getPosition(), dv)])
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setPosition([x+y for x, y in zip(obj.getPosition(), dv)])
@@ -135,6 +141,8 @@ class Human(gui3d.Object):
         gui3d.Object.setRotation(self, rotation)
         if self.hairObj:
             self.hairObj.setRotation(rotation)
+        if self.eyesObj:
+            self.eyesObj.setRotation(rotation)
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setRotation(rotation)
@@ -145,6 +153,8 @@ class Human(gui3d.Object):
         gui3d.Object.setSolid(self, *args, **kwargs)
         if self.hairObj:
             self.hairObj.setSolid(*args, **kwargs)
+        if self.eyesObj:
+            self.eyesObj.setSolid(*args, **kwargs)
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setSolid(*args, **kwargs)
@@ -153,6 +163,8 @@ class Human(gui3d.Object):
         gui3d.Object.setSubdivided(self, *args, **kwargs)
         if self.hairObj:
             self.hairObj.setSubdivided(*args, **kwargs)
+        if self.eyesObj:
+            self.eyesObj.setSubdivided(*args, **kwargs)
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setSubdivided(*args, **kwargs)

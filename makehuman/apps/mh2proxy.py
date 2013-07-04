@@ -181,6 +181,8 @@ class CProxy:
             obj = human.mesh
         elif self.type == "Hair":
             obj = human.hairObj
+        elif self.type == "Eyes":
+            obj = human.eyesObj
         elif self.type == "Cage":
             return None
         elif self.type == "Converter":

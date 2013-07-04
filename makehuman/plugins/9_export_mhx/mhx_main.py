@@ -119,7 +119,8 @@ def exportMhx(human, filepath, config):
 
     mhx_proxy.writeProxyType('Proxy', 'T_Proxy', env, fp, 0.35, 0.4)
     mhx_proxy.writeProxyType('Clothes', 'T_Clothes', env, fp, 0.4, 0.55)
-    mhx_proxy.writeProxyType('Hair', 'T_Clothes', env, fp, 0.55, 0.6)
+    mhx_proxy.writeProxyType('Hair', 'T_Clothes', env, fp, 0.55, 0.58)
+    mhx_proxy.writeProxyType('Eyes', 'T_Clothes', env, fp, 0.58, 0.6)
 
     mhx_pose.writePose(fp, env)
 
@@ -154,6 +155,7 @@ def writeGroups(fp, env):
     groupProxy('Proxy', 'T_Proxy', fp, env)
     groupProxy('Clothes', 'T_Clothes', fp, env)
     groupProxy('Hair', 'T_Clothes', fp, env)
+    groupProxy('Eyes', 'T_Clothes', fp, env)
 
     fp.write(
         "    ob CustomShapes ;\n" +

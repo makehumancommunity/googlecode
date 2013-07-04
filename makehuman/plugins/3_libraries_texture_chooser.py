@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -78,6 +78,24 @@ class HairAction(Action):
         return True
 
 
+class EyesAction(Action):
+
+    def __init__(self, human, before, after):
+        super(EyesAction, self).__init__('Change eyes texture', human)
+        self.before = before
+        self.after = after
+
+    def do(self):
+        if self.human.eyesObj:
+            self.human.eyesObj.mesh.setTexture(self.after)
+        return True
+
+    def undo(self):
+        if self.human.eyesObj:
+            self.human.eyesObj.mesh.setTexture(self.before)
+        return True
+
+
 class ClothesAction(Action):
 
     def __init__(self, human, library, clothesUuid, before, after):
@@ -112,7 +130,7 @@ class TextureTaskView(gui3d.TaskView):
         if not os.path.exists(self.userTextures):
             os.makedirs(self.userTextures)
 
-        self.defaultTextures = [self.systemTextures, self.userTextures]  
+        self.defaultTextures = [self.systemTextures, self.userTextures]
         self.textures = self.defaultTextures
         self.activeClothing = None
         self.eyeTexture = None
@@ -138,8 +156,9 @@ class TextureTaskView(gui3d.TaskView):
                     human.hairObj.getTexture(),
                     filename))
             elif self.eyesRadio.selected:
-                # TODO make undoable action 
-                self.setEyes(gui3d.app.selectedHuman, filename)
+                gui3d.app.do(EyesAction(human,
+                    human.eyesObj.getTexture(),
+                    filename))
             else: # Clothes
                 if self.activeClothing:
                     uuid = self.activeClothing
@@ -192,11 +211,16 @@ class TextureTaskView(gui3d.TaskView):
         else:
             self.hairRadio.setEnabled(False)
 
+        if human.eyesObj:
+            self.eyesRadio.setEnabled(True)
+        else:
+            self.eyesRadio.setEnabled(False)
+
         self.populateClothesSelector()
 
-        # Offer to download skins if none are found    
+        # Offer to download skins if none are found
         self.numSkin = len([filename for filename in os.listdir(os.path.join(mh.getPath(''), 'data', 'skins')) if filename.lower().endswith('png')])
-        if self.numSkin < 1:    
+        if self.numSkin < 1:
             gui3d.app.prompt('No skins found', 'You don\'t seem to have any skins, download them from the makehuman media repository?\nNote: this can take some time depending on your connection speed.', 'Yes', 'No', self.syncMedia)
 
 
@@ -271,9 +295,12 @@ class TextureTaskView(gui3d.TaskView):
             self.textures = [os.path.dirname(proxy.file)]
             selectedTex = human.hairObj.getTexture()
         elif self.eyesRadio.selected:
-            self.filechooser.setPreviewExtensions('png')
-            self.filechooser.extension = 'mhstx'
-            self.textures = ['data/eyes']
+            proxy = human.eyesProxy
+            self.textures = [os.path.dirname(proxy.file)]
+            selectedTex = human.eyesObj.getTexture()
+            #self.filechooser.setPreviewExtensions('png')
+            #self.filechooser.extension = 'mhstx'
+            #self.textures = ['data/eyes']
         else: # Clothes
             if self.activeClothing:
                 uuid = self.activeClothing
@@ -283,8 +310,8 @@ class TextureTaskView(gui3d.TaskView):
                 selectedTex = clo.getTexture()
             else:
                 # TODO maybe dont show anything?
-                self.textures = self.defaultTextures            
-                
+                self.textures = self.defaultTextures
+
                 filec = self.filechooser
                 log.debug("fc %s %s %s added", filec, filec.children.count(), str(filec.files))
 
@@ -299,17 +326,17 @@ class TextureTaskView(gui3d.TaskView):
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
-        
+
     def onHumanChanging(self, event):
         pass
-        
+
     def loadHandler(self, human, values):
-        
+
         if values[0] == 'skinTexture':
             (fname, ext) = os.path.splitext(values[1])
             if fname != "texture":
                 path = os.path.join(os.path.join(mh.getPath(''), 'data', 'skins', values[1]))
-                if os.path.isfile(path):                    
+                if os.path.isfile(path):
                     human.setTexture(path)
                 elif ext == ".tif":
                     path = path.replace(".tif", ".png")
@@ -317,12 +344,20 @@ class TextureTaskView(gui3d.TaskView):
         elif values[0] == 'textures':
             uuid = values[1]
             filepath = values[2]
+
             if human.hairProxy and human.hairProxy.getUuid() == uuid:
                 if not os.path.dirname(filepath):
                     proxy = human.hairProxy
                     hairPath = os.path.dirname(proxy.file)
                     filepath = os.path.join(hairPath, filepath)
                 human.hairObj.mesh.setTexture(filepath)
+                return
+            elif human.eyesProxy and human.eyesProxy.getUuid() == uuid:
+                if not os.path.dirname(filepath):
+                    proxy = human.eyesProxy
+                    eyesPath = os.path.dirname(proxy.file)
+                    filepath = os.path.join(eyesPath, filepath)
+                human.eyesObj.mesh.setTexture(filepath)
                 return
             elif not uuid in human.clothesProxies.keys():
                 log.error("Could not load texture for object with uuid %s!" % uuid)
@@ -336,9 +371,9 @@ class TextureTaskView(gui3d.TaskView):
             return
         elif values[0] == 'eyeTexture':
             self.setEyes(human, values[1])
-       
+
     def saveHandler(self, human, file):
-        
+
         file.write('skinTexture %s\n' % os.path.basename(human.getTexture()))
         for name, clo in human.clothesObjs.items():
             if clo:
@@ -352,11 +387,13 @@ class TextureTaskView(gui3d.TaskView):
                     file.write('textures %s %s\n' % (proxy.getUuid(), texturePath))
         if human.hairObj and human.hairProxy:
             file.write('textures %s %s\n' % (human.hairProxy.getUuid(), human.hairObj.mesh.texture))
-        if self.eyeTexture:
-            file.write('eyeTexture %s\n' % self.eyeTexture)
+        if human.eyesObj and human.eyesProxy:
+            file.write('textures %s %s\n' % (human.eyesProxy.getUuid(), human.eyesObj.mesh.texture))
+        #if self.eyeTexture:
+        #    file.write('eyeTexture %s\n' % self.eyeTexture)
 
     def syncMedia(self):
-        
+
         if self.mediaSync:
             return
         if not os.path.isdir(self.userSkins):
@@ -364,7 +401,7 @@ class TextureTaskView(gui3d.TaskView):
         self.mediaSync = download.MediaSync(gui3d.app, self.userSkins, 'http://download.tuxfamily.org/makehuman/skins/', self.syncMediaFinished)
         self.mediaSync.start()
         self.mediaSync2 = None
-        
+
     def syncMediaFinished(self):
         '''
         if not self.mediaSync2:

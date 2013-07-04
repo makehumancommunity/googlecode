@@ -97,6 +97,7 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
     deleteVerts = None  # Don't load deleteVerts from proxies directly, we use the facemask set in the gui module3d
     _,deleteVerts = setupProxies('Clothes', None, human, stuffs, richMesh, config, deleteGroups, deleteVerts)
     _,deleteVerts = setupProxies('Hair', None, human, stuffs, richMesh, config, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Eyes', None, human, stuffs, richMesh, config, deleteGroups, deleteVerts)
     foundProxy,deleteVerts = setupProxies('Proxy', name, human, stuffs, richMesh, config, deleteGroups, deleteVerts)
     progress(0.06*(3-2*subdivide))
     if not foundProxy:
