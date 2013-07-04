@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -354,7 +354,7 @@ class MHApplication(gui3d.Application, mh.Application):
                 folder = os.path.join("plugins", fname)
                 if os.path.isdir(folder) and ("__init__.py" in os.listdir(folder)):
                     self.pluginsToLoad.append(folder)
-        
+
         self.pluginsToLoad.sort()
         self.pluginsToLoad.reverse()
 
@@ -387,7 +387,7 @@ class MHApplication(gui3d.Application, mh.Application):
                 if module is None:
                     log.message("Could not import plugin %s", name)
                     return
-                
+
                 self.modules[name] = module
                 log.message('Imported plugin %s', name)
                 log.message('Loading plugin %s', name)
@@ -464,6 +464,14 @@ class MHApplication(gui3d.Application, mh.Application):
 
         log.message('Loading plugins')
         self.loadPlugins()
+
+        eyestask = None
+        for name,task in self.getCategory('Geometries').tasksByName.items():
+            if name == 'Eyes':
+                eyestask = task
+                break
+        if eyestask is not None:
+            eyestask.setEyes(gui3d.app.selectedHuman, "data/eyes/eye/eye.mhclo")
 
         log.message('Loading GUI')
         self.loadGui()
