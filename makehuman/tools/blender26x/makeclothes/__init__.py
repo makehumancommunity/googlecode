@@ -30,7 +30,7 @@
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.908",
+    "version": "0.909",
     "blender": (2, 6, 7),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -79,7 +79,6 @@ class MakeClothesPanel(bpy.types.Panel):
 
         layout.prop(scn, "MCShowSettings")
         if scn.MCShowSettings:
-            ins = inset(layout)
             maketarget.settings.drawDirectories(inset(layout), scn, "MhClothesDir")
 
         #layout.operator("mhclo.snap_selected_verts")
@@ -135,14 +134,6 @@ class MakeClothesPanel(bpy.types.Panel):
         '''
 
         layout.separator()
-        '''
-        split = layout.split(0.5)
-        split.label("MH Program Path")
-        row = split.row()
-        row.operator("mh.read_settings")
-        row.operator("mh.save_settings")
-        layout.prop(scn, "MhProgramPath", text="")
-        '''
         split = layout.split(0.3)
         split.label("Load")
         split.prop(scn, "MhBodyType", text="Type")
@@ -250,7 +241,7 @@ class OBJECT_OT_InitInterfaceButton(bpy.types.Operator):
     bl_label = "Init"
 
     def execute(self, context):
-        makeclothes.initInterface()
+        makeclothes.init()
         makeclothes.readDefaultSettings(context)
         print("Interface initialized")
         return{'FINISHED'}
@@ -265,7 +256,7 @@ class OBJECT_OT_FactorySettingsButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        makeclothes.initInterface()
+        makeclothes.init()
         return{'FINISHED'}
 
 #
@@ -473,7 +464,7 @@ class OBJECT_OT_LoadHumanButton(bpy.types.Operator):
                 maketarget.maketarget.newTarget(context)
                 found = True
             else:
-                trgpath = os.path.join(scn.MhProgramPath, "data/targets/macrodetails", scn.MhBodyType + ".target")
+                trgpath = os.path.join(os.path.dirname(__file__), "targets", scn.MhBodyType + ".target")
                 try:
                     utils.loadTarget(trgpath, context)
                     found = True
@@ -611,7 +602,7 @@ class VIEW3D_OT_AutoVertexGroupsButton(bpy.types.Operator):
 #
 
 def register():
-    makeclothes.initInterface()
+    makeclothes.init()
     bpy.utils.register_module(__name__)
 
 def unregister():

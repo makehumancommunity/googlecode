@@ -1755,10 +1755,17 @@ def getFaces(me):
         return me.faces
 
 #
-#   initInterface():
+#   init():
 #
 
-def initInterface():
+MCIsInited = False
+
+def init():
+    global MCIsInited
+    import maketarget
+    if not maketarget.maketarget.MTIsInited:
+        maketarget.maketarget.init()
+
     for skey in theShapeKeys:
         expr = (
     'bpy.types.Scene.MC%s = BoolProperty(\n' % skey +
@@ -2000,4 +2007,5 @@ def initInterface():
     bpy.types.Scene.MCShowExportDetails = BoolProperty(name = "Show Export Details", default=False)
     bpy.types.Scene.MCShowLicense = BoolProperty(name = "Show License", default=False)
 
+    MCIsInited = True
 

@@ -279,36 +279,6 @@ class ExportObj(bpy.types.Operator, ExportHelper):
         return {'RUNNING_MODAL'}
 
 #----------------------------------------------------------
-#   Settings buttons
-#----------------------------------------------------------
-
-class OBJECT_OT_FactorySettingsButton(bpy.types.Operator):
-    bl_idname = "mh.factory_settings"
-    bl_label = "Restore Factory Settings"
-
-    def execute(self, context):
-        settings.restoreFactorySettings(context)
-        return{'FINISHED'}
-
-
-class OBJECT_OT_SaveSettingsButton(bpy.types.Operator):
-    bl_idname = "mh.save_settings"
-    bl_label = "Save Settings"
-
-    def execute(self, context):
-        settings.saveDefaultSettings(context)
-        return{'FINISHED'}
-
-
-class OBJECT_OT_ReadSettingsButton(bpy.types.Operator):
-    bl_idname = "mh.read_settings"
-    bl_label = "Read Settings"
-
-    def execute(self, context):
-        settings.readDefaultSettings(context)
-        return{'FINISHED'}
-
-#----------------------------------------------------------
 #   Register
 #----------------------------------------------------------
 
@@ -320,13 +290,7 @@ def register():
     mh.confirm = None
     mh.confirmString = "?"
 
-    settings.init()
-    import_obj.init()
-    #character.init()
-
     maketarget.init()
-    convert.init()
-    pose.init()
     try:
         maketarget.initBatch(bpy.context.scene)
     except:

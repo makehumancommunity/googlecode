@@ -571,11 +571,21 @@ def writeTexVert(fp, uv):
     fp.write("%.4f %.4f\n" % (uv[0], uv[1]))
 
 #
-#   initInterface():
+#   init():
 #
 
-def initInterface():
+MUVIsInited = False
+
+def init():
+    global MUVIsInited
+    import maketarget, makeclothes
+    if not maketarget.maketarget.MTIsInited:
+        maketarget.maketarget.init()
+    if not makeclothes.makeclothes.MCIsInited:
+        makeclothes.makeclothes.init()
 
     bpy.types.Scene.MUVShowSettings = BoolProperty(name = "Show Settings", default=False)
     bpy.types.Scene.MUVShowUVProject = BoolProperty(name = "Show UV Projection", default=False)
     bpy.types.Scene.MUVShowLicense = BoolProperty(name = "Show License", default=False)
+
+    MUVIsInited = True

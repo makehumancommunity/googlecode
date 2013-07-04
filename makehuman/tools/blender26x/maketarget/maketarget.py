@@ -1076,7 +1076,11 @@ class VIEW3D_OT_SkipButton(bpy.types.Operator):
 #   Init
 #----------------------------------------------------------
 
+MTIsInited = False
+
 def init():
+    global MTIsInited
+
     bpy.types.Scene.MhUnlock = BoolProperty(default = False)
 
     bpy.types.Scene.MhBodyType = EnumProperty(
@@ -1119,7 +1123,18 @@ def init():
     bpy.types.Object.SelectedOnly = BoolProperty(name="Selected verts only", default = True)
     bpy.types.Object.MhZeroOtherTargets = BoolProperty(name="Active target only", description="Save the active (last) target only, setting the values of all other targets to 0", default = False)
 
-    return
+    from . import settings
+    settings.init()
+    from . import import_obj
+    import_obj.init()
+    #from . import character
+    #character.init()
+    from . import convert
+    convert.init()
+    from . import pose
+    pose.init()
+
+    MTIsInited = True
 
 
 def initBatch():

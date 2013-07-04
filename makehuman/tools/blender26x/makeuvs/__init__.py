@@ -30,7 +30,7 @@
 bl_info = {
     "name": "Make UVs",
     "author": "Thomas Larsson",
-    "version": "0.100",
+    "version": "0.101",
     "blender": (2, 6, 7),
     "location": "View3D > Properties > Make MH UVs",
     "description": "Make UVs for MakeHuman characters",
@@ -65,11 +65,6 @@ class MakeUVsPanel(bpy.types.Panel):
     bl_label = "Make UVs v %s" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object and context.object.type == 'MESH')
 
     def draw(self, context):
         layout = self.layout
@@ -88,6 +83,7 @@ class MakeUVsPanel(bpy.types.Panel):
             ins.operator("mhuv.reexport_mhclo")
             ins.separator()
 
+        layout.separator()
         layout.operator("mhuv.export_uvs")
         layout.operator("mhuv.export_helper_uvs")
 
@@ -214,7 +210,7 @@ class OBJECT_OT_ExportHelperUVsButton(bpy.types.Operator):
 #
 
 def register():
-    makeuvs.initInterface()
+    makeuvs.init()
     bpy.utils.register_module(__name__)
 
 def unregister():

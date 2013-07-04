@@ -36,8 +36,8 @@ def drawDirectories(layout, scn, outdir):
     layout.operator("mh.factory_settings")
     layout.operator("mh.read_settings")
     layout.operator("mh.save_settings")
-    layout.label("MakeHuman Program Directory")
-    layout.prop(scn, "MhProgramPath", text="")
+    #layout.label("MakeHuman Program Directory")
+    #layout.prop(scn, "MhProgramPath", text="")
     layout.label("Output Directory")
     layout.prop(scn, outdir, text="")
     layout.separator()
@@ -92,6 +92,39 @@ def restoreFactorySettings(context):
     scn.MhClothesDir = os.path.join(getMyDocuments(), "makehuman/data/clothes")
     scn.MhUvsDir = os.path.join(getMyDocuments(), "makehuman/data/uvs")
 
+#----------------------------------------------------------
+#   Settings buttons
+#----------------------------------------------------------
+
+class OBJECT_OT_FactorySettingsButton(bpy.types.Operator):
+    bl_idname = "mh.factory_settings"
+    bl_label = "Restore Factory Settings"
+
+    def execute(self, context):
+        restoreFactorySettings(context)
+        return{'FINISHED'}
+
+
+class OBJECT_OT_SaveSettingsButton(bpy.types.Operator):
+    bl_idname = "mh.save_settings"
+    bl_label = "Save Settings"
+
+    def execute(self, context):
+        saveDefaultSettings(context)
+        return{'FINISHED'}
+
+
+class OBJECT_OT_ReadSettingsButton(bpy.types.Operator):
+    bl_idname = "mh.read_settings"
+    bl_label = "Read Settings"
+
+    def execute(self, context):
+        readDefaultSettings(context)
+        return{'FINISHED'}
+
+#----------------------------------------------------------
+#  Init
+#----------------------------------------------------------
 
 def init():
     bpy.types.Scene.MhProgramPath = StringProperty(
@@ -121,6 +154,4 @@ def init():
         maxlen=1024,
         default=os.path.join(getMyDocuments(), "makehuman/data/uvs")
     )
-
-
 
