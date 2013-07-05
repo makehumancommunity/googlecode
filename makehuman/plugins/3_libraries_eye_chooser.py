@@ -141,12 +141,12 @@ class EyesTaskView(gui3d.TaskView):
 
         human = event.human
         if event.change == 'reset':
-            log.message("deleting eyes")
+            log.message("resetting eyes")
             if human.eyesObj:
                 gui3d.app.removeObject(human.eyesObj)
-                #human.eyesObj.mesh.clear()
                 human.eyesObj = None
                 human.eyesProxy = None
+            self.setEyes(human, "data/eyes/eye/eye.mhclo")
             self.filechooser.deselectAll()
 
     def onHumanChanged(self, event):

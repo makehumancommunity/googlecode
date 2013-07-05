@@ -465,13 +465,8 @@ class MHApplication(gui3d.Application, mh.Application):
         log.message('Loading plugins')
         self.loadPlugins()
 
-        eyestask = None
-        for name,task in self.getCategory('Geometries').tasksByName.items():
-            if name == 'Eyes':
-                eyestask = task
-                break
-        if eyestask is not None:
-            eyestask.setEyes(gui3d.app.selectedHuman, "data/eyes/eye/eye.mhclo")
+        task = self.getCategory('Geometries').tasksByName['Eyes']
+        task.setEyes(gui3d.app.selectedHuman, "data/eyes/eye/eye.mhclo")
 
         log.message('Loading GUI')
         self.loadGui()
