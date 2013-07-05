@@ -32,42 +32,64 @@ from . import mhx_drivers
 
 def writeMaterials(fp, env):
     config = env.config
+    human = env.human
 
-    if env.human.uvset:
+    if human.uvset:
         writeMultiMaterials(fp, env)
         return
 
+    filepath = human.material.diffuseTexture
+    diffuse = os.path.basename(filepath)
+    diffusepath = config.copyTextureToNewLocation(filepath)
+
+    filepath = human.material.specularMapTexture
+    specular = os.path.basename(filepath)
+    specularpath = config.copyTextureToNewLocation(filepath)
+
+    filepath = human.material.bumpMapTexture
+    bump = os.path.basename(filepath)
+    bumppath = config.copyTextureToNewLocation(filepath)
+
     fp.write("""
 # --------------- Images and textures ----------------------------- #
-
-Image texture.png
-""")
-
-    newpath = config.copyTextureToNewLocation("data/textures/texture.png")
-    fp.write("  Filename %s ;" % newpath)
-
-    fp.write("""
+""" +
+"Image %s\n" % diffuse +
+"  Filename %s ;" % diffusepath +
+"""
   use_premultiply True ;
 end Image
 
-Image texture_ref.png
-""")
-
-    newpath = config.copyTextureToNewLocation("data/textures/texture_ref.png")
-    fp.write("  Filename %s ;" % newpath)
-
-    fp.write("""
+""" +
+"Image %s\n" % specular +
+"  Filename %s ;" % specularpath +
+"""
   use_premultiply True ;
 end Image
 
-Texture diffuse IMAGE
-  Image texture.png ;
+""" +
+"Image %s\n" % bump +
+"  Filename %s ;" % bumppath +
+"""
+  use_premultiply True ;
+end Image
+
+""" +
+"Texture %s IMAGE\n" % diffuse +
+"  Image %s ;" % diffuse +
+"""
 end Texture
 
-Texture specularity IMAGE
-  Image texture_ref.png ;
+""" +
+"Texture %s IMAGE\n" % specular +
+"  Image %s ;" % specular +
+"""
 end Texture
 
+""" +
+"Texture %s IMAGE\n" % bump +
+"  Image %s ;" % bump +
+"""
+end Texture
 
 Texture solid IMAGE
 end Texture
@@ -84,10 +106,10 @@ end Texture
         "Material %sSkin\n" % env.name)
 
     nMasks = writeMaskMTexs(fp, env)
-    fp.write("  MTex %d diffuse UV COLOR" % nMasks)
-
-    fp.write("""
-    texture Refer Texture diffuse ;
+    fp.write(
+"  MTex %d %s UV COLOR\n" % (nMasks, diffuse) +
+"    texture Refer Texture %s ;\n" % diffuse +
+"""
     use_map_color_diffuse True ;
     use_map_translucency True ;
     use_map_alpha True ;
@@ -96,19 +118,29 @@ end Texture
     diffuse_color_factor 1.0 ;
     translucency_factor 1.0 ;
   end MTex
-""")
 
-    fp.write("  MTex %d specularity UV SPECULAR_COLOR" % (1+nMasks))
-
-    fp.write("""
-    texture Refer Texture specularity ;
+""" +
+"  MTex %d %s UV SPECULAR_COLOR\n" % (nMasks, specular) +
+"    texture Refer Texture %s ;" % specular +
+"""
     use_map_color_diffuse False ;
     use_map_specular True ;
     use_map_reflect True ;
-    alpha_factor 1 ;
     blend_type 'MIX' ;
     specular_factor 0.1 ;
     reflection_factor 1 ;
+  end MTex
+
+""" +
+"  MTex %d %s UV NORMAL\n" % (nMasks, bump) +
+"    texture Refer Texture %s ;" % bump +
+"""
+    use_map_color_diffuse False ;
+    use_map_normal True ;
+    blend_type 'MIX' ;
+""" +
+"    normal_factor %.4g*theScale ;" % (0.1*config.scale) +
+"""
   end MTex
 
   diffuse_color Array 1.0 1.0 1.0  ;
@@ -128,7 +160,7 @@ end Texture
     radius Array 4.82147502899 1.69369900227 1.08997094631  ;
 """)
 
-    fp.write("    scale %.5f*theScale ;" % (0.01*config.scale))
+    fp.write("    scale %.4g*theScale ;" % (0.01*config.scale))
 
     fp.write("""
     texture_factor 0 ;
@@ -156,7 +188,7 @@ end Texture
 
     fp.write("Material %sShiny\n" % env.name)
     nMasks = writeMaskMTexs(fp, env)
-    fp.write("  MTex %d diffuse UV COLOR\n" % nMasks)
+    fp.write("  MTex %d %s UV COLOR\n" % (nMasks, diffuse))
     fp.write("""
     texture Refer Texture diffuse ;
     use_map_color_diffuse True ;

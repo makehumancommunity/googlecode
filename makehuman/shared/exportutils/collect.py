@@ -126,11 +126,11 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
             stuff.richMesh.fromObject(subMesh, stuff.richMesh.weights, rawTargets)
         i += 1.0
 
-    # Apply subtextures.
-    mhstx = mh.G.app.getCategory('Textures').getTaskByName('Texture').eyeTexture
-    if mhstx:
-        stuffs[0].material.diffuseTexture = subtextures.combine(
-            stuffs[0].material.diffuseTexture, mhstx)
+    # Apply subtextures. Obsolete with separate eyes
+    #mhstx = mh.G.app.getCategory('Textures').getTaskByName('Texture').eyeTexture
+    #if mhstx:
+    #    stuffs[0].material.diffuseTexture = subtextures.combine(
+    #        stuffs[0].material.diffuseTexture, mhstx)
 
     progress(1)
     return stuffs,amt
