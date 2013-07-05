@@ -218,10 +218,11 @@ end Object
 
     def writeDrivers(self, fp):
         parser = self.parser
-        if parser.lrDrivers or parser.drivers:
+        if parser.lrPropDrivers or parser.drivers:
             fp.write("AnimationData %s True\n" % self.name)
-            mhx_drivers.writePropDrivers(fp, self, parser.lrDrivers, "L", "Mha")
-            mhx_drivers.writePropDrivers(fp, self, parser.lrDrivers, "R", "Mha")
+            mhx_drivers.writePropDrivers(fp, self, parser.lrPropDrivers, "L", "Mha")
+            mhx_drivers.writePropDrivers(fp, self, parser.lrPropDrivers, "R", "Mha")
+            mhx_drivers.writePropDrivers(fp, self, parser.propDrivers, "", "Mha")
             mhx_drivers.writeDrivers(fp, True, parser.drivers)
 
             fp.write(

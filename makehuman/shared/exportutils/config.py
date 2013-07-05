@@ -60,12 +60,6 @@ class Config:
         self.scale,self.unit    = exporter.taskview.getScale()
         return self
 
-        self.cage =             exporter.cage.selected
-        self.maleRig =          exporter.maleRig.selected
-        self.clothesRig =       eexporter.clothesRig.selected
-
-        return self
-
 
     @property
     def subdivide(self):

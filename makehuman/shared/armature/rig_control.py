@@ -145,7 +145,7 @@ HeadArmature = {
     'eye.R' :           (0, 'eye_parent.R', F_DEF, L_HEAD),
     'eye.L' :           (0, 'eye_parent.L', F_DEF, L_HEAD),
     'gaze_parent' :     (0, None, 0, L_HELP),
-    'gaze' :            (180*D, 'gaze_parent', 0, L_HEAD),
+    'gaze' :            (180*D, 'gaze_parent', F_NOLOCK, L_HEAD),
     'eyes' :            (0, 'head', 0, L_HELP),
 }
 
@@ -207,7 +207,6 @@ FingerArmature = {
     'ring.R' :         ('f_ring.01.R', 'palm_ring.R', F_WIR, L_RHANDIK),
     'pinky.R' :        ('f_pinky.01.R', 'palm_pinky.R', F_WIR, L_RHANDIK),
 }
-
 
 IkArmParents = {
     'upper_arm.L' :     'arm_hinge.L',
@@ -485,11 +484,10 @@ IkArmSoftPropLRDrivers = [
 ]
 
 HeadPropDrivers = [
-    # Head
-
     ('gaze_parent', 'head', ['GazeFollowsHead'], 'x1'),
+]
 
-    # Leg
+LegPropDrivers = [
     ('thigh.L', 'LimitRot', ['RotationLimits', 'LegIk.L'], 'x1*(1-x2)'),
     ('shin.L', 'LimitRot', ['RotationLimits', 'LegIk.L'], 'x1*(1-x2)'),
     ('foot.L', 'LimitRot', ['RotationLimits', 'LegIk.L'], 'x1*(1-x2)'),
@@ -497,8 +495,9 @@ HeadPropDrivers = [
     ('thigh.R', 'LimitRot', ['RotationLimits', 'LegIk.R'], 'x1*(1-x2)'),
     ('shin.R', 'LimitRot', ['RotationLimits', 'LegIk.R'], 'x1*(1-x2)'),
     ('foot.R', 'LimitRot', ['RotationLimits', 'LegIk.R'], 'x1*(1-x2)'),
+]
 
-    #Arm
+ArmPropDrivers = [
     ('upper_arm.L', 'LimitRot', ['RotationLimits', 'ArmIk.L'], 'x1*(1-x2)'),
     #('LoArm.L', 'LimitRot', ['RotationLimits', 'ArmIk.L'], 'x1*(1-x2)'),
     ('hand.L', 'LimitRot', ['RotationLimits', 'ArmIk.L', 'HandFollowsIKHand.L'], 'x1*(1-x2*x3)'),
@@ -506,7 +505,6 @@ HeadPropDrivers = [
     ('upper_arm.R', 'LimitRot', ['RotationLimits', 'ArmIk.R'], 'x1*(1-x2)'),
     #('LoArm.R', 'LimitRot', ['RotationLimits', 'ArmIk.R'], 'x1*(1-x2)'),
     ('hand.R', 'LimitRot', ['RotationLimits', 'ArmIk.R', 'HandFollowsIKHand.R'], 'x1*(1-x2*x3)'),
-
 ]
 
 #

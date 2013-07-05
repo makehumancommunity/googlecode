@@ -56,7 +56,7 @@ Only works with MHX export.
         self.useMuscles = True
         self.useSplitNames = True
         self.useDeformNames = True
-        self.mergeShoulders = True
+        self.mergeShoulders = False
 
         # Options set by MHX exporter
         self.useCustomShapes = False

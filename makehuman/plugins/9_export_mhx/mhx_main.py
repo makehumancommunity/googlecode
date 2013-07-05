@@ -90,6 +90,8 @@ def exportMhx(human, filepath, config):
         "  error 'This file can only be read with Blender 2.5' ;\n" +
         "#endif\n")
 
+    if config.scale != 1.0:
+        amt.rescale(config.scale)
     proxies = config.getProxies()
     env = MhxEnvironment(name, human, amt, config, proxies)
 

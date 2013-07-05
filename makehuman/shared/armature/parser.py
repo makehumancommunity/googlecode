@@ -67,7 +67,8 @@ class Parser:
         self.constraints = {}
         self.rotationLimits = {}
         self.drivers = []
-        self.lrDrivers = []
+        self.propDrivers = []
+        self.lrPropDrivers = []
 
         self.vertexGroupFiles = []
 
@@ -125,7 +126,7 @@ class Parser:
 
         if options.useFingers and options.useConstraints:
             self.setConstraints(rig_control.FingerConstraints)
-            self.lrDrivers += rig_control.FingerPropLRDrivers
+            self.lrPropDrivers += rig_control.FingerPropLRDrivers
 
         self.splitBones = {}
         if options.useSplitBones:
@@ -172,12 +173,18 @@ class Parser:
         if options.useMuscles:
             self.addBones(rig_muscle.Armature, boneInfo)
 
+        if options.useHeadControl:
+            self.addBones(rig_control.HeadArmature, boneInfo)
+            if options.useConstraints:
+                self.setConstraints(rig_control.HeadConstraints)
+                self.propDrivers += rig_control.HeadPropDrivers
+
         if options.useIkLegs and options.useConstraints:
             self.addBones(rig_control.IkLegArmature, boneInfo)
             self.setConstraints(rig_control.IkLegConstraints)
             #addDict(rig_control.IkLegChains, self.ikChains)
             addDict(rig_control.IkLegParents, self.parents)
-            self.lrDrivers += rig_control.IkLegPropLRDrivers
+            self.lrPropDrivers += rig_control.IkLegPropLRDrivers
             self.addIkChains(rig_bones.Armature, boneInfo, rig_control.IkLegChains)
 
         if options.useIkArms and options.useConstraints:
@@ -185,7 +192,7 @@ class Parser:
             self.setConstraints(rig_control.IkArmConstraints)
             #addDict(rig_control.IkArmChains, self.ikChains)
             addDict(rig_control.IkArmParents, self.parents)
-            self.lrDrivers += rig_control.IkArmPropLRDrivers
+            self.lrPropDrivers += rig_control.IkArmPropLRDrivers
             self.addIkChains(rig_bones.Armature, boneInfo, rig_control.IkArmChains)
 
         if options.useFingers and options.useConstraints:

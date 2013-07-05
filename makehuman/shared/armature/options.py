@@ -37,6 +37,7 @@ class ArmatureOptions:
         self.boneMap = None
 
         self.useMasterBone = False
+        self.useHeadControl = False
         self.useReverseHip = False
         self.useMuscles = False
         self.addConnectingBones = False
@@ -155,8 +156,8 @@ class ArmatureOptions:
         selector.fromOptions(self)
 
 
-    def loadPreset(self, filename, selector):
-        filepath = os.path.join("data/rigs/", filename + ".json")
+    def loadPreset(self, filename, selector, folder="data/rigs/"):
+        filepath = os.path.join(folder, filename + ".json")
         struct = io_json.loadJson(filepath)
         self.__init__()
         try:
@@ -179,7 +180,8 @@ class ArmatureOptions:
             expr = ("self.%s = %s" % (key, value))
             exec(expr)
 
-        selector.fromOptions(self)
+        if selector is not None:
+            selector.fromOptions(self)
         try:
             bones = struct["bones"]
         except KeyError:
