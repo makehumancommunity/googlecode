@@ -44,6 +44,9 @@ class CStuff:
             self.type = proxy.type
             self.material = proxy.material
             self.material.name = proxy.name + "Material"
+            texture = proxy.getActualTexture(human)
+            if texture is not None:
+                self.material.setDiffuseTexture(texture)
         else:
             self.type = None
             self.material = human.material

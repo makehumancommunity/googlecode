@@ -304,14 +304,11 @@ def writeProxyMaterial(fp, proxy, env):
     # Write images and textures
 
     if mat.diffuseTexture:
-        uuid = proxy.getUuid()
-        if uuid in env.human.clothesObjs.keys() and env.human.clothesObjs[uuid]:
-            # Apply custom texture
-            clothesObj = env.human.clothesObjs[uuid]
-            texture = clothesObj.mesh.texture
-            diffpath = writeProxyTexture(fp, texture, mat, "", env)
-        else:
+        texture = proxy.getActualTexture(env.human)
+        if texture is None:
             diffpath = writeProxyTexture(fp, mat.diffuseTexture, mat, "", env)
+        else:
+            diffpath = writeProxyTexture(fp, texture, mat, "", env)
     else:
         diffpath = None
 

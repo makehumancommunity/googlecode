@@ -197,6 +197,19 @@ class CProxy:
         return obj
 
 
+    def getActualTexture(self, human):
+        uuid = self.getUuid()
+        if uuid in human.clothesObjs.keys() and human.clothesObjs[uuid]:
+            obj = human.clothesObjs[uuid]
+        elif human.hairProxy and uuid == human.hairProxy.uuid:
+            obj = human.hairObj
+        elif human.eyesProxy and uuid == human.eyesProxy.uuid:
+            obj = human.eyesObj
+        else:
+            return None
+        return obj.mesh.texture.replace('\\', '/')
+
+
     def getCoords(self):
         converter = self.getConverter()
         if converter:
