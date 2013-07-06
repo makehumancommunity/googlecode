@@ -277,12 +277,12 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, env):
 
 def writeProxyMaterial(fp, proxy, env):
     mat = proxy.material
-    alpha = 1 - mat.transparencyIntensity
-
-    # Write images and textures
 
     if mat.diffuseTexture:
         mat.diffuseTexture = proxy.getActualTexture(env.human)
+        alpha = 0
+    else:
+        alpha = 1 - mat.transparencyIntensity
 
     prefix = env.name+"_"+proxy.name
     texnames = mhx_materials.writeTextures(fp, mat, prefix, env)
@@ -294,40 +294,16 @@ def writeProxyMaterial(fp, proxy, env):
 
     fp.write("Material %s_%s_%s \n" % (env.name, proxy.name, mat.name))
     addProxyMaskMTexs(fp, mat, proxy, prxList)
-    #writeProxyMaterialSettings(fp, mat.settings)
     #uvlayer = proxy.uvtexLayerName[proxy.textureLayer]
     uvlayer = "Texture"
 
-    mhx_materials.writeMTexes(fp, texnames, nMasks, env)
-
-    if nMasks > 0 or alpha < 0.99:
-        fp.write(
-            "  use_transparency True ;\n" +
-            "  transparency_method 'Z_TRANSPARENCY' ;\n" +
-            "  alpha %3.f ;\n" % alpha +
-            "  specular_alpha %.3f ;\n" % alpha)
-
-    if True or mat.mtexSettings == []:
-        fp.write(
-            "  use_shadows True ;\n" +
-            "  use_transparent_shadows True ;\n")
+    mhx_materials.writeMTexes(fp, texnames, mat, nMasks, env)
+    mhx_materials.writeMaterialSettings(fp, mat, alpha, env)
 
     fp.write(
         "  Property MhxDriven True ;\n" +
         "end Material\n\n")
 
-"""
-def writeProxyMaterialSettings(fp, settings):
-    for (key, value) in settings:
-        if type(value) == list:
-            fp.write("  %s Array %.4f %.4f %.4f ;\n" % (key, value[0], value[1], value[2]))
-        elif type(value) == float:
-            fp.write("  %s %.4f ;\n" % (key, value))
-        elif type(value) == int:
-            fp.write("  %s %d ;\n" % (key, value))
-        else:
-            fp.write("  %s '%s' ;\n" % (key, value))
-"""
 
 def addProxyMaskMTexs(fp, mat, proxy, prxList):
     if proxy.maskLayer < 0:

@@ -66,7 +66,7 @@ def writeTextures(fp, mat, prefix, env):
     return diffuse,spec,bump,normal,disp
 
 
-def writeMTexes(fp, texnames, slot, env):
+def writeMTexes(fp, texnames, mat, slot, env):
     diffuse,spec,bump,normal,disp = texnames
     scale = env.config.scale
 
@@ -89,12 +89,12 @@ def writeMTexes(fp, texnames, slot, env):
     if spec:
         fp.write(
             "  MTex %d %s UV SPECULAR_COLOR\n" % (slot, spec) +
-            "    texture Refer Texture %s ;" % spec +
+            "    texture Refer Texture %s ;\n" % spec +
+            "    specular_factor %.4g ;" % (0.1*mat.specularIntensity) +
 """
     use_map_color_diffuse False ;
     use_map_specular True ;
     use_map_reflect True ;
-    specular_factor 0.1 ;
     reflection_factor 1 ;
   end MTex
 
@@ -105,7 +105,7 @@ def writeMTexes(fp, texnames, slot, env):
         fp.write(
             "  MTex %d %s UV NORMAL\n" % (slot, bump) +
             "    texture Refer Texture %s ;\n" % bump +
-            "    normal_factor %.4g*theScale ;" % (0.1*scale) +
+            "    normal_factor %.4g*theScale ;" % (0.1*scale*mat.bumpMapIntensity) +
 """
     use_map_color_diffuse False ;
     use_map_normal True ;
@@ -118,7 +118,7 @@ def writeMTexes(fp, texnames, slot, env):
         fp.write(
             "  MTex %d %s UV NORMAL\n" % (slot, normal) +
             "    texture Refer Texture %s ;\n" % normal +
-            "    normal_factor %.4g*theScale ;" % (0.1*scale) +
+            "    normal_factor %.4g*theScale ;" % (0.1*scale*mat.normalMapIntensity) +
 """
     use_map_color_diffuse False ;
     use_map_normal True ;
@@ -131,7 +131,7 @@ def writeMTexes(fp, texnames, slot, env):
         fp.write(
             "  MTex %d %s UV DISPLACEMENT\n" % (slot, disp) +
             "    texture Refer Texture %s ;\n" % disp +
-            "    normal_factor %.4g*theScale ;" % (0.1*scale) +
+            "    displacement_factor %.4g*theScale ;" % (0.1*scale*mat.displacementMapIntensity) +
 """
     use_map_color_diffuse False ;
     use_map_normal True ;
@@ -141,15 +141,46 @@ def writeMTexes(fp, texnames, slot, env):
         slot += 1
 
 
+def writeMaterialSettings(fp, mat, alpha, env):
+    log.debug("%s %s %s" % (mat.specularColor, mat.specularIntensity, mat.specularHardness))
+    fp.write(
+        "  diffuse_color Array %.4g %.4g %.4g  ;\n" % mat.diffuseColor.asTuple() +
+        "  diffuse_shader 'LAMBERT' ;\n" +
+        "  diffuse_intensity %.4g ;\n" % mat.diffuseIntensity +
+        "  specular_color Array %.4g %.4g %.4g ;\n" % mat.specularColor.asTuple() +
+        "  specular_shader 'PHONG' ;\n" +
+        "  specular_intensity %.4g ;\n" % (0.1*mat.specularIntensity) +
+        "  specular_hardness %.4g ;\n" % mat.specularHardness)
+
+    if alpha < 0.99:
+        fp.write(
+            "  use_transparency True ;\n" +
+            "  transparency_method 'Z_TRANSPARENCY' ;\n" +
+            "  alpha %3.f ;\n" % alpha +
+            "  specular_alpha %.3f ;\n" % alpha)
+
+    fp.write(
+"""
+  use_cast_approximate True ;
+  use_cast_buffer_shadows True ;
+  use_cast_shadows_only False ;
+  use_ray_shadow_bias True ;
+  use_shadows True ;
+  use_transparent_shadows True ;
+  use_raytrace True ;
+""")
+
+
 def writeMaterials(fp, env):
     config = env.config
     human = env.human
+    mat = human.material
 
     if human.uvset:
         writeMultiMaterials(fp, env)
         return
 
-    texnames = writeTextures(fp, human.material, env.name, env)
+    texnames = writeTextures(fp, mat, env.name, env)
 
     fp.write("""
 Texture solid IMAGE
@@ -167,16 +198,11 @@ end Texture
         "Material %sSkin\n" % env.name)
 
     nMasks = writeMaskMTexs(fp, env)
-    writeMTexes(fp, texnames, nMasks, env)
+    writeMTexes(fp, texnames, mat, nMasks, env)
+    writeMaterialSettings(fp, mat, 0, env)
 
     fp.write(
 """
-  diffuse_color Array 1.0 1.0 1.0  ;
-  diffuse_shader 'LAMBERT' ;
-  diffuse_intensity 1.0 ;
-  specular_color Array 1.0 1.0 1.0  ;
-  specular_shader 'PHONG' ;
-  specular_intensity 0 ;
   SSS
     use True ;
     back 2 ;
@@ -191,21 +217,6 @@ end Texture
 """
     texture_factor 0 ;
   end SSS
-  alpha 0 ;
-  use_cast_approximate True ;
-  use_cast_buffer_shadows True ;
-  use_cast_shadows_only False ;
-  use_cubic False ;
-  use_ray_shadow_bias True ;
-  use_transparent_shadows True ;
-  use_shadows True ;
-  specular_alpha 1 ;
-  specular_hardness 30 ;
-  specular_ior 4 ;
-  use_tangent_shading False ;
-  use_raytrace True ;
-  use_transparency True ;
-  transparency_method 'Z_TRANSPARENCY' ;
   Property MhxDriven True ;
 """)
 
@@ -215,9 +226,10 @@ end Texture
     fp.write("Material %sShiny\n" % env.name)
     nMasks = writeMaskMTexs(fp, env)
     shinyTexnames = texnames[0],None,None,None,None
-    writeMTexes(fp, shinyTexnames, nMasks, env)
+    writeMTexes(fp, shinyTexnames, mat, nMasks, env)
 
-    fp.write("""
+    fp.write(
+"""
   diffuse_color Array 1.0 1.0 1.0  ;
   diffuse_shader 'LAMBERT' ;
   diffuse_intensity 1.0 ;
