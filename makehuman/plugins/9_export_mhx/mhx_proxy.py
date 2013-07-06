@@ -234,47 +234,6 @@ def writeProxyModifiers(fp, env, proxy):
     return
 
 
-
-def copyProxyMaterialFile(fp, pair, mat, proxy, env):
-    prxList = sortedMasks(env)
-    nMasks = countMasks(proxy, prxList)
-    tex = None
-
-    (folder, file) = pair
-    folder = os.path.realpath(os.path.expanduser(folder))
-    infile = os.path.join(folder, file)
-    tmpl = open(infile, "rU")
-    for line in tmpl:
-        words= line.split()
-        if len(words) == 0:
-            fp.write(line)
-        elif words[0] == 'Texture':
-            words[1] = env.name + words[1]
-            for word in words:
-                fp.write("%s " % word)
-            fp.write("\n")
-            tex = os.path.join(folder,words[1])
-        elif words[0] == 'Material':
-            words[1] = env.name + words[1]
-            for word in words:
-                fp.write("%s " % word)
-            fp.write("\n")
-            addProxyMaskMTexs(fp, mat, proxy, prxList)
-        elif words[0] == 'MTex':
-            words[2] = env.name + words[2]
-            for word in words:
-                fp.write("%s " % word)
-            fp.write("\n")
-        elif words[0] == 'Filename':
-            filepath = os.path.join(folder, words[1])
-            newpath = env.config.copyTextureToNewLocation(filepath)
-            fp.write("  Filename %s ;\n" % newpath)
-        else:
-            fp.write(line)
-    tmpl.close()
-    return
-
-
 def writeProxyMaterial(fp, proxy, env):
     mat = proxy.material
 
