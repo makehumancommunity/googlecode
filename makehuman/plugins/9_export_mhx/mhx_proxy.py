@@ -151,7 +151,7 @@ NoScale False ;
     if proxy.useBaseMaterials:
         mhx_mesh.writeBaseMaterials(fp, env)
     elif proxy.material:
-        fp.write("  Material %s%s ;" % (env.name, proxy.material.name))
+        fp.write("  Material %s_%s_%s ;" % (env.name, proxy.name, proxy.material.name))
 
 
     fp.write("""
@@ -275,28 +275,6 @@ def copyProxyMaterialFile(fp, pair, mat, proxy, env):
     return
 
 
-def writeProxyTexture(fp, filepath, mat, extra, env):
-    config = env.config
-
-    texname = getTextureName(filepath, env)
-    newpath = config.copyTextureToNewLocation(filepath)
-    fp.write(
-        "Image %s\n" % texname +
-        "  Filename %s ;\n" % newpath +
-#        "  alpha_mode 'PREMUL' ;\n" +
-        "end Image\n\n" +
-        "Texture %s IMAGE\n" % texname +
-        "  Image %s ;\n" % texname)
-    #writeProxyMaterialSettings(fp, mat.textureSettings)
-    fp.write(extra)
-    fp.write("end Texture\n\n")
-    return newpath
-
-
-def getTextureName(filepath, env):
-    return (env.name + os.path.basename(filepath).replace(" ","_"))
-
-
 def writeProxyMaterial(fp, proxy, env):
     mat = proxy.material
     alpha = 1 - mat.transparencyIntensity
@@ -304,102 +282,23 @@ def writeProxyMaterial(fp, proxy, env):
     # Write images and textures
 
     if mat.diffuseTexture:
-        texture = proxy.getActualTexture(env.human)
-        if texture is None:
-            diffpath = writeProxyTexture(fp, mat.diffuseTexture, mat, "", env)
-        else:
-            diffpath = writeProxyTexture(fp, texture, mat, "", env)
-    else:
-        diffpath = None
+        mat.diffuseTexture = proxy.getActualTexture(env.human)
 
-    if mat.normalMapTexture or mat.bumpMapTexture:
-        if mat.normalMapTexture:
-            bumppath = writeProxyTexture(fp, mat.normalMapTexture, mat,
-                ("    use_normal_map True ;\n"),
-                env)
-            bumpIsnormal = True
-            bumpfactor = mat.normalMapIntensity
-        else:
-            bumppath = writeProxyTexture(fp, mat.bumpMapTexture, mat, "", env)
-            bumpIsnormal = False
-            factor = mat.bumpMapIntensity
-    else:
-        bumppath = None
-
-    if mat.displacementMapTexture:
-        disppath = writeProxyTexture(fp, mat.displacementMapTexture, mat, "", env)
-    else:
-        disppath = None
-
-    if mat.transparencyMapTexture:
-        transpath = writeProxyTexture(fp, mat.transparencyMapTexture, mat, "", env)
-    else:
-        transpath = None
+    prefix = env.name+"_"+proxy.name
+    texnames = mhx_materials.writeTextures(fp, mat, prefix, env)
 
     # Write materials
 
     prxList = sortedMasks(env)
     nMasks = countMasks(proxy, prxList)
-    slot = nMasks
 
-    fp.write("Material %s%s \n" % (env.name, mat.name))
+    fp.write("Material %s_%s_%s \n" % (env.name, proxy.name, mat.name))
     addProxyMaskMTexs(fp, mat, proxy, prxList)
     #writeProxyMaterialSettings(fp, mat.settings)
     #uvlayer = proxy.uvtexLayerName[proxy.textureLayer]
     uvlayer = "Texture"
 
-    if diffpath:
-        texname = getTextureName(diffpath, env)
-        fp.write(
-            "  MTex %d %s UV COLOR\n" % (slot, texname) +
-            "    texture Refer Texture %s ;\n" % texname +
-            "    use_map_alpha True ;\n" +
-            "    diffuse_color_factor %.3f ;\n" % mat.diffuseIntensity +
-            "    uv_layer '%s' ;\n" % uvlayer)
-        #writeProxyMaterialSettings(fp, proxy.mtexSettings)
-        fp.write("  end MTex\n")
-        slot += 1
-        alpha = 0
-
-    if bumppath:
-        texname = getTextureName(bumppath, env)
-        fp.write(
-            "  MTex %d %s UV NORMAL\n" % (slot, texname) +
-            "    texture Refer Texture %s ;\n" % texname +
-            "    use_map_normal %s ;\n" % bumpIsnormal +
-            "    use_map_color_diffuse False ;\n" +
-            "    normal_factor %.3f ;\n" % bumpfactor +
-            "    use_rgb_to_intensity True ;\n" +
-            "    uv_layer '%s' ;\n" % uvlayer +
-            "  end MTex\n")
-        slot += 1
-
-    if disppath:
-        texname = getTextureName(disppath, env)
-        fp.write(
-            "  MTex %d %s UV DISPLACEMENT\n" % (slot, texname) +
-            "    texture Refer Texture %s ;\n" % texname +
-            "    use_map_displacement True ;\n" +
-            "    use_map_color_diffuse False ;\n" +
-            "    displacement_factor %.3f ;\n" % proxy.displacementMapIntensity +
-            "    use_rgb_to_intensity True ;\n" +
-            "    uv_layer '%s' ;\n" % uvlayer +
-            "  end MTex\n")
-        slot += 1
-
-    if transpath:
-        texname = getTextureName(transpath, env)
-        fp.write(
-            "  MTex %d %s UV ALPHA\n" % (slot, texname) +
-            "    texture Refer Texture %s ;\n" % texname +
-            "    use_map_alpha True ;\n" +
-            "    use_map_color_diffuse False ;\n" +
-            "    invert True ;\n" +
-            "    use_stencil True ;\n" +
-            "    use_rgb_to_intensity True ;\n" +
-            "    uv_layer '%s' ;\n" % uvlayer +
-            "  end MTex\n")
-        slot += 1
+    mhx_materials.writeMTexes(fp, texnames, nMasks, env)
 
     if nMasks > 0 or alpha < 0.99:
         fp.write(

@@ -140,7 +140,7 @@ class CProxy:
         self.rig = None
         self.mask = None
 
-        self.material = material.Material(self.name + "Material")
+        self.material = material.Material(self.name)
 
         self.obj_file = None
         self.material_file = None
