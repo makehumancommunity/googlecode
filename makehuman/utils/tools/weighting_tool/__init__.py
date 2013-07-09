@@ -91,6 +91,10 @@ class MhxWeightToolsPanel(bpy.types.Panel):
             layout.operator("mhw.copy_vertex_groups")
             layout.operator("mhw.remove_vertex_groups")
             layout.separator()
+            layout.prop(scn, "MhxBlurFactor")
+            layout.operator("mhw.blur_vertex_groups")
+            layout.operator("mhw.prune_four")
+            layout.separator()
 
             layout.prop(scn, "MhxVG0")
             layout.prop(scn, "MhxVG1")
@@ -193,6 +197,11 @@ def initInterface(context):
     bpy.types.Scene.MhxVertNum = IntProperty(
         name="Vert number",
         description="Vertex number to select")
+
+    bpy.types.Scene.MhxBlurFactor = FloatProperty(
+        name="Blur Factor",
+        default=0,
+        min=0, max=1)
 
     bpy.types.Scene.MhxWeight = FloatProperty(
         name="Weight",

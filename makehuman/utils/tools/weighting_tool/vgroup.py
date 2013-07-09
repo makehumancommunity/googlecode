@@ -146,6 +146,92 @@ class VIEW3D_OT_MergeVertexGroupsButton(bpy.types.Operator):
         print("Vertex groups merged")
         return{'FINISHED'}
 
+#
+#
+#
+
+def blurVertexGroups(scn, ob):
+    from makeclothes.makeclothes import setupTexVerts
+    (vertEdges, vertFaces, edgeFaces, faceEdges, faceNeighbors, uvFaceVertsList, texVertsList) = setupTexVerts(ob)
+
+    factor = scn.MhxBlurFactor
+    vertWeights = {}
+    for v in ob.data.vertices:
+        neighbors = []
+        for e in vertEdges[v.index]:
+            if e.vertices[0] == v.index:
+                neighbors.append(e.vertices[1])
+            else:
+                neighbors.append(e.vertices[0])
+
+        nNeighbors = len(neighbors)
+        weights = vertWeights[v.index] = {}
+        for g in v.groups:
+            weights[g.group] = (1 - nNeighbors*factor)*g.weight
+
+        for n in neighbors:
+            nv = ob.data.vertices[n]
+            for g in nv.groups:
+                try:
+                    w0 = weights[g.group]
+                except KeyError:
+                    w0 = 0
+                weights[g.group] = w0 + factor*g.weight
+
+    vgroups = setupVGroups(ob)
+    for v in ob.data.vertices:
+        weights = vertWeights[v.index]
+        for gn,w in weights.items():
+            vg = vgroups[gn]
+            if w < 0.05:
+                print("Add", vg.name, v.index, w)
+            vg.add([v.index], w, 'REPLACE')
+
+
+def setupVGroups(ob):
+    vgroups = {}
+    for vg in ob.vertex_groups:
+        vgroups[vg.index] = vg
+    return vgroups
+
+
+class VIEW3D_OT_BlurButton(bpy.types.Operator):
+    bl_idname = "mhw.blur_vertex_groups"
+    bl_label = "Blur VGs"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        blurVertexGroups(context.scene, context.object)
+        print("Vertex groups blurred")
+        return{'FINISHED'}
+
+#
+#
+#
+
+def prune4(scn, ob):
+    vgroups = setupVGroups(ob)
+
+    for v in ob.data.vertices:
+        if len(v.groups) > 4:
+            wts = [(g.weight, g.group) for g in v.groups]
+            wts.sort()
+            print("Rem", v.index, wts[4:])
+            for _w,gn in wts[4:]:
+                vg = vgroups[gn]
+                vg.remove([v.index])
+
+
+class VIEW3D_OT_Prune4Button(bpy.types.Operator):
+    bl_idname = "mhw.prune_four"
+    bl_label = "Prune to 4 VGs"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        prune4(context.scene, context.object)
+        print("Vertex groups pruned")
+        return{'FINISHED'}
+
 
 #
 #    unVertexDiamonds(context):

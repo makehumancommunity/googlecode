@@ -62,10 +62,11 @@ def exportVertexGroups(context):
     vgroups = sortVertexGroups(ob)
     filePath = scn.MhxVertexGroupFile
 
-    struct = OrderedDict()
+    list = []
     for vg in vgroups:
         index = vg.index
-        weights = struct[vg.name] = []
+        weights = []
+        list.append((vg.name, weights))
         for v in me.vertices:
             if exportAllVerts or v.select:
                 for grp in v.groups:
@@ -73,7 +74,7 @@ def exportVertexGroups(context):
                         weights.append((v.index, grp.weight))
 
     fileName = os.path.expanduser(filePath)
-    io_json.saveJson(struct, fileName)
+    io_json.saveJson(list, fileName)
     """
     fp = open(fileName, "w")
         exportList(context, weights, vg.name, fp)

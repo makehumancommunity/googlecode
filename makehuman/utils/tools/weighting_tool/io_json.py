@@ -49,13 +49,13 @@ def saveJson(struct, filepath, binary=False):
         with gzip.open(realpath, 'wb') as fp:
             fp.write(bytes)
     else:
-        string = encodeJsonData(struct, "")
+        string = encodeJsonData(struct, 0, "")
         with open(filepath, "w", encoding="utf-8") as fp:
             fp.write(string)
             fp.write("\n")
 
 
-def encodeJsonData(data, pad=""):
+def encodeJsonData(data, depth, pad=""):
     if data == None:
         return "none"
     elif isinstance(data, bool):
@@ -75,22 +75,22 @@ def encodeJsonData(data, pad=""):
     elif isinstance(data, (list, tuple)):
         if data == []:
             return "[]"
-        elif leafList(data):
+        elif leafList(data) and depth >= 1:
             string = "["
             for elt in data:
-                string += encodeJsonData(elt) + ", "
+                string += encodeJsonData(elt, depth+1) + ", "
             return string[:-2] + "]"
         else:
             string = "["
             for elt in data:
-                string += "\n    " + pad + encodeJsonData(elt, pad+"    ") + ","
+                string += "\n    " + pad + encodeJsonData(elt, depth+1, pad+"    ") + ","
             return string[:-1] + "\n%s]" % pad
     elif isinstance(data, dict):
         if data == {}:
             return "{}"
         string = "{"
         for key,value in data.items():
-            string += "\n    %s\"%s\" : " % (pad, key) + encodeJsonData(value, pad+"    ") + ","
+            string += "\n    %s\"%s\" : " % (pad, key) + encodeJsonData(value, 0, pad+"    ") + ","
         return string[:-1] + "\n%s}" % pad
 
 
