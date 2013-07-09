@@ -1,18 +1,18 @@
-# Material definition for MakeHuman benchmark clothes
+# Material definition for MakeHuman eyes
 
-name browneyeMaterial
+name high-poly-Material
 
 // Color shading attributes
 ambientColor 1.0 1.0 1.0
 diffuseColor  0.8 0.8 0.8
 diffuseIntensity 1
 specularColor  1 1 1
-specularIntensity 0.02098
-specularHardness 92
-opacity 1
+specularIntensity 0.5
+specularHardness 255
+opacity 0
 
 // Textures and properties
-diffuseTexture brown_eye.png
+diffuseTexture ../brown_eye.png
 
 // Shader programme
 shader data/shaders/glsl/phong
