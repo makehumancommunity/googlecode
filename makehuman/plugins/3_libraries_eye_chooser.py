@@ -58,7 +58,7 @@ class EyesTaskView(gui3d.TaskView):
             os.makedirs(eyesDir)
         self.paths = [eyesDir , 'data/eyes']
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhclo', 'thumb', 'data/eyes/notfound.thumb'))
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhclo', 'thumb', 'data/eyes/notfound.thumb', 'Eyes'))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhclo', 'thumb', 'data/clothes/notfound.thumb', 'Eyes'))
         self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
 
@@ -146,7 +146,7 @@ class EyesTaskView(gui3d.TaskView):
                 gui3d.app.removeObject(human.eyesObj)
                 human.eyesObj = None
                 human.eyesProxy = None
-            self.setEyes(human, "data/eyes/eye/eye.mhclo")
+            self.setEyes(human, "data/eyes/high-poly/high-poly.mhclo")
             self.filechooser.deselectAll()
 
     def onHumanChanged(self, event):
