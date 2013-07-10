@@ -216,6 +216,7 @@ def prune4(scn, ob):
         if len(v.groups) > 4:
             wts = [(g.weight, g.group) for g in v.groups]
             wts.sort()
+            wts.reverse()
             print("Rem", v.index, wts[4:])
             for _w,gn in wts[4:]:
                 vg = vgroups[gn]
@@ -232,6 +233,28 @@ class VIEW3D_OT_Prune4Button(bpy.types.Operator):
         print("Vertex groups pruned")
         return{'FINISHED'}
 
+#
+#
+#
+
+def factorVGroup(scn, ob):
+    factor = scn.MhxFactor
+    vgroup = ob.vertex_groups[scn.MhxVG0]
+    for v in ob.data.vertices:
+        for g in v.groups:
+            if g.group == vgroup.index:
+                g.weight *= factor
+    print("%s multiplied with %.4g" % (vgroup, factor))
+
+
+class VIEW3D_OT_FactorVGroupButton(bpy.types.Operator):
+    bl_idname = "mhw.factor_vertex_group"
+    bl_label = "Factor Vertex Gruop"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        factorVGroup(context.scene, context.object)
+        return{'FINISHED'}
 
 #
 #    unVertexDiamonds(context):

@@ -94,6 +94,9 @@ class MhxWeightToolsPanel(bpy.types.Panel):
             layout.prop(scn, "MhxBlurFactor")
             layout.operator("mhw.blur_vertex_groups")
             layout.operator("mhw.prune_four")
+            layout.prop(scn, "MhxVG0")
+            layout.prop(scn, "MhxFactor")
+            layout.operator("mhw.factor_vertex_group")
             layout.separator()
 
             layout.prop(scn, "MhxVG0")
@@ -193,6 +196,11 @@ def initInterface(context):
         description="Maximal distance for identification",
         default=1.0e-3,
         min=0, max=1)
+
+    bpy.types.Scene.MhxFactor = FloatProperty(
+        name="Factor",
+        default=1.0,
+        min=0, max=2)
 
     bpy.types.Scene.MhxVertNum = IntProperty(
         name="Vert number",
