@@ -82,9 +82,9 @@ class Parser:
 
         #options.useMuscles = True
         if options.useMuscles:
-            self.vertexGroupFiles = ["head", "muscles", "hand", "tights_muscles"]
+            self.vertexGroupFiles = ["head", "muscles", "hand", "tights_muscles", "skirt_muscles", "hair_muscles"]
         else:
-            self.vertexGroupFiles = ["head", "bones", "hand", "tights"]
+            self.vertexGroupFiles = ["head", "bones", "hand", "tights", "skirt", "hair"]
 
         #self.vertexGroupFiles = ["bones"]
 

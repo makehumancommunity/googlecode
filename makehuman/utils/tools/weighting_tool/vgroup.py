@@ -183,8 +183,8 @@ def blurVertexGroups(scn, ob):
         weights = vertWeights[v.index]
         for gn,w in weights.items():
             vg = vgroups[gn]
-            if w < 0.05:
-                print("Add", vg.name, v.index, w)
+            #if w < 0.05:
+            #    print("Add", vg.name, v.index, w)
             vg.add([v.index], w, 'REPLACE')
 
 
@@ -217,7 +217,7 @@ def prune4(scn, ob):
             wts = [(g.weight, g.group) for g in v.groups]
             wts.sort()
             wts.reverse()
-            print("Rem", v.index, wts[4:])
+            #print("Rem", v.index, wts[4:])
             for _w,gn in wts[4:]:
                 vg = vgroups[gn]
                 vg.remove([v.index])

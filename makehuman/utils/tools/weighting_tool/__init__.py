@@ -181,6 +181,7 @@ class MhxWeightToolsPanel(bpy.types.Panel):
             layout.operator("mhw.join_meshes")
             layout.operator("mhw.fix_base_file")
             layout.operator("mhw.project_weights")
+            layout.operator("mhw.smoothen_skirt")
             layout.operator("mhw.project_materials")
             layout.operator("mhw.export_base_obj")
 
