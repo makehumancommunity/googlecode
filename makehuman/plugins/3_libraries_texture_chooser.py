@@ -121,18 +121,26 @@ class TextureTaskView(gui3d.TaskView):
         gui3d.TaskView.__init__(self, category, 'Texture', label='Skin/Material')
 
         self.systemSkins = os.path.join('data', 'skins')
-        self.systemTextures = os.path.join('data', 'clothes', 'textures')
+        self.systemClothes = os.path.join('data', 'clothes', 'textures')
+        self.systemHair = os.path.join('data', 'hairstyles')
+        self.systemEyes = os.path.join('data', 'eyes')
 
         self.userSkins = os.path.join(mh.getPath(''), 'data', 'skins')
-        self.userTextures = os.path.join(mh.getPath(''), 'data', 'clothes', 'textures')
-        if not os.path.exists(self.userSkins):
-            os.makedirs(self.userSkins)
-        if not os.path.exists(self.userTextures):
-            os.makedirs(self.userTextures)
+        self.userClothes = os.path.join(mh.getPath(''), 'data', 'clothes', 'textures')
+        self.userHair = os.path.join(mh.getPath(''), 'data', 'hairstyles')
+        self.userEyes = os.path.join(mh.getPath(''), 'data', 'eyes')
 
-        self.defaultTextures = [self.systemTextures, self.userTextures]
-        self.textures = self.defaultTextures
+        for path in (self.userSkins, self.userClothes, self.userEyes):
+            if not os.path.exists(path):
+                os.makedirs(path)
+
+        self.defaultClothes = [self.systemClothes, self.userClothes]
+        self.defaultHair = [self.systemHair, self.userHair]
+        self.defaultEyes = [self.systemEyes, self.userEyes]
+
+        self.textures = self.defaultClothes
         self.activeClothing = None
+        self.hairTexture = None
         self.eyeTexture = None
 
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.userSkins, 'png', ['thumb', 'png'], 'data/skins/notfound.thumb'))
@@ -272,13 +280,6 @@ class TextureTaskView(gui3d.TaskView):
         clo = human.clothesObjs[uuid]
         return clo.getTexture()
 
-    def setEyes(self, human, mhstx):
-        # TODO this will change, for now eyes might only be compatible with the original skin
-        texture = mh.getTexture(human.getTexture())
-        texture.loadSubImage(
-            subtextures.combine(mh.Image(human.getTexture()),mhstx), 0, 0)
-        self.eyeTexture = mhstx
-
     def reloadTextureChooser(self):
         human = gui3d.app.selectedHuman
         # TODO this is temporary, until new eye texturing approach
@@ -292,25 +293,28 @@ class TextureTaskView(gui3d.TaskView):
             selectedTex = human.getTexture()
         elif self.hairRadio.selected:
             proxy = human.hairProxy
-            self.textures = [os.path.dirname(proxy.file)]
+            if proxy:
+                self.textures = [os.path.dirname(proxy.file)] + self.defaultHair
+            else:
+                self.textures = self.defaultHair
             selectedTex = human.hairObj.getTexture()
         elif self.eyesRadio.selected:
             proxy = human.eyesProxy
-            self.textures = [os.path.dirname(proxy.file)]
+            if proxy:
+                self.textures = [os.path.dirname(proxy.file)] + self.defaultEyes
+            else:
+                self.textures = self.defaultEyes
             selectedTex = human.eyesObj.getTexture()
-            #self.filechooser.setPreviewExtensions('png')
-            #self.filechooser.extension = 'mhstx'
-            #self.textures = ['data/eyes']
         else: # Clothes
             if self.activeClothing:
                 uuid = self.activeClothing
                 clo = human.clothesObjs[uuid]
                 filepath = human.clothesProxies[uuid].file
-                self.textures = [os.path.dirname(filepath)] + self.defaultTextures
+                self.textures = [os.path.dirname(filepath)] + self.defaultClothes
                 selectedTex = clo.getTexture()
             else:
                 # TODO maybe dont show anything?
-                self.textures = self.defaultTextures
+                self.textures = self.defaultClothes
 
                 filec = self.filechooser
                 log.debug("fc %s %s %s added", filec, filec.children.count(), str(filec.files))
@@ -369,8 +373,6 @@ class TextureTaskView(gui3d.TaskView):
                 filepath = os.path.join(clothesPath, filepath)
             self.applyClothesTexture(uuid, filepath)
             return
-        elif values[0] == 'eyeTexture':
-            self.setEyes(human, values[1])
 
     def saveHandler(self, human, file):
 
@@ -405,9 +407,9 @@ class TextureTaskView(gui3d.TaskView):
     def syncMediaFinished(self):
         '''
         if not self.mediaSync2:
-            if not os.path.isdir(self.userTextures):
-                os.makedirs(self.userTextures)
-            self.mediaSync2 = download.MediaSync(gui3d.app, self.userTextures, 'http://download.tuxfamily.org/makehuman/clothes/textures/', self.syncMediaFinished)
+            if not os.path.isdir(self.userClothes):
+                os.makedirs(self.userClothes)
+            self.mediaSync2 = download.MediaSync(gui3d.app, self.userClothes, 'http://download.tuxfamily.org/makehuman/clothes/textures/', self.syncMediaFinished)
             self.mediaSync2.start()
             self.mediaSync = None
         else:
