@@ -133,7 +133,7 @@ def addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScal
 "    lock_location Array %d %d %d ;\n"  % (lockLocX, lockLocY, lockLocZ)+
 "    lock_rotation Array %d %d %d ;\n"  % (lockRotX, lockRotY, lockRotZ) +
 "    lock_rotation_w %s ; \n" % lkRotW +
-"    lock_rotations_4d %s ; \n" % lkRot4 +
+"    lock_rotations_4d %s ; \n" % False +
 "    lock_scale Array %d %d %d  ; \n" % (lockScaleX, lockScaleY, lockScaleZ)+
 "  end Posebone \n")
     return

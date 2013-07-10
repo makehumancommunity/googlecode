@@ -80,10 +80,13 @@ class Parser:
         if options.useDeformBones or options.useDeformNames:
             self.deformPrefix = "DEF-"
 
+        #options.useMuscles = True
         if options.useMuscles:
-            self.vertexGroupFiles = ["head", "muscles", "hand", "helpers"]
+            self.vertexGroupFiles = ["head", "muscles", "hand", "tights_muscles"]
         else:
-            self.vertexGroupFiles = ["head", "bones", "hand", "helpers"]
+            self.vertexGroupFiles = ["head", "bones", "hand", "tights"]
+
+        #self.vertexGroupFiles = ["bones"]
 
         self.joints = (
             rig_joints.Joints +
@@ -754,8 +757,8 @@ class Parser:
         for file in files:
             filepath = os.path.join("shared/armature/data", "vgrp_"+file+".json")
             log.message("Loading %s" % filepath)
-            struct = io_json.loadJson(filepath)
-            for key,data in struct.items():
+            vglist = io_json.loadJson(filepath)
+            for key,data in vglist:
                 try:
                     vgroups[key] += data
                 except KeyError:

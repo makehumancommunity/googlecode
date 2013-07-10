@@ -38,8 +38,8 @@ Joints = [
     ('plexus',              'vl', ((0.9, 1892), (0.1, 3960))),
     ('l-breast-2',          'v', 8458),
     ('r-breast-2',          'v', 1786),
-    ('l-breast-1',          'vl', ((0.8, 8458), (0.2, 10610))),
-    ('r-breast-1',          'vl', ((0.8, 1786), (0.2, 3955))),
+    ('l-breast-1',          'vl', ((0.6, 8458), (0.4, 10610))),
+    ('r-breast-1',          'vl', ((0.6, 1786), (0.4, 3955))),
 
     ('l-pect-1',            'vl', ((0.9, 8458), (0.1, 10610))),
     ('r-pect-1',            'vl', ((0.9, 1786), (0.1, 3955))),
@@ -112,6 +112,12 @@ Joints = [
     ('r-soleus-1',          'vl', ((0.5, 4675), (0.5, 4684))),
     ('l-soleus-2',          'l', ((1-SoleusLength, 'l-soleus-1'), (SoleusLength, 'l-heel'))),
     ('r-soleus-2',          'l', ((1-SoleusLength, 'r-soleus-1'), (SoleusLength, 'r-heel'))),
+
+    ('l-forearm-1',         'l', ((0.7, 'l-elbow'), (0.3, 'l-hand'))),
+    ('r-forearm-1',         'l', ((0.7, 'r-elbow'), (0.3, 'r-hand'))),
+    ('l-shin-1',            'l', ((0.7, 'l-knee'), (0.3, 'l-ankle'))),
+    ('r-shin-1',            'l', ((0.7, 'r-knee'), (0.3, 'r-ankle'))),
+
 ]
 
 HeadsTails = {
@@ -166,14 +172,16 @@ HeadsTails = {
     'soleus.R' :           ('r-soleus-1', 'r-soleus-2'),
     'sole.L' :             ('l-foot-1', 'l-heel'),
     'sole.R' :             ('r-foot-1', 'r-heel'),
+
+    'elbow_fan.L' :        ('l-elbow', 'l-forearm-1'),
+    'elbow_fan.R' :        ('r-elbow', 'r-forearm-1'),
+    'knee_fan.L' :         ('l-knee', 'l-shin-1'),
+    'knee_fan.R' :         ('r-knee', 'r-shin-1'),
 }
 
 
 Armature = {
-    'pubis' :              (0, 'hips', F_DEF, L_TWEAK),
-
-    #'ribcage.L' :         (0, 'chest-1', F_DEF, L_MSCL),
-    #'ribcage.R' :         (0, 'chest-1', F_DEF, L_MSCL),
+    'pubis' :              (0, 'hips', 0, L_HELP),
     'breast.L' :           (0, 'chest-1', F_WIR|F_DEF, L_TWEAK),
     'breast.R' :           (0, 'chest-1', F_WIR|F_DEF, L_TWEAK),
     'stomach' :            (0, 'chest-1',  F_DEF, L_MSCL),
@@ -224,6 +232,11 @@ Armature = {
     'trg_knee.R' :         (179*D, 'thigh.R', F_DEF, L_MSCL),
     'soleus.R' :           (-168*D  , 'shin.R', F_DEF, L_MSCL),
     'sole.R' :             (0, 'foot.R', 0, L_MSCL),
+
+    'elbow_fan.L' :        ('forearm.L', 'upper_arm.L', F_DEF, L_MSCL),
+    'elbow_fan.R' :        ('forearm.R', 'upper_arm.R', F_DEF, L_MSCL),
+    'knee_fan.L' :         ('shin.L', 'thigh.L', F_DEF, L_MSCL),
+    'knee_fan.R' :         ('shin.R', 'thigh.R', F_DEF, L_MSCL),
 }
 
 CustomShapes = {
@@ -422,6 +435,26 @@ Constraints = {
     'soleus.R' : [
         ('StretchTo', C_VOLX, 1,
             ['Stretch_To', 'sole.R', 1, 1, ('r-soleus-1', 'r-heel')])
+        ],
+
+    'elbow_fan.L' : [
+        ('CopyRot', C_LOCAL, 0.5,
+            ['forearm', 'forearm.L', (1,0,1), (0,0,0), False])
+        ],
+
+    'elbow_fan.R' : [
+        ('CopyRot', C_LOCAL, 0.5,
+            ['forearm', 'forearm.R', (1,0,1), (0,0,0), False])
+        ],
+
+    'knee_fan.L' : [
+        ('CopyRot', C_LOCAL, 0.5,
+            ['shin', 'shin.L', (1,0,1), (0,0,0), False])
+        ],
+
+    'knee_fan.R' : [
+        ('CopyRot', C_LOCAL, 0.5,
+            ['shin', 'shin.R', (1,0,1), (0,0,0), False])
         ],
 }
 
