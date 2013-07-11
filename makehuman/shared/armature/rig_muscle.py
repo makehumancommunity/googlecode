@@ -38,8 +38,8 @@ Joints = [
     ('plexus',              'vl', ((0.9, 1892), (0.1, 3960))),
     ('l-breast-2',          'v', 8458),
     ('r-breast-2',          'v', 1786),
-    ('l-breast-1',          'vl', ((0.6, 8458), (0.4, 10610))),
-    ('r-breast-1',          'vl', ((0.6, 1786), (0.4, 3955))),
+    ('l-breast-1',          'vl', ((0.6, 8458), (0.4, 10591))),
+    ('r-breast-1',          'vl', ((0.6, 1786), (0.4, 3926))),
 
     ('l-pect-1',            'vl', ((0.9, 8458), (0.1, 10610))),
     ('r-pect-1',            'vl', ((0.9, 1786), (0.1, 3955))),
@@ -181,9 +181,9 @@ HeadsTails = {
 
 
 Armature = {
-    'pubis' :              (0, 'hips', 0, L_HELP),
     'breast.L' :           (0, 'chest-1', F_WIR|F_DEF, L_TWEAK),
     'breast.R' :           (0, 'chest-1', F_WIR|F_DEF, L_TWEAK),
+    'pubis' :              (0, 'hips', 0, L_HELP),
     'stomach' :            (0, 'chest-1',  F_DEF, L_MSCL),
 
     'pectoralis.L' :       (173*D, 'chest-1', F_DEF, L_MSCL),
@@ -240,8 +240,8 @@ Armature = {
 }
 
 CustomShapes = {
-    'breast.L' :    'GZM_EndCube025',
-    'breast.R' :    'GZM_EndCube025',
+    'breast.L' :        'GZM_Breast_L',
+    'breast.R' :        'GZM_Breast_R',
 }
 
 RotationLimits = {}

@@ -270,11 +270,11 @@ class Parser:
             ])
             if options.useDeformBones:
                 self.addDeformBones(generic, boneInfo)
-                self.renameDeformBones(rig_muscle.Armature, boneInfo)
+                self.renameDeformBones(rig_muscle.Armature, rig_muscle.CustomShapes, boneInfo)
                 if options.useConstraints:
                     self.renameConstraints(rig_muscle.Constraints, boneInfo)
-            self.addDeformVertexGroups(generic, vgroups)
-            self.renameDeformVertexGroups(rig_muscle.Armature)
+            self.addDeformVertexGroups(vgroups, rig_muscle.CustomShapes)
+            #self.renameDeformVertexGroups(rig_muscle.Armature)
 
         if options.useSplitBones or options.useSplitNames:
             if options.useSplitBones:
@@ -688,9 +688,11 @@ class Parser:
                     self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [target, target+ext, (0,1,0), (0,0,0), True]))
 
 
-    def renameDeformBones(self, muscles, boneInfo):
+    def renameDeformBones(self, muscles, custom, boneInfo):
         amt = self.armature
         for bname in muscles.keys():
+            if bname in custom.keys():
+                continue
             try:
                 bone = boneInfo[bname]
             except KeyError:
@@ -745,7 +747,7 @@ class Parser:
         return vgroups
 
 
-    def addDeformVertexGroups(self, generic, vgroups):
+    def addDeformVertexGroups(self, vgroups, custom):
         amt = self.armature
         options = amt.options
         useSplit = (options.useSplitBones or options.useSplitNames)
@@ -753,8 +755,9 @@ class Parser:
             base = splitBoneName(bname)[0]
             if useSplit and base in self.splitBones.keys():
                 pass
-                #self.splitVertexGroup(bname, vgroup)
-                #del amt.vertexWeights[bname]
+            elif bname in custom.keys():
+                log.debug(amt.vertexWeights[bname])
+                pass
             else:
                 defName = self.deformPrefix+bname
                 amt.vertexWeights[defName] = vgroup
@@ -764,7 +767,7 @@ class Parser:
                     pass
 
 
-    def renameDeformVertexGroups(self, muscles):
+    def renameDeformVertexGroups(self, muscles, custom):
         amt = self.armature
         options = amt.options
         for bname in muscles.keys():
