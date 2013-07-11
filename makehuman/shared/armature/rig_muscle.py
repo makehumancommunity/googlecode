@@ -240,7 +240,6 @@ Armature = {
 }
 
 CustomShapes = {
-    'pubis' :       'GZM_Cube025',
     'breast.L' :    'GZM_EndCube025',
     'breast.R' :    'GZM_EndCube025',
 }

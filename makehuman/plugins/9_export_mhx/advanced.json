@@ -12,7 +12,8 @@
         "useMuscles" : true,
         "useIkArms" : true,
         "useIkLegs" : true,
-        "useFingers" : true
+        "useFingers" : true,
+        "useRotationLimits" : true
     }
 }
 

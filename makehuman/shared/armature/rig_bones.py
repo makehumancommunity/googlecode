@@ -257,10 +257,30 @@ RotationLimits = {
     'shoulder.L' :      (-16*D,50*D,  -70*D,70*D,  -45*D,45*D),
     'upper_arm.L' :     (-45*D,135*D, -60*D,60*D, -135*D,135*D),
     'upper_arm.R' :     (-45*D,135*D, -60*D,60*D, -135*D,135*D),
-    'forearm.L' :       (-10*D,100*D, -178*D,150*D, -175*D,10*D),
-    'forearm.R' :       (-10*D,100*D, -150*D,178*D, -10*D,175*D),
+    'forearm.L' :       (-70*D,130*D, -178*D,150*D, -10*D,10*D),
+    'forearm.R' :       (-70*D,130*D, -150*D,178*D, -10*D,10*D),
     'hand.L' :          (-90*D,70*D, -10*D,10*D, -20*D,20*D),
     'hand.R' :          (-90*D,70*D, -10*D,10*D, -20*D,20*D),
+
+    'thumb.03.L' :      (None,None, 0,0, 0,0),
+    'f_index.02.L' :    (None,None, 0,0, 0,0),
+    'f_index.03.L' :    (None,None, 0,0, 0,0),
+    'f_middle.02.L' :   (None,None, 0,0, 0,0),
+    'f_middle.03.L' :   (None,None, 0,0, 0,0),
+    'f_ring.02.L' :     (None,None, 0,0, 0,0),
+    'f_ring.03.L' :     (None,None, 0,0, 0,0),
+    'f_pinky.02.L' :    (None,None, 0,0, 0,0),
+    'f_pinky.03.L' :    (None,None, 0,0, 0,0),
+
+    'thumb.03.R' :      (None,None, 0,0, 0,0),
+    'f_index.02.R' :    (None,None, 0,0, 0,0),
+    'f_index.03.R' :    (None,None, 0,0, 0,0),
+    'f_middle.02.R' :   (None,None, 0,0, 0,0),
+    'f_middle.03.R' :   (None,None, 0,0, 0,0),
+    'f_ring.02.R' :     (None,None, 0,0, 0,0),
+    'f_ring.03.R' :     (None,None, 0,0, 0,0),
+    'f_pinky.02.R' :    (None,None, 0,0, 0,0),
+    'f_pinky.03.R' :    (None,None, 0,0, 0,0),
 }
 
 CustomShapes = {

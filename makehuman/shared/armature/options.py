@@ -40,6 +40,7 @@ class ArmatureOptions:
         self.useHeadControl = False
         self.useReverseHip = False
         self.useMuscles = False
+        self.useRotationLimits = False
         self.addConnectingBones = False
 
         self.mergeSpine = False
@@ -60,7 +61,6 @@ class ArmatureOptions:
         # Options set by exporters
         self.useCustomShapes = False
         self.useConstraints = False
-        self.useRotationLimits = False
         self.useBoneGroups = False
         self.useCorrectives = False
         self.useExpressions = False
@@ -78,7 +78,6 @@ class ArmatureOptions:
     def setExportOptions(self,
             useCustomShapes = False,
             useConstraints = False,
-            useRotationLimits = False,
             useBoneGroups = False,
             useCorrectives = False,
             useExpressions = False,
@@ -89,7 +88,6 @@ class ArmatureOptions:
             ):
         self.useCustomShapes = useCustomShapes
         self.useConstraints = useConstraints
-        self.useRotationLimits = useRotationLimits
         self.useBoneGroups = useBoneGroups
         self.useCorrectives = useCorrectives
         self.useExpressions = useExpressions
@@ -133,6 +131,7 @@ class ArmatureOptions:
         self.useMuscles = selector.useMuscles.selected
         self.useReverseHip = selector.useReverseHip.selected
         #self.useCorrectives = selector.useCorrectives.selected
+        self.useRotationLimits = selector.useRotationLimits.selected
         self.addConnectingBones = selector.addConnectingBones.selected
 
         self.mergeSpine = selector.mergeSpine.selected
@@ -199,6 +198,7 @@ class ArmatureSelector:
         self.useMuscles = box.addWidget(gui.ToggleButton("Muscle bones (MHX only)"))
         self.useReverseHip = box.addWidget(gui.ToggleButton("Reverse hips"))
         self.addConnectingBones = box.addWidget(gui.ToggleButton("Connecting bones"))
+        self.useRotationLimits = box.addWidget(gui.ToggleButton("Use rotation limits (MHX only)"))
 
         self.mergeSpine = box.addWidget(gui.ToggleButton("Merge spine"))
         self.mergeShoulders = box.addWidget(gui.ToggleButton("Merge shoulders"))
@@ -219,6 +219,7 @@ class ArmatureSelector:
         self.useMuscles.setSelected(options.useMuscles)
         self.useReverseHip.setSelected(options.useReverseHip)
         self.addConnectingBones.setSelected(options.addConnectingBones)
+        self.useRotationLimits.setSelected(options.useRotationLimits)
 
         self.mergeSpine.setSelected(options.mergeSpine)
         self.mergeShoulders.setSelected(options.mergeShoulders)

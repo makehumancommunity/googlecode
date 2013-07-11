@@ -60,7 +60,6 @@ class MhxConfig(Config):
             self.rigOptions.setExportOptions(
                 useCustomShapes = True,
                 useConstraints = True,
-                useRotationLimits = True,
                 useBoneGroups = True,
                 useCorrectives = self.bodyShapes,
                 useExpressions = self.expressions,

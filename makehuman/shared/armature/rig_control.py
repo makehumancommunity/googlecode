@@ -281,7 +281,7 @@ CustomShapes = {
 
 IkArmChains = {
     "upper_arm" :   ("Upstream", L_LARMIK, "Arm"),
-    "forearm" :     ("Leaf", L_LARMIK, 2, "Arm", "hand", "elbow.pt", 180*D, 0*D),
+    "forearm" :     ("Leaf", L_LARMIK, 2, "Arm", "hand", "elbow.pt", -90*D, -90*D),
     "hand" :        ("DownStream", L_LARMIK, "Arm"),
 }
 

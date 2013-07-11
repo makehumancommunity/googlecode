@@ -199,6 +199,23 @@ class Parser:
         if options.useFingers and options.useConstraints:
             self.addBones(rig_control.FingerArmature, boneInfo)
 
+        if options.useConstraints and options.useRotationLimits:
+            for bname,limits in self.rotationLimits.items():
+                try:
+                    bone = boneInfo[bname]
+                except KeyError:
+                    continue
+                minX,maxX, minY,maxY, minZ,maxZ = limits
+                if minX != None:
+                    cns = ("LimitRot", C_LOCAL, 0.8, ["LimitRot", limits, (1,1,1)])
+                    self.addConstraint(bname, cns)
+                lockX,lockY,lockZ = bone.lockRotation
+                if minY == maxY == 0:
+                    lockY = 1
+                if minZ == maxZ == 0:
+                    lockZ = 1
+                bone.lockRotation = lockX,lockY,lockZ
+
         if options.useCorrectives:
             self.addCSysBones(rig_control.CoordinateSystems, boneInfo)
 
@@ -528,12 +545,21 @@ class Parser:
                 self.customShapes[bone.name] = None
                 bone.layers = L_HELP
 
+                if options.useRotationLimits:
+                    try:
+                        limits = self.rotationLimits[bname]
+                    except KeyError:
+                        limits = None
+                    if limits:
+                        self.rotationLimits[fkName] = limits
+                        del self.rotationLimits[bname]
+
                 self.addConstraint(bname, copyTransform(fkName, cnsname+"FK"))
 
                 if type == "DownStream":
                     continue
 
-                ikName = base + ".ik" + ext
+                ikName = getIkName(base,ext)
                 self.headsTails[ikName] = headTail
                 ikBone = boneInfo[ikName] = Bone(amt, ikName)
                 ikBone.fromInfo((bname, ikParent, F_WIR, L_HELP))
@@ -845,7 +871,6 @@ class Parser:
             for mbone in merged:
                 if mbone != bname:
                     vgroup += amt.vertexWeights[mbone]
-                    log.debug("Merge %s to %s" % (mbone, bname))
                     del amt.vertexWeights[mbone]
                     del boneInfo[mbone]
                     for child in boneInfo.values():
@@ -932,4 +957,5 @@ class Parser:
         for bname,clist in constraints.items():
             for cns in clist:
                 self.addConstraint(bname, cns)
+
 
