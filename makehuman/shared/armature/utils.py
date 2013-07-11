@@ -138,16 +138,16 @@ def checkOrthogonal(mat):
     return True
 
 
-def computeRoll(head, tail, normal):
+def computeRoll(head, tail, normal, bone=None):
     if normal is None:
         return 0
 
     p1 = m2b(head)
     p2 = m2b(tail)
     xvec = normal
-    yvec = getUnitVector(p2-p1)
-    xy = np.dot(xvec,yvec)
-    yvec = getUnitVector(yvec-xy*xvec)
+    pvec = getUnitVector(p2-p1)
+    xy = np.dot(xvec,pvec)
+    yvec = getUnitVector(pvec-xy*xvec)
     zvec = getUnitVector(np.cross(xvec, yvec))
     if zvec is None:
         return 0
@@ -159,9 +159,27 @@ def computeRoll(head, tail, normal):
     if abs(quat[0]) < 1e-4:
         return 0
     else:
-        roll = math.pi + 2*math.atan(quat[2]/quat[0])
+        roll = math.pi - 2*math.atan(quat[2]/quat[0])
 
-    return max(-math.pi, min(roll, math.pi))
+    if roll < -math.pi:
+        roll += 2*math.pi
+    elif roll > math.pi:
+        roll -= 2*math.pi
+    return roll
+
+    if bone and bone.name in ["forearm.L", "forearm.R"]:
+        log.debug("B  %s" % bone.name)
+        log.debug(" H  %.4g %.4g %.4g" % tuple(head))
+        log.debug(" T  %.4g %.4g %.4g" % tuple(tail))
+        log.debug(" N  %.4g %.4g %.4g" % tuple(normal))
+        log.debug(" P  %.4g %.4g %.4g" % tuple(pvec))
+        log.debug(" X  %.4g %.4g %.4g" % tuple(xvec))
+        log.debug(" Y  %.4g %.4g %.4g" % tuple(yvec))
+        log.debug(" Z  %.4g %.4g %.4g" % tuple(zvec))
+        log.debug(" Q  %.4g %.4g %.4g %.4g" % tuple(quat))
+        log.debug(" R  %.4g" % roll)
+
+    return roll
 
 
 #-------------------------------------------------------------------------------

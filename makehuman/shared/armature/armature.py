@@ -229,7 +229,7 @@ class Bone:
         if isinstance(self.roll, str):
             if self.roll[0:5] == "Plane":
                 normal = m2b(self.armature.parser.normals[self.roll])
-                self.roll = computeRoll(self.head, self.tail, normal)
+                self.roll = computeRoll(self.head, self.tail, normal, bone=self)
 
 
     def rescale(self, scale):
