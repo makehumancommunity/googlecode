@@ -780,7 +780,7 @@ class TextEdit(QtGui.QLineEdit, Widget):
 
     def keyPressEvent(self, event):
         key = event.key()
-        mod = int(event.modifiers()) & ~QtCore.Qt.ShiftModifier
+        mod = int(event.modifiers()) & ~QtCore.Qt.ShiftModifier & ~QtCore.Qt.KeypadModifier
         if mod:
             return
         if key == QtCore.Qt.Key_Up:
@@ -1531,6 +1531,7 @@ class ImageView(QtGui.QLabel, QtGui.QScrollArea, Widget):
         self.setSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.MinimumExpanding)
         #self.setScaledContents(True)
         self.ratio = 1.0
+        self.workingSize = None
         self._pixmap = None
 
     def setImage(self, path):
@@ -1545,6 +1546,7 @@ class ImageView(QtGui.QLabel, QtGui.QScrollArea, Widget):
         return self._pixmap.size()
 
     def resizeEvent(self, event):
+        self.workingSize = event.size()
         self.refreshImage(event.size())
         
     def refreshImage(self, size = None):
