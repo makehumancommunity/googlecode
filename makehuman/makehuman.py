@@ -119,11 +119,19 @@ def get_svn_revision_1():
     return svnrev
 
 def get_svn_revision():
-    # Set SVN rev in environment so it can be used elsewhere
-    svnrev = get_svn_revision_1()
-    print >> sys.stderr,  "Detected SVN revision: " + svnrev
-    os.environ['SVNREVISION'] = svnrev
-
+    #[BAL 07/13/2013] use the VERSION file if it exists. This is created and managed using pyinstaller.
+    if os.path.exists(os.path.join("core","VERSION")):
+        version = open(os.path.join("core","VERSION")).read().strip()
+        print >> sys.stderr,  "VERSION file detected using value from version file: %s" % version
+        os.environ['SVNREVISION'] = version
+        os.environ['SVNREVISION_SOURCE'] = "core/VERSION static revision data"
+    else:
+        print >> sys.stderr,  "NO VERSION file detected retrieving revision info from SVN"
+        # Set SVN rev in environment so it can be used elsewhere
+        svnrev = get_svn_revision_1()
+        print >> sys.stderr,  "Detected SVN revision: " + svnrev
+        os.environ['SVNREVISION'] = svnrev
+    
 def recursiveDirNames(root):
     pathlist=[]
     #root=os.path.dirname(root)
@@ -197,8 +205,8 @@ def debug_dump():
 def main():
     get_platform_paths()
     redirect_standard_streams()
-#    get_svn_revision()
     set_sys_path()
+    get_svn_revision()
     make_user_dir()
     init_logging()
     debug_dump()
