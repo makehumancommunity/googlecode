@@ -43,7 +43,7 @@ exe = EXE(pyz,
           name='makehuman',
           debug=False,
           strip=None,
-          upx=True,
+          upx=False,
           console=False )
 coll = COLLECT(exe,
                a.binaries,
