@@ -135,10 +135,9 @@ def recursiveDirNames(root):
     return(pathlist)
 
 def set_sys_path():
-    syspath = ["./", "./lib", "./apps", "./shared"]
-    syspath = syspath + recursiveDirNames("./apps")
-    syspath.append("./core")
-    syspath = syspath + recursiveDirNames("./core")
+    #[BAL 07/11/2013] make sure we're in the right directory
+    os.chdir(sys.path[0])
+    syspath = ["./", "./lib", "./apps", "./shared", "./apps/gui","./core"]
     syspath.extend(sys.path)
     sys.path = syspath
 
@@ -198,7 +197,7 @@ def debug_dump():
 def main():
     get_platform_paths()
     redirect_standard_streams()
-    get_svn_revision()
+#    get_svn_revision()
     set_sys_path()
     make_user_dir()
     init_logging()
