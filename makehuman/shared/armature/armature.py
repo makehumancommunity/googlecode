@@ -167,7 +167,6 @@ class Bone:
         self.children = []
 
         self.location = (0,0,0)
-        self.group = None
         self.lockLocation = (0,0,0)
         self.lockRotation = (0,0,0)
         self.lockScale = (1,1,1)

@@ -70,7 +70,7 @@ def addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScal
     fp.write("\n  Posebone %s %s \n" % (bone, True))
 
     if boneGroup:
-        index = boneGroupIndex(boneGroup, amt)
+        #index = boneGroupIndex(boneGroup, amt)
         fp.write("    bone_group Refer BoneGroup %s ;\n" % boneGroup)
 
     uses = (0,0,0)
@@ -143,7 +143,7 @@ def rotationMode(flags):
     modes = ['QUATERNION', 'XYZ', 'XZY', 'YXZ', 'YZX', 'ZXY', 'ZYX']
     return modes[(flags&P_ROTMODE) >> 8]
 
-
+'''
 def boneGroupIndex(grp, amt):
     index = 1
     for (name, color) in amt.boneGroups:
@@ -151,6 +151,6 @@ def boneGroupIndex(grp, amt):
             return index
         index += 1
     raise NameError("Unknown bonegroup %s" % grp)
-
+'''
 
 

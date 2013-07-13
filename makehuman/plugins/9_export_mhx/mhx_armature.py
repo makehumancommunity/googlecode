@@ -30,6 +30,7 @@ import exportutils
 import log
 
 from armature.armature import Armature
+from armature.flags import *
 
 from . import posebone
 from . import mhx_drivers
@@ -197,11 +198,11 @@ class ExportArmature(Armature):
     def writeBoneGroups(self, fp):
         if not fp:
             return
-        for (name, color) in self.boneGroups:
+        for (name, theme, _) in _BoneGroups:
             fp.write(
                 "    BoneGroup %s\n" % name +
                 "      name '%s' ;\n" % name +
-                "      color_set '%s' ;\n" % color +
+                "      color_set '%s' ;\n" % theme +
                 "    end BoneGroup\n")
         return
 
@@ -210,11 +211,14 @@ class ExportArmature(Armature):
         self.writeBoneGroups(fp)
 
         for bone in self.bones.values():
+            bgroup = getBoneGroup(bone)
             posebone.addPoseBone(
                 fp, self, bone.name,
-                bone.customShape, bone.group,
+                bone.customShape, bgroup,
                 bone.lockLocation, bone.lockRotation, bone.lockScale,
                 bone.ikDof, bone.flags, bone.constraints)
+
+
 
 
     def writeDrivers(self, fp):
@@ -445,3 +449,24 @@ end Object
     def writeFinal(self, fp):
         return
 
+#
+#
+#
+
+_BoneGroups = [
+    ('Spine', 'THEME01', L_UPSPNFK),
+    ('ArmFK.L', 'THEME02', L_LARMFK),
+    ('ArmFK.R', 'THEME03', L_RARMFK),
+    ('ArmIK.L', 'THEME04', L_LARMIK),
+    ('ArmIK.R', 'THEME05', L_RARMIK),
+    ('LegFK.L', 'THEME06', L_LLEGFK),
+    ('LegFK.R', 'THEME07', L_RLEGFK),
+    ('LegIK.L', 'THEME08', L_LLEGIK),
+    ('LegIK.R', 'THEME09', L_RLEGIK),
+]
+
+def getBoneGroup(bone):
+    for bgroup,_,layer in _BoneGroups:
+        if bone.layers & layer:
+            return bgroup
+    return None

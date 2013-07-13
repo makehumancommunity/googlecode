@@ -177,14 +177,14 @@ Armature = {
     'neck' :               (0, 'chest-1', F_DEF|F_CON, L_UPSPNFK),
     'head' :               (0, 'neck', F_DEF|F_CON, L_UPSPNFK),
 
-    'shoulder.L' :         (0, 'chest-1', F_DEF, L_LARMFK|L_LARMIK),
-    'deltoid.L' :          (0, 'shoulder.L', F_DEF|F_CON, L_LARMFK|L_LARMIK),
+    'shoulder.L' :         (0, 'chest-1', F_DEF, L_UPSPNFK|L_LARMFK|L_LARMIK),
+    'deltoid.L' :          (0, 'shoulder.L', F_DEF|F_CON, L_UPSPNFK|L_LARMFK|L_LARMIK),
     'upper_arm.L' :        ("PlaneArm.L", 'deltoid.L', F_DEF|F_CON, L_LARMFK),
     'forearm.L' :          ("PlaneArm.L", 'upper_arm.L', F_DEF|F_CON, L_LARMFK),
     'hand.L' :             ("PlaneArm.L", 'forearm.L', F_DEF|F_CON, L_LARMFK),
 
-    'shoulder.R' :         (0, 'chest-1', F_DEF, L_RARMFK|L_RARMIK),
-    'deltoid.R' :          (0, 'shoulder.R', F_DEF|F_CON, L_RARMFK|L_RARMIK),
+    'shoulder.R' :         (0, 'chest-1', F_DEF, L_UPSPNFK|L_RARMFK|L_RARMIK),
+    'deltoid.R' :          (0, 'shoulder.R', F_DEF|F_CON, L_UPSPNFK|L_RARMFK|L_RARMIK),
     'upper_arm.R' :        ("PlaneArm.R", 'deltoid.R', F_DEF|F_CON, L_RARMFK),
     'forearm.R' :          ("PlaneArm.R", 'upper_arm.R', F_DEF|F_CON, L_RARMFK),
     'hand.R' :             ("PlaneArm.R", 'forearm.R', F_DEF|F_CON, L_RARMFK),
@@ -326,7 +326,6 @@ CustomShapes = {
 }
 
 Constraints = {}
-
 
 ObjectProps = [
 ]
