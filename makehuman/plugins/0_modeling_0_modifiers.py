@@ -46,6 +46,24 @@ class ModifierTaskView(gui3d.TaskView):
     def __init__(self, category):
         super(ModifierTaskView, self).__init__(category, self._name, label=self._label)
 
+        def resolveOptionsDict(opts, type = 'simple'):
+            # Function to analyze options passed
+            # with a dictionary in the features.
+            if not 'cam' in opts.keys():
+                opts['cam'] = 'noSetCamera'
+            if not 'min' in opts.keys():
+                if type == 'paired':
+                    opts['min'] = -1.0
+                else:
+                    opts['min'] = 0.0
+            if not 'max' in opts.keys():
+                opts['max'] = 1.0
+            if 'reverse' in opts.keys() and opts['reverse'] == True:
+                temp = opts['max']
+                opts['max'] = opts['min']
+                opts['min'] = temp
+                # More work needed for reversing - TODO SOON
+                
         self.groupBoxes = []
         self.radioButtons = []
         self.sliders = []
@@ -68,18 +86,22 @@ class ModifierTaskView(gui3d.TaskView):
             for index, template in enumerate(templates):
                 macro = len(template) == 4
                 if macro:
-                    tlabel, tname, tvar, tview = template
+                    tlabel, tname, tvar, opts = template
+                    resolveOptionsDict(opts, 'macro')
                     modifier = humanmodifier.MacroModifier(base, tname, tvar)
                     self.modifiers[tvar] = modifier
-                    slider = humanmodifier.MacroSlider(modifier, tlabel, None, tview)
+                    slider = humanmodifier.MacroSlider(modifier, tlabel, None,
+                                                       opts['cam'], opts['min'], opts['max'])
                 else:
                     paired = len(template) == 5
                     if paired:
-                        tlabel, tname, tleft, tright, tview = template
+                        tlabel, tname, tleft, tright, opts = template
+                        resolveOptionsDict(opts, 'paired')
                         left  = '-'.join([base, tname, tleft])
                         right = '-'.join([base, tname, tright])
                     else:
-                        tlabel, tname, tview = template
+                        tlabel, tname, opts = template
+                        resolveOptionsDict(opts)                       
                         left = None
                         right = '-'.join([base, tname])
 
@@ -100,7 +122,8 @@ class ModifierTaskView(gui3d.TaskView):
                         clashIndex += 1
 
                     self.modifiers[modifierName] = modifier
-                    slider = humanmodifier.UniversalSlider(modifier, tlabel, '%s.png' % tpath, tview)
+                    slider = humanmodifier.UniversalSlider(modifier, tlabel, '%s.png' % tpath,
+                                                           opts['cam'], opts['min'], opts['max'])
 
                 box.addWidget(slider)
                 self.sliders.append(slider)
@@ -168,146 +191,146 @@ class FaceTaskView(ModifierTaskView):
     _group = 'face'
     _features = [
         ('head shape', 'head', [
-            (None, 'head-oval', 'frontView'),
-            (None, 'head-round', 'frontView'),
-            (None, 'head-rectangular', 'frontView'),
-            (None, 'head-square', 'frontView'),
-            (None, 'head-triangular', 'frontView'),
-            (None, 'head-invertedtriangular', 'frontView'),
-            (None, 'head-diamond', 'frontView'),
+            (None, 'head-oval', {'cam' : 'frontView'}),
+            (None, 'head-round', {'cam' : 'frontView'}),
+            (None, 'head-rectangular', {'cam' : 'frontView'}),
+            (None, 'head-square', {'cam' : 'frontView'}),
+            (None, 'head-triangular', {'cam' : 'frontView'}),
+            (None, 'head-invertedtriangular', {'cam' : 'frontView'}),
+            (None, 'head-diamond', {'cam' : 'frontView'}),
             ]),
         ('head', 'head', [
-            (None, 'head-age', 'less', 'more', 'frontView'),
-            (None, 'head-angle', 'in', 'out', 'rightView'),
-            (None, 'head-scale-depth', 'less', 'more', 'rightView'),
-            (None, 'head-scale-horiz', 'less', 'more', 'frontView'),
-            (None, 'head-scale-vert', 'more', 'less', 'frontView'),
-            (None, 'head-trans', 'in', 'out', 'frontView'),
-            (None, 'head-trans', 'down', 'up', 'frontView'),
-            (None, 'head-trans', 'forward', 'backward', 'rightView'),
+            (None, 'head-age', 'less', 'more', {'cam' : 'frontView'}),
+            (None, 'head-angle', 'in', 'out', {'cam' : 'rightView'}),
+            (None, 'head-scale-depth', 'less', 'more', {'cam' : 'rightView'}),
+            (None, 'head-scale-horiz', 'less', 'more', {'cam' : 'frontView'}),
+            (None, 'head-scale-vert', 'more', 'less', {'cam' : 'frontView'}),
+            (None, 'head-trans', 'in', 'out', {'cam' : 'frontView'}),
+            (None, 'head-trans', 'down', 'up', {'cam' : 'frontView'}),
+            (None, 'head-trans', 'forward', 'backward', {'cam' : 'rightView'}),
             ]),
         ('neck', 'neck', [
-            (None, 'neck-scale-depth', 'less', 'more', 'rightView'),
-            (None, 'neck-scale-horiz', 'less', 'more', 'frontView'),
-            (None, 'neck-scale-vert', 'more', 'less', 'frontView'),
-            (None, 'neck-trans', 'in', 'out', 'frontView'),
-            (None, 'neck-trans', 'down', 'up', 'frontView'),
-            (None, 'neck-trans', 'forward', 'backward', 'rightView'),
+            (None, 'neck-scale-depth', 'less', 'more', {'cam' : 'rightView'}),
+            (None, 'neck-scale-horiz', 'less', 'more', {'cam' : 'frontView'}),
+            (None, 'neck-scale-vert', 'more', 'less', {'cam' : 'frontView'}),
+            (None, 'neck-trans', 'in', 'out', {'cam' : 'frontView'}),
+            (None, 'neck-trans', 'down', 'up', {'cam' : 'frontView'}),
+            (None, 'neck-trans', 'forward', 'backward', {'cam' : 'rightView'}),
             ]),
         ('right eye', 'eyes', [
-            (None, 'r-eye-height1', 'min', 'max', 'frontView'),
-            (None, 'r-eye-height2', 'min', 'max', 'frontView'),
-            (None, 'r-eye-height3', 'min', 'max', 'frontView'),
-            (None, 'r-eye-push1', 'in', 'out', 'frontView'),
-            (None, 'r-eye-push2', 'in', 'out', 'frontView'),
-            (None, 'r-eye-move', 'in', 'out', 'frontView'),
-            (None, 'r-eye-move', 'up', 'down', 'frontView'),
-            (None, 'r-eye', 'small', 'big', 'frontView'),
-            (None, 'r-eye-corner1', 'up', 'down', 'frontView'),
-            (None, 'r-eye-corner2', 'up', 'down', 'frontView')
+            (None, 'r-eye-height1', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'r-eye-height2', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'r-eye-height3', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'r-eye-push1', 'in', 'out', {'cam' : 'frontView'}),
+            (None, 'r-eye-push2', 'in', 'out', {'cam' : 'frontView'}),
+            (None, 'r-eye-move', 'in', 'out', {'cam' : 'frontView'}),
+            (None, 'r-eye-move', 'up', 'down', {'cam' : 'frontView'}),
+            (None, 'r-eye', 'small', 'big', {'cam' : 'frontView'}),
+            (None, 'r-eye-corner1', 'up', 'down', {'cam' : 'frontView'}),
+            (None, 'r-eye-corner2', 'up', 'down', {'cam' : 'frontView'})
             ]),
         ('left eye', 'eyes', [
-            (None, 'l-eye-height1', 'min', 'max', 'frontView'),
-            (None, 'l-eye-height2', 'min', 'max', 'frontView'),
-            (None, 'l-eye-height3', 'min', 'max', 'frontView'),
-            (None, 'l-eye-push1', 'in', 'out', 'frontView'),
-            (None, 'l-eye-push2', 'in', 'out', 'frontView'),
-            (None, 'l-eye-move', 'in', 'out', 'frontView'),
-            (None, 'l-eye-move', 'up', 'down', 'frontView'),
-            (None, 'l-eye', 'small', 'big', 'frontView'),
-            (None, 'l-eye-corner1', 'up', 'down', 'frontView'),
-            (None, 'l-eye-corner2', 'up', 'down', 'frontView'),
+            (None, 'l-eye-height1', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'l-eye-height2', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'l-eye-height3', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'l-eye-push1', 'in', 'out', {'cam' : 'frontView'}),
+            (None, 'l-eye-push2', 'in', 'out', {'cam' : 'frontView'}),
+            (None, 'l-eye-move', 'in', 'out', {'cam' : 'frontView'}),
+            (None, 'l-eye-move', 'up', 'down', {'cam' : 'frontView'}),
+            (None, 'l-eye', 'small', 'big', {'cam' : 'frontView'}),
+            (None, 'l-eye-corner1', 'up', 'down', {'cam' : 'frontView'}),
+            (None, 'l-eye-corner2', 'up', 'down', {'cam' : 'frontView'}),
             ]),
         ('nose features', 'nose', [
-            (None, 'nose', 'compress', 'uncompress', 'rightView'),
-            (None, 'nose', 'convex', 'concave', 'rightView'),
-            (None, 'nose', 'moregreek', 'lessgreek', 'rightView'),
-            (None, 'nose', 'morehump', 'lesshump', 'rightView'),
-            (None, 'nose', 'potato', 'point', 'rightView'),
-            (None, 'nose-nostrils', 'point', 'unpoint', 'frontView'),
-            (None, 'nose-nostrils', 'up', 'down', 'rightView'),
-            (None, 'nose-point', 'up', 'down', 'rightView'),
+            (None, 'nose', 'compress', 'uncompress', {'cam' : 'rightView'}),
+            (None, 'nose', 'convex', 'concave', {'cam' : 'rightView'}),
+            (None, 'nose', 'moregreek', 'lessgreek', {'cam' : 'rightView'}),
+            (None, 'nose', 'morehump', 'lesshump', {'cam' : 'rightView'}),
+            (None, 'nose', 'potato', 'point', {'cam' : 'rightView'}),
+            (None, 'nose-nostrils', 'point', 'unpoint', {'cam' : 'frontView'}),
+            (None, 'nose-nostrils', 'up', 'down', {'cam' : 'rightView'}),
+            (None, 'nose-point', 'up', 'down', {'cam' : 'rightView'}),
             ]),
         ('nose size details', 'nose', [
-            (None, 'nose-nostril-width', 'min', 'max', 'frontView'),
-            (None, 'nose-height', 'min', 'max', 'rightView'),
-            (None, 'nose-width1', 'min', 'max', 'frontView'),
-            (None, 'nose-width2', 'min', 'max', 'frontView'),
-            (None, 'nose-width3', 'min', 'max', 'frontView'),
-            (None, 'nose-width', 'min', 'max', 'frontView'),
+            (None, 'nose-nostril-width', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'nose-height', 'min', 'max', {'cam' : 'rightView'}),
+            (None, 'nose-width1', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'nose-width2', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'nose-width3', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'nose-width', 'min', 'max', {'cam' : 'frontView'}),
             ]),
         ('nose size', 'nose', [
-            (None, 'nose-trans', 'up', 'down', 'frontView'),
-            (None, 'nose-trans', 'forward', 'backward', 'rightView'),
-            (None, 'nose-trans', 'in', 'out', 'frontView'),
-            (None, 'nose-scale-vert', 'incr', 'decr', 'frontView'),
-            (None, 'nose-scale-horiz', 'incr', 'decr', 'frontView'),
-            (None, 'nose-scale-depth', 'incr', 'decr', 'rightView'),
+            (None, 'nose-trans', 'up', 'down', {'cam' : 'frontView'}),
+            (None, 'nose-trans', 'forward', 'backward', {'cam' : 'rightView'}),
+            (None, 'nose-trans', 'in', 'out', {'cam' : 'frontView'}),
+            (None, 'nose-scale-vert', 'incr', 'decr', {'cam' : 'frontView'}),
+            (None, 'nose-scale-horiz', 'incr', 'decr', {'cam' : 'frontView'}),
+            (None, 'nose-scale-depth', 'incr', 'decr', {'cam' : 'rightView'}),
             ]),
         ('mouth size', 'mouth', [
-            (None, 'mouth-scale-horiz', 'incr', 'decr', 'frontView'),
-            (None, 'mouth-scale-vert', 'incr', 'decr', 'frontView'),
-            (None, 'mouth-scale-depth', 'incr', 'decr', 'rightView'),
-            (None, 'mouth-trans', 'in', 'out', 'frontView'),
-            (None, 'mouth-trans', 'up', 'down', 'frontView'),
-            (None, 'mouth-trans', 'forward', 'backward', 'rightView'),
+            (None, 'mouth-scale-horiz', 'incr', 'decr', {'cam' : 'frontView'}),
+            (None, 'mouth-scale-vert', 'incr', 'decr', {'cam' : 'frontView'}),
+            (None, 'mouth-scale-depth', 'incr', 'decr', {'cam' : 'rightView'}),
+            (None, 'mouth-trans', 'in', 'out', {'cam' : 'frontView'}),
+            (None, 'mouth-trans', 'up', 'down', {'cam' : 'frontView'}),
+            (None, 'mouth-trans', 'forward', 'backward', {'cam' : 'rightView'}),
             ]),
         ('mouth size details', 'mouth', [
-            (None, 'mouth-lowerlip-height', 'min', 'max', 'frontView'),
-            (None, 'mouth-lowerlip-middle', 'up', 'down', 'frontView'),
-            (None, 'mouth-lowerlip-width', 'min', 'max', 'frontView'),
-            (None, 'mouth-upperlip-height', 'min', 'max', 'frontView'),
-            (None, 'mouth-upperlip-width', 'min', 'max', 'frontView'),
+            (None, 'mouth-lowerlip-height', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'mouth-lowerlip-middle', 'up', 'down', {'cam' : 'frontView'}),
+            (None, 'mouth-lowerlip-width', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'mouth-upperlip-height', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'mouth-upperlip-width', 'min', 'max', {'cam' : 'frontView'}),
             ]),
         ('mouth features', 'mouth', [
-            (None, 'mouth-lowerlip-ext', 'up', 'down', 'frontView'),
-            (None, 'mouth-angles', 'up', 'down', 'frontView'),
-            (None, 'mouth-lowerlip-middle', 'up', 'down', 'frontView'),
-            (None, 'mouth-lowerlip', 'deflate', 'inflate', 'rightView'),
-            (None, 'mouth-philtrum', 'up', 'down', 'frontView'),
-            (None, 'mouth-philtrum', 'increase', 'decrease', 'rightView'),
-            (None, 'mouth-upperlip', 'deflate', 'inflate', 'rightView'),
-            (None, 'mouth-upperlip-ext', 'up', 'down', 'frontView'),
-            (None, 'mouth-upperlip-middle', 'up', 'down', 'frontView'),
+            (None, 'mouth-lowerlip-ext', 'up', 'down', {'cam' : 'frontView'}),
+            (None, 'mouth-angles', 'up', 'down', {'cam' : 'frontView'}),
+            (None, 'mouth-lowerlip-middle', 'up', 'down', {'cam' : 'frontView'}),
+            (None, 'mouth-lowerlip', 'deflate', 'inflate', {'cam' : 'rightView'}),
+            (None, 'mouth-philtrum', 'up', 'down', {'cam' : 'frontView'}),
+            (None, 'mouth-philtrum', 'increase', 'decrease', {'cam' : 'rightView'}),
+            (None, 'mouth-upperlip', 'deflate', 'inflate', {'cam' : 'rightView'}),
+            (None, 'mouth-upperlip-ext', 'up', 'down', {'cam' : 'frontView'}),
+            (None, 'mouth-upperlip-middle', 'up', 'down', {'cam' : 'frontView'}),
             ]),
         ('right ear', 'ears', [
-            (None, 'r-ear', 'backward', 'forward', 'rightView'),
-            (None, 'r-ear', 'big', 'small', 'rightView'),
-            (None, 'r-ear', 'down', 'up', 'rightView'),
-            (None, 'r-ear-height', 'min', 'max', 'rightView'),
-            (None, 'r-ear-lobe', 'min', 'max', 'rightView'),
-            (None, 'r-ear', 'pointed', 'triangle', 'rightView'),
-            (None, 'r-ear-rot', 'backward', 'forward', 'rightView'),
-            (None, 'r-ear', 'square', 'round', 'rightView'),
-            (None, 'r-ear-width', 'max', 'min', 'rightView'),
-            (None, 'r-ear-wing', 'out', 'in', 'frontView'),
-            (None, 'r-ear-flap', 'out', 'in', 'frontView'),
+            (None, 'r-ear', 'backward', 'forward', {'cam' : 'rightView'}),
+            (None, 'r-ear', 'big', 'small', {'cam' : 'rightView'}),
+            (None, 'r-ear', 'down', 'up', {'cam' : 'rightView'}),
+            (None, 'r-ear-height', 'min', 'max', {'cam' : 'rightView'}),
+            (None, 'r-ear-lobe', 'min', 'max', {'cam' : 'rightView'}),
+            (None, 'r-ear', 'pointed', 'triangle', {'cam' : 'rightView'}),
+            (None, 'r-ear-rot', 'backward', 'forward', {'cam' : 'rightView'}),
+            (None, 'r-ear', 'square', 'round', {'cam' : 'rightView'}),
+            (None, 'r-ear-width', 'max', 'min', {'cam' : 'rightView'}),
+            (None, 'r-ear-wing', 'out', 'in', {'cam' : 'frontView'}),
+            (None, 'r-ear-flap', 'out', 'in', {'cam' : 'frontView'}),
             ]),
         ('left ear', 'ears', [
-            (None, 'l-ear', 'backward', 'forward', 'leftView'),
-            (None, 'l-ear', 'big', 'small', 'leftView'),
-            (None, 'l-ear', 'down', 'up', 'leftView'),
-            (None, 'l-ear-height', 'min', 'max', 'leftView'),
-            (None, 'l-ear-lobe', 'min', 'max', 'leftView'),
-            (None, 'l-ear', 'pointed', 'triangle', 'leftView'),
-            (None, 'l-ear-rot', 'backward', 'forward', 'leftView'),
-            (None, 'l-ear', 'square', 'round', 'leftView'),
-            (None, 'l-ear-width', 'max', 'min', 'leftView'),
-            (None, 'l-ear-wing', 'out', 'in', 'frontView'),
-            (None, 'l-ear-flap', 'out', 'in', 'frontView'),
+            (None, 'l-ear', 'backward', 'forward', {'cam' : 'leftView'}),
+            (None, 'l-ear', 'big', 'small', {'cam' : 'leftView'}),
+            (None, 'l-ear', 'down', 'up', {'cam' : 'leftView'}),
+            (None, 'l-ear-height', 'min', 'max', {'cam' : 'leftView'}),
+            (None, 'l-ear-lobe', 'min', 'max', {'cam' : 'leftView'}),
+            (None, 'l-ear', 'pointed', 'triangle', {'cam' : 'leftView'}),
+            (None, 'l-ear-rot', 'backward', 'forward', {'cam' : 'leftView'}),
+            (None, 'l-ear', 'square', 'round', {'cam' : 'leftView'}),
+            (None, 'l-ear-width', 'max', 'min', {'cam' : 'leftView'}),
+            (None, 'l-ear-wing', 'out', 'in', {'cam' : 'frontView'}),
+            (None, 'l-ear-flap', 'out', 'in', {'cam' : 'frontView'}),
             ]),
         ('chin', 'chin', [
-            (None, 'chin', 'in', 'out', 'rightView'),
-            (None, 'chin-width', 'min', 'max', 'frontView'),
-            (None, 'chin-height', 'min', 'max', 'frontView'),
-            (None, 'chin', 'squared', 'round', 'frontView'),
-            (None, 'chin', 'prognathism1', 'prognathism2', 'rightView'),
+            (None, 'chin', 'in', 'out', {'cam' : 'rightView'}),
+            (None, 'chin-width', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'chin-height', 'min', 'max', {'cam' : 'frontView'}),
+            (None, 'chin', 'squared', 'round', {'cam' : 'frontView'}),
+            (None, 'chin', 'prognathism1', 'prognathism2', {'cam' : 'rightView'}),
             ]),
         ('cheek', 'cheek', [
-            (None, 'l-cheek', 'in', 'out', 'frontView'),
-            (None, 'l-cheek-bones', 'out', 'in', 'frontView'),
-            (None, 'r-cheek', 'in', 'out', 'frontView'),
-            (None, 'r-cheek-bones', 'out', 'in', 'frontView'),
+            (None, 'l-cheek', 'in', 'out', {'cam' : 'frontView'}),
+            (None, 'l-cheek-bones', 'out', 'in', {'cam' : 'frontView'}),
+            (None, 'r-cheek', 'in', 'out', {'cam' : 'frontView'}),
+            (None, 'r-cheek-bones', 'out', 'in', {'cam' : 'frontView'}),
             ]),
         ]
 
@@ -319,29 +342,29 @@ class TorsoTaskView(ModifierTaskView):
     _group = 'torso'
     _features = [
         ('Torso', 'torso', [
-            (None, 'torso-scale-depth', 'decr', 'incr', 'setGlobalCamera'),
-            (None, 'torso-scale-horiz', 'decr', 'incr', 'setGlobalCamera'),
-            (None, 'torso-scale-vert', 'decr', 'incr', 'setGlobalCamera'),
-            (None, 'torso-trans', 'in', 'out', 'setGlobalCamera'),
-            (None, 'torso-trans', 'down', 'up', 'setGlobalCamera'),
-            (None, 'torso-trans', 'forward', 'backward', 'setGlobalCamera'),
+            (None, 'torso-scale-depth', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
+            (None, 'torso-scale-horiz', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
+            (None, 'torso-scale-vert', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
+            (None, 'torso-trans', 'in', 'out', {'cam' : 'setGlobalCamera'}),
+            (None, 'torso-trans', 'down', 'up', {'cam' : 'setGlobalCamera'}),
+            (None, 'torso-trans', 'forward', 'backward', {'cam' : 'setGlobalCamera'}),
             ]),
         ('Hip', 'hip', [
-            (None, 'hip-scale-depth', 'decr', 'incr', 'setGlobalCamera'),
-            (None, 'hip-scale-horiz', 'decr', 'incr', 'setGlobalCamera'),
-            (None, 'hip-scale-vert', 'decr', 'incr', 'setGlobalCamera'),
-            (None, 'hip-trans', 'in', 'out', 'setGlobalCamera'),
-            (None, 'hip-trans', 'down', 'up', 'setGlobalCamera'),
-            (None, 'hip-trans', 'forward', 'backward', 'setGlobalCamera'),
+            (None, 'hip-scale-depth', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
+            (None, 'hip-scale-horiz', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
+            (None, 'hip-scale-vert', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
+            (None, 'hip-trans', 'in', 'out', {'cam' : 'setGlobalCamera'}),
+            (None, 'hip-trans', 'down', 'up', {'cam' : 'setGlobalCamera'}),
+            (None, 'hip-trans', 'forward', 'backward', {'cam' : 'setGlobalCamera'}),
             ]),
         ('Stomach', 'stomach', [
-            (None, 'stomach-tone', 'decr', 'incr', 'setGlobalCamera'),
+            (None, 'stomach-tone', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
             ]),
         ('Buttocks', 'buttocks', [
-            (None, 'buttocks-tone', 'decr', 'incr', 'setGlobalCamera'),
+            (None, 'buttocks-tone', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
             ]),
         ('Pelvis', 'pelvis', [
-            (None, 'pelvis-tone', 'decr', 'incr', 'setGlobalCamera'),
+            (None, 'pelvis-tone', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
             ])
         ]
 
@@ -350,92 +373,92 @@ class ArmsLegsTaskView(ModifierTaskView):
     _group = 'armslegs'
     _features = [
         ('right hand', 'armslegs', [
-            (None, 'r-hand-scale-depth', 'decr', 'incr', 'setRightHandTopCamera'),
-            (None, 'r-hand-scale-horiz', 'decr', 'incr', 'setRightHandFrontCamera'),
-            (None, 'r-hand-scale-vert', 'decr', 'incr', 'setRightHandFrontCamera'),
-            (None, 'r-hand-trans', 'in', 'out', 'setRightHandFrontCamera'),
-            (None, 'r-hand-trans', 'down', 'up', 'setRightHandFrontCamera'),
-            (None, 'r-hand-trans', 'forward', 'backward', 'setRightHandTopCamera'),
+            (None, 'r-hand-scale-depth', 'decr', 'incr', {'cam' : 'setRightHandTopCamera'}),
+            (None, 'r-hand-scale-horiz', 'decr', 'incr', {'cam' : 'setRightHandFrontCamera'}),
+            (None, 'r-hand-scale-vert', 'decr', 'incr', {'cam' : 'setRightHandFrontCamera'}),
+            (None, 'r-hand-trans', 'in', 'out', {'cam' : 'setRightHandFrontCamera'}),
+            (None, 'r-hand-trans', 'down', 'up', {'cam' : 'setRightHandFrontCamera'}),
+            (None, 'r-hand-trans', 'forward', 'backward', {'cam' : 'setRightHandTopCamera'}),
             ]),
         ('left hand', 'armslegs', [
-            (None, 'l-hand-scale-depth', 'decr', 'incr', 'setLeftHandTopCamera'),
-            (None, 'l-hand-scale-horiz', 'decr', 'incr', 'setLeftHandFrontCamera'),
-            (None, 'l-hand-scale-vert', 'decr', 'incr', 'setLeftHandFrontCamera'),
-            (None, 'l-hand-trans', 'in', 'out', 'setLeftHandFrontCamera'),
-            (None, 'l-hand-trans', 'down', 'up', 'setLeftHandFrontCamera'),
-            (None, 'l-hand-trans', 'forward', 'backward', 'setLeftHandTopCamera'),
+            (None, 'l-hand-scale-depth', 'decr', 'incr', {'cam' : 'setLeftHandTopCamera'}),
+            (None, 'l-hand-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftHandFrontCamera'}),
+            (None, 'l-hand-scale-vert', 'decr', 'incr', {'cam' : 'setLeftHandFrontCamera'}),
+            (None, 'l-hand-trans', 'in', 'out', {'cam' : 'setLeftHandFrontCamera'}),
+            (None, 'l-hand-trans', 'down', 'up', {'cam' : 'setLeftHandFrontCamera'}),
+            (None, 'l-hand-trans', 'forward', 'backward', {'cam' : 'setLeftHandTopCamera'}),
             ]),
         ('right foot', 'armslegs', [
-            (None, 'r-foot-scale-depth', 'decr', 'incr', 'setRightFootRightCamera'),
-            (None, 'r-foot-scale-horiz', 'decr', 'incr', 'setRightFootFrontCamera'),
-            (None, 'r-foot-scale-vert', 'decr', 'incr', 'setRightFootFrontCamera'),
-            (None, 'r-foot-trans', 'in', 'out', 'setRightFootFrontCamera'),
-            (None, 'r-foot-trans', 'down', 'up', 'setRightFootFrontCamera'),
-            (None, 'r-foot-trans', 'forward', 'backward', 'setRightFootRightCamera'),
+            (None, 'r-foot-scale-depth', 'decr', 'incr', {'cam' : 'setRightFootRightCamera'}),
+            (None, 'r-foot-scale-horiz', 'decr', 'incr', {'cam' : 'setRightFootFrontCamera'}),
+            (None, 'r-foot-scale-vert', 'decr', 'incr', {'cam' : 'setRightFootFrontCamera'}),
+            (None, 'r-foot-trans', 'in', 'out', {'cam' : 'setRightFootFrontCamera'}),
+            (None, 'r-foot-trans', 'down', 'up', {'cam' : 'setRightFootFrontCamera'}),
+            (None, 'r-foot-trans', 'forward', 'backward', {'cam' : 'setRightFootRightCamera'}),
             ]),
         ('left foot', 'armslegs', [
-            (None, 'l-foot-scale-depth', 'decr', 'incr', 'setLeftFootLeftCamera'),
-            (None, 'l-foot-scale-horiz', 'decr', 'incr', 'setLeftFootFrontCamera'),
-            (None, 'l-foot-scale-vert', 'decr', 'incr', 'setLeftFootFrontCamera'),
-            (None, 'l-foot-trans', 'in', 'out', 'setLeftFootFrontCamera'),
-            (None, 'l-foot-trans', 'down', 'up', 'setLeftFootFrontCamera'),
-            (None, 'l-foot-trans', 'forward', 'backward', 'setLeftFootLeftCamera'),
+            (None, 'l-foot-scale-depth', 'decr', 'incr', {'cam' : 'setLeftFootLeftCamera'}),
+            (None, 'l-foot-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftFootFrontCamera'}),
+            (None, 'l-foot-scale-vert', 'decr', 'incr', {'cam' : 'setLeftFootFrontCamera'}),
+            (None, 'l-foot-trans', 'in', 'out', {'cam' : 'setLeftFootFrontCamera'}),
+            (None, 'l-foot-trans', 'down', 'up', {'cam' : 'setLeftFootFrontCamera'}),
+            (None, 'l-foot-trans', 'forward', 'backward', {'cam' : 'setLeftFootLeftCamera'}),
             ]),
         ('left arm', 'armslegs', [
-            (None, 'l-lowerarm-scale-depth', 'decr', 'incr', 'setLeftArmTopCamera'),
-            (None, 'l-lowerarm-scale-horiz', 'decr', 'incr', 'setLeftArmFrontCamera'),
-            (None, 'l-lowerarm-scale-vert', 'decr', 'incr', 'setLeftArmFrontCamera'),
-            (None, 'l-lowerarm-trans', 'in', 'out', 'setLeftArmFrontCamera'),
-            (None, 'l-lowerarm-trans', 'down', 'up', 'setLeftArmFrontCamera'),
-            (None, 'l-lowerarm-trans', 'forward', 'backward', 'setLeftArmTopCamera'),
-            (None, 'l-upperarm-scale-depth', 'decr', 'incr', 'setLeftArmTopCamera'),
-            (None, 'l-upperarm-scale-horiz', 'decr', 'incr', 'setLeftArmFrontCamera'),
-            (None, 'l-upperarm-scale-vert', 'decr', 'incr', 'setLeftArmFrontCamera'),
-            (None, 'l-upperarm-trans', 'in', 'out', 'setLeftArmFrontCamera'),
-            (None, 'l-upperarm-trans', 'down', 'up', 'setLeftArmFrontCamera'),
-            (None, 'l-upperarm-trans', 'forward', 'backward', 'setLeftArmTopCamera'),
+            (None, 'l-lowerarm-scale-depth', 'decr', 'incr', {'cam' : 'setLeftArmTopCamera'}),
+            (None, 'l-lowerarm-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftArmFrontCamera'}),
+            (None, 'l-lowerarm-scale-vert', 'decr', 'incr', {'cam' : 'setLeftArmFrontCamera'}),
+            (None, 'l-lowerarm-trans', 'in', 'out', {'cam' : 'setLeftArmFrontCamera'}),
+            (None, 'l-lowerarm-trans', 'down', 'up', {'cam' : 'setLeftArmFrontCamera'}),
+            (None, 'l-lowerarm-trans', 'forward', 'backward', {'cam' : 'setLeftArmTopCamera'}),
+            (None, 'l-upperarm-scale-depth', 'decr', 'incr', {'cam' : 'setLeftArmTopCamera'}),
+            (None, 'l-upperarm-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftArmFrontCamera'}),
+            (None, 'l-upperarm-scale-vert', 'decr', 'incr', {'cam' : 'setLeftArmFrontCamera'}),
+            (None, 'l-upperarm-trans', 'in', 'out', {'cam' : 'setLeftArmFrontCamera'}),
+            (None, 'l-upperarm-trans', 'down', 'up', {'cam' : 'setLeftArmFrontCamera'}),
+            (None, 'l-upperarm-trans', 'forward', 'backward', {'cam' : 'setLeftArmTopCamera'}),
             ]),
         ('right arm', 'armslegs', [
-            (None, 'r-lowerarm-scale-depth', 'decr', 'incr', 'setRightArmTopCamera'),
-            (None, 'r-lowerarm-scale-horiz', 'decr', 'incr', 'setRightArmFrontCamera'),
-            (None, 'r-lowerarm-scale-vert', 'decr', 'incr', 'setRightArmFrontCamera'),
-            (None, 'r-lowerarm-trans', 'in', 'out', 'setRightArmFrontCamera'),
-            (None, 'r-lowerarm-trans', 'down', 'up', 'setRightArmFrontCamera'),
-            (None, 'r-lowerarm-trans', 'forward', 'backward', 'setRightArmTopCamera'),
-            (None, 'r-upperarm-scale-depth', 'decr', 'incr', 'setRightArmTopCamera'),
-            (None, 'r-upperarm-scale-horiz', 'decr', 'incr', 'setRightArmFrontCamera'),
-            (None, 'r-upperarm-scale-vert', 'decr', 'incr', 'setRightArmFrontCamera'),
-            (None, 'r-upperarm-trans', 'in', 'out', 'setRightArmFrontCamera'),
-            (None, 'r-upperarm-trans', 'down', 'up', 'setRightArmFrontCamera'),
-            (None, 'r-upperarm-trans', 'forward', 'backward', 'setRightArmTopCamera'),
+            (None, 'r-lowerarm-scale-depth', 'decr', 'incr', {'cam' : 'setRightArmTopCamera'}),
+            (None, 'r-lowerarm-scale-horiz', 'decr', 'incr', {'cam' : 'setRightArmFrontCamera'}),
+            (None, 'r-lowerarm-scale-vert', 'decr', 'incr', {'cam' : 'setRightArmFrontCamera'}),
+            (None, 'r-lowerarm-trans', 'in', 'out', {'cam' : 'setRightArmFrontCamera'}),
+            (None, 'r-lowerarm-trans', 'down', 'up', {'cam' : 'setRightArmFrontCamera'}),
+            (None, 'r-lowerarm-trans', 'forward', 'backward', {'cam' : 'setRightArmTopCamera'}),
+            (None, 'r-upperarm-scale-depth', 'decr', 'incr', {'cam' : 'setRightArmTopCamera'}),
+            (None, 'r-upperarm-scale-horiz', 'decr', 'incr', {'cam' : 'setRightArmFrontCamera'}),
+            (None, 'r-upperarm-scale-vert', 'decr', 'incr', {'cam' : 'setRightArmFrontCamera'}),
+            (None, 'r-upperarm-trans', 'in', 'out', {'cam' : 'setRightArmFrontCamera'}),
+            (None, 'r-upperarm-trans', 'down', 'up', {'cam' : 'setRightArmFrontCamera'}),
+            (None, 'r-upperarm-trans', 'forward', 'backward', {'cam' : 'setRightArmTopCamera'}),
             ]),
         ('left leg', 'armslegs', [
-            (None, 'l-lowerleg-scale-depth', 'decr', 'incr', 'setLeftLegLeftCamera'),
-            (None, 'l-lowerleg-scale-horiz', 'decr', 'incr', 'setLeftLegFrontCamera'),
-            (None, 'l-lowerleg-scale-vert', 'decr', 'incr', 'setLeftLegFrontCamera'),
-            (None, 'l-lowerleg-trans', 'in', 'out', 'setLeftLegFrontCamera'),
-            (None, 'l-lowerleg-trans', 'down', 'up', 'setLeftLegFrontCamera'),
-            (None, 'l-lowerleg-trans', 'forward', 'backward', 'setLeftLegLeftCamera'),
-            (None, 'l-upperleg-scale-depth', 'decr', 'incr', 'setLeftLegLeftCamera'),
-            (None, 'l-upperleg-scale-horiz', 'decr', 'incr', 'setLeftLegFrontCamera'),
-            (None, 'l-upperleg-scale-vert', 'decr', 'incr', 'setLeftLegFrontCamera'),
-            (None, 'l-upperleg-trans', 'in', 'out', 'setLeftLegFrontCamera'),
-            (None, 'l-upperleg-trans', 'down', 'up', 'setLeftLegFrontCamera'),
-            (None, 'l-upperleg-trans', 'forward', 'backward', 'setLeftLegLeftCamera'),
+            (None, 'l-lowerleg-scale-depth', 'decr', 'incr', {'cam' : 'setLeftLegLeftCamera'}),
+            (None, 'l-lowerleg-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftLegFrontCamera'}),
+            (None, 'l-lowerleg-scale-vert', 'decr', 'incr', {'cam' : 'setLeftLegFrontCamera'}),
+            (None, 'l-lowerleg-trans', 'in', 'out', {'cam' : 'setLeftLegFrontCamera'}),
+            (None, 'l-lowerleg-trans', 'down', 'up', {'cam' : 'setLeftLegFrontCamera'}),
+            (None, 'l-lowerleg-trans', 'forward', 'backward', {'cam' : 'setLeftLegLeftCamera'}),
+            (None, 'l-upperleg-scale-depth', 'decr', 'incr', {'cam' : 'setLeftLegLeftCamera'}),
+            (None, 'l-upperleg-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftLegFrontCamera'}),
+            (None, 'l-upperleg-scale-vert', 'decr', 'incr', {'cam' : 'setLeftLegFrontCamera'}),
+            (None, 'l-upperleg-trans', 'in', 'out', {'cam' : 'setLeftLegFrontCamera'}),
+            (None, 'l-upperleg-trans', 'down', 'up', {'cam' : 'setLeftLegFrontCamera'}),
+            (None, 'l-upperleg-trans', 'forward', 'backward', {'cam' : 'setLeftLegLeftCamera'}),
             ]),
         ('right leg', 'armslegs', [
-            (None, 'r-lowerleg-scale-depth', 'decr', 'incr', 'setRightLegRightCamera'),
-            (None, 'r-lowerleg-scale-horiz', 'decr', 'incr', 'setRightLegFrontCamera'),
-            (None, 'r-lowerleg-scale-vert', 'decr', 'incr', 'setRightLegFrontCamera'),
-            (None, 'r-lowerleg-trans', 'in', 'out', 'setRightLegFrontCamera'),
-            (None, 'r-lowerleg-trans', 'down', 'up', 'setRightLegFrontCamera'),
-            (None, 'r-lowerleg-trans', 'forward', 'backward', 'setRightLegRightCamera'),
-            (None, 'r-upperleg-scale-depth', 'decr', 'incr', 'setRightLegRightCamera'),
-            (None, 'r-upperleg-scale-horiz', 'decr', 'incr', 'setRightLegFrontCamera'),
-            (None, 'r-upperleg-scale-vert', 'decr', 'incr', 'setRightLegFrontCamera'),
-            (None, 'r-upperleg-trans', 'in', 'out', 'setRightLegFrontCamera'),
-            (None, 'r-upperleg-trans', 'down', 'up', 'setRightLegFrontCamera'),
-            (None, 'r-upperleg-trans', 'forward', 'backward', 'setRightLegRightCamera'),
+            (None, 'r-lowerleg-scale-depth', 'decr', 'incr', {'cam' : 'setRightLegRightCamera'}),
+            (None, 'r-lowerleg-scale-horiz', 'decr', 'incr', {'cam' : 'setRightLegFrontCamera'}),
+            (None, 'r-lowerleg-scale-vert', 'decr', 'incr', {'cam' : 'setRightLegFrontCamera'}),
+            (None, 'r-lowerleg-trans', 'in', 'out', {'cam' : 'setRightLegFrontCamera'}),
+            (None, 'r-lowerleg-trans', 'down', 'up', {'cam' : 'setRightLegFrontCamera'}),
+            (None, 'r-lowerleg-trans', 'forward', 'backward', {'cam' : 'setRightLegRightCamera'}),
+            (None, 'r-upperleg-scale-depth', 'decr', 'incr', {'cam' : 'setRightLegRightCamera'}),
+            (None, 'r-upperleg-scale-horiz', 'decr', 'incr', {'cam' : 'setRightLegFrontCamera'}),
+            (None, 'r-upperleg-scale-vert', 'decr', 'incr', {'cam' : 'setRightLegFrontCamera'}),
+            (None, 'r-upperleg-trans', 'in', 'out', {'cam' : 'setRightLegFrontCamera'}),
+            (None, 'r-upperleg-trans', 'down', 'up', {'cam' : 'setRightLegFrontCamera'}),
+            (None, 'r-upperleg-trans', 'forward', 'backward', {'cam' : 'setRightLegRightCamera'}),
             ])
         ]
 
@@ -444,14 +467,14 @@ class GenderTaskView(ModifierTaskView):
     _group = 'gendered'
     _features = [
         ('Genitals', 'genitals', [
-            (None, 'genitals', 'feminine', 'masculine', 'noSetCamera'),
+            (None, 'genitals', 'feminine', 'masculine', {}),
             ]),
         ('Breast', 'breast', [
-            ('Breast size', None, 'BreastSize', 'noSetCamera'),
-            ('Breast sagginess', None, 'BreastFirmness', 'noSetCamera'),
-            (None, 'breast', 'down', 'up', 'noSetCamera'),
-            (None, 'breast-dist', 'min', 'max', 'noSetCamera'),
-            (None, 'breast-point', 'min', 'max', 'noSetCamera'),
+            ('Breast size', None, 'BreastSize', {}),
+            ('Breast firmness', None, 'BreastFirmness', {'reverse' : True}),
+            (None, 'breast', 'down', 'up', {}),
+            (None, 'breast-dist', 'min', 'max', {}),
+            (None, 'breast-point', 'min', 'max', {}),
             ]),
         ]
 
@@ -460,55 +483,55 @@ class AsymmTaskView(ModifierTaskView):
     _group = 'asymmetry'
     _features = [
         ('brow', 'asym', [
-            (None, 'asym-brown-1', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-brown-2', 'l', 'r', 'setFaceCamera'),
+            (None, 'asym-brown-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-brown-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
             ]),
         ('cheek', 'asym', [
-            (None, 'asym-cheek-1', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-cheek-2', 'l', 'r', 'setFaceCamera'),
+            (None, 'asym-cheek-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-cheek-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
             ]),
         ('ear', 'asym', [
-            (None, 'asym-ear-1', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-ear-2', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-ear-3', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-ear-4', 'l', 'r', 'setFaceCamera'),
+            (None, 'asym-ear-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-ear-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-ear-3', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-ear-4', 'l', 'r', {'cam' : 'setFaceCamera'}),
             ]),
         ('eye', 'asym', [
-            (None, 'asym-eye-1', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-eye-2', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-eye-3', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-eye-4', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-eye-5', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-eye-6', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-eye-7', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-eye-8', 'l', 'r', 'setFaceCamera'),
+            (None, 'asym-eye-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-eye-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-eye-3', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-eye-4', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-eye-5', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-eye-6', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-eye-7', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-eye-8', 'l', 'r', {'cam' : 'setFaceCamera'}),
             ]),
         ('jaw', 'asym', [
-            (None, 'asym-jaw-1', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-jaw-2', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-jaw-3', 'l', 'r', 'setFaceCamera'),
+            (None, 'asym-jaw-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-jaw-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-jaw-3', 'l', 'r', {'cam' : 'setFaceCamera'}),
             ]),
         ('mouth', 'asym', [
-            (None, 'asym-mouth-1', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-mouth-2', 'l', 'r', 'setFaceCamera'),
+            (None, 'asym-mouth-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-mouth-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
             ]),
         ('nose', 'asym', [
-            (None, 'asym-nose-1', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-nose-2', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-nose-3', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-nose-4', 'l', 'r', 'setFaceCamera'),
+            (None, 'asym-nose-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-nose-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-nose-3', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-nose-4', 'l', 'r', {'cam' : 'setFaceCamera'}),
             ]),
         ('temple', 'asym', [
-            (None, 'asym-temple-1', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-temple-2', 'l', 'r', 'setFaceCamera'),
+            (None, 'asym-temple-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-temple-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
             ]),
         ('top', 'asym', [
-            (None, 'asym-top-1', 'l', 'r', 'setFaceCamera'),
-            (None, 'asym-top-2', 'l', 'r', 'setFaceCamera'),
+            (None, 'asym-top-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
+            (None, 'asym-top-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
             ]),
         ('body', 'asym', [
-            (None, 'asymm-breast-1', 'l', 'r', 'setGlobalCamera'),
-            (None, 'asymm-trunk-1', 'l', 'r', 'setGlobalCamera'),
+            (None, 'asymm-breast-1', 'l', 'r', {'cam' : 'setGlobalCamera'}),
+            (None, 'asymm-trunk-1', 'l', 'r', {'cam' : 'setGlobalCamera'}),
             ]),
         ]
 
@@ -519,14 +542,14 @@ class MacroTaskView(ModifierTaskView):
 
     _features = [
         ('Macro', 'macrodetails', [
-            ('Gender', None, 'Gender', 'noSetCamera'),
-            ('Age', None, 'Age', 'noSetCamera'),
-            ('Muscle', 'universal', 'Muscle', 'noSetCamera'),
-            ('Weight', 'universal', 'Weight', 'noSetCamera'),
-            ('Height', 'universal-stature', 'Height', 'noSetCamera'),
-            ('African', None, 'African', 'noSetCamera'),
-            ('Asian', None, 'Asian', 'noSetCamera'),
-            ('Caucasian', None, 'Caucasian', 'noSetCamera'),
+            ('Gender', None, 'Gender', {}),
+            ('Age', None, 'Age', {}),
+            ('Muscle', 'universal', 'Muscle', {}),
+            ('Weight', 'universal', 'Weight', {}),
+            ('Height', 'universal-stature', 'Height', {}),
+            ('African', None, 'African', {}),
+            ('Asian', None, 'Asian', {}),
+            ('Caucasian', None, 'Caucasian', {}),
             ]),
         ]
 

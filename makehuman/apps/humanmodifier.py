@@ -195,13 +195,14 @@ class GenericSlider(ModifierSlider):
             self.view()
 
 class MacroSlider(GenericSlider):
-    def __init__(self, modifier, label, image, view):
-        super(MacroSlider, self).__init__(min=0.0, max=1.0, modifier=modifier, label=label, image=image, view=view)
+    def __init__(self, modifier, label, image, view, min = 0.0, max = 1.0):
+        super(MacroSlider, self).__init__(min=min, max=max, modifier=modifier, label=label, image=image, view=view)
 
 class UniversalSlider(GenericSlider):
-    def __init__(self, modifier, label, image, view):
-        min = -1.0 if modifier.left is not None else 0.0
-        super(UniversalSlider, self).__init__(min, 1.0, modifier, label, image, view)
+    def __init__(self, modifier, label, image, view, min = None, max = 1.0):
+        if min is None:
+            min = -1.0 if modifier.left is not None else 0.0
+        super(UniversalSlider, self).__init__(min, max, modifier, label, image, view)
 
 class BaseModifier(object):
 
