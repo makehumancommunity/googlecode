@@ -74,7 +74,7 @@ def exportVertexGroups(context):
                         weights.append((v.index, grp.weight))
 
     fileName = os.path.expanduser(filePath)
-    io_json.saveJson(list, fileName)
+    io_json.saveJson(list, fileName, maxDepth=1)
     """
     fp = open(fileName, "w")
         exportList(context, weights, vg.name, fp)
@@ -146,7 +146,7 @@ class VIEW3D_OT_ExportCustomShapesButton(bpy.types.Operator):
             struct["verts"] = [tuple(v.co) for v in ob.data.vertices]
             struct["edges"] = [tuple(e.vertices) for e in ob.data.edges]
         filepath = os.path.expanduser(scn.MhxVertexGroupFile)
-        io_json.saveJson(structs, filepath)
+        io_json.saveJson(structs, filepath, maxDepth=0)
         print(filepath, "saved")
         return{'FINISHED'}
 

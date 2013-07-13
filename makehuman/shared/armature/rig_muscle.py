@@ -110,14 +110,15 @@ Joints = [
 
     ('l-soleus-1',          'vl', ((0.5, 11293), (0.5, 11302))),
     ('r-soleus-1',          'vl', ((0.5, 4675), (0.5, 4684))),
-    ('l-soleus-2',          'l', ((1-SoleusLength, 'l-soleus-1'), (SoleusLength, 'l-heel'))),
-    ('r-soleus-2',          'l', ((1-SoleusLength, 'r-soleus-1'), (SoleusLength, 'r-heel'))),
+    ('l-sole-2',            'v', 12820),
+    ('r-sole-2',            'v', 6223),
+    ('l-soleus-2',          'l', ((1-SoleusLength, 'l-soleus-1'), (SoleusLength, 'l-sole-2'))),
+    ('r-soleus-2',          'l', ((1-SoleusLength, 'r-soleus-1'), (SoleusLength, 'r-sole-2'))),
 
     ('l-forearm-1',         'l', ((0.7, 'l-elbow'), (0.3, 'l-hand'))),
     ('r-forearm-1',         'l', ((0.7, 'r-elbow'), (0.3, 'r-hand'))),
     ('l-shin-1',            'l', ((0.7, 'l-knee'), (0.3, 'l-ankle'))),
     ('r-shin-1',            'l', ((0.7, 'r-knee'), (0.3, 'r-ankle'))),
-
 ]
 
 HeadsTails = {
@@ -170,8 +171,8 @@ HeadsTails = {
     'trg_knee.R' :         ('r-knee-1', 'r-knee-2'),
     'soleus.L' :           ('l-soleus-1', 'l-soleus-2'),
     'soleus.R' :           ('r-soleus-1', 'r-soleus-2'),
-    'sole.L' :             ('l-foot-1', 'l-heel'),
-    'sole.R' :             ('r-foot-1', 'r-heel'),
+    'sole.L' :             ('l-foot-1', 'l-sole-2'),
+    'sole.R' :             ('r-foot-1', 'r-sole-2'),
 
     'elbow_fan.L' :        ('l-elbow', 'l-forearm-1'),
     'elbow_fan.R' :        ('r-elbow', 'r-forearm-1'),
@@ -344,7 +345,7 @@ Constraints = {
 
     'soleus.L' : [
         ('StretchTo', C_VOLX, 1,
-            ['Stretch_To', 'sole.L', 1, 1, ('l-soleus-1', 'l-heel')])
+            ['Stretch_To', 'sole.L', 1, 1, ('l-soleus-1', 'l-sole-2')])
         ],
 
     # Right side
@@ -433,7 +434,7 @@ Constraints = {
 
     'soleus.R' : [
         ('StretchTo', C_VOLX, 1,
-            ['Stretch_To', 'sole.R', 1, 1, ('r-soleus-1', 'r-heel')])
+            ['Stretch_To', 'sole.R', 1, 1, ('r-soleus-1', 'r-sole-2')])
         ],
 
     'elbow_fan.L' : [

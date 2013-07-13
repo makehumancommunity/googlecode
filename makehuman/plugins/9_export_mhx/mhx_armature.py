@@ -114,23 +114,25 @@ class ExportArmature(Armature):
             for e in gizmo["edges"]:
                 fp.write('    e %d %d ;\n' % tuple(e))
             fp.write(
-"""
-  end Edges
-end Mesh
+                '  end Edges\n' +
+                'end Mesh\n\n' +
+                'Object %s MESH %s\n' % (name, name) +
+                '  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;\n')
 
-""" +
-'Object %s MESH %s' % (name, name) +
+            if gizmo["subsurf"]:
+                fp.write(
 """
-  layers Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1  ;
     Modifier Subsurf SUBSURF
       levels 1 ;
       render_levels 2 ;
       subdivision_type 'CATMULL_CLARK' ;
       use_subsurf_uv True ;
     end Modifier
-  parent Refer Object CustomShapes ;
-end Object
 """)
+
+            fp.write(
+                '  parent Refer Object CustomShapes ;\n' +
+                'end Object\n\n')
 
 
     def writeEditBones(self, fp):

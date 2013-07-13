@@ -27,11 +27,11 @@ from .flags import *
 
 Joints = [
     ('l-heel-y',            'v', 12877),
-    ('l-heel-z',            'l', ((-2.5,'l-foot-2'), (3.5,'l-foot-1'))),
-    ('l-heel',              'p', ('l-foot-2', 'l-heel-y', 'l-heel-z')),
+    ('l-heel-z',            'l', ((-2.5,'l-toe-2'), (3.5,'l-foot-1'))),
+    ('l-heel',              'p', ('l-toe-2', 'l-foot-1', 'l-heel-z')),
     ('r-heel-y',            'v', 6280),
-    ('r-heel-z',            'l', ((-2.5,'r-foot-2'), (3.5,'r-foot-1'))),
-    ('r-heel',              'p', ('r-foot-2', 'r-heel-y', 'r-heel-z')),
+    ('r-heel-z',            'l', ((-2.5,'r-toe-2'), (3.5,'r-foot-1'))),
+    ('r-heel',              'p', ('r-toe-2', 'r-foot-1', 'r-heel-z')),
 
     ('l-ankle-tip',         'o', ('l-ankle', (0,0,-1))),
     ('r-ankle-tip',         'o', ('r-ankle', (0,0,-1))),
@@ -64,16 +64,16 @@ HeadsTails = {
 
     'ankle.L' :         ('l-ankle', 'l-ankle-tip'),
     'ankle.ik.L' :      ('l-ankle', 'l-ankle-tip'),
-    'foot.ik.L' :       ('l-heel', 'l-foot-2'),
-    'foot_helper.L':    ('l-heel', 'l-foot-2'),
-    'toe.rev.L' :       ('l-foot-2', 'l-foot-1'),
+    'foot.ik.L' :       ('l-heel', 'l-toe-2'),
+    'foot_helper.L':    ('l-heel', 'l-toe-2'),
+    'toe.rev.L' :       ('l-toe-2', 'l-foot-1'),
     'foot.rev.L' :      ('l-foot-1', 'l-ankle'),
 
     'ankle.R' :         ('r-ankle', 'r-ankle-tip'),
     'ankle.ik.R' :      ('r-ankle', 'r-ankle-tip'),
-    'foot.ik.R' :       ('r-heel', 'r-foot-2'),
-    'foot_helper.R':    ('r-heel', 'r-foot-2'),
-    'toe.rev.R' :       ('r-foot-2', 'r-foot-1'),
+    'foot.ik.R' :       ('r-heel', 'r-toe-2'),
+    'foot_helper.R':    ('r-heel', 'r-toe-2'),
+    'toe.rev.R' :       ('r-toe-2', 'r-foot-1'),
     'foot.rev.R' :      ('r-foot-1', 'r-ankle'),
 
     # Pole Targets
@@ -151,18 +151,18 @@ HeadArmature = {
 
 IkLegArmature = {
     'hip.L' :          (0, 'hips', F_WIR, L_TWEAK),
-    'foot.ik.L' :      (0, None, F_WIR|F_NOLOCK, L_LLEGIK),
+    'foot.ik.L' :      (180*D, None, F_WIR|F_NOLOCK, L_LLEGIK),
     'foot_helper.L' :  (0, 'toe.fk.L', 0, L_HELP),
-    'toe.rev.L' :      (0, 'foot.ik.L', F_WIR, L_LLEGIK),
-    'foot.rev.L' :     (0, 'toe.rev.L', F_WIR, L_LLEGIK),
+    'toe.rev.L' :      ("PlaneToe.L", 'foot.ik.L', F_WIR, L_LLEGIK),
+    'foot.rev.L' :     ("PlaneFoot.L", 'toe.rev.L', F_WIR, L_LLEGIK),
     'ankle.L' :        (0, None, F_WIR, L_LEXTRA),
     'ankle.ik.L' :     (0, 'foot.rev.L', F_NOLOCK, L_HELP2),
 
     'hip.R' :          (0, 'hips', F_WIR, L_TWEAK),
-    'foot.ik.R' :      (0, None, F_WIR|F_NOLOCK, L_RLEGIK),
+    'foot.ik.R' :      (180*D, None, F_WIR|F_NOLOCK, L_RLEGIK),
     'foot_helper.R' :  (0, 'toe.fk.R', 0, L_HELP),
-    'toe.rev.R' :      (0, 'foot.ik.R', F_WIR, L_RLEGIK),
-    'foot.rev.R' :     (0, 'toe.rev.R', F_WIR, L_RLEGIK),
+    'toe.rev.R' :      ("PlaneToe.R", 'foot.ik.R', F_WIR, L_RLEGIK),
+    'foot.rev.R' :     ("PlaneFoot.R", 'toe.rev.R', F_WIR, L_RLEGIK),
     'ankle.R' :        (0, None, F_WIR, L_REXTRA),
     'ankle.ik.R' :     (0, 'foot.rev.R', F_NOLOCK, L_HELP2),
 

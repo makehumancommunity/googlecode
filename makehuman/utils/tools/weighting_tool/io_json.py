@@ -43,7 +43,9 @@ def loadJson(filepath):
     return struct
 
 
-def saveJson(struct, filepath, binary=False):
+def saveJson(struct, filepath, binary=False, maxDepth=1):
+    global _maxDepth
+    _maxDepth = maxDepth
     if binary:
         bytes = json.dumps(struct)
         with gzip.open(realpath, 'wb') as fp:
@@ -56,6 +58,7 @@ def saveJson(struct, filepath, binary=False):
 
 
 def encodeJsonData(data, depth, pad=""):
+    global _maxDepth
     if data == None:
         return "none"
     elif isinstance(data, bool):
@@ -75,7 +78,7 @@ def encodeJsonData(data, depth, pad=""):
     elif isinstance(data, (list, tuple)):
         if data == []:
             return "[]"
-        elif leafList(data) and depth >= 1:
+        elif leafList(data) and depth >= _maxDepth:
             string = "["
             for elt in data:
                 string += encodeJsonData(elt, depth+1) + ", "

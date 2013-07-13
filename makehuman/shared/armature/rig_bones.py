@@ -28,8 +28,8 @@ from .rig_joints import *
 Joints = [
     ('spine-23',            'l', ((0.5, 'spine-2'), (0.5, 'spine-3'))),
 
-    ('l-heel',              'v', 12820),
-    ('r-heel',              'v', 6223),
+    ('l-toe-2',             'p', ('l-foot-2', 'l-foot-1', 'l-foot-2')),
+    ('r-toe-2',             'p', ('r-foot-2', 'r-foot-1', 'r-foot-2')),
 
     ('l-kneecap',           'vo', (11223, 0,0,1)),
     ('r-kneecap',           'vo', (4605, 0,0,-1)),
@@ -54,6 +54,11 @@ Joints = [
     ('r-plane-thumb-1',     'v', 3623),
     ('r-plane-thumb-2',     'v', 2725),
     ('r-plane-thumb-3',     'v', 2697),
+
+    ('l-plane-foot',        'o', ('l-ankle', (0,-1,0))),
+    ('r-plane-foot',        'o', ('r-ankle', (0,-1,0))),
+    ('l-plane-toe',         'o', ('l-foot-1', (0,-1,0))),
+    ('r-plane-toe',         'o', ('r-foot-1', (0,-1,0))),
 
     ('pubis',               'vl', ((0.9, 4341), (0.1, 4250))),
 ]
@@ -131,17 +136,20 @@ HeadsTails = {
     'thigh.L' :            ('l-upper-leg', 'l-knee'),
     'shin.L' :             ('l-knee', 'l-ankle'),
     'foot.L' :             ('l-ankle', 'l-foot-1'),
-    'toe.L' :              ('l-foot-1', 'l-foot-2'),
+    'toe.L' :              ('l-foot-1', 'l-toe-2'),
 
     'thigh.R' :            ('r-upper-leg', 'r-knee'),
     'shin.R' :             ('r-knee', 'r-ankle'),
     'foot.R' :             ('r-ankle', 'r-foot-1'),
-    'toe.R' :              ('r-foot-1', 'r-foot-2'),
+    'toe.R' :              ('r-foot-1', 'r-toe-2'),
 }
 
 Planes = {
     "PlaneArm.L" :         ('l-shoulder', 'l-elbow', 'l-hand'),
     "PlaneLeg.L" :         ('l-upper-leg', 'l-kneecap', 'l-ankle'),
+    "PlaneFoot.L" :        ('l-plane-foot', 'l-ankle', 'l-foot-1'),
+    "PlaneToe.L" :         ('l-plane-toe', 'l-foot-1', 'l-toe-2'),
+
     "PlaneThumb.L" :       ('l-plane-thumb-1', 'l-plane-thumb-2', 'l-plane-thumb-3'),
     "PlaneIndex.L" :       ('l-finger-2-1', 'l-finger-2-2', 'l-finger-2-4'),
     "PlaneMiddle.L" :      ('l-finger-3-1', 'l-finger-3-2', 'l-finger-3-4'),
@@ -150,6 +158,9 @@ Planes = {
 
     "PlaneArm.R" :         ('r-shoulder', 'r-elbow', 'r-hand'),
     "PlaneLeg.R" :         ('r-upper-leg', 'r-kneecap', 'r-ankle'),
+    "PlaneFoot.R" :        ('r-plane-foot', 'r-ankle', 'r-foot-1'),
+    "PlaneToe.R" :         ('r-plane-toe', 'r-foot-1', 'r-toe-2'),
+
     "PlaneThumb.R" :       ('r-plane-thumb-1', 'r-plane-thumb-2', 'r-plane-thumb-3'),
     "PlaneIndex.R" :       ('r-finger-2-1', 'r-finger-2-2', 'r-finger-2-4'),
     "PlaneMiddle.R" :      ('r-finger-3-1', 'r-finger-3-2', 'r-finger-3-4'),
@@ -228,13 +239,13 @@ Armature = {
 
     'thigh.L' :            ("PlaneLeg.L", 'hips', F_DEF, L_LLEGFK),
     'shin.L' :             ("PlaneLeg.L", 'thigh.L', F_DEF|F_CON, L_LLEGFK),
-    'foot.L' :             (-31*D, 'shin.L', F_DEF|F_CON, L_LLEGFK),
-    'toe.L' :              (-36*D, 'foot.L', F_DEF|F_CON, L_LLEGFK),
+    'foot.L' :             ("PlaneFoot.L", 'shin.L', F_DEF|F_CON, L_LLEGFK),
+    'toe.L' :              ("PlaneToe.L", 'foot.L', F_DEF|F_CON, L_LLEGFK),
 
     'thigh.R' :            ("PlaneLeg.R", 'hips', F_DEF, L_RLEGFK),
     'shin.R' :             ("PlaneLeg.R", 'thigh.R', F_DEF|F_CON, L_RLEGFK),
-    'foot.R' :             (31*D, 'shin.R', F_DEF|F_CON, L_RLEGFK),
-    'toe.R' :              (36*D, 'foot.R', F_DEF|F_CON, L_RLEGFK),
+    'foot.R' :             ("PlaneFoot.R", 'shin.R', F_DEF|F_CON, L_RLEGFK),
+    'toe.R' :              ("PlaneToe.R", 'foot.R', F_DEF|F_CON, L_RLEGFK),
 }
 
 RotationLimits = {
@@ -297,10 +308,10 @@ CustomShapes = {
     'thigh.R' :         'GZM_Circle025',
     'shin.L' :          'GZM_Circle025',
     'shin.R' :          'GZM_Circle025',
-    'foot.L' :          'GZM_Foot_L',
-    'foot.R' :          'GZM_Foot_R',
-    'toe.L' :           'GZM_Toe_L',
-    'toe.R' :           'GZM_Toe_R',
+    'foot.L' :          'GZM_Foot',
+    'foot.R' :          'GZM_Foot',
+    'toe.L' :           'GZM_Toe',
+    'toe.R' :           'GZM_Toe',
 
     'shoulder.L' :      'GZM_Shoulder',
     'shoulder.R' :      'GZM_Shoulder',
@@ -310,8 +321,8 @@ CustomShapes = {
     'upper_arm.R' :     'GZM_Circle025',
     'forearm.L' :       'GZM_Circle025',
     'forearm.R' :       'GZM_Circle025',
-    'hand.L' :          'GZM_Hand',
-    'hand.R' :          'GZM_Hand',
+    'hand.L' :          'GZM_Hand_L',
+    'hand.R' :          'GZM_Hand_R',
 }
 
 Constraints = {}
