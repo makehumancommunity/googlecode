@@ -1,5 +1,6 @@
 # -*- mode: python -*-
 VERSION="1.0alpha8"
+import sys
 
 def SvnInfo():
     import os
@@ -122,7 +123,8 @@ a.datas += extra_datas('icons')
 #a.datas += extra_datas('qt_menu.nib')
 
 pyz = PYZ(a.pure)
-exe = EXE(pyz,
+if sys.platform == 'darwin':
+    exe = EXE(pyz,
           a.scripts,
           exclude_binaries=True,
           name='makehuman',
@@ -130,15 +132,31 @@ exe = EXE(pyz,
           strip=None,
           upx=False,
           console=False )
-coll = COLLECT(exe,
-               a.binaries,
-               a.zipfiles,
-               a.datas,
-               strip=None,
-               upx=True,
-               name='makehuman')
-app = BUNDLE(coll,
-             name='makehuman.app',
-             icon=None)
-
+    coll = COLLECT(exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=None,
+        upx=True,
+        name='makehuman')
+    app = BUNDLE(coll,
+        name='makehuman.app',
+        icon=None)
+elif sys.platform == 'win32':
+    exe = EXE(pyz,
+        a.scripts,
+        exclude_binaries=True,
+        name='makehuman.exe',
+        debug=False,
+        strip=None,
+        upx=True,
+        console=False )
+    coll = COLLECT(exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=None,
+        upx=True,
+        name='makehuman')
+        
 os.remove(os.path.join("core","VERSION"))
