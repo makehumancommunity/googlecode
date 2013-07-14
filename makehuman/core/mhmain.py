@@ -1284,6 +1284,10 @@ class MHApplication(gui3d.Application, mh.Application):
     def OnInit(self):
         mh.Application.OnInit(self)
 
+        #[BAL 07/14/2013] work around focus bug in PyQt on OS X
+        if sys.platform == 'darwin':
+            G.app.mainwin.raise_()
+        
         self.setLanguage("english")
 
         self.loadSettings()
