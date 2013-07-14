@@ -45,18 +45,24 @@ class SkinAction(Action):
         super(SkinAction, self).__init__('Change skin texture', human)
         self.before = before
         self.after = after
+        self.litcheck = gui3d.app.getCategory('Settings').getTaskByName('LitSphere material').diffuseChk
+        self.litstateBefore = self.litcheck.selected
 
     def do(self):
         self.human.setTexture(self.after)
         # TODO determine which uv map to load from a data definition file
         #setHumanUVMap(self.human, 'data/uvs/a7/A7.mhuv')
         self.human.mesh.setShadeless(False)
+        self.litcheck.setSelected(True)
+        self.litcheck.callEvent('onClicked', None)
         return True
 
     def undo(self):
         self.human.setTexture(self.before)
         # TODO determine which uv map to load from a data definition file
         #setHumanUVMap(self.human, 'data/uvs/a7/A7.mhuv')
+        self.litcheck.setSelected(self.litstateBefore)
+        self.litcheck.callEvent('onClicked', None)
         return True
 
 
