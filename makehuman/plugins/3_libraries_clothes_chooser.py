@@ -429,6 +429,9 @@ class ClothesTaskView(gui3d.TaskView):
                 proxy.toggleEnabled = False
             self.updateFaceMasks(self.faceHidingTggl.selected)
             # self.clothesButton.setTexture('data/clothes/clear.png')
+        else:
+            if gui3d.app.settings.get('realtimeFitting', False):
+                self.adaptClothesToHuman(human)
 
     def onHumanChanged(self, event):
 

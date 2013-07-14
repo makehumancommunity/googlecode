@@ -148,7 +148,10 @@ class HairTaskView(gui3d.TaskView):
                 human.hairObj = None
                 human.hairProxy = None
             self.filechooser.deselectAll()
-
+        else:
+            if gui3d.app.settings.get('realtimeFitting', False):
+                self.adaptHairToHuman(human)
+                
     def onHumanChanged(self, event):
 
         human = event.human
