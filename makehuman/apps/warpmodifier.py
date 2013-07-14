@@ -203,7 +203,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
                     self.bases[key1] = BaseSpec(base1, factors1)
                     self.targetSpecs[key1] = TargetSpec(path1, factors1)
                     if gender is None or age is None:
-                        log.debug("Bases %s" % self.bases.items())
+                        #log.debug("Bases %s" % self.bases.items())
                         return
 
                     for tone in _warpGlobals.baseCharacterParts[tones]:
@@ -271,11 +271,11 @@ class WarpModifier (humanmodifier.SimpleModifier):
         roVerts = _warpGlobals.getRefObjectVerts(self.modtype)
         unwarpedCoords = _warpGlobals.getUnwarpedCoords(human)
         if (self.refTargetVerts and roVerts is not None):
-            log.debug("BP %s" % self.bodypart)
-            log.debug("RTV %s" % self.refTargetVerts)
-            log.debug("ROV %s" % roVerts)
-            log.debug("SHC %s" % unwarpedCoords)
-            log.debug("LMK %s" % landmarks)
+            #log.debug("BP %s" % self.bodypart)
+            #log.debug("RTV %s" % self.refTargetVerts)
+            #log.debug("ROV %s" % roVerts)
+            #log.debug("SHC %s" % unwarpedCoords)
+            #log.debug("LMK %s" % landmarks)
             shape = warp.warp_target(self.refTargetVerts, roVerts, unwarpedCoords, landmarks)
         else:
             shape = {}

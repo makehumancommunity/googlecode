@@ -380,7 +380,7 @@ class TextureTaskView(gui3d.TaskView):
         for name, clo in human.clothesObjs.items():
             if clo:
                 proxy = human.clothesProxies[name]
-                if clo.mesh.texture != proxy.texture[0]+"/"+proxy.texture[1]:
+                if clo.mesh.texture !=  proxy.material.diffuseTexture:
                     clothesPath = os.path.dirname(proxy.file)
                     if os.path.dirname(clo.mesh.texture) == clothesPath:
                         texturePath = os.path.basename(clo.mesh.texture)

@@ -100,9 +100,9 @@ class BackgroundChooser(gui3d.TaskView):
 
         self.texture = mh.Texture()
 
-        self.sides = { 'front': [0,0,0], 
-                       'back': [0,180,0], 
-                       'left': [0,90,0], 
+        self.sides = { 'front': [0,0,0],
+                       'back': [0,180,0],
+                       'left': [0,90,0],
                        'right': [0,-90,0],
                        'top': [90,0,0],
                        'bottom': [-90,0,0],
@@ -138,7 +138,7 @@ class BackgroundChooser(gui3d.TaskView):
         self.bgSettingsBox = self.addLeftWidget(gui.GroupBox('Background settings'))
 
         self.radioButtonGroup = []
-        for side in ['front', 'back', 'left', 'right', 'top', 'bottom', 'other']: 
+        for side in ['front', 'back', 'left', 'right', 'top', 'bottom', 'other']:
             radioBtn = self.backgroundBox.addWidget(gui.RadioButton(self.radioButtonGroup, label=side.capitalize(), selected=len(self.radioButtonGroup)==0))
             radioBtn.side = side
 
@@ -249,7 +249,7 @@ class BackgroundChooser(gui3d.TaskView):
 
     def toggleBackground(self):
         self.setBackgroundEnabled(self.backgroundImageToggle.isChecked())
-        
+
     def onShow(self, event):
 
         gui3d.TaskView.onShow(self, event)
@@ -269,7 +269,7 @@ class BackgroundChooser(gui3d.TaskView):
         self.backgroundImage.setPosition(gui3d.app.selectedHuman.getPosition()) # TODO other Z offset?
 
     def onHumanChanging(self, event):
-        
+
         human = event.human
         if event.change == 'reset':
             for side in self.sides.keys():
@@ -436,10 +436,12 @@ class TextureProjectionView(gui3d.TaskView) :
         mh.updatePickingBuffer()
 
     def onHumanChanging(self, event):
-        
+
         human = event.human
-        if event.change == 'reset':
-            texture.reloadTexture(os.path.join('data/textures/texture.png'))
+        # TL: Disabled because texture.png is not found.
+        # Not sure if the is still relevant
+        #if event.change == 'reset':
+        #    texture.reloadTexture(os.path.join('data/textures/texture.png'))
 
     def projectBackground(self):
         if not self.backgroundChooserView.isBackgroundShowing():
@@ -491,7 +493,7 @@ class TextureProjectionView(gui3d.TaskView) :
         log.debug("Enabling shadeless rendering on body")
         self.shadelessButton.setChecked(True)
         gui3d.app.selectedHuman.mesh.setShadeless(1)
-        
+
     def projectUV(self):
         dstImg = projection.mapUV()
         #dstImg.resize(128, 128)
