@@ -250,9 +250,10 @@ def writeProxyMaterial(fp, proxy, env):
 
     prxList = sortedMasks(env)
     nMasks = countMasks(proxy, prxList)
+    nMasks = 0
 
     fp.write("Material %s_%s_%s \n" % (env.name, proxy.name, mat.name))
-    addProxyMaskMTexs(fp, mat, proxy, prxList)
+    #addProxyMaskMTexs(fp, mat, proxy, prxList)
     #uvlayer = proxy.uvtexLayerName[proxy.textureLayer]
     uvlayer = "Texture"
 
