@@ -223,7 +223,7 @@ class ClothesTaskView(gui3d.TaskView):
 
         obj = proxy.obj_file
         try:
-            clo = human.clothesObjs[obj]
+            clo = human.clothesObjs[uuid]
         except KeyError:
             clo = None
         if clo:
