@@ -58,11 +58,6 @@ class PoseAction(gui3d.Action):
 #   Pose library
 #
 
-class PoseModifier(warpmodifier.WarpModifier):
-    def __init__(self, template):
-        warpmodifier.WarpModifier.__init__(self, template, "body", "GenderAgeToneWeight")
-
-
 class PoseLoadTaskView(gui3d.TaskView):
 
     def __init__(self, category):

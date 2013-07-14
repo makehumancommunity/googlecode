@@ -162,6 +162,14 @@ def loadMhpFile(filepath, pose=None):
     return pose
 
 #----------------------------------------------------------
+#   class PoseModifier
+#----------------------------------------------------------
+
+class PoseModifier(warpmodifier.WarpModifier):
+    def __init__(self, template):
+        warpmodifier.WarpModifier.__init__(self, template, "body", "GenderAgeToneWeight")
+
+#----------------------------------------------------------
 #   class PoseModifierSlider
 #----------------------------------------------------------
 
