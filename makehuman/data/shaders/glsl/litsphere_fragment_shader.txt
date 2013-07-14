@@ -50,7 +50,8 @@ void main() {
     vec3 shading = texture2D(litsphereTexture, vec2(normal.xyz * vec3(0.495) + vec3(0.5))).rgb;
 
     #ifdef DIFFUSE
-        gl_FragColor.rgb = shading * texture2D(diffuseTexture, gl_TexCoord[0].xy).rgb;
+		vec3 diffuse = texture2D(diffuseTexture, gl_TexCoord[0].xy).rgb;
+        gl_FragColor.rgb = shading * diffuse * vec3(2.0 - shading);
     #else
         gl_FragColor.rgb = shading;
     #endif
