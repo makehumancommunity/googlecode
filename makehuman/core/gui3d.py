@@ -330,14 +330,9 @@ class Object(events3d.EventHandler):
             uvset.read(mesh, filename)
 
             mesh._materials = []
-            if len(uvset.materials) == 0:
-                mesh.createMaterial('Default')
-            else:
-                for mat in uvset.materials:
-                    mesh.createMaterial(mat.name)
-
-            mesh.setUVs(uvset.texVerts)
-            mesh.setFaces(mesh.fvert, np.asarray(uvset.texFaces, dtype=np.uint32)-1, faceGroups, uvset.faceMaterials)
+            mesh.createMaterial(uvset.name)
+            mesh.setUVs(uvset.uvs)
+            mesh.setFaces(mesh.fvert, uvset.fuvs, faceGroups)
 
         mesh.changeFaceMask(faceMask)
         mesh.updateIndexBuffer()

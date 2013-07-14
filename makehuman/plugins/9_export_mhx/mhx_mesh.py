@@ -67,10 +67,10 @@ def writeMesh(fp, mesh, env):
 """)
 
     if env.human.uvset:
-        for ft in env.human.uvset.texFaces:
+        for ft in env.human.uvset.fuvs:
             fp.write("    vt")
             for vt in ft:
-                uv = env.human.uvset.texVerts[vt]
+                uv = env.human.uvset.uvs[vt]
                 fp.write(" %.4g %.4g" %(uv[0], uv[1]))
             fp.write(" ;\n")
     else:
@@ -211,8 +211,7 @@ def writeFaceNumbers(fp, env):
     from exportutils.collect import deleteGroup
 
     if env.human.uvset:
-        for ftn in env.human.uvset.faceNumbers:
-            fp.write(ftn)
+        pass
     else:
         obj = env.human.meshData
         fmats = numpy.zeros(len(obj.coord), int)

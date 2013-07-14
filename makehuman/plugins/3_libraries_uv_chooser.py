@@ -55,12 +55,12 @@ class UvTaskView(gui3d.TaskView):
         if not os.path.exists(uvDir):
             os.makedirs(uvDir)
         self.filechooser = self.addRightWidget( \
-        fc.IconListFileChooser([uvDir , 'data/uvs'], 'mhuv', ['thumb', 'png'], 'data/uvs/notfound.thumb', 'UV Map'))
+        fc.IconListFileChooser([uvDir , 'data/uvs'], 'obj', ['thumb', 'png'], 'data/uvs/notfound.thumb', 'UV Map'))
         self.addLeftWidget(self.filechooser.createSortBox())
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
-            if os.path.basename(filename) == "default.mhuv":
+            if os.path.basename(filename) == "default.obj":
                 filename = None
             gui3d.app.do(UVMapAction("Changing UV map",
                                      gui3d.app.selectedHuman,
@@ -85,11 +85,11 @@ class UvTaskView(gui3d.TaskView):
         human = event.human
 
     def loadHandler(self, human, values):
-        mhuv = values[1]
-        if not os.path.exists(os.path.realpath(mhuv)):
-            log.notice('UvTaskView.loadHandler: %s does not exist. Skipping.', mhuv)
+        filepath = values[1]
+        if not os.path.exists(os.path.realpath(filepath)):
+            log.notice('UvTaskView.loadHandler: %s does not exist. Skipping.', filepath)
             return
-        human.setUVMap(mhuv)
+        human.setUVMap(filepath)
         gui3d.app.redraw()
 
     def saveHandler(self, human, file):

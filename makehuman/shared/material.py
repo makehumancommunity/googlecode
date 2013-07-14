@@ -666,7 +666,7 @@ class Material(object):
         else:
             return texture
 
-            
+
     def getDiffuseTexture(self):
         return self._diffuseTexture
 
@@ -821,82 +821,44 @@ def getFilePath(filename, folder = None):
     return filename
 
 
-# TODO this is a duplicate from mh2proxy, but I hope to remove this code from mh2proxy some time. mh2proxy is too bloated
 class UVMap:
     def __init__(self, name):
         self.name = name
         self.type = "UvSet"
-        self.filename = None
-        self.faceMaterials = None
-        self.materials = []
-        self.faceNumbers = []
-        self.texVerts = []
-        self.texFaces = []
+        self.filepath = None
+        #self.materials = [name]
+        self.uvs = None
+        self.fuvs = None
 
-    def read(self, mesh, filename):
+
+    def read(self, mesh, filepath):
         import numpy as np
+        import os
 
-        doTexVerts = 1
-        doTexFaces = 2
-        doFaces = 3
-        doFaceNumbers = 4
-        doMaterial = 5
+        filename,ext = os.path.splitext(filepath)
+        if ext == ".mhuv":
+            raise NameError("ERROR: .mhuv files are obsolete. Change to .obj: %s" % filepath)
 
-        try:
-            fp = open(filename, "r")
-        except:
-            log.error("Error loading UV map from %s.", filename)
-            raise NameError("Cannot open %s" % filename)
+        self.filepath = filepath
+        uvs,fuvs = loadUvObjFile(filepath)
+        self.uvs = np.array(uvs)
+        self.fuvs = np.array(fuvs)
 
-        status = 0
-        for line in fp:
-            words = line.split()
-            if words == [] or words[0][0] == '#':
-                continue
+        log.debug("UVS %s" % self.uvs)
+        log.debug("FUVS %s" % self.fuvs)
 
-            if words[0] == "name":
-                self.name = words[1]
-            # TODO allow multiple materials for one mesh?
-            #elif words[1] == "material":
-            #    mat = Material(words[1])
-            #    self.materials.append(mat)
-            #    status = doMaterial
-            elif words[0] == "faceNumbers":
-                status = doFaceNumbers
-            elif words[0] == "texVerts":
-                status = doTexVerts
-            elif words[0] == "texFaces":
-                status = doTexFaces
-            #elif status == doMaterial:
-            #    readMaterial(line, mat, self, True)
-            elif status == doFaceNumbers:
-                self.faceNumbers.append(line)
-            elif status == doTexVerts:
-                self.texVerts.append([float(words[0]), float(words[1])])
-            elif status == doTexFaces:
-                texface = [int(word) for word in words]
-                self.texFaces.append(texface)
-        fp.close()
-        self.filename = filename
 
-        nFaces = len(mesh.fvert)
-        self.faceMaterials = np.zeros(nFaces, int)
-        fn = 0
-        mn = 0
-        for line in self.faceNumbers:
-            words = line.split()
-            if len(words) < 2:
-                continue
-            elif words[0] == "ft":
-                self.faceMaterials[fn] = int(words[1])
-                fn += 1
-            elif words[0] == "ftn":
-                nfaces = int(words[1])
-                mn = int(words[2])
-                for n in range(nfaces):
-                    self.faceMaterials[fn] = mn
-                    fn += 1
-        while fn < nFaces:
-            self.faceMaterials[fn] = mn
-            fn += 1
-
+def loadUvObjFile(filepath):
+    fp = open(filepath, "rU")
+    uvs = []
+    fuvs = []
+    for line in fp:
+        words = line.split()
+        if len(words) == 0:
+            continue
+        elif words[0] == "vt":
+            uvs.append((float(words[1]), float(words[2])))
+        elif words[0] == "f":
+            fuvs.append( [(int(word.split("/")[1]) - 1) for word in words[1:]] )
+    fp.close()
+    return uvs,fuvs
