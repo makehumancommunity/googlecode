@@ -148,6 +148,9 @@ class EyesTaskView(gui3d.TaskView):
                 human.eyesProxy = None
             self.setEyes(human, "data/eyes/high-poly/high-poly.mhclo")
             self.filechooser.deselectAll()
+        else:
+            if gui3d.app.settings.get('realtimeFitting', False):
+                self.adaptEyesToHuman(human)
 
     def onHumanChanged(self, event):
 
