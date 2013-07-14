@@ -77,7 +77,9 @@ def writeMhpBones(fp, pb):
         mat[1] = matz
         mat[2] = -maty
     q = mat.to_quaternion()
-    fp.write("%s\t%s\t%s\t%s\t%s\t%s\n" % (pb.name, string, round(q.w), round(q.x), round(q.y), round(q.z)))
+    magn = math.sqrt(q.x*q.x + q.y*q.y + q.z*q.z)
+    if magn > 1e-5:
+        fp.write("%s\t%s\t%s\t%s\t%s\t%s\n" % (pb.name, string, round(q.w), round(q.x), round(q.y), round(q.z)))
     for child in pb.children:
         writeMhpBones(fp, child)
 
