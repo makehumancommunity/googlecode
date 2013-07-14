@@ -115,14 +115,14 @@ class PoseLoadTaskView(gui3d.TaskView):
 
 
     def onHumanChanging(self, event):
-        posemode.compromiseStorage()
+        posemode.touchStorage()
         if event.change == 'reset':
             self.posefile = None
             self.pose = None
 
 
     def onHumanChanged(self, event):
-        posemode.compromiseStorage()
+        posemode.touchStorage()
         #posemode.changePoseMode(event)
 
     def loadHandler(self, human, values):

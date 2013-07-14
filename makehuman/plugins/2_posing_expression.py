@@ -108,7 +108,7 @@ class ExpressionTaskView(gui3d.TaskView):
 
     def onHumanChanged(self, event):
         log.debug("OHC %s %s" % (event, dir(event)))
-        warpmodifier.compromiseWarps()
+        warpmodifier.touchWarps()
         for slider in self.sliders:
             slider.update()
 
@@ -177,8 +177,6 @@ class ExpressionAction(gui3d.Action):
     def do(self):
         self.taskView.loadExpression(self.filename, self.include)
         self.human.applyAllTargets(gui3d.app.progress, True)
-        if self.human.armature:
-            self.human.armature.adapt()
         for slider in self.taskView.sliders:
             slider.update()
         return True
@@ -187,8 +185,6 @@ class ExpressionAction(gui3d.Action):
         for name, value in self.before.iteritems():
             self.taskView.modifiers[name].setValue(self.human, value)
         self.human.applyAllTargets(gui3d.app.progress, True)
-        if self.human.armature:
-            self.human.armature.update()
         for slider in self.taskView.sliders:
             slider.update()
         return True

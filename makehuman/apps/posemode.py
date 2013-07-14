@@ -28,14 +28,14 @@ from armature.pose import createPoseRig
 from armature.utils import debugCoords
 import humanmodifier
 import warpmodifier
-import algos3d
 import log
 
 
 class Storage:
     def __init__(self):
         self.coord = None
-        self.targetBuffer = None
+        self.baseDetails = None
+        self.poseDetails = {}
         self.filepath = None
         self.dirty = False
 
@@ -46,15 +46,21 @@ class Storage:
             raise NameError("Failed to set unposed coords")
         obj = human.meshData
         self.coord = obj.coord.copy()
-        if self.filepath and not self.dirty:
-            return self.filepath
 
-        self.dirty = False
-        self.filepath = None
-        self.targetBuffer = {}
-        for trgpath, target in algos3d.targetBuffer.items():
-            self.targetBuffer[trgpath] = target
-        return None
+        self.baseDetails = {}
+        for path,value in human.targetsDetailStack.items():
+            self.baseDetails[path] = value
+
+        if self.filepath and not self.dirty:
+            for path,value in self.poseDetails.items():
+                human.setDetail(path, value)
+            human.applyAllTargets()
+            return self.filepath
+        else:
+            self.dirty = False
+            self.filepath = None
+            self.poseDetails = {}
+            return None
 
 
     def restore(self, human, filepath):
@@ -65,19 +71,29 @@ class Storage:
             obj.update()
             self.coord = None
             debugCoords("restore1")
-        #warpmodifier.removeAllWarpTargets(human)
-        if self.targetBuffer is not None:
-            algos3d.targetBuffer = self.targetBuffer
-            self.targetBuffer = None
+
+        if self.baseDetails is not None:
+            self.poseDetails = {}
+            for path,value in human.targetsDetailStack.items():
+                try:
+                    self.baseDetails[path]
+                except KeyError:
+                    self.poseDetails[path] = value
+            for path in self.poseDetails.keys():
+                human.setDetail(path, 0)
+            self.baseDetails = None
+            human.applyAllTargets()
         self.filepath = filepath
         self.dirty = False
         debugCoords("restore2")
 
 
-def compromiseStorage():
-    _storage.dirty = True
-    _storage.filepath = None
-    log.debug("Storage compromised")
+def touchStorage():
+    if not _inPoseMode:
+        _storage.dirty = True
+        _storage.filepath = None
+        #_storage.poseDetails = {}
+        log.debug("Storage touched")
 
 _storage = Storage()
 _inPoseMode = False

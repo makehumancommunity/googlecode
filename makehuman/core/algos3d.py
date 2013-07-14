@@ -50,7 +50,6 @@ NMHVerts = 18528
 
 targetBuffer = {}
 warpTargetBuffer = {}
-poseTargetBuffer = {}
 
 class Target:
 
@@ -261,11 +260,6 @@ def getTarget(obj, targetPath):
         target.reinit()
         return target
 
-    target = getPoseTarget(targetPath)
-    if target:
-        target.reinit()
-        return target
-
     target = Target(obj, targetPath)
     targetBuffer[targetPath] = target
     return target
@@ -288,25 +282,6 @@ def removeWarpTarget(targetPath):
     except KeyError:
         return
     del warpTargetBuffer[targetPath]
-
-
-def getPoseTarget(targetPath):
-    try:
-        return poseTargetBuffer[targetPath]
-    except KeyError:
-        return None
-
-
-def setPoseTarget(targetPath, target):
-    poseTargetBuffer[targetPath] = target
-
-
-def removePoseTarget(targetPath):
-    try:
-        target = poseTargetBuffer[targetPath]
-    except KeyError:
-        return
-    del poseTargetBuffer[targetPath]
 
 
 def loadTranslationTarget(obj, targetPath, morphFactor, faceGroupToUpdateName=None, update=1, calcNorm=1, scale=[1.0,1.0,1.0]):

@@ -98,8 +98,11 @@ class BaseSpec:
 
 class TargetSpec:
     def __init__(self, path, factors):
-        self.path = path
+        self.path = path.replace("-${tone}","").replace("-${weight}","")
         self.factors = factors
+        if "$" in self.path:
+            log.debug("TS %s %s" % (self.path, path))
+            halt
 
     def __repr__(self):
         return ("<TargetSpec %s %s>" % (self.path, self.factors))
@@ -209,15 +212,29 @@ class WarpModifier (humanmodifier.SimpleModifier):
                     for tone in _warpGlobals.baseCharacterParts[tones]:
                         for weight in _warpGlobals.baseCharacterParts[weights]:
                             if tone and weight:
-                                base2 = "data/targets/macrodetails/universal-%s-%s-%s-%s.target" % (gender, age, tone, weight)
-                                key2 = "universal-%s-%s-%s-%s" % (gender, age, tone, weight)
-                                factors2 = factors1 + [tone, weight]
-                                self.bases[key2] = BaseSpec(base2, factors2)
-                                path2 = path1.replace("${tone}", tone).replace("${weight}", weight)
-                                self.targetSpecs[key2] = TargetSpec(path2, factors2)
-
+                                tone2 = tone
+                                weight2 = weight
+                            '''
                             elif tone:
-                                base2 = "data/targets/macrodetails/universal-%s-%s-%s.target" % (gender, age, tone)
+                                tone2 = tone
+                                weight2 = "averageweight"
+                            elif tone:
+                                tone2 = "averagemuscle"
+                                weight2 = weight
+                            else:
+                                tone2 = "averagemuscle"
+                                weight2 = "averageweight"
+                            '''
+                            base2 = "data/targets/macrodetails/universal-%s-%s-%s-%s.target" % (gender, age, tone, weight)
+                            key2 = "universal-%s-%s-%s-%s" % (gender, age, tone2, weight2)
+                            factors2 = factors1 + [tone2, weight2]
+                            self.bases[key2] = BaseSpec(base2, factors2)
+                            path2 = path1.replace("${tone}", tone2).replace("${weight}", weight2)
+                            self.targetSpecs[key2] = TargetSpec(path2, factors2)
+
+                            '''
+                            elif tone:
+                                base2 = "data/targets/macrodetails/universal-%s-%s-%s-averageweight.target" % (gender, age, tone)
                                 key2 = "universal-%s-%s-%s" % (gender, age, tone)
                                 factors2 = factors1 + [tone, 'averageweight']
                                 self.bases[key2] = BaseSpec(base2, factors2)
@@ -225,7 +242,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
                                 self.targetSpecs[key2] = TargetSpec(path2, factors2)
 
                             elif weight:
-                                base2 = "data/targets/macrodetails/universal-%s-%s-%s.target" % (gender, age, weight)
+                                base2 = "data/targets/macrodetails/universal-%s-%s-averagemuscle-%s.target" % (gender, age, weight)
                                 key2 = "universal-%s-%s-%s" % (gender, age, weight)
                                 factors2 = factors1 + ['averagemuscle', weight]
                                 self.bases[key2] = BaseSpec(base2, factors2)
@@ -233,10 +250,12 @@ class WarpModifier (humanmodifier.SimpleModifier):
                                 self.targetSpecs[key2] = TargetSpec(path2, factors2)
 
                             else:
+                                base2 = "data/targets/macrodetails/universal-%s-%s-averagemuscle-averageweight.target" % (gender, age)
+                                key2 = "universal-%s" % (gender)
                                 factors2 = factors1 + ['averagemuscle', 'averageweight']
                                 path2 = path1.replace("-${tone}", "").replace("-${weight}", "")
                                 self.targetSpecs[key1] = TargetSpec(path2, factors2)
-
+                            '''
 
 
 
@@ -324,16 +343,13 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 factors[key1] += value
             except KeyError:
                 factors[key1] = value
-            log.debug("  %s %s %s" % (key, key1, factors[key1]))
-        log.debug("Factors %s" % factors.items())
 
         for target in self.targetSpecs.values():
             cval = 1.0
             for factor in target.factors:
                 cval *= factors[factor]
-            log.debug("  reftrg %s %s", target.path, cval)
+            #log.debug("  reftrg %s %s", target.path, cval)
             if cval > 1e-6:
-                log.debug("  ***")
                 madeRefTarget = True
                 verts = self.getRefTargetVertsInsist(target.path)
                 if verts is not None:
@@ -418,7 +434,6 @@ class WarpModifier (humanmodifier.SimpleModifier):
             for char in _warpGlobals.getRefObjects().keys():
                 cval = human.getDetail(char)
                 if cval:
-                    log.debug("  refobj %s %s", os.path.basename(char), cval)
                     verts = self.getRefObjectVerts(char)
                     if verts is not None:
                         addVerts(refverts, cval, verts)
@@ -465,23 +480,39 @@ def compileWarpTarget(template, fallback, human, bodypart):
 #   Read target
 #----------------------------------------------------------
 
-def readTarget(path):
+def readTarget(filepath):
+
+    words = filepath.split("-")
+    if (words[0] == "data/targets/macrodetails/universal" and
+        words[-2] == "averagemuscle" and
+        words[-1] == "averageweight.target"):
+        return {}
+
     try:
-        fp = open(path, "r")
+        fp = open(filepath, "r")
     except:
         fp = None
+
+    if fp is None:
+        filepath1 = filepath.replace("-averagemuscle", "").replace("-averageweight", "")
+        try:
+            fp = open(filepath1, "r")
+        except:
+            fp = None
+
     if fp:
         target = {}
         for line in fp:
             words = line.split()
             if len(words) >= 4 and words[0][0] != '#':
                 n = int(words[0])
-                if n < algos3d.NMHVerts:
+                if n < _warpGlobals.nMhVerts:
                     target[n] = np.array([float(words[1]), float(words[2]), float(words[3])])
         fp.close()
         return target
     else:
-        log.message("Could not find %s" % os.path.realpath(path))
+        log.message("Found neither %s nor %s" % (filepath, filepath1))
+        halt
         return None
 
 #----------------------------------------------------------
@@ -502,6 +533,7 @@ def addVerts(targetVerts, cval, verts):
 
 class GlobalWarpData:
     def __init__(self):
+        self.nMhVerts = 19158
         self._refObjectVerts = None
         self._landMarks = None
         self._refObjects = None
@@ -544,8 +576,8 @@ class GlobalWarpData:
             "NoAge" : [None],
             "Ethnic" : ("caucasian", "african", "asian"),
             "NoEthnic" : [None],
-            "Tone" : ("minmuscle", None, "maxmuscle"),
-            "Weight" : ("minweight", None, "maxweight"),
+            "Tone" : ("minmuscle", "averagemuscle", "maxmuscle"),
+            "Weight" : ("minweight", "averageweight", "maxweight"),
             "NoUniv" : [None]
         }
 
@@ -639,15 +671,10 @@ class GlobalWarpData:
 
         for age in self.ages:
             for gender in self.genders:
-                for tone in ["minmuscle", "maxmuscle"]:
-                    path = "data/targets/macrodetails/universal-%s-%s-%s.target" % (gender, age, tone)
-                    self._refObjects[path] = None
-                    for weight in ["minweight", "maxweight"]:
+                for tone in ["minmuscle", "averagemuscle", "maxmuscle"]:
+                    for weight in ["minweight", "averageweight", "maxweight"]:
                         path = "data/targets/macrodetails/universal-%s-%s-%s-%s.target" % (gender, age, tone, weight)
                         self._refObjects[path] = None
-                for weight in ["minweight", "maxweight"]:
-                    path = "data/targets/macrodetails/universal-%s-%s-%s.target" % (gender, age, weight)
-                    self._refObjects[path] = None
 
         return self._refObjects
 
@@ -656,7 +683,7 @@ class GlobalWarpData:
         self._refObjects[path] = verts
 
 
-def compromiseWarps():
+def touchWarps():
     global _warpGlobals
     _warpGlobals.dirty = True
 
