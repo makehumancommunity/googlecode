@@ -330,7 +330,7 @@ class Object(events3d.EventHandler):
             uvset.read(mesh, filename)
 
             mesh._materials = []
-            mesh.createMaterial(uvset.name)
+            mesh.createMaterial(uvset.materialName)
             mesh.setUVs(uvset.uvs)
             mesh.setFaces(mesh.fvert, uvset.fuvs, faceGroups)
 

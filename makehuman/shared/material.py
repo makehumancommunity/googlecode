@@ -826,7 +826,7 @@ class UVMap:
         self.name = name
         self.type = "UvSet"
         self.filepath = None
-        #self.materials = [name]
+        self.materialName = "Default"
         self.uvs = None
         self.fuvs = None
 

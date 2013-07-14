@@ -24,6 +24,7 @@ Mesh
 
 import numpy
 import os
+import log
 from . import mhx_drivers
 
 #-------------------------------------------------------------------------------
