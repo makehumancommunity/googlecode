@@ -212,7 +212,10 @@ def loadTarget(filepath, context, irrelevant=[], offset=0):
     print("Loading target %s, ignoring: %s" % (realpath, irrelevant))
 
     ob = context.object
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
+
     for v in ob.data.vertices:
         v.select = False
     name = nameFromPath(filepath)

@@ -64,11 +64,18 @@ class VIEW3D_OT_ReadVNumsButton(bpy.types.Operator):
     bl_label = "Read Vnums from file"
     bl_options = {'UNDO'}
 
+    filepath = bpy.props.StringProperty(
+        name="File Path",
+        description="File path used for target file",
+        maxlen= 1024, default= "")
+
+    @classmethod
+    def poll(self, context):
+        return context.object
+
     def execute(self, context):
-        scn = context.scene
         ob = context.object
-        path = os.path.expanduser(scn.MhxVertexGroupFile)
-        fp = open(path, "rU")
+        fp = open(self.filepath, "rU")
         for line in fp:
             try:
                 vn = int(line)
@@ -77,7 +84,13 @@ class VIEW3D_OT_ReadVNumsButton(bpy.types.Operator):
             if vn >= 0:
                 ob.data.vertices[vn].select = True
         fp.close()
+        print("Vnums loaded")
         return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
 
 
 def printFirstVertNum(context):
