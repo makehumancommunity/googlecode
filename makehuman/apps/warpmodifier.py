@@ -54,13 +54,11 @@ class WarpTarget(algos3d.Target):
 
 
     def __repr__(self):
-        return ( "<WarpTarget %s d:%s o:%s>" % (os.path.basename(self.modifier.warppath), self.isDirty, self.isObsolete) )
+        return ( "<WarpTarget %s dirty:%s>" % (os.path.basename(self.modifier.warppath), self.isDirty) )
 
 
     def reinit(self):
 
-        if self.isObsolete:
-            halt
         if self.isDirty:
             shape = self.modifier.compileWarpTarget(self.human)
             saveWarpedTarget(shape, self.modifier.warppath)
@@ -85,7 +83,6 @@ def saveWarpedTarget(shape, path):
 #----------------------------------------------------------
 #   class WarpModifier
 #----------------------------------------------------------
-
 
 class BaseSpec:
     def __init__(self, path, factors):
@@ -265,15 +262,12 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
 
     def setValue(self, human, value):
+        self.compileTargetIfNecessary(human)
         humanmodifier.SimpleModifier.setValue(self, human, value)
-        human.warpNeedReset = False
 
 
     def updateValue(self, human, value, updateNormals=1):
-        target = self.getWarpTarget(G.app.selectedHuman)
-        if not target:
-            return
-        target.reinit()
+        self.compileTargetIfNecessary(human)
         humanmodifier.SimpleModifier.updateValue(self, human, value, updateNormals)
         human.warpNeedReset = False
 
@@ -282,37 +276,60 @@ class WarpModifier (humanmodifier.SimpleModifier):
         return max(0.0, min(1.0, value))
 
 
+    def compileTargetIfNecessary(self, human):
+        try:
+            target = algos3d.warpTargetBuffer[self.warppath]
+        except KeyError:
+            target = None
+        if target:
+            if not isinstance(target, WarpTarget):
+                raise NameError("%s is not a warp target" % target)
+        else:
+            target = WarpTarget(self, human)
+            algos3d.warpTargetBuffer[self.warppath] = target
+
+        target.reinit()
+
+
     def compileWarpTarget(self, human):
         global _warpGlobals
-        log.message("Compile %s", self)
+        log.message("COMPWARP %s", self)
         landmarks = _warpGlobals.getLandMarks(self.bodypart)
-        objectChanged = self.resetRefVertsIfChanged(human)
-        self.getRefTarget(human, objectChanged)
-        roVerts = _warpGlobals.getRefObjectVerts(self.modtype)
-        unwarpedCoords = _warpGlobals.getUnwarpedCoords(human)
-        if (self.refTargetVerts and roVerts is not None):
-            #log.debug("BP %s" % self.bodypart)
-            #log.debug("RTV %s" % self.refTargetVerts)
-            #log.debug("ROV %s" % roVerts)
-            #log.debug("SHC %s" % unwarpedCoords)
-            #log.debug("LMK %s" % landmarks)
-            shape = warp.warp_target(self.refTargetVerts, roVerts, unwarpedCoords, landmarks)
+
+        obj = human.meshData
+        srcCharCoord = obj.orig_coord.copy()
+        trgCharCoord = obj.orig_coord.copy()
+
+        for trgpath,value in human.targetsDetailStack.items():
+            try:
+                target = algos3d.targetBuffer[trgpath]
+            except KeyError:
+                continue
+            srcVerts = np.s_[...]
+            dstVerts = target.verts[srcVerts]
+            data = value * target.data[srcVerts]
+            data.resize((meshstat.numberOfVertices,3))
+            trgCharCoord += data
+            if trgpath in self.bases.keys():
+                srcCharCoord[dstVerts] += data
+
+        self.updateRefTarget(human)
+
+        if self.refTargetVerts:
+            shape = warp.warp_target(self.refTargetVerts, srcCharCoord, trgCharCoord, landmarks)
         else:
             shape = {}
         log.message("...done")
         return shape
 
 
-    def getRefTarget(self, human, objectChanged):
-        targetChanged = self.getBases(human)
-        if targetChanged or objectChanged:
-            log.message("Reference target changed")
+    def updateRefTarget(self, human):
+        if not self.makeRefTarget(human):
+            log.message("Updating character")
+            #human.applyAllTargets()
+            self.getBases(human)
             if not self.makeRefTarget(human):
-                log.message("Updating character")
-                #human.applyAllTargets()
-                self.getBases(human)
-                if not self.makeRefTarget(human):
-                    raise NameError("Character is empty")
+                raise NameError("Character is empty")
 
 
     def getBases(self, human):
@@ -349,7 +366,6 @@ class WarpModifier (humanmodifier.SimpleModifier):
             cval = 1.0
             for factor in target.factors:
                 cval *= factors[factor]
-            #log.debug("  reftrg %s %s", target.path, cval)
             if cval > 1e-6:
                 madeRefTarget = True
                 verts = self.getRefTargetVertsInsist(target.path)
@@ -409,65 +425,6 @@ class WarpModifier (humanmodifier.SimpleModifier):
         if verts is None:
             verts = readTarget(path)
         return verts
-
-
-    def getWarpTarget(self, human):
-        target = algos3d.getWarpTarget(self.warppath)
-        if target:
-            return target
-        target = WarpTarget(self, human)
-        algos3d.setWarpTarget(self.warppath, target)
-        return target
-
-
-    def removeTarget(self):
-        algos3d.removeWarpTarget(self.warppath)
-
-
-    def resetRefVertsIfChanged(self, human):
-        global _warpGlobals
-
-        if _warpGlobals.getRefObjectVerts(self.modtype) is not None:
-            return False
-        else:
-            log.message("Reset warps")
-            refverts = np.array(G.app.selectedHuman.meshData.orig_coord)
-            for char in _warpGlobals.getRefObjects().keys():
-                cval = human.getDetail(char)
-                if cval:
-                    verts = self.getRefObjectVerts(char)
-                    if verts is not None:
-                        addVerts(refverts, cval, verts)
-            _warpGlobals.setRefObjectVerts(self.modtype, refverts)
-            return True
-
-
-    def getRefObjectVerts(self, path):
-        global _warpGlobals
-        refObjects = _warpGlobals.getRefObjects()
-        if refObjects[path]:
-            return refObjects[path]
-        else:
-            verts = readTarget(path)
-            if verts is not None:
-                _warpGlobals.sefRefObject(path, verts)
-            return verts
-
-
-def removeAllWarpTargets(human):
-    log.message("Removing all warp targets")
-    for target in algos3d.targetBuffer.values():
-        if isinstance(target, WarpTarget):
-            log.message("  %s", target)
-            target.isDirty = True
-            target.isObsolete = True
-            human.setDetail(target.name, 0)
-            target.morphFactor = 0
-            target.modifier.setValue(human, 0)
-            if target.modifier.slider:
-                target.modifier.slider.update()
-            del algos3d.targetBuffer[target.name]
-
 
 #----------------------------------------------------------
 #   Call from exporter
@@ -588,45 +545,6 @@ class GlobalWarpData:
         self.dirty = False
 
 
-    def getUnwarpedCoords(self, human):
-        if self.dirty:
-            self.reset()
-        elif self._unwarpedCoords is not None:
-            return self._unwarpedCoords
-        coords = np.array(G.app.selectedHuman.meshData.orig_coord)
-        for target in algos3d.targetBuffer.values():
-            if not isinstance(target, WarpTarget):
-                verts = algos3d.targetBuffer[target.name].verts
-                coords[verts] += target.morphFactor * target.data
-        self._unwarpedCoords = coords
-        return coords
-
-
-    def getWarpedCoords(self, human):
-        if self.dirty:
-            self.reset()
-        elif self._warpedCoords is not None:
-            return self._warpedCoords
-        coords = np.array(G.app.selectedHuman.meshData.orig_coord)
-        for target in algos3d.targetBuffer.values():
-            if isinstance(target, WarpTarget):
-                verts = algos3d.targetBuffer[target.name].verts
-                coords[verts] += target.morphFactor * target.data
-        self._warpedCoords = coords
-        return coords
-
-
-    def getRefObjectVerts(self, modtype):
-        if self._refObjectVerts is None:
-            return None
-        else:
-            return self._refObjectVerts[modtype]
-
-
-    def setRefObjectVerts(self, modtype, refverts):
-        self._refObjectVerts[modtype] = refverts
-
-
     def getLandMarks(self, bodypart):
         if self._landMarks is not None:
             return self._landMarks[bodypart]
@@ -648,39 +566,6 @@ class GlobalWarpData:
             self._landMarks[name] = landmark
 
         return self._landMarks[bodypart]
-
-
-    def clearRefObject(self):
-        self._refObjectVerts = {}
-        for mtype in self.modifierTypes.keys():
-            self._refObjectVerts[mtype] = None
-
-
-    def getRefObjects(self):
-        if self._refObjects is not None:
-            return self._refObjects
-
-        self.clearRefObject()
-        self._refObjects = {}
-
-        for ethnic in self.ethnics:
-            for age in self.ages:
-                for gender in self.genders:
-                    path = "data/targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age)
-                    self._refObjects[path] = None
-
-        for age in self.ages:
-            for gender in self.genders:
-                for tone in ["minmuscle", "averagemuscle", "maxmuscle"]:
-                    for weight in ["minweight", "averageweight", "maxweight"]:
-                        path = "data/targets/macrodetails/universal-%s-%s-%s-%s.target" % (gender, age, tone, weight)
-                        self._refObjects[path] = None
-
-        return self._refObjects
-
-
-    def sefRefObject(self, path, verts):
-        self._refObjects[path] = verts
 
 
 def touchWarps():

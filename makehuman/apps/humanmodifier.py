@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -37,42 +37,42 @@ import targets
 
 # Gender
 # -
-# female	1.0	0.5	1.0
-# male		0.0	0.5	1.0
+# female    1.0 0.5 1.0
+# male      0.0 0.5 1.0
 
 # Age
 # -
 # baby      1.0 0.0 0.0 0.0
-# child		0.0	1.0	0.0 0.0
-# young		0.0	0.0	1.0 0.0
-# old		0.0	0.0	0.0 1.0
+# child     0.0 1.0 0.0 0.0
+# young     0.0 0.0 1.0 0.0
+# old       0.0 0.0 0.0 1.0
 
 # Weight
 # -
-# light		1.0	0.0	0.0
-# averageWeight	0.0	1.0	0.0
-# heavy		0.0	0.0	1.0
+# light     1.0 0.0 0.0
+# averageWeight 0.0 1.0 0.0
+# heavy     0.0 0.0 1.0
 
 # Muscle
 # -
-# flaccid	1.0	0.0	0.0
-# averageTone	0.0	1.0	0.0
-# muscle	0.0	0.0	1.0
+# flaccid   1.0 0.0 0.0
+# averageTone   0.0 1.0 0.0
+# muscle    0.0 0.0 1.0
 
 # Height
 # -
-# dwarf		1.0	0.0	0.0
-# giant		0.0	0.0	1.0
+# dwarf     1.0 0.0 0.0
+# giant     0.0 0.0 1.0
 
 # BreastFirmness
 # -
-# firmness0	1.0	0.5	1.0
-# firmness1	0.0	0.5	1.0
+# firmness0 1.0 0.5 1.0
+# firmness1 0.0 0.5 1.0
 
 # BreastSize
 # -
-# cup1		1.0	0.0	0.0
-# cup2		0.0	0.0	1.0
+# cup1      1.0 0.0 0.0
+# cup2      0.0 0.0 1.0
 
 # African
 
@@ -120,9 +120,9 @@ class ModifierAction(gui3d.Action):
         self.human.applyAllTargets(gui3d.app.progress)
         self.postAction()
         return True
-        
+
 class ModifierSlider(gui.Slider):
-    
+
     def __init__(self, value=0.0, min=0.0, max=1.0, label=None, modifier=None, valueConverter=None,
                  warpResetNeeded=True, image=None):
         super(ModifierSlider, self).__init__(value, min, max, label, valueConverter=valueConverter, image=image)
@@ -130,14 +130,14 @@ class ModifierSlider(gui.Slider):
         self.value = None
         self.warpResetNeeded = warpResetNeeded
         self.changing = None
-        
+
     def onChanging(self, value):
         if self.changing is not None:
             self.changing = value
             return
         self.changing = value
         gui3d.app.callAsync(self._onChanging)
-        
+
     def _onChanging(self):
         value = self.changing
         self.changing = None
@@ -153,10 +153,11 @@ class ModifierSlider(gui.Slider):
                     human.getSubdivisionMesh(False).setVisibility(0)
             self.modifier.updateValue(human, value, gui3d.app.settings.get('realtimeNormalUpdates', True))
             human.updateProxyMesh()
-            human.warpsNeedReset = self.warpResetNeeded
-            
+        if self.warpResetNeeded:
+            algos3d.resetWarpBuffer()
+
     def onChange(self, value):
-        
+
         human = gui3d.app.selectedHuman
         if self.value is None:
             self.value = self.modifier.getValue(human)
@@ -169,10 +170,11 @@ class ModifierSlider(gui.Slider):
                 human.getSeedMesh().setVisibility(0)
             human.getSubdivisionMesh(False).setVisibility(1)
         self.value = None
-        human.warpsNeedReset = self.warpResetNeeded
-        
+        if self.warpResetNeeded:
+            algos3d.resetWarpBuffer()
+
     def update(self):
-        
+
         human = gui3d.app.selectedHuman
         self.setValue(self.modifier.getValue(human))
 
@@ -210,15 +212,14 @@ class BaseModifier(object):
         self.verts = None
         self.faces = None
         self.eventType = 'modifier'
-        
+
     def setValue(self, human, value):
         value = self.clampValue(value)
         factors = self.getFactors(human, value)
-        human.warpNeedReset = True
-        
+
         for target in self.targets:
             human.setDetail(target[0], value * reduce(operator.mul, [factors[factor] for factor in target[1]]))
-            
+
     def getValue(self, human):
         return sum([human.getDetail(target[0]) for target in self.targets])
 
@@ -251,12 +252,11 @@ class BaseModifier(object):
             if new == old:
                 continue
             algos3d.loadTranslationTarget(human.meshData, target[0], new - old, None, 0, 0)
-        
+
         # Update vertices
         if updateNormals:
             human.meshData.calcNormals(1, 1, self.verts, self.faces)
         human.meshData.update(self.verts, updateNormals)
-        human.warpNeedReset = True
         human.callEvent('onChanging', events3d.HumanEvent(human, self.eventType))
 
 class Modifier(BaseModifier):
@@ -268,17 +268,17 @@ class Modifier(BaseModifier):
         self.targets = [[self.left], [self.right]]
 
     def setValue(self, human, value, update=1):
-        
+
         value = max(-1.0, min(1.0, value))
 
         left = -value if value < 0.0 else 0.0
         right = value if value > 0.0 else 0.0
-        
+
         human.setDetail(self.left, left)
         human.setDetail(self.right, right)
 
     def getValue(self, human):
-        
+
         value = human.getDetail(self.left)
         if value:
             return -value
@@ -297,19 +297,19 @@ class SimpleModifier(BaseModifier):
         self.targets = self.expandTemplate([(self.template, [])])
 
     def expandTemplate(self, targets):
-        
+
         targets = [(target[0], target[1] + ['dummy']) for target in targets]
-        
+
         return targets
-    
+
     def getFactors(self, human, value):
-        
+
         factors = {
             'dummy': 1.0
         }
-        
+
         return factors
-    
+
     def clampValue(self, value):
         return max(0.0, min(1.0, value))
 

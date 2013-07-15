@@ -49,6 +49,7 @@ import log
 targetBuffer = {}
 warpTargetBuffer = {}
 
+
 class Target:
 
     """
@@ -253,7 +254,10 @@ def getTarget(obj, targetPath):
     except KeyError:
         pass
 
-    target = getWarpTarget(targetPath)
+    try:
+        target = warpTargetBuffer[targetPath]
+    except KeyError:
+        target = None
     if target:
         target.reinit()
         return target
@@ -263,23 +267,16 @@ def getTarget(obj, targetPath):
     return target
 
 
-def getWarpTarget(targetPath):
-    try:
-        return warpTargetBuffer[targetPath]
-    except KeyError:
-        return None
-
-
-def setWarpTarget(targetPath, target):
-    warpTargetBuffer[targetPath] = target
-
-
-def removeWarpTarget(targetPath):
-    try:
-        target = warpTargetBuffer[targetPath]
-    except KeyError:
-        return
-    del warpTargetBuffer[targetPath]
+def resetWarpBuffer():
+    global warpTargetBuffer
+    import gui3d
+    if warpTargetBuffer:
+        log.debug("WARP RESET")
+        human = gui3d.app.selectedHuman
+        for trgpath in warpTargetBuffer:
+            human.setDetail(trgpath, 0)
+        warpTargetBuffer = {}
+        human.applyAllTargets()
 
 
 def loadTranslationTarget(obj, targetPath, morphFactor, faceGroupToUpdateName=None, update=1, calcNorm=1, scale=[1.0,1.0,1.0]):

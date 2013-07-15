@@ -43,10 +43,23 @@ class GroupBoxRadioButton(gui.RadioButton):
     def onClicked(self, event):
         self.task.groupBox.showWidget(self.groupBox)
 
-class ExpressionSlider(posemode.PoseModifierSlider):
-    def __init__(self, label, modifier):
-        posemode.PoseModifierSlider.__init__(self, label, modifier)
+#----------------------------------------------------------
+#   class ExpressionSlider
+#----------------------------------------------------------
 
+class ExpressionSlider(humanmodifier.ModifierSlider):
+    def __init__(self, label, modifier):
+        humanmodifier.ModifierSlider.__init__(self, label=label, modifier=modifier, warpResetNeeded=False)
+
+    def onChanging(self, value):
+        humanmodifier.ModifierSlider.onChanging(self, value)
+
+    def onChange(self, value):
+        humanmodifier.ModifierSlider.onChange(self, value)
+
+#----------------------------------------------------------
+#   class ExpressionTaskView
+#----------------------------------------------------------
 
 class ExpressionTaskView(gui3d.TaskView):
 
@@ -145,7 +158,6 @@ class ExpressionTaskView(gui3d.TaskView):
 
     def loadExpression(self, filename, include):
         human = gui3d.app.selectedHuman
-        posemode.enterPoseMode()
         self.resetExpressions(include)
 
         f = open(filename, 'r')

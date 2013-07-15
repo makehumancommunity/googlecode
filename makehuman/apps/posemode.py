@@ -142,9 +142,7 @@ def resetPoseMode():
 def changePoseMode(event):
     human = event.human
     #log.debug("Change pose mode %s w=%s e=%s", _inPoseMode, human.warpsNeedReset, event.change)
-    if human and human.warpsNeedReset:
-        exitPoseMode()
-    elif event.change not in ["targets", "warp"]:
+    if event.change not in ["targets", "warp"]:
         exitPoseMode()
     if event.change == "reset":
         resetPoseMode()
@@ -185,19 +183,4 @@ class PoseModifier(warpmodifier.WarpModifier):
     def __init__(self, template):
         warpmodifier.WarpModifier.__init__(self, template, "body", "GenderAgeToneWeight")
 
-#----------------------------------------------------------
-#   class PoseModifierSlider
-#----------------------------------------------------------
-
-class PoseModifierSlider(humanmodifier.ModifierSlider):
-    def __init__(self, label, modifier):
-        humanmodifier.ModifierSlider.__init__(self, label=label, modifier=modifier, warpResetNeeded=False)
-
-    def onChanging(self, value):
-        enterPoseMode()
-        humanmodifier.ModifierSlider.onChanging(self, value)
-
-    def onChange(self, value):
-        enterPoseMode()
-        humanmodifier.ModifierSlider.onChange(self, value)
 

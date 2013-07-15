@@ -43,9 +43,6 @@ class Human(gui3d.Object):
         self.MAX_AGE = 90.0
         self.MID_AGE = 25.0
 
-        self.warpsNeedReset = True
-        #self.pose = None
-
         self.mesh.setCameraProjection(0)
         self.mesh.setShadeless(0)
         self.mesh.setCull(1)
