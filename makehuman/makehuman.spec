@@ -84,7 +84,7 @@ VERSION="%s (%s)" % (VERSION,SvnInfo())
 vfile = open(os.path.join("core","VERSION"),"w")
 vfile.write(VERSION)
 vfile.close()
-             
+
 a = Analysis(['makehuman.py'],
              pathex=['lib','core','shared','apps','apps/gui', 'plugins'],
              hiddenimports=[],
@@ -105,7 +105,10 @@ def extra_datas(mydir):
     rec_glob("%s/*" % mydir, files)
     extra_datas = []
     for f in files:
-        extra_datas.append((f, f, 'DATA'))
+        if mydir == 'data' and f.endswith(".target"):
+            print "skipping %s" % f
+        else:
+            extra_datas.append((f, f, 'DATA'))
 
     return extra_datas
 ###########################################
