@@ -151,8 +151,12 @@ if sys.platform == 'darwin':
         upx=True,
         name='makehuman')
     app = BUNDLE(coll,
-        name='makehuman.app',
-        icon=None)
+        name='MakeHuman.app',
+        icon='icons/makehuman.icns')
+    if os.path.exists(os.path.join("dist","MakeHuman.dmg")):
+        os.remove(os.path.join("dist","MakeHuman.dmg"))
+    subprocess.check_call(["hdiutil","create","dist/MakeHuman.dmg","-srcfolder","dist/MakeHuman.app","-volname","'MakeHuman for Mac OS X'"])
+        
 elif sys.platform == 'win32':
     exe = EXE(pyz,
         a.scripts,
