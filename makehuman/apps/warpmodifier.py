@@ -31,6 +31,7 @@ import mh
 import os
 
 import algos3d
+import meshstat
 import warp
 import humanmodifier
 import log
@@ -506,7 +507,7 @@ def readTarget(filepath):
             words = line.split()
             if len(words) >= 4 and words[0][0] != '#':
                 n = int(words[0])
-                if n < _warpGlobals.nMhVerts:
+                if n < meshstat.numberOfVertices:
                     target[n] = np.array([float(words[1]), float(words[2]), float(words[3])])
         fp.close()
         return target
@@ -533,7 +534,6 @@ def addVerts(targetVerts, cval, verts):
 
 class GlobalWarpData:
     def __init__(self):
-        self.nMhVerts = 19158
         self._refObjectVerts = None
         self._landMarks = None
         self._refObjects = None

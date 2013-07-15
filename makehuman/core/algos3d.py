@@ -46,8 +46,6 @@ import os
 import numpy as np
 import log
 
-NMHVerts = 18528
-
 targetBuffer = {}
 warpTargetBuffer = {}
 

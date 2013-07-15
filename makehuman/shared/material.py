@@ -22,6 +22,9 @@ Abstract
 TODO
 """
 import log
+import os
+import meshstat
+
 
 class Color(object):
     def __init__(self, r=0.00, g=0.00, b=0.00):
@@ -833,19 +836,19 @@ class UVMap:
 
     def read(self, mesh, filepath):
         import numpy as np
-        import os
 
         filename,ext = os.path.splitext(filepath)
         if ext == ".mhuv":
             raise NameError("ERROR: .mhuv files are obsolete. Change to .obj: %s" % filepath)
 
-        self.filepath = filepath
         uvs,fuvs = loadUvObjFile(filepath)
+        self.filepath = filepath
         self.uvs = np.array(uvs)
         self.fuvs = np.array(fuvs)
 
-        log.debug("UVS %s" % self.uvs)
-        log.debug("FUVS %s" % self.fuvs)
+        if len(self.fuvs) != meshstat.numberOfFaces:
+            raise NameError("The file %s is corrupt. Number of faces %d != %d" %
+                (filepath, len(self.fuvs), meshstat.numberOfFaces))
 
 
 def loadUvObjFile(filepath):

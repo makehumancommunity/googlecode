@@ -24,6 +24,7 @@ TODO
 
 import os
 import math
+import meshstat
 import gui3d
 import warp
 import warpmodifier
@@ -161,7 +162,7 @@ def readShape(filename):
     for line in fp:
         words = line.split()
         n = int(words[0])
-        if n < algos3d.NMHVerts:
+        if n < meshstat.numberOfVertices:
             shape[n] = (float(words[1]), float(words[2]), float(words[3]))
     fp.close()
     log.message("    %s copied", filename)
