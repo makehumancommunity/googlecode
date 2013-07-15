@@ -1,6 +1,7 @@
 # -*- mode: python -*-
 VERSION="1.0alpha8"
 import sys
+import subprocess
 
 def SvnInfo():
     import os
@@ -84,6 +85,13 @@ VERSION="%s (%s)" % (VERSION,SvnInfo())
 vfile = open(os.path.join("core","VERSION"),"w")
 vfile.write(VERSION)
 vfile.close()
+
+###COMPILE TARGETS
+try:
+    subprocess.check_call(["python","compile_targets.py"])
+except subprocess.CalledProcessError:
+    print "check that compile_targets.py is working correctly"
+    sys.exit(1)
 
 a = Analysis(['makehuman.py'],
              pathex=['lib','core','shared','apps','apps/gui', 'plugins'],
