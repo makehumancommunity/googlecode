@@ -114,7 +114,7 @@ class ModifierTaskView(gui3d.TaskView):
 
                     modifier = humanmodifier.UniversalModifier(left, right)
 
-                    tpath = '-'.join(template[1:-1])
+                    tpath = '-'.join(template[0:-1])
                     modifierName = tpath
                     clashIndex = 0
                     while modifierName in self.modifiers:
