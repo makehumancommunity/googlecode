@@ -36,12 +36,13 @@ class HelpTaskView(gui3d.TaskView):
         optionsBox = self.addLeftWidget(gui.GroupBox('Support options'))
         self.manualButton = optionsBox.addWidget(gui.Button("Manual"))
         self.reportBugButton = optionsBox.addWidget(gui.Button("Report bug"))
-        self.requestFeatureButton = optionsBox.addWidget(gui.Button("Request feature"))
-        self.donateButton = optionsBox.addWidget(gui.Button("Donate"))
+        self.requestFeatureButton = optionsBox.addWidget(gui.Button("Request feature"))   
+        self.forumButton = optionsBox.addWidget(gui.Button("Forum")) 
+        self.facebookButton = optionsBox.addWidget(gui.Button("FaceBook page"))        
         
         @self.manualButton.mhEvent
         def onClicked(event):
-            webbrowser.open('http://download.tuxfamily.org/makehuman/makehuman_a_manual.pdf');
+            webbrowser.open('http://www.makehuman.org/documentation');
         
         @self.reportBugButton.mhEvent
         def onClicked(event):
@@ -51,9 +52,14 @@ class HelpTaskView(gui3d.TaskView):
         def onClicked(event):
             webbrowser.open('http://code.google.com/p/makehuman/issues/entry?template=Request%20feature');
             
-        @self.donateButton.mhEvent
+        @self.forumButton.mhEvent
         def onClicked(event):
-            webbrowser.open('https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=34KYQRLBE2K3N');
+            webbrowser.open('http://www.makehuman.org/forum/');
+            
+        @self.facebookButton.mhEvent
+        def onClicked(event):
+            webbrowser.open('https://www.facebook.com/makehuman/');
+            
             
     def onShow(self, event):
     
