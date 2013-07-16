@@ -8,6 +8,7 @@ shin.R	quat	1	0	0	0
 foot.R	quat	1	0	0	0
 toe.R	quat	1	0	0	0
 spine	quat	1	0	0	0
+spine-1	quat	1	0	0	0
 chest	quat	1	0	0	0
 chest-1	quat	1	0	0	0
 shoulder.L	quat	1	0	0	0
