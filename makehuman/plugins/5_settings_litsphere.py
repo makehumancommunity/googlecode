@@ -93,6 +93,7 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
             self.filechooser.selectItem(os.path.relpath(current))
             self.image.setImage(current)
         self.diffuseChk.setChecked("DIFFUSE" in self.human.mesh.shaderDefines)
+        self.diffuseChk.setChecked("NORMALMAP" in self.human.mesh.shaderDefines)
 
     def onHumanChanging(self, event):
         # TODO move this someplace else (in Human maybe?) In the future we probably want a more generic mechanism for blending textures
