@@ -211,8 +211,9 @@ def reloadTextures():
 
 def reloadTexture(path):
     log.message('Reloading texture %s', path)
-    if path not in _textureCache.keys():
+    if path not in _textureCache:
         log.error('Cannot reload non-existing texture %s', path)
+        return
     try:
         _textureCache[path].loadImage(path)
     except RuntimeError, text:
