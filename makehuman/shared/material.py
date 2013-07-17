@@ -116,13 +116,20 @@ class Material(object):
         self._transparencyMapIntensity = 1.0
 
         self._shader = None
-        self._shaderConfig = {}
+        self._shaderConfig = {
+            'diffuse'      : True,
+            'bump'         : True,
+            'normal'       : True,
+            'displacement' : True,
+            'spec'         : True,
+            'vertexColors' : True
+        }
         self._shaderParameters = {}
         self._shaderDefines = []
         self.shaderChanged = True   # Determines whether shader should be recompiled
 
         if performConfig:
-            self.configureShading()
+            self._updateShaderConfig()
 
         self._uvMap = None
 
@@ -181,12 +188,12 @@ class Material(object):
         self.filename = filename
         self.filepath = os.path.dirname(filename)
 
-        shaderConfig_diffuse = True
-        shaderConfig_bump = True
-        shaderConfig_normal = True
-        shaderConfig_displacement = True
-        shaderConfig_spec = True
-        shaderConfig_vertexColors = True
+        shaderConfig_diffuse = None
+        shaderConfig_bump = None
+        shaderConfig_normal = None
+        shaderConfig_displacement = None
+        shaderConfig_spec = None
+        shaderConfig_vertexColors = None
 
         for line in f:
             words = line.split()
@@ -496,8 +503,7 @@ class Material(object):
     def supportsTransparency(self):
         return self.transparencyMapTexture != None
 
-
-    def configureShading(self, diffuse=True, bump = True, normal=True, displacement=True, spec = True, vertexColors = True):
+    def configureShading(self, diffuse=None, bump = None, normal=None, displacement=None, spec = None, vertexColors = None):
         """
         Configure shading options and set the necessary properties based on
         the material configuration of this object. This configuration applies
@@ -505,18 +511,22 @@ class Material(object):
         chosen options), so only has effect when a shader is set.
         This method can be invoked even when no shader is set, the chosen
         options will remain effective when another shader is set.
+        A value of None leaves configuration options unchanged.
         """
-        self._shaderConfig['diffuse'] = diffuse
-        self._shaderConfig['bump'] = bump
-        self._shaderConfig['normal'] = normal
-        self._shaderConfig['displacement'] = displacement
-        self._shaderConfig['spec'] = spec
-        self._shaderConfig['vertexColors'] = vertexColors
+        if diffuse != None: self._shaderConfig['diffuse'] = diffuse
+        if bump != None: self._shaderConfig['bump'] = bump
+        if normal != None: self._shaderConfig['normal'] = normal
+        if displacement != None: self._shaderConfig['displacement'] = displacement
+        if spec != None: self._shaderConfig['spec'] = spec
+        if vertexColors != None: self._shaderConfig['vertexColors'] = vertexColors
 
         self._updateShaderConfig()
 
     @property
     def shaderConfig(self):
+        """
+        The shader parameters as set by configureShading().
+        """
         return dict(self._shaderConfig)
 
     def _updateShaderConfig(self):
@@ -593,9 +603,18 @@ class Material(object):
 
     @property
     def shaderParameters(self):
+        """
+        All shader parameters. Both those set by material properties as well as
+        custom shader parameters set by setShaderParameter().
+        """
         return dict(self._shaderParameters)
 
     def setShaderParameter(self, name, value):
+        """
+        Set a custom shader parameter. Shader parameters are uniform parameters
+        passed to the shader programme, their type should match that declared in
+        the shader code.
+        """
         global _materialShaderParams
 
         if name in _materialShaderParams:
@@ -625,6 +644,10 @@ class Material(object):
 
     @property
     def shaderDefines(self):
+        """
+        All shader defines. Both those set by configureShading() as well as
+        custom shader defines set by addShaderDefine().
+        """
         return list(self._shaderDefines)
 
     def addShaderDefine(self, defineStr):

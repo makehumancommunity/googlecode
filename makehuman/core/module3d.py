@@ -819,6 +819,9 @@ class Object3D(object):
         This is used for certain GUI controls to give them a more 2D type
         appearance (predominantly the top bar of GUI controls).
 
+        NOTE that this option only has effect when no shader is set on this
+        object.
+
         :param shadeless: Whether or not the object is unaffected by lights.
         :type shadeless: Boolean
         """
