@@ -776,7 +776,7 @@ class Object3D(object):
     def shader(self):
         return self.material.shader
 
-    def configureShading(self, diffuse=True, bump = True, normal=True, displacement=True, spec = True):
+    def configureShading(self, diffuse=None, bump = None, normal=None, displacement=None, spec = None, vertexColors = None):
         """
         Configure shader options and set the necessary properties based on
         the material configuration of this object.
