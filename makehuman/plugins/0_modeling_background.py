@@ -90,6 +90,8 @@ class BackgroundChooser(gui3d.TaskView):
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Background')
 
+        self.human = gui3d.app.selectedHuman
+
         self.backgroundsFolder = os.path.join(mh.getPath(''), 'backgrounds')
         if not os.path.exists(self.backgroundsFolder):
             os.makedirs(self.backgroundsFolder)
@@ -174,7 +176,7 @@ class BackgroundChooser(gui3d.TaskView):
                 filename))
 
             if self.sides[side]:
-                gui3d.app.selectedHuman.setRotation(self.sides[side])
+                self.human.setRotation(self.sides[side])
             mh.redraw()
 
     def getSelectedSideCheckbox(self):
@@ -205,7 +207,7 @@ class BackgroundChooser(gui3d.TaskView):
         self.setBackgroundEnabled(self.isBackgroundSet())
 
     def getCurrentSide(self):
-        rot = gui3d.app.selectedHuman.getRotation()
+        rot = self.human.getRotation()
         for (side, rotation) in self.sides.items():
             if rot == rotation:
                 return side
@@ -266,7 +268,7 @@ class BackgroundChooser(gui3d.TaskView):
         gui3d.TaskView.onHide(self, event)
 
     def onHumanTranslated(self, event):
-        self.backgroundImage.setPosition(gui3d.app.selectedHuman.getPosition()) # TODO other Z offset?
+        self.backgroundImage.setPosition(self.human.getPosition()) # TODO other Z offset?
 
     def onHumanChanging(self, event):
 
@@ -287,7 +289,7 @@ class BackgroundChooser(gui3d.TaskView):
             filename = aspect = None
         if filename:
             self.backgroundImage.show()
-            self.backgroundImage.setPosition(gui3d.app.selectedHuman.getPosition())
+            self.backgroundImage.setPosition(self.human.getPosition())
             (posX, posY), scale = self.transformations[side]
             self.setBackgroundPosition(posX, posY)
             self.setBackgroundScale(scale)
@@ -338,6 +340,7 @@ class BackgroundChooser(gui3d.TaskView):
 class TextureProjectionView(gui3d.TaskView) :
 
     def __init__(self, category, backgroundChooserView):
+        self.human = gui3d.app.selectedHuman
 
         self.backgroundImage = backgroundChooserView.backgroundImage
         self.texture = backgroundChooserView.texture
@@ -412,6 +415,7 @@ class TextureProjectionView(gui3d.TaskView) :
 
         displayBox = self.addRightWidget(gui.GroupBox('Display settings'))
         self.shadelessButton = displayBox.addWidget(gui.ToggleButton('Shadeless'))
+        # TODO should disable shader as well when setting shadeless
 
         @self.shadelessButton.mhEvent
         def onClicked(event):
@@ -421,19 +425,24 @@ class TextureProjectionView(gui3d.TaskView) :
 
         gui3d.TaskView.onShow(self, event)
         self.backgroundImage.mesh.setPickable(self.dragButton.selected)
-        gui3d.app.selectedHuman.mesh.setPickable(not self.dragButton.selected)
+        self.human.mesh.setPickable(not self.dragButton.selected)
         mh.updatePickingBuffer()
-        gui3d.app.selectedHuman.mesh.setShadeless(1 if self.shadelessButton.selected else 0)
+        self.human.mesh.setShadeless(1 if self.shadelessButton.selected else 0)
         self.opacitySlider.setValue(self.backgroundChooserView.opacity)
         self.foregroundTggl.setChecked(self.backgroundChooserView.isShowBgInFront())
+
+        self.oldDiffuseShaderSetting = self.human.material.shaderConfig['diffuse']
+        self.human.mesh.configureShading(diffuse = True)
 
     def onHide(self, event):
 
         gui3d.TaskView.onHide(self, event)
-        gui3d.app.selectedHuman.mesh.setShadeless(0)
+        self.human.mesh.setShadeless(0)
         self.backgroundImage.mesh.setPickable(False)
-        gui3d.app.selectedHuman.mesh.setPickable(True)
+        self.human.mesh.setPickable(True)
         mh.updatePickingBuffer()
+
+        self.human.mesh.configureShading(diffuse = self.oldDiffuseShaderSetting)
 
     def onHumanChanging(self, event):
 
@@ -448,7 +457,7 @@ class TextureProjectionView(gui3d.TaskView) :
             gui3d.app.prompt("Warning", "You need to load a background for the current view before you can project it.", "OK")
             return
 
-        mesh = gui3d.app.selectedHuman.getSeedMesh()
+        mesh = self.human.getSeedMesh()
 
         # for all quads, project vertex to screen
         # if one vertex falls in bg rect, project screen quad into uv quad
@@ -468,13 +477,14 @@ class TextureProjectionView(gui3d.TaskView) :
             oldImg = None
 
         gui3d.app.do(ProjectionAction("Change projected background texture",
-                gui3d.app.selectedHuman.getTexture(),
+                self.human.getTexture(),
                 texPath,
                 oldImg,
                 dstImg))
         log.debug("Enabling shadeless rendering on body")
         self.shadelessButton.setChecked(True)
-        gui3d.app.selectedHuman.mesh.setShadeless(1)
+        self.human.mesh.setShadeless(1)
+        mh.redraw()
 
     def projectLighting(self):
         dstImg = projection.mapLighting()
@@ -486,13 +496,14 @@ class TextureProjectionView(gui3d.TaskView) :
             oldImg = None
 
         gui3d.app.do(ProjectionAction("Change projected lighting texture",
-                gui3d.app.selectedHuman.getTexture(),
+                self.human.getTexture(),
                 texPath,
                 oldImg,
                 dstImg))
         log.debug("Enabling shadeless rendering on body")
         self.shadelessButton.setChecked(True)
-        gui3d.app.selectedHuman.mesh.setShadeless(1)
+        self.human.mesh.setShadeless(1)
+        mh.redraw()
 
     def projectUV(self):
         dstImg = projection.mapUV()
@@ -504,13 +515,14 @@ class TextureProjectionView(gui3d.TaskView) :
             oldImg = None
 
         gui3d.app.do(ProjectionAction("Change projected UV map texture",
-                gui3d.app.selectedHuman.getTexture(),
+                self.human.getTexture(),
                 texPath,
                 oldImg,
                 dstImg))
         log.debug("Enabling shadeless rendering on body")
         self.shadelessButton.setChecked(True)
-        gui3d.app.selectedHuman.mesh.setShadeless(1)
+        self.human.mesh.setShadeless(1)
+        mh.redraw()
 
 
 # This method is called when the plugin is loaded into makehuman
