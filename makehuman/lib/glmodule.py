@@ -302,6 +302,7 @@ def drawMesh(obj):
             glVertexAttribPointer(obj.shaderObj.vertexTangentAttrId, 4, GL_FLOAT, GL_FALSE, 0, obj.tangents)
             glEnableVertexAttribArray(obj.shaderObj.vertexTangentAttrId)
 
+        # TODO
         # This should be optimized, since we only need to do it when it's changed
         # Validation should also only be done when it is set
         if obj.shaderParameters:

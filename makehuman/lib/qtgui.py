@@ -37,6 +37,14 @@ def getLanguageString(text):
         return text
     return language.language.getLanguageString(text)
 
+def imageToQImage(img):
+    data = img.data
+    if img.components == 3:
+        fmt = QtGui.QImage.Format_RGB888
+    else:
+        fmt = QtGui.QImage.Format_ARGB32
+    return QtGui.QImage(data.tostring(), data.shape[0], data.shape[1], fmt)
+
 class Widget(events3d.EventHandler):
     def __init__(self):
         events3d.EventHandler.__init__(self)
@@ -1539,7 +1547,16 @@ class ImageView(QtGui.QLabel, QtGui.QScrollArea, Widget):
         self._pixmap = None
 
     def setImage(self, path):
-        self._pixmap = QtGui.QPixmap(path)
+        import image
+        if isinstance(path, image.Image):
+            img = imageToQImage(path)
+            self._pixmap = QtGui.QPixmap.fromImage(img)
+        elif isinstance(path, QtGui.QPixmap):
+            self._pixmap = path
+        elif isinstance(path, QtGui.QImage):
+            self._pixmap = QtGui.QPixmap.fromImage(path)
+        else:
+            self._pixmap = QtGui.QPixmap(path)
         self.adjustSize()
         self.updateGeometry()
         self.refreshImage()
