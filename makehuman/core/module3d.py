@@ -783,7 +783,7 @@ class Object3D(object):
         This can be done without an actual shader being set for this object.
         Call this method when changes are made to the material property.
         """
-        self.material.configureShading(diffuse, bump, normal, displacement, spec)
+        self.material.configureShading(diffuse, bump, normal, displacement, spec, vertexColors)
 
     def getMaterial(self):
         return self._material

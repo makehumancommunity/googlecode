@@ -37,4 +37,8 @@ void main() {
         mat3 tangMat = mat3(tang, binormal, vNormal);
         tNormVec = normalize(vec3(1.0) * tangMat);
     #endif
+
+    #ifdef VERTEX_COLOR
+        gl_FrontColor = gl_Color;
+    #endif
 }
