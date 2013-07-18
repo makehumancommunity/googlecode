@@ -1530,7 +1530,9 @@ class ImageView(QtGui.QLabel, QtGui.QScrollArea, Widget):
         Widget.__init__(self)
         self.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
         self.setMinimumSize(50,50)
-        self.setSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.MinimumExpanding)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Preferred)
+        sizePolicy.setHeightForWidth(True)
+        self.setSizePolicy(sizePolicy)
         #self.setScaledContents(True)
         self.ratio = 1.0
         self.workingSize = None
@@ -1546,6 +1548,13 @@ class ImageView(QtGui.QLabel, QtGui.QScrollArea, Widget):
         if not self._pixmap:
             return super(ImageView, self).sizeHint()
         return self._pixmap.size()
+
+    def heightForWidth(self, width):
+        if not self._pixmap:
+            return width
+        else:
+            size = self._pixmap.size()
+            return int((float(width)/size.width())*size.height())
 
     def resizeEvent(self, event):
         self.workingSize = event.size()
