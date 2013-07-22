@@ -78,7 +78,7 @@ class PovrayTaskView(gui3d.TaskView):
         settingsBox.addWidget(gui.TextView("Resolution"))
         self.resBox = settingsBox.addWidget(gui.TextEdit(
             "x".join([str(self.resWidth), str(self.resHeight)])))
-        self.AA = settingsBox.addWidget(gui.Slider(value=0.5, label="AntiAliasing"))
+        self.AAbox = settingsBox.addWidget(gui.Slider(value=gui3d.app.settings.get('POV_AA', 0.5), label="AntiAliasing"))
 
         materialsBox = self.addRightWidget(gui.GroupBox('Materials'))
         self.skinoil = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin oil"))
@@ -116,6 +116,10 @@ class PovrayTaskView(gui3d.TaskView):
             except: # The user hasn't typed the value correctly yet.
                 pass
 
+        @self.AAbox.mhEvent
+        def onChange(value):
+            gui3d.app.settings['POV_AA'] = value
+
         #        
         @self.renderButton.mhEvent
         def onClicked(event):            
@@ -138,7 +142,7 @@ class PovrayTaskView(gui3d.TaskView):
                                     'action':'render',      # 'export' if self.exportButton.selected else 'render',
                                     'scene': gui3d.app.getCategory('Rendering').getTaskByName('Scene').scene,
                                     'subdivide':True if self.doSubdivide.selected else False,
-                                    'AA': 0.5-0.49*self.AA.getValue(),
+                                    'AA': 0.5-0.49*self.AAbox.getValue(),
                                     'bintype': binary,
                                     'SSS': True if self.useSSS.selected else False,
                                     'SSSA': self.SSSA.getValue() + 0.01, # blur strength. Prevent zero

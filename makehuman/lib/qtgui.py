@@ -1539,7 +1539,7 @@ class ImageView(QtGui.QScrollArea, Widget):
         self.imageLabel = QtGui.QLabel()
         self.imageLabel.setBackgroundRole(QtGui.QPalette.Base)
         self.imageLabel.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
-        self.imageLabel.setMinimumSize(100,100)
+        self.imageLabel.setMinimumSize(5,5)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored)
         sizePolicy.setHeightForWidth(True)
         self.imageLabel.setSizePolicy(sizePolicy)
@@ -1565,6 +1565,8 @@ class ImageView(QtGui.QScrollArea, Widget):
         self.imageLabel.adjustSize()
         self.ratio = float(self.width()) / float(pixmap.width())
         self.minratio = 100.0 / float(pixmap.width())
+        if self.minratio > 1.0:
+            self.minratio = 1.0
         self.imageLabel.updateGeometry()
         self.refreshImage()
 
