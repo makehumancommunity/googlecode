@@ -1532,87 +1532,99 @@ class TableView(QtGui.QTableWidget, Widget):
     def getItemData(self, row, col):
         return self.item(row, col).getUserData()
 
-class ImageView(QtGui.QLabel, QtGui.QScrollArea, Widget):
+class ImageView(QtGui.QScrollArea, Widget):
     def __init__(self):
-        super(ImageView, self).__init__()
+        QtGui.QScrollArea.__init__(self)
         Widget.__init__(self)
-        self.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
-        self.setMinimumSize(50,50)
-        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Preferred)
+        self.imageLabel = QtGui.QLabel()
+        self.imageLabel.setBackgroundRole(QtGui.QPalette.Base)
+        self.imageLabel.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
+        self.imageLabel.setMinimumSize(50,50)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored)
         sizePolicy.setHeightForWidth(True)
-        self.setSizePolicy(sizePolicy)
-        #self.setScaledContents(True)
+        self.imageLabel.setSizePolicy(sizePolicy)
+        self.imageLabel.setScaledContents(True)
+        self.setBackgroundRole(QtGui.QPalette.Dark)
+        self.setWidget(self.imageLabel)
+        self.workingWidth = None
         self.ratio = 1.0
-        self.workingSize = None
-        self._pixmap = None
+        self.minratio = 0.5
 
     def setImage(self, path):
         import image
         if isinstance(path, image.Image):
             img = imageToQImage(path)
-            self._pixmap = QtGui.QPixmap.fromImage(img)
+            pixmap = QtGui.QPixmap.fromImage(img)
         elif isinstance(path, QtGui.QPixmap):
-            self._pixmap = path
+            pixmap = path
         elif isinstance(path, QtGui.QImage):
-            self._pixmap = QtGui.QPixmap.fromImage(path)
+            pixmap = QtGui.QPixmap.fromImage(path)
         else:
-            self._pixmap = QtGui.QPixmap(path)
-        self.adjustSize()
-        self.updateGeometry()
+            pixmap = QtGui.QPixmap(path)
+        self.imageLabel.setPixmap(pixmap)
+        self.imageLabel.adjustSize()
+        try:
+            self.minratio = float(self.workingWidth) / float(pixmap.width())
+            self.ratio = self.minratio
+        except:
+            self.ratio = 1.0
+        self.imageLabel.updateGeometry()
         self.refreshImage()
-
-    def sizeHint(self):
-        if not self._pixmap:
-            return super(ImageView, self).sizeHint()
-        return self._pixmap.size()
-
-    def heightForWidth(self, width):
-        if not self._pixmap:
-            return width
-        else:
-            size = self._pixmap.size()
-            return int((float(width)/size.width())*size.height())
 
     def resizeEvent(self, event):
-        self.workingSize = event.size()
-        self.refreshImage(event.size())
+        if self.workingWidth:
+            factor = float(event.size().width()) / float(self.workingWidth)
+            self.ratio *= factor
+            self.workingWidth = event.size().width()
+        else:
+            factor = None
+            self.workingWidth = event.size().width()
+            self.minratio = float(self.workingWidth) / float(pixmap.width())
+            self.ratio = self.minratio
+        if self.ratio > 1.0:
+            self.ratio = 1.0
+        self.refreshImage()
+        if factor:
+            self.adjustScrollBars(factor)
+
+    def heightForWidth(self, width):
+        pixmap = self.imageLabel.pixmap()
+        if not pixmap:
+            return width
+        else:
+            size = pixmap.size()
+            return int((float(width)/size.width())*size.height())
         
-    def refreshImage(self, size = None):
-        if not self._pixmap:
+    def refreshImage(self):
+        pixmap = self.imageLabel.pixmap()
+        if not pixmap:
             return
-
-        if not size:
-            size = self.sizeHint()
-
-        pixmap = self._pixmap
-        w = pixmap.width()
-        h = pixmap.height()
-        size *= self.ratio
-        if w > size.width() or h > size.height():
-            pixmap = pixmap.scaled(size.width(), size.height(), QtCore.Qt.KeepAspectRatio)
-        self.setPixmap(pixmap)
-
+        self.imageLabel.resize(self.ratio * pixmap.size())
+        
     def save(self, fname):
-        if self._pixmap:
-            self._pixmap.save (fname)
-
+        if self.imageLabel.pixmap():
+            self.imageLabel.pixmap().save (fname)
+            
     def mousePressEvent(self, event):
-        if not self._pixmap:
-            return
         self.mdown = event.pos()
-        self.mdownrect = self._pixmap.rect()
         
     def mouseMoveEvent(self, event):
-        if not self._pixmap:
-            return
-        self._pixmap.scroll(event.pos.x()-self.mdown.x(),
-                            event.pos.y()-self.mdown.y(),
-                            self.mdownrect, shownarea)
+        self.horizontalScrollBar().setValue(
+            self.horizontalScrollBar().value() - event.pos().x() + self.mdown.x())
+        self.verticalScrollBar().setValue(
+            self.verticalScrollBar().value() - event.pos().y() + self.mdown.y())
+        self.mdown = event.pos()
         self.refreshImage()
-
-    def wheelEvent(self, event):
-        if (event.delta() < 0 or
-            self.sizeHint().width()*self.ratio < self._pixmap.width()):
-            self.ratio *= 1 + event.delta()*0.0005
+    
+    def adjustScrollBars(self, factor):
+        for scrollbar in (self.horizontalScrollBar(), self.verticalScrollBar()):
+            scrollBar.setValue(int(factor * scrollBar.value()
+                                   + ((factor - 1) * scrollBar.pageStep()/2)))
+                               
+    def wheelEvent(self, event):        
+        factor = 1 - event.delta()*0.001
+        self.ratio *= factor
+        if self.ratio > 1.0:
+            self.ratio = 1.0
         self.refreshImage()
-
+        self.adjustScrollBars(factor)
