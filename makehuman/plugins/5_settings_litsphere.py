@@ -97,6 +97,13 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
 
     def onHumanChanging(self, event):
         # TODO move this someplace else (in Human maybe?) In the future we probably want a more generic mechanism for blending textures
+        self._checkSkinUpdate(event)
+
+    def onHumanChanged(self, event):
+        # TODO move this someplace else (in Human maybe?) In the future we probably want a more generic mechanism for blending textures
+        self._checkSkinUpdate(event)
+
+    def _checkSkinUpdate(self, event):
         if "litsphereTexture" not in self.human.meshData.shaderParameters:
             return
 
@@ -104,7 +111,7 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
         if current and (isinstance(current, image.Image) or \
            os.path.abspath(current) == os.path.abspath("data/litspheres/adaptive_skin_tone.png")):
             if event.change == "caucasian" or event.change == "african" or \
-              event.change == "asian":
+              event.change == "asian" or event.change == "material":
                 self.updateAdaptiveSkin()
 
     def updateAdaptiveSkin(self):
