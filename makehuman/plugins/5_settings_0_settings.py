@@ -28,16 +28,6 @@ import gui3d
 import gui
 import log
 
-class FontRadioButton(gui.RadioButton):
-
-    def __init__(self, group, font):
-        super(FontRadioButton, self).__init__(group, font.capitalize(), gui3d.app.settings.get('font', 'Ubuntu') == font)
-        self.font = font
-        
-    def onClicked(self, event):
-        gui3d.app.settings['font'] = self.font
-        gui3d.app.setFont(self.font)
-
 class ThemeRadioButton(gui.RadioButton):
 
     def __init__(self, group, label, theme):
@@ -129,15 +119,6 @@ class SettingsTaskView(gui3d.TaskView):
             platformsBox.addWidget(PlatformRadioButton(platforms, platform))
         '''
 
-        # We might allow overriding the font from the style, but for now loaded fonts can be used from a style
-        '''
-        fonts = []
-        fontsBox = self.fontsBox = self.addRightWidget(gui.GroupBox('Font'))
-        fontsBox.addWidget(FontRadioButton(fonts, "Default"))
-        for font in gui3d.app.getCustomFonts():
-            fontsBox.addWidget(FontRadioButton(fonts, font))
-        '''
-        
         languages = []
         languageBox = self.languageBox = self.addRightWidget(gui.GroupBox('Language'))
         languageBox.addWidget(LanguageRadioButton(languages, 'english'))

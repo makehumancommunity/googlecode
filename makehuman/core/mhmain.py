@@ -172,8 +172,6 @@ class MHApplication(gui3d.Application, mh.Application):
             'preloadTargets': False
         }
 
-        self.fonts = {}
-
         self.loadHandlers = {}
         self.saveHandlers = []
 
@@ -459,9 +457,6 @@ class MHApplication(gui3d.Application, mh.Application):
         log.message('Loading main GUI')
         self.loadMainGui()
 
-        log.message('Loading fonts')
-        self.loadFonts()
-
         log.message('Loading plugins')
         self.loadPlugins()
 
@@ -691,44 +686,6 @@ class MHApplication(gui3d.Application, mh.Application):
             return
         for action in self.actions:
             action.setIcon(gui.Action.getIcon(action.name))
-
-    def loadFonts(self):
-        """
-        Load custom fonts from data/fonts folder to make them available for theming.
-        """
-        self.customFonts = []
-        fontFiles = [os.path.join('data/fonts', filename) for filename in os.listdir('data/fonts') if filename.split(os.extsep)[-1] == "ttf"]
-        for font in fontFiles:
-            try:
-                fontHandle = gui.QtGui.QFontDatabase.addApplicationFont(font)
-                log.debug("Loading font file %s", font)
-                if fontHandle != -1:
-                    fontFamilies = gui.QtGui.QFontDatabase.applicationFontFamilies(fontHandle)
-                    for f in fontFamilies:
-                        self.customFonts.append(str(f))
-                        log.debug("Added font family %s", f)
-            except:
-                log.warning("Error loading font file %s", font)
-
-    def getCustomFonts(self):
-        """
-        Returns the font family names of all custom fonts loaded from the
-        data/fonts folder. These fonts can be used in custom styles.
-        """
-        return self.customFonts
-
-    '''
-    # Does not work well with custom themes
-    def setFont(self, font):
-        if font == "Default":
-            return # TODO
-        if font not in self.customFonts:
-            log.warning("No font family with name %s loaded from data/fonts", font)
-            return
-        qfont = gui.QtGui.QFont(font)
-        self.setFont(qfont)
-        log.debug("Setting font %s", font)
-    '''
 
     def getLookAndFeelStyles(self):
         return [ str(style) for style in gui.QtGui.QStyleFactory.keys() ]
