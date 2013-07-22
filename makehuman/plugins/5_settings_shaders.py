@@ -64,6 +64,27 @@ class ShaderTaskView(gui3d.TaskView):
         def onClicked(item):
             self.setShader(unicode(item.getUserData()))
 
+        self.loadSaveBox = self.addRightWidget(gui.GroupBox("Material file"))
+        self.loadMaterialBtn = self.loadSaveBox.addWidget(gui.BrowseButton(), 0, 0)
+        self.loadMaterialBtn.setText('Load')
+        @self.loadMaterialBtn.mhEvent
+        def onClicked(path):
+            if path:
+                self.loadMaterial(path)
+        self.saveMaterialBtn = self.loadSaveBox.addWidget(gui.BrowseButton('save'), 0, 1)
+        self.saveMaterialBtn.setText('Save')
+        @self.saveMaterialBtn.mhEvent
+        def onClicked(path):
+            if path:
+                self.saveMaterial(path)
+
+    def loadMaterial(self, path):
+        self.human.material = material.fromFile(path)
+        self.listMaterialSettings(self.human.material)
+
+    def saveMaterial(self, path):
+        self.human.material.toFile(path)
+
     def listMaterialSettings(self, mat):
         for child in self.materialBox.children[:]:
             self.materialBox.removeWidget(child)
@@ -340,7 +361,7 @@ class FileValue(gui.GroupBox):
         super(FileValue, self).__init__(name)
         self.name = name
 
-        self.fileText = self.addWidget(gui.TextView(value), 0, 0)
+        self.fileText = self.addWidget(gui.TextView(''), 0, 0)
         self.browseBtn = self.addWidget(gui.BrowseButton(), 1, 0)
         @self.browseBtn.mhEvent
         def onClicked(event):
@@ -348,13 +369,15 @@ class FileValue(gui.GroupBox):
                 self.setValue(self.browseBtn._path)
                 self.callEvent('onActivate', self.browseBtn._path)
 
+        self.setValue(value)
+
     def getValue(self):
         return self.browseBtn._path
 
     def setValue(self, value):
         if value:
             self.browseBtn.setPath(value)
-            self.fileText.setText(value)
+            self.fileText.setText(os.path.basename(value))
         else:
             self.imageView.setPath('')
 
