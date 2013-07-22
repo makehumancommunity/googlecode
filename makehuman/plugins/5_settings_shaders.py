@@ -28,6 +28,7 @@ import gui
 import log
 import shader
 import numpy as np
+import material
 
 class ShaderTaskView(gui3d.TaskView):
     def __init__(self, category):
@@ -55,13 +56,129 @@ class ShaderTaskView(gui3d.TaskView):
             log.notice('Shaders not supported')
             self.shaderList.setEnabled(False)
 
-        self.paramBox = self.addRightWidget(gui.GroupBox('Parameters'))
+        self.paramBox = self.addRightWidget(gui.GroupBox('Shader parameters'))
 
-        materialBox = self.addRightWidget(gui.GroupBox('Material settings'))
+        self.materialBox = self.addRightWidget(gui.GroupBox('Material settings'))
 
         @self.shaderList.mhEvent
         def onClicked(item):
             self.setShader(unicode(item.getUserData()))
+
+    def listMaterialSettings(self, mat):
+        for child in self.materialBox.children[:]:
+            self.materialBox.removeWidget(child)
+
+        w1 = self.materialBox.addWidget(ColorValue("Diffuse", mat.diffuseColor))
+        @w1.mhEvent
+        def onActivate(event):
+            self.human.material.diffuseColor = w1.value
+
+        w2 = self.materialBox.addWidget(ScalarValue("Diffuse intensity", mat.diffuseIntensity))
+        @w2.mhEvent
+        def onActivate(event):
+            self.human.material.diffuseIntensity = w2.value
+
+        w3 = self.materialBox.addWidget(ImageValue("Diffuse texture", mat.diffuseTexture))
+        @w3.mhEvent
+        def onActivate(event):
+            self.human.material.diffuseTexture = w3.value
+            self.updateShaderConfig()
+
+        w4 = self.materialBox.addWidget(ColorValue("Ambient", mat.ambientColor))
+        @w4.mhEvent
+        def onActivate(event):
+            self.human.material.ambientColor = w4.value
+
+        w5 = self.materialBox.addWidget(ColorValue("Specular", mat.specularColor))
+        @w5.mhEvent
+        def onActivate(event):
+            self.human.material.specularColor = w5.value
+
+        w6 = self.materialBox.addWidget(ScalarValue("Specular intensity", mat.specularIntensity))
+        @w6.mhEvent
+        def onActivate(event):
+            self.human.material.specularIntensity = w6.value
+
+        w7 = self.materialBox.addWidget(ScalarValue("Specular hardness", mat.specularHardness))
+        @w7.mhEvent
+        def onActivate(event):
+            self.human.material.specularHardness = w7.value
+
+        w8 = self.materialBox.addWidget(ColorValue("Emissive", mat.emissiveColor))
+        @w8.mhEvent
+        def onActivate(event):
+            self.human.material.emissiveColor = w8.value
+
+        w9 = self.materialBox.addWidget(ScalarValue("Opacity", mat.opacity))
+        @w9.mhEvent
+        def onActivate(event):
+            self.human.material.opacity = w9.value
+
+        w10 = self.materialBox.addWidget(ScalarValue("Translucency", mat.translucency))
+        @w10.mhEvent
+        def onActivate(event):
+            self.human.material.translucency = w10.value
+
+        w11 = self.materialBox.addWidget(ImageValue("Transparency map texture", mat.transparencyMapTexture))
+        @w11.mhEvent
+        def onActivate(event):
+            self.human.material.transparencyMapTexture = w11.value
+            self.updateShaderConfig()
+
+        w12 = self.materialBox.addWidget(ScalarValue("Transparency (map) intensity", mat.transparencyIntensity))
+        @w12.mhEvent
+        def onActivate(event):
+            self.human.material.transparencyIntensity = w12.value
+
+        w13 = self.materialBox.addWidget(ImageValue("Bump map texture", mat.bumpMapTexture))
+        @w13.mhEvent
+        def onActivate(event):
+            self.human.material.bumpMapTexture = w13.value
+            self.updateShaderConfig()
+
+        w14 = self.materialBox.addWidget(ScalarValue("Bump map intensity", mat.bumpMapIntensity))
+        @w14.mhEvent
+        def onActivate(event):
+            self.human.material.bumpMapIntensity = w14.value
+
+        w15 = self.materialBox.addWidget(ImageValue("Normal map texture", mat.normalMapTexture))
+        @w15.mhEvent
+        def onActivate(event):
+            self.human.material.normalMapTexture = w15.value
+            self.updateShaderConfig()
+
+        w16 = self.materialBox.addWidget(ScalarValue("Normal map intensity", mat.normalMapIntensity))
+        @w16.mhEvent
+        def onActivate(event):
+            self.human.material.normalMapIntensity = w16.value
+
+        w17 = self.materialBox.addWidget(ImageValue("Displacement map texture", mat.displacementMapTexture))
+        @w17.mhEvent
+        def onActivate(event):
+            self.human.material.displacementMapTexture = w17.value
+            self.updateShaderConfig()
+
+        w18 = self.materialBox.addWidget(ScalarValue("Displacement map intensity", mat.displacementMapIntensity))
+        @w18.mhEvent
+        def onActivate(event):
+            self.human.material.displacementMapIntensity = w18.value
+
+        w19 = self.materialBox.addWidget(ImageValue("Specular map texture", mat.specularMapTexture))
+        @w19.mhEvent
+        def onActivate(event):
+            self.human.material.specularMapTexture = w19.value
+            self.updateShaderConfig()
+
+        w20 = self.materialBox.addWidget(ScalarValue("Specular map intensity", mat.specularMapIntensity))
+        @w20.mhEvent
+        def onActivate(event):
+            self.human.material.specularMapIntensity = w20.value
+
+        w21 = self.materialBox.addWidget(FileValue("UV map", self.human.material.uvMap))
+        @w21.mhEvent
+        def onActivate(event):
+            self.human.setUVMap(w21.value)
+
 
     def listShaders(self, dir = 'data/shaders/glsl'):
         shaders = set()
@@ -92,6 +209,24 @@ class ShaderTaskView(gui3d.TaskView):
                 path = unicode(item.getUserData())
                 self.listUniforms(path, self.human.mesh.material)
 
+    def updateShaderConfig(self):
+        shaderConfig = self.human.material.shaderConfig
+
+        for child in self.shaderConfBox.children:
+            name = str(child.text())
+            child.setChecked( shaderConfig[name] )
+            if name == 'diffuse':
+                child.setEnabled(self.human.material.supportsDiffuse())
+            if name == 'bump':
+                # TODO disable bump if normal enabled
+                child.setEnabled(self.human.material.supportsBump())
+            if name == 'normal':
+                child.setEnabled(self.human.material.supportsNormal())
+            if name == 'displacement':
+                child.setEnabled(self.human.material.supportsDisplacement())
+            if name == 'spec':
+                child.setEnabled(self.human.material.supportsSpecular())
+
     def setShader(self, path):
         self.human.mesh.setShader(path)
         self.listUniforms(path, self.human.mesh.material)
@@ -118,25 +253,112 @@ class ShaderTaskView(gui3d.TaskView):
         if not shader.Shader.supported():
             gui3d.app.statusPersist('Shaders not supported by OpenGL')
 
-        shaderConfig = self.human.material.shaderConfig
-        for child in self.shaderConfBox.children:
-            name = str(child.text())
-            child.setChecked( shaderConfig[name] )
-            if name == 'diffuse':
-                child.setEnabled(self.human.material.supportsDiffuse())
-            if name == 'bump':
-                # TODO disable bump if normal enabled
-                child.setEnabled(self.human.material.supportsBump())
-            if name == 'normal':
-                child.setEnabled(self.human.material.supportsNormal())
-            if name == 'displacement':
-                child.setEnabled(self.human.material.supportsDisplacement())
-            if name == 'spec':
-                child.setEnabled(self.human.material.supportsSpecular())
+        self.updateShaderConfig()
+
+        self.listMaterialSettings(self.human.material)
 
     def onHide(self, arg):
         gui3d.app.statusPersist('')
         super(ShaderTaskView, self).onHide(arg)
+
+class ColorValue(gui.GroupBox):
+    def __init__(self, name, value):
+        super(ColorValue, self).__init__(name)
+        self.name = name
+
+        self.widgets = []
+        for col in xrange(3):
+            child = FloatValue(self, 0)
+            self.addWidget(child, 0, col)
+            self.widgets.append(child)
+        self.pickBtn = self.addWidget(gui.Button('Pick'))
+        @self.pickBtn.mhEvent
+        def onClicked(event):
+            current = self.value.asTuple()
+            current = gui.QtGui.QColor(int(current[0]*255), 
+                                       int(current[1]*255), 
+                                       int(current[2]*255))
+            color = gui.QtGui.QColorDialog.getColor(current)
+            if color.isValid():
+                values = (float(color.red())/255, 
+                          float(color.green())/255, 
+                          float(color.blue())/255)
+                self.value = values
+
+        self.value = value
+
+    def getValue(self):
+        return material.Color().copyFrom([widget.value for widget in self.widgets])
+
+    def setValue(self, value):
+        if isinstance(value, material.Color):
+            value = value.asTuple()
+        else:
+            value = tuple(value)
+
+        for idx, widget in enumerate(self.widgets):
+            widget.setText(str(value[idx]))
+
+    value = property(getValue, setValue)
+
+class ScalarValue(gui.GroupBox):
+    def __init__(self, name, value):
+        super(ScalarValue, self).__init__(name)
+        self.name = name
+
+        self.widget = FloatValue(self, 0)
+        self.addWidget(self.widget, 0, 0)
+        self.value = value
+
+    def getValue(self):
+        return self.widget.value
+
+    def setValue(self, value):
+        self.widget.setText(str(value))
+
+    value = property(getValue, setValue)
+
+class ImageValue(gui.GroupBox):
+    def __init__(self, name, value):
+        super(ImageValue, self).__init__(name)
+        self.name = name
+
+        self.widget = TextureValue(self, 0)
+        self.addWidget(self.widget, 0, 0)
+        self.value = value
+
+    def getValue(self):
+        return self.widget.value
+
+    def setValue(self, value):
+        self.widget.value = value
+
+    value = property(getValue, setValue)
+
+class FileValue(gui.GroupBox):
+    def __init__(self, name, value):
+        super(FileValue, self).__init__(name)
+        self.name = name
+
+        self.fileText = self.addWidget(gui.TextView(value), 0, 0)
+        self.browseBtn = self.addWidget(gui.BrowseButton(), 1, 0)
+        @self.browseBtn.mhEvent
+        def onClicked(event):
+            if self.browseBtn._path:
+                self.setValue(self.browseBtn._path)
+                self.callEvent('onActivate', self.browseBtn._path)
+
+    def getValue(self):
+        return self.browseBtn._path
+
+    def setValue(self, value):
+        if value:
+            self.browseBtn.setPath(value)
+            self.fileText.setText(value)
+        else:
+            self.imageView.setPath('')
+
+    value = property(getValue, setValue)
 
 class UniformValue(gui.GroupBox):
     def __init__(self, uniform, material = None):
@@ -247,18 +469,22 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
                 self.imageView.setImage(self.value)
                 self.parent.callEvent('onActivate', self.value)
 
+        self.value = value
+
+        self.layout.addWidget(self.imageView)
+        self.layout.addWidget(self.browseBtn)
+
+    def getValue(self):
+        return self._path
+
+    def setValue(self, value):
         if value:
             self.imageView.setImage(value)
             if isinstance(value, basestring): self.browseBtn.setPath(value)
         else:
             self.imageView.setImage('data/notfound.thumb')
 
-        self.layout.addWidget(self.imageView)
-        self.layout.addWidget(self.browseBtn)
-
-    @property
-    def value(self):
-        return self._path
+    value = property(getValue, setValue)
 
 def load(app):
     category = app.getCategory('Settings')
