@@ -1539,7 +1539,7 @@ class ImageView(QtGui.QScrollArea, Widget):
         self.imageLabel = QtGui.QLabel()
         self.imageLabel.setBackgroundRole(QtGui.QPalette.Base)
         self.imageLabel.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
-        self.imageLabel.setMinimumSize(50,50)
+        self.imageLabel.setMinimumSize(100,100)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored)
         sizePolicy.setHeightForWidth(True)
         self.imageLabel.setSizePolicy(sizePolicy)
@@ -1548,7 +1548,7 @@ class ImageView(QtGui.QScrollArea, Widget):
         self.setWidget(self.imageLabel)
         self.workingWidth = None
         self.ratio = 1.0
-        self.minratio = 0.5
+        self.minratio = 0.1
 
     def setImage(self, path):
         import image
@@ -1563,29 +1563,18 @@ class ImageView(QtGui.QScrollArea, Widget):
             pixmap = QtGui.QPixmap(path)
         self.imageLabel.setPixmap(pixmap)
         self.imageLabel.adjustSize()
-        try:
-            self.minratio = float(self.workingWidth) / float(pixmap.width())
-            self.ratio = self.minratio
-        except:
-            self.ratio = 1.0
+        self.ratio = float(self.width()) / float(pixmap.width())
+        self.minratio = 100.0 / float(pixmap.width())
         self.imageLabel.updateGeometry()
         self.refreshImage()
 
     def resizeEvent(self, event):
         if self.workingWidth:
-            factor = float(event.size().width()) / float(self.workingWidth)
-            self.ratio *= factor
-            self.workingWidth = event.size().width()
-        else:
-            factor = None
-            self.workingWidth = event.size().width()
-            self.minratio = float(self.workingWidth) / float(pixmap.width())
-            self.ratio = self.minratio
+            self.ratio *= float(event.size().width()) / float(self.workingWidth)
+        self.workingWidth = event.size().width()
         if self.ratio > 1.0:
             self.ratio = 1.0
-        self.refreshImage()
-        if factor:
-            self.adjustScrollBars(factor)
+        self.refreshImage(True)
 
     def heightForWidth(self, width):
         pixmap = self.imageLabel.pixmap()
@@ -1595,11 +1584,22 @@ class ImageView(QtGui.QScrollArea, Widget):
             size = pixmap.size()
             return int((float(width)/size.width())*size.height())
         
-    def refreshImage(self):
+    def refreshImage(self, zoomAct = False, displ = (0, 0)):
         pixmap = self.imageLabel.pixmap()
         if not pixmap:
             return
+        scrat = [0.0, 0.0]
+        if zoomAct:
+            for (index, scrollBar) in enumerate((self.horizontalScrollBar(), self.verticalScrollBar())):
+                if scrollBar.maximum() > 0:
+                    scrat[index] = float(scrollBar.value()) / float(scrollBar.maximum())
+                else:
+                    scrat[index] = 0.5
         self.imageLabel.resize(self.ratio * pixmap.size())
+        if zoomAct:
+            for (index, scrollBar) in enumerate((self.horizontalScrollBar(), self.verticalScrollBar())):
+                if scrollBar.maximum() > 0:
+                    scrollBar.setValue(int(scrat[index] * scrollBar.maximum() + displ[index]))
         
     def save(self, fname):
         if self.imageLabel.pixmap():
@@ -1610,21 +1610,21 @@ class ImageView(QtGui.QScrollArea, Widget):
         
     def mouseMoveEvent(self, event):
         self.horizontalScrollBar().setValue(
-            self.horizontalScrollBar().value() - event.pos().x() + self.mdown.x())
+            self.horizontalScrollBar().value() + 2*(self.mdown.x() - event.pos().x()))
         self.verticalScrollBar().setValue(
-            self.verticalScrollBar().value() - event.pos().y() + self.mdown.y())
+            self.verticalScrollBar().value() + 2*(self.mdown.y() - event.pos().y()))
         self.mdown = event.pos()
         self.refreshImage()
-    
-    def adjustScrollBars(self, factor):
-        for scrollbar in (self.horizontalScrollBar(), self.verticalScrollBar()):
-            scrollBar.setValue(int(factor * scrollBar.value()
-                                   + ((factor - 1) * scrollBar.pageStep()/2)))
                                
-    def wheelEvent(self, event):        
-        factor = 1 - event.delta()*0.001
+    def wheelEvent(self, event):
+        ratbef = self.ratio
+        factor = 1 - event.delta()*0.0007
         self.ratio *= factor
         if self.ratio > 1.0:
             self.ratio = 1.0
-        self.refreshImage()
-        self.adjustScrollBars(factor)
+        if self.ratio < self.minratio:
+            self.ratio = self.minratio
+        dr = 2*abs(self.ratio - ratbef)
+        self.refreshImage(True,
+                          (dr*(event.x() - self.width()/2),
+                           dr*(event.y() - self.height()/2)))
