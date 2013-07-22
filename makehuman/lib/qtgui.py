@@ -1532,7 +1532,72 @@ class TableView(QtGui.QTableWidget, Widget):
     def getItemData(self, row, col):
         return self.item(row, col).getUserData()
 
-class ImageView(QtGui.QScrollArea, Widget):
+class ImageView(QtGui.QLabel, QtGui.QScrollArea, Widget):
+    def __init__(self):
+        super(ImageView, self).__init__()
+        Widget.__init__(self)
+        self.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignTop)
+        self.setMinimumSize(50,50)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Preferred)
+        sizePolicy.setHeightForWidth(True)
+        self.setSizePolicy(sizePolicy)
+        #self.setScaledContents(True)
+        self.ratio = 1.0
+        self.workingSize = None
+        self._pixmap = None
+
+    def setImage(self, path):
+        import image
+        if isinstance(path, image.Image):
+            img = imageToQImage(path)
+            self._pixmap = QtGui.QPixmap.fromImage(img)
+        elif isinstance(path, QtGui.QPixmap):
+            self._pixmap = path
+        elif isinstance(path, QtGui.QImage):
+            self._pixmap = QtGui.QPixmap.fromImage(path)
+        else:
+            self._pixmap = QtGui.QPixmap(path)
+        self.adjustSize()
+        self.updateGeometry()
+        self.refreshImage()
+
+    def sizeHint(self):
+        if not self._pixmap:
+            return super(ImageView, self).sizeHint()
+        return self._pixmap.size()
+
+    def heightForWidth(self, width):
+        if not self._pixmap or self._pixmap.width() == 0:
+            return width
+        else:
+            size = self._pixmap.size()
+            return int((float(width)/size.width())*size.height())
+
+    def resizeEvent(self, event):
+        self.workingSize = event.size()
+        self.refreshImage(event.size())
+       
+    def refreshImage(self, size = None):
+        if not self._pixmap:
+            return
+
+        if not size:
+            size = self.sizeHint()
+
+        pixmap = self._pixmap
+        w = pixmap.width()
+        h = pixmap.height()
+        size *= self.ratio
+        if w > size.width() or h > size.height():
+            pixmap = pixmap.scaled(size.width(), size.height(), QtCore.Qt.KeepAspectRatio)
+        self.setPixmap(pixmap)
+
+    def save(self, fname):
+        if self._pixmap:
+            self._pixmap.save (fname)
+
+
+class ZoomableImageView(QtGui.QScrollArea, Widget):
     def __init__(self):
         QtGui.QScrollArea.__init__(self)
         Widget.__init__(self)
@@ -1580,7 +1645,7 @@ class ImageView(QtGui.QScrollArea, Widget):
 
     def heightForWidth(self, width):
         pixmap = self.imageLabel.pixmap()
-        if not pixmap:
+        if not pixmap or pixmap.width() == 0:
             return width
         else:
             size = pixmap.size()

@@ -36,7 +36,7 @@ import log
 class ViewerTaskView(gui3d.TaskView):
     def __init__(self, category):
         super(ViewerTaskView, self).__init__(category, 'Viewer')
-        self.image = self.addTopWidget(gui.ImageView())
+        self.image = self.addTopWidget(gui.ZoomableImageView())
         self.path = None
 
         tools = self.addLeftWidget(gui.GroupBox('Tools'))
