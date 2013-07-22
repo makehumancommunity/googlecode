@@ -74,7 +74,7 @@ class Human(gui3d.Object):
         self.bodyZones = ['l-eye','r-eye', 'jaw', 'nose', 'mouth', 'head', 'neck', 'torso', 'hip', 'pelvis', 'r-upperarm', 'l-upperarm', 'r-lowerarm', 'l-lowerarm', 'l-hand',
                           'r-hand', 'r-upperleg', 'l-upperleg', 'r-lowerleg', 'l-lowerleg', 'l-foot', 'r-foot', 'ear']
 
-        self.setMaterial(material.fromFile('data/skins/default.mhmat'))
+        self.material = material.fromFile('data/skins/default.mhmat')
         #self.setTexture("data/textures/texture.png")
         self._defaultMaterial = material.Material().copyFrom(self.material)
 
@@ -659,6 +659,16 @@ class Human(gui3d.Object):
 
         self.callEvent('onChanging', events3d.HumanEvent(self, 'reset'))
         self.callEvent('onChanged', events3d.HumanEvent(self, 'reset'))
+
+    def getMaterial(self):
+        return super(Human, self).getMaterial()
+
+    def setMaterial(self, mat):
+        self.callEvent('onChanging', events3d.HumanEvent(self, 'material'))
+        super(Human, self).setMaterial(mat)
+        self.callEvent('onChanged', events3d.HumanEvent(self, 'material'))
+
+    material = property(getMaterial, setMaterial)
 
     def load(self, filename, update=True, progressCallback=None):
 
