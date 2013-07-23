@@ -658,7 +658,7 @@ class MHApplication(gui3d.Application, mh.Application):
         log.debug("Loaded theme %s", mh.getSysDataPath('themes/'+theme+'.mht'))
 
         try:
-            f = open(mh.getSysDataPath('themes/%s.qss' % theme, 'r'))
+            f = open(mh.getSysDataPath('themes/%s.qss' % theme), 'r')
             qStyle = "\n".join(f.readlines())
             self.setStyleSheet(qStyle)
             # Also set stylesheet on custom slider style
