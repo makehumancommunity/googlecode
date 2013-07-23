@@ -54,6 +54,7 @@ import os.path
 import module3d
 import numpy as np
 import log
+import wavefront
 
 def packStringList(strings):
     text = ''
@@ -144,95 +145,7 @@ def loadTextMesh(obj, path):
     Parse and load a Wavefront OBJ file as mesh.
     """
     log.debug('loadTextMesh: begin')
-    objFile = open(path)
-
-    fg = None
-    mtl = None
-
-    verts = []
-    uvs = []
-    fverts = []
-    fuvs = []
-    groups = []
-    fmtls = []
-    has_uv = False
-    materials = {}
-    faceGroups = {}
-
-    for objData in objFile:
-
-        lineData = objData.split()
-        if len(lineData) > 0:
-            
-            command = lineData[0]
-                
-            if command == 'v':
-                verts.append((float(lineData[1]), float(lineData[2]), float(lineData[3])))
-
-            elif command == 'vt':
-                uvs.append((float(lineData[1]), float(lineData[2])))
-
-            elif command == 'f':
-                if not fg:
-                    if 0 not in faceGroups:
-                        faceGroups[0] = obj.createFaceGroup('default-dummy-group')
-                    fg = faceGroups[0]
-
-                if mtl is None:
-                    if 0 not in materials:
-                        materials[0] = obj.createMaterial('')
-                    mtl = materials[0]
-                    
-                uvIndices = []
-                vIndices = []
-                for faceData in lineData[1:]:
-                    vInfo = faceData.split('/')
-                    vIdx = int(vInfo[0]) - 1  # -1 because obj is 1 based list
-                    vIndices.append(vIdx)
-
-                    # If there are other data (uv, normals, etc)
-                    if len(vInfo) > 1 and vInfo[1] != '':
-                        uvIndex = int(vInfo[1]) - 1  # -1 because obj is 1 based list
-                        uvIndices.append(uvIndex)
-                
-                if len(vIndices) == 3:
-                    vIndices.append(vIndices[0])
-                fverts.append(tuple(vIndices))
-                    
-                if len(uvIndices) > 0:
-                    if len(uvIndices) == 3:
-                        uvIndices.append(uvIndices[0])
-                    has_uv = True
-                if len(uvIndices) < 4:
-                    uvIndices = [0, 0, 0, 0]
-                fuvs.append(tuple(uvIndices))
-
-                groups.append(fg.idx)
-                
-                fmtls.append(mtl)
-
-            elif command == 'g':
-                fgName = lineData[1]
-                if fgName not in faceGroups:
-                    faceGroups[fgName] = obj.createFaceGroup(fgName)
-                fg =  faceGroups[fgName]
-                
-            elif command == 'usemtl':
-                mtlName = lineData[1]
-                if mtlName not in materials:
-                    materials[mtlName] = obj.createMaterial(mtlName)
-                mtl =  materials[mtlName]
-                
-            elif command == 'o':
-                
-                obj.name = lineData[1]
-
-    objFile.close()
-
-    obj.setCoords(verts)
-    obj.setUVs(uvs)
-    obj.setFaces(fverts, fuvs if has_uv else None, groups, fmtls)
-
+    wavefront.loadObjFile(path, obj)
     log.debug('loadTextMesh: end')
 
 def loadMesh(path, locX=0, locY=0, locZ=0, loadColors=1):
