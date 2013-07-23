@@ -55,6 +55,7 @@ import module3d
 import numpy as np
 import log
 import wavefront
+from getpath import isSubPath, getPath
 
 def packStringList(strings):
     text = ''
@@ -189,10 +190,14 @@ def loadMesh(path, locX=0, locY=0, locZ=0, loadColors=1):
             loadBinaryMesh(obj, npzpath)
         except:
             loadTextMesh(obj, path)
-            try:
-                saveBinaryMesh(obj, npzpath)
-            except StandardError:
-                log.notice('unable to save compiled mesh: %s', npzpath)
+            if isSubPath(npzpath, getPath('')):
+                # Only write compiled binary meshes to user data path
+                try:
+                    saveBinaryMesh(obj, npzpath)
+                except StandardError:
+                    log.notice('unable to save compiled mesh: %s', npzpath)
+            else:
+                log.debug('Not writing compiled meshes to system paths (%s).', npzpath)
     except:
         log.error('Unable to load obj file: %s', path, exc_info=True)
         return False

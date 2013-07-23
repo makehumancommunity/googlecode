@@ -106,3 +106,25 @@ def getSysPath(subPath):
     else:
         return os.path.join(".")
 
+
+def _allnamesequal(name):
+    return all(n==name[0] for n in name[1:])
+
+def commonprefix(paths, sep='/'):
+    """
+    Implementation of os.path.commonprefix that works as you would expect.
+    
+    Source: http://rosettacode.org/wiki/Find_Common_Directory_Path#Python
+    """
+    from itertools import takewhile
+    
+    bydirectorylevels = zip(*[p.split(sep) for p in paths])
+    return sep.join(x[0] for x in takewhile(_allnamesequal, bydirectorylevels))
+
+def isSubPath(subpath, path):
+    """
+    Verifies whether subpath is within path.
+    """
+    subpath = os.path.normpath(os.path.realpath(subpath))
+    path = os.path.normpath(os.path.realpath(path))
+    return commonprefix([subpath, path]) == path
