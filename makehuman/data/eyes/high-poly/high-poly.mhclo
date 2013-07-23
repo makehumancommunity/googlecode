@@ -13,6 +13,7 @@ z_depth 50
 uvtex_layer 0 Texture
 objfile_layer 0
 material high-poly.mhmat
+transparent yes
 use_projection 0
 verts 0
 14598 14599 14662 0.64546 0.02023 0.33431 -0.00208 -0.00037 0.00667

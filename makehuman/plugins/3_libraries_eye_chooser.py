@@ -113,9 +113,11 @@ class EyesTaskView(gui3d.TaskView):
             human.eyesObj.mesh.setCull(None)
         # Enabling this causes render-que order issues so that eyes render over hair
         # Disabling it renders hi-poly eyes wrong
-        #human.eyesObj.mesh.setTransparentPrimitives(len(human.eyesObj.mesh.fvert))
-        human.mesh.setTransparentPrimitives(0)
-        human.eyesObj.mesh.priority = 20
+        if human.eyesProxy.transparent:
+            human.eyesObj.mesh.setTransparentPrimitives(len(human.eyesObj.mesh.fvert))
+        else:
+            human.eyesObj.mesh.setTransparentPrimitives(0)
+        human.eyesObj.mesh.priority = 5
 
         eyesName = human.eyesObj.mesh.name.split('.')[0]
 
