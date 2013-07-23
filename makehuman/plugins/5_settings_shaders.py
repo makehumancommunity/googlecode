@@ -199,7 +199,7 @@ class ShaderTaskView(gui3d.TaskView):
         w21 = self.materialBox.addWidget(FileValue("UV map", self.human.material.uvMap))
         @w21.mhEvent
         def onActivate(event):
-            if os.basename(w21.value) == "default.obj":
+            if os.path.basename(w21.value) == "default.obj":
                 self.human.setUVMap(None)
             else: 
                 self.human.setUVMap(w21.value)
@@ -383,7 +383,7 @@ class FileValue(gui.GroupBox):
             self.browseBtn.setPath(value)
             self.fileText.setText(os.path.basename(value))
         else:
-            self.imageView.setPath('')
+            self.fileText.setText('Default')
 
     value = property(getValue, setValue)
 
