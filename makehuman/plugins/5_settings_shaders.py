@@ -199,7 +199,10 @@ class ShaderTaskView(gui3d.TaskView):
         w21 = self.materialBox.addWidget(FileValue("UV map", self.human.material.uvMap))
         @w21.mhEvent
         def onActivate(event):
-            self.human.setUVMap(w21.value)
+            if os.basename(w21.value) == "default.obj":
+                self.human.setUVMap(None)
+            else: 
+                self.human.setUVMap(w21.value)
 
 
     def listShaders(self, dir = mh.getSysDataPath('shaders/glsl')):
