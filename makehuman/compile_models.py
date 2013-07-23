@@ -25,9 +25,7 @@ loading.
 
 import sys
 sys.path = ["./core", "./lib", "./shared"] + sys.path
-import algos3d
 import os
-import zipfile
 import fnmatch
 import module3d
 import files3d
@@ -83,7 +81,6 @@ def compileMesh(path):
 
 
 if __name__ == '__main__':
-    obj = algos3d.Target(None, None)
     allFiles = getAllFiles('data', ['*.obj'])
     allOBJs = allFiles[0]
     for (i, path) in enumerate(allOBJs):
