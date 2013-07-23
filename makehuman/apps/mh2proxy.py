@@ -531,8 +531,7 @@ def readProxyFile(obj, filepath, type="Clothes", layer=4):
                     v0 = v1
 
         else:
-            pass
-            #print "Ignored proxy keyword", key
+            log.warning('Unknown keyword %s found in proxy file %s', key, filepath)
 
     return proxy
 

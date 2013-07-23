@@ -111,7 +111,10 @@ class EyesTaskView(gui3d.TaskView):
             human.eyesObj.mesh.setCull(1)
         else:
             human.eyesObj.mesh.setCull(None)
-        human.eyesObj.mesh.setTransparentPrimitives(len(human.eyesObj.mesh.fvert))
+        # Enabling this causes render-que order issues so that eyes render over hair
+        # Disabling it renders hi-poly eyes wrong
+        #human.eyesObj.mesh.setTransparentPrimitives(len(human.eyesObj.mesh.fvert))
+        human.mesh.setTransparentPrimitives(0)
         human.eyesObj.mesh.priority = 20
 
         eyesName = human.eyesObj.mesh.name.split('.')[0]
@@ -182,6 +185,9 @@ def load(app):
 
     app.addLoadHandler('eyes', taskview.loadHandler)
     app.addSaveHandler(taskview.saveHandler)
+
+    # Load initial eyes
+    taskview.setEyes(gui3d.app.selectedHuman, mh.getSysDataPath("eyes/low-poly/low-poly.mhclo"))
 
 # This method is called when the plugin is unloaded from makehuman
 # At the moment this is not used, but in the future it will remove the added GUI elements

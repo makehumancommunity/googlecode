@@ -460,9 +460,6 @@ class MHApplication(gui3d.Application, mh.Application):
         log.message('Loading plugins')
         self.loadPlugins()
 
-        task = self.getCategory('Geometries').tasksByName['Eyes']
-        task.setEyes(gui3d.app.selectedHuman, mh.getSysDataPath("eyes/high-poly/high-poly.mhclo"))
-
         log.message('Loading GUI')
         self.loadGui()
 
