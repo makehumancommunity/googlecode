@@ -64,9 +64,9 @@ class Language(object):
     def dumpMissingStrings(self):
         if not self.language:
             return
-        path = os.path.join(getPath(), "data", "languages", self.language + ".missing")
-        pathdir = os.dirname(path)
-        if not os.ispath(pathdir):
+        path = os.path.join(getPath(''), "data", "languages", self.language + ".missing")
+        pathdir = os.path.dirname(path)
+        if not os.path.isdir(pathdir):
             os.makedirs(pathdir)
         with open(path, 'w') as f:
             for string in self.missingStrings:
