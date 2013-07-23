@@ -1676,14 +1676,20 @@ class ZoomableImageView(QtGui.QScrollArea, Widget):
         self.mdown = event.pos()
         
     def mouseMoveEvent(self, event):
-        self.horizontalScrollBar().setValue(
-            self.horizontalScrollBar().value() + 2*(self.mdown.x() - event.pos().x()))
-        self.verticalScrollBar().setValue(
-            self.verticalScrollBar().value() + 2*(self.mdown.y() - event.pos().y()))
-        self.mdown = event.pos()
-        self.refreshImage()
+        if event.buttons() & QtCore.Qt.RightButton:
+            self.wheelEvent(QtGui.QWheelEvent(event.pos(),
+                                              10 * (event.pos().x() - self.mdown.x()),
+                                              event.buttons(), event.modifiers()), False)
+            self.mdown = event.pos()
+        else:
+            self.horizontalScrollBar().setValue(
+                self.horizontalScrollBar().value() + 2*(self.mdown.x() - event.pos().x()))
+            self.verticalScrollBar().setValue(
+                self.verticalScrollBar().value() + 2*(self.mdown.y() - event.pos().y()))
+            self.mdown = event.pos()
+            self.refreshImage()
                                
-    def wheelEvent(self, event):
+    def wheelEvent(self, event, displace = True):
         ratbef = self.ratio
         factor = 1 - event.delta()*0.0007
         self.ratio *= factor
@@ -1691,7 +1697,7 @@ class ZoomableImageView(QtGui.QScrollArea, Widget):
             self.ratio = 1.0
         if self.ratio < self.minratio:
             self.ratio = self.minratio
-        dr = 2*abs(self.ratio - ratbef)
+        dr = 2*abs(self.ratio - ratbef) if displace else 0
         self.refreshImage(True,
                           (dr*(event.x() - self.width()/2),
                            dr*(event.y() - self.height()/2)))
