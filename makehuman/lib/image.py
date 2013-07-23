@@ -31,7 +31,10 @@ class Image(object):
             if isinstance(path, Image):
                 # Create a copy of the image.
                 self._data = path.data.copy()
-            else:   # Path string.
+            elif isinstance(path, image_qt.QtGui.QPixmap):
+                qimg = path.toImage()
+                self._data = image_qt.load(qimg)
+            else:   # Path string / QImage.
                 self._data = image_qt.load(path)
         elif data is not None:
             if isinstance(data, Image):
@@ -83,6 +86,13 @@ class Image(object):
 
     def save(self, path):
         image_qt.save(path, self._data)
+
+    def toQImage(self):
+        if self.components == 3:
+            fmt = image_qt.QtGui.QImage.Format_RGB888
+        else:
+            fmt = image_qt.QtGui.QImage.Format_ARGB32
+        return image_qt.QtGui.QImage(self.data.tostring(), self.data.shape[0], self.data.shape[1], fmt)
 
     def resized_(self, width, height):
         dw, dh = width, height

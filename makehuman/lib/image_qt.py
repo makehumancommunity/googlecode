@@ -28,7 +28,10 @@ import numpy as np
 from PyQt4 import QtCore, QtGui
 
 def load(path):
-    im = QtGui.QImage(path)
+    if isinstance(path, QtGui.QImage):
+        im = path
+    else:
+        im = QtGui.QImage(path)
     if im.isNull():
         raise RuntimeError("unable to load image '%s'" % path)
     w, h = im.width(), im.height()
