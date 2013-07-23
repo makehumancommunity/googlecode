@@ -62,7 +62,7 @@ class PoseLoadTaskView(gui3d.TaskView):
 
     def __init__(self, category):
 
-        self.systemPoses = os.path.join('data', 'poses')
+        self.systemPoses = mh.getSysDataPath('poses')
         self.userPoses = os.path.join(mh.getPath(''), 'data', 'poses')
         self.paths = [self.systemPoses, self.userPoses]
 
@@ -72,8 +72,8 @@ class PoseLoadTaskView(gui3d.TaskView):
         gui3d.TaskView.__init__(self, category, 'Poses')
         if not os.path.exists(self.userPoses):
             os.makedirs(self.userPoses)
-        #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhp', 'thumb', 'data/notfound.thumb'))
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhp', 'thumb', 'data/notfound.thumb', 'Pose'))
+        #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhp', 'thumb', mh.getSysDataPath('notfound.thumb')))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhp', 'thumb', mh.getSysDataPath('notfound.thumb'), 'Pose'))
         self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
 

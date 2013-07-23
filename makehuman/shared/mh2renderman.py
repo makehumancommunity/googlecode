@@ -495,14 +495,14 @@ class RMRScene:
         
         #Texture paths
         self.usrTexturePath = os.path.join(self.ribsPath, 'textures')
-        self.applicationPath = os.getcwd()  # TODO: this may not always return the app folder
-        self.appTexturePath = os.path.join(self.applicationPath, 'data', 'textures')
-        self.hairTexturePath = os.path.join(self.applicationPath, 'data', 'hairstyles')
+        self.applicationPath = mh.getSysPath()
+        self.appTexturePath = mh.getSysDataPath('textures')
+        self.hairTexturePath = mh.getSysDataPath('hairstyles')
         self.skinTexturePath = os.path.join(mh.getPath(''), 'data', 'skins')
         
         #self.appObjectPath = os.path.join(self.applicationPath, 'data', '3dobjs')
         self.worldFileName = os.path.join(self.ribsPath,"world.rib").replace('\\', '/')
-        self.lightsFolderPath = os.path.join(self.applicationPath, 'data', 'lights', 'aqsis')       
+        self.lightsFolderPath = os.path.join(mh.getSysDataPath('lights'), 'aqsis')       
 
         #mainscenefile
         self.sceneFileName = os.path.join(self.ribsPath, "scene.rib")

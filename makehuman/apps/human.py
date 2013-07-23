@@ -74,8 +74,7 @@ class Human(gui3d.Object):
         self.bodyZones = ['l-eye','r-eye', 'jaw', 'nose', 'mouth', 'head', 'neck', 'torso', 'hip', 'pelvis', 'r-upperarm', 'l-upperarm', 'r-lowerarm', 'l-lowerarm', 'l-hand',
                           'r-hand', 'r-upperleg', 'l-upperleg', 'r-lowerleg', 'l-lowerleg', 'l-foot', 'r-foot', 'ear']
 
-        self.material = material.fromFile('data/skins/default.mhmat')
-        #self.setTexture("data/textures/texture.png")
+        self.material = material.fromFile(mh.getSysDataPath('skins/default.mhmat'))
         self._defaultMaterial = material.Material().copyFrom(self.material)
 
     def getFaceMask(self):

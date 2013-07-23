@@ -123,7 +123,7 @@ class SettingsTaskView(gui3d.TaskView):
         languageBox = self.languageBox = self.addRightWidget(gui.GroupBox('Language'))
         languageBox.addWidget(LanguageRadioButton(languages, 'english'))
         
-        languageFiles = [os.path.basename(filename).replace('.ini', '') for filename in os.listdir('data/languages') if filename.split(os.extsep)[-1] == "ini"]
+        languageFiles = [os.path.basename(filename).replace('.ini', '') for filename in os.listdir(mh.getSysDataPath('languages')) if filename.split(os.extsep)[-1] == "ini"]
         for language in languageFiles:
             languageBox.addWidget(LanguageRadioButton(languages, language))
         
@@ -134,31 +134,31 @@ class SettingsTaskView(gui3d.TaskView):
             
         @self.shaderPhong.mhEvent
         def onClicked(event):
-            self.setShader("data/shaders/glsl/phong")
+            self.setShader(mh.getSysDataPath("shaders/glsl/phong"))
                 
         @self.shaderToon.mhEvent
         def onClicked(event):
-            self.setShader("data/shaders/glsl/toon")
+            self.setShader(mh.getSysDataPath("shaders/glsl/toon"))
 
         @self.shaderLitSphere.mhEvent
         def onClicked(event):
             human = gui3d.app.selectedHuman
             if "litsphereTexture" not in human.meshData.shaderParameters:
-                human.setShaderParameter("litsphereTexture", "data/litspheres/adaptive_skin_tone.png")
-            self.setShader("data/shaders/glsl/litsphere")
+                human.setShaderParameter("litsphereTexture", mh.getSysDataPath("litspheres/adaptive_skin_tone.png"))
+            self.setShader(mh.getSysDataPath("shaders/glsl/litsphere"))
 
         @self.shaderNormalMap.mhEvent
         def onClicked(event):
             human = gui3d.app.selectedHuman
-            self.setShader("data/shaders/glsl/normalmap")
-            #human.setShaderParameter("normalmapTexture", "data/textures/normal.jpg")
-            human.material.normalMapTexture = "data/textures/normal.jpg"
+            self.setShader(mh.getSysDataPath("shaders/glsl/normalmap"))
+            #human.setShaderParameter("normalmapTexture", mh.getSysDataPath("textures/normal.jpg"))
+            human.material.normalMapTexture = mh.getSysDataPath("textures/normal.jpg")
             
         #@self.shaderSkin.mhEvent
         #def onClicked(event):
-            #self.setShader("data/shaders/glsl/skin")
-            #gui3d.app.selectedHuman.mesh.setShaderParameter("gradientMap", "data/textures/color_temperature.png")
-            #gui3d.app.selectedHuman.mesh.setShaderParameter("ambientOcclusionMap", "data/textures/female_young.tif")
+            #self.setShader(mh.getSysDataPath("shaders/glsl/skin"))
+            #gui3d.app.selectedHuman.mesh.setShaderParameter("gradientMap", mh.getSysDataPath("textures/color_temperature.png"))
+            #gui3d.app.selectedHuman.mesh.setShaderParameter("ambientOcclusionMap", mh.getSysDataPath("textures/female_young.tif"))
                 
         @self.realtimeUpdates.mhEvent
         def onClicked(event):

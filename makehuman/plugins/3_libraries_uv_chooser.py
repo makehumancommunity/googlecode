@@ -55,7 +55,7 @@ class UvTaskView(gui3d.TaskView):
         if not os.path.exists(uvDir):
             os.makedirs(uvDir)
         self.filechooser = self.addRightWidget( \
-        fc.IconListFileChooser([uvDir , 'data/uvs'], 'obj', ['thumb', 'png'], 'data/uvs/notfound.thumb', 'UV Map'))
+        fc.IconListFileChooser([uvDir , mh.getSysDataPath('uvs')], 'obj', ['thumb', 'png'], mh.getSysDataPath('uvs/notfound.thumb'), 'UV Map'))
         self.addLeftWidget(self.filechooser.createSortBox())
 
         @self.filechooser.mhEvent

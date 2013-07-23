@@ -20,7 +20,7 @@
 Abstract
 --------
 
-This code is part of MakeHuman exported for Mitsuba Renderer
+This code is part of MakeHuman exporter for Mitsuba Renderer
 
 This module implements functions to export a human model in Mitsuba XML file format.
 Also use parts of code from mh2obj.py
@@ -359,7 +359,7 @@ def mitsubaCamera(camera, resolution, filexml, samplerData, obj):
 
 def mitsubaLights(filexml):
     # TODO: create a menu option
-    env_path = os.getcwd() + '/data/mitsuba/envmap.exr'
+    env_path = mh.getSysDataPath('mitsuba/envmap.exr')
     env = True
     sky = False
     #
@@ -397,7 +397,7 @@ def mitsubaLights(filexml):
 
 def mitsubaTexture(filexml):
     #pigment map
-    texture_path = os.getcwd() + '/data/textures/texture.png'
+    texture_path = mh.getSysDataPath('textures/texture.png')
 
     f = open(filexml, 'a')
     f.write('\n' +
@@ -450,7 +450,7 @@ def mitsubaMaterials(filexml):
 
 def mitsubaGeometry(filexml, fileobj, subSurfaceData):
     #
-    objpath = os.getcwd() + '/data/mitsuba/plane.obj'
+    objpath = mh.getSysDataPath('mitsuba/plane.obj')
     f = open(filexml, 'a')
     # write plane
     '''

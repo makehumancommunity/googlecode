@@ -220,9 +220,9 @@ class MHApplication(gui3d.Application, mh.Application):
     def loadHuman(self):
 
         self.progress(0.1)
-        #hairObj = hair.loadHairsFile(self.scene3d, path="./data/hairs/default", update = False)
+        #hairObj = hair.loadHairsFile(self.scene3d, path=mh.getSysDataPath("hairs/default"), update = False)
         #self.scene3d.clear(hairObj)
-        self.selectedHuman = self.addObject(human.Human(files3d.loadMesh("data/3dobjs/base.obj")))
+        self.selectedHuman = self.addObject(human.Human(files3d.loadMesh(mh.getSysDataPath("3dobjs/base.obj"))))
 
     def loadMainGui(self):
 
@@ -345,7 +345,7 @@ class MHApplication(gui3d.Application, mh.Application):
         self.progress(0.4)
 
         # Load plugins not starting with _
-        self.pluginsToLoad = glob.glob(os.path.join("plugins/",'[!_]*.py'))
+        self.pluginsToLoad = glob.glob(mh.getSysPath(os.path.join("plugins/",'[!_]*.py')))
 
         for fname in os.listdir("plugins/"):
             if fname[0] != "_":
@@ -461,7 +461,7 @@ class MHApplication(gui3d.Application, mh.Application):
         self.loadPlugins()
 
         task = self.getCategory('Geometries').tasksByName['Eyes']
-        task.setEyes(gui3d.app.selectedHuman, "data/eyes/high-poly/high-poly.mhclo")
+        task.setEyes(gui3d.app.selectedHuman, mh.getSysDataPath("eyes/high-poly/high-poly.mhclo"))
 
         log.message('Loading GUI')
         self.loadGui()
@@ -643,7 +643,7 @@ class MHApplication(gui3d.Application, mh.Application):
         if self.theme == theme:
             return
 
-        f = open(os.path.join("data/themes/", theme + ".mht"), 'r')
+        f = open(os.path.join(mh.getSysDataPath("themes/"), theme + ".mht"), 'r')
 
         for data in f.readlines():
             lineData = data.split()
@@ -655,17 +655,17 @@ class MHApplication(gui3d.Application, mh.Application):
                     if lineData[1] == "clear":
                         self.clearColor[:] = [float(val) for val in lineData[2:5]]
                         mh.setClearColor(float(lineData[2]), float(lineData[3]), float(lineData[4]), 1.0)
-        log.debug("Loaded theme %s", 'data/themes/'+theme+'.mht')
+        log.debug("Loaded theme %s", mh.getSysDataPath('themes/'+theme+'.mht'))
 
         try:
-            f = open('data/themes/%s.qss' % theme, 'r')
+            f = open(mh.getSysDataPath('themes/%s.qss' % theme, 'r'))
             qStyle = "\n".join(f.readlines())
             self.setStyleSheet(qStyle)
             # Also set stylesheet on custom slider style
             for widget in self.allWidgets():
                 if isinstance(widget, gui.Slider):
                     widget.setStyleSheet(qStyle)
-            log.debug("Loaded Qt style %s", 'data/themes/'+theme+'.qss')
+            log.debug("Loaded Qt style %s", mh.getSysDataPath('themes/'+theme+'.qss'))
         except:
             self.setStyleSheet("")
             # Also set stylesheet on custom slider style
@@ -674,7 +674,7 @@ class MHApplication(gui3d.Application, mh.Application):
                     widget.setStyleSheet("")
             '''
             if theme != "default":
-                log.warning('Could not open Qt style file %s.', 'data/themes/'+theme+'.qss')
+                log.warning('Could not open Qt style file %s.', mh.getSysDataPath('themes/'+theme+'.qss'))
             '''
 
         self.theme = theme
@@ -700,11 +700,11 @@ class MHApplication(gui3d.Application, mh.Application):
     def getThemeResource(self, folder, id):
         if '/' in id:
             return id
-        path = os.path.join("data/themes/", self.theme, folder, id)
+        path = os.path.join(mh.getSysDataPath("themes/"), self.theme, folder, id)
         if os.path.exists(path):
             return path
         else:
-            return os.path.join("data/themes/default/", folder, id)
+            return os.path.join(mh.getSysDataPath("themes/default/"), folder, id)
 
     def setLanguage(self, lang):
         log.debug("Setting language to %s", lang)

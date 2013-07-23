@@ -50,14 +50,14 @@ class SkinAction(Action):
     def do(self):
         self.human.setTexture(self.after)
         # TODO determine which uv map to load from a data definition file
-        #setHumanUVMap(self.human, 'data/uvs/a7/A7.mhuv')
+        #setHumanUVMap(self.human, mh.getSysDataPath('uvs/a7/A7.mhuv'))
         self.human.mesh.configureShading(diffuse=True)
         return True
 
     def undo(self):
         self.human.setTexture(self.before)
         # TODO determine which uv map to load from a data definition file
-        #setHumanUVMap(self.human, 'data/uvs/a7/A7.mhuv')
+        #setHumanUVMap(self.human, mh.getSysDataPath('uvs/a7/A7.mhuv'))
         self.human.mesh.configureShading(diffuse=self.diffuseBefore)
         return True
 
@@ -122,10 +122,10 @@ class TextureTaskView(gui3d.TaskView):
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Texture', label='Skin/Material')
 
-        self.systemSkins = os.path.join('data', 'skins')
-        self.systemClothes = os.path.join('data', 'clothes', 'textures')
-        self.systemHair = os.path.join('data', 'hairstyles')
-        self.systemEyes = os.path.join('data', 'eyes')
+        self.systemSkins = mh.getSysDataPath('skins')
+        self.systemClothes = os.path.join(mh.getSysDataPath('clothes'), 'textures')
+        self.systemHair = mh.getSysDataPath('hairstyles')
+        self.systemEyes = mh.getSysDataPath('eyes')
 
         self.userSkins = os.path.join(mh.getPath(''), 'data', 'skins')
         self.userClothes = os.path.join(mh.getPath(''), 'data', 'clothes', 'textures')
@@ -145,8 +145,8 @@ class TextureTaskView(gui3d.TaskView):
         self.hairTexture = None
         self.eyeTexture = None
 
-        #self.filechooser = self.addTopWidget(fc.FileChooser(self.userSkins, 'png', ['thumb', 'png'], 'data/skins/notfound.thumb'))
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.userSkins, 'png', ['thumb', 'png'], 'data/skins/notfound.thumb', 'Texture'))
+        #self.filechooser = self.addTopWidget(fc.FileChooser(self.userSkins, 'png', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb')))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.userSkins, 'png', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), 'Texture'))
         self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
 
@@ -285,13 +285,13 @@ class TextureTaskView(gui3d.TaskView):
     def reloadTextureChooser(self):
         human = gui3d.app.selectedHuman
         # TODO this is temporary, until new eye texturing approach
-        if 'data/eyes' in self.filechooser.paths:
+        if self.eyesRadio.selected:
             self.filechooser.setPreviewExtensions(['thumb', 'png'])
             self.filechooser.extension = 'png'
 
         selectedTex = None
         if self.skinRadio.selected:
-            self.textures = [self.systemSkins, self.userSkins, os.path.join('data', 'textures')]
+            self.textures = [self.systemSkins, self.userSkins, mh.getSysDataPath('textures')]
             selectedTex = human.getTexture()
         elif self.hairRadio.selected:
             proxy = human.hairProxy
@@ -443,7 +443,7 @@ def load(app):
     app.addSaveHandler(taskview.saveHandler)
 
     #log.message("Applying A7 UV map to human as temporary fix for lack of new textures.")
-    #setHumanUVMap(gui3d.app.selectedHuman, 'data/uvs/a7/A7.mhuv')
+    #setHumanUVMap(gui3d.app.selectedHuman, mh.getSysDataPath('uvs/a7/A7.mhuv'))
 
 
 # This method is called when the plugin is unloaded from makehuman

@@ -41,7 +41,7 @@ class AnimTestView(gui3d.TaskView):
         
     def doFirstTime(self):
         # Load BVH source rig and animation
-        bvhRig = bvh.load('data/bvhs/cmu/12_03.bvh')
+        bvhRig = bvh.load(mh.getSysDataPath('bvhs/cmu/12_03.bvh'))
         bvhSkel = bvhRig.createSkeleton()   # TODO debug and find out why it creates some zero-length bones (such as hand)
 
         # Draw static BVH mesh in rest pose
@@ -66,7 +66,7 @@ class AnimTestView(gui3d.TaskView):
 
 
         # Load target rig
-        skel,weights = skeleton.loadRig('data/rigs/soft1.rig', self.human.meshData)
+        skel,weights = skeleton.loadRig(mh.getSysDataPath('rigs/soft1.rig'), self.human.meshData)
         skelMesh = skeleton_drawing.meshFromSkeleton(skel, "Prism")
 
         # Draw target rig

@@ -112,7 +112,7 @@ class AqsisTaskView(gui3d.TaskView):
         
     def buildShader(self, shader):
         
-        srcPath = os.path.join('data/shaders/aqsis', shader + '.sl')
+        srcPath = os.path.join(mh.getSysDataPath('shaders/aqsis'), shader + '.sl')
         dstPath = os.path.join(self.sceneToRender.usrShaderPath, shader + '.slx')
         
         if not os.path.exists(dstPath) or os.stat(srcPath).st_mtime > os.stat(dstPath).st_mtime:

@@ -163,7 +163,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
                     path1 = str(self.template)
                     key1 = ""
                     factors1 = []
-                    base1 = "data/targets/macrodetails/"
+                    base1 = mh.getSysDataPath("targets/macrodetails/")
 
                     if ethnic is None:
                         base1 += "caucasian-"
@@ -223,7 +223,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
                                 tone2 = "averagemuscle"
                                 weight2 = "averageweight"
                             '''
-                            base2 = "data/targets/macrodetails/universal-%s-%s-%s-%s.target" % (gender, age, tone, weight)
+                            base2 = mh.getSysDataPath("targets/macrodetails/universal-%s-%s-%s-%s.target") % (gender, age, tone, weight)
                             key2 = "universal-%s-%s-%s-%s" % (gender, age, tone2, weight2)
                             factors2 = factors1 + [tone2, weight2]
                             self.bases[key2] = BaseSpec(base2, factors2)
@@ -232,7 +232,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
                             '''
                             elif tone:
-                                base2 = "data/targets/macrodetails/universal-%s-%s-%s-averageweight.target" % (gender, age, tone)
+                                base2 = mh.getSysDataPath("targets/macrodetails/universal-%s-%s-%s-averageweight.target") % (gender, age, tone)
                                 key2 = "universal-%s-%s-%s" % (gender, age, tone)
                                 factors2 = factors1 + [tone, 'averageweight']
                                 self.bases[key2] = BaseSpec(base2, factors2)
@@ -240,7 +240,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
                                 self.targetSpecs[key2] = TargetSpec(path2, factors2)
 
                             elif weight:
-                                base2 = "data/targets/macrodetails/universal-%s-%s-averagemuscle-%s.target" % (gender, age, weight)
+                                base2 = mh.getSysDataPath("targets/macrodetails/universal-%s-%s-averagemuscle-%s.target") % (gender, age, weight)
                                 key2 = "universal-%s-%s-%s" % (gender, age, weight)
                                 factors2 = factors1 + ['averagemuscle', weight]
                                 self.bases[key2] = BaseSpec(base2, factors2)
@@ -248,7 +248,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
                                 self.targetSpecs[key2] = TargetSpec(path2, factors2)
 
                             else:
-                                base2 = "data/targets/macrodetails/universal-%s-%s-averagemuscle-averageweight.target" % (gender, age)
+                                base2 = mh.getSysDataPath("targets/macrodetails/universal-%s-%s-averagemuscle-averageweight.target") % (gender, age)
                                 key2 = "universal-%s" % (gender)
                                 factors2 = factors1 + ['averagemuscle', 'averageweight']
                                 path2 = path1.replace("-${tone}", "").replace("-${weight}", "")
@@ -441,7 +441,7 @@ def compileWarpTarget(template, fallback, human, bodypart):
 def readTarget(filepath):
 
     words = filepath.split("-")
-    if (words[0] == "data/targets/macrodetails/universal" and
+    if (words[0] == mh.getSysDataPath("targets/macrodetails/universal") and
         words[-2] == "averagemuscle" and
         words[-1] == "averageweight.target"):
         return {}
@@ -550,7 +550,7 @@ class GlobalWarpData:
             return self._landMarks[bodypart]
 
         self._landMarks = {}
-        folder = "data/landmarks"
+        folder = mh.getSysDataPath("landmarks")
         for file in os.listdir(folder):
             (name, ext) = os.path.splitext(file)
             if ext != ".lmk":

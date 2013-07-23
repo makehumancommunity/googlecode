@@ -140,7 +140,7 @@ class AnimationLibrary(gui3d.TaskView):
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Animations')
 
-        self.systemAnims = os.path.join('data', 'animations')
+        self.systemAnims = mh.getSysDataPath('animations')
         self.userAnims = os.path.join(mh.getPath(''), 'data', 'animations')
         self.animPaths = [self.userAnims, self.systemAnims]
         if not os.path.exists(self.userAnims):
@@ -738,7 +738,7 @@ def loadAnimationTrack(anim):
     else:
         # Skeleton and joint rig in BVH are not the same, retarget/remap
         # the motion data:
-        if not os.path.isfile("tools/blender26x/mh_mocap_tool/target_rigs/%s.trg" % human.getSkeleton().name):
+        if not os.path.isfile(mh.getSysPath("tools/blender26x/mh_mocap_tool/target_rigs/%s.trg") % human.getSkeleton().name):
             gui3d.app.statusPersist("Cannot apply motion on the selected skeleton %s because there is no target mapping file for it.", human.getSkeleton().name)
             return None
 
@@ -749,7 +749,7 @@ def loadAnimationTrack(anim):
             jointToBoneMap = _jointMappingCache[cacheName]
         else:
             # Create and cache mapping
-            srcSkel, _ = skeleton.loadRig(os.path.join('data', 'rigs', '%s.rig' % anim.collection.rig), human.meshData)
+            srcSkel, _ = skeleton.loadRig(os.path.join(mh.getSysDataPath('rigs'), '%s.rig' % anim.collection.rig), human.meshData)
             tgtSkel = human.getSkeleton()
             # Load mapping from reference rig to target rig
             # TODO this only works if anim.collection.rig == soft1! We cannot do reverse target mappings

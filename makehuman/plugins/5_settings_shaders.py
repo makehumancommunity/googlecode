@@ -29,6 +29,7 @@ import log
 import shader
 import numpy as np
 import material
+import mh
 
 class ShaderTaskView(gui3d.TaskView):
     def __init__(self, category):
@@ -201,7 +202,7 @@ class ShaderTaskView(gui3d.TaskView):
             self.human.setUVMap(w21.value)
 
 
-    def listShaders(self, dir = 'data/shaders/glsl'):
+    def listShaders(self, dir = mh.getSysDataPath('shaders/glsl')):
         shaders = set()
         for name in os.listdir(dir):
             path = os.path.join(dir, name)
@@ -505,7 +506,7 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
             self.imageView.setImage(value)
             if isinstance(value, basestring): self.browseBtn.setPath(value)
         else:
-            self.imageView.setImage('data/notfound.thumb')
+            self.imageView.setImage(mh.getSysDataPath('notfound.thumb'))
 
     value = property(getValue, setValue)
 

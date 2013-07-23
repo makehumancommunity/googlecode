@@ -26,6 +26,7 @@ import os
 import codecs
 import math
 import exportutils
+import mh
 
 #
 #    exportObj(human, filepath, config):
@@ -156,7 +157,7 @@ def writeMaterial(fp, stuff, human, config):
     writeTexture(fp, "map_Disp", mat.specularMapTexture, human, config)
     writeTexture(fp, "map_Disp", mat.displacementMapTexture, human, config)
 
-    #    writeTexture(fp, "map_Kd", ("data/textures", "texture.png"), human, config)
+    #    writeTexture(fp, "map_Kd", (mh.getSysDataPath("textures"), "texture.png"), human, config)
 
 
 def writeTexture(fp, key, filepath, human, config):

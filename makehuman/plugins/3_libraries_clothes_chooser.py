@@ -85,7 +85,7 @@ class ClothesTaskView(gui3d.TaskView):
 
     def __init__(self, category):
 
-        self.systemClothes = os.path.join('data', 'clothes')
+        self.systemClothes = mh.getSysDataPath('clothes')
         self.userClothes = os.path.join(mh.getPath(''), 'data', 'clothes')
 
         self.taggedClothes = {}
@@ -99,9 +99,9 @@ class ClothesTaskView(gui3d.TaskView):
         if not os.path.exists(self.userClothes):
             os.makedirs(self.userClothes)
         self.paths = [self.systemClothes, self.userClothes]
-        #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhclo', 'thumb', 'data/clothes/notfound.thumb'))
+        #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhclo', 'thumb', mh.getSysDataPath('clothes/notfound.thumb')))
         #self.filechooser = self.addRightWidget(fc.ListFileChooser(self.paths, 'mhclo', 'Clothes', True))
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhclo', 'thumb', 'data/clothes/notfound.thumb', 'Clothes', True))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhclo', 'thumb', mh.getSysDataPath('clothes/notfound.thumb'), 'Clothes', True))
         self.filechooser.setIconSize(50,50)
         self.filechooser.setFileLoadHandler(fc.MhcloFileLoader())
         self.optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
@@ -428,7 +428,7 @@ class ClothesTaskView(gui3d.TaskView):
             for _,proxy in self.cache.items():
                 proxy.toggleEnabled = False
             self.updateFaceMasks(self.faceHidingTggl.selected)
-            # self.clothesButton.setTexture('data/clothes/clear.png')
+            # self.clothesButton.setTexture(mh.getSysDataPath('clothes/clear.png'))
         else:
             if gui3d.app.settings.get('realtimeFitting', False):
                 self.adaptClothesToHuman(human)

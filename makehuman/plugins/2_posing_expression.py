@@ -95,7 +95,7 @@ class ExpressionTaskView(gui3d.TaskView):
             # Create sliders
             for subname in subnames:
                 modifier = warpmodifier.WarpModifier(
-                        'data/targets/expression/units/${ethnic}/%s-%s.target' % (name, subname),
+                        mh.getSysDataPath('targets/expression/units/${ethnic}/%s-%s.target' % (name, subname)),
                         "face",
                         "Ethnic")
 
@@ -210,7 +210,7 @@ class MhmLoadTaskView(gui3d.TaskView):
         self.mhmTaskView = mhmTaskView
         self.include = "All"
 
-        self.globalMhmPath = os.path.join('data', folder)
+        self.globalMhmPath = mh.getSysDataPath(folder)
         self.mhmPath = os.path.join(mh.getPath(''), 'data', folder)
         self.paths = [self.globalMhmPath, self.mhmPath]
 
@@ -218,7 +218,7 @@ class MhmLoadTaskView(gui3d.TaskView):
             os.makedirs(self.mhmPath)
 
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhm', 'thumb'))
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhm', 'thumb', 'data/notfound.thumb', mhmLabel))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhm', 'thumb', mh.getSysDataPath('notfound.thumb'), mhmLabel))
         self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
 

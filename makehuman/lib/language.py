@@ -27,6 +27,7 @@ Language file loading and translation.
 import os
 import log
 import json
+import mh
 
 class Language(object):
     def __init__(self):
@@ -37,7 +38,7 @@ class Language(object):
 
     def setLanguage(self, language):
         self.languageStrings = None
-        path = os.path.join("data/languages/", language + ".ini")
+        path = os.path.join(mh.getSysDataPath("languages/", language + ".ini"))
         if not os.path.isfile(path):
             return
         with open(path, 'rU') as f:
@@ -63,7 +64,10 @@ class Language(object):
     def dumpMissingStrings(self):
         if not self.language:
             return
-        path = os.path.join("data", "languages", self.language + ".missing")
+        path = os.path.join(mh.getPath(), "data", "languages", self.language + ".missing")
+        pathdir = os.dirname(path)
+        if not os.ispath(pathdir):
+            os.makedirs(pathdir)
         with open(path, 'w') as f:
             for string in self.missingStrings:
                 f.write('"%s": "",\n' % string.encode('utf8'))

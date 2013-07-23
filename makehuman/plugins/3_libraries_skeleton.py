@@ -85,7 +85,7 @@ class SkeletonLibrary(gui3d.TaskView):
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Skeleton')
 
-        self.systemRigs = os.path.join('data', 'rigs')
+        self.systemRigs = mh.getSysDataPath('rigs')
         self.userRigs = os.path.join(mh.getPath(''), 'data', 'rigs')
         self.rigPaths = [self.userRigs, self.systemRigs]
         if not os.path.exists(self.userRigs):
@@ -216,7 +216,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
         self.languages = OrderedDict()
         self.languages["English"] = None
-        folder = "data/rigs/languages"
+        folder = mh.getSysDataPath("rigs/languages")
         for filename in os.listdir(folder):
             name,ext = os.path.splitext(filename)
             filepath = os.path.join(folder, filename)

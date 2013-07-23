@@ -23,6 +23,7 @@ Pose
 """
 
 import log
+import mh
 
 import exportutils
 
@@ -218,9 +219,9 @@ def writeShapeKeys(fp, env, name, proxy):
     fp.write("  end AnimationData\n\n")
 
     if config.expressions and not proxy:
-        exprList = exportutils.shapekeys.readExpressionMhm("data/expressions")
+        exprList = exportutils.shapekeys.readExpressionMhm(mh.getSysDataPath("expressions"))
         writeExpressions(fp, exprList, "Expression")
-        visemeList = exportutils.shapekeys.readExpressionMhm("data/visemes")
+        visemeList = exportutils.shapekeys.readExpressionMhm(mh.getSysDataPath("visemes"))
         writeExpressions(fp, visemeList, "Viseme")
 
     fp.write(

@@ -25,6 +25,7 @@ TODO
 import os
 import log
 import zipfile
+import mh
 
 class Component(object):
     _cat_data = [
@@ -155,7 +156,7 @@ class Targets(object):
                     dir[head] = {}
                 add_file(dir[head], tail)
 
-        with zipfile.ZipFile('data/targets.npz', 'r') as npzfile:
+        with zipfile.ZipFile(mh.getSysDataPath('targets.npz'), 'r') as npzfile:
             for file in npzfile.infolist():
                 name = file.filename
                 if not name.endswith('.index.npy'):
@@ -164,7 +165,7 @@ class Targets(object):
                 path = name.split('/')
                 add_file(cls._files, path)
 
-        with open('data/images.list', 'r') as imgfile:
+        with open(mh.getSysDataPath('images.list'), 'r') as imgfile:
             for line in imgfile:
                 name = line.rstrip()
                 if not name.endswith('.png'):
@@ -238,5 +239,5 @@ _targets = None
 def getTargets():
     global _targets
     if _targets is None:
-        _targets = Targets('data/targets')
+        _targets = Targets(mh.getSysDataPath('targets'))
     return _targets

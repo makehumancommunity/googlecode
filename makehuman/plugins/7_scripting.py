@@ -475,7 +475,7 @@ class Scripting():
 
     def applyTarget(self,targetName,power):
         log.message("SCRIPT: applyTarget(" + targetName + ", " + str(power) + ")")
-        self.human.setDetail("data/targets/" + targetName + ".target",power)
+        self.human.setDetail(mh.getSysDataPath("targets/" + targetName + ".target"), power)
         self.human.applyAllTargets()
         mh.redraw()
 

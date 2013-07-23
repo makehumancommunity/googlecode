@@ -26,6 +26,7 @@ Armature options
 import os
 import gui
 import io_json
+import mh
 
 class ArmatureOptions:
     def __init__(self):
@@ -155,7 +156,7 @@ class ArmatureOptions:
         selector.fromOptions(self)
 
 
-    def loadPreset(self, filename, selector, folder="data/rigs/"):
+    def loadPreset(self, filename, selector, folder=mh.getSysDataPath("rigs/"):
         filepath = os.path.join(folder, filename + ".json")
         struct = io_json.loadJson(filepath)
         self.__init__()

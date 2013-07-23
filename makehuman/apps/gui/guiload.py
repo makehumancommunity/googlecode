@@ -103,7 +103,7 @@ class LoadTaskView(gui3d.TaskView):
         
         modelPath = mh.getPath('models')
         gui3d.TaskView.__init__(self, category, 'Load', )
-        self.filechooser = self.addTopWidget(fc.FileChooser(modelPath, 'mhm', 'thumb', 'data/notfound.thumb', sort=HumanFileSort()))
+        self.filechooser = self.addTopWidget(fc.FileChooser(modelPath, 'mhm', 'thumb', mh.getSysDataPath('notfound.thumb'), sort=HumanFileSort()))
         self.addLeftWidget(self.filechooser.sortBox)
 
         @self.filechooser.mhEvent

@@ -27,6 +27,7 @@ IT NOT WORK
 """
 
 import log
+import mh
 
 
 def testAnimation(self):
@@ -59,7 +60,7 @@ def testColor(self):
 
     # TODO: move this in a test module
 
-    algos3d.loadVertsColors(self.basemesh, 'data/3dobjs/base.obj.colors')
+    algos3d.loadVertsColors(self.basemesh, mh.getSysDataPath('3dobjs/base.obj.colors'))
 
 
 def applyTexture(self):
@@ -75,7 +76,7 @@ def applyTexture(self):
         self.basemesh.setTexture('data/textures/texture.tga')
     else:
         sob = self.scene.getObject(self.basemesh.name + '.sub')
-        sob.setTexture('data/textures/texture.tga')
+        sob.setTexture(mh.getSysDataPath('textures/texture.tga'))
     self.scene.redraw()
 
 
@@ -93,7 +94,7 @@ def analyzeTestTarget(self):
 
     if not self.basemesh.isSubdivided:
         self.basemesh.applyDefaultColor()
-        self.analyzeTarget(basemesh, 'data/targets/test.target')
+        self.analyzeTarget(basemesh, mh.getSysDataPath('targets/test.target'))
         self.scene.redraw()
 
 

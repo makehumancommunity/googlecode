@@ -174,10 +174,10 @@ def povrayExportArray(obj, camera, path, settings):
   # Certain files and blocks of SDL are mostly static and can be copied directly
   # from reference files into the generated output directories or files.
 
-    headerFile = 'data/povray/headercontent.inc'
-    staticFile = 'data/povray/staticcontent.inc'
-    sceneFile = 'data/povray/makehuman.pov'
-    groupingsFile = 'data/povray/makehuman_groupings.inc'
+    headerFile = mh.getSysDataPath('povray/headercontent.inc')
+    staticFile = mh.getSysDataPath('povray/staticcontent.inc')
+    sceneFile = mh.getSysDataPath('povray/makehuman.pov')
+    groupingsFile = mh.getSysDataPath('povray/makehuman_groupings.inc')
     pigmentMap = gui3d.app.selectedHuman.mesh.texture
 
   # Define some additional file related strings
@@ -309,7 +309,7 @@ def writeCamera(hfile, camera, settings):
     hfile.write("  look_at <%f,%f,%f>\n}\n\n" % invx(camera.focus))
 
 def writeLights(scene, hfile):
-    hflig = open('data/povray/lights.inc','r')
+    hflig = open(mh.getSysDataPath('povray/lights.inc'),'r')
     ligfilebuffer = hflig.read()
     hflig.close()
     for light in scene.lights:
@@ -412,7 +412,7 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     # files into the output files.
     nextpb = 0.6 - 0.4 * bool(settings['SSS'])
     progress (progbase,"Parsing data")
-    staticFile = 'data/povray/staticcontent_mesh2only_fsss.inc' if settings['SSS'] else 'data/povray/staticcontent_mesh2only_tl.inc'
+    staticFile = mh.getSysDataPath('povray/staticcontent_mesh2only_fsss.inc') if settings['SSS'] else mh.getSysDataPath('povray/staticcontent_mesh2only_tl.inc')
 
     # Define some additional file locations
     outputSceneFile = path.replace('.inc', '.pov')
@@ -551,13 +551,13 @@ def writeItemsMaterials(hfile, stuffs, settings, outDir):
             bumpdata = None
         if stuff.type == 'Hair':
             if settings['hairShine']:
-                hinfile = open ("data/povray/hair_2.inc",'r')
+                hinfile = open (mh.getSysDataPath("povray/hair_2.inc"),'r')
             else:
-                hinfile = open ("data/povray/hair_0.inc",'r')
+                hinfile = open (mh.getSysDataPath("povray/hair_0.inc"),'r')
         elif stuff.type == 'Eyes':
-            hinfile = open ("data/povray/eyes.inc",'r')
+            hinfile = open (mh.getSysDataPath("povray/eyes.inc"),'r')
         else:
-            hinfile = open ("data/povray/clothes.inc",'r')
+            hinfile = open (mh.getSysDataPath("povray/clothes.inc"),'r')
         inlines = hinfile.read()
         hinfile.close()
         inlines = inlines.replace ("%%name%%",stuff.name)

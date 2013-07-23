@@ -27,6 +27,7 @@ import numpy
 import gui3d
 import exportutils
 import log
+import mh
 from collections import OrderedDict
 
 import material
@@ -234,7 +235,7 @@ class CProxy:
         if self.basemesh in ["alpha_7", "alpha7"]:
             global _A7converter
             if _A7converter is None:
-                _A7converter = readProxyFile(gui3d.app.selectedHuman.meshData, "data/3dobjs/a7_converter.proxy", type="Converter")
+                _A7converter = readProxyFile(gui3d.app.selectedHuman.meshData, mh.getSysDataPath("3dobjs/a7_converter.proxy"), type="Converter")
             print "Converting clothes with", _A7converter
             return _A7converter
         elif self.basemesh == "hm08":

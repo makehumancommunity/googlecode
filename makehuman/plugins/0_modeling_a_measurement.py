@@ -173,7 +173,7 @@ class MeasureTaskView(gui3d.TaskView):
 
         self.modifiers = {}
 
-        measureDataPath = "data/targets/measure/"
+        measureDataPath = mh.getSysDataPath("targets/measure/")
 
         self.categoryBox = self.addRightWidget(gui.GroupBox('Category'))
         self.groupBox = self.addLeftWidget(gui.StackedBox())

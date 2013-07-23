@@ -30,6 +30,7 @@ import warp
 import warpmodifier
 import algos3d
 import log
+import mh
 
 
 #----------------------------------------------------------
@@ -56,7 +57,7 @@ def setupExpressions(folder, prefix):
     return(expressions)
 
 
-ExpressionUnits = setupExpressions("./data/targets/expression/units/caucasian", "")
+ExpressionUnits = setupExpressions(mh.getSysDataPath("/targets/expression/units/caucasian"), "")
 
 #----------------------------------------------------------
 #   Loop
@@ -140,12 +141,12 @@ def loopGendersAges(name, human, typ):
 
 def targetFileName(typ, name, gender, age):
     #if typ == "Expressions":
-    #    return ('data/targets/expression/%s_%s/neutral_%s_%s_%s.target' % (gender, age, gender, age, name) )
+    #    return (mh.getSysDataPath('targets/expression/%s_%s/neutral_%s_%s_%s.target') % (gender, age, gender, age, name) )
     if typ == "ExpressionUnits":
-        return ('data/targets/expression/units/caucasian/%s_%s/%s.target' %  (gender, age, name) )
+        return (mh.getSysDataPath('targets/expression/units/caucasian/%s_%s/%s.target') %  (gender, age, name) )
     elif typ == "Corrective":
         (part, pose) = name
-        return ("shared/mhx/targets/correctives/%s/caucasian/%s-%s/%s.target" % (part, gender, age, pose))
+        return (mh.getSysDataPath("shared/mhx/targets/correctives/%s/caucasian/%s-%s/%s.target") % (part, gender, age, pose))
     else:
         raise NameError("Unknown type %s" % typ)
 
@@ -216,7 +217,7 @@ def readExpressions(human, t0, t1):
         gui3d.app.progress(t, text="Reading expression %s" % name)
 
         shape = warpmodifier.compileWarpTarget(
-                'data/targets/expression/${gender}_${age}/neutral_${gender}_${age}_%s.target' % name,
+                mh.getSysDataPath('targets/expression/${gender}_${age}/neutral_${gender}_${age}_%s.target') % name,
                 "GenderAgeEthnicModifier",
                 human,
                 "face")
@@ -234,9 +235,9 @@ def readExpressionUnits(human, t0, t1):
         gui3d.app.progress(t, text="Reading expression %s" % name)
 
         shape = warpmodifier.compileWarpTarget(
-                #'data/targets/expression/units/${ethnic}/${gender}_${age}/%s.target' % name,
+                #mh.getSysDataPath('targets/expression/units/${ethnic}/${gender}_${age}/%s.target') % name,
                 #"GenderAgeEthnic",
-                'data/targets/expression/units/${ethnic}/%s.target' % name,
+                mh.getSysDataPath('targets/expression/units/${ethnic}/%s.target') % name,
                 "Ethnic",
                 human,
                 "face")

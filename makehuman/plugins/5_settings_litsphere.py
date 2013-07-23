@@ -40,11 +40,11 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
 
         self.extensions = ['png', 'tif', 'tiff', 'jpg', 'jpeg', 'bmp']
 
-        self.skinCache = { 'caucasian' : image.Image('data/litspheres/skinmat_caucasian.png'),
-                           'african'   : image.Image('data/litspheres/skinmat_african.png'),
-                           'asian'    : image.Image('data/litspheres/skinmat_asian.png') }
+        self.skinCache = { 'caucasian' : image.Image(mh.getSysDataPath('litspheres/skinmat_caucasian.png')),
+                           'african'   : image.Image(mh.getSysDataPath('litspheres/skinmat_african.png')),
+                           'asian'    : image.Image(mh.getSysDataPath('litspheres/skinmat_asian.png')) }
 
-        self.sysPath = 'data/litspheres'
+        self.sysPath = mh.getSysDataPath('litspheres')
         self.userPath = os.path.join(mh.getPath(''), 'data', 'litspheres')
         if not os.path.exists(self.userPath):
             os.makedirs(self.userPath)
@@ -71,25 +71,25 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
-            if os.path.abspath(filename) == os.path.abspath("data/litspheres/adaptive_skin_tone.png"):
+            if os.path.abspath(filename) == os.path.abspath(mh.getSysDataPath("litspheres/adaptive_skin_tone.png")):
                 self.updateAdaptiveSkin()
             else:
                 self.human.setShaderParameter("litsphereTexture", filename)
                 self.image.setImage(filename)
 
     def configureShading(self):
-        if os.path.isfile("data/textures/caucasian-female-young-minmuscle-maxweight1-NM.png"):
-            self.human.material.normalMapTexture = "data/textures/caucasian-female-young-minmuscle-maxweight1-NM.png"
-            #self.human.material.diffuseTexture = "data/textures/caucasian-female-young-minmuscle-maxweight1-NM.png"
+        if os.path.isfile(mh.getSysDataPath("textures/caucasian-female-young-minmuscle-maxweight1-NM.png")):
+            self.human.material.normalMapTexture = mh.getSysDataPath("textures/caucasian-female-young-minmuscle-maxweight1-NM.png")
+            #self.human.material.diffuseTexture = mh.getSysDataPath("textures/caucasian-female-young-minmuscle-maxweight1-NM.png")
         else:
-            self.human.material.normalMapTexture = "data/textures/normal.jpg"
+            self.human.material.normalMapTexture = mh.getSysDataPath("textures/normal.jpg")
         self.human.mesh.configureShading(diffuse=self.diffuseChk.selected, normal=self.normalChk.selected)
 
     def onShow(self, event):
         if "litsphereTexture" in self.human.meshData.shaderParameters:
             current = self.human.meshData.shaderParameters["litsphereTexture"]
             if isinstance(current, image.Image):
-                current = "data/litspheres/adaptive_skin_tone.png"
+                current = mh.getSysDataPath("litspheres/adaptive_skin_tone.png")
             self.filechooser.selectItem(os.path.relpath(current))
             self.image.setImage(current)
         self.diffuseChk.setChecked("DIFFUSE" in self.human.mesh.shaderDefines)
@@ -109,7 +109,7 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
 
         current = self.human.meshData.shaderParameters["litsphereTexture"]
         if current and (isinstance(current, image.Image) or \
-           os.path.abspath(current) == os.path.abspath("data/litspheres/adaptive_skin_tone.png")):
+           os.path.abspath(current) == os.path.abspath(mh.getSysDataPath("litspheres/adaptive_skin_tone.png"))):
             if event.change == "caucasian" or event.change == "african" or \
               event.change == "asian" or event.change == "material":
                 self.updateAdaptiveSkin()
@@ -149,7 +149,7 @@ def load(app):
     #taskview.updateAdaptiveSkin()
     # Enable litsphere shading without texture at startup
     #taskview.human.mesh.configureShading(diffuse=False)
-    #taskview.human.setShader("data/shaders/glsl/litsphere")
+    #taskview.human.setShader(mh.getSysDataPath("shaders/glsl/litsphere"))
 
 
 def unload(app):

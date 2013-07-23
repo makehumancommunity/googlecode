@@ -33,7 +33,7 @@ from logging import debug, warning, error, getLogger, getLevelName
 from logging import DEBUG, INFO, WARNING, ERROR, CRITICAL
 
 from core import G
-from getpath import getPath
+from getpath import getPath, getSysDataPath
 
 NOTICE = 25
 MESSAGE = logging.INFO
@@ -133,7 +133,7 @@ def init():
             pass
 
         try:
-            logging.config.fileConfig(os.path.join('data','logging.ini'), defaults)
+            logging.config.fileConfig(getSysDataPath('logging.ini'), defaults)
             return
         except Exception:
             pass

@@ -23,7 +23,7 @@ Python compatibility layer replacing the old C functions of MakeHuman.
 """
 
 from core import G
-from getpath import getPath
+from getpath import getPath, getSysDataPath, getSysPath
 
 from glmodule import updatePickingBuffer, grabScreen, hasRenderSkin, renderSkin
 

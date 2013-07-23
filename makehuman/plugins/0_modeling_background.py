@@ -96,7 +96,7 @@ class BackgroundChooser(gui3d.TaskView):
         if not os.path.exists(self.backgroundsFolder):
             os.makedirs(self.backgroundsFolder)
 
-        self.backgroundsFolders = [ os.path.join('data', 'backgrounds'),
+        self.backgroundsFolders = [ mh.getSysDataPath('backgrounds'),
                                     self.backgroundsFolder ]
         self.extensions = ['bmp', 'png', 'tif', 'tiff', 'jpg', 'jpeg', 'clear']
 
@@ -450,7 +450,7 @@ class TextureProjectionView(gui3d.TaskView) :
         # TL: Disabled because texture.png is not found.
         # Not sure if the is still relevant
         #if event.change == 'reset':
-        #    texture.reloadTexture(os.path.join('data/textures/texture.png'))
+        #    texture.reloadTexture(os.path.join(mh.getSysDataPath('textures/texture.png')))
 
     def projectBackground(self):
         if not self.backgroundChooserView.isBackgroundShowing():

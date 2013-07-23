@@ -114,7 +114,7 @@ class Config:
 
         if self.cage:
             obj = gui3d.app.selectedHuman
-            filepath = "./data/cages/cage/cage.mhclo"
+            filepath = mh.getSysDataPath("cages/cage/cage.mhclo")
             proxy = mh2proxy.readProxyFile(obj, filepath, type="Cage", layer=4)
             proxy.update(obj)
             proxies[name] = proxy
@@ -198,7 +198,7 @@ def getExistingProxyFile(path, uuid, category):
         paths = []
         folder = os.path.join(mh.getPath(''), 'data', category)
         addProxyFiles(file, folder, paths, 6)
-        folder = os.path.join('data', category)
+        folder = mh.getSysDataPath(category)
         addProxyFiles(file, folder, paths, 6)
         for path in paths:
             uuid1 = scanFileForUuid(path)
