@@ -132,29 +132,23 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
     if not isinstance(objects, list):
         objects = [objects]
 
-    if path is None:
-        # Write to stringbuffer.
-        outstr = ""
-        write = lambda str: outstr += str
+    if isinstance(path, file):
+        fp = path
     else:
-        # Write to file.
-        if isinstance(path, file):
-            fp = path
-        else:
-            fp = codecs.open(path, 'w', encoding="utf-8")
-        write = lambda str: fp.write(str)
-    write(
+        fp = codecs.open(path, 'w', encoding="utf-8")
+
+    fp.write(
         "# MakeHuman exported OBJ\n" +
         "# www.makehuman.org\n\n")
 
     if writeMTL:
         mtlfile = path.replace(".obj",".mtl")
-        write("mtllib %s\n" % os.path.basename(mtlfile))
+        fp.write("mtllib %s\n" % os.path.basename(mtlfile))
 
     # Vertices
     for obj in objects:
         for co in obj.coord:
-            write("v %.4g %.4g %.4g\n" % tuple(co))
+            fp.write("v %.4g %.4g %.4g\n" % tuple(co))
 
     # Vertex normals
     if config == None or config.useNormals:
@@ -163,22 +157,22 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
             #obj.calcVertexNormals()
             for no in obj.fnorm:
                 no = no/math.sqrt(no.dot(no))
-                write("vn %.4g %.4g %.4g\n" % tuple(no))
+                fp.write("vn %.4g %.4g %.4g\n" % tuple(no))
 
     # UV vertices
     for obj in objects:
         if obj.has_uv:
             for uv in obj.texco:
-                write("vt %.4g %.4g\n" % tuple(uv))
+                fp.write("vt %.4g %.4g\n" % tuple(uv))
 
     # Faces
     nVerts = 1
     nTexVerts = 1
     for obj in objects:
-        write("usemtl %s\n" % obj.material.name)
-        write("g %s\n" % obj.name)
+        fp.write("usemtl %s\n" % obj.material.name)
+        fp.write("g %s\n" % obj.name)
         for fn,fv in enumerate(obj.fvert):
-            write('f ')
+            fp.write('f ')
             fuv = obj.fuvs[fn]
             if fv[0] == fv[3]:
                 nv = 3
@@ -190,33 +184,32 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
                     for n in range(nv):
                         vn = fv[n]+nVerts
                         line.append("%d/%d/%d" % (vn, fuv[n]+nTexVerts, fn))
-                    write(" ".join(line))
+                    fp.write(" ".join(line))
                 else:
                     line = []
                     for n in range(nv):
                         vn = fv[n]+nVerts
                         line.append("%d//%d" % (vn, fn))
-                    write(" ".join(line))
+                    fp.write(" ".join(line))
             else:
                 if obj.has_uv:
                     line = []
                     for n in range(nv):
                         vn = fv[n]+nVerts
                         line.append("%d/%d" % (vn, fuv[n]+nTexVerts))
-                    write(" ".join(line))
+                    fp.write(" ".join(line))
                 else:
                     line = []
                     for n in range(nv):
                         vn = fv[n]+nVerts
                         line.append("%d" % (vn))
-                    write(" ".join(line))
-            write('\n')
+                    fp.write(" ".join(line))
+            fp.write('\n')
 
         nVerts += len(obj.coord)
         nTexVerts += len(obj.texco)
 
-    if path:
-        fp.close()
+    fp.close()
 
     if writeMTL:
         fp = codecs.open(mtlfile, 'w', encoding="utf-8")
@@ -227,8 +220,6 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
             writeMaterial(fp, obj.material, config)
         fp.close()
 
-    if path is None:
-        return outstr
 
 #
 #   writeMaterial(fp, mat, config):
