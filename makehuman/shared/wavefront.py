@@ -132,9 +132,10 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
     if not isinstance(objects, list):
         objects = [objects]
 
-    # TODO if path == None write to stringbuffer
-
-    fp = codecs.open(path, 'w', encoding="utf-8")
+    if isinstance(path, file):
+        fp = path
+    else:
+        fp = codecs.open(path, 'w', encoding="utf-8")
 
     fp.write(
         "# MakeHuman exported OBJ\n" +
@@ -218,10 +219,6 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
         for obj in objects:
             writeMaterial(fp, obj.material, config)
         fp.close()
-
-    if path == None:
-        pass
-        #return # TODO return stringbuffer
 
 
 #
