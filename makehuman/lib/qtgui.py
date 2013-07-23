@@ -31,7 +31,7 @@ from core import G
 import events3d
 import language
 import log
-import mh
+from getpath import getSysDataPath
 
 def getLanguageString(text):
     if not text:
@@ -1437,13 +1437,13 @@ class Action(QtGui.QAction, Widget):
     @classmethod
     def getIcon(cls, name):
         # icon = G.app.mainwin.style().standardIcon(QtGui.QStyle.SP_MessageBoxWarning)
-        path = os.path.join(mh.getSysDataPath('icons'), name + '.png')
+        path = os.path.join(getSysDataPath('icons'), name + '.png')
         if G.app.theme:
-            themePath = os.path.join(mh.getSysDataPath('themes'), G.app.theme, 'icons', name + '.png')
+            themePath = os.path.join(getSysDataPath('themes'), G.app.theme, 'icons', name + '.png')
             if os.path.isfile(themePath):
                 path = themePath
         if not os.path.isfile(path):
-            path = os.path.join(mh.getSysDataPath('icons'), 'notfound.png')
+            path = os.path.join(getSysDataPath('icons'), 'notfound.png')
         icon = QtGui.QIcon(path)
         # Allows setting custom icons for active, selected and disabled states
         for (name, mode) in [ ("disabled", QtGui.QIcon.Disabled), 

@@ -156,7 +156,7 @@ class ArmatureOptions:
         selector.fromOptions(self)
 
 
-    def loadPreset(self, filename, selector, folder=mh.getSysDataPath("rigs/"):
+    def loadPreset(self, filename, selector, folder=mh.getSysDataPath("rigs/")):
         filepath = os.path.join(folder, filename + ".json")
         struct = io_json.loadJson(filepath)
         self.__init__()
