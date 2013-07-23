@@ -111,7 +111,7 @@ class Target:
         bname = os.path.splitext(name)[0]
         iname = '%s.index' % bname
         vname = '%s.vector' % bname
-        if Target.npztime < os.path.getmtime(name):
+        if os.path.isfile(name) and Target.npztime < os.path.getmtime(name):
             log.message('compiled file newer than archive: %s', name)
             raise RuntimeError()
         if iname not in Target.npzfile:
@@ -133,7 +133,7 @@ class Target:
         if not os.path.exists(vname):
             log.message('compiled file missing: %s', name)
             raise RuntimeError()
-        if os.path.getmtime(iname) < os.path.getmtime(name):
+        if os.path.isfile(name) and os.path.getmtime(iname) < os.path.getmtime(name):
             log.message('compiled file out of date: %s', iname)
             raise RuntimeError()
         if os.path.getmtime(vname) < os.path.getmtime(name):
