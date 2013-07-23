@@ -179,22 +179,30 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
                 nv = 4
             if config == None or config.useNormals:
                 if obj.has_uv:
+                    line = []
                     for n in range(nv):
                         vn = fv[n]+nVerts
-                        fp.write("%d/%d/%d " % (vn, fuv[n]+nTexVerts, fn))
+                        line.append("%d/%d/%d" % (vn, fuv[n]+nTexVerts, fn))
+                    fp.write(" ".join(line))
                 else:
+                    line = []
                     for n in range(nv):
                         vn = fv[n]+nVerts
-                        fp.write("%d//%d " % (vn, fn))
+                        line.append("%d//%d" % (vn, fn))
+                    fp.write(" ".join(line))
             else:
                 if obj.has_uv:
+                    line = []
                     for n in range(nv):
                         vn = fv[n]+nVerts
-                        fp.write("%d/%d " % (vn, fuv[n]+nTexVerts))
+                        line.append("%d/%d" % (vn, fuv[n]+nTexVerts))
+                    fp.write(" ".join(line))
                 else:
+                    line = []
                     for n in range(nv):
                         vn = fv[n]+nVerts
-                        fp.write("%d " % (vn))
+                        line.append("%d" % (vn))
+                    fp.write(" ".join(line))
             fp.write('\n')
 
         nVerts += len(obj.coord)
