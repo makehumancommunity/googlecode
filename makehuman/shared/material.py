@@ -19,8 +19,9 @@
 Abstract
 --------
 
-TODO
+MakeHuman Material format with parser and serializer.
 """
+
 import log
 import os
 import meshstat
@@ -184,7 +185,6 @@ class Material(object):
             log.error("Failed to load material from file %s.", filename)
             return
 
-        import os
         self.filename = filename
         self.filepath = os.path.dirname(filename)
 
@@ -273,11 +273,7 @@ class Material(object):
         self.configureShading(diffuse=shaderConfig_diffuse, bump=shaderConfig_bump, normal=shaderConfig_normal, displacement=shaderConfig_displacement, spec=shaderConfig_spec, vertexColors=shaderConfig_vertexColors)
 
     def _texPath(self, filename, materialPath = None):
-        import os
-
         if materialPath:
-            print filename
-            print os.path.relpath(filename, materialPath)
             return os.path.relpath(filename, materialPath)
         elif self.filepath:
             return os.path.relpath(filename, self.filepath)
@@ -286,7 +282,6 @@ class Material(object):
 
     def toFile(self, filename, comments = []):
         import codecs
-        import os
 
         try:
             f = codecs.open(filename, 'w', encoding='utf-8')
@@ -357,8 +352,8 @@ class Material(object):
                     f.write("shaderParam %s %s\n" % (name, " ".join([str(p) for p in param])) )
                 elif isinstance(param, image.Image):
                     if hasattr(param, "sourcePath"):
-                        f.write("shaderParam %s %s\n" % (name, param.sourcePath) )
-                if isinstance(param, basestring) and not param.isnumeric():
+                        f.write("shaderParam %s %s\n" % (name, self._texPath(param.sourcePath, filedir)) )
+                elif isinstance(param, basestring) and not isNumeric(param):
                     # Assume param is a path
                     f.write("shaderParam %s %s\n" % (name, self._texPath(param, filedir)) )
                 else:
@@ -631,6 +626,16 @@ class Material(object):
 
         if name in _materialShaderParams:
             raise RuntimeError('The shader parameter "%s" is protected and should be set by means of material properties.' % name)
+
+        if isinstance(value, list):
+            value = [float(v) for v in value]
+        elif isinstance(value, basestring):
+            if isNumeric(value):
+                value = float(value)
+            else:
+                # Assume value is a path
+                value = getFilePath(value, self.filepath)
+
         self._shaderParameters[name] = value
 
     def removeShaderParameter(self, name):
@@ -839,8 +844,6 @@ def getFilePath(filename, folder = None):
     if not filename:
         return filename
 
-    import os
-
     # Search within current folder
     if folder:
         path = os.path.join(folder, filename)
@@ -854,10 +857,20 @@ def getFilePath(filename, folder = None):
     userPath = os.path.join(mh.getPath(''), filename)
     if os.path.isfile(userPath):
         return os.path.abspath(userPath)
+    # Search in system data path
+    sysPath = mh.getSysDataPath(filename)
+    if os.path.isfile(sysPath):
+        return os.path.abspath(sysPath)
 
     # Nothing found
     return filename
 
+def isNumeric(string):
+    try:
+        return unicode(string).isnumeric()
+    except:
+        # On decoding errors
+        return False
 
 class UVMap:
     def __init__(self, name):

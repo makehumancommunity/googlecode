@@ -374,7 +374,7 @@ class EthnicSkinBlender(object):
     def updateAdaptiveSkin(self):
         img = self.getEthnicityBlendMaterial()
         # Set parameter so the image can be referenced when material is written to file
-        img.sourcePath = "litspheres/adaptive_skin_tone.png"
+        img.sourcePath = mh.getSysDataPath("litspheres/adaptive_skin_tone.png")
         self.human.setShaderParameter("litsphereTexture", img)
 
     def getEthnicityBlendMaterial(self):
