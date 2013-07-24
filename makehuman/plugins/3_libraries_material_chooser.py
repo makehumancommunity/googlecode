@@ -54,6 +54,7 @@ class TextureTaskView(gui3d.TaskView):
 
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Material', label='Skin/Material')
+        self.skinBlender = EthnicSkinBlender(gui3d.app.selectedHuman)
 
         self.systemSkins = mh.getSysDataPath('skins')
         self.systemClothes = os.path.join(mh.getSysDataPath('clothes'), 'textures')
@@ -258,7 +259,10 @@ class TextureTaskView(gui3d.TaskView):
         gui3d.TaskView.onHide(self, event)
 
     def onHumanChanging(self, event):
-        pass
+        self.skinBlender.onSkinUpdateEvent(event)
+
+    def onHumanChanged(self, event):
+        self.skinBlender.onSkinUpdateEvent(event)
 
     def loadHandler(self, human, values):
 
@@ -346,9 +350,53 @@ class TextureTaskView(gui3d.TaskView):
         self.mediaSync = None
         self.filechooser.refresh()
 
+import image
+import image_operations
+class EthnicSkinBlender(object):
+    # TODO move this someplace else (in Human maybe?) In the future we probably want a more generic mechanism for blending textures
 
-def setHumanUVMap(human, filename):
-    human.setUVMap(filename)
+    def __init__(self, human):
+        self.human = human
+        self.skinCache = { 'caucasian' : image.Image(mh.getSysDataPath('litspheres/skinmat_caucasian.png')),
+                           'african'   : image.Image(mh.getSysDataPath('litspheres/skinmat_african.png')),
+                           'asian'    : image.Image(mh.getSysDataPath('litspheres/skinmat_asian.png')) }
+
+    def onSkinUpdateEvent(self, event):
+        if "litsphereTexture" not in self.human.meshData.shaderParameters:
+            return
+
+        current = self.human.meshData.shaderParameters["litsphereTexture"]
+        if current and (isinstance(current, image.Image) or \
+           os.path.abspath(current) == os.path.abspath(mh.getSysDataPath("litspheres/adaptive_skin_tone.png"))):
+            if event.change == "caucasian" or event.change == "african" or \
+              event.change == "asian" or event.change == "material":
+                self.updateAdaptiveSkin()
+
+    def updateAdaptiveSkin(self):
+        img = self.getEthnicityBlendMaterial()
+        self.human.setShaderParameter("litsphereTexture", img)
+
+    def getEthnicityBlendMaterial(self):
+        caucasianWeight = self.human.getCaucasian()
+        africanWeight   = self.human.getAfrican()
+        asianWeight     = self.human.getAsian()
+        blends = []
+
+        if caucasianWeight > 0:
+            blends.append( ('caucasian', caucasianWeight) )
+        if africanWeight > 0:
+            blends.append( ('african', africanWeight) )
+        if asianWeight > 0:
+            blends.append( ('asian', asianWeight) )
+
+        if len(blends) == 1:
+            return self.skinCache[blends[0][0]]
+        else:
+            img = image_operations.mix(self.skinCache[blends[0][0]], self.skinCache[blends[1][0]], blends[0][1], blends[1][1])
+            if len(blends) > 2:
+                img = image_operations.mix(img, self.skinCache[blends[2][0]], 1.0, blends[2][1])
+            return img
+
 
 
 # This method is called when the plugin is loaded into makehuman
@@ -365,9 +413,6 @@ def load(app):
     app.addLoadHandler('skinTexture', taskview.loadHandler)
     app.addLoadHandler('eyeTexture', taskview.loadHandler)
     app.addSaveHandler(taskview.saveHandler)
-
-    #log.message("Applying A7 UV map to human as temporary fix for lack of new textures.")
-    #setHumanUVMap(gui3d.app.selectedHuman, mh.getSysDataPath('uvs/a7/A7.mhuv'))
 
 
 # This method is called when the plugin is unloaded from makehuman

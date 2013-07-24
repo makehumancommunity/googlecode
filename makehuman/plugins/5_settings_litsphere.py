@@ -95,49 +95,6 @@ class LitSphereTextureChooserTaskView(gui3d.TaskView):
         self.diffuseChk.setChecked("DIFFUSE" in self.human.mesh.shaderDefines)
         self.normalChk.setChecked("NORMALMAP" in self.human.mesh.shaderDefines)
 
-    def onHumanChanging(self, event):
-        # TODO move this someplace else (in Human maybe?) In the future we probably want a more generic mechanism for blending textures
-        self._checkSkinUpdate(event)
-
-    def onHumanChanged(self, event):
-        # TODO move this someplace else (in Human maybe?) In the future we probably want a more generic mechanism for blending textures
-        self._checkSkinUpdate(event)
-
-    def _checkSkinUpdate(self, event):
-        if "litsphereTexture" not in self.human.meshData.shaderParameters:
-            return
-
-        current = self.human.meshData.shaderParameters["litsphereTexture"]
-        if current and (isinstance(current, image.Image) or \
-           os.path.abspath(current) == os.path.abspath(mh.getSysDataPath("litspheres/adaptive_skin_tone.png"))):
-            if event.change == "caucasian" or event.change == "african" or \
-              event.change == "asian" or event.change == "material":
-                self.updateAdaptiveSkin()
-
-    def updateAdaptiveSkin(self):
-        img = self.getEthnicityBlendMaterial()
-        self.human.setShaderParameter("litsphereTexture", img)
-
-    def getEthnicityBlendMaterial(self):
-        caucasianWeight = self.human.getCaucasian()
-        africanWeight   = self.human.getAfrican()
-        asianWeight     = self.human.getAsian()
-        blends = []
-
-        if caucasianWeight > 0:
-            blends.append( ('caucasian', caucasianWeight) )
-        if africanWeight > 0:
-            blends.append( ('african', africanWeight) )
-        if asianWeight > 0:
-            blends.append( ('asian', asianWeight) )
-
-        if len(blends) == 1:
-            return self.skinCache[blends[0][0]]
-        else:
-            img = image_operations.mix(self.skinCache[blends[0][0]], self.skinCache[blends[1][0]], blends[0][1], blends[1][1])
-            if len(blends) > 2:
-                img = image_operations.mix(img, self.skinCache[blends[2][0]], 1.0, blends[2][1])
-            return img
 
 def load(app):
     category = app.getCategory('Settings')
