@@ -272,10 +272,14 @@ class Material(object):
         f.close()
         self.configureShading(diffuse=shaderConfig_diffuse, bump=shaderConfig_bump, normal=shaderConfig_normal, displacement=shaderConfig_displacement, spec=shaderConfig_spec, vertexColors=shaderConfig_vertexColors)
 
-    def _texPath(self, filename):
+    def _texPath(self, filename, materialPath = None):
         import os
 
-        if self.filepath:
+        if materialPath:
+            print filename
+            print os.path.relpath(filename, materialPath)
+            return os.path.relpath(filename, materialPath)
+        elif self.filepath:
             return os.path.relpath(filename, self.filepath)
         else:
             return filename
@@ -311,33 +315,34 @@ class Material(object):
         f.write("translucency %s\n\n" % self.translucency)
 
         hasTexture = False
+        filedir = os.path.dirname(filename)
         if self.diffuseTexture:
-            f.write("diffuseTexture %s\n" % self._texPath(self.diffuseTexture) )
+            f.write("diffuseTexture %s\n" % self._texPath(self.diffuseTexture, filedir) )
             hasTexture = True
         if self.bumpMapTexture:
-            f.write("bumpmapTexture %s\n" % self._texPath(self.bumpMapTexture) )
+            f.write("bumpmapTexture %s\n" % self._texPath(self.bumpMapTexture, filedir) )
             f.write("bumpmapIntensity %s\n" % self.bumpMapIntensity)
             hasTexture = True
         if self.normalMapTexture:
-            f.write("normalmapTexture %s\n" % self._texPath(self.normalMapTexture) )
+            f.write("normalmapTexture %s\n" % self._texPath(self.normalMapTexture, filedir) )
             f.write("normalmapIntensity %s\n" % self.normalMapIntensity)
             hasTexture = True
         if self.displacementMapTexture:
-            f.write("displacementmapTexture %s\n" % self._texPath(self.displacementMapTexture) )
+            f.write("displacementmapTexture %s\n" % self._texPath(self.displacementMapTexture, filedir) )
             f.write("displacementmapIntensity %s\n" % self.displacementMapIntensity)
             hasTexture = True
         if self.specularMapTexture:
-            f.write("specularmapTexture %s\n" % self._texPath(self.specularMapTexture) )
+            f.write("specularmapTexture %s\n" % self._texPath(self.specularMapTexture, filedir) )
             f.write("specularmapIntensity %s\n" % self.specularMapIntensity)
             hasTexture = True
         if self.transparencyMapTexture:
-            f.write("transparencymapTexture %s\n" % self._texPath(self.transparencyMapTexture) )
+            f.write("transparencymapTexture %s\n" % self._texPath(self.transparencyMapTexture, filedir) )
             f.write("transparencymapIntensity %s\n" % self.transparencyMapIntensity)
             hasTexture = True
         if hasTexture: f.write('\n')
 
         if self.uvMap:
-            f.write("uvMap %s\n\n" % self._texPath(self.uvMap) )
+            f.write("uvMap %s\n\n" % self._texPath(self.uvMap, filedir) )
 
         if self.shader:
             f.write("shader %s\n\n" % self.shader)
