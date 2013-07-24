@@ -8,7 +8,7 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Manuel Bastioni, Marc Flerackers
+**Authors:**           Glynn Clements, Jonas Hauquier
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
@@ -33,7 +33,7 @@ import mh
 
 class ShaderTaskView(gui3d.TaskView):
     def __init__(self, category):
-        gui3d.TaskView.__init__(self, category, 'Shading')
+        gui3d.TaskView.__init__(self, category, 'Material Editor')
 
         self.human = gui3d.app.selectedHuman
 
@@ -514,7 +514,7 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
     value = property(getValue, setValue)
 
 def load(app):
-    category = app.getCategory('Settings')
+    category = app.getCategory('Utilities')
     taskview = category.addTask(ShaderTaskView(category))
 
 def unload(app):
