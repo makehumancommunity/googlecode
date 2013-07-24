@@ -47,7 +47,7 @@ class MouseActionsTaskView(gui3d.TaskView):
             widget.addWidget(AppMouseActionEdit(method), row[0], 1)
             row[0] += 1
 
-        speedBox = self.addLeftWidget(gui.SliderBox('Mouse acceleration'))
+        speedBox = self.addLeftWidget(gui.SliderBox('3D Viewport Speed'))
         self.normal = speedBox.addWidget(gui.Slider(gui3d.app.settings.get('lowspeed', 1), 1, 10,
             "Normal speed: %d"))
         self.shift = speedBox.addWidget(gui.Slider(gui3d.app.settings.get('highspeed', 5), 1, 10,
