@@ -67,16 +67,22 @@ class ShaderTaskView(gui3d.TaskView):
 
         self.loadSaveBox = self.addRightWidget(gui.GroupBox("Material file"))
         self.loadMaterialBtn = self.loadSaveBox.addWidget(gui.BrowseButton(), 0, 0)
+        self.loadMaterialBtn.setFilter("MakeHuman Material (*.mhmat)")
         self.loadMaterialBtn.setText('Load')
+        self.loadMaterialBtn._path = mh.getSysDataPath('')
         @self.loadMaterialBtn.mhEvent
         def onClicked(path):
             if path:
                 self.loadMaterial(path)
         self.saveMaterialBtn = self.loadSaveBox.addWidget(gui.BrowseButton('save'), 0, 1)
+        self.saveMaterialBtn.setFilter("MakeHuman Material (*.mhmat)")
         self.saveMaterialBtn.setText('Save')
+        self.saveMaterialBtn._path = os.path.join(mh.getPath(''), 'data')
         @self.saveMaterialBtn.mhEvent
         def onClicked(path):
             if path:
+                if not os.path.splitext(path)[1]:
+                    path = path + ".mhmat"
                 self.saveMaterial(path)
 
     def loadMaterial(self, path):
@@ -100,7 +106,7 @@ class ShaderTaskView(gui3d.TaskView):
         def onActivate(event):
             self.human.material.diffuseIntensity = w2.value
 
-        w3 = self.materialBox.addWidget(ImageValue("Diffuse texture", mat.diffuseTexture))
+        w3 = self.materialBox.addWidget(ImageValue("Diffuse texture", mat.diffuseTexture, mh.getSysDataPath('textures')))
         @w3.mhEvent
         def onActivate(event):
             self.human.material.diffuseTexture = w3.value
@@ -141,7 +147,7 @@ class ShaderTaskView(gui3d.TaskView):
         def onActivate(event):
             self.human.material.translucency = w10.value
 
-        w11 = self.materialBox.addWidget(ImageValue("Transparency map texture", mat.transparencyMapTexture))
+        w11 = self.materialBox.addWidget(ImageValue("Transparency map texture", mat.transparencyMapTexture, mh.getSysDataPath('textures')))
         @w11.mhEvent
         def onActivate(event):
             self.human.material.transparencyMapTexture = w11.value
@@ -152,7 +158,7 @@ class ShaderTaskView(gui3d.TaskView):
         def onActivate(event):
             self.human.material.transparencyIntensity = w12.value
 
-        w13 = self.materialBox.addWidget(ImageValue("Bump map texture", mat.bumpMapTexture))
+        w13 = self.materialBox.addWidget(ImageValue("Bump map texture", mat.bumpMapTexture, mh.getSysDataPath('textures')))
         @w13.mhEvent
         def onActivate(event):
             self.human.material.bumpMapTexture = w13.value
@@ -163,7 +169,7 @@ class ShaderTaskView(gui3d.TaskView):
         def onActivate(event):
             self.human.material.bumpMapIntensity = w14.value
 
-        w15 = self.materialBox.addWidget(ImageValue("Normal map texture", mat.normalMapTexture))
+        w15 = self.materialBox.addWidget(ImageValue("Normal map texture", mat.normalMapTexture, mh.getSysDataPath('textures')))
         @w15.mhEvent
         def onActivate(event):
             self.human.material.normalMapTexture = w15.value
@@ -174,7 +180,7 @@ class ShaderTaskView(gui3d.TaskView):
         def onActivate(event):
             self.human.material.normalMapIntensity = w16.value
 
-        w17 = self.materialBox.addWidget(ImageValue("Displacement map texture", mat.displacementMapTexture))
+        w17 = self.materialBox.addWidget(ImageValue("Displacement map texture", mat.displacementMapTexture, mh.getSysDataPath('textures')))
         @w17.mhEvent
         def onActivate(event):
             self.human.material.displacementMapTexture = w17.value
@@ -185,7 +191,7 @@ class ShaderTaskView(gui3d.TaskView):
         def onActivate(event):
             self.human.material.displacementMapIntensity = w18.value
 
-        w19 = self.materialBox.addWidget(ImageValue("Specular map texture", mat.specularMapTexture))
+        w19 = self.materialBox.addWidget(ImageValue("Specular map texture", mat.specularMapTexture, mh.getSysDataPath('textures')))
         @w19.mhEvent
         def onActivate(event):
             self.human.material.specularMapTexture = w19.value
@@ -196,7 +202,8 @@ class ShaderTaskView(gui3d.TaskView):
         def onActivate(event):
             self.human.material.specularMapIntensity = w20.value
 
-        w21 = self.materialBox.addWidget(FileValue("UV map", self.human.material.uvMap))
+        w21 = self.materialBox.addWidget(FileValue("UV map", self.human.material.uvMap, mh.getSysDataPath('uvs')))
+        w21.browseBtn.setFilter("UV Set (*.obj)")
         @w21.mhEvent
         def onActivate(event):
             if os.path.basename(w21.value) == "default.obj":
@@ -345,11 +352,11 @@ class ScalarValue(gui.GroupBox):
     value = property(getValue, setValue)
 
 class ImageValue(gui.GroupBox):
-    def __init__(self, name, value):
+    def __init__(self, name, value, defaultPath = None):
         super(ImageValue, self).__init__(name)
         self.name = name
 
-        self.widget = TextureValue(self, 0)
+        self.widget = TextureValue(self, 0, defaultPath)
         self.addWidget(self.widget, 0, 0)
         self.value = value
 
@@ -362,26 +369,33 @@ class ImageValue(gui.GroupBox):
     value = property(getValue, setValue)
 
 class FileValue(gui.GroupBox):
-    def __init__(self, name, value):
+    def __init__(self, name, value, defaultPath = None):
         super(FileValue, self).__init__(name)
         self.name = name
+        self.defaultPath = defaultPath
 
         self.fileText = self.addWidget(gui.TextView(''), 0, 0)
         self.browseBtn = self.addWidget(gui.BrowseButton(), 1, 0)
+
+        if self.defaultPath:
+            self.browseBtn._path = self.defaultPath
+
         @self.browseBtn.mhEvent
         def onClicked(event):
+            if self.defaultPath and self.browseBtn._path == self.defaultPath:
+                return
             if self.browseBtn._path:
                 self.setValue(self.browseBtn._path)
-                self.callEvent('onActivate', self.browseBtn._path)
+                self.callEvent('onActivate', self.getValue())
 
         self.setValue(value)
 
     def getValue(self):
-        return self.browseBtn._path
+        return self._value
 
     def setValue(self, value):
         if value:
-            self.browseBtn.setPath(value)
+            self._value = value
             self.fileText.setText(os.path.basename(value))
         else:
             self.fileText.setText('Default')
@@ -424,7 +438,8 @@ class UniformValue(gui.GroupBox):
             return FloatValue(self, value)
         if type == str:
             # TODO account for tex idx
-            return TextureValue(self, value)
+            defaultPath = mh.getSysDataPath('litspheres') if self.uniform.name == 'litsphereTexture' else None
+            return TextureValue(self, value, defaultPath)
         if type == bool:
             return BooleanValue(self, value)
         return TextView('???')
@@ -482,16 +497,24 @@ class BooleanValue(gui.CheckBox):
         return self.selected
 
 class TextureValue(gui.QtGui.QWidget, gui.Widget):
-    def __init__(self, parent, value):
+    def __init__(self, parent, value, defaultPath = None):
         super(TextureValue, self).__init__()
         self.parent = parent
         self._path = value
+        self.defaultPath = defaultPath
 
         self.layout = gui.QtGui.QGridLayout(self)
         self.imageView = gui.ImageView()
         self.browseBtn = gui.BrowseButton()
+        self.browseBtn.setFilter("Image Files (*.png *.jpg *.bmp)")
+
+        if self.defaultPath:
+            self.browseBtn._path = self.defaultPath
+
         @self.browseBtn.mhEvent
         def onClicked(event):
+            if self.defaultPath and self.browseBtn._path == self.defaultPath:
+                return
             if self.browseBtn._path:
                 self._path = self.browseBtn._path
                 self.imageView.setImage(self.value)
@@ -506,9 +529,9 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
         return self._path
 
     def setValue(self, value):
+        self._path = value
         if value:
             self.imageView.setImage(value)
-            if isinstance(value, basestring): self.browseBtn.setPath(value)
         else:
             self.imageView.setImage(mh.getSysDataPath('notfound.thumb'))
 

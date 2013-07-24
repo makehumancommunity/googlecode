@@ -1411,7 +1411,7 @@ class BrowseButton(Button):
         self._filter = filter
 
     def _clicked(self, state):
-        if not os.path.isfile(self._path):
+        if not os.path.isdir(self._path) and not os.path.isfile(self._path):
             self._path = os.path.split(self._path)[0]
             if not os.path.isdir(self._path):
                 self._path = os.getcwd()

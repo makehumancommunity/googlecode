@@ -30,7 +30,7 @@ specularmapIntensity 1.0
 shader data/shaders/glsl/normalmap
 
 // Define custom uniform values to pass to supporting shaders
-shaderParam litSphereTexture data/litspheres/skinmat.png
+shaderParam litsphereTexture data/litspheres/skinmat.png
 shaderParam customColor 1.0 0.0 0.5
 shaderParam customScale 0.6
 shaderParam customQuadVect 0.1 0.2 0.3 0.4
