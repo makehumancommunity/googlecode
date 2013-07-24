@@ -358,6 +358,9 @@ class Material(object):
                 elif isinstance(param, image.Image):
                     if hasattr(param, "sourcePath"):
                         f.write("shaderParam %s %s\n" % (name, param.sourcePath) )
+                if isinstance(param, basestring) and not param.isnumeric():
+                    # Assume param is a path
+                    f.write("shaderParam %s %s\n" % (name, self._texPath(param, filedir)) )
                 else:
                     f.write("shaderParam %s %s\n" % (name, param) )
         if hasShaderParam: f.write('\n')
