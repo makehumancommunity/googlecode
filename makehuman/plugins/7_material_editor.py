@@ -200,6 +200,7 @@ class ShaderTaskView(gui3d.TaskView):
         @w21.mhEvent
         def onActivate(event):
             if os.path.basename(w21.value) == "default.obj":
+                w21.value = None
                 self.human.setUVMap(None)
             else: 
                 self.human.setUVMap(w21.value)

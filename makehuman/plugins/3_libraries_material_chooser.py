@@ -79,8 +79,7 @@ class TextureTaskView(gui3d.TaskView):
         self.hairTexture = None
         self.eyeTexture = None
 
-        #self.filechooser = self.addTopWidget(fc.FileChooser(self.userSkins, 'png', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb')))
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.userSkins, 'mhmat', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), 'Texture'))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.userSkins, 'mhmat', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), 'Material'))
         self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
 
@@ -374,6 +373,8 @@ class EthnicSkinBlender(object):
 
     def updateAdaptiveSkin(self):
         img = self.getEthnicityBlendMaterial()
+        # Set parameter so the image can be referenced when material is written to file
+        img.sourcePath = "litspheres/adaptive_skin_tone.png"
         self.human.setShaderParameter("litsphereTexture", img)
 
     def getEthnicityBlendMaterial(self):

@@ -347,8 +347,12 @@ class Material(object):
         for name, param in self.shaderParameters.items():
             if name not in _materialShaderParams:
                 hasShaderParam = True
+                import image
                 if isinstance(param, list):
                     f.write("shaderParam %s %s\n" % (name, " ".join([str(p) for p in param])) )
+                elif isinstance(param, image.Image):
+                    if hasattr(param, "sourcePath"):
+                        f.write("shaderParam %s %s\n" % (name, param.sourcePath) )
                 else:
                     f.write("shaderParam %s %s\n" % (name, param) )
         if hasShaderParam: f.write('\n')
