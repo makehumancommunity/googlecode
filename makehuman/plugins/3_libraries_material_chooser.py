@@ -19,12 +19,13 @@
 Abstract
 --------
 
-TODO
+Material library plugin.
 
 """
 
 __docformat__ = 'restructuredtext'
 
+import material 
 import os
 import gui3d
 import mh
@@ -32,95 +33,27 @@ import download
 import gui
 import filechooser as fc
 import log
-import subtextures
 
-class Action(gui3d.Action):
-    def __init__(self, name, human):
-        super(Action, self).__init__(name)
-        self.human = human
-
-class SkinAction(Action):
-
-    def __init__(self, human, before, after):
-        super(SkinAction, self).__init__('Change skin texture', human)
-        self.before = before
-        self.after = after
-        self.diffuseBefore = self.human.mesh.material.shaderConfig['diffuse']
-
-    def do(self):
-        self.human.setTexture(self.after)
-        # TODO determine which uv map to load from a data definition file
-        #setHumanUVMap(self.human, mh.getSysDataPath('uvs/a7/A7.mhuv'))
-        self.human.mesh.configureShading(diffuse=True)
-        return True
-
-    def undo(self):
-        self.human.setTexture(self.before)
-        # TODO determine which uv map to load from a data definition file
-        #setHumanUVMap(self.human, mh.getSysDataPath('uvs/a7/A7.mhuv'))
-        self.human.mesh.configureShading(diffuse=self.diffuseBefore)
-        return True
-
-
-class HairAction(Action):
-
-    def __init__(self, human, before, after):
-        super(HairAction, self).__init__('Change hair texture', human)
-        self.before = before
+class MaterialAction(gui3d.Action):
+    def __init__(self, obj, after):
+        super(MaterialAction, self).__init__("Change material of %s" % obj.mesh.name)
+        self.obj = obj
+        self.before = material.Material().copyFrom(obj.material)
         self.after = after
 
     def do(self):
-        if self.human.hairObj:
-            self.human.hairObj.mesh.setTexture(self.after)
+        self.obj.material = self.after
         return True
 
     def undo(self):
-        if self.human.hairObj:
-            self.human.hairObj.mesh.setTexture(self.before)
-        return True
-
-
-class EyesAction(Action):
-
-    def __init__(self, human, before, after):
-        super(EyesAction, self).__init__('Change eyes texture', human)
-        self.before = before
-        self.after = after
-
-    def do(self):
-        if self.human.eyesObj:
-            self.human.eyesObj.mesh.setTexture(self.after)
-        return True
-
-    def undo(self):
-        if self.human.eyesObj:
-            self.human.eyesObj.mesh.setTexture(self.before)
-        return True
-
-
-class ClothesAction(Action):
-
-    def __init__(self, human, library, clothesUuid, before, after):
-        super(ClothesAction, self).__init__('Change clothes texture', human)
-        self.before = before
-        self.after = after
-        self.uuid = clothesUuid
-        self.library = library
-
-    def do(self):
-        self.library.applyClothesTexture(self.uuid, self.after)
-        return True
-
-    def undo(self):
-        if self.before:
-            self.library.applyClothesTexture(self.uuid, self.before)
+        self.obj.material = self.before
         return True
 
 
 class TextureTaskView(gui3d.TaskView):
 
     def __init__(self, category):
-        gui3d.TaskView.__init__(self, category, 'Texture', label='Skin/Material')
+        gui3d.TaskView.__init__(self, category, 'Material', label='Skin/Material')
 
         self.systemSkins = mh.getSysDataPath('skins')
         self.systemClothes = os.path.join(mh.getSysDataPath('clothes'), 'textures')
@@ -146,7 +79,7 @@ class TextureTaskView(gui3d.TaskView):
         self.eyeTexture = None
 
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.userSkins, 'png', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb')))
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.userSkins, 'png', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), 'Texture'))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.userSkins, 'mhmat', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), 'Texture'))
         self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
 
@@ -156,27 +89,22 @@ class TextureTaskView(gui3d.TaskView):
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
+            mat = material.fromFile(filename)
             human = gui3d.app.selectedHuman
             if self.skinRadio.selected:
-                gui3d.app.do(SkinAction(human,
-                    human.getTexture(),
-                    filename))
+                gui3d.app.do(MaterialAction(human,
+                    mat))
             elif self.hairRadio.selected:
-                gui3d.app.do(HairAction(human,
-                    human.hairObj.getTexture(),
-                    filename))
+                gui3d.app.do(MaterialAction(human.hairObj,
+                    mat))
             elif self.eyesRadio.selected:
-                gui3d.app.do(EyesAction(human,
-                    human.eyesObj.getTexture(),
-                    filename))
+                gui3d.app.do(MaterialAction(human.eyesObj,
+                    mat))
             else: # Clothes
                 if self.activeClothing:
                     uuid = self.activeClothing
-                    gui3d.app.do(ClothesAction(human,
-                        self,
-                        uuid,
-                        self.getClothesTexture(uuid),
-                        filename))
+                    gui3d.app.do(MaterialAction(human.clothesObjs[uuid],
+                        mat))
 
         @self.update.mhEvent
         def onClicked(event):
@@ -284,12 +212,8 @@ class TextureTaskView(gui3d.TaskView):
 
     def reloadTextureChooser(self):
         human = gui3d.app.selectedHuman
-        # TODO this is temporary, until new eye texturing approach
-        if self.eyesRadio.selected:
-            self.filechooser.setPreviewExtensions(['thumb', 'png'])
-            self.filechooser.extension = 'png'
-
         selectedTex = None
+
         if self.skinRadio.selected:
             self.textures = [self.systemSkins, self.userSkins, mh.getSysDataPath('textures')]
             selectedTex = human.getTexture()
