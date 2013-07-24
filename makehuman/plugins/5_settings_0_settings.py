@@ -65,20 +65,6 @@ class SettingsTaskView(gui3d.TaskView):
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'General')
 
-        self.shaderGroup = []
-        shaderBox = self.addLeftWidget(gui.GroupBox('Shader'))
-        self.shaderNo = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "No shader"))
-        self.shaderPhong = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Phong shader"))
-        self.shaderToon = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Toon shader"))
-        self.shaderLitSphere = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "LitSphere shader", True))
-        self.shaderNormalMap = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Normal Mapping shader"))
-        #self.shaderSkin = shaderBox.addWidget(gui.RadioButton(self.shaderGroup, "Skin shader"))
-
-        from shader import Shader
-        if not Shader.supported():
-            for radio in shaderBox.children:
-                radio.setEnabled(False)
-
         sliderBox = self.addLeftWidget(gui.GroupBox('Slider behavior'))
         self.realtimeUpdates = sliderBox.addWidget(gui.CheckBox("Update real-time",
             gui3d.app.settings.get('realtimeUpdates', True)))
@@ -127,39 +113,6 @@ class SettingsTaskView(gui3d.TaskView):
         for language in languageFiles:
             languageBox.addWidget(LanguageRadioButton(languages, language))
         
-        @self.shaderNo.mhEvent
-        def onClicked(event):
-            human = gui3d.app.selectedHuman
-            human.setShader(None)
-            
-        @self.shaderPhong.mhEvent
-        def onClicked(event):
-            self.setShader(mh.getSysDataPath("shaders/glsl/phong"))
-                
-        @self.shaderToon.mhEvent
-        def onClicked(event):
-            self.setShader(mh.getSysDataPath("shaders/glsl/toon"))
-
-        @self.shaderLitSphere.mhEvent
-        def onClicked(event):
-            human = gui3d.app.selectedHuman
-            if "litsphereTexture" not in human.meshData.shaderParameters:
-                human.setShaderParameter("litsphereTexture", mh.getSysDataPath("litspheres/adaptive_skin_tone.png"))
-            self.setShader(mh.getSysDataPath("shaders/glsl/litsphere"))
-
-        @self.shaderNormalMap.mhEvent
-        def onClicked(event):
-            human = gui3d.app.selectedHuman
-            self.setShader(mh.getSysDataPath("shaders/glsl/normalmap"))
-            #human.setShaderParameter("normalmapTexture", mh.getSysDataPath("textures/normal.jpg"))
-            human.material.normalMapTexture = mh.getSysDataPath("textures/normal.jpg")
-            
-        #@self.shaderSkin.mhEvent
-        #def onClicked(event):
-            #self.setShader(mh.getSysDataPath("shaders/glsl/skin"))
-            #gui3d.app.selectedHuman.mesh.setShaderParameter("gradientMap", mh.getSysDataPath("textures/color_temperature.png"))
-            #gui3d.app.selectedHuman.mesh.setShaderParameter("ambientOcclusionMap", mh.getSysDataPath("textures/female_young.tif"))
-                
         @self.realtimeUpdates.mhEvent
         def onClicked(event):
             gui3d.app.settings['realtimeUpdates'] = self.realtimeUpdates.selected
@@ -202,12 +155,8 @@ class SettingsTaskView(gui3d.TaskView):
         def onClicked(event):
             gui3d.app.settings['preloadTargets'] = self.preload.selected
 
-    def setShader(self, path):
-        gui3d.app.selectedHuman.setShader(path)
-    
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
-        self.shaderNo.setFocus()
     
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
