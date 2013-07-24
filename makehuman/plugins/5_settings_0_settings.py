@@ -77,12 +77,6 @@ class SettingsTaskView(gui3d.TaskView):
         self.sliderImages = sliderBox.addWidget(gui.CheckBox("Slider images",
             gui3d.app.settings.get('sliderImages', True)))
             
-        mouseBox = self.addLeftWidget(gui.SliderBox('Mouse behavior'))
-        self.normal = mouseBox.addWidget(gui.Slider(gui3d.app.settings.get('lowspeed', 1), 1, 10,
-            "Normal: %d"))
-        self.shift = mouseBox.addWidget(gui.Slider(gui3d.app.settings.get('highspeed', 5), 1, 10,
-            "Shift: %d"))
-            
         modes = [] 
         unitBox = self.unitsBox = self.addLeftWidget(gui.GroupBox('Units'))
         metric = unitBox.addWidget(gui.RadioButton(modes, 'Metric', gui3d.app.settings.get('units', 'metric') == 'metric'))
@@ -134,14 +128,6 @@ class SettingsTaskView(gui3d.TaskView):
             gui3d.app.settings['sliderImages'] = self.sliderImages.selected
             gui.Slider.showImages(self.sliderImages.selected)
             mh.refreshLayout()
-            
-        @self.normal.mhEvent
-        def onChange(value):
-            gui3d.app.settings['lowspeed'] = value
-            
-        @self.shift.mhEvent
-        def onChange(value):
-            gui3d.app.settings['highspeed'] = value
             
         @metric.mhEvent
         def onClicked(event):
