@@ -405,7 +405,7 @@ class EthnicSkinBlender(object):
 
 
 def load(app):
-    category = app.getCategory('Textures')
+    category = app.getCategory('Materials')
     taskview = TextureTaskView(category)
     taskview.sortOrder = 0
     category.addTask(taskview)

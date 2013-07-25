@@ -335,7 +335,7 @@ class MHApplication(gui3d.Application, mh.Application):
         # Set up categories and tasks
         self.getCategory("Modelling")
         self.getCategory("Geometries")
-        self.getCategory("Textures")
+        self.getCategory("Materials")
         self.getCategory("Pose/Animate")
         self.getCategory("Rendering")
         self.addCategory(guifiles.FilesCategory())

@@ -530,11 +530,10 @@ class TextureProjectionView(gui3d.TaskView) :
 
 
 def load(app):
-    category = app.getCategory('Textures')
+    category = app.getCategory('Materials')
     bgChooser = BackgroundChooser(category)
     bgChooser.sortOrder = 1
     category.addTask(bgChooser)
-    category = app.getCategory('Textures')
     bgSettings = TextureProjectionView(category, bgChooser)
     bgSettings.sortOrder = 1.5
     category.addTask(bgSettings)
