@@ -91,6 +91,11 @@ class SettingsTaskView(gui3d.TaskView):
         self.themeNative = themesBox.addWidget(ThemeRadioButton(themes, "Native look", "default"))
         self.themeMH = themesBox.addWidget(ThemeRadioButton(themes, "MakeHuman", "makehuman"))
 
+        initSizeBox = self.addLeftWidget(gui.GroupBox('Initial window size'))
+        self.initSizeText = initSizeBox.addWidget(gui.TextEdit(
+            str(gui3d.app.settings.get('InitWinWidth', gui3d.app.mainwin.width())) + "x" +
+            str(gui3d.app.settings.get('InitWinHeight', gui3d.app.mainwin.height()))))
+        
         # For debugging themes on multiple platforms
         '''
         platforms = []
@@ -128,6 +133,16 @@ class SettingsTaskView(gui3d.TaskView):
             gui3d.app.settings['sliderImages'] = self.sliderImages.selected
             gui.Slider.showImages(self.sliderImages.selected)
             mh.refreshLayout()
+
+        @self.initSizeText.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                res = [int(x) for x in value.split("x")]
+                gui3d.app.settings['InitWinWidth'] = res[0]
+                gui3d.app.settings['InitWinHeight'] = res[1]
+            except: # The user hasn't typed the value correctly yet.
+                pass
             
         @metric.mhEvent
         def onClicked(event):
@@ -151,6 +166,10 @@ class SettingsTaskView(gui3d.TaskView):
 def load(app):
     category = app.getCategory('Settings')
     taskview = category.addTask(SettingsTaskView(category))
+
+    app.mainwin.resize(
+        app.settings.get('InitWinWidth', app.mainwin.width()),
+        app.settings.get('InitWinHeight', app.mainwin.height()))
 
 def unload(app):
     pass
