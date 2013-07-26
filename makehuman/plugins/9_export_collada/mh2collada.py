@@ -301,11 +301,11 @@ def writeMaterials(fp, stuff):
 
 def writeController(fp, stuff, amt, config):
     obj = stuff.richMesh.object
-    exportutils.collect.setStuffSkinWeights(stuff, amt)
+    stuff.richMesh.calculateSkinWeights(amt)
     nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
     nFaces = len(obj.fvert)
-    nWeights = len(stuff.skinWeights)
+    nWeights = len(stuff.richMesh.skinWeights)
     nBones = len(amt.bones)
     nShapes = len(stuff.richMesh.shapes)
 
@@ -337,9 +337,8 @@ def writeController(fp, stuff, amt, config):
         '          <float_array count="%d" id="%s-skin-weights-array">\n' % (nWeights,stuff.name) +
         '           ')
 
-    for (n,b) in enumerate(stuff.skinWeights):
-        (v,w) = stuff.skinWeights[n]
-        fp.write(' %s' % w)
+    for w in stuff.richMesh.skinWeights:
+        fp.write(' %s' % w[1])
 
     fp.write('\n' +
         '          </float_array>\n' +
@@ -395,7 +394,7 @@ def writeController(fp, stuff, amt, config):
         '          <vcount>\n' +
         '            ')
 
-    for wts in stuff.vertexWeights.values():
+    for wts in stuff.richMesh.vertexWeights:
         fp.write('%d ' % len(wts))
 
     fp.write('\n' +
@@ -403,16 +402,9 @@ def writeController(fp, stuff, amt, config):
         '          <v>\n' +
         '           ')
 
-    #print(stuff.vertexWeights)
-    for (vn,wts) in stuff.vertexWeights.items():
-        wtot = 0.0
-        for (bn,wn) in wts:
-            wtot += wn
-        if wtot < 0.01:
-            # print("wtot", vn, wtot)
-            wtot = 1
-        for (bn,wn) in wts:
-            fp.write(' %d %d' % (bn, wn))
+    for wts in stuff.richMesh.vertexWeights:
+        for pair in wts:
+            fp.write(' %d %d' % pair)
 
     fp.write('\n' +
         '          </v>\n' +
@@ -472,7 +464,7 @@ def writeGeometry(fp, stuff, config):
     obj = stuff.richMesh.object
     nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
-    nWeights = len(stuff.skinWeights)
+    nWeights = len(stuff.richMesh.skinWeights)
     nShapes = len(stuff.richMesh.shapes)
 
     fp.write('\n' +

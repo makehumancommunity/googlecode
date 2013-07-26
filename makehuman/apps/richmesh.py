@@ -38,8 +38,6 @@ class CStuff:
         self.proxy = proxy
         self.human = human
         self._richMesh = None
-        self.vertexWeights = None
-        self.skinWeights = None
         if proxy:
             self.type = proxy.type
             self.material = proxy.material
@@ -124,6 +122,24 @@ class RichMesh:
 
     def __repr__(self):
         return ("<RichMesh %s w %d t %d>" % (self.object, len(self.weights), len(self.shapes)))
+
+    def calculateSkinWeights(self, amt):
+        if self.object is None:
+            raise NameError("%s has no object. Cannot calculate skin weights" % self)
+        
+        self.vertexWeights = [list() for _ in xrange(len(self.object.coord))]
+        self.skinWeights = []
+
+        wn = 0
+        for (bn,b) in enumerate(amt.bones):
+            try:
+                wts = self.weights[b]
+            except KeyError:
+                wts = []
+            for (vn,w) in wts:
+                self.vertexWeights[int(vn)].append((bn,wn))
+                wn += 1
+            self.skinWeights.extend(wts)
 
 
 def getRichMesh(obj, proxy, rawWeights, rawShapes, amt, scale=1.0):

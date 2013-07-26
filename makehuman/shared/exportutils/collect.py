@@ -280,27 +280,6 @@ def deleteGroup(name, groups):
             return True
     return False
 
-
-def setStuffSkinWeights(stuff, amt):
-    obj = stuff.richMesh.object
-
-    stuff.vertexWeights = {}
-    for vn in range(len(obj.coord)):
-        stuff.vertexWeights[vn] = []
-
-    stuff.skinWeights = []
-    wn = 0
-    for (bn,b) in enumerate(amt.bones):
-        try:
-            wts = stuff.richMesh.weights[b]
-        except KeyError:
-            wts = []
-        for (vn,w) in wts:
-            stuff.vertexWeights[int(vn)].append((bn,wn))
-            wn += 1
-        stuff.skinWeights.extend(wts)
-    return
-
 def getpath(path):
     if isinstance(path, tuple):
         (folder, file) = path
