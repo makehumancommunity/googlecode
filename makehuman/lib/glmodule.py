@@ -294,7 +294,7 @@ def drawMesh(obj):
         glCullFace(GL_BACK if obj.cull > 0 else GL_FRONT)
 
     # Enable the shader if the driver supports it and there is a shader assigned
-    if obj.shader and obj.solid and Shader.supported():
+    if obj.shader and obj.solid and Shader.supported() and not obj.shadeless:
         glUseProgram(obj.shader)
 
         # Set custom attributes
@@ -348,7 +348,7 @@ def drawMesh(obj):
         glEnableClientState(GL_COLOR_ARRAY)
 
     # Disable the shader if the driver supports it and there is a shader assigned
-    if obj.shader and obj.solid and Shader.supported():
+    if obj.shader and obj.solid and Shader.supported() and not obj.shadeless:
         glUseProgram(0)
         glActiveTexture(GL_TEXTURE0)
 
