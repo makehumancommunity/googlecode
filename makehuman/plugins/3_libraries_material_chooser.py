@@ -81,6 +81,7 @@ class TextureTaskView(gui3d.TaskView):
 
         self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.userSkins, 'mhmat', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), 'Material'))
         self.filechooser.setIconSize(50,50)
+        self.filechooser.enableAutoRefresh(False)
         self.addLeftWidget(self.filechooser.createSortBox())
 
         self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
@@ -212,32 +213,32 @@ class TextureTaskView(gui3d.TaskView):
 
     def reloadTextureChooser(self):
         human = gui3d.app.selectedHuman
-        selectedTex = None
+        selectedMat = None
 
         if self.skinRadio.selected:
             self.textures = [self.systemSkins, self.userSkins, mh.getSysDataPath('textures')]
-            selectedTex = human.getTexture()
+            selectedMat = human.material.filename
         elif self.hairRadio.selected:
             proxy = human.hairProxy
             if proxy:
                 self.textures = [os.path.dirname(proxy.file)] + self.defaultHair
             else:
                 self.textures = self.defaultHair
-            selectedTex = human.hairObj.getTexture()
+            selectedMat = human.hairObj.material.filename
         elif self.eyesRadio.selected:
             proxy = human.eyesProxy
             if proxy:
                 self.textures = [os.path.dirname(proxy.file)] + self.defaultEyes
             else:
                 self.textures = self.defaultEyes
-            selectedTex = human.eyesObj.getTexture()
+            selectedMat = human.eyesObj.material.filename
         else: # Clothes
             if self.activeClothing:
                 uuid = self.activeClothing
                 clo = human.clothesObjs[uuid]
                 filepath = human.clothesProxies[uuid].file
                 self.textures = [os.path.dirname(filepath)] + self.defaultClothes
-                selectedTex = clo.getTexture()
+                selectedMat = clo.material.filename
             else:
                 # TODO maybe dont show anything?
                 self.textures = self.defaultClothes
@@ -249,10 +250,12 @@ class TextureTaskView(gui3d.TaskView):
         self.filechooser.deselectAll()
         self.filechooser.setPaths(self.textures)
         self.filechooser.refresh()
-        if selectedTex:
-            selectedTex = os.path.relpath(selectedTex)
-            self.filechooser.selectItem(selectedTex)
+        if selectedMat:
+            self.filechooser.setHighlightedItem(selectedMat)
         self.filechooser.setFocus()
+        if self.eyesRadio.selected:
+            print self.filechooser.children.getItems()[1].file
+            print self.filechooser.children.getItems()[2].file
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)

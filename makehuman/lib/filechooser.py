@@ -295,10 +295,10 @@ class FileHandler(object):
         return item.file
 
     def matchesItem(self, listItem, item):
-        return listItem.file == item
+        return abspath(listItem.file) == abspath(item)
 
     def matchesItems(self, listItem, items):
-        return listItem.file in items
+        return abspath(listItem.file) in [abspath(i) for i in items]
 
     def setFileChooser(self, fileChooser):
         self.fileChooser = fileChooser
@@ -344,6 +344,8 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
 
         self.setFileLoadHandler(FileHandler())
         self.tagFilter = None
+
+        self._autoRefresh = True
 
     def createSortBox(self):
         sortBox = gui.GroupBox('Sort')
@@ -475,7 +477,15 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         return None
 
     def onShow(self, event):
-        self.refresh()
+        if self._autoRefresh:
+            self.refresh()
+
+    def enableAutoRefresh(self, enabled):
+        """
+        Set to true to auto perform refresh() when the filechooser widget
+        receives an onShow() event. Enabled by default.
+        """
+        self._autoRefresh = enabled
 
 class FileChooser(FileChooserBase):
     """
@@ -539,7 +549,7 @@ class FileChooser(FileChooserBase):
     def setPaths(self, value):
         super(FileChooser, self).setPaths(value)
         locationLbl = "  |  ".join(self.paths)
-        self.location.setText(os.path.abspath(locationLbl))
+        self.location.setText(abspath(locationLbl))
 
 # TODO IconListFileChooser (with FileChooserRectangles as items)
 # TODO allow setting a clear or none item at the top
@@ -721,3 +731,9 @@ class IconListFileChooser(ListFileChooser):
 
     def setIconSize(self, width, height):
         self.children.setIconSize(QtCore.QSize(width, height))
+
+def abspath(path):
+    if path:
+        return os.path.abspath(path)
+    else:
+        return None

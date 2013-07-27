@@ -60,20 +60,22 @@ class EyesTaskView(gui3d.TaskView):
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhclo', 'thumb', mh.getSysDataPath('eyes/notfound.thumb')))
         self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhclo', 'thumb', mh.getSysDataPath('clothes/notfound.thumb'), 'Eyes'))
         self.filechooser.setIconSize(50,50)
+        self.filechooser.enableAutoRefresh(False)
         self.addLeftWidget(self.filechooser.createSortBox())
 
         self.oHeadCentroid = [0.0, 7.436, 0.03 + 0.577]
         self.oHeadBBox = [[-0.84,6.409,-0.9862],[0.84,8.463,1.046]]
 
+        self.human = gui3d.app.selectedHuman
+
         @self.filechooser.mhEvent
         def onFileSelected(filename):
-            human = gui3d.app.selectedHuman
-            if human.eyesProxy:
-                oldFile = human.eyesProxy.file
+            if self.human.eyesProxy:
+                oldFile = self.human.eyesProxy.file
             else:
                 oldFile = 'clear.mhclo'
             gui3d.app.do(EyesAction("Change eyes",
-                human,
+                self.human,
                 self,
                 oldFile,
                 filename))
@@ -137,6 +139,10 @@ class EyesTaskView(gui3d.TaskView):
     def onShow(self, event):
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
+        self.filechooser.refresh()
+        if self.human.eyesProxy and self.human.eyesProxy.file:
+            print self.human.eyesProxy.file
+            self.filechooser.setHighlightedItem(self.human.eyesProxy.file)
         self.filechooser.setFocus()
 
     def onHide(self, event):
