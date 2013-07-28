@@ -144,7 +144,8 @@ def recursiveDirNames(root):
 
 def set_sys_path():
     #[BAL 07/11/2013] make sure we're in the right directory
-    os.chdir(sys.path[0])
+    if sys.platform != 'darwin':
+        os.chdir(sys.path[0])
     syspath = ["./", "./lib", "./apps", "./shared", "./apps/gui","./core"]
     syspath.extend(sys.path)
     sys.path = syspath
