@@ -431,7 +431,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
     def refresh(self, keepSelections=True):
         self.clearList()
 
-        files = self.sort.sort(self.sortBy, list(self.search()))
+        files = set(self.sort.sort(self.sortBy, list(self.search())))
         self.loadHandler.refresh(files)
 
         self.applyTagFilter()
