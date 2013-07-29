@@ -289,7 +289,7 @@ class FileHandler(object):
             label = os.path.basename(file)
             if isinstance(self.fileChooser.extension, str):
                 label = os.path.splitext(label)[0]
-            self.fileChooser.addItem(file, label, self.fileChooser.getPreview(file))
+            self.fileChooser.addItem(file, label, self.getPreview(file))
 
     def getSelection(self, item):
         return item.file
@@ -302,6 +302,28 @@ class FileHandler(object):
 
     def setFileChooser(self, fileChooser):
         self.fileChooser = fileChooser
+
+    def getPreview(self, filename):
+        preview = filename
+
+        fc = self.fileChooser
+        
+        if fc.previewExtensions:
+            #log.debug('%s, %s', fc.extension, fc.previewExtensions)
+            preview = filename.replace('.' + fc.extension, '.' + fc.previewExtensions[0])
+            i = 1
+            while not os.path.exists(preview) and i < len(fc.previewExtensions):
+                preview = filename.replace('.' + fc.extension, '.' + fc.previewExtensions[i])
+                i = i + 1
+        else:
+            preview = filename
+            
+        if not os.path.exists(preview) and fc.notFoundImage:
+            # preview = os.path.join(fc.path, fc.notFoundImage)
+            # TL: full filepath needed, so we don't look into user dir.
+            preview = fc.notFoundImage
+
+        return preview
 
 class MhcloFileLoader(FileHandler):
 
@@ -325,7 +347,22 @@ class MhcloFileLoader(FileHandler):
                 self.__tagsCache[file] = tags
             else:
                 tags = self.__tagsCache[file]
-            self.fileChooser.addItem(file, label, self.fileChooser.getPreview(file), tags)
+            self.fileChooser.addItem(file, label, self.getPreview(file), tags)
+
+class MhmatFileLoader(FileHandler):
+
+    def __init__(self):
+        super(MhmatFileLoader, self).__init__()
+
+    def getPreview(self, filename):
+        thumb = super(MhmatFileLoader, self).getPreview(filename)
+        print "%s == %s" % (os.path.abspath(thumb), os.path.abspath(self.fileChooser.notFoundImage))
+        if os.path.abspath(thumb) == os.path.abspath(self.fileChooser.notFoundImage):
+            import material
+            mat = material.fromFile(filename)
+            if mat.diffuseTexture:
+                return mat.diffuseTexture
+        return thumb
 
 class FileChooserBase(QtGui.QWidget, gui.Widget):
 
@@ -387,26 +424,6 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
             mh.callAsync(self._updateScrollBar)
         return False
         
-    def getPreview(self, filename):
-        preview = filename
-        
-        if self.previewExtensions:
-            #log.debug('%s, %s', self.extension, self.previewExtensions)
-            preview = filename.replace('.' + self.extension, '.' + self.previewExtensions[0])
-            i = 1
-            while not os.path.exists(preview) and i < len(self.previewExtensions):
-                preview = filename.replace('.' + self.extension, '.' + self.previewExtensions[i])
-                i = i + 1
-        else:
-            preview = filename
-            
-        if not os.path.exists(preview) and self.notFoundImage:
-            # preview = os.path.join(self.path, self.notFoundImage)
-            # TL: full filepath needed, so we don't look into user dir.
-            preview = self.notFoundImage
-
-        return preview
-
     def search(self):
         if isinstance(self.extension, str):
             extensions = [self.extension]

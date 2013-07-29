@@ -50,19 +50,19 @@ class MaterialAction(gui3d.Action):
         return True
 
 
-class TextureTaskView(gui3d.TaskView):
+class MaterialTaskView(gui3d.TaskView):
 
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Material', label='Skin/Material')
         self.skinBlender = EthnicSkinBlender(gui3d.app.selectedHuman)
 
         self.systemSkins = mh.getSysDataPath('skins')
-        self.systemClothes = os.path.join(mh.getSysDataPath('clothes'), 'textures')
+        self.systemClothes = os.path.join(mh.getSysDataPath('clothes'), 'materials')
         self.systemHair = mh.getSysDataPath('hairstyles')
         self.systemEyes = mh.getSysDataPath('eyes')
 
         self.userSkins = os.path.join(mh.getPath(''), 'data', 'skins')
-        self.userClothes = os.path.join(mh.getPath(''), 'data', 'clothes', 'textures')
+        self.userClothes = os.path.join(mh.getPath(''), 'data', 'clothes', 'materials')
         self.userHair = os.path.join(mh.getPath(''), 'data', 'hairstyles')
         self.userEyes = os.path.join(mh.getPath(''), 'data', 'eyes')
 
@@ -74,14 +74,15 @@ class TextureTaskView(gui3d.TaskView):
         self.defaultHair = [self.systemHair, self.userHair]
         self.defaultEyes = [self.systemEyes, self.userEyes]
 
-        self.textures = self.defaultClothes
+        self.materials = self.defaultClothes
         self.activeClothing = None
-        self.hairTexture = None
-        self.eyeTexture = None
+        self.hairMaterial = None
+        self.eyeMaterial = None
 
         self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.userSkins, 'mhmat', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), 'Material'))
         self.filechooser.setIconSize(50,50)
         self.filechooser.enableAutoRefresh(False)
+        self.filechooser.setFileLoadHandler(fc.MhmatFileLoader())
         self.addLeftWidget(self.filechooser.createSortBox())
 
         self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
@@ -120,17 +121,17 @@ class TextureTaskView(gui3d.TaskView):
         @self.skinRadio.mhEvent
         def onClicked(event):
             if self.skinRadio.selected:
-                self.reloadTextureChooser()
+                self.reloadMaterialChooser()
 
         @self.hairRadio.mhEvent
         def onClicked(event):
             if self.hairRadio.selected:
-                self.reloadTextureChooser()
+                self.reloadMaterialChooser()
 
         @self.eyesRadio.mhEvent
         def onClicked(event):
             if self.eyesRadio.selected:
-                self.reloadTextureChooser()
+                self.reloadMaterialChooser()
 
         self.clothesBox = self.addLeftWidget(gui.GroupBox('Clothes'))
         self.clothesSelections = []
@@ -143,7 +144,7 @@ class TextureTaskView(gui3d.TaskView):
         human = gui3d.app.selectedHuman
 
         self.skinRadio.setChecked(True)
-        self.reloadTextureChooser()
+        self.reloadMaterialChooser()
 
         if human.hairObj:
             self.hairRadio.setEnabled(True)
@@ -189,7 +190,7 @@ class TextureTaskView(gui3d.TaskView):
                     if radio.selected:
                         self.activeClothing = uuid
                         log.debug( 'Selected clothing "%s" (%s)' % (radio.text(), uuid) )
-                        self.reloadTextureChooser()
+                        self.reloadMaterialChooser()
                         return
 
     def applyClothesTexture(self, uuid, filename):
@@ -211,51 +212,48 @@ class TextureTaskView(gui3d.TaskView):
         clo = human.clothesObjs[uuid]
         return clo.getTexture()
 
-    def reloadTextureChooser(self):
+    def reloadMaterialChooser(self):
         human = gui3d.app.selectedHuman
         selectedMat = None
 
         if self.skinRadio.selected:
-            self.textures = [self.systemSkins, self.userSkins, mh.getSysDataPath('textures')]
+            self.materials = [self.systemSkins, self.userSkins, mh.getSysDataPath('textures')]
             selectedMat = human.material.filename
         elif self.hairRadio.selected:
             proxy = human.hairProxy
             if proxy:
-                self.textures = [os.path.dirname(proxy.file)] + self.defaultHair
+                self.materials = [os.path.dirname(proxy.file)] + self.defaultHair
             else:
-                self.textures = self.defaultHair
+                self.materials = self.defaultHair
             selectedMat = human.hairObj.material.filename
         elif self.eyesRadio.selected:
             proxy = human.eyesProxy
             if proxy:
-                self.textures = [os.path.dirname(proxy.file)] + self.defaultEyes
+                self.materials = [os.path.dirname(proxy.file)] + self.defaultEyes
             else:
-                self.textures = self.defaultEyes
+                self.materials = self.defaultEyes
             selectedMat = human.eyesObj.material.filename
         else: # Clothes
             if self.activeClothing:
                 uuid = self.activeClothing
                 clo = human.clothesObjs[uuid]
                 filepath = human.clothesProxies[uuid].file
-                self.textures = [os.path.dirname(filepath)] + self.defaultClothes
+                self.materials = [os.path.dirname(filepath)] + self.defaultClothes
                 selectedMat = clo.material.filename
             else:
                 # TODO maybe dont show anything?
-                self.textures = self.defaultClothes
+                self.materials = self.defaultClothes
 
                 filec = self.filechooser
                 log.debug("fc %s %s %s added", filec, filec.children.count(), str(filec.files))
 
         # Reload filechooser
         self.filechooser.deselectAll()
-        self.filechooser.setPaths(self.textures)
+        self.filechooser.setPaths(self.materials)
         self.filechooser.refresh()
         if selectedMat:
             self.filechooser.setHighlightedItem(selectedMat)
         self.filechooser.setFocus()
-        if self.eyesRadio.selected:
-            print self.filechooser.children.getItems()[1].file
-            print self.filechooser.children.getItems()[2].file
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
@@ -409,7 +407,7 @@ class EthnicSkinBlender(object):
 
 def load(app):
     category = app.getCategory('Materials')
-    taskview = TextureTaskView(category)
+    taskview = MaterialTaskView(category)
     taskview.sortOrder = 0
     category.addTask(taskview)
 
