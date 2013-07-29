@@ -7,7 +7,7 @@ uuid d4d380fe-c36c-4c7b-8a49-d59f654fba40
 basemesh alpha_7
 
 obj_file benchmark_tights.obj
-material ../benchmark.mhmat
+material ../../materials/benchmark.mhmat
 x_scale 3464 10305 2.5128
 z_scale 6930 7245 1.6554
 y_scale 14022 14040 4.5292

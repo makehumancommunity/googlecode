@@ -12,7 +12,7 @@ specularHardness 0.8
 opacity 1.0
 
 // Textures and properties
-diffuseTexture data/clothes/textures/uvgrid.png
+diffuseTexture ../textures/uvgrid.png
 
 // Shader programme
 shader data/shaders/glsl/phong

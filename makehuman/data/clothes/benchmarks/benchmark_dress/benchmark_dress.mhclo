@@ -7,7 +7,7 @@ uuid 4c6b34ff-32d2-41e5-86b9-ca90b09a5e63
 basemesh alpha_7
 
 obj_file benchmark_dress.obj
-material ../benchmark.mhmat
+material ../../materials/benchmark.mhmat
 x_scale 3464 10305 2.5128
 z_scale 6930 7245 1.6554
 y_scale 14022 14040 4.5292
