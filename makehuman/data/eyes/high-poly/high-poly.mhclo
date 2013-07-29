@@ -12,7 +12,7 @@ y_scale 791 881 2.7213
 z_depth 50
 uvtex_layer 0 Texture
 objfile_layer 0
-material high-poly.mhmat
+material ../materials/brown.mhmat
 transparent yes
 use_projection 0
 verts 0
