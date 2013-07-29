@@ -77,7 +77,6 @@ class MaterialTaskView(gui3d.TaskView):
         self.materials = self.defaultClothes
         self.activeClothing = None
         self.hairMaterial = None
-        self.eyeMaterial = None
 
         self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.userSkins, 'mhmat', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), 'Material'))
         self.filechooser.setIconSize(50,50)
@@ -193,31 +192,31 @@ class MaterialTaskView(gui3d.TaskView):
                         self.reloadMaterialChooser()
                         return
 
-    def applyClothesTexture(self, uuid, filename):
+    def applyClothesMaterial(self, uuid, filename):
         human = gui3d.app.selectedHuman
         if uuid not in human.clothesObjs.keys():
-            log.warning("Cannot set texture for clothes with UUID %s, no such item", uuid)
+            log.warning("Cannot set material for clothes with UUID %s, no such item", uuid)
             return False
         clo = human.clothesObjs[uuid]
-        clo.mesh.setTexture(filename)
+        clo.mesh.material = material.fromFile(filename)
         return True
 
-    def getClothesTexture(self, uuid):
+    def getClothesMaterial(self, uuid):
         """
-        Get the currently set texture for clothing item with specified UUID.
+        Get the currently set material for clothing item with specified UUID.
         """
         human = gui3d.app.selectedHuman
         if uuid not in human.clothesObjs.keys():
             return None
         clo = human.clothesObjs[uuid]
-        return clo.getTexture()
+        return clo.material.filename
 
     def reloadMaterialChooser(self):
         human = gui3d.app.selectedHuman
         selectedMat = None
 
         if self.skinRadio.selected:
-            self.materials = [self.systemSkins, self.userSkins, mh.getSysDataPath('textures')]
+            self.materials = [self.systemSkins, self.userSkins]
             selectedMat = human.material.filename
         elif self.hairRadio.selected:
             proxy = human.hairProxy
@@ -266,16 +265,21 @@ class MaterialTaskView(gui3d.TaskView):
 
     def loadHandler(self, human, values):
 
-        if values[0] == 'skinTexture':
-            (fname, ext) = os.path.splitext(values[1])
-            if fname != "texture":
-                path = os.path.join(os.path.join(mh.getPath(''), 'data', 'skins', values[1]))
-                if os.path.isfile(path):
-                    human.setTexture(path)
-                elif ext == ".tif":
-                    path = path.replace(".tif", ".png")
-                    human.setTexture(path)
-        elif values[0] == 'textures':
+        if values[0] == 'skinMaterial':
+            path = values[1]
+            if os.path.isfile(path):
+                mat = material.fromFile(path)
+                self.human.material = mat
+                return
+            else:
+                for d in [self.systemSkins, self.userSkins]:
+                    absP = os.path.join(d, path)
+                    if os.path.isfile(absP):
+                        mat = material.fromFile(path)
+                        self.human.material = mat
+                        return
+            log.warning('Could not find material %s for skinMaterial parameter.', values[1])
+        elif values[0] == 'materials':
             uuid = values[1]
             filepath = values[2]
 
@@ -284,45 +288,44 @@ class MaterialTaskView(gui3d.TaskView):
                     proxy = human.hairProxy
                     hairPath = os.path.dirname(proxy.file)
                     filepath = os.path.join(hairPath, filepath)
-                human.hairObj.mesh.setTexture(filepath)
+                human.hairObj.material = material.fromFile(filepath)
                 return
             elif human.eyesProxy and human.eyesProxy.getUuid() == uuid:
                 if not os.path.dirname(filepath):
                     proxy = human.eyesProxy
                     eyesPath = os.path.dirname(proxy.file)
                     filepath = os.path.join(eyesPath, filepath)
-                human.eyesObj.mesh.setTexture(filepath)
+                human.eyesObj.material = material.fromFile(filepath)
                 return
             elif not uuid in human.clothesProxies.keys():
-                log.error("Could not load texture for object with uuid %s!" % uuid)
+                log.error("Could not load material for object with uuid %s!" % uuid)
                 return
+
             proxy = human.clothesProxies[uuid]
             if not os.path.dirname(filepath):
                 proxy = human.clothesProxies[uuid]
                 clothesPath = os.path.dirname(proxy.file)
                 filepath = os.path.join(clothesPath, filepath)
-            self.applyClothesTexture(uuid, filepath)
+            self.applyClothesMaterial(uuid, filepath)
             return
 
     def saveHandler(self, human, file):
 
-        file.write('skinTexture %s\n' % os.path.basename(human.getTexture()))
+        file.write('skinMaterial %s\n' % os.path.basename(human.material.filename))
         for name, clo in human.clothesObjs.items():
             if clo:
                 proxy = human.clothesProxies[name]
-                if clo.mesh.texture !=  proxy.material.diffuseTexture:
+                if clo.material.filename !=  proxy.material.filename:
                     clothesPath = os.path.dirname(proxy.file)
-                    if os.path.dirname(clo.mesh.texture) == clothesPath:
-                        texturePath = os.path.basename(clo.mesh.texture)
+                    if os.path.dirname(clo.material.filename) == clothesPath:
+                        materialPath = os.path.basename(clo.material.filename)
                     else:
-                        texturePath = clo.mesh.texture
-                    file.write('textures %s %s\n' % (proxy.getUuid(), texturePath))
+                        materialPath = clo.material.filename
+                    file.write('materials %s %s\n' % (proxy.getUuid(), materialPath))
         if human.hairObj and human.hairProxy:
-            file.write('textures %s %s\n' % (human.hairProxy.getUuid(), human.hairObj.mesh.texture))
+            file.write('materials %s %s\n' % (human.hairProxy.getUuid(), human.hairObj.material.filename))
         if human.eyesObj and human.eyesProxy:
-            file.write('textures %s %s\n' % (human.eyesProxy.getUuid(), human.eyesObj.mesh.texture))
-        #if self.eyeTexture:
-        #    file.write('eyeTexture %s\n' % self.eyeTexture)
+            file.write('materials %s %s\n' % (human.eyesProxy.getUuid(), human.eyesObj.material.filename))
 
     def syncMedia(self):
 
@@ -411,9 +414,8 @@ def load(app):
     taskview.sortOrder = 0
     category.addTask(taskview)
 
-    app.addLoadHandler('textures', taskview.loadHandler)
-    app.addLoadHandler('skinTexture', taskview.loadHandler)
-    app.addLoadHandler('eyeTexture', taskview.loadHandler)
+    app.addLoadHandler('materials', taskview.loadHandler)
+    app.addLoadHandler('skinMaterial', taskview.loadHandler)
     app.addSaveHandler(taskview.saveHandler)
 
 
