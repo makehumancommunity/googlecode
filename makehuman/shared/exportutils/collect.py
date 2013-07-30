@@ -37,7 +37,6 @@ import mh2proxy
 import richmesh
 import log
 import catmull_clark_subdivision as cks
-import subtextures
 
 from .config import Config
 
@@ -71,7 +70,6 @@ def readTargets(human, config):
 #
 
 def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=False, eyebrows=True, lashes=True, subdivide = False, progressCallback=None):
-    global theStuff
     from armature.armature import setupArmature
 
     def progress(prog):
@@ -84,64 +82,54 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
         config = Config()
         config.setHuman(human)
 
-    stuffs = []
-    stuff = richmesh.CStuff(name, None, human)
+    rmeshes = []
     amt = setupArmature(name, human, config.rigOptions)
-    obj = human.meshData
-    richMesh = richmesh.getRichMesh(obj, None, None, rawTargets, amt)
+    richMesh = richmesh.getRichMesh(human.meshData, None, None, rawTargets, amt)
+    richMesh.name = name
     if amt:
         richMesh.weights = amt.vertexWeights
 
-    theStuff = stuff
     deleteGroups = []
     deleteVerts = None  # Don't load deleteVerts from proxies directly, we use the facemask set in the gui module3d
-    _,deleteVerts = setupProxies('Clothes', None, human, stuffs, richMesh, config, deleteGroups, deleteVerts)
-    _,deleteVerts = setupProxies('Hair', None, human, stuffs, richMesh, config, deleteGroups, deleteVerts)
-    _,deleteVerts = setupProxies('Eyes', None, human, stuffs, richMesh, config, deleteGroups, deleteVerts)
-    foundProxy,deleteVerts = setupProxies('Proxy', name, human, stuffs, richMesh, config, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Clothes', None, human, rmeshes, richMesh, config, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Hair', None, human, rmeshes, richMesh, config, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Eyes', None, human, rmeshes, richMesh, config, deleteGroups, deleteVerts)
+    foundProxy,deleteVerts = setupProxies('Proxy', name, human, rmeshes, richMesh, config, deleteGroups, deleteVerts)
     progress(0.06*(3-2*subdivide))
     if not foundProxy:
-        if helpers:     # helpers override everything
-            stuff.richMesh = richMesh
-        else:
-            stuff.richMesh = filterMesh(richMesh, deleteGroups, deleteVerts, eyebrows, lashes, not hidden)
-        stuffs = [stuff] + stuffs
+        if helpers is None:     # helpers override everything
+            richMesh = filterMesh(richMesh, deleteGroups, deleteVerts, eyebrows, lashes, not hidden)
+        rmeshes = [richMesh] + rmeshes
 
     if config.scale != 1.0:
         amt.rescale(config.scale)
-        for stuff in stuffs:
-            stuff.richMesh.rescale(config.scale)
+        for rmesh in rmeshes:
+            rmesh.rescale(config.scale)
 
     progbase = 0.12*(3-2*subdivide)
     progress(progbase)
 
     # Subdivide, if requested.
-    stuffnum = float(len(stuffs))
+    rmeshnum = float(len(rmeshes))
     i = 0.0
-    for stuff in stuffs:
-        progress(progbase+(i/stuffnum)*(1-progbase))
+    for rmesh in rmeshes:
+        progress(progbase+(i/rmeshnum)*(1-progbase))
         if subdivide:
             subMesh = cks.createSubdivisionObject(
-                stuff.richMesh.object, lambda p: progress(progbase+((i+p)/stuffnum)*(1-progbase)))
-            stuff.richMesh.fromObject(subMesh, stuff.richMesh.weights, rawTargets)
+                rmesh.object, lambda p: progress(progbase+((i+p)/rmeshnum)*(1-progbase)))
+            rmesh.fromObject(subMesh, rmesh.weights, rawTargets)
         i += 1.0
 
-    # Apply subtextures. Obsolete with separate eyes
-    #mhstx = mh.G.app.getCategory('Textures').getTaskByName('Texture').eyeTexture
-    #if mhstx:
-    #    stuffs[0].material.diffuseTexture = subtextures.combine(
-    #        stuffs[0].material.diffuseTexture, mhstx)
-
     progress(1)
-    return stuffs,amt
+    return rmeshes,amt
 
 #
-#    setupProxies(typename, name, human, stuffs, richMesh, config, deleteGroups, deleteVerts):
+#    setupProxies(typename, name, human, rmeshes, richMesh, config, deleteGroups, deleteVerts):
 #
 
-def setupProxies(typename, name, human, stuffs, richMesh, config, deleteGroups, deleteVerts):
-    # TODO document that this method does not only return values, it also modifies some of the passed parameters (deleteGroups and stuffs, deleteVerts is modified only if it is not None)
-    global theStuff
+def setupProxies(typename, name, human, rmeshes, richMesh, config, deleteGroups, deleteVerts):
+    # TODO document that this method does not only return values, it also modifies some of the passed parameters (deleteGroups and rmeshes, deleteVerts is modified only if it is not None)
+    import re    
 
     foundProxy = False
     for proxy in config.getProxies().values():
@@ -150,16 +138,11 @@ def setupProxies(typename, name, human, stuffs, richMesh, config, deleteGroups, 
             deleteGroups += proxy.deleteGroups
             if deleteVerts != None:
                 deleteVerts = deleteVerts | proxy.deleteVerts
-            if not name:
-                name = proxy.name
-            stuff = richmesh.CStuff(name, proxy, human)
-            if stuff:
-                if proxy.type == 'Proxy':
-                     theStuff = stuff
-                stuffname = theStuff.name if theStuff else None
-
-                stuff.richMesh = richmesh.getRichMesh(None, proxy, richMesh.weights, richMesh.shapes, richMesh.armature)
-                stuffs.append(stuff)
+            rmesh = richmesh.getRichMesh(None, proxy, richMesh.weights, richMesh.shapes, richMesh.armature) 
+            if name is not None:    # Make exportable names.
+                rmesh.name = name
+            rmesh.name = re.sub('[^0-9a-zA-Z]+', '_', rmesh.name)
+            rmeshes.append(rmesh)
     return foundProxy, deleteVerts
 
 #
