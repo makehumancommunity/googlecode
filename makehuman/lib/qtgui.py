@@ -1436,6 +1436,39 @@ class BrowseButton(Button):
             self._path = path
         self.callEvent('onClicked', path)
 
+class ColorPickButton(Button):
+    """
+    Button widget that opens a color picker when clicked.
+    """
+    # TODO add a rectangle showing the current color
+
+    def __init__(self, initialColor = None):
+        super(ColorPickButton, self).__init__("Pick")
+        if initialColor:
+            self.current = initialColor
+        else:
+            import material
+            self.color = material.Color()
+
+    def getColor(self):
+        return self.current
+        
+    def setColor(self, color):
+        if isinstance(color, tuple) or isinstance(color, list):
+            import material
+            self.current = material.Color().copyFrom(color)
+        else:
+            self.current = color
+
+    color = property(getColor, setColor)
+
+    def _clicked(self, state):
+        current = qColorFromColor(self.color)
+        color = QtGui.QColorDialog.getColor(current)
+        if color.isValid():
+            self.value = colorFromQColor(color)
+            self.callEvent('onClicked', self.value)
+
 class Action(QtGui.QAction, Widget):
     _groups = {}
 
@@ -1707,3 +1740,24 @@ class ZoomableImageView(QtGui.QScrollArea, Widget):
         self.refreshImage(True,
                           (dr*(event.x() - self.width()/2),
                            dr*(event.y() - self.height()/2)))
+
+
+def colorFromQColor(qColor):
+    import material
+    if qColor.isValid():
+        values = (float(qColor.red())/255, 
+                  float(qColor.green())/255, 
+                  float(qColor.blue())/255)
+        return material.Color().copyFrom(values)
+    else:
+        return material.Color()
+
+def qColorFromColor(color):
+    import material
+    if isinstance(color, material.Color):
+        color = color.asTuple()
+    return QtGui.QColor(int(color[0]*255), 
+                            int(color[1]*255), 
+                            int(color[2]*255))
+
+

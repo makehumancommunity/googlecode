@@ -304,19 +304,10 @@ class ColorValue(gui.GroupBox):
             child = FloatValue(self, 0)
             self.addWidget(child, 0, col)
             self.widgets.append(child)
-        self.pickBtn = self.addWidget(gui.Button('Pick'))
+        self.pickBtn = self.addWidget(gui.ColorPickButton(value))
         @self.pickBtn.mhEvent
-        def onClicked(event):
-            current = self.value.asTuple()
-            current = gui.QtGui.QColor(int(current[0]*255), 
-                                       int(current[1]*255), 
-                                       int(current[2]*255))
-            color = gui.QtGui.QColorDialog.getColor(current)
-            if color.isValid():
-                values = (float(color.red())/255, 
-                          float(color.green())/255, 
-                          float(color.blue())/255)
-                self.value = values
+        def onClicked(color):
+            self.value = color
 
         self.value = value
 
@@ -372,21 +363,19 @@ class FileValue(gui.GroupBox):
     def __init__(self, name, value, defaultPath = None):
         super(FileValue, self).__init__(name)
         self.name = name
-        self.defaultPath = defaultPath
 
         self.fileText = self.addWidget(gui.TextView(''), 0, 0)
         self.browseBtn = self.addWidget(gui.BrowseButton(), 1, 0)
 
-        if self.defaultPath:
-            self.browseBtn._path = self.defaultPath
+        if defaultPath:
+            self.browseBtn._path = defaultPath
 
         @self.browseBtn.mhEvent
-        def onClicked(event):
-            if self.defaultPath and self.browseBtn._path == self.defaultPath:
+        def onClicked(path):
+            if not path:
                 return
-            if self.browseBtn._path:
-                self.setValue(self.browseBtn._path)
-                self.callEvent('onActivate', self.getValue())
+            self.setValue(path)
+            self.callEvent('onActivate', self.getValue())
 
         self.setValue(value)
 
@@ -501,24 +490,22 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
         super(TextureValue, self).__init__()
         self.parent = parent
         self._path = value
-        self.defaultPath = defaultPath
 
         self.layout = gui.QtGui.QGridLayout(self)
         self.imageView = gui.ImageView()
         self.browseBtn = gui.BrowseButton()
         self.browseBtn.setFilter("Image Files (*.png *.jpg *.bmp)")
 
-        if self.defaultPath:
-            self.browseBtn._path = self.defaultPath
+        if defaultPath:
+            self.browseBtn._path = defaultPath
 
         @self.browseBtn.mhEvent
-        def onClicked(event):
-            if self.defaultPath and self.browseBtn._path == self.defaultPath:
+        def onClicked(path):
+            if not path:
                 return
-            if self.browseBtn._path:
-                self._path = self.browseBtn._path
-                self.imageView.setImage(self.value)
-                self.parent.callEvent('onActivate', self.value)
+            self._path = path
+            self.imageView.setImage(self.value)
+            self.parent.callEvent('onActivate', self.value)
 
         self.value = value
 
