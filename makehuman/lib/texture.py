@@ -172,7 +172,10 @@ def getTexture(path, cache=None):
 
         import time
         texture = Texture(img)
-        texture.modified = time.time()
+        if hasattr(img, 'modified'):
+            texture.modified = img.modified
+        else:
+            texture.modified = time.time()
         cache[img.sourcePath] = texture
         return texture
 
@@ -206,7 +209,12 @@ def getTexture(path, cache=None):
     return texture
     
 def reloadTextures():
-    log.message('Reloading textures')
+    """
+    Clear the entire texture cache, resulting in removing all contained textures
+    from the GPU memory (unless other references are kept to the texture 
+    objects).
+    """
+    log.message('Reloading all textures')
     for path in _textureCache:
         try:
             _textureCache[path].loadImage(path)
@@ -214,6 +222,11 @@ def reloadTextures():
             log.error("Error loading texture %s", path, exc_info=True)
 
 def reloadTexture(path):
+    """
+    Remove a texture from the texture cache. Removing a texture from cache will
+    result in unloading the texture from the GPU memory, unless another
+    reference to it is kept.
+    """
     log.message('Reloading texture %s', path)
     if path not in _textureCache:
         log.error('Cannot reload non-existing texture %s', path)
