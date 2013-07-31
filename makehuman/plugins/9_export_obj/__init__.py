@@ -25,7 +25,6 @@ TODO
 import gui
 from export import Exporter
 from exportutils.config import Config
-import posemode
 
 class ObjConfig(Config):
 
@@ -41,6 +40,7 @@ class ExporterOBJ(Exporter):
         Exporter.__init__(self)
         self.name = "Wavefront obj"
         self.filter = "Wavefront (*.obj)"
+        self.fileExtension = "obj"
 
     def build(self, options, taskview):
         Exporter.build(self, options, taskview)
@@ -48,6 +48,7 @@ class ExporterOBJ(Exporter):
 
     def export(self, human, filename):
         from . import mh2obj
+        print filename
 
         mh2obj.exportObj(human, filename("obj"), ObjConfig(self))
 

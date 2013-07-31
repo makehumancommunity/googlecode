@@ -51,6 +51,7 @@ class ExporterMD5(Exporter):
         Exporter.__init__(self)
         self.name = "MD5"
         self.filter = "MD5 (*.md5)"
+        self.fileExtension = "md5"
 
     def build(self, options, taskview):
         self.taskview       = taskview

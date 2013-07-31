@@ -40,7 +40,7 @@ class ExportTaskView(gui3d.TaskView):
 
         exportPath = mh.getPath('exports')
 
-        self.fileentry = self.addTopWidget(gui.FileEntryView('Export'))
+        self.fileentry = self.addTopWidget(gui.FileEntryView('Export', mode='save'))
         self.fileentry.setDirectory(exportPath)
         self.fileentry.setFilter('All Files (*.*)')
 
@@ -143,13 +143,22 @@ class ExportTaskView(gui3d.TaskView):
         @radio.mhEvent
         def onClicked(event):
             self.updateGui()
-            self.fileentry.setFilter(exporter.filter)
+
+    def setFileExtension(self, extension, filter='All Files (*.*)'):
+        self.fileentry.setFilter(filter)
+        path,ext = os.path.splitext(unicode(self.fileentry.edit.text()))
+        if ext:
+            if extension:
+                self.fileentry.edit.setText("%s.%s" % (path, extension.lstrip('.')))
+            else:
+                self.fileentry.edit.setText(path)
 
     def updateGui(self):
         for exporter, radio, options in self.formats:
             if radio.selected:
                 if self.recentlyShown: self.recentlyShown.onHide(self)
                 self.optionsBox.showWidget(options)
+                self.setFileExtension(exporter.fileExtension, exporter.filter)
                 exporter.onShow(self)
                 self.recentlyShown = exporter
                 break

@@ -1051,7 +1051,7 @@ class Dialog(QtGui.QDialog):
             self.helpIds.add(helpId)
 
 class FileEntryView(QtGui.QWidget, Widget):
-    def __init__(self, buttonLabel):
+    def __init__(self, buttonLabel, mode='open'):
         super(FileEntryView, self).__init__()
         Widget.__init__(self)
 
@@ -1062,7 +1062,7 @@ class FileEntryView(QtGui.QWidget, Widget):
 
         self.layout = QtGui.QGridLayout(self)
 
-        self.browse = BrowseButton()
+        self.browse = BrowseButton(mode)
         self.layout.addWidget(self.browse, 0, 0)
         self.layout.setColumnStretch(0, 0)
 
