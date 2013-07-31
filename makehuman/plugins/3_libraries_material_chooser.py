@@ -33,6 +33,7 @@ import download
 import gui
 import filechooser as fc
 import log
+from getpath import isSubPath
 
 class MaterialAction(gui3d.Action):
     def __init__(self, obj, after):
@@ -57,6 +58,10 @@ class MaterialTaskView(gui3d.TaskView):
         self.human = gui3d.app.selectedHuman
 
         self.skinBlender = EthnicSkinBlender(self.human)
+
+        # Paths, in order, in which relative material filepaths will be searched
+        self.searchPaths = [mh.getPath(''), mh.getSysDataPath()]
+        self.searchPaths = [os.path.abspath(p) for p in self.searchPaths]
 
         self.systemSkins = mh.getSysDataPath('skins')
         self.systemClothes = os.path.join(mh.getSysDataPath('clothes'), 'materials')
@@ -271,32 +276,28 @@ class MaterialTaskView(gui3d.TaskView):
             path = values[1]
             if os.path.isfile(path):
                 mat = material.fromFile(path)
-                self.human.material = mat
+                human.material = mat
                 return
             else:
                 for d in [self.systemSkins, self.userSkins]:
                     absP = os.path.join(d, path)
                     if os.path.isfile(absP):
                         mat = material.fromFile(path)
-                        self.human.material = mat
+                        human.material = mat
                         return
             log.warning('Could not find material %s for skinMaterial parameter.', values[1])
-        elif values[0] == 'materials':
+        elif values[0] == 'material':
             uuid = values[1]
             filepath = values[2]
 
             if human.hairProxy and human.hairProxy.getUuid() == uuid:
-                if not os.path.dirname(filepath):
-                    proxy = human.hairProxy
-                    hairPath = os.path.dirname(proxy.file)
-                    filepath = os.path.join(hairPath, filepath)
+                proxy = human.hairProxy
+                filepath = self.getMaterialPath(filepath, proxy.file)
                 human.hairObj.material = material.fromFile(filepath)
                 return
             elif human.eyesProxy and human.eyesProxy.getUuid() == uuid:
-                if not os.path.dirname(filepath):
-                    proxy = human.eyesProxy
-                    eyesPath = os.path.dirname(proxy.file)
-                    filepath = os.path.join(eyesPath, filepath)
+                proxy = human.eyesProxy
+                filepath = self.getMaterialPath(filepath, proxy.file)
                 human.eyesObj.material = material.fromFile(filepath)
                 return
             elif not uuid in human.clothesProxies.keys():
@@ -304,30 +305,65 @@ class MaterialTaskView(gui3d.TaskView):
                 return
 
             proxy = human.clothesProxies[uuid]
-            if not os.path.dirname(filepath):
-                proxy = human.clothesProxies[uuid]
-                clothesPath = os.path.dirname(proxy.file)
-                filepath = os.path.join(clothesPath, filepath)
+            proxy = human.clothesProxies[uuid]
+            filepath = self.getMaterialPath(filepath, proxy.file)
             self.applyClothesMaterial(uuid, filepath)
             return
 
+    def getRelativeMaterialPath(self, filepath, objFile = None):
+        print "finding path for %s  %s" % (filepath, objFile)
+        _originalPath = filepath
+        filepath = os.path.abspath(filepath)
+        if objFile:
+            objFile = os.path.abspath(objFile)
+            if os.path.isdir(objFile):
+                objFile = os.path.dirname(objFile)[0]
+            searchPaths = [ objFile ] + self.searchPaths
+        else:
+            searchPaths = self.searchPaths
+        print "_finding path for %s  %s" % (filepath, objFile)
+
+        for dataPath in searchPaths:
+            if isSubPath(filepath, dataPath):
+                return os.path.relpath(filepath, dataPath)
+
+        return _originalPath
+
+    def getMaterialPath(self, relPath, objFile = None):
+        if objFile:
+            objFile = os.path.abspath(objFile)
+            if os.path.isdir(objFile):
+                objFile = os.path.split(objFile)[0]
+            searchPaths = [ objFile ] + self.searchPaths
+        else:
+            searchPaths = self.searchPaths
+
+        for dataPath in searchPaths:
+            path = os.path.join(dataPath, relPath)
+            if os.path.isfile(path):
+                return path
+
+        return relPath
+
     def saveHandler(self, human, file):
 
-        file.write('skinMaterial %s\n' % os.path.basename(human.material.filename))
+        file.write('skinMaterial %s\n' % self.getRelativeMaterialPath(human.material.filename))
         for name, clo in human.clothesObjs.items():
             if clo:
                 proxy = human.clothesProxies[name]
                 if clo.material.filename !=  proxy.material.filename:
-                    clothesPath = os.path.dirname(proxy.file)
-                    if os.path.dirname(clo.material.filename) == clothesPath:
-                        materialPath = os.path.basename(clo.material.filename)
-                    else:
-                        materialPath = clo.material.filename
-                    file.write('materials %s %s\n' % (proxy.getUuid(), materialPath))
+                    materialPath = self.getRelativeMaterialPath(clo.material.filename, proxy.file)
+                    file.write('material %s %s\n' % (proxy.getUuid(), materialPath))
         if human.hairObj and human.hairProxy:
-            file.write('materials %s %s\n' % (human.hairProxy.getUuid(), human.hairObj.material.filename))
+            proxy = human.hairProxy
+            hairObj = human.hairObj
+            materialPath = self.getRelativeMaterialPath(hairObj.material.filename, proxy.file)
+            file.write('material %s %s\n' % (proxy.getUuid(), materialPath))
         if human.eyesObj and human.eyesProxy:
-            file.write('materials %s %s\n' % (human.eyesProxy.getUuid(), human.eyesObj.material.filename))
+            proxy = human.eyesProxy
+            eyesObj = human.eyesObj
+            materialPath = self.getRelativeMaterialPath(eyesObj.material.filename, proxy.file)
+            file.write('material %s %s\n' % (proxy.getUuid(), materialPath))
 
     def syncMedia(self):
 
@@ -372,7 +408,7 @@ class EthnicSkinBlender(object):
 
         current = self.human.meshData.shaderParameters["litsphereTexture"]
         if current and (isinstance(current, image.Image) or \
-           os.path.abspath(current) == os.path.abspath(mh.getSysDataPath("litspheres/adaptive_skin_tone.png"))):
+           os.path.realpath(current) == os.path.realpath(mh.getSysDataPath("litspheres/adaptive_skin_tone.png"))):
             if event.change == "caucasian" or event.change == "african" or \
               event.change == "asian" or event.change == "material":
                 self.updateAdaptiveSkin()
@@ -416,7 +452,7 @@ def load(app):
     taskview.sortOrder = 0
     category.addTask(taskview)
 
-    app.addLoadHandler('materials', taskview.loadHandler)
+    app.addLoadHandler('material', taskview.loadHandler)
     app.addLoadHandler('skinMaterial', taskview.loadHandler)
     app.addSaveHandler(taskview.saveHandler)
 

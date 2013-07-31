@@ -26,7 +26,6 @@ import log
 import os
 import meshstat
 
-
 class Color(object):
     def __init__(self, r=0.00, g=0.00, b=0.00):
         self.setValues(r,g,b)
@@ -185,8 +184,8 @@ class Material(object):
             log.error("Failed to load material from file %s.", filename)
             return
 
-        self.filename = filename
-        self.filepath = os.path.dirname(filename)
+        self.filename = os.path.normpath(filename)
+        self.filepath = os.path.dirname(self.filename)
 
         shaderConfig_diffuse = None
         shaderConfig_bump = None
@@ -278,7 +277,7 @@ class Material(object):
         elif self.filepath:
             return os.path.relpath(filename, self.filepath)
         else:
-            return filename
+            return os.path.normpath(filename)
 
     def toFile(self, filename, comments = []):
         import codecs
@@ -863,7 +862,7 @@ def getFilePath(filename, folder = None):
         return os.path.abspath(sysPath)
 
     # Nothing found
-    return filename
+    return os.path.normpath(filename)
 
 def isNumeric(string):
     try:
