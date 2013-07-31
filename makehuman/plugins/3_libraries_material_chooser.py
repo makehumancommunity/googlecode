@@ -54,7 +54,9 @@ class MaterialTaskView(gui3d.TaskView):
 
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Material', label='Skin/Material')
-        self.skinBlender = EthnicSkinBlender(gui3d.app.selectedHuman)
+        self.human = gui3d.app.selectedHuman
+
+        self.skinBlender = EthnicSkinBlender(self.human)
 
         self.systemSkins = mh.getSysDataPath('skins')
         self.systemClothes = os.path.join(mh.getSysDataPath('clothes'), 'materials')
@@ -91,7 +93,7 @@ class MaterialTaskView(gui3d.TaskView):
         @self.filechooser.mhEvent
         def onFileSelected(filename):
             mat = material.fromFile(filename)
-            human = gui3d.app.selectedHuman
+            human = self.human
             if self.skinRadio.selected:
                 gui3d.app.do(MaterialAction(human,
                     mat))
@@ -140,7 +142,7 @@ class MaterialTaskView(gui3d.TaskView):
 
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
-        human = gui3d.app.selectedHuman
+        human = self.human
 
         self.skinRadio.setChecked(True)
         self.reloadMaterialChooser()
@@ -167,7 +169,7 @@ class MaterialTaskView(gui3d.TaskView):
         """
         Builds a list of all available clothes.
         """
-        human = gui3d.app.selectedHuman
+        human = self.human
         # Only keep first 3 radio btns (human body parts)
         for radioBtn in self.objectSelector[3:]:
             radioBtn.hide()
@@ -193,7 +195,7 @@ class MaterialTaskView(gui3d.TaskView):
                         return
 
     def applyClothesMaterial(self, uuid, filename):
-        human = gui3d.app.selectedHuman
+        human = self.human
         if uuid not in human.clothesObjs.keys():
             log.warning("Cannot set material for clothes with UUID %s, no such item", uuid)
             return False
@@ -205,14 +207,14 @@ class MaterialTaskView(gui3d.TaskView):
         """
         Get the currently set material for clothing item with specified UUID.
         """
-        human = gui3d.app.selectedHuman
+        human = self.human
         if uuid not in human.clothesObjs.keys():
             return None
         clo = human.clothesObjs[uuid]
         return clo.material.filename
 
     def reloadMaterialChooser(self):
-        human = gui3d.app.selectedHuman
+        human = self.human
         selectedMat = None
 
         if self.skinRadio.selected:
