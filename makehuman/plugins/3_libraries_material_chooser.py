@@ -311,6 +311,9 @@ class MaterialTaskView(gui3d.TaskView):
             return
 
     def getRelativeMaterialPath(self, filepath, objFile = None):
+        """
+        Produce a portable path for writing to file.
+        """
         _originalPath = filepath
         filepath = os.path.abspath(filepath)
         if objFile:
@@ -323,9 +326,9 @@ class MaterialTaskView(gui3d.TaskView):
 
         for dataPath in searchPaths:
             if isSubPath(filepath, dataPath):
-                return os.path.relpath(filepath, dataPath)
+                return os.path.relpath(filepath, dataPath).replace('\\', '/')
 
-        return _originalPath
+        return _originalPath.replace('\\', '/')
 
     def getMaterialPath(self, relPath, objFile = None):
         if objFile:

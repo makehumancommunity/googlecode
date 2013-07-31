@@ -272,12 +272,15 @@ class Material(object):
         self.configureShading(diffuse=shaderConfig_diffuse, bump=shaderConfig_bump, normal=shaderConfig_normal, displacement=shaderConfig_displacement, spec=shaderConfig_spec, vertexColors=shaderConfig_vertexColors)
 
     def _texPath(self, filename, materialPath = None):
+        """
+        Produce a portable path for writing to file.
+        """
         if materialPath:
-            return os.path.relpath(filename, materialPath)
+            return os.path.relpath(filename, materialPath).replace('\\', '/')
         elif self.filepath:
-            return os.path.relpath(filename, self.filepath)
+            return os.path.relpath(filename, self.filepath).replace('\\', '/')
         else:
-            return os.path.normpath(filename)
+            return os.path.normpath(filename).replace('\\', '/')
 
     def toFile(self, filename, comments = []):
         import codecs
@@ -339,7 +342,7 @@ class Material(object):
             f.write("uvMap %s\n\n" % self._texPath(self.uvMap, filedir) )
 
         if self.shader:
-            f.write("shader %s\n\n" % self.shader)
+            f.write("shader %s\n\n" % self.shader.replace('\\', '/'))
 
         hasShaderParam = False
         global _materialShaderParams
