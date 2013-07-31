@@ -521,7 +521,7 @@ class FileChooser(FileChooserBase):
     """
     
     def __init__(self, path, extension, previewExtensions='bmp', notFoundImage=None, sort=FileSort()):
-        self.location = gui.TextView('')
+        self.location = gui.TextEdit('')
         super(FileChooser, self).__init__(path, extension, sort)
 
         self.setPreviewExtensions(previewExtensions)
@@ -556,6 +556,18 @@ class FileChooser(FileChooserBase):
         self.layout.addWidget(self.location, 2, 0, 1, -1)
         self.layout.setRowStretch(2, 0)
 
+        @self.location.mhEvent
+        def onActivate(value):
+            paths = list(value.split("|"))
+            for path in paths:
+                path = path.strip()
+            paths2 = list(paths)
+            for path in paths2:
+                if not os.path.isdir(path):
+                    paths.remove(path)
+            super(FileChooser, self).setPaths(paths)
+            self.refresh()
+            
     def addItem(self, file, label, preview, tags=[]):
         item = FileChooserRectangle(self, file, label, preview)
         item.tags = tags
@@ -567,6 +579,7 @@ class FileChooser(FileChooserBase):
         super(FileChooser, self).setPaths(value)
         locationLbl = "  |  ".join(self.paths)
         self.location.setText(abspath(locationLbl))
+        
 
 # TODO IconListFileChooser (with FileChooserRectangles as items)
 # TODO allow setting a clear or none item at the top
