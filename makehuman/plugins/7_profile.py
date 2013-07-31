@@ -153,7 +153,8 @@ class ProfilingTaskView(gui3d.TaskView):
 
         @self.save.mhEvent
         def onClicked(path):
-            self.saveStats(path)
+            if path:
+                self.saveStats(path)
 
     def setData(self, stats):
         self.data = [Stat(func, data) for func, data in stats.stats.iteritems()]
