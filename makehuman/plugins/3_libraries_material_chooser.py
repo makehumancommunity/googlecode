@@ -311,7 +311,6 @@ class MaterialTaskView(gui3d.TaskView):
             return
 
     def getRelativeMaterialPath(self, filepath, objFile = None):
-        print "finding path for %s  %s" % (filepath, objFile)
         _originalPath = filepath
         filepath = os.path.abspath(filepath)
         if objFile:
@@ -321,7 +320,6 @@ class MaterialTaskView(gui3d.TaskView):
             searchPaths = [ objFile ] + self.searchPaths
         else:
             searchPaths = self.searchPaths
-        print "_finding path for %s  %s" % (filepath, objFile)
 
         for dataPath in searchPaths:
             if isSubPath(filepath, dataPath):
