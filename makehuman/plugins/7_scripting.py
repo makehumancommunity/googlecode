@@ -47,12 +47,18 @@ class ScriptingView(gui3d.TaskView):
 
         self.scriptText.setLineWrapMode(gui.DocumentEdit.NoWrap)
 
-        self.loadButton = box.addWidget(gui.Button('Load ...'), 0, 0)
-        self.saveButton = box.addWidget(gui.Button('Save ...'), 0, 1)
+        self.loadButton = box.addWidget(gui.BrowseButton(mode='open'), 0, 0)
+        self.loadButton.setLabel('Load ...')
+        self.loadButton._path = mh.getPath('')
+        self.saveButton = box.addWidget(gui.BrowseButton(mode='save'), 0, 1)
+        self.saveButton.setLabel('Save ...')
+        self.saveButton._path = mh.getPath('')
 
         @self.loadButton.mhEvent
-        def onClicked(event):
-            filename = mh.getOpenFileName(self.directory, 'Python scripts (*.py);;All files (*.*)')
+        def onClicked(filename):
+            if not filename:
+                return
+
             if(os.path.exists(filename)):
                 contents = open(filename, 'r').read()
                 self.scriptText.setText(contents)
@@ -65,8 +71,10 @@ class ScriptingView(gui3d.TaskView):
                 dlg.prompt("Load script","File " + filename + " does not seem to exist","OK")
 
         @self.saveButton.mhEvent
-        def onClicked(event):
-            filename = mh.getSaveFileName(self.filename or self.directory, 'Python scripts (*.py);;All files (*.*)')
+        def onClicked(filename):
+            if not filename:
+                return
+
             with open(filename, "w") as f:
                 f.write(self.scriptText.getText())
             dlg = gui.Dialog()
