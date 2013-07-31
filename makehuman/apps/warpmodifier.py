@@ -49,14 +49,12 @@ class WarpTarget(algos3d.Target):
 
         self.human = human
         self.modifier = modifier
-        self.isDirty = True
-        self.isObsolete = False
 
 
     def __repr__(self):
-        return ( "<WarpTarget %s dirty:%s>" % (os.path.basename(self.modifier.warppath), self.isDirty) )
+        return ( "<WarpTarget %s>" % (os.path.basename(self.modifier.warppath)) )
 
-
+    '''
     def reinit(self):
 
         if self.isDirty:
@@ -70,7 +68,7 @@ class WarpTarget(algos3d.Target):
 
         self.reinit()
         algos3d.Target.apply(self, obj, morphFactor, update, calcNormals, faceGroupToUpdateName, scale)
-
+    '''
 
 def saveWarpedTarget(shape, path):
     slist = list(shape.items())
@@ -79,6 +77,17 @@ def saveWarpedTarget(shape, path):
     for (n, dr) in slist:
         fp.write("%d %.4f %.4f %.4f\n" % (n, dr[0], dr[1], dr[2]))
     fp.close()
+
+#----------------------------------------------------------
+#   class WarpSlider
+#----------------------------------------------------------
+
+class WarpSlider(humanmodifier.ModifierSlider):
+
+    # Override
+    def resetWarpTargets(self):
+        #log.debug("Reset NOT %s" % self)
+        pass
 
 #----------------------------------------------------------
 #   class WarpModifier
@@ -98,6 +107,7 @@ class TargetSpec:
     def __init__(self, path, factors):
         self.path = path.replace("-${tone}","").replace("-${weight}","")
         self.factors = factors
+        self.verts = None
         if "$" in self.path:
             log.debug("TS %s %s" % (self.path, path))
             halt
@@ -110,6 +120,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
     def __init__(self, template, bodypart, modtype):
         global _warpGlobals
+        _warpGlobals.modifiers.append(self)
 
         string = template.replace('$','').replace('{','').replace('}','')
         warppath = os.path.join(mh.getPath(""), "warp", string)
@@ -126,7 +137,6 @@ class WarpModifier (humanmodifier.SimpleModifier):
         self.bodypart = bodypart
         self.slider = None
         self.refTargets = {}
-        self.refTargetVerts = {}
         self.modtype = modtype
 
         self.fallback = None
@@ -145,20 +155,20 @@ class WarpModifier (humanmodifier.SimpleModifier):
         self.bases = {}
         self.targetSpecs = {}
         if modtype == "GenderAge":
-            self.setupBaseCharacters("Gender", "Age", "NoEthnic", "NoUniv", "NoUniv")
+            self.setupBaseCharacters("Gender", "Age", None, None, None)
         elif modtype == "Ethnic":
-            self.setupBaseCharacters("NoGender", "NoAge", "Ethnic", "NoUniv", "NoUniv")
+            self.setupBaseCharacters(None, None, "Ethnic", None, None)
         elif modtype == "GenderAgeEthnic":
-            self.setupBaseCharacters("Gender", "Age", "Ethnic", "NoUniv", "NoUniv")
+            self.setupBaseCharacters("Gender", "Age", "Ethnic", None, None)
         elif modtype == "GenderAgeToneWeight":
-            self.setupBaseCharacters("Gender", "Age", "NoEthnic", "Tone", "Weight")
+            self.setupBaseCharacters("Gender", "Age", None, "Tone", "Weight")
 
 
     def setupBaseCharacters(self, genders, ages, ethnics, tones, weights):
         global _warpGlobals
 
-        for gender in _warpGlobals.baseCharacterParts[genders]:
-            for age in _warpGlobals.baseCharacterParts[ages]:
+        for gender in ["female", "male"]:
+            for age in ["baby", "child", "young", "old"]:
                 for ethnic in _warpGlobals.baseCharacterParts[ethnics]:
                     path1 = str(self.template)
                     key1 = ""
@@ -175,86 +185,38 @@ class WarpModifier (humanmodifier.SimpleModifier):
                         factors1.append(ethnic)
                         path1 = path1.replace("${ethnic}", ethnic)
 
-                    if True:    # Hack for expressions
-                        for e in _warpGlobals.ethnics:
-                            self.remaps[e] = "caucasian"
+                    base1 += gender + "-"
+                    key1 += gender + "-"
+                    factors1.append(gender)
+                    path1 = path1.replace("${gender}", gender)
 
-                    if gender is None:
-                        base1 += "female-"
-                        for g in _warpGlobals.genders:
-                            self.remaps[g] = "female"
+                    base1 += age + ".target"
+                    key1 += age
+                    factors1.append(age)
+                    if ages is None:
+                        path1 = path1.replace("${age}", "young")
                     else:
-                        base1 += gender + "-"
-                        key1 += gender + "-"
-                        factors1.append(gender)
-                        path1 = path1.replace("${gender}", gender)
-
-                    if age is None:
-                        base1 += "young.target"
-                        for a in _warpGlobals.ages:
-                            self.remaps[a] = "young"
-                    else:
-                        base1 += age + ".target"
-                        key1 += age
-                        factors1.append(age)
                         path1 = path1.replace("${age}", age)
 
                     if key1[-1] == "-":
                         key1 = key1[:-1]
+                    key1 = base1
                     self.bases[key1] = BaseSpec(base1, factors1)
                     self.targetSpecs[key1] = TargetSpec(path1, factors1)
-                    if gender is None or age is None:
+
+                    if tones is None or weights is None:
                         #log.debug("Bases %s" % self.bases.items())
-                        return
+                        continue
 
                     for tone in _warpGlobals.baseCharacterParts[tones]:
                         for weight in _warpGlobals.baseCharacterParts[weights]:
-                            if tone and weight:
-                                tone2 = tone
-                                weight2 = weight
-                            '''
-                            elif tone:
-                                tone2 = tone
-                                weight2 = "averageweight"
-                            elif tone:
-                                tone2 = "averagemuscle"
-                                weight2 = weight
-                            else:
-                                tone2 = "averagemuscle"
-                                weight2 = "averageweight"
-                            '''
                             base2 = mh.getSysDataPath("targets/macrodetails/universal-%s-%s-%s-%s.target") % (gender, age, tone, weight)
-                            key2 = "universal-%s-%s-%s-%s" % (gender, age, tone2, weight2)
-                            factors2 = factors1 + [tone2, weight2]
+                            key2 = "universal-%s-%s-%s-%s" % (gender, age, tone, weight)
+                            factors2 = factors1 + [tone, weight]
+                            key2 = base2
                             self.bases[key2] = BaseSpec(base2, factors2)
-                            path2 = path1.replace("${tone}", tone2).replace("${weight}", weight2)
+                            path2 = path1.replace("${tone}", tone).replace("${weight}", weight)
                             self.targetSpecs[key2] = TargetSpec(path2, factors2)
-
-                            '''
-                            elif tone:
-                                base2 = mh.getSysDataPath("targets/macrodetails/universal-%s-%s-%s-averageweight.target") % (gender, age, tone)
-                                key2 = "universal-%s-%s-%s" % (gender, age, tone)
-                                factors2 = factors1 + [tone, 'averageweight']
-                                self.bases[key2] = BaseSpec(base2, factors2)
-                                path2 = path1.replace("${tone}", tone).replace("-${weight}", "")
-                                self.targetSpecs[key2] = TargetSpec(path2, factors2)
-
-                            elif weight:
-                                base2 = mh.getSysDataPath("targets/macrodetails/universal-%s-%s-averagemuscle-%s.target") % (gender, age, weight)
-                                key2 = "universal-%s-%s-%s" % (gender, age, weight)
-                                factors2 = factors1 + ['averagemuscle', weight]
-                                self.bases[key2] = BaseSpec(base2, factors2)
-                                path2 = path1.replace("-${tone}", "").replace("${weight}", weight)
-                                self.targetSpecs[key2] = TargetSpec(path2, factors2)
-
-                            else:
-                                base2 = mh.getSysDataPath("targets/macrodetails/universal-%s-%s-averagemuscle-averageweight.target") % (gender, age)
-                                key2 = "universal-%s" % (gender)
-                                factors2 = factors1 + ['averagemuscle', 'averageweight']
-                                path2 = path1.replace("-${tone}", "").replace("-${weight}", "")
-                                self.targetSpecs[key1] = TargetSpec(path2, factors2)
-                            '''
-
 
 
     def __repr__(self):
@@ -287,8 +249,8 @@ class WarpModifier (humanmodifier.SimpleModifier):
         else:
             target = WarpTarget(self, human)
             algos3d.warpTargetBuffer[self.warppath] = target
-
-        target.reinit()
+            shape = self.compileWarpTarget(human)
+            saveWarpedTarget(shape, self.warppath)
 
 
     def compileWarpTarget(self, human):
@@ -299,132 +261,54 @@ class WarpModifier (humanmodifier.SimpleModifier):
         obj = human.meshData
         srcCharCoord = obj.orig_coord.copy()
         trgCharCoord = obj.orig_coord.copy()
+        srcTargetCoord = {}
 
-        for trgpath,value in human.targetsDetailStack.items():
+        sumtargets = 0
+        for charpath,value in human.targetsDetailStack.items():
+            if charpath in self.bases.keys():
+                sumtargets += value
+        if sumtargets == 0:
+            log.debug("No targets: %s" % human.targetsDetailStack.keys())
+        factor = 1.0/sumtargets
+
+        for charpath,value in human.targetsDetailStack.items():
             try:
-                target = algos3d.targetBuffer[trgpath]
+                target = algos3d.targetBuffer[charpath]
             except KeyError:
                 continue
+            log.debug("  CHAR %s %s %s" % (charpath, value, target))
             srcVerts = np.s_[...]
             dstVerts = target.verts[srcVerts]
             data = value * target.data[srcVerts]
-            data.resize((meshstat.numberOfVertices,3))
-            trgCharCoord += data
-            if trgpath in self.bases.keys():
+            trgCharCoord[dstVerts] += data
+            if charpath in self.bases.keys():
                 srcCharCoord[dstVerts] += data
+                trgspec = self.targetSpecs[charpath]
+                srcTrg = readTarget(trgspec.path)
+                addVerts(srcTargetCoord, factor*value, srcTrg)
 
-        self.updateRefTarget(human)
-
-        if self.refTargetVerts:
-            shape = warp.warp_target(self.refTargetVerts, srcCharCoord, trgCharCoord, landmarks)
+        if srcTargetCoord:
+            shape = warp.warp_target(srcTargetCoord, srcCharCoord, trgCharCoord, landmarks)
         else:
             shape = {}
         log.message("...done")
         return shape
 
+#----------------------------------------------------------
+#   Reset warp buffer
+#----------------------------------------------------------
 
-    def updateRefTarget(self, human):
-        if not self.makeRefTarget(human):
-            log.message("Updating character")
-            #human.applyAllTargets()
-            self.getBases(human)
-            if not self.makeRefTarget(human):
-                raise NameError("Character is empty")
+def resetWarpBuffer():
+    global _warpGlobals
+    import gui3d
 
-
-    def getBases(self, human):
-        targetChanged = False
-        for key,base in self.bases.items():
-            verts = self.getRefObjectVerts(base.path)
-            if verts is None:
-                base.value = 0
-                continue
-
-            cval1 = human.getDetail(base.path)
-            if base.value != cval1:
-                base.value = cval1
-                targetChanged = True
-        return targetChanged
-
-
-    def makeRefTarget(self, human):
-        self.refTargetVerts = {}
-        madeRefTarget = False
-
-        factors = {}
-        for key,value in self.fallback.getFactors(human, 1.0).items():
-            try:
-                key1 = self.remaps[key]
-            except KeyError:
-                key1 = key
-            try:
-                factors[key1] += value
-            except KeyError:
-                factors[key1] = value
-
-        for target in self.targetSpecs.values():
-            cval = 1.0
-            for factor in target.factors:
-                cval *= factors[factor]
-            if cval > 1e-6:
-                madeRefTarget = True
-                verts = self.getRefTargetVertsInsist(target.path)
-                if verts is not None:
-                    addVerts(self.refTargetVerts, cval, verts)
-        return madeRefTarget
-
-
-    def getRefTargetVertsInsist(self, path):
-        verts = self.getTarget(path)
-        if verts is not None:
-            self.refTargets[path] = verts
-            return verts
-
-        for string in ["minmuscle", "maxmuscle", "minweight", "maxweight"]:
-            if string in path:
-                log.message("  Did not find %s", path)
-                return None
-
-        path1 = path.replace("/asian", "/caucasian").replace("/african", "/caucasian")
-        verts = self.getTarget(path1)
-        if verts is not None:
-            self.refTargets[path] = verts
-            log.message("   Replaced %s\n  -> %s", path, path1)
-            return verts
-
-        path2 = path1.replace("/baby", "/young").replace("/child", "/young").replace("/old", "/young")
-        verts = self.getTarget(path2)
-        if verts is not None:
-            self.refTargets[path] = verts
-            log.message("   Replaced %s\n  -> %s", path, path2)
-            return verts
-
-        path3 = path2.replace("/male", "/female")
-        if verts is not None:
-            self.refTargets[path] = verts
-            log.message("   Replaced %s\n  -> %s", path, path2)
-            return verts
-
-        path4 = path3.replace("/female_young", "")
-        verts = self.getTarget(path4)
-        self.refTargets[path] = verts
-
-        if verts is None:
-            log.message("Warning: Found none of:\n    %s\n    %s\n    %s\n    %s\n    %s" %
-                (path, path1, path2, path3, path4))
-        else:
-            log.message("   Replaced %s\n  -> %s" % (path, path4))
-        return verts
-
-
-    def getTarget(self, path):
-        try:
-            verts = self.refTargets[path]
-        except KeyError:
-            verts = None
-        if verts is None:
-            verts = readTarget(path)
-        return verts
+    if algos3d.warpTargetBuffer:
+        log.debug("WARP RESET")
+        human = gui3d.app.selectedHuman
+        for trgpath in algos3d.warpTargetBuffer:
+            human.setDetail(trgpath, 0)
+        algos3d.warpTargetBuffer = {}
+        human.applyAllTargets()
 
 #----------------------------------------------------------
 #   Call from exporter
@@ -435,28 +319,49 @@ def compileWarpTarget(template, fallback, human, bodypart):
     return mod.compileWarpTarget(human)
 
 #----------------------------------------------------------
+#   Add verts. Replace with something faster using numpy.
+#----------------------------------------------------------
+
+def addVerts(targetVerts, value, verts):
+    for n,v in verts.items():
+        dr = value*v
+        try:
+            targetVerts[n] += dr
+        except KeyError:
+            targetVerts[n] = dr
+
+#----------------------------------------------------------
 #   Read target
 #----------------------------------------------------------
 
 def readTarget(filepath):
+    global _warpGlobals
 
-    words = filepath.split("-")
-    if (words[0] == mh.getSysDataPath("targets/macrodetails/universal") and
-        words[-2] == "averagemuscle" and
-        words[-1] == "averageweight.target"):
-        return {}
+    log.debug("GETTARG %s" % filepath)
+    try:
+        return _warpGlobals.refTargets[filepath]
+    except KeyError:
+        pass
+
+    log.debug("READTARG %s" % filepath)
+    words = filepath.rsplit("-",3)
+    if words[0] == mh.getSysDataPath("targets/macrodetails/universal"):
+        if words[1] == "averagemuscle":
+            if words[2] == "averageweight.target":
+                return {}
+            else:
+                filepath = words[0] + "-" + words[2]
+        elif words[2] == "averageweight.target":
+            filepath = words[0] + "-" + words[1] + ".target"
+        log.debug("  NEW %s" % filepath)
 
     try:
-        fp = open(filepath, "r")
+        fp = open(filepath, "rU")
     except:
         fp = None
 
     if fp is None:
-        filepath1 = filepath.replace("-averagemuscle", "").replace("-averageweight", "")
-        try:
-            fp = open(filepath1, "r")
-        except:
-            fp = None
+        fp = findReplacementFile(filepath)
 
     if fp:
         target = {}
@@ -467,23 +372,40 @@ def readTarget(filepath):
                 if n < meshstat.numberOfVertices:
                     target[n] = np.array([float(words[1]), float(words[2]), float(words[3])])
         fp.close()
+        _warpGlobals.refTargets[filepath] = target
         return target
     else:
-        log.message("Found neither %s nor %s" % (filepath, filepath1))
         halt
         return None
 
-#----------------------------------------------------------
-#   For testing np
-#----------------------------------------------------------
 
-def addVerts(targetVerts, cval, verts):
-    for n,v in verts.items():
-        dr = cval*v
-        try:
-            targetVerts[n] += dr
-        except KeyError:
-            targetVerts[n] = dr
+def findReplacementFile(filepath):
+    # If some targets are missing, try to find a good default
+    replacements = [
+        (["-averagemuscle", "-averageweight"], ""),
+        (["/asian", "/african"], "/caucasian"),
+        (["/baby", "/child", "/old"], "/young"),
+        (["/male"], "/female"),
+        (["/female_young"], ""),
+    ]
+
+    filepath1 = filepath
+    tried = [filepath]
+    for variants,default in replacements:
+        for variant in variants:
+            filepath1 = filepath1.replace(variant, default)
+            try:
+                fp = open(filepath1, "rU")
+                log.message("   Replaced %s\n  -> %s", filepath, filepath1)
+                return fp
+            except IOError:
+                continue
+
+    string = "Warning: Found none of:"
+    for filepath1 in tried:
+        string += "\n    %s" % filepath1
+    log.message(string)
+    return None
 
 #----------------------------------------------------------
 #   Global warp data
@@ -491,12 +413,9 @@ def addVerts(targetVerts, cval, verts):
 
 class GlobalWarpData:
     def __init__(self):
-        self._refObjectVerts = None
+        self.modifiers = []
         self._landMarks = None
-        self._refObjects = None
-        self._unwarpedCoords = None
-        self._warpedCoords = None
-        self.dirty = False
+        self.refTargets = {}
 
         self.ethnics = ["african", "asian", "caucasian"]
         self.genders = ["female", "male"]
@@ -528,21 +447,12 @@ class GlobalWarpData:
 
         self.baseCharacterParts = {
             "Gender" : ("male", "female"),
-            "NoGender" : [None],
             "Age" : ("child", "young", "old"),
-            "NoAge" : [None],
             "Ethnic" : ("caucasian", "african", "asian"),
-            "NoEthnic" : [None],
             "Tone" : ("minmuscle", "averagemuscle", "maxmuscle"),
             "Weight" : ("minweight", "averageweight", "maxweight"),
-            "NoUniv" : [None]
+            None : [None]
         }
-
-
-    def reset(self):
-        self._unwarpedCoords = None
-        self._warpedCoords = None
-        self.dirty = False
 
 
     def getLandMarks(self, bodypart):
@@ -575,4 +485,9 @@ def touchWarps():
 
 _warpGlobals = GlobalWarpData()
 
+
+def order(dict):
+    stru = list(dict.items())
+    stru.sort()
+    return stru
 

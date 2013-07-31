@@ -123,12 +123,10 @@ class ModifierAction(gui3d.Action):
 
 class ModifierSlider(gui.Slider):
 
-    def __init__(self, value=0.0, min=0.0, max=1.0, label=None, modifier=None, valueConverter=None,
-                 warpResetNeeded=True, image=None):
+    def __init__(self, value=0.0, min=0.0, max=1.0, label=None, modifier=None, valueConverter=None, image=None):
         super(ModifierSlider, self).__init__(value, min, max, label, valueConverter=valueConverter, image=image)
         self.modifier = modifier
         self.value = None
-        self.warpResetNeeded = warpResetNeeded
         self.changing = None
 
     def onChanging(self, value):
@@ -137,6 +135,7 @@ class ModifierSlider(gui.Slider):
             return
         self.changing = value
         gui3d.app.callAsync(self._onChanging)
+
 
     def _onChanging(self):
         value = self.changing
@@ -152,9 +151,9 @@ class ModifierSlider(gui.Slider):
                         human.getSeedMesh().setVisibility(1)
                     human.getSubdivisionMesh(False).setVisibility(0)
             self.modifier.updateValue(human, value, gui3d.app.settings.get('realtimeNormalUpdates', True))
+            self.resetWarpTargets()
             human.updateProxyMesh()
-        if self.warpResetNeeded:
-            algos3d.resetWarpBuffer()
+
 
     def onChange(self, value):
 
@@ -170,13 +169,21 @@ class ModifierSlider(gui.Slider):
                 human.getSeedMesh().setVisibility(0)
             human.getSubdivisionMesh(False).setVisibility(1)
         self.value = None
-        if self.warpResetNeeded:
-            algos3d.resetWarpBuffer()
+        self.resetWarpTargets()
+
 
     def update(self):
 
         human = gui3d.app.selectedHuman
         self.setValue(self.modifier.getValue(human))
+
+
+    # Overwrite for warp targets
+    def resetWarpTargets(self):
+        import warpmodifier
+        log.debug("Reset %s" % self)
+        warpmodifier.resetWarpBuffer()
+
 
 class GenericSlider(ModifierSlider):
     @staticmethod

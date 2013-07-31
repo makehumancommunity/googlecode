@@ -57,7 +57,7 @@ def setupExpressions(folder, prefix):
     return(expressions)
 
 
-ExpressionUnits = setupExpressions(mh.getSysDataPath("/targets/expression/units/caucasian"), "")
+ExpressionUnits = setupExpressions(mh.getSysDataPath("targets/expression/units/caucasian"), "")
 
 #----------------------------------------------------------
 #   Loop

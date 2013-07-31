@@ -91,6 +91,11 @@ class Target:
     npzfile = None
     npztime = None
 
+
+    def __repr__(self):
+        return ( "<Target %s>" % (os.path.basename(self.name)) )
+
+
     def _load_text(self, name):
         data = []
         with open(name) as fd:
@@ -256,28 +261,13 @@ def getTarget(obj, targetPath):
         pass
 
     try:
-        target = warpTargetBuffer[targetPath]
+        return warpTargetBuffer[targetPath]
     except KeyError:
-        target = None
-    if target:
-        target.reinit()
-        return target
+        pass
 
     target = Target(obj, targetPath)
     targetBuffer[targetPath] = target
     return target
-
-
-def resetWarpBuffer():
-    global warpTargetBuffer
-    import gui3d
-    if warpTargetBuffer:
-        log.debug("WARP RESET")
-        human = gui3d.app.selectedHuman
-        for trgpath in warpTargetBuffer:
-            human.setDetail(trgpath, 0)
-        warpTargetBuffer = {}
-        human.applyAllTargets()
 
 
 def loadTranslationTarget(obj, targetPath, morphFactor, faceGroupToUpdateName=None, update=1, calcNorm=1, scale=[1.0,1.0,1.0]):

@@ -44,20 +44,6 @@ class GroupBoxRadioButton(gui.RadioButton):
         self.task.groupBox.showWidget(self.groupBox)
 
 #----------------------------------------------------------
-#   class ExpressionSlider
-#----------------------------------------------------------
-
-class ExpressionSlider(humanmodifier.ModifierSlider):
-    def __init__(self, label, modifier):
-        humanmodifier.ModifierSlider.__init__(self, label=label, modifier=modifier, warpResetNeeded=False)
-
-    def onChanging(self, value):
-        humanmodifier.ModifierSlider.onChanging(self, value)
-
-    def onChange(self, value):
-        humanmodifier.ModifierSlider.onChange(self, value)
-
-#----------------------------------------------------------
 #   class ExpressionTaskView
 #----------------------------------------------------------
 
@@ -95,12 +81,12 @@ class ExpressionTaskView(gui3d.TaskView):
             # Create sliders
             for subname in subnames:
                 modifier = warpmodifier.WarpModifier(
-                        mh.getSysDataPath('targets/expression/units/${ethnic}/%s-%s.target' % (name, subname)),
+                        'data/targets/expression/units/${ethnic}/%s-%s.target' % (name, subname),
                         "face",
                         "Ethnic")
 
                 self.modifiers[name + '-' + subname] = modifier
-                slider = box.addWidget(ExpressionSlider(subname.capitalize(), modifier))
+                slider = box.addWidget(warpmodifier.WarpSlider(label=subname.capitalize(), modifier=modifier))
                 self.sliders.append(slider)
                 modifier.slider = slider
             # Create radiobutton

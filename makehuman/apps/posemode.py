@@ -93,7 +93,7 @@ def touchStorage():
         _storage.dirty = True
         _storage.filepath = None
         #_storage.poseDetails = {}
-        log.debug("Storage touched")
+        #log.debug("Storage touched")
 
 _storage = Storage()
 _inPoseMode = False
