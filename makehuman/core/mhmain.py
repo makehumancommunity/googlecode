@@ -485,11 +485,26 @@ class MHApplication(gui3d.Application, mh.Application):
         self.splash.hide()
         # self.splash.finish(self.mainwin)
 
+        if self.settings.get('restoreWindowSize', False):
+            self.mainwin.resize(
+                self.settings.get('windowWidth', self.mainwin.width()),
+                self.settings.get('windowHeight', self.mainwin.height()))
+
+            self.mainwin.move(
+                self.settings.get('windowXPos', self.mainwin.pos().x()),
+                self.settings.get('windowYPos', self.mainwin.pos().y()))
+
     # Events
     def onStart(self, event):
         self.startupSequence()
 
     def onStop(self, event):
+        if self.settings.get('restoreWindowSize', False):
+            self.settings['windowWidth'] = self.mainwin.width()
+            self.settings['windowHeight'] = self.mainwin.height()
+
+            self.settings['windowXPos'] = self.mainwin.pos().x()
+            self.settings['windowYPos'] = self.mainwin.pos().y()
 
         self.saveSettings(True)
         self.unloadPlugins()

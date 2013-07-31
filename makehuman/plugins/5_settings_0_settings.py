@@ -82,20 +82,18 @@ class SettingsTaskView(gui3d.TaskView):
         metric = unitBox.addWidget(gui.RadioButton(modes, 'Metric', gui3d.app.settings.get('units', 'metric') == 'metric'))
         imperial = unitBox.addWidget(gui.RadioButton(modes, 'Imperial', gui3d.app.settings.get('units', 'metric') == 'imperial'))
 
-        preloadBox = self.addLeftWidget(gui.GroupBox('Preloading'))
-        self.preload = preloadBox.addWidget(gui.CheckBox("Preload macro targets",
+        startupBox = self.addLeftWidget(gui.GroupBox('Startup'))
+        self.preload = startupBox.addWidget(gui.CheckBox("Preload macro targets",
             gui3d.app.settings.get('preloadTargets', False)))
+        self.saveScreenSize = startupBox.addWidget(gui.CheckBox("Restore window size",
+            gui3d.app.settings.get('restoreWindowSize', False)))
         
         themes = []
         themesBox = self.themesBox = self.addRightWidget(gui.GroupBox('Theme'))
         self.themeNative = themesBox.addWidget(ThemeRadioButton(themes, "Native look", "default"))
         self.themeMH = themesBox.addWidget(ThemeRadioButton(themes, "MakeHuman", "makehuman"))
 
-        initSizeBox = self.addLeftWidget(gui.GroupBox('Initial window size'))
-        self.initSizeText = initSizeBox.addWidget(gui.TextEdit(
-            str(gui3d.app.settings.get('InitWinWidth', gui3d.app.mainwin.width())) + "x" +
-            str(gui3d.app.settings.get('InitWinHeight', gui3d.app.mainwin.height()))))
-        
+
         # For debugging themes on multiple platforms
         '''
         platforms = []
@@ -134,16 +132,6 @@ class SettingsTaskView(gui3d.TaskView):
             gui.Slider.showImages(self.sliderImages.selected)
             mh.refreshLayout()
 
-        @self.initSizeText.mhEvent
-        def onChange(value):
-            try:
-                value = value.replace(" ", "")
-                res = [int(x) for x in value.split("x")]
-                gui3d.app.settings['InitWinWidth'] = res[0]
-                gui3d.app.settings['InitWinHeight'] = res[1]
-            except: # The user hasn't typed the value correctly yet.
-                pass
-            
         @metric.mhEvent
         def onClicked(event):
             gui3d.app.settings['units'] = 'metric'
@@ -155,6 +143,10 @@ class SettingsTaskView(gui3d.TaskView):
         @self.preload.mhEvent
         def onClicked(event):
             gui3d.app.settings['preloadTargets'] = self.preload.selected
+
+        @self.saveScreenSize.mhEvent
+        def onClicked(event):
+            gui3d.app.settings['restoreWindowSize'] = self.saveScreenSize.selected
 
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
