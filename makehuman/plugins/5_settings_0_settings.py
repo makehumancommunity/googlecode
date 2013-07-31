@@ -159,10 +159,6 @@ def load(app):
     category = app.getCategory('Settings')
     taskview = category.addTask(SettingsTaskView(category))
 
-    app.mainwin.resize(
-        app.settings.get('InitWinWidth', app.mainwin.width()),
-        app.settings.get('InitWinHeight', app.mainwin.height()))
-
 def unload(app):
     pass
 
