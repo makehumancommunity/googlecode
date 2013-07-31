@@ -161,15 +161,19 @@ def getTexture(path, cache=None):
 
     if isinstance(path, Image):
         img = path
-        if hasattr(img, 'cachePath'):
-            if img.cachePath in cache:
-                texture = cache[img.cachePath]
-                return texture
+        if hasattr(img, 'sourcePath'):
+            if img.sourcePath in cache:
+                texture = cache[img.sourcePath]
+                if not (hasattr(img, 'modified') and img.modified > texture.modified):
+                    return texture
+        else:
+            log.warning("Image used as texture does not contain a \"sourcePath\" attribute, making it impossible to cache it. This could cause slow rendering.")
+            return Texture(img)
+
         import time
         texture = Texture(img)
         texture.modified = time.time()
-        img.cachePath = texture.modified
-        cache[img.cachePath] = texture
+        cache[img.sourcePath] = texture
         return texture
 
     if path in cache:

@@ -24,6 +24,7 @@ TODO
 
 import numpy as np
 import image_qt
+import time
 
 class Image(object):
     def __init__(self, path = None, width = 0, height = 0, bitsPerPixel = 32, components = None, data = None):
@@ -36,6 +37,7 @@ class Image(object):
                 self._data = image_qt.load(qimg)
             else:   # Path string / QImage.
                 self._data = image_qt.load(path)
+                self.sourcePath = path
         elif data is not None:
             if isinstance(data, Image):
                 # Share data between images.
@@ -54,6 +56,8 @@ class Image(object):
                     raise NotImplementedError("bitsPerPixel must be 24 or 32")
             self._data = np.empty((height, width, components), dtype=np.uint8)
         self._data = np.ascontiguousarray(self._data)
+
+        self.modified = time.time()
 
     @property
     def size(self):
@@ -106,6 +110,7 @@ class Image(object):
 
     def resize(self, width, height):
         self._data = self.resized_(width, height)
+        self.modified = time.time()
 
     def blit(self, other, x, y):
         dh, dw, dc = self._data.shape
@@ -115,6 +120,8 @@ class Image(object):
         sw = min(sw, dw - x)
         sh = min(sh, dh - y)
         self._data[y:y+sh,x:x+sw,:] = other._data
+
+        self.modified = time.time()
 
     def flip_vertical(self):
         return Image(data = self._data[::-1,:,:])
@@ -162,6 +169,7 @@ class Image(object):
             raise TypeError("tuple expected")
 
         self._data[y,x,:] = color
+        self.modified = time.time()
 
     def convert(self, components):
         if self.components == components:
