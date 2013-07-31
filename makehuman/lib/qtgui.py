@@ -783,9 +783,6 @@ class TextEdit(QtGui.QLineEdit, Widget):
 
     def keyPressEvent(self, event):
         key = event.key()
-        mod = int(event.modifiers()) & ~QtCore.Qt.ShiftModifier & ~QtCore.Qt.KeypadModifier
-        if mod:
-            return
         if key == QtCore.Qt.Key_Up:
             self._key_up()
             event.accept()
@@ -793,6 +790,9 @@ class TextEdit(QtGui.QLineEdit, Widget):
             self._key_down()
             event.accept()
         else:
+            mod = int(event.modifiers())
+            if mod > 0:
+                self.callEvent('onModifier', (mod, key))
             super(TextEdit, self).keyPressEvent(event)
 
     def _key_up(self):
