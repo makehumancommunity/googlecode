@@ -28,7 +28,7 @@ import os
 if sys.platform == 'win32':
     import _winreg
 
-def getPath(type = None, mustExist = False):
+def getPath(type = None):
     if isinstance(type, (str, unicode)):
         typeStr = str(type)
     elif type is None:
@@ -84,10 +84,6 @@ def getPath(type = None, mustExist = False):
             path += "/"
         else:
             raise ValueError("Unknown property '%s' for getPath()!" % typeStr)
-
-    if mustExist:   # Get the deepest possible dir that exists.
-        while not os.path.isdir(path):
-            path = os.path.abspath(os.path.join(path, '..'))
 
     return path
 

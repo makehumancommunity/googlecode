@@ -31,7 +31,7 @@ from core import G
 import events3d
 import language
 import log
-from getpath import getSysDataPath
+from getpath import getSysDataPath, getPath, isSubPath
 
 def getLanguageString(text):
     if not text:
@@ -1062,7 +1062,7 @@ class FileEntryView(QtGui.QWidget, Widget):
 
         self.layout = QtGui.QGridLayout(self)
 
-        self.browse = QtGui.QPushButton("...")
+        self.browse = BrowseButton()
         self.layout.addWidget(self.browse, 0, 0)
         self.layout.setColumnStretch(0, 0)
 
@@ -1077,12 +1077,17 @@ class FileEntryView(QtGui.QWidget, Widget):
 
         self.setSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Fixed)
 
-        self.connect(self.browse, QtCore.SIGNAL('clicked(bool)'), self._browse)
         self.connect(self.confirm, QtCore.SIGNAL('clicked(bool)'), self._confirm)
         self.connect(self.edit, QtCore.SIGNAL(' returnPressed()'), self._confirm)
 
+        @self.browse.mhEvent
+        def onClicked(path):
+            if path:
+                self.edit.setText(path)
+
     def setDirectory(self, directory):
         self.directory = directory
+        self.browse._path = directory
 
     def setFilter(self, filter):
         self.filter = getLanguageString(filter)
@@ -1413,15 +1418,23 @@ class BrowseButton(Button):
     def _clicked(self, state):
         if not os.path.isdir(self._path) and not os.path.isfile(self._path):
             self._path = os.path.split(self._path)[0]
+            homePath = os.path.abspath(getPath(''))
+            if os.path.isdir(homePath) and isSubPath(os.path.abspath(self._path), homePath):
+                # Find first existing folder within MH home path
+                while self._path and not os.path.isdir(self._path):
+                    self._path = os.path.split(self._path)[0]
             if not os.path.isdir(self._path):
                 self._path = os.getcwd()
         if self._mode == 'open':
-            self._path = str(QtGui.QFileDialog.getOpenFileName(G.app.mainwin, directory=self._path, filter=self._filter))
+            path = str(QtGui.QFileDialog.getOpenFileName(G.app.mainwin, directory=self._path, filter=self._filter))
         elif self._mode == 'save':
-            self._path = str(QtGui.QFileDialog.getSaveFileName(G.app.mainwin, directory=self._path, filter=self._filter))
+            path = str(QtGui.QFileDialog.getSaveFileName(G.app.mainwin, directory=self._path, filter=self._filter))
         elif self._mode == 'dir':
-            self._path = str(QtGui.QFileDialog.getExistingDirectory(G.app.mainwin, directory=self._path))
-        self.callEvent('onClicked', self._path)
+            path = str(QtGui.QFileDialog.getExistingDirectory(G.app.mainwin, directory=self._path))
+
+        if path:
+            self._path = path
+        self.callEvent('onClicked', path)
 
 class Action(QtGui.QAction, Widget):
     _groups = {}
