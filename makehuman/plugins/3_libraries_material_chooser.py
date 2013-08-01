@@ -51,6 +51,119 @@ class MaterialAction(gui3d.Action):
         return True
 
 
+class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
+    def __init__(self, human):
+        super(HumanObjectSelector, self).__init__()
+        self.human = human
+        self._selected = 'skin'
+
+        self.layout = gui.QtGui.QGridLayout(self)
+
+        self.objectSelector = []
+        self.humanBox = gui.GroupBox('Human')
+        self.layout.addWidget(self.humanBox)
+        self.skinRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Skin", selected=True))
+        self.hairRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Hair", selected=False))
+        self.eyesRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Eyes", selected=False))
+
+        @self.skinRadio.mhEvent
+        def onClicked(event):
+            if self.skinRadio.selected:
+                self.selected = 'skin'
+                self.callEvent('onActivate', self.selected)
+
+        @self.hairRadio.mhEvent
+        def onClicked(event):
+            if self.hairRadio.selected:
+                self.selected = 'hair'
+                self.callEvent('onActivate', self.selected)
+
+        @self.eyesRadio.mhEvent
+        def onClicked(event):
+            if self.eyesRadio.selected:
+                self.selected = 'eyes'
+                self.callEvent('onActivate', self.selected)
+
+        self.clothesBox = gui.GroupBox('Clothes')
+        self.layout.addWidget(self.clothesBox)
+        self.clothesSelections = []
+
+    def getSelected(self):
+        if self._selected == 'eyes' and not self.human.eyesObj:
+            return 'skin'
+
+        if self._selected == 'hair' and not self.human.hairObj:
+            return 'skin'
+
+        if self._selected in ['skin', 'hair', 'eyes'] or \
+           self._selected in self.human.clothesObjs.keys():
+            return self._selected
+        else:
+            return 'skin'
+
+    def setSelected(self, value):
+        if self._selected == 'eyes' and not self.human.eyesObj:
+            self._selected = 'skin'
+            return
+
+        if self._selected == 'hair' and not self.human.hairObj:
+            self._selected = 'skin'
+            return
+
+        if value in ['skin', 'hair', 'eyes'] or \
+           value in self.human.clothesObjs.keys():
+            self._selected = value
+        else:
+            self._selected = 'skin'
+
+    selected = property(getSelected, setSelected)
+
+    def onShow(self, event):
+        selected = self.selected
+
+        self.skinRadio.setChecked(selected == 'skin')
+
+        if self.human.hairObj:
+            self.hairRadio.setEnabled(True)
+        else:
+            self.hairRadio.setEnabled(False)
+        self.hairRadio.setChecked(selected == 'hair')
+
+        if self.human.eyesObj:
+            self.eyesRadio.setEnabled(True)
+        else:
+            self.eyesRadio.setEnabled(False)
+        self.eyesRadio.setChecked(selected == 'eyes')
+
+        self._populateClothesSelector()
+
+    def _populateClothesSelector(self):
+        """
+        Builds a list of all available clothes.
+        """
+        human = self.human
+        # Only keep first 3 radio btns (human body parts)
+        for radioBtn in self.objectSelector[3:]:
+            radioBtn.hide()
+            radioBtn.destroy()
+        del self.objectSelector[3:]
+
+        self.clothesSelections = []
+        clothesList = human.clothesObjs.keys()
+        selected = self.selected
+        for i, uuid in enumerate(clothesList):
+            radioBtn = self.clothesBox.addWidget(gui.RadioButton(self.objectSelector, human.clothesProxies[uuid].name, selected=(selected == uuid)))
+            self.clothesSelections.append( (radioBtn, uuid) )
+
+            @radioBtn.mhEvent
+            def onClicked(event):
+                for radio, uuid in self.clothesSelections:
+                    if radio.selected:
+                        self.selected = uuid
+                        log.debug( 'Selected clothing "%s" (%s)' % (radio.text(), uuid) )
+                        self.callEvent('onActivate', self.selected)
+                        return
+
 class MaterialTaskView(gui3d.TaskView):
 
     def __init__(self, category):
@@ -82,8 +195,6 @@ class MaterialTaskView(gui3d.TaskView):
         self.defaultEyes = [self.systemEyes, self.userEyes]
 
         self.materials = self.defaultClothes
-        self.activeClothing = None
-        self.hairMaterial = None
 
         self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.userSkins, 'mhmat', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), 'Material'))
         self.filechooser.setIconSize(50,50)
@@ -99,18 +210,20 @@ class MaterialTaskView(gui3d.TaskView):
         def onFileSelected(filename):
             mat = material.fromFile(filename)
             human = self.human
-            if self.skinRadio.selected:
+
+            obj = self.humanObjSelector.selected
+            if obj == 'skin':
                 gui3d.app.do(MaterialAction(human,
                     mat))
-            elif self.hairRadio.selected:
+            elif obj == 'hair':
                 gui3d.app.do(MaterialAction(human.hairObj,
                     mat))
-            elif self.eyesRadio.selected:
+            elif obj == 'eyes':
                 gui3d.app.do(MaterialAction(human.eyesObj,
                     mat))
             else: # Clothes
-                if self.activeClothing:
-                    uuid = self.activeClothing
+                if obj:
+                    uuid = obj
                     gui3d.app.do(MaterialAction(human.clothesObjs[uuid],
                         mat))
 
@@ -118,29 +231,10 @@ class MaterialTaskView(gui3d.TaskView):
         def onClicked(event):
             self.syncMedia()
 
-        self.objectSelector = []
-        self.humanBox = self.addLeftWidget(gui.GroupBox('Human'))
-        self.skinRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Skin", selected=True))
-        self.hairRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Hair", selected=False))
-        self.eyesRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Eyes", selected=False))
-
-        @self.skinRadio.mhEvent
-        def onClicked(event):
-            if self.skinRadio.selected:
-                self.reloadMaterialChooser()
-
-        @self.hairRadio.mhEvent
-        def onClicked(event):
-            if self.hairRadio.selected:
-                self.reloadMaterialChooser()
-
-        @self.eyesRadio.mhEvent
-        def onClicked(event):
-            if self.eyesRadio.selected:
-                self.reloadMaterialChooser()
-
-        self.clothesBox = self.addLeftWidget(gui.GroupBox('Clothes'))
-        self.clothesSelections = []
+        self.humanObjSelector = self.addLeftWidget(HumanObjectSelector(self.human))
+        @self.humanObjSelector.mhEvent
+        def onActivate(value):
+            self.reloadMaterialChooser(value)
 
 
     def onShow(self, event):
@@ -149,55 +243,13 @@ class MaterialTaskView(gui3d.TaskView):
         gui3d.TaskView.onShow(self, event)
         human = self.human
 
-        self.skinRadio.setChecked(True)
-        self.reloadMaterialChooser()
-
-        if human.hairObj:
-            self.hairRadio.setEnabled(True)
-        else:
-            self.hairRadio.setEnabled(False)
-
-        if human.eyesObj:
-            self.eyesRadio.setEnabled(True)
-        else:
-            self.eyesRadio.setEnabled(False)
-
-        self.populateClothesSelector()
+        self.reloadMaterialChooser(self.humanObjSelector.selected)
 
         # Offer to download skins if none are found
         self.numSkin = len([filename for filename in os.listdir(os.path.join(mh.getPath(''), 'data', 'skins')) if filename.lower().endswith('png')])
         if self.numSkin < 1:
             gui3d.app.prompt('No skins found', 'You don\'t seem to have any skins, download them from the makehuman media repository?\nNote: this can take some time depending on your connection speed.', 'Yes', 'No', self.syncMedia)
 
-
-    def populateClothesSelector(self):
-        """
-        Builds a list of all available clothes.
-        """
-        human = self.human
-        # Only keep first 3 radio btns (human body parts)
-        for radioBtn in self.objectSelector[3:]:
-            radioBtn.hide()
-            radioBtn.destroy()
-        del self.objectSelector[3:]
-
-        self.clothesSelections = []
-        theClothesList = human.clothesObjs.keys()
-        self.activeClothing = None
-        for i, uuid in enumerate(theClothesList):
-            if i == 0:
-                self.activeClothing = uuid
-            radioBtn = self.clothesBox.addWidget(gui.RadioButton(self.objectSelector, human.clothesProxies[uuid].name, selected=False))
-            self.clothesSelections.append( (radioBtn, uuid) )
-
-            @radioBtn.mhEvent
-            def onClicked(event):
-                for radio, uuid in self.clothesSelections:
-                    if radio.selected:
-                        self.activeClothing = uuid
-                        log.debug( 'Selected clothing "%s" (%s)' % (radio.text(), uuid) )
-                        self.reloadMaterialChooser()
-                        return
 
     def applyClothesMaterial(self, uuid, filename):
         human = self.human
@@ -218,21 +270,21 @@ class MaterialTaskView(gui3d.TaskView):
         clo = human.clothesObjs[uuid]
         return clo.material.filename
 
-    def reloadMaterialChooser(self):
+    def reloadMaterialChooser(self, obj):
         human = self.human
         selectedMat = None
 
-        if self.skinRadio.selected:
+        if obj == 'skin':
             self.materials = [self.systemSkins, self.userSkins]
             selectedMat = human.material.filename
-        elif self.hairRadio.selected:
+        elif obj == 'hair':
             proxy = human.hairProxy
             if proxy:
                 self.materials = [os.path.dirname(proxy.file)] + self.defaultHair
             else:
                 self.materials = self.defaultHair
             selectedMat = human.hairObj.material.filename
-        elif self.eyesRadio.selected:
+        elif obj == 'eyes':
             proxy = human.eyesProxy
             if proxy:
                 self.materials = [os.path.dirname(proxy.file)] + self.defaultEyes
@@ -240,8 +292,8 @@ class MaterialTaskView(gui3d.TaskView):
                 self.materials = self.defaultEyes
             selectedMat = human.eyesObj.material.filename
         else: # Clothes
-            if self.activeClothing:
-                uuid = self.activeClothing
+            if obj:
+                uuid = obj
                 clo = human.clothesObjs[uuid]
                 filepath = human.clothesProxies[uuid].file
                 self.materials = [os.path.dirname(filepath)] + self.defaultClothes

@@ -355,8 +355,8 @@ class MhmatFileLoader(FileHandler):
         super(MhmatFileLoader, self).__init__()
 
     def getPreview(self, filename):
+        # TODO this makes filechooser loading quite slow for materials without a thumbnail, but it does provide a preview
         thumb = super(MhmatFileLoader, self).getPreview(filename)
-        print "%s == %s" % (os.path.abspath(thumb), os.path.abspath(self.fileChooser.notFoundImage))
         if os.path.abspath(thumb) == os.path.abspath(self.fileChooser.notFoundImage):
             import material
             mat = material.fromFile(filename)
