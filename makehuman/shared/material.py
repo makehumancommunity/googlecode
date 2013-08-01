@@ -577,31 +577,31 @@ class Material(object):
                 pass
 
         if self._shaderConfig['vertexColors']:
-            log.debug("Enabling vertex colors.")
+            #log.debug("Enabling vertex colors.")
             self._shaderDefines.append('VERTEX_COLOR')
         if self._shaderConfig['diffuse'] and self.supportsDiffuse():
-            log.debug("Enabling diffuse texturing.")
+            #log.debug("Enabling diffuse texturing.")
             self._shaderDefines.append('DIFFUSE')
             self._shaderParameters['diffuseTexture'] = self.diffuseTexture
         bump = self._shaderConfig['bump'] and self.supportsBump()
         normal = self._shaderConfig['normal'] and self.supportsNormal()
         if bump and not normal:
-            log.debug("Enabling bump mapping.")
+            #log.debug("Enabling bump mapping.")
             self._shaderDefines.append('BUMPMAP')
             self._shaderParameters['bumpmapTexture'] = self.bumpMapTexture
             self._shaderParameters['bumpmapIntensity'] = self.bumpMapIntensity
         if normal:
-            log.debug("Enabling normal mapping.")
+            #log.debug("Enabling normal mapping.")
             self._shaderDefines.append('NORMALMAP')
             self._shaderParameters['normalmapTexture'] = self.normalMapTexture
             self._shaderParameters['normalmapIntensity'] = self.normalMapIntensity
         if self._shaderConfig['displacement'] and self.supportsDisplacement():
-            log.debug("Enabling displacement mapping.")
+            #log.debug("Enabling displacement mapping.")
             self._shaderDefines.append('DISPLACEMENT')
             self._shaderParameters['displacementmapTexture'] = self.displacementMapTexture
             self._shaderParameters['displacementmapIntensity'] = self.displacementMapIntensity
         if self._shaderConfig['spec'] and self.supportsSpecular():
-            log.debug("Enabling specular mapping.")
+            #log.debug("Enabling specular mapping.")
             self._shaderDefines.append('SPECULARMAP')
             self._shaderParameters['specularmapTexture'] = self.specularMapTexture
             self._shaderParameters['specularmapIntensity'] = self._specularMapIntensity
