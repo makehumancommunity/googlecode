@@ -26,7 +26,7 @@
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.16",
+    "version": "1.17",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -271,6 +271,7 @@ class ExportObj(bpy.types.Operator, ExportHelper):
     groupsAsMaterials = BoolProperty(name="Groups as materials", default=False)
 
     def execute(self, context):
+        bpy.ops.object.mode_set(mode='OBJECT')
         export_mh_obj.exportObjFile(self.properties.filepath, self.groupsAsMaterials, context)
         return {'FINISHED'}
 
