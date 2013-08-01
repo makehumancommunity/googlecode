@@ -17,7 +17,7 @@ normalmapIntensity 1.0
 displacementmapTexture fedora_displacement.png
 displacementmapIntensity 0.2
 
-shader data/shaders/glsl/normalmap
+shader data/shaders/glsl/phong
 
 shaderParam displacementmapIntensity 0.2
 

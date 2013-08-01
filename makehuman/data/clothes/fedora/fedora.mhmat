@@ -20,7 +20,7 @@ displacementmapTexture fedora_displacement.png
 displacementmapIntensity 0.2
 
 // Shader programme
-shader data/shaders/glsl/normalmap
+shader data/shaders/glsl/phong
 
 // Configure built-in shader defines
 shaderConfig diffuse true
