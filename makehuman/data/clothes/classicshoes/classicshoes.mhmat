@@ -4,7 +4,7 @@ name ClassicShoesMaterial
 
 // Color shading attributes
 ambientColor 1.0 1.0 1.0
-diffuseColor 0.4 0.13 0.0
+diffuseColor 0.850980392157 0.419607843137 0.0666666666667
 diffuseIntensity 0.5
 specularColor 1.0 1.0 0.0
 specularIntensity 0.05

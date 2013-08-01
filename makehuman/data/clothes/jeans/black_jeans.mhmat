@@ -1,0 +1,31 @@
+# Material definition for Black Jeans
+
+name BlackJeans
+ambientColor 1 1 1
+diffuseColor 0.117647058824 0.117647058824 0.117647058824
+diffuseIntensity 0.4667
+specularColor 1 1 0
+specularIntensity 0.0
+specularHardness 0.8
+emissiveColor 0 0 0
+opacity 1.0
+translucency 0.0
+
+diffuseTexture jeans_texture_black.png
+normalmapTexture jeans_normal.png
+normalmapIntensity 1.0
+displacementmapTexture jeans_displacement.png
+displacementmapIntensity 0.2
+transparencymapTexture jeans_mask.png
+transparencymapIntensity 1.0
+
+shader data/shaders/glsl/normalmap
+
+shaderParam displacementmapIntensity 0.2
+
+shaderConfig diffuse True
+shaderConfig normal True
+shaderConfig bump False
+shaderConfig spec True
+shaderConfig vertexColors True
+shaderConfig displacement True

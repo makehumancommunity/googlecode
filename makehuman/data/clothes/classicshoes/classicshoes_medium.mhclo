@@ -8,6 +8,7 @@ basemesh alpha_7
 tag Shoes
 
 obj_file classicshoes_medium.obj
+material classicshoes.mhmat
 x_scale 4302 8697 1.3742
 z_scale 8208 8220 2.0187
 y_scale 8223 6827 1.9414
