@@ -247,6 +247,11 @@ class Material(object):
                 self._shader = getFilePath(words[1], self.filepath)
             if words[0] == "uvMap":
                 self._uvMap = getFilePath(words[1], self.filepath)
+                import mh
+                if self._uvMap and \
+                   os.path.realpath(self._uvMap) == os.path.realpath(mh.getSysDataPath('uvs/default.obj')):
+                    # uvs/default.obj is a meta-file that refers to the default uv set
+                    self._uvMap = None
             if words[0] == "shaderParam":
                 if len(words) > 3:
                     self.setShaderParameter(words[1], words[2:])
@@ -380,6 +385,11 @@ class Material(object):
 
     def setUVMap(self, uvMap):
         self._uvMap = getFilePath(uvMap, self.filepath)
+        import mh
+        if self._uvMap and \
+           os.path.realpath(self._uvMap) == os.path.realpath(mh.getSysDataPath('uvs/default.obj')):
+            # uvs/default.obj is a meta-file that refers to the default uv set
+            self._uvMap = None
 
     uvMap = property(getUVMap, setUVMap)
 
