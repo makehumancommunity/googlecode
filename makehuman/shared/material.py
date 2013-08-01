@@ -67,7 +67,7 @@ class Color(object):
         return (self.r, self.g, self.b)
 
     def asStr(self):
-        return "%d %d %d" % self.asTuple()
+        return "%r %r %r" % self.asTuple()
 
 # Protected shaderDefine parameters that are set exclusively by means of shaderConfig options (configureShading())
 _shaderConfigDefines = ['DIFFUSE', 'BUMPMAP', 'NORMALMAP', 'DISPLACEMENT', 'SPECULARMAP', 'VERTEX_COLOR']
