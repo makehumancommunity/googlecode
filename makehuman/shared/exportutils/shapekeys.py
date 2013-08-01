@@ -208,24 +208,6 @@ def readFaceShapes(human, drivers, t0, t1):
     shapeList.sort()
     return shapeList
 
-"""
-def readExpressions(human, t0, t1):
-    shapeList = []
-    t,dt = initTimes(Expressions, 0.0, 1.0)
-
-    for name in Expressions:
-        gui3d.app.progress(t, text="Reading expression %s" % name)
-
-        shape = warpmodifier.compileWarpTarget(
-                mh.getSysDataPath('targets/expression/${gender}_${age}/neutral_${gender}_${age}_%s.target') % name,
-                "GenderAgeEthnicModifier",
-                human,
-                "face")
-
-        shapeList.append((name, shape))
-        t += dt
-    return shapeList
-"""
 
 def readExpressionUnits(human, t0, t1):
     shapeList = []
@@ -235,10 +217,8 @@ def readExpressionUnits(human, t0, t1):
         gui3d.app.progress(t, text="Reading expression %s" % name)
 
         shape = warpmodifier.compileWarpTarget(
-                #mh.getSysDataPath('targets/expression/units/${ethnic}/${gender}_${age}/%s.target') % name,
-                #"GenderAgeEthnic",
-                mh.getSysDataPath('targets/expression/units/${ethnic}/%s.target') % name,
                 "Ethnic",
+                mh.getSysDataPath('targets/expression/units/${ethnic}/%s.target') % name,
                 human,
                 "face")
 
@@ -255,8 +235,8 @@ def readCorrectives(drivers, human, folder, landmarks, t0, t1):
         gui3d.app.progress(t, text="Reading corrective %s %s" % (folder, pose))
 
         shape = warpmodifier.compileWarpTarget(
-                "shared/mhx/targets/correctives/%s/caucasian/${gender}-${age}-${tone}-${weight}/%s.target" % (folder, pose),
                 'GenderAgeToneWeight',
+                "shared/mhx/targets/correctives/%s/caucasian/${gender}-${age}-${tone}-${weight}/%s.target" % (folder, pose),
                 human,
                 landmarks)
 

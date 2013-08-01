@@ -34,7 +34,6 @@ import log
 import armature
 from armature.pose import createPoseRig
 from armature.utils import debugCoords
-import warpmodifier
 import posemode
 
 class PoseAction(gui3d.Action):

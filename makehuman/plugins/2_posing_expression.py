@@ -80,10 +80,9 @@ class ExpressionTaskView(gui3d.TaskView):
 
             # Create sliders
             for subname in subnames:
-                modifier = warpmodifier.WarpModifier(
+                modifier = warpmodifier.EthnicWarpModifier(
                         'data/targets/expression/units/${ethnic}/%s-%s.target' % (name, subname),
-                        "face",
-                        "Ethnic")
+                        "face")
 
                 self.modifiers[name + '-' + subname] = modifier
                 slider = box.addWidget(warpmodifier.WarpSlider(label=subname.capitalize(), modifier=modifier))

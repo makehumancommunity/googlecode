@@ -179,8 +179,9 @@ def loadMhpFile(filepath, pose=None):
 #   class PoseModifier
 #----------------------------------------------------------
 
-class PoseModifier(warpmodifier.WarpModifier):
+class PoseModifier(warpmodifier.GenderAgeToneWeightWarpModifier):
+
     def __init__(self, template):
-        warpmodifier.WarpModifier.__init__(self, template, "body", "GenderAgeToneWeight")
+        warpmodifier.GenderAgeToneWeightWarpModifier.__init__(self, template, "body")
 
 

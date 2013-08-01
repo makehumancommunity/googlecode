@@ -54,21 +54,6 @@ class WarpTarget(algos3d.Target):
     def __repr__(self):
         return ( "<WarpTarget %s>" % (os.path.basename(self.modifier.warppath)) )
 
-    '''
-    def reinit(self):
-
-        if self.isDirty:
-            shape = self.modifier.compileWarpTarget(self.human)
-            saveWarpedTarget(shape, self.modifier.warppath)
-            self.__init__(self.modifier, self.human)
-            self.isDirty = False
-
-
-    def apply(self, obj, morphFactor, update=True, calcNormals=True, faceGroupToUpdateName=None, scale=(1.0,1.0,1.0)):
-
-        self.reinit()
-        algos3d.Target.apply(self, obj, morphFactor, update, calcNormals, faceGroupToUpdateName, scale)
-    '''
 
 def saveWarpedTarget(shape, path):
     slist = list(shape.items())
@@ -118,7 +103,7 @@ class TargetSpec:
 
 class WarpModifier (humanmodifier.SimpleModifier):
 
-    def __init__(self, template, bodypart, modtype):
+    def __init__(self, template, bodypart):
         global _warpGlobals
         _warpGlobals.modifiers.append(self)
 
@@ -133,90 +118,16 @@ class WarpModifier (humanmodifier.SimpleModifier):
         humanmodifier.SimpleModifier.__init__(self, warppath)
         self.eventType = 'warp'
         self.warppath = warppath
-        self.template = template
+        self.template = str(template)
         self.bodypart = bodypart
         self.slider = None
-        self.refTargets = {}
-        self.modtype = modtype
 
-        self.fallback = None
-        for (tlabel, tname, tvar) in _warpGlobals.modifierTypes[modtype]:
+        for (tlabel, tname, tvar) in self.modifierTypes:
             self.fallback = humanmodifier.MacroModifier(tlabel, tname, tvar)
             break
 
-        self.remaps = {}
-        for ethnic in _warpGlobals.ethnics:
-            self.remaps[ethnic] = ethnic
-        for age in _warpGlobals.ages:
-            self.remaps[age] = age
-        for gender in _warpGlobals.genders:
-            self.remaps[gender] = gender
-
-        self.bases = {}
-        self.targetSpecs = {}
-        if modtype == "GenderAge":
-            self.setupBaseCharacters("Gender", "Age", None, None, None)
-        elif modtype == "Ethnic":
-            self.setupBaseCharacters(None, None, "Ethnic", None, None)
-        elif modtype == "GenderAgeEthnic":
-            self.setupBaseCharacters("Gender", "Age", "Ethnic", None, None)
-        elif modtype == "GenderAgeToneWeight":
-            self.setupBaseCharacters("Gender", "Age", None, "Tone", "Weight")
-
-
-    def setupBaseCharacters(self, genders, ages, ethnics, tones, weights):
-        global _warpGlobals
-
-        for gender in ["female", "male"]:
-            for age in ["baby", "child", "young", "old"]:
-                for ethnic in _warpGlobals.baseCharacterParts[ethnics]:
-                    path1 = str(self.template)
-                    key1 = ""
-                    factors1 = []
-                    base1 = mh.getSysDataPath("targets/macrodetails/")
-
-                    if ethnic is None:
-                        base1 += "caucasian-"
-                        for e in _warpGlobals.ethnics:
-                            self.remaps[e] = "caucasian"
-                    else:
-                        base1 += ethnic + "-"
-                        key1 += ethnic + "-"
-                        factors1.append(ethnic)
-                        path1 = path1.replace("${ethnic}", ethnic)
-
-                    base1 += gender + "-"
-                    key1 += gender + "-"
-                    factors1.append(gender)
-                    path1 = path1.replace("${gender}", gender)
-
-                    base1 += age + ".target"
-                    key1 += age
-                    factors1.append(age)
-                    if ages is None:
-                        path1 = path1.replace("${age}", "young")
-                    else:
-                        path1 = path1.replace("${age}", age)
-
-                    if key1[-1] == "-":
-                        key1 = key1[:-1]
-                    key1 = base1
-                    self.bases[key1] = BaseSpec(base1, factors1)
-                    self.targetSpecs[key1] = TargetSpec(path1, factors1)
-
-                    if tones is None or weights is None:
-                        #log.debug("Bases %s" % self.bases.items())
-                        continue
-
-                    for tone in _warpGlobals.baseCharacterParts[tones]:
-                        for weight in _warpGlobals.baseCharacterParts[weights]:
-                            base2 = mh.getSysDataPath("targets/macrodetails/universal-%s-%s-%s-%s.target") % (gender, age, tone, weight)
-                            key2 = "universal-%s-%s-%s-%s" % (gender, age, tone, weight)
-                            factors2 = factors1 + [tone, weight]
-                            key2 = base2
-                            self.bases[key2] = BaseSpec(base2, factors2)
-                            path2 = path1.replace("${tone}", tone).replace("${weight}", weight)
-                            self.targetSpecs[key2] = TargetSpec(path2, factors2)
+        self.setupReferences()
+        self.refTargetVerts = {}
 
 
     def __repr__(self):
@@ -257,7 +168,16 @@ class WarpModifier (humanmodifier.SimpleModifier):
         global _warpGlobals
         log.message("COMPWARP %s", self)
         landmarks = _warpGlobals.getLandMarks(self.bodypart)
+        srcTargetCoord, srcCharCoord, trgCharCoord = self.getReferences(human)
+        if srcTargetCoord:
+            shape = warp.warp_target(srcTargetCoord, srcCharCoord, trgCharCoord, landmarks)
+        else:
+            shape = {}
+        log.message("...done")
+        return shape
 
+
+    def getReferences(self, human):
         obj = human.meshData
         srcCharCoord = obj.orig_coord.copy()
         trgCharCoord = obj.orig_coord.copy()
@@ -265,34 +185,119 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
         sumtargets = 0
         for charpath,value in human.targetsDetailStack.items():
-            if charpath in self.bases.keys():
+            try:
+                self.refCharacters[charpath]
                 sumtargets += value
+            except KeyError:
+                continue
         if sumtargets == 0:
             log.debug("No targets: %s" % human.targetsDetailStack.keys())
-        factor = 1.0/sumtargets
+        #factor = 1.0/sumtargets
+        factor = 1.0
+        log.debug("  SUM %g %g" % (sumtargets, factor))
 
         for charpath,value in human.targetsDetailStack.items():
             try:
-                target = algos3d.targetBuffer[charpath]
+                trgChar = algos3d.targetBuffer[charpath]
+            except KeyError:
+                continue    # Warp target - ignore
+
+            log.debug("  CHAR %s %s %s" % (value, os.path.basename(charpath), trgChar))
+
+            srcVerts = np.s_[...]
+            dstVerts = trgChar.verts[srcVerts]
+            trgCharCoord[dstVerts] += value * trgChar.data[srcVerts]
+
+            try:
+                refchar = self.refCharacters[charpath]
             except KeyError:
                 continue
-            log.debug("  CHAR %s %s %s" % (charpath, value, target))
-            srcVerts = np.s_[...]
-            dstVerts = target.verts[srcVerts]
-            data = value * target.data[srcVerts]
-            trgCharCoord[dstVerts] += data
-            if charpath in self.bases.keys():
-                srcCharCoord[dstVerts] += data
-                trgspec = self.targetSpecs[charpath]
-                srcTrg = readTarget(trgspec.path)
-                addVerts(srcTargetCoord, factor*value, srcTrg)
+            reftrg = self.refTargets[charpath]
 
-        if srcTargetCoord:
-            shape = warp.warp_target(srcTargetCoord, srcCharCoord, trgCharCoord, landmarks)
-        else:
-            shape = {}
-        log.message("...done")
-        return shape
+            log.debug("   REF %s %s %s" % (factor*value, os.path.basename(refchar), os.path.basename(reftrg)))
+
+            srcChar = readTarget(refchar)
+            dstVerts = srcChar.verts[srcVerts]
+            srcCharCoord[dstVerts] += factor * value * srcChar.data[srcVerts]
+
+            srcTrg = readTarget(reftrg)
+            addVerts(srcTargetCoord, factor*value, srcTrg)
+
+        return srcTargetCoord, srcCharCoord, trgCharCoord
+
+#----------------------------------------------------------
+#   Specialized warp modifiers
+#----------------------------------------------------------
+
+class GenderAgeWarpModifier (WarpModifier):
+
+    modifierTypes = [
+            ("macrodetails", None, "Gender"),
+            ("macrodetails", None, "Age"),
+        ]
+
+
+class EthnicWarpModifier (WarpModifier):
+
+    modifierTypes = [
+            ("macrodetails", None, "African"),
+            ("macrodetails", None, "Asian"),
+        ]
+
+    def setupReferences(self):
+        self.refTargets = {}
+        self.refCharacters = {}
+
+        for ethnic in ["caucasian", "african", "asian"]:
+            reftrg = self.template.replace("${ethnic}", ethnic)
+            refchar = mh.getSysDataPath("targets/macrodetails/%s-female-young.target" % (ethnic))
+            for gender in ["female", "male"]:
+                for age in ["baby", "child", "young", "old"]:
+                    base = mh.getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
+                    self.refCharacters[base] = refchar
+                    self.refTargets[base] = reftrg
+
+
+class GenderAgeEthnicWarpModifier (WarpModifier):
+
+    modifierTypes = [
+            ("macrodetails", None, "Gender"),
+            ("macrodetails", None, "Age"),
+            ("macrodetails", None, "African"),
+            ("macrodetails", None, "Asian"),
+        ]
+
+
+class GenderAgeToneWeightWarpModifier (WarpModifier):
+
+    modifierTypes = [
+            ("macrodetails", None, "Gender"),
+            ("macrodetails", None, "Age"),
+            ("macrodetails", "universal", "Muscle"),
+            ("macrodetails", "universal", "Weight"),
+            #("macrodetails", "universal-stature", "Height"),
+        ]
+
+    def setupReferences(self):
+        self.refTargets = {}
+        self.refCharacters = {}
+
+        for ethnic in ["caucasian", "african", "asian"]:
+            for gender in ["female", "male"]:
+                for age in ["baby", "child", "young", "old"]:
+                    path = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
+                    reftrg = path.replace("-${tone}", "").replace("-${weight}", "")
+                    refchar = mh.getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
+                    base = mh.getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
+                    self.refCharacters[base] = refchar
+                    self.refTargets[base] = reftrg
+
+                    for tone in ["minmuscle", "averagemuscle", "maxmuscle"]:
+                        for weight in ["minweight", "averageweight", "maxweight"]:
+                            univ = mh.getSysDataPath("targets/macrodetails/universal-%s-%s-%s-%s.target") % (gender, age, tone, weight)
+                            self.refCharacters[univ] = univ
+                            self.refTargets[univ] = path.replace("${tone}", tone).replace("${weight}", weight)
+
 
 #----------------------------------------------------------
 #   Reset warp buffer
@@ -314,8 +319,14 @@ def resetWarpBuffer():
 #   Call from exporter
 #----------------------------------------------------------
 
-def compileWarpTarget(template, fallback, human, bodypart):
-    mod = WarpModifier(template, bodypart, fallback)
+def compileWarpTarget(modtype, template, human, bodypart):
+    if modtype == 'Ethnic':
+        mod = EthnicWarpModifier(template, bodypart)
+    elif modtype == 'GenderAgeToneWeight':
+        mod = GenderAgeToneWeightWarpModifier(template, bodypart)
+    else:
+        raise NameError("compileWarpTarget modtype = %s" % modtype)
+
     return mod.compileWarpTarget(human)
 
 #----------------------------------------------------------
@@ -337,13 +348,21 @@ def addVerts(targetVerts, value, verts):
 def readTarget(filepath):
     global _warpGlobals
 
-    log.debug("GETTARG %s" % filepath)
+    # Target cached?
     try:
-        return _warpGlobals.refTargets[filepath]
+        return _warpGlobals.targetCache[filepath]
     except KeyError:
         pass
 
-    log.debug("READTARG %s" % filepath)
+    # Target already on global target stack?
+    try:
+        target = algos3d.targetBuffer[filepath]
+        _warpGlobals.targetCache[filepath] = target
+        return target
+    except KeyError:
+        pass
+
+    # If neither, read target
     words = filepath.rsplit("-",3)
     if words[0] == mh.getSysDataPath("targets/macrodetails/universal"):
         if words[1] == "averagemuscle":
@@ -372,7 +391,7 @@ def readTarget(filepath):
                 if n < meshstat.numberOfVertices:
                     target[n] = np.array([float(words[1]), float(words[2]), float(words[3])])
         fp.close()
-        _warpGlobals.refTargets[filepath] = target
+        _warpGlobals.targetCache[filepath] = target
         return target
     else:
         halt
@@ -382,11 +401,15 @@ def readTarget(filepath):
 def findReplacementFile(filepath):
     # If some targets are missing, try to find a good default
     replacements = [
-        (["-averagemuscle", "-averageweight"], ""),
+        (["-minmuscle"], "-flaccid"),
+        (["-maxmuscle"], "-muscle"),
+        (["-minweight"], "-light"),
+        (["-maxweight"], "-heavy"),
+        (["-averagemuscle"], ""),
+        (["-averageweight"], ""),
         (["/asian", "/african"], "/caucasian"),
         (["/baby", "/child", "/old"], "/young"),
         (["/male"], "/female"),
-        (["/female_young"], ""),
     ]
 
     filepath1 = filepath
@@ -394,12 +417,14 @@ def findReplacementFile(filepath):
     for variants,default in replacements:
         for variant in variants:
             filepath1 = filepath1.replace(variant, default)
-            try:
-                fp = open(filepath1, "rU")
-                log.message("   Replaced %s\n  -> %s", filepath, filepath1)
-                return fp
-            except IOError:
-                continue
+            if filepath1 not in tried:
+                log.debug("  TRY %s" % filepath1)
+                try:
+                    fp = open(filepath1, "rU")
+                    log.message("   Replaced %s\n  -> %s", filepath, filepath1)
+                    return fp
+                except IOError:
+                    tried.append(filepath1)
 
     string = "Warning: Found none of:"
     for filepath1 in tried:
@@ -415,44 +440,7 @@ class GlobalWarpData:
     def __init__(self):
         self.modifiers = []
         self._landMarks = None
-        self.refTargets = {}
-
-        self.ethnics = ["african", "asian", "caucasian"]
-        self.genders = ["female", "male"]
-        self.ages = ["baby", "child", "young", "old"]
-
-        self.modifierTypes = {
-            "GenderAge" : [
-                ("macrodetails", None, "Gender"),
-                ("macrodetails", None, "Age"),
-            ],
-            "Ethnic" : [
-                ("macrodetails", None, "African"),
-                ("macrodetails", None, "Asian"),
-            ],
-            "GenderAgeEthnic" : [
-                ("macrodetails", None, "Gender"),
-                ("macrodetails", None, "Age"),
-                ("macrodetails", None, "African"),
-                ("macrodetails", None, "Asian"),
-            ],
-            "GenderAgeToneWeight" : [
-                ("macrodetails", None, "Gender"),
-                ("macrodetails", None, "Age"),
-                ("macrodetails", "universal", "Muscle"),
-                ("macrodetails", "universal", "Weight"),
-                #("macrodetails", "universal-stature", "Height"),
-            ],
-        }
-
-        self.baseCharacterParts = {
-            "Gender" : ("male", "female"),
-            "Age" : ("child", "young", "old"),
-            "Ethnic" : ("caucasian", "african", "asian"),
-            "Tone" : ("minmuscle", "averagemuscle", "maxmuscle"),
-            "Weight" : ("minweight", "averageweight", "maxweight"),
-            None : [None]
-        }
+        self.targetCache = {}
 
 
     def getLandMarks(self, bodypart):
