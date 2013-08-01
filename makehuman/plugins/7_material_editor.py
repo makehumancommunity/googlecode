@@ -75,7 +75,6 @@ class ShaderTaskView(gui3d.TaskView):
         self.loadMaterialBtn = self.loadSaveBox.addWidget(gui.BrowseButton(), 0, 0)
         self.loadMaterialBtn.setFilter("MakeHuman Material (*.mhmat)")
         self.loadMaterialBtn.setText('Load')
-        self.loadMaterialBtn._path = mh.getSysDataPath('')
         @self.loadMaterialBtn.mhEvent
         def onClicked(path):
             if path:
@@ -83,7 +82,7 @@ class ShaderTaskView(gui3d.TaskView):
         self.saveMaterialBtn = self.loadSaveBox.addWidget(gui.BrowseButton('save'), 0, 1)
         self.saveMaterialBtn.setFilter("MakeHuman Material (*.mhmat)")
         self.saveMaterialBtn.setText('Save')
-        self.saveMaterialBtn._path = os.path.join(mh.getPath(''), 'data')
+
         @self.saveMaterialBtn.mhEvent
         def onClicked(path):
             if path:
@@ -107,6 +106,7 @@ class ShaderTaskView(gui3d.TaskView):
         w1 = self.materialBox.addWidget(ColorValue("Diffuse", mat.diffuseColor))
         @w1.mhEvent
         def onActivate(event):
+            print "setting diffuse color to %s" % w1.value
             mat.diffuseColor = w1.value
 
         w2 = self.materialBox.addWidget(ScalarValue("Diffuse intensity", mat.diffuseIntensity))
@@ -220,6 +220,11 @@ class ShaderTaskView(gui3d.TaskView):
             else: 
                 obj.setUVMap(w21.value)
 
+        w22 = self.materialBox.addWidget(TextValue("Material name", mat.name))
+        @w22.mhEvent
+        def onActivate(event):
+            mat.name = w22.value
+
 
     def listShaders(self, mat, dir = mh.getSysDataPath('shaders/glsl')):
         shaders = set()
@@ -313,6 +318,13 @@ class ShaderTaskView(gui3d.TaskView):
         self.updateShaderConfig(obj.material)
         self.listMaterialSettings(obj)
 
+        if obj.material.filepath:
+            self.saveMaterialBtn._path = obj.material.filepath
+            self.loadMaterialBtn._path = obj.material.filepath
+        else:
+            self.saveMaterialBtn._path = os.path.join(mh.getPath(''), 'data')
+            self.loadMaterialBtn._path = mh.getSysDataPath('')
+
     def onShow(self, arg):
         super(ShaderTaskView, self).onShow(arg)
         if not shader.Shader.supported():
@@ -338,6 +350,7 @@ class ColorValue(gui.GroupBox):
         @self.pickBtn.mhEvent
         def onClicked(color):
             self.value = color
+            self.callEvent('onActivate', self.getValue())
 
         self.value = value
 
@@ -354,6 +367,25 @@ class ColorValue(gui.GroupBox):
             widget.setText(str(value[idx]))
 
     value = property(getValue, setValue)
+
+
+class TextValue(gui.GroupBox):
+    def __init__(self, name, value):
+        super(TextValue, self).__init__(name)
+        self.name = name
+
+        self.widget = StringValue(self, value)
+        self.addWidget(self.widget, 0, 0)
+        self.value = value
+
+    def getValue(self):
+        return self.widget.value
+
+    def setValue(self, value):
+        self.widget.setText(str(value))
+
+    value = property(getValue, setValue)
+
 
 class ScalarValue(gui.GroupBox):
     def __init__(self, name, value):
@@ -377,7 +409,7 @@ class ImageValue(gui.GroupBox):
         super(ImageValue, self).__init__(name)
         self.name = name
 
-        self.widget = TextureValue(self, 0, defaultPath)
+        self.widget = TextureValue(self, value, defaultPath)
         self.addWidget(self.widget, 0, 0)
         self.value = value
 
@@ -397,7 +429,9 @@ class FileValue(gui.GroupBox):
         self.fileText = self.addWidget(gui.TextView(''), 0, 0)
         self.browseBtn = self.addWidget(gui.BrowseButton(), 1, 0)
 
-        if defaultPath:
+        if value:
+            self.browseBtn._path = value
+        elif defaultPath:
             self.browseBtn._path = defaultPath
 
         @self.browseBtn.mhEvent
@@ -422,7 +456,7 @@ class FileValue(gui.GroupBox):
     value = property(getValue, setValue)
 
 class UniformValue(gui.GroupBox):
-    def __init__(self, uniform, mat = None):
+    def __init__(self, uniform, mat):
         super(UniformValue, self).__init__(uniform.name)
 
         self.uniform = uniform
@@ -489,6 +523,24 @@ class NumberValue(gui.TextEdit):
     def onActivate(self, arg=None):
         self.parent.callEvent('onActivate', self.value)
 
+    def onChange(self, arg=None):
+        self.parent.callEvent('onActivate', self.value)
+
+class StringValue(gui.TextEdit):
+    def __init__(self, parent, value):
+        super(StringValue, self).__init__(str(value))
+        self.parent = parent
+
+    @property
+    def value(self):
+        return unicode(self.text)
+
+    def onActivate(self, arg=None):
+        self.parent.callEvent('onActivate', self.value)
+
+    def onChange(self, arg=None):
+        self.parent.callEvent('onActivate', self.value)
+
 class IntValue(NumberValue):
     _validator = gui.intValidator
 
@@ -527,7 +579,14 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
         self.browseBtn = gui.BrowseButton()
         self.browseBtn.setFilter("Image Files (*.png *.jpg *.bmp)")
 
-        if defaultPath:
+        self.layout.addWidget(self.imageView)
+        self.layout.addWidget(self.browseBtn)
+
+        self.value = value
+
+        if value:
+            self.browseBtn._path = value
+        elif defaultPath:
             self.browseBtn._path = defaultPath
 
         @self.browseBtn.mhEvent
@@ -538,11 +597,6 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
             self.imageView.setImage(self.value)
             self.parent.callEvent('onActivate', self.value)
 
-        self.value = value
-
-        self.layout.addWidget(self.imageView)
-        self.layout.addWidget(self.browseBtn)
-
     def getValue(self):
         return self._path
 
@@ -550,6 +604,7 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
         self._path = value
         if value:
             self.imageView.setImage(value)
+            self.browseBtn._path = value
         else:
             self.imageView.setImage(mh.getSysDataPath('notfound.thumb'))
 
