@@ -28,6 +28,7 @@ import mh
 import gui3d
 import filechooser as fc
 import log
+import qtgui as gui
 
 class HumanFileSort(fc.FileSort):
     
@@ -103,6 +104,16 @@ class LoadTaskView(gui3d.TaskView):
         
         modelPath = mh.getPath('models')
         gui3d.TaskView.__init__(self, category, 'Load', )
+
+        self.fileentry = self.addTopWidget(gui.FileEntryView('Browse', mode='dir'))
+        self.fileentry.setDirectory(mh.getPath('models'))
+        self.fileentry.setFilter('MakeHuman Models (*.mhm)')
+
+        @self.fileentry.mhEvent
+        def onFileSelected(dirpath):
+            self.filechooser.setPaths([dirpath])
+            self.filechooser.refresh()
+
         self.filechooser = self.addTopWidget(fc.FileChooser(modelPath, 'mhm', 'thumb', mh.getSysDataPath('notfound.thumb'), sort=HumanFileSort()))
         self.addLeftWidget(self.filechooser.sortBox)
 

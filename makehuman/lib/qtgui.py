@@ -1071,23 +1071,29 @@ class FileEntryView(QtGui.QWidget, Widget):
         self.layout.addWidget(self.edit, 0, 1)
         self.layout.setColumnStretch(1, 1)
 
-        self.confirm = QtGui.QPushButton(buttonLabel)
-        self.layout.addWidget(self.confirm, 0, 2)
-        self.layout.setColumnStretch(2, 0)
+        if mode != 'dir':
+            self.confirm = QtGui.QPushButton(buttonLabel)
+            self.layout.addWidget(self.confirm, 0, 2)
+            self.layout.setColumnStretch(2, 0)
+
+            self.connect(self.confirm, QtCore.SIGNAL('clicked(bool)'), self._confirm)
+            self.connect(self.edit, QtCore.SIGNAL(' returnPressed()'), self._confirm)
 
         self.setSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Fixed)
 
-        self.connect(self.confirm, QtCore.SIGNAL('clicked(bool)'), self._confirm)
-        self.connect(self.edit, QtCore.SIGNAL(' returnPressed()'), self._confirm)
 
         @self.browse.mhEvent
         def onClicked(path):
             if path:
                 self.edit.setText(path)
+                if self.browse._mode == 'dir':
+                    self._confirm()
 
     def setDirectory(self, directory):
         self.directory = directory
         self.browse._path = directory
+        if self.browse._mode == 'dir':
+            self.edit.setText(directory)
 
     def setFilter(self, filter):
         self.filter = getLanguageString(filter)
@@ -1097,6 +1103,8 @@ class FileEntryView(QtGui.QWidget, Widget):
     def _browse(self, state = None):
         path = QtGui.QFileDialog.getSaveFileName(G.app.mainwin, getLanguageString("Save File"), self.directory, self.filter)
         self.edit.setText(path)
+        if self.browse._mode == 'dir':
+            self._confirm()
 
     def _confirm(self, state = None):
         if len(self.edit.text()):
