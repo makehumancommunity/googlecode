@@ -440,6 +440,12 @@ class ClothesTaskView(gui3d.TaskView):
 
     def loadHandler(self, human, values):
 
+        if values[0] == 'clothesHideFaces':
+            enabled = values[1].lower() in ['true', 'yes']
+            self.faceHidingTggl.setChecked(enabled)
+            self.updateFaceMasks(enabled)
+            return
+
         if len(values) >= 3:
             mhclo = exportutils.config.getExistingProxyFile(values[1], values[2], "clothes")
         else:
@@ -452,6 +458,7 @@ class ClothesTaskView(gui3d.TaskView):
 
     def saveHandler(self, human, file):
 
+        file.write('clothesHideFaces %s\n' % self.faceHidingTggl.selected)
         for name in self.clothesList:
             clo = human.clothesObjs[name]
             if clo:
@@ -483,6 +490,7 @@ def load(app):
     category.addTask(taskview)
 
     app.addLoadHandler('clothes', taskview.loadHandler)
+    app.addLoadHandler('clothesHideFaces', taskview.loadHandler)
     app.addSaveHandler(taskview.saveHandler)
 
 # This method is called when the plugin is unloaded from makehuman
