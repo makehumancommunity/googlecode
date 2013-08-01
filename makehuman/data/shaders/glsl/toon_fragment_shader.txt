@@ -2,7 +2,7 @@
 
 varying vec3 vNormal;
 varying vec3 vVertex;
-uniform sampler2D unit0;
+uniform sampler2D diffuseTexture;
 
 uniform float silhouetteThreshold = 0.2;
 uniform float shininess = 20.0;
@@ -15,7 +15,7 @@ uniform float diffuse_th = 0.5;
 void main (void)
 {
   // Texture color
-	vec4 tex_color = texture2D(unit0, gl_TexCoord[0].st);
+	vec4 tex_color = texture2D(diffuseTexture, gl_TexCoord[0].st);
 
   // Silhouette Color:
   vec4 silhouetteColor = vec4(0.0, 0.0, 0.0, 1.0);

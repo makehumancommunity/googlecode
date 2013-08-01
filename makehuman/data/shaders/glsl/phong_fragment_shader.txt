@@ -2,12 +2,12 @@
 
 varying vec3 normal, lightDir, halfVector;
 varying vec4 ambient_color, diffuse_color, specular_color;
-uniform sampler2D unit0;
+uniform sampler2D diffuseTexture;
 
 void main (void)
 {
 	// Get the texture color
-	vec4 tex_color = texture2D(unit0, gl_TexCoord[0].st);
+	vec4 tex_color = texture2D(diffuseTexture, gl_TexCoord[0].st);
 	
 	// Ambient * texture color
 	vec4 final_color = ambient_color * tex_color;
