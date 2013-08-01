@@ -30,12 +30,18 @@ import shader
 import numpy as np
 import material
 import mh
+from humanobjchooser import HumanObjectSelector
 
 class ShaderTaskView(gui3d.TaskView):
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Material Editor')
 
         self.human = gui3d.app.selectedHuman
+
+        self.humanObjSelector = self.addLeftWidget(HumanObjectSelector(self.human))
+        @self.humanObjSelector.mhEvent
+        def onActivate(value):
+            self.reloadMaterial()
 
         shaderBox = self.addLeftWidget(gui.GroupBox('Shader'))
         self.shaderList = shaderBox.addWidget(gui.ListView())
@@ -51,7 +57,7 @@ class ShaderTaskView(gui3d.TaskView):
                 shaderConfig = dict()
                 for child in self.shaderConfBox.children:
                     shaderConfig[str(child.text())] = child.isChecked()
-                self.human.mesh.configureShading(**shaderConfig)
+                self.getSelectedObject().material.configureShading(**shaderConfig)
 
         if not shader.Shader.supported():
             log.notice('Shaders not supported')
@@ -86,134 +92,136 @@ class ShaderTaskView(gui3d.TaskView):
                 self.saveMaterial(path)
 
     def loadMaterial(self, path):
-        self.human.material = material.fromFile(path)
-        self.listMaterialSettings(self.human.material)
+        self.getSelectedObject().material = material.fromFile(path)
+        self.listMaterialSettings(self.getSelectedObject())
 
     def saveMaterial(self, path):
-        self.human.material.toFile(path)
+        self.getSelectedObject().material.toFile(path)
 
-    def listMaterialSettings(self, mat):
+    def listMaterialSettings(self, obj):
         for child in self.materialBox.children[:]:
             self.materialBox.removeWidget(child)
+
+        mat = obj.material
 
         w1 = self.materialBox.addWidget(ColorValue("Diffuse", mat.diffuseColor))
         @w1.mhEvent
         def onActivate(event):
-            self.human.material.diffuseColor = w1.value
+            mat.diffuseColor = w1.value
 
         w2 = self.materialBox.addWidget(ScalarValue("Diffuse intensity", mat.diffuseIntensity))
         @w2.mhEvent
         def onActivate(event):
-            self.human.material.diffuseIntensity = w2.value
+            mat.diffuseIntensity = w2.value
 
         w3 = self.materialBox.addWidget(ImageValue("Diffuse texture", mat.diffuseTexture, mh.getSysDataPath('textures')))
         @w3.mhEvent
         def onActivate(event):
-            self.human.material.diffuseTexture = w3.value
+            mat.diffuseTexture = w3.value
             self.updateShaderConfig()
 
         w4 = self.materialBox.addWidget(ColorValue("Ambient", mat.ambientColor))
         @w4.mhEvent
         def onActivate(event):
-            self.human.material.ambientColor = w4.value
+            mat.ambientColor = w4.value
 
         w5 = self.materialBox.addWidget(ColorValue("Specular", mat.specularColor))
         @w5.mhEvent
         def onActivate(event):
-            self.human.material.specularColor = w5.value
+            mat.specularColor = w5.value
 
         w6 = self.materialBox.addWidget(ScalarValue("Specular intensity", mat.specularIntensity))
         @w6.mhEvent
         def onActivate(event):
-            self.human.material.specularIntensity = w6.value
+            mat.specularIntensity = w6.value
 
         w7 = self.materialBox.addWidget(ScalarValue("Specular hardness", mat.specularHardness))
         @w7.mhEvent
         def onActivate(event):
-            self.human.material.specularHardness = w7.value
+            mat.specularHardness = w7.value
 
         w8 = self.materialBox.addWidget(ColorValue("Emissive", mat.emissiveColor))
         @w8.mhEvent
         def onActivate(event):
-            self.human.material.emissiveColor = w8.value
+            mat.emissiveColor = w8.value
 
         w9 = self.materialBox.addWidget(ScalarValue("Opacity", mat.opacity))
         @w9.mhEvent
         def onActivate(event):
-            self.human.material.opacity = w9.value
+            mat.opacity = w9.value
 
         w10 = self.materialBox.addWidget(ScalarValue("Translucency", mat.translucency))
         @w10.mhEvent
         def onActivate(event):
-            self.human.material.translucency = w10.value
+            mat.translucency = w10.value
 
         w11 = self.materialBox.addWidget(ImageValue("Transparency map texture", mat.transparencyMapTexture, mh.getSysDataPath('textures')))
         @w11.mhEvent
         def onActivate(event):
-            self.human.material.transparencyMapTexture = w11.value
+            mat.transparencyMapTexture = w11.value
             self.updateShaderConfig()
 
         w12 = self.materialBox.addWidget(ScalarValue("Transparency (map) intensity", mat.transparencyIntensity))
         @w12.mhEvent
         def onActivate(event):
-            self.human.material.transparencyIntensity = w12.value
+            mat.transparencyIntensity = w12.value
 
         w13 = self.materialBox.addWidget(ImageValue("Bump map texture", mat.bumpMapTexture, mh.getSysDataPath('textures')))
         @w13.mhEvent
         def onActivate(event):
-            self.human.material.bumpMapTexture = w13.value
+            mat.bumpMapTexture = w13.value
             self.updateShaderConfig()
 
         w14 = self.materialBox.addWidget(ScalarValue("Bump map intensity", mat.bumpMapIntensity))
         @w14.mhEvent
         def onActivate(event):
-            self.human.material.bumpMapIntensity = w14.value
+            mat.bumpMapIntensity = w14.value
 
         w15 = self.materialBox.addWidget(ImageValue("Normal map texture", mat.normalMapTexture, mh.getSysDataPath('textures')))
         @w15.mhEvent
         def onActivate(event):
-            self.human.material.normalMapTexture = w15.value
+            mat.normalMapTexture = w15.value
             self.updateShaderConfig()
 
         w16 = self.materialBox.addWidget(ScalarValue("Normal map intensity", mat.normalMapIntensity))
         @w16.mhEvent
         def onActivate(event):
-            self.human.material.normalMapIntensity = w16.value
+            mat.normalMapIntensity = w16.value
 
         w17 = self.materialBox.addWidget(ImageValue("Displacement map texture", mat.displacementMapTexture, mh.getSysDataPath('textures')))
         @w17.mhEvent
         def onActivate(event):
-            self.human.material.displacementMapTexture = w17.value
+            mat.displacementMapTexture = w17.value
             self.updateShaderConfig()
 
         w18 = self.materialBox.addWidget(ScalarValue("Displacement map intensity", mat.displacementMapIntensity))
         @w18.mhEvent
         def onActivate(event):
-            self.human.material.displacementMapIntensity = w18.value
+            mat.displacementMapIntensity = w18.value
 
         w19 = self.materialBox.addWidget(ImageValue("Specular map texture", mat.specularMapTexture, mh.getSysDataPath('textures')))
         @w19.mhEvent
         def onActivate(event):
-            self.human.material.specularMapTexture = w19.value
+            mat.specularMapTexture = w19.value
             self.updateShaderConfig()
 
         w20 = self.materialBox.addWidget(ScalarValue("Specular map intensity", mat.specularMapIntensity))
         @w20.mhEvent
         def onActivate(event):
-            self.human.material.specularMapIntensity = w20.value
+            mat.specularMapIntensity = w20.value
 
-        w21 = self.materialBox.addWidget(FileValue("UV map", self.human.material.uvMap, mh.getSysDataPath('uvs')))
+        w21 = self.materialBox.addWidget(FileValue("UV map", mat.uvMap, mh.getSysDataPath('uvs')))
         w21.browseBtn.setFilter("UV Set (*.obj)")
         @w21.mhEvent
         def onActivate(event):
             if os.path.basename(w21.value) == "default.obj":
                 w21.value = None
-                self.human.setUVMap(None)
+                obj.setUVMap(None)
             else: 
-                self.human.setUVMap(w21.value)
+                obj.setUVMap(w21.value)
 
 
-    def listShaders(self, dir = mh.getSysDataPath('shaders/glsl')):
+    def listShaders(self, mat, dir = mh.getSysDataPath('shaders/glsl')):
         shaders = set()
         for name in os.listdir(dir):
             path = os.path.join(dir, name)
@@ -229,44 +237,51 @@ class ShaderTaskView(gui3d.TaskView):
 
         self.shaderList.clear()
         firstItem = self.shaderList.addItem('[None]', data = '')
-        if self.human.mesh.shader:
-            shaderName = os.path.basename(self.human.mesh.shader)
+        if mat.shader:
+            shaderName = os.path.basename(mat.shader)
         else:
             shaderName = None
             firstItem.setChecked(True)
 
         for name in sorted(shaders):
             item = self.shaderList.addItem(name, data = os.path.join(dir, name))
-            if shaderName and unicode(shaderName) == item.text:
+            if shaderName and unicode(shaderName) == unicode(item.text):
                 item.setChecked(True) # TODO does not have the desired effect
                 path = unicode(item.getUserData())
-                self.listUniforms(path, self.human.mesh.material)
+                self.listUniforms(mat)
 
-    def updateShaderConfig(self):
-        shaderConfig = self.human.material.shaderConfig
+    def updateShaderConfig(self, mat = None):
+        if not mat:
+            mat = self.getSelectedObject().material
+
+        shaderConfig = mat.shaderConfig
 
         for child in self.shaderConfBox.children:
             name = str(child.text())
             child.setChecked( shaderConfig[name] )
             if name == 'diffuse':
-                child.setEnabled(self.human.material.supportsDiffuse())
+                child.setEnabled(mat.supportsDiffuse())
             if name == 'bump':
                 # TODO disable bump if normal enabled
-                child.setEnabled(self.human.material.supportsBump())
+                child.setEnabled(mat.supportsBump())
             if name == 'normal':
-                child.setEnabled(self.human.material.supportsNormal())
+                child.setEnabled(mat.supportsNormal())
             if name == 'displacement':
-                child.setEnabled(self.human.material.supportsDisplacement())
+                child.setEnabled(mat.supportsDisplacement())
             if name == 'spec':
-                child.setEnabled(self.human.material.supportsSpecular())
+                child.setEnabled(mat.supportsSpecular())
 
-    def setShader(self, path):
-        self.human.mesh.setShader(path)
-        self.listUniforms(path, self.human.mesh.material)
+    def setShader(self, path, mat = None):
+        if not mat:
+            mat = self.getSelectedObject().material
+        mat.setShader(path)
+        self.listUniforms(mat)
 
-    def listUniforms(self, path, material):
+    def listUniforms(self, mat):
         for child in self.paramBox.children[:]:
             self.paramBox.removeWidget(child)
+
+        path = mat.shader
 
         if not path:
             return
@@ -276,19 +291,34 @@ class ShaderTaskView(gui3d.TaskView):
         for index, uniform in enumerate(uniforms):
             if uniform.name.startswith('gl_'):
                 continue
-            self.paramBox.addWidget(UniformValue(uniform, material), index)
+            if uniform.name in material._materialShaderParams:
+                continue
+            self.paramBox.addWidget(UniformValue(uniform, mat), index)
+
+    def getSelectedObject(self):
+        selected = self.humanObjSelector.selected
+        if selected == 'skin':
+            return self.human
+        if selected == 'hair':
+            return self.human.hairObj
+        if selected == 'eyes':
+            return self.human.eyesObj
+
+        return self.human.clothesObjs[selected]
+
+    def reloadMaterial(self):
+        obj = self.getSelectedObject()
+
+        self.listShaders(obj.material)
+        self.updateShaderConfig(obj.material)
+        self.listMaterialSettings(obj)
 
     def onShow(self, arg):
         super(ShaderTaskView, self).onShow(arg)
-        self.listShaders()
-        if self.human.material.shader:
-            self.human.material.shader
         if not shader.Shader.supported():
             gui3d.app.statusPersist('Shaders not supported by OpenGL')
 
-        self.updateShaderConfig()
-
-        self.listMaterialSettings(self.human.material)
+        self.reloadMaterial()
 
     def onHide(self, arg):
         gui3d.app.statusPersist('')
@@ -392,10 +422,11 @@ class FileValue(gui.GroupBox):
     value = property(getValue, setValue)
 
 class UniformValue(gui.GroupBox):
-    def __init__(self, uniform, material = None):
+    def __init__(self, uniform, mat = None):
         super(UniformValue, self).__init__(uniform.name)
+
         self.uniform = uniform
-        self.material = material
+        self.material = mat
         self.widgets = None
         self.create()
 
@@ -443,7 +474,7 @@ class UniformValue(gui.GroupBox):
                 values = values[0]
                 if not os.path.isfile(values):
                     return
-        gui3d.app.selectedHuman.mesh.setShaderParameter(self.uniform.name, values)
+        self.material.setShaderParameter(self.uniform.name, values)
 
 class NumberValue(gui.TextEdit):
     def __init__(self, parent, value):
