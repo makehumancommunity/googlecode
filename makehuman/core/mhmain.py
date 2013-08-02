@@ -676,7 +676,7 @@ class MHApplication(gui3d.Application, mh.Application):
 
             if len(lineData) > 0:
                 if lineData[0] == "version":
-                    log.message('Version %s', lineData[1])
+                    log.message('Theme %s version %s', theme, lineData[1])
                 elif lineData[0] == "color":
                     if lineData[1] == "clear":
                         self.clearColor[:] = [float(val) for val in lineData[2:5]]
