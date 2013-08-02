@@ -449,6 +449,15 @@ class MHApplication(gui3d.Application, mh.Application):
         self.redraw()
 
     def startupSequence(self):
+        mainwinSize = (self.mainwin.width(), self.mainwin.height())
+        mainwinPos = (self.mainwin.pos().x(), self.mainwin.pos().y())
+        mainwinFrame = (self.mainwin.frameGeometry().width(), self.mainwin.frameGeometry().height())
+        mainwinBorder = (mainwinFrame[0] - mainwinSize[0], mainwinFrame[1] - mainwinSize[1])
+
+        # Move main window completely behind splash screen
+        self.mainwin.resize(self.splash.width() - mainwinBorder[0], self.splash.height() - mainwinBorder[1])
+        self.mainwin.move(self.splash.pos())
+
         self.splash.setFormat('<br><br><b><font size="48" color="#ff0000">%s</font></b>')
 
         log.message('Loading human')
@@ -485,14 +494,18 @@ class MHApplication(gui3d.Application, mh.Application):
         self.splash.hide()
         # self.splash.finish(self.mainwin)
 
+        # Restore main window size and position
         if self.settings.get('restoreWindowSize', False):
             self.mainwin.resize(
-                self.settings.get('windowWidth', self.mainwin.width()),
-                self.settings.get('windowHeight', self.mainwin.height()))
+                self.settings.get('windowWidth', mainwinSize[0]),
+                self.settings.get('windowHeight', mainwinSize[1]))
 
             self.mainwin.move(
-                self.settings.get('windowXPos', self.mainwin.pos().x()),
-                self.settings.get('windowYPos', self.mainwin.pos().y()))
+                self.settings.get('windowXPos', mainwinPos[0]),
+                self.settings.get('windowYPos', mainwinPos[1]))
+        else:
+            self.mainwin.resize(mainwinSize[0], mainwinSize[1])
+            self.mainwin.move(mainwinPos[0], mainwinPos[1])
 
     # Events
     def onStart(self, event):
