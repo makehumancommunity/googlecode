@@ -107,6 +107,7 @@ class LoadTaskView(gui3d.TaskView):
 
         self.fileentry = self.addTopWidget(gui.FileEntryView('Browse', mode='dir'))
         self.fileentry.setDirectory(mh.getPath('models'))
+        self.fileentry.text = mh.getPath('models')
         self.fileentry.setFilter('MakeHuman Models (*.mhm)')
 
         @self.fileentry.mhEvent
@@ -145,6 +146,7 @@ class LoadTaskView(gui3d.TaskView):
 
         gui3d.app.selectedHuman.hide()
         gui3d.TaskView.onShow(self, event)
+        self.filechooser.setPaths([self.fileentry.directory])
         self.filechooser.setFocus()
 
         # HACK: otherwise the toolbar background disappears for some weird reason

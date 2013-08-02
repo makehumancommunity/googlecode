@@ -82,9 +82,13 @@ class SaveTaskView(gui3d.TaskView):
             human.save(path, name)
             gui3d.app.modified = False
             #gui3d.app.clearUndoRedo()
-            
+
             gui3d.app.setFilenameCaption(filename)
             gui3d.app.setFileModified(False)
+
+            self.parent.tasksByName['Load'].fileentry.text = dir
+            self.parent.tasksByName['Load'].fileentry.edit.setText(dir)
+            self.parent.tasksByName['Load'].fileentry.setDirectory(dir)
 
             mh.changeCategory('Modelling')
 
