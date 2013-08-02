@@ -665,8 +665,9 @@ class MHApplication(gui3d.Application, mh.Application):
     # Themes
     def setTheme(self, theme):
 
-        if self.theme == theme:
-            return
+        # Disabling this check allows faster testing of a skin by reloading it.
+        #if self.theme == theme:
+        #    return
 
         f = open(os.path.join(mh.getSysDataPath("themes/"), theme + ".mht"), 'r')
 

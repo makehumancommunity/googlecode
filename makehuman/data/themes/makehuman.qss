@@ -410,10 +410,66 @@ QMainWindow::separator:hover
     spacing: 3px; /* spacing between items in the tool bar */
 }
 
+QToolBar
+{
+    background-color: #323232;
+    border: 0px black solid; /* Fix to force full style redefine, as mentioned at http://qt-project.org/forums/viewthread/24361/#112482 */
+}
+
 QToolBar::handle
 {
-     spacing: 3px; /* spacing between items in the tool bar */
-     background: url(data/themes/makehuman/images/handle.png);
+    spacing: 3px; /* spacing between items in the tool bar */
+    background: url(data/themes/makehuman/images/handle.png);
+}
+
+QToolButton
+{
+    /*background-color: red;*/
+    margin-left: 2px;
+    margin-right: 1px;
+
+    border: 1px solid #444;
+    border-radius: 5px;
+}
+
+QToolButton:pressed {
+/*    background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #d7801a);*/
+/*    background-color: ffa02f;*/
+/*    background-color: qradialgradient(
+        cx: 0.5, cy: 0.5,
+        fx: 0.5, fy: 0.5,
+        radius: 1.0,
+        stop: 0.25 #ffaa00,
+        stop: 0.5 #323232
+    );*/
+    
+    border: 1px solid #444;
+    border-radius: 5px;
+}
+
+QToolButton:hover
+{
+    /*background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #e96226);*/
+    /*background-color: QLinearGradient(x1:0, y1:0, x2:0, y2:1, stop:1 #212121, stop:0.4 #343434, stop:0.2 #343434, stop:0.1 #ffaa00);*/
+    background-color: qradialgradient(
+        cx: 0.5, cy: 0.5,
+        fx: 0.5, fy: 0.5,
+        radius: 1.0,
+        stop: 0.25 #323232,
+        stop: 0.65 #6c6c6c
+    );
+
+    border: 1px solid #ffaa00;
+}
+
+QToolButton:checked
+{
+/*    background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #e96226);*/
+/*    background-color: QLinearGradient( x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #ffa02f, stop: 1 #d7801a);*/
+    background-color: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 1, stop: 0.5 #323232, stop: 1 #e96226);
+    background-color: QLinearGradient( x1: 0, y1: 0, x2: 1, y2: 1, stop: 0 #e96226, stop: 0.5 #323232);
+
+    border: 1px solid #ffaa00;
 }
 
 QMenu::separator
