@@ -103,6 +103,7 @@ class ExpressionTaskView(gui3d.TaskView):
         gui3d.TaskView.onShow(self, event)
         for slider in self.sliders:
             slider.update()
+        gui3d.app.setFaceCamera()
 
     def onHumanChanged(self, event):
         log.debug("OHC %s %s" % (event, dir(event)))
@@ -155,7 +156,6 @@ class ExpressionTaskView(gui3d.TaskView):
                         value = float(lineData[2])
                         modifier.setValue(human, value)
                         modifier.updateValue(human, value)  # Force recompilation
-        gui3d.app.setFaceCamera()
 
 
 class ExpressionAction(gui3d.Action):
@@ -215,6 +215,7 @@ class MhmLoadTaskView(gui3d.TaskView):
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
         self.filechooser.setFocus()
+        gui3d.app.setFaceCamera()
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
@@ -236,6 +237,7 @@ class VisemeLoadTaskView(MhmLoadTaskView):
                 for name in names:
                     self.include.append("mouth-" + name)
                 break
+
 
 
 # This method is called when the plugin is loaded into makehuman

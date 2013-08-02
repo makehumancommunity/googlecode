@@ -144,6 +144,7 @@ class EyesTaskView(gui3d.TaskView):
             print self.human.eyesProxy.file
             self.filechooser.setHighlightedItem(self.human.eyesProxy.file)
         self.filechooser.setFocus()
+        gui3d.app.setFaceCamera()
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)

@@ -130,6 +130,7 @@ class ProxyTaskView(gui3d.TaskView):
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
         self.filechooser.setFocus()
+        gui3d.app.setGlobalCamera()
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
