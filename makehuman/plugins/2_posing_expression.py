@@ -105,9 +105,12 @@ class ExpressionTaskView(gui3d.TaskView):
             slider.update()
         gui3d.app.setFaceCamera()
 
+    def onHumanChanging(self, event):
+        if event.change not in ['warp', 'material']:
+            log.debug("onHumanChanging %s" % event)
+            warpmodifier.resetWarpBuffer()
+
     def onHumanChanged(self, event):
-        log.debug("OHC %s %s" % (event, dir(event)))
-        warpmodifier.touchWarps()
         for slider in self.sliders:
             slider.update()
 
@@ -124,7 +127,7 @@ class ExpressionTaskView(gui3d.TaskView):
             if value:
                 file.write('expression %s %f\n' % (name, value))
 
-
+    '''
     def resetExpressions(self, include):
         human = gui3d.app.selectedHuman
 
@@ -140,11 +143,11 @@ class ExpressionTaskView(gui3d.TaskView):
                 #print "  R", name
                 if name in include:
                     modifier.setValue(human, 0.0)
-
+    '''
 
     def loadExpression(self, filename, include):
         human = gui3d.app.selectedHuman
-        self.resetExpressions(include)
+        #self.resetExpressions(include)
 
         f = open(filename, 'r')
         for data in f.readlines():
@@ -157,6 +160,10 @@ class ExpressionTaskView(gui3d.TaskView):
                         modifier.setValue(human, value)
                         modifier.updateValue(human, value)  # Force recompilation
 
+
+#----------------------------------------------------------
+#   class ExpressionAction
+#----------------------------------------------------------
 
 class ExpressionAction(gui3d.Action):
 
@@ -186,6 +193,11 @@ class ExpressionAction(gui3d.Action):
             slider.update()
         return True
 
+
+#----------------------------------------------------------
+#   class ExpressionLoadTaskView
+#   class VisemeLoadTaskView
+#----------------------------------------------------------
 
 class MhmLoadTaskView(gui3d.TaskView):
 
@@ -219,6 +231,7 @@ class MhmLoadTaskView(gui3d.TaskView):
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
+
 
 class ExpressionLoadTaskView(MhmLoadTaskView):
 

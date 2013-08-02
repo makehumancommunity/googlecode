@@ -137,12 +137,16 @@ class WarpModifier (humanmodifier.SimpleModifier):
     def setValue(self, human, value):
         self.compileTargetIfNecessary(human)
         humanmodifier.SimpleModifier.setValue(self, human, value)
+        return
+        log.debug("SETVAL")
+        loglist(algos3d.targetBuffer)
+        loglist(algos3d.warpTargetBuffer)
+        loglist(human.targetsDetailStack)
 
 
     def updateValue(self, human, value, updateNormals=1):
         self.compileTargetIfNecessary(human)
         humanmodifier.SimpleModifier.updateValue(self, human, value, updateNormals)
-        human.warpNeedReset = False
 
 
     def clampValue(self, value):
@@ -173,14 +177,14 @@ class WarpModifier (humanmodifier.SimpleModifier):
             shape = warp.warp_target(srcTargetCoord, srcCharCoord, trgCharCoord, landmarks)
         else:
             shape = {}
-        log.message("...done")
         return shape
 
 
     def getReferences(self, human):
-        obj = human.meshData
-        srcCharCoord = obj.orig_coord.copy()
-        trgCharCoord = obj.orig_coord.copy()
+        #obj = human.meshData
+        #srcCharCoord = obj.orig_coord.copy()
+        srcCharCoord = human.getSeedMesh().coord.copy()
+        trgCharCoord = srcCharCoord.copy()
         srcTargetCoord = {}
 
         sumtargets = 0
@@ -190,19 +194,14 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 sumtargets += value
             except KeyError:
                 continue
-        if sumtargets == 0:
-            log.debug("No targets: %s" % human.targetsDetailStack.keys())
-        #factor = 1.0/sumtargets
-        factor = 1.0
-        log.debug("  SUM %g %g" % (sumtargets, factor))
+        if abs(sumtargets-1) > 1e-3 and abs(sumtargets-2) > 1e-3:
+            log.debug("Inconsistent target sum %s: %s" % (sumtargets, human.targetsDetailStack.keys()))
 
         for charpath,value in human.targetsDetailStack.items():
             try:
                 trgChar = algos3d.targetBuffer[charpath]
             except KeyError:
                 continue    # Warp target - ignore
-
-            log.debug("  CHAR %s %s %s" % (value, os.path.basename(charpath), trgChar))
 
             srcVerts = np.s_[...]
             dstVerts = trgChar.verts[srcVerts]
@@ -214,14 +213,12 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 continue
             reftrg = self.refTargets[charpath]
 
-            log.debug("   REF %s %s %s" % (factor*value, os.path.basename(refchar), os.path.basename(reftrg)))
-
             srcChar = readTarget(refchar)
             dstVerts = srcChar.verts[srcVerts]
-            srcCharCoord[dstVerts] += factor * value * srcChar.data[srcVerts]
+            srcCharCoord[dstVerts] +=  value * srcChar.data[srcVerts]
 
             srcTrg = readTarget(reftrg)
-            addVerts(srcTargetCoord, factor*value, srcTrg)
+            addVerts(srcTargetCoord, value, srcTrg)
 
         return srcTargetCoord, srcCharCoord, trgCharCoord
 
@@ -358,11 +355,13 @@ def readTarget(filepath):
     try:
         target = algos3d.targetBuffer[filepath]
         _warpGlobals.targetCache[filepath] = target
+        #log.debug("GLOBTAR %s" % target)
         return target
     except KeyError:
         pass
 
     # If neither, read target
+    #log.debug("READTAR %s" % filepath)
     words = filepath.rsplit("-",3)
     if words[0] == mh.getSysDataPath("targets/macrodetails/universal"):
         if words[1] == "averagemuscle":
@@ -372,7 +371,7 @@ def readTarget(filepath):
                 filepath = words[0] + "-" + words[2]
         elif words[2] == "averageweight.target":
             filepath = words[0] + "-" + words[1] + ".target"
-        log.debug("  NEW %s" % filepath)
+        #log.debug("  NEW %s" % filepath)
 
     try:
         fp = open(filepath, "rU")
@@ -418,7 +417,6 @@ def findReplacementFile(filepath):
         for variant in variants:
             filepath1 = filepath1.replace(variant, default)
             if filepath1 not in tried:
-                log.debug("  TRY %s" % filepath1)
                 try:
                     fp = open(filepath1, "rU")
                     log.message("   Replaced %s\n  -> %s", filepath, filepath1)
@@ -466,11 +464,6 @@ class GlobalWarpData:
         return self._landMarks[bodypart]
 
 
-def touchWarps():
-    global _warpGlobals
-    _warpGlobals.dirty = True
-
-
 _warpGlobals = GlobalWarpData()
 
 
@@ -479,3 +472,12 @@ def order(dict):
     stru.sort()
     return stru
 
+
+def loglist(dict):
+    return
+    stru = list(dict.items())
+    stru.sort()
+    log.debug("  [")
+    for x,y in stru:
+        log.debug("    %s: %s" % (x,y))
+    log.debug("  ]")

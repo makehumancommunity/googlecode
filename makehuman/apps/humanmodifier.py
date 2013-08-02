@@ -180,6 +180,7 @@ class ModifierSlider(gui.Slider):
 
     # Overwrite for warp targets
     def resetWarpTargets(self):
+        return
         import warpmodifier
         log.debug("Reset %s" % self)
         warpmodifier.resetWarpBuffer()
