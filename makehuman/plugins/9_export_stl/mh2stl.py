@@ -71,7 +71,7 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
     f.write('solid %s\n' % solid)
 
     for rmesh in rmeshes:
-        obj = rmesh.richMesh.object
+        obj = rmesh.object
 
         for fn,fv in enumerate(obj.fvert):
             f.write('facet normal %f %f %f\n' % tuple(obj.fnorm[fn]))
