@@ -55,9 +55,6 @@ def compileMesh(path):
 
     try:
         # Do not compile UV sets
-        if isSubPath(path, 'data/hairs'):
-            # These (unused) meshes cause errors
-            return False
         if not isSubPath(path, 'data/uvs'):
             npzpath = os.path.splitext(path)[0] + '.npz'
             #print 'Compiling mesh to binary: %s' % npzpath
