@@ -1,0 +1,14 @@
+Section: graphics
+Priority: optional
+Homepage: http://www.makehuman.org
+Package: PKGNAME
+Version: SVNREV
+Maintainer: Joel Palmius <joepal1976@hotmail.com>
+Depends: python,python-opengl,python-pyside.qtopengl,python-pyside.qtcore,python-pyside.qtgui,python-pyside.qtopengl,python-numpy,python-qt4-gl
+Suggests: blender
+Provides: makehuman
+Replaces: REPLACES
+Architecture: all
+Installed-Size: SIZE
+Description: Some kind of description.
+ I'll update this later
