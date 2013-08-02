@@ -141,6 +141,7 @@ class SkeletonLibrary(gui3d.TaskView):
                 self.jointsObj.hide()
         self.showJointsTggl.setSelected(True)
 
+        '''
         self.showWeightsTggl = displayBox.addWidget(gui.ToggleButton("Show bone weights"))
         @self.showWeightsTggl.mhEvent
         def onClicked(event):
@@ -152,6 +153,7 @@ class SkeletonLibrary(gui3d.TaskView):
             else:
                 self.clearBoneWeights()
         self.showWeightsTggl.setSelected(True)
+        '''
 
         #
         #   Preset box
