@@ -30,6 +30,7 @@ A description of this format can be found here: https://bitbucket.org/sinbad/ogr
 __docformat__ = 'restructuredtext'
 
 import os
+import gui3d
 import codecs
 import numpy as np
 import transformations
@@ -39,7 +40,20 @@ import log
 
 feetOnGround = True
 
-def exportOgreMesh(human, filepath, config):
+def exportOgreMesh(human, filepath, config, progressCallback = None):
+
+    progbase = 0
+    def progress(prog, desc = None):
+        if desc:
+            progress.lastDesc = desc
+        if progressCallback == None:
+            gui3d.app.progress(prog, progress.lastDesc)
+        else:
+            progressCallback(prog, progress.lastDesc)
+    progress.lastDesc = ""
+
+    nextpb = 0.05
+    progress(progbase,"Parsing data")
     obj = human.meshData
     config.setHuman(human)
     config.feetOnGround = False    # TODO translate skeleton with feet-on-ground offset too
@@ -47,7 +61,10 @@ def exportOgreMesh(human, filepath, config):
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
     name = formatName(config.goodName(os.path.splitext(filename)[0]))
+    progbase = nextpb
 
+    nextpb = 0.2
+    progress(progbase, "Collecting Objects")
     rmeshes,_amt = exportutils.collect.setupObjects(
         name,
         human,
@@ -55,15 +72,30 @@ def exportOgreMesh(human, filepath, config):
         helpers=config.helpers,
         eyebrows=config.eyebrows,
         lashes=config.lashes,
-        subdivide=config.subdivide)
+        subdivide=config.subdivide,
+        progressCallback=lambda p: progress(progbase+(nextpb-progbase)*p))
+    progbase = nextpb
 
-    writeMeshFile(human, filepath, rmeshes, config)
+    nextpb = 0.95 - 0.05 * bool(human.getSkeleton());
+    writeMeshFile(human, filepath, rmeshes, config,
+                  progressCallback=lambda p: progress(progbase+(nextpb-progbase)*p))
     if human.getSkeleton():
+        progress(0.8, "Writing Skeleton")
         writeSkeletonFile(human, filepath, config)
+    progress(0.95, "Writing Materials")
     writeMaterialFile(human, filepath, rmeshes, config)
+    progress(1.0)
 
 
-def writeMeshFile(human, filepath, rmeshes, config):
+def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
+
+    progbase = 0
+    def progress(prog):
+        if progressCallback is not None:
+            progressCallback(prog)
+        else:
+            pass
+    
     filename = os.path.basename(filepath)
     name = formatName(config.goodName(os.path.splitext(filename)[0]))
 
@@ -73,6 +105,7 @@ def writeMeshFile(human, filepath, rmeshes, config):
     f.write('<mesh>\n')
     f.write('    <submeshes>\n')
 
+    rmeshnum = float(len(rmeshes))
     for rmeshIdx, rmesh in enumerate(rmeshes):
         obj = rmesh.object
         # Make sure vertex normals are calculated
@@ -81,6 +114,7 @@ def writeMeshFile(human, filepath, rmeshes, config):
         # Calculate rendering data so we can use the unwelded vertices
         obj.updateIndexBuffer()
         numVerts = len(obj.r_coord)
+
         if obj.vertsPerPrimitive == 4:
             # Quads
             numFaces = len(obj.r_faces) * 2
@@ -97,8 +131,11 @@ def writeMeshFile(human, filepath, rmeshes, config):
             if obj.vertsPerPrimitive == 4:
                 f.write('                <face v1="%s" v2="%s" v3="%s" />\n' % (fv[2], fv[3], fv[0]))
         f.write('            </faces>\n')
+        progbase = float(rmeshIdx)/rmeshnum + 0.2
+        progress(progbase)
 
         # Vertices
+        nextpb = float(rmeshIdx)/rmeshnum + 0.8 - 0.08*bool(human.getSkeleton())
         f.write('            <geometry vertexcount="%s">\n' % numVerts)
         f.write('                <vertexbuffer positions="true" normals="true">\n')
         #f.write('                <vertexbuffer positions="true">\n')
@@ -114,7 +151,8 @@ def writeMeshFile(human, filepath, rmeshes, config):
             f.write('                        <normal x="%s" y="%s" z="%s" />\n' % (norm[0], norm[1], norm[2]))
             f.write('                    </vertex>\n')
         f.write('                </vertexbuffer>\n')
-
+        progress(nextpb)
+        
         # UV Texture Coordinates
         f.write('                <vertexbuffer texture_coord_dimensions_0="2" texture_coords="1">\n')
         for vIdx in xrange(numVerts):
@@ -128,6 +166,7 @@ def writeMeshFile(human, filepath, rmeshes, config):
             f.write('                    </vertex>\n')
         f.write('                </vertexbuffer>\n')
         f.write('            </geometry>\n')
+        progress(float(rmeshIdx)/rmeshnum + 1.0 - 0.1*bool(human.getSkeleton()))
 
         # Skeleton bone assignments
         if human.getSkeleton():
@@ -172,6 +211,7 @@ def writeMeshFile(human, filepath, rmeshes, config):
                         # unused coord
                         pass
             f.write('            </boneassignments>\n')
+            progress(float(rmeshIdx)/rmeshnum + 1.0)
         f.write('        </submesh>\n')
 
     f.write('    </submeshes>\n')

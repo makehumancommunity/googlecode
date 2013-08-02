@@ -24,6 +24,7 @@ Exporter plugin for the Ogre3d mesh format.
 
 import gui3d
 import gui
+import mh2ogre
 from export import Exporter
 from exportutils.config import Config
 
@@ -52,7 +53,7 @@ class ExporterOgre(Exporter):
         self.fileExtension = "mesh.xml"
 
     def export(self, human, filename):
-        import mh2ogre
+        reload(mh2ogre)
         mh2ogre.exportOgreMesh(human, filename("mesh.xml"), OgreConfig(self))
 
     def build(self, options, taskview):
