@@ -235,7 +235,7 @@ def writeMaterialFile(human, filepath, rmeshes, config):
 
     f = codecs.open(filepath, 'w', encoding="utf-8")
     for rmeshIdx, rmesh in enumerate(rmeshes):
-        texpath = rmesh.material.diffuseTexture
+        texfile = os.path.basename(rmesh.material.diffuseTexture)
         if rmeshIdx > 0:
             f.write('\n')
         f.write('material %s_%s_%s\n' % (formatName(name), rmeshIdx, formatName(rmesh.name) if formatName(rmesh.name) != name else "human"))
