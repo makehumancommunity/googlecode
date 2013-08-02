@@ -30,7 +30,7 @@
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.910",
+    "version": "0.911",
     "blender": (2, 6, 7),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -46,6 +46,7 @@ if "bpy" in locals():
     imp.reload(mc)
     imp.reload(materials)
     imp.reload(makeclothes)
+    imp.reload(project)
 else:
     print("Loading makeclothes v %s" % bl_info["version"])
     import bpy
@@ -53,9 +54,11 @@ else:
     from bpy.props import *
     import maketarget
     from maketarget.error import MHError, handleMHError
+    from maketarget.utils import setObjectMode
     from . import mc
     from . import materials
     from . import makeclothes
+    from . import project
 
 #
 #    class MakeClothesPanel(bpy.types.Panel):
@@ -155,6 +158,19 @@ class MakeClothesPanel(bpy.types.Panel):
             row = ins.row()
             row.prop(scn, "MCThreshold")
             row.prop(scn, "MCListLength")
+            ins.separator()
+        '''
+
+        '''
+        # UV projection. Currently hidden, but should be revived if
+        # masking comes back
+        layout.prop(scn, "MCShowUVProject")
+        if scn.MCShowUVProject:
+            ins = inset(layout)
+            ins.operator("mhclo.recover_seams")
+            ins.operator("mhclo.set_seams")
+            ins.operator("mhclo.project_uvs")
+            ins.operator("mhclo.reexport_mhclo")
             ins.separator()
         '''
 
@@ -281,7 +297,7 @@ class OBJECT_OT_SnapSelectedVertsButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         makeclothes.snapSelectedVerts(context)
         return{'FINISHED'}
 
@@ -295,7 +311,7 @@ class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             makeclothes.makeClothes(context, True)
             makeclothes.exportObjFile(context)
@@ -309,7 +325,7 @@ class OBJECT_OT_PrintClothesButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             makeclothes.makeClothes(context, False)
         except MHError:
@@ -326,7 +342,7 @@ class OBJECT_OT_CopyVertLocsButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         src = context.object
         for trg in context.scene.objects:
             if trg != src and trg.select and trg.type == 'MESH':
@@ -348,7 +364,7 @@ class OBJECT_OT_ExportDeleteVertsButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             makeclothes.exportDeleteVerts(context)
         except MHError:
@@ -365,7 +381,7 @@ class OBJECT_OT_ExportObjFileButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             makeclothes.exportObjFile(context)
         except MHError:
@@ -383,7 +399,7 @@ class OBJECT_OT_ExportBaseUvsPyButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             makeclothes.exportBaseUvsPy(context)
         except MHError:
@@ -396,7 +412,7 @@ class OBJECT_OT_SelectHelpersButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             makeclothes.selectHelpers(context)
         except MHError:
@@ -413,7 +429,7 @@ class OBJECT_OT_ExportBlenderMaterialButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             pob = makeclothes.getClothing(context)
             (outpath, outfile) = makeclothes.getFileName(pob, context, "mhx")
@@ -433,7 +449,7 @@ class OBJECT_OT_MakeHumanButton(bpy.types.Operator):
     isHuman = BoolProperty()
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             ob = context.object
             ob.MhHuman = self.isHuman
@@ -454,7 +470,7 @@ class OBJECT_OT_LoadHumanButton(bpy.types.Operator):
 
     def execute(self, context):
         from maketarget import mt, import_obj, utils
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         scn = context.scene
 
         print("BODY", scn.MhBodyType)
@@ -504,7 +520,7 @@ class OBJECT_OT_ExamineBoundaryButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             makeclothes.examineBoundary(context.object, context.scene)
         except MHError:
@@ -521,7 +537,7 @@ class OBJECT_OT_OffsetClothesButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             makeclothes.offsetCloth(context)
         except MHError:
@@ -538,7 +554,7 @@ class OBJECT_OT_SetZDepthButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             makeclothes.setZDepth(context.scene)
         except MHError:
@@ -555,7 +571,7 @@ class VIEW3D_OT_PrintVnumsButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             makeclothes.printVertNums(context)
         except MHError:
@@ -573,7 +589,7 @@ class VIEW3D_OT_DeleteHelpersButton(bpy.types.Operator):
     answer = StringProperty()
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         ob = context.object
         scn = context.scene
         if makeclothes.isHuman(ob):
@@ -590,7 +606,7 @@ class VIEW3D_OT_RemoveVertexGroupsButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             makeclothes.removeVertexGroups(context, context.scene.MCRemoveGroupType)
         except MHError:
@@ -607,10 +623,79 @@ class VIEW3D_OT_AutoVertexGroupsButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         try:
             makeclothes.removeVertexGroups(context, 'All')
             makeclothes.autoVertexGroups(context.object, context.scene)
+        except MHError:
+            handleMHError(context)
+        return{'FINISHED'}
+
+#
+#    class OBJECT_OT_RecoverSeamsButton(bpy.types.Operator):
+#
+
+class OBJECT_OT_RecoverSeamsButton(bpy.types.Operator):
+    bl_idname = "mhclo.recover_seams"
+    bl_label = "Recover seams"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        setObjectMode(context)
+        try:
+            project.recoverSeams(context)
+        except MHError:
+            handleMHError(context)
+        return{'FINISHED'}
+
+
+class OBJECT_OT_SetSeamsButton(bpy.types.Operator):
+    bl_idname = "mhclo.set_seams"
+    bl_label = "Set seams"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        setObjectMode(context)
+        try:
+            project.setSeams(context)
+        except MHError:
+            handleMHError(context)
+        return{'FINISHED'}
+
+#
+#    class OBJECT_OT_ProjectUVsButton(bpy.types.Operator):
+#
+
+class OBJECT_OT_ProjectUVsButton(bpy.types.Operator):
+    bl_idname = "mhclo.project_uvs"
+    bl_label = "Project UVs"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        from .makeclothes import getObjectPair
+        setObjectMode(context)
+        try:
+            (human, clothing) = getObjectPair(context)
+            project.unwrapObject(clothing, context)
+            project.projectUVs(human, clothing, context)
+            print("UVs projected")
+        except MHError:
+            handleMHError(context)
+        return{'FINISHED'}
+
+#
+#   class OBJECT_OT_ReexportMhcloButton(bpy.types.Operator):
+#
+
+class OBJECT_OT_ReexportMhcloButton(bpy.types.Operator):
+    bl_idname = "mhclo.reexport_mhclo"
+    bl_label = "Reexport Mhclo file"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        setObjectMode(context)
+        try:
+            project.reexportMhclo(context)
         except MHError:
             handleMHError(context)
         return{'FINISHED'}

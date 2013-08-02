@@ -51,7 +51,7 @@ from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 from . import mh
 from . import utils
-from .utils import round
+from .utils import round, setObjectMode
 from . import import_obj
 from .proxy import CProxy
 
@@ -135,7 +135,7 @@ class VIEW3D_OT_ImportBaseMhcloButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         import_obj.importBaseMhclo(context, filepath=mt.baseMhcloFile)
         afterImport(context, mt.baseMhcloFile, False, True)
         return {'FINISHED'}
@@ -148,7 +148,7 @@ class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         import_obj.importBaseObj(context, filepath=mt.baseObjFile)
         afterImport(context, mt.baseObjFile, True, False)
         return {'FINISHED'}
@@ -161,7 +161,7 @@ class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         mh.proxy = None
         ob = context.object
         for mod in ob.modifiers:
@@ -217,7 +217,7 @@ class VIEW3D_OT_DeleteIrrelevantButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         ob = context.object
         deleteIrrelevant(ob, ob.MhAffectOnly)
         return{'FINISHED'}
@@ -242,7 +242,7 @@ class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
 
     def execute(self, context):
         global Comments
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         ob = context.object
         settings = getSettings(ob)
         if ob.MhMeshVertsDeleted:
@@ -313,7 +313,7 @@ class VIEW3D_OT_LoadTargetFromMeshButton(bpy.types.Operator):
         #return (context.object and not context.object.MhMeshVertsDeleted)
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         loadTargetFromMesh(context)
         return {'FINISHED'}
 
@@ -472,7 +472,7 @@ class VIEW3D_OT_SaveTargetButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         ob = context.object
         path = ob["FilePath"]
         if mh.confirm:
@@ -504,7 +504,7 @@ class VIEW3D_OT_SaveasTargetButton(bpy.types.Operator, ExportHelper):
         return context.object
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         doSaveTarget(context, self.properties.filepath)
         print("Target saved")
         return {'FINISHED'}
@@ -540,7 +540,7 @@ class VIEW3D_OT_ApplyTargetsButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         applyTargets(context)
         return{'FINISHED'}
 
@@ -593,7 +593,7 @@ class VIEW3D_OT_PruneTargetFileButton(bpy.types.Operator, ExportHelper):
         return (context.object and context.object.MhPruneEnabled)
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         ob = context.object
         if ob.MhPruneWholeDir:
             folder = os.path.dirname(self.properties.filepath)
@@ -641,7 +641,7 @@ class VIEW3D_OT_BatchFitButton(bpy.types.Operator):
 
     def execute(self, context):
         global TargetSubPaths
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         scn = context.scene
         if not mh.confirm:
             mh.confirmString = "Really batch fit targets?"
@@ -694,7 +694,7 @@ class VIEW3D_OT_BatchRenderButton(bpy.types.Operator):
 
     def execute(self, context):
         global TargetSubPaths
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         scn = context.scene
         folder = os.path.expanduser(scn.MhTargetPath)
         outdir = os.path.expanduser("~/makehuman/pictures/")
@@ -750,7 +750,7 @@ class VIEW3D_OT_FitTargetButton(bpy.types.Operator):
         return (not context.object.MhMeshVertsDeleted)
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         fitTarget(context)
         return{'FINISHED'}
 
@@ -797,7 +797,7 @@ class VIEW3D_OT_DiscardTargetButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         discardTarget(context)
         return{'FINISHED'}
 
@@ -813,7 +813,7 @@ class VIEW3D_OT_DiscardAllTargetsButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         discardAllTargets(context)
         return{'FINISHED'}
 
@@ -966,7 +966,7 @@ class VIEW3D_OT_SymmetrizeTargetButton(bpy.types.Operator):
     action = StringProperty()
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         symmetrizeTarget(context, (self.action=="Right"), (self.action=="Mirror"))
         return{'FINISHED'}
 
@@ -986,7 +986,7 @@ class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
         return (ob.MhAffectOnly == 'Skirt' or not ob.MhIrrelevantDeleted)
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         ob = context.object
         settings = getSettings(ob)
         if ob.MhIrrelevantDeleted:
@@ -1021,7 +1021,7 @@ class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
         return (ob.MhAffectOnly == 'Skirt' or not ob.MhIrrelevantDeleted)
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         ob = context.object
         settings = getSettings(ob)
         if ob.MhIrrelevantDeleted:
@@ -1078,7 +1078,7 @@ class VIEW3D_OT_FixInconsistencyButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         fixInconsistency(context)
         return{'FINISHED'}
 

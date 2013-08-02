@@ -978,7 +978,7 @@ def makeClothes(context, doFindClothes):
     scn = context.scene
     checkNoTriangles(pob)
     checkObjectOK(bob, context, False)
-    checkAndVertexDiamonds(scn, bob)
+    checkAndVertexDiamonds(context, bob)
     checkObjectOK(pob, context, True)
     checkSingleVGroups(pob, scn)
     if scn.MCLogging:
@@ -1566,6 +1566,8 @@ def deleteHelpers(context):
 
 def removeVertexGroups(context, removeType):
     ob = context.object
+    if len(ob.vertex_groups) == 0:
+        return
     bpy.ops.object.mode_set(mode='OBJECT')
     if removeType == 'All':
         bpy.ops.object.vertex_group_remove(all=True)
@@ -1576,7 +1578,6 @@ def removeVertexGroups(context, removeType):
                 for vgrp in ob.vertex_groups:
                     vgrp.remove([v.index])
         print("Selected verts removed from all vertex groups")
-    return
 
 #
 #   autoVertexGroups(ob, scn):
@@ -1656,16 +1657,21 @@ def addBodyVerts(me, verts):
     return
 
 #
-#   checkAndVertexDiamonds(scn, ob):
+#   checkAndVertexDiamonds(context, ob):
 #
 
-def checkAndVertexDiamonds(scn, ob):
+def checkAndVertexDiamonds(context, ob):
     print("Unvertex diamonds in %s" % ob)
+    scn = context.scene
+    bpy.ops.object.mode_set(mode='OBJECT')
+    scn.objects.active = ob
     bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.reveal()
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
     me = ob.data
     nverts = len(me.vertices)
+
     if theSettings and (nverts not in getLastVertices()):
         vertlines = ""
         for n in getLastVertices():
@@ -1674,8 +1680,21 @@ def checkAndVertexDiamonds(scn, ob):
             "Base object %s has %d vertices. \n" % (ob, nverts) +
             "The number of verts in an %s MH human must be one of:" % theSettings.baseMesh +
             vertlines)
+
+    joints = theSettings.vertices["Joints"]
+    if nverts <= joints[0]:
+        return
+    for vn in range(joints[0], joints[1]):
+        me.vertices[vn].select = True
+    lastHair = theSettings.vertices["Hair"][1]
+    if nverts > lastHair:
+        for vn in range(lastHair, theSettings.nTotalVerts):
+            me.vertices[vn].select = True
+
     bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.object.vertex_group_remove_from(all=True)
+    for gn in range(len(ob.vertex_groups)):
+        ob.vertex_groups.active_index = gn
+        bpy.ops.object.vertex_group_remove_from()
     bpy.ops.object.mode_set(mode='OBJECT')
     return
 

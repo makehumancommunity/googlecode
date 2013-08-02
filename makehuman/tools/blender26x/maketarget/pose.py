@@ -39,7 +39,7 @@ from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 from . import mh
 from . import utils
-from .utils import round
+from .utils import round, setObjectMode
 
 #----------------------------------------------------------
 #   saveMhpFile(context, filepath):
@@ -134,7 +134,7 @@ class VIEW3D_OT_LoadMhpButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         loadMhpFile(context, self.properties.filepath)
         return {'FINISHED'}
 
@@ -161,7 +161,7 @@ class VIEW3D_OT_SaveasMhpFileButton(bpy.types.Operator, ExportHelper):
         return context.object
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         saveMhpFile(context, self.properties.filepath)
         return {'FINISHED'}
 
@@ -278,7 +278,7 @@ class VIEW3D_OT_LoadBvhButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         loadBvhFile(context, self.properties.filepath)
         return {'FINISHED'}
 
@@ -305,7 +305,7 @@ class VIEW3D_OT_SaveasBvhFileButton(bpy.types.Operator, ExportHelper):
         return context.object
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         saveBvhFile(context, self.properties.filepath)
         return {'FINISHED'}
 
@@ -440,7 +440,7 @@ class VIEW3D_OT_ConvertRigButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        bpy.ops.object.mode_set(mode='OBJECT')
+        setObjectMode(context)
         scn = context.scene
         ob = context.object
         rig = ob.parent
