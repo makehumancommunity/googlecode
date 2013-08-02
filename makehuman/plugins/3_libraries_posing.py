@@ -44,12 +44,14 @@ class PoseAction(gui3d.Action):
         self.after = after
 
     def do(self):
-        self.library.pose = posemode.loadMhpFile(self.after, self.library.pose)
+        clearOnly = (os.path.basename(self.after) == 'clear.mhp')
+        self.library.pose = posemode.loadMhpFile(self.after, self.library.pose, clearOnly)
         self.library.posefile = self.after
         return True
 
     def undo(self):
-        self.library.pose = posemode.loadMhpFile(self.before, self.library.pose)
+        clearOnly = (os.path.basename(self.before) == 'clear.mhp')
+        self.library.pose = posemode.loadMhpFile(self.before, self.library.pose, clearOnly)
         self.library.posefile = self.before
         return True
 

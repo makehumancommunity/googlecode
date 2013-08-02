@@ -148,7 +148,7 @@ def changePoseMode(event):
         resetPoseMode()
 
 
-def loadMhpFile(filepath, pose=None):
+def loadMhpFile(filepath, pose=None, clearOnly=False):
 
     human = gui3d.app.selectedHuman
     folder = os.path.dirname(filepath)
@@ -171,7 +171,7 @@ def loadMhpFile(filepath, pose=None):
     if not pose:
         pose = createPoseRig(human)
     pose.setModifier(modifier)
-    pose.readMhpFile(filepath)
+    pose.readMhpFile(filepath, clearOnly)
 
     return pose
 

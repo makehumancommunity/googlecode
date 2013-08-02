@@ -266,10 +266,14 @@ class Pose:
             raise NameError("Dirty bones encountered")
 
 
-    def readMhpFile(self, filepath):
-        log.message("Mhp %s", filepath)
+    def readMhpFile(self, filepath, clearOnly=False):
+        self.clear()
+        if clearOnly:
+            self.update()
+            return
+
+        log.message("Loading MHP file %s", filepath)
         amt = self.armature
-        print(self.posebones.keys())
         fp = open(filepath, "rU")
         for line in fp:
             words = line.split()
