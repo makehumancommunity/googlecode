@@ -208,8 +208,10 @@ QGroupBox::title {
 }
 
 QSlider {
-	/*background: transparency;*/
-	padding: -5px 0px;
+    /*background: transparency;*/
+    padding: -5px 0px;
+    height: 22px;
+    border 0px solid black;
 }
 
 QSlider::groove:horizontal {
