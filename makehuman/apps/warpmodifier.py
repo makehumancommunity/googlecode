@@ -78,29 +78,6 @@ class WarpSlider(humanmodifier.ModifierSlider):
 #   class WarpModifier
 #----------------------------------------------------------
 
-class BaseSpec:
-    def __init__(self, path, factors):
-        self.path = path
-        self.factors = factors
-        self.value = -1
-
-    def __repr__(self):
-        return ("<BaseSpec %s %.4f %s>" % (self.path, self.value, self.factors))
-
-
-class TargetSpec:
-    def __init__(self, path, factors):
-        self.path = path.replace("-${tone}","").replace("-${weight}","")
-        self.factors = factors
-        self.verts = None
-        if "$" in self.path:
-            log.debug("TS %s %s" % (self.path, path))
-            halt
-
-    def __repr__(self):
-        return ("<TargetSpec %s %s>" % (self.path, self.factors))
-
-
 class WarpModifier (humanmodifier.SimpleModifier):
 
     def __init__(self, template, bodypart):
@@ -407,6 +384,9 @@ def findReplacementFile(filepath):
         (["-averagemuscle"], ""),
         (["-averageweight"], ""),
         (["/asian", "/african"], "/caucasian"),
+        (["-baby"], "-child"),
+        (["-child", "-old"], "-young"),
+        (["-male"], "-female"),
         (["/baby", "/child", "/old"], "/young"),
         (["/male"], "/female"),
     ]
@@ -474,7 +454,7 @@ def order(dict):
 
 
 def loglist(dict):
-    return
+    #return
     stru = list(dict.items())
     stru.sort()
     log.debug("  [")

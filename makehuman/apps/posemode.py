@@ -24,6 +24,7 @@ TODO
 
 import os
 import gui3d
+import algos3d
 from armature.pose import createPoseRig
 from armature.utils import debugCoords
 import humanmodifier
@@ -38,6 +39,7 @@ class Storage:
         self.poseDetails = {}
         self.filepath = None
         self.dirty = False
+        self.modifiers = {}
 
 
     def store(self, human):
@@ -95,6 +97,19 @@ def touchStorage():
         #_storage.poseDetails = {}
         #log.debug("Storage touched")
 
+
+def clearPoseDetails(human):
+    for path in human.targetsDetailStack.keys():
+        try:
+            target = algos3d.warpTargetBuffer[path]
+        except KeyError:
+            continue
+        if isinstance(target.modifier, PoseModifier):
+            target.modifier.updateValue(human, 0.0)
+            human.setDetail(path, 0)
+    human.applyAllTargets()
+
+
 _storage = Storage()
 _inPoseMode = False
 
@@ -108,6 +123,12 @@ def printVert(human):
         else:
             y = human.unposedCoords[vn]
         log.debug("  %d: (%.3f %.3f %.3f) (%.3f %.3f %.3f)", vn,x[0],x[1],x[2],y[0],y[1],y[2])
+
+
+def logStack(human):
+    log.debug("STACK")
+    for path,value in human.targetsDetailStack.items():
+        log.debug("  %s: %s" % (path, value))
 
 
 def enterPoseMode():
@@ -141,7 +162,6 @@ def resetPoseMode():
 
 def changePoseMode(event):
     human = event.human
-    #log.debug("Change pose mode %s w=%s e=%s", _inPoseMode, human.warpsNeedReset, event.change)
     if event.change not in ["targets", "warp"]:
         exitPoseMode()
     if event.change == "reset":
@@ -151,6 +171,17 @@ def changePoseMode(event):
 def loadMhpFile(filepath, pose=None, clearOnly=False):
 
     human = gui3d.app.selectedHuman
+    if not pose:
+        pose = createPoseRig(human)
+
+    clearPoseDetails(human)
+    pose.clear()
+    if clearOnly:
+        pose.storeCoords()
+        pose.setModifier(None)
+        pose.update()
+        return pose
+
     folder = os.path.dirname(filepath)
     hasTargets = False
     for file in os.listdir(folder):
@@ -163,15 +194,18 @@ def loadMhpFile(filepath, pose=None, clearOnly=False):
         filenamePattern = "${gender}-${age}-${tone}-${weight}-%s.target" % fname
         modpath = os.path.join(folder, filenamePattern)
         log.debug('PoseLoadTaskView.loadMhpFile: %s %s', filepath, modpath)
-        modifier = PoseModifier(modpath)
-        modifier.updateValue(human, 1.0)
+        try:
+            modifier = _storage.modifiers[modpath]
+        except KeyError:
+            modifier = _storage.modifiers[modpath] = PoseModifier(modpath)
+        modifier.setValue(human, 1.0)
+        human.applyAllTargets()
     else:
         modifier = None
 
-    if not pose:
-        pose = createPoseRig(human)
+    pose.storeCoords()
     pose.setModifier(modifier)
-    pose.readMhpFile(filepath, clearOnly)
+    pose.readMhpFile(filepath)
 
     return pose
 
@@ -183,5 +217,4 @@ class PoseModifier(warpmodifier.GenderAgeToneWeightWarpModifier):
 
     def __init__(self, template):
         warpmodifier.GenderAgeToneWeightWarpModifier.__init__(self, template, "body")
-
 

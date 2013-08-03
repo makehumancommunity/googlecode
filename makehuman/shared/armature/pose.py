@@ -149,9 +149,7 @@ class Pose:
 
 
     def syncRestVerts(self, caller):
-        #import warpmodifier
         log.message("Sync rest verts: %s", caller)
-        #self.restCoords[:,:3] = warpmodifier.getWarpedCoords(self.human)
         self.restCoords[:,:3] = self._storedCoord
 
 
@@ -266,12 +264,7 @@ class Pose:
             raise NameError("Dirty bones encountered")
 
 
-    def readMhpFile(self, filepath, clearOnly=False):
-        self.clear()
-        if clearOnly:
-            self.update()
-            return
-
+    def readMhpFile(self, filepath):
         log.message("Loading MHP file %s", filepath)
         amt = self.armature
         fp = open(filepath, "rU")
