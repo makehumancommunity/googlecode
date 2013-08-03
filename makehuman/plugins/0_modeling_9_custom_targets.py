@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
-Plugin to apply custom targets. 
+"""
+Plugin to apply custom targets.
 
 **Project Name:**      MakeHuman
 
@@ -40,7 +40,7 @@ class FolderButton(gui.RadioButton):
         super(FolderButton, self).__init__(group, label, selected)
         self.groupBox = groupBox
         self.task = task
-        
+
     def onClicked(self, event):
         self.task.syncVisibility()
 
@@ -52,28 +52,28 @@ class CustomTargetsTaskView(gui3d.TaskView):
         self.targetsPath = os.path.join(mh.getPath(''), 'custom')
         if not os.path.exists(self.targetsPath):
             os.makedirs(self.targetsPath)
-        
+
         self.optionsBox = self.addRightWidget(gui.GroupBox('Options'))
         rescanButton = self.optionsBox.addWidget(gui.Button("Rescan targets' folder"))
 
         self.folderBox = self.addRightWidget(gui.GroupBox('Folders'))
         self.targetsBox = self.addLeftWidget(gui.StackedBox())
-        
+
         @rescanButton.mhEvent
         def onClicked(event):
             #TODO: undo any applied change here
             self.searchTargets()
-           
-        self.folders = [] 
-            
+
+        self.folders = []
+
         self.searchTargets()
-        
+
     def searchTargets(self):
-    
+
         self.sliders = []
         self.modifiers = {}
         active = None
-        
+
         for folder in self.folders:
             self.targetsBox.removeWidget(folder)
             folder.destroy()
@@ -85,7 +85,7 @@ class CustomTargetsTaskView(gui3d.TaskView):
 
         self.folders = []
         group = []
-        
+
         for root, dirs, files in os.walk(self.targetsPath):
 
             groupBox = self.targetsBox.addWidget(gui.GroupBox('Targets'))
@@ -95,7 +95,7 @@ class CustomTargetsTaskView(gui3d.TaskView):
             for f in files:
                 if f.endswith(".target"):
                     self.createTargetControls(groupBox, root, f)
-        
+
         for folder in self.folders:
             for child in folder.children:
                 child.update()
@@ -124,13 +124,13 @@ class CustomTargetsTaskView(gui3d.TaskView):
 
         # We want the slider to start from the middle
         targetName = os.path.splitext(targetFile)[0]
-        
+
         modifier = humanmodifier.SimpleModifier(os.path.join(targetPath, targetFile))
         self.modifiers[targetName] = modifier
         self.sliders.append(box.addWidget(humanmodifier.ModifierSlider(value=0, label=targetName, modifier=modifier)))
-        
+
     def syncSliders(self):
-        
+
         for slider in self.sliders:
             slider.update()
 
@@ -140,7 +140,7 @@ class CustomTargetsTaskView(gui3d.TaskView):
                 self.targetsBox.showWidget(button.groupBox)
                 if button.groupBox.children:
                     button.groupBox.children[0].setFocus()
-        
+
     def onShow(self, event):
 
         gui3d.TaskView.onShow(self, event)
@@ -151,14 +151,20 @@ class CustomTargetsTaskView(gui3d.TaskView):
     def onHide(self, event):
         gui3d.app.statusPersist('')
 
+    def onHumanChanging(self, event):
+        if event.change == 'reset':
+            self.syncVisibility()
+            self.syncSliders()
+            self.syncStatus()
+
     def loadHandler(self, human, values):
-        
+
         modifier = self.modifiers.get(values[1], None)
         if modifier:
             modifier.setValue(human, float(values[2]))
-       
+
     def saveHandler(self, human, file):
-        
+
         for name, modifier in self.modifiers.iteritems():
             value = modifier.getValue(human)
             if value:
@@ -174,7 +180,7 @@ taskview = None
 def load(app):
     category = app.getCategory('Modelling')
     taskview = category.addTask(CustomTargetsTaskView(category, app))
-    
+
     app.addLoadHandler('custom', taskview.loadHandler)
     app.addSaveHandler(taskview.saveHandler)
 
