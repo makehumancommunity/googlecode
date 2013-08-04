@@ -59,9 +59,7 @@ def exportFbx(human, filepath, config):
         human,
         config=config,
         rawTargets=rawTargets,
-        helpers=config.helpers,
-        eyebrows=config.eyebrows,
-        lashes=config.lashes)
+        helpers=config.helpers)
 
     amt.calcBindMatrices()
 

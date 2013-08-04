@@ -44,8 +44,6 @@ def exportObj(human, filepath, config=None):
         human,
         config=config,
         helpers=config.helpers,
-        eyebrows=config.eyebrows,
-        lashes=config.lashes,
         subdivide=config.subdivide)
 
     objects = [rmesh.object for rmesh in rmeshes]

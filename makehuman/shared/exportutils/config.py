@@ -35,8 +35,6 @@ class Config:
 
     def __init__(self):
         self.useTexFolder       = True
-        self.eyebrows           = True
-        self.lashes             = True
         self.helpers            = False
         self.useTPose           = False
         self.scale              = 1.0
@@ -53,8 +51,6 @@ class Config:
 
     def selectedOptions(self, exporter):
         self.useTexFolder       = exporter.useTexFolder.selected
-        self.eyebrows           = exporter.eyebrows.selected
-        self.lashes             = exporter.lashes.selected
         self.helpers            = exporter.helpers.selected
         self.useTPose           = False # exporter.useTPose.selected
         self.scale,self.unit    = exporter.taskview.getScale()

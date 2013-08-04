@@ -70,8 +70,6 @@ def exportOgreMesh(human, filepath, config, progressCallback = None):
         human,
         config=config,
         helpers=config.helpers,
-        eyebrows=config.eyebrows,
-        lashes=config.lashes,
         subdivide=config.subdivide,
         progressCallback=lambda p: progress(progbase+(nextpb-progbase)*p))
     progbase = nextpb
@@ -95,7 +93,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
             progressCallback(prog)
         else:
             pass
-    
+
     filename = os.path.basename(filepath)
     name = formatName(config.goodName(os.path.splitext(filename)[0]))
 
@@ -152,7 +150,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
             f.write('                    </vertex>\n')
         f.write('                </vertexbuffer>\n')
         progress(nextpb)
-        
+
         # UV Texture Coordinates
         f.write('                <vertexbuffer texture_coord_dimensions_0="2" texture_coords="1">\n')
         for vIdx in xrange(numVerts):

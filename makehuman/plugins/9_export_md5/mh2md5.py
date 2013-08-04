@@ -76,8 +76,6 @@ def exportMd5(human, filepath, config):
         human,
         config=config,
         helpers=config.helpers,
-        eyebrows=config.eyebrows,
-        lashes=config.lashes,
         subdivide=config.subdivide)
 
     if human.getSkeleton():
