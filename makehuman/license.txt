@@ -15,7 +15,7 @@ D. CC0 1.0 Universal
 A. The MakeHuman Source code and data
 ======================================
 
-Copyright (C) 2001-2012  MakeHuman Team (makehuman.org)
+Copyright (C) 2001-2013  MakeHuman Team (makehuman.org)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as
