@@ -1,27 +1,25 @@
-# ##### BEGIN GPL LICENSE BLOCK #####
-#
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ##### END GPL LICENSE BLOCK #####
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
-# Project Name:        MakeHuman
-# Product Home Page:   http://www.makehuman.org/
-# Code Home Page:      http://code.google.com/p/makehuman/
-# Authors:             Thomas Larsson
-# Script copyright (C) MakeHuman Team 2001-2013
-# Coding Standards:    See http://www.makehuman.org/node/165
+"""
+**Project Name:**      MakeHuman
+
+**Product Home Page:** http://www.makehuman.org/
+
+**Code Home Page:**    http://code.google.com/p/makehuman/
+
+**Authors:**           Thomas Larsson
+
+**Copyright(c):**      MakeHuman Team 2001-2013
+
+**Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
+
+**Coding Standards:**  See http://www.makehuman.org/node/165
+
+Abstract
+--------
+
+"""
 
 import bpy
 import os
@@ -35,25 +33,25 @@ from . import mh
 #
 
 class CRefVert:
-    
+
     def __init__(self, index):
         self.index = index
-        
+
     def __repr__(self):
         return ("<CRefVert %s\n    %s\n    %s>" % (self.verts, self.weights, self.offsets))
-        
+
     def fromSingle(self, vn):
         self.verts = (vn,vn,vn)
         self.weights = (1,0,0)
         self.offsets = Vector((0,0,0))
         return self
-        
+
     def fromTriple(self, verts, weights, offsets):
         self.verts = verts
         self.weights = weights
         self.offsets = Vector(offsets)
         return self
-        
+
     def update(self, srcVerts, scales):
         rv0,rv1,rv2 = self.verts
         w0,w1,w2 = self.weights
@@ -62,7 +60,7 @@ class CRefVert:
 
     def updateWeight(self, srcWeights):
         rv0,rv1,rv2 = self.verts
-        w0,w1,w2 = self.weights        
+        w0,w1,w2 = self.weights
         return w0*srcWeights[rv0] + w1*srcWeights[rv1] + w2*srcWeights[rv2]
 
 #
@@ -79,12 +77,12 @@ class CProxy:
         self.zScale = None
         self.firstVert = 0
         return
-        
+
     def __repr__(self):
-        return ("<CProxy %s %d\n  %s\n  x %s  y %s  z %s>" % 
+        return ("<CProxy %s %d\n  %s\n  x %s  y %s  z %s>" %
             (self.name, self.firstVert, self.obj_file, self.xScale, self.yScale, self.zScale))
 
-        
+
     def checkSanity(self, trgVerts):
         rlen = len(self.refVerts)
         mlen = len(trgVerts)
@@ -117,7 +115,7 @@ class CProxy:
         for n,refVert in self.refVerts.items():
             trgWeights[n] = refVert.updateWeight(srcWeights)
         return trgWeights
-        
+
 
     def read(self, filepath):
         realpath = os.path.realpath(os.path.expanduser(filepath))
@@ -144,7 +142,7 @@ class CProxy:
                     pass
                 elif words[1] == 'verts':
                     if len(words) > 2:
-                        self.firstVert = int(words[2])                    
+                        self.firstVert = int(words[2])
                     status = doVerts
                 elif words[1] == 'name':
                     self.name = words[2]
@@ -155,7 +153,7 @@ class CProxy:
                 elif words[1] == 'y_scale':
                     self.yScale = scaleInfo(words)
                 elif words[1] == 'z_scale':
-                    self.zScale = scaleInfo(words)                
+                    self.zScale = scaleInfo(words)
                 elif words[1] == 'obj_file':
                     self.obj_file = os.path.join(folder, words[2])
                 else:
@@ -164,13 +162,13 @@ class CProxy:
                 if len(words) == 1:
                     v = int(words[0])
                     self.refVerts[vn] = CRefVert(vn).fromSingle(v)
-                else:                
+                else:
                     v0 = int(words[0])
                     v1 = int(words[1])
                     v2 = int(words[2])
                     w0 = float(words[3])
                     w1 = float(words[4])
-                    w2 = float(words[5])            
+                    w2 = float(words[5])
                     d0 = float(words[6])
                     d1 = float(words[7])
                     d2 = float(words[8])
@@ -179,7 +177,7 @@ class CProxy:
         return
 
 
-def scaleInfo(words):                
+def scaleInfo(words):
     v1 = int(words[2])
     v2 = int(words[3])
     den = float(words[4])
@@ -200,4 +198,3 @@ def getScale(info, verts, index):
         dz = v1[2]-v2[2]
         num = math.sqrt(dx*dx + dy*dy + dz*dz)
     return num/den
-    

@@ -1,30 +1,23 @@
-# ##### BEGIN GPL LICENSE BLOCK #####
-#
-#  This program is free software; you can redistribute it and/or
-#  modify it under the terms of the GNU General Public License
-#  as published by the Free Software Foundation; either version 2
-#  of the License, or (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software Foundation,
-#  Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
-#
-# ##### END GPL LICENSE BLOCK #####
-
-# Project Name:        MakeHuman
-# Product Home Page:   http://www.makehuman.org/
-# Code Home Page:      http://code.google.com/p/makehuman/
-# Authors:             Thomas Larsson
-# Script copyright (C) MakeHuman Team 2001-2013
-# Coding Standards:    See http://www.makehuman.org/node/165
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 """
+**Project Name:**      MakeHuman
+
+**Product Home Page:** http://www.makehuman.org/
+
+**Code Home Page:**    http://code.google.com/p/makehuman/
+
+**Authors:**           Thomas Larsson
+
+**Copyright(c):**      MakeHuman Team 2001-2013
+
+**Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
+
+**Coding Standards:**  See http://www.makehuman.org/node/165
+
 Abstract
+--------
 
 Custom obj exporter for MakeHuman Maketarget
 """
@@ -42,7 +35,7 @@ from . import maketarget
 #   Only looks at the last part of the group name
 #   Groups not listed have Z-order 0.
 #   Faces within a given Z-order are exported with lower face number first.
-#   Preferably add new groups with higher Z-order, to not ruin numbering 
+#   Preferably add new groups with higher Z-order, to not ruin numbering
 #   of existing faces. It is not a disaster to change face numbers, but
 #   it does require some changes in MHX export.
 #
@@ -62,11 +55,11 @@ GroupZOrderSuffix = {
 #
 
 GroupMaterials = {
-    "nail" : "nail", 
-    "eye-ball" : "eye", 
-    "teeth" : "teeth", 
-    "cornea" : "cornea", 
-    "joint" : "joint", 
+    "nail" : "nail",
+    "eye-ball" : "eye",
+    "teeth" : "teeth",
+    "cornea" : "cornea",
+    "joint" : "joint",
     "skirt" : "joint",
     "tights" : "joint",
 }
@@ -86,17 +79,17 @@ def exportObjFile(path, groupsAsMaterials, context):
     if (not me) or (len(me.materials) < 2):
         raise NameError("Mesh must have materials")
 
-    try:        
+    try:
         faces = me.polygons
         BMeshAware = True
         print("Using BMesh")
     except:
-        faces = me.faces        
+        faces = me.faces
         BMeshAware = False
         print("Not using BMesh")
-        
+
     orderedFaces = zOrderFaces(me, faces)
-    
+
     (name,ext) = os.path.splitext(path)
     if ext.lower() != ".obj":
         path = path + ".obj"
@@ -105,10 +98,10 @@ def exportObjFile(path, groupsAsMaterials, context):
 
     for v in me.vertices:
         fp.write("v %.4f %.4f %.4f\n" % (v.co[0], v.co[2], -v.co[1]))
-        
+
     for v in me.vertices:
         fp.write("vn %.4f %.4f %.4f\n" % (v.normal[0], v.normal[2], -v.normal[1]))
-        
+
     info =  (-2, None)
     if me.uv_textures:
         (uvFaceVerts, texVerts, nTexVerts) = setupTexVerts(me, faces)
@@ -137,7 +130,7 @@ def exportObjFile(path, groupsAsMaterials, context):
     return
 
 
-def writeNewGroup(fp, f, info, me, ob, groupsAsMaterials):            
+def writeNewGroup(fp, f, info, me, ob, groupsAsMaterials):
     (gnum, mname) = info
     if groupsAsMaterials:
         if f.material_index != gnum:
@@ -148,7 +141,7 @@ def writeNewGroup(fp, f, info, me, ob, groupsAsMaterials):
                 if key in gname:
                     mname1 = GroupMaterials[key]
                     break
-            if mname != mname1:                    
+            if mname != mname1:
                 mname = mname1
                 fp.write("usemtl %s\n" % mname)
             fp.write("g %s\n" % gname)
@@ -170,21 +163,21 @@ def writeNewGroup(fp, f, info, me, ob, groupsAsMaterials):
                 gn = gn1
                 break
 
-        if gn != gnum:            
+        if gn != gnum:
             mat = me.materials[f.material_index]
             if mname != mat.name:
                 mname = mat.name
                 #fp.write("usemtl %s\n" % mname)
-            gnum = gn  
+            gnum = gn
             if gnum < 0:
                 fp.write("g body\n")
             else:
                 for vgrp in ob.vertex_groups:
-                    if vgrp.index == gnum:                    
+                    if vgrp.index == gnum:
                         fp.write("g %s\n" % vgrp.name)
                         break
             info = (gnum, mname)
-    return info       
+    return info
 
 #
 #   zOrderFaces(me, faces):
@@ -194,7 +187,7 @@ def zOrderFaces(me, faces):
     zGroupFaces = {}
     zGroupFaces[0] = []
     for n in GroupZOrderSuffix.keys():
-        zGroupFaces[n] = []        
+        zGroupFaces[n] = []
     for f in faces:
         group = me.materials[f.material_index].name
         suffix = group.split("-")[-1]
@@ -219,7 +212,7 @@ def setupTexVerts(me, faces):
     global BMeshAware
     vertEdges = {}
     vertFaces = {}
-    
+
     for v in me.vertices:
         vertEdges[v.index] = []
         vertFaces[v.index] = []
@@ -229,7 +222,7 @@ def setupTexVerts(me, faces):
     for f in faces:
         for vn in f.vertices:
             vertFaces[vn].append(f)
-    
+
     edgeFaces = {}
     for e in me.edges:
         edgeFaces[e.index] = []
@@ -246,7 +239,7 @@ def setupTexVerts(me, faces):
                         edgeFaces[e.index].append(f)
                     if e not in faceEdges[f.index]:
                         faceEdges[f.index].append(e)
-        
+
     faceNeighbors = {}
     uvFaceVerts = {}
     for f in faces:
@@ -259,13 +252,13 @@ def setupTexVerts(me, faces):
                     faceNeighbors[f.index].append((e,f1))
 
     vtn = 0
-    texVerts = {}    
+    texVerts = {}
     if BMeshAware:
         uvloop = me.uv_layers[0]
         n = 0
         for f in faces:
             for vn in f.vertices:
-                vtn = findTexVert(uvloop.data[n].uv, vtn, f, faceNeighbors, uvFaceVerts, texVerts)                
+                vtn = findTexVert(uvloop.data[n].uv, vtn, f, faceNeighbors, uvFaceVerts, texVerts)
                 n += 1
     else:
         uvtex = me.uv_textures[0]
@@ -276,7 +269,7 @@ def setupTexVerts(me, faces):
             vtn = findTexVert(uvf.uv3, vtn, f, faceNeighbors, uvFaceVerts, texVerts)
             if len(f.vertices) > 3:
                 vtn = findTexVert(uvf.uv4, vtn, f, faceNeighbors, uvFaceVerts, texVerts)
-    return (uvFaceVerts, texVerts, vtn)     
+    return (uvFaceVerts, texVerts, vtn)
 
 #
 #   findTexVert(uv, vtn, f, faceNeighbors, uvFaceVerts, texVerts):
@@ -287,11 +280,11 @@ def findTexVert(uv, vtn, f, faceNeighbors, uvFaceVerts, texVerts):
         for (vtn1,uv1) in uvFaceVerts[f1.index]:
             vec = uv - uv1
             if vec.length < Epsilon:
-                uvFaceVerts[f.index].append((vtn1,uv))                
+                uvFaceVerts[f.index].append((vtn1,uv))
                 return vtn
     uvFaceVerts[f.index].append((vtn,uv))
     texVerts[vtn] = uv
     return vtn+1
-        
-    
+
+
 
