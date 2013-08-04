@@ -23,12 +23,9 @@ TODO
 """
 
 import gui3d
-import humanmodifier
 import warpmodifier
-import warp
 import os
 import mh
-import posemode
 import gui
 import filechooser as fc
 import log
@@ -95,9 +92,11 @@ class ExpressionTaskView(gui3d.TaskView):
         # self.hideAllBoxes()
         # self.groupBoxes[0].show()
 
+
     def hideAllBoxes(self):
         for box in self.groupBoxes:
             box.hide()
+
 
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
@@ -105,14 +104,17 @@ class ExpressionTaskView(gui3d.TaskView):
             slider.update()
         gui3d.app.setFaceCamera()
 
+
     def onHumanChanging(self, event):
         if event.change not in ['warp', 'material']:
             log.debug("onHumanChanging %s" % event)
             warpmodifier.resetWarpBuffer()
 
+
     def onHumanChanged(self, event):
         for slider in self.sliders:
             slider.update()
+
 
     def loadHandler(self, human, values):
         modifier = self.modifiers.get(values[1], None)
@@ -121,33 +123,17 @@ class ExpressionTaskView(gui3d.TaskView):
             modifier.setValue(human, value)
             modifier.updateValue(human, value)  # Force recompilation
 
+
     def saveHandler(self, human, file):
         for name, modifier in self.modifiers.iteritems():
             value = modifier.getValue(human)
             if value:
                 file.write('expression %s %f\n' % (name, value))
 
-    '''
-    def resetExpressions(self, include):
-        human = gui3d.app.selectedHuman
-
-        log.message("resetExpressions %s", include)
-
-        if include == "All":
-            for name, modifier in self.modifiers.iteritems():
-                #print "  R", name
-                modifier.setValue(human, 0.0)
-                #modifier.updateValue(human, 0.0)  # Force recompilation
-        else:
-            for name, modifier in self.modifiers.iteritems():
-                #print "  R", name
-                if name in include:
-                    modifier.setValue(human, 0.0)
-    '''
 
     def loadExpression(self, filename, include):
         human = gui3d.app.selectedHuman
-        #self.resetExpressions(include)
+        warpmodifier.resetWarpBuffer()
 
         f = open(filename, 'r')
         for data in f.readlines():

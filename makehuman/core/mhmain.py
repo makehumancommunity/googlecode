@@ -486,6 +486,10 @@ class MHApplication(gui3d.Application, mh.Application):
             self.loadMacroTargets()
 
         log.message('Loading done')
+
+        # Make an explicit reset to avoid init glitch (issue 732)
+        self.resetHuman()
+
         log.message('')
 
         if sys.platform.startswith("darwin"):
@@ -1270,7 +1274,7 @@ class MHApplication(gui3d.Application, mh.Application):
         #[BAL 07/14/2013] work around focus bug in PyQt on OS X
         if sys.platform == 'darwin':
             G.app.mainwin.raise_()
-        
+
         self.setLanguage("english")
 
         self.loadSettings()

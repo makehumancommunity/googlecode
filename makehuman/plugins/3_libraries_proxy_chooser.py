@@ -139,7 +139,6 @@ class ProxyTaskView(gui3d.TaskView):
 
         human = event.human
         if event.change == 'reset':
-            log.message('deleting proxy')
             human.setProxy(None)
             self.filechooser.deselectAll()
 
