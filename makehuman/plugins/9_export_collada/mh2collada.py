@@ -64,7 +64,7 @@ def exportCollada(human, filepath, config):
         human,
         config=config,
         rawTargets = rawTargets,
-        helpers=config.helpers)
+        useHelpers=config.useHelpers)
 
     amt.calcBindMatrices()
 

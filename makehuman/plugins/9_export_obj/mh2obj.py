@@ -43,7 +43,7 @@ def exportObj(human, filepath, config=None):
         name,
         human,
         config=config,
-        helpers=config.helpers,
+        useHelpers=config.useHelpers,
         subdivide=config.subdivide)
 
     objects = [rmesh.object for rmesh in rmeshes]

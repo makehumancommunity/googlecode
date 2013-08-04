@@ -61,7 +61,7 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
         name,
         human,
         config=config,
-        helpers=config.helpers,
+        useHelpers=config.useHelpers,
         subdivide=config.subdivide)
 
     f = open(filepath, 'w')
@@ -113,7 +113,7 @@ def exportStlBinary(human, filename, config, exportJoints = False):
         name,
         human,
         config=config,
-        helpers=config.helpers,
+        useHelpers=config.useHelpers,
         subdivide=config.subdivide)
 
     # TL: should loop over rmesh (clothes etc) but only do nude human for now.

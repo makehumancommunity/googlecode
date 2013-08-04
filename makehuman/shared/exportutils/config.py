@@ -35,7 +35,7 @@ class Config:
 
     def __init__(self):
         self.useTexFolder       = True
-        self.helpers            = False
+        self.useHelpers            = False
         self.useTPose           = False
         self.scale              = 1.0
         self.unit               = "dm"
@@ -51,7 +51,7 @@ class Config:
 
     def selectedOptions(self, exporter):
         self.useTexFolder       = exporter.useTexFolder.selected
-        self.helpers            = exporter.helpers.selected
+        self.useHelpers            = exporter.useHelpers.selected
         self.useTPose           = False # exporter.useTPose.selected
         self.scale,self.unit    = exporter.taskview.getScale()
         return self

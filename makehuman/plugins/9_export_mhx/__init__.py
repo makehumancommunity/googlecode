@@ -38,7 +38,7 @@ class MhxConfig(Config):
         self.useTexFolder =         exporter.useTexFolder.selected
         self.scale,self.unit =      exporter.taskview.getScale()
         self.useRelPaths =          True
-        self.helpers =              True
+        self.useHelpers =              True
 
         self.feetOnGround =         exporter.feetOnGround.selected
         self.useMasks =             True # exporter.masks.selected

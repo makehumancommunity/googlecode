@@ -37,7 +37,7 @@ class OgreConfig(Config):
 
     def selectedOptions(self, exporter):
         self.useTexFolder       = exporter.useTexFolder.selected
-        self.helpers            = exporter.helpers.selected
+        self.useHelpers            = exporter.useHelpers.selected
         #self.scale,self.unit    = exporter.taskview.getScale()
         self.subdivide          = gui3d.app.selectedHuman.isSubdivided()
 
@@ -57,7 +57,7 @@ class ExporterOgre(Exporter):
     def build(self, options, taskview):
         self.taskview       = taskview
         self.useTexFolder   = options.addWidget(gui.CheckBox("Separate texture folder", True))
-        self.helpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
+        self.useHelpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
         #self.scales         = self.addScales(options)
 
     def onShow(self, exportTaskView):

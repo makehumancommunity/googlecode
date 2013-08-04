@@ -242,7 +242,7 @@ def povrayExportArray(obj, camera, path, settings):
     povraySizeData(obj, outputFileDescriptor)
 
     # Collect and prepare all objects.
-    rmeshes,_amt = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False, subdivide = settings['subdivide'])
+    rmeshes,_amt = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, useHelpers=False, hidden=False, subdivide = settings['subdivide'])
 
     # Write array data for the object.
     povrayWriteArray(outputFileDescriptor, rmeshes)
@@ -438,7 +438,7 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     writeConstants(outputFileDescriptor, settings)
 
     # Collect and prepare all objects.
-    rmeshes,_amt = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False,
+    rmeshes,_amt = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, useHelpers=False, hidden=False,
                                             subdivide = settings['subdivide'],
                                             progressCallback = lambda p: progress(progbase+p*(nextpb-progbase),"Analyzing objects"))
     progbase = nextpb

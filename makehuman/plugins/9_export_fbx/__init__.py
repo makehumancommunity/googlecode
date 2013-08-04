@@ -55,7 +55,7 @@ class FbxConfig(Config):
 
     def __repr__(self):
         return("<FbxConfig %s s %s e %s h %s>" % (
-            self.rigOptions.rigtype, self.useTexFolder, self.expressions, self.helpers))
+            self.rigOptions.rigtype, self.useTexFolder, self.expressions, self.useHelpers))
 
 
 class ExporterFBX(Exporter):
