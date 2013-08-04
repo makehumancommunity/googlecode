@@ -96,7 +96,6 @@ def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidd
     _,deleteVerts = setupProxies('Eyes', None, human, rmeshes, richMesh, config, deleteGroups, deleteVerts)
     foundProxy,deleteVerts = setupProxies('Proxy', name, human, rmeshes, richMesh, config, deleteGroups, deleteVerts)
     progress(0.06*(3-2*subdivide))
-    log.debug("SOB %s %s" % (foundProxy,useHelpers))
     if not foundProxy:
         if not useHelpers:     # useHelpers override everything
             richMesh = filterMesh(richMesh, deleteGroups, deleteVerts, not hidden)
@@ -154,7 +153,6 @@ def filterMesh(richMesh, deleteGroups, deleteVerts, useFaceMask = False):
     """
     Filter out vertices and faces from the mesh that are not desired for exporting.
     """
-    # DONE. TODO scaling does not belong in a filter method.
     obj = richMesh.object
 
     killUvs = numpy.zeros(len(obj.texco), bool)
@@ -247,7 +245,7 @@ def filterMesh(richMesh, deleteGroups, deleteVerts, useFaceMask = False):
                     morphs2[newVerts[v1]] = dx
             shapes.append((name, morphs2))
 
-    richMesh.fromProxy(coords, texVerts, faceVerts, faceUvs, weights, shapes)
+    richMesh.fromProxy(coords, texVerts, faceVerts, faceUvs, weights, shapes, obj.material)
     richMesh.vertexMask = numpy.logical_not(killVerts)
     richMesh.vertexMapping = newVerts
     richMesh.faceMask = numpy.logical_not(faceMask)

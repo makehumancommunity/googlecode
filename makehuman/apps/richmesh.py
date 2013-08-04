@@ -57,8 +57,8 @@ class RichMesh(object):
         self.type = newProxy.type
         if newProxy.material:
             self.material = newProxy.material
-    
-    def fromProxy(self, coords, texVerts, faceVerts, faceUvs, weights, shapes, scale=1.0):
+
+    def fromProxy(self, coords, texVerts, faceVerts, faceUvs, weights, shapes, material):
         for fv in faceVerts:
             if len(fv) != 4:
                 raise NameError("Mesh %s has non-quad faces and can not be handled by MakeHuman" % self.name)
@@ -70,6 +70,7 @@ class RichMesh(object):
         obj.setFaces(faceVerts, faceUvs)
         self.weights = weights
         self.shapes = shapes
+        self.material = obj.material = material
         return self
 
 
@@ -104,7 +105,7 @@ class RichMesh(object):
     def calculateSkinWeights(self, amt):
         if self.object is None:
             raise NameError("%s has no object. Cannot calculate skin weights" % self)
-        
+
         self.vertexWeights = [list() for _ in xrange(len(self.object.coord))]
         self.skinWeights = []
 

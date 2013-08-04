@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 Handles WaveFront .obj 3D mesh files.
 
 **Project Name:**      MakeHuman
@@ -90,7 +90,7 @@ def loadObjFile(path, obj = None):
                 if len(vIndices) == 3:
                     vIndices.append(vIndices[0])
                 fverts.append(tuple(vIndices))
-                    
+
                 if len(uvIndices) > 0:
                     if len(uvIndices) == 3:
                         uvIndices.append(uvIndices[0])
@@ -100,7 +100,7 @@ def loadObjFile(path, obj = None):
                 fuvs.append(tuple(uvIndices))
 
                 groups.append(fg.idx)
-                
+
                 fmtls.append(mtl)
 
             elif command == 'g':
@@ -116,7 +116,7 @@ def loadObjFile(path, obj = None):
                 mtl =  materials[mtlName]
 
             elif command == 'o':
-                
+
                 obj.name = lineData[1]
 
     objFile.close()
@@ -231,18 +231,26 @@ def writeMaterial(fp, mat, texPathConf = None):
     diff = mat.diffuseColor
     si = mat.specularIntensity
     spec =  mat.specularColor
+    # alpha=0 is necessary for correct transparency in Blender.
+    # But may lead to problems with other apps.
+    if mat.diffuseTexture:
+        alpha = 0
+    else:
+        alpha = 1-mat.transparencyIntensity
     fp.write(
         "Kd %.4g %.4g %.4g\n" % (di*diff.r, di*diff.g, di*diff.b) +
         "Ks %.4g %.4g %.4g\n" % (si*spec.r, si*spec.g, si*spec.b) +
-        "d %.4g\n" % (1-mat.transparencyIntensity)
+        "d %.4g\n" % alpha
     )
 
     writeTexture(fp, "map_Kd", mat.diffuseTexture, texPathConf)
+    writeTexture(fp, "map_D", mat.diffuseTexture, texPathConf)
     writeTexture(fp, "map_Ks", mat.specularMapTexture, texPathConf)
     #writeTexture(fp, "map_Tr", mat.translucencyMapTexture, texPathConf)
-    writeTexture(fp, "map_Disp", mat.normalMapTexture, texPathConf)
-    writeTexture(fp, "map_Disp", mat.specularMapTexture, texPathConf)
-    writeTexture(fp, "map_Disp", mat.displacementMapTexture, texPathConf)
+    # Disabled because Blender interprets map_Disp as map_D
+    #writeTexture(fp, "map_Disp", mat.normalMapTexture, texPathConf)
+    #writeTexture(fp, "map_Disp", mat.specularMapTexture, texPathConf)
+    #writeTexture(fp, "map_Disp", mat.displacementMapTexture, texPathConf)
 
     #import mh
     #writeTexture(fp, "map_Kd", os.path.join(mh.getSysDataPath("textures"), "texture.png"), texPathConf)
