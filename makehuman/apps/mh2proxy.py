@@ -262,15 +262,20 @@ class CProxy:
 
 
     def getWeights(self, rawWeights):
+        converter = self.getConverter()
+        if converter:
+            rawWeights = converter.getWeights1(rawWeights)
+        return self.getWeights1(rawWeights)
+
+
+    def getWeights1(self, rawWeights):
         weights = OrderedDict()
         if not rawWeights:
             return weights
+
         for key in rawWeights.keys():
             vgroup = []
             empty = True
-            if key == "Spine1":
-                print "RW", rawWeights[key]
-                print "VW", self.vertWeights.items()
             for (v,wt) in rawWeights[key]:
                 try:
                     vlist = self.vertWeights[v]
@@ -281,8 +286,6 @@ class CProxy:
                     if (pw > 1e-4):
                         vgroup.append((pv, pw))
                         empty = False
-            if key == "Spine1":
-                print "VL", vlist
             if not empty:
                 weights[key] = self.fixVertexGroup(vgroup)
         return weights
