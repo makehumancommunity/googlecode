@@ -69,7 +69,7 @@ def readTargets(human, config):
 #   setupObjects
 #
 
-def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=False, eyebrows=True, lashes=True, subdivide = False, progressCallback=None):
+def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=False, subdivide = False, progressCallback=None):
     from armature.armature import setupArmature
 
     def progress(prog):
@@ -98,7 +98,7 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
     progress(0.06*(3-2*subdivide))
     if not foundProxy:
         if helpers is None:     # helpers override everything
-            richMesh = filterMesh(richMesh, deleteGroups, deleteVerts, eyebrows, lashes, not hidden)
+            richMesh = filterMesh(richMesh, deleteGroups, deleteVerts, not hidden)
         rmeshes = [richMesh] + rmeshes
 
     if config.scale != 1.0:
@@ -129,7 +129,7 @@ def setupObjects(name, human, config=None, rawTargets=[], helpers=False, hidden=
 
 def setupProxies(typename, name, human, rmeshes, richMesh, config, deleteGroups, deleteVerts):
     # TODO document that this method does not only return values, it also modifies some of the passed parameters (deleteGroups and rmeshes, deleteVerts is modified only if it is not None)
-    import re    
+    import re
 
     foundProxy = False
     for proxy in config.getProxies().values():
@@ -138,7 +138,7 @@ def setupProxies(typename, name, human, rmeshes, richMesh, config, deleteGroups,
             deleteGroups += proxy.deleteGroups
             if deleteVerts != None:
                 deleteVerts = deleteVerts | proxy.deleteVerts
-            rmesh = richmesh.getRichMesh(None, proxy, richMesh.weights, richMesh.shapes, richMesh.armature) 
+            rmesh = richmesh.getRichMesh(None, proxy, richMesh.weights, richMesh.shapes, richMesh.armature)
             if name is not None:    # Make exportable names.
                 rmesh.name = name
             rmesh.name = re.sub('[^0-9a-zA-Z]+', '_', rmesh.name)
@@ -149,7 +149,7 @@ def setupProxies(typename, name, human, rmeshes, richMesh, config, deleteGroups,
 #
 #
 
-def filterMesh(richMesh, deleteGroups, deleteVerts, eyebrows, lashes, useFaceMask = False):
+def filterMesh(richMesh, deleteGroups, deleteVerts, useFaceMask = False):
     """
     Filter out vertices and faces from the mesh that are not desired for exporting.
     """
@@ -172,10 +172,6 @@ def filterMesh(richMesh, deleteGroups, deleteVerts, eyebrows, lashes, useFaceMas
     for fg in obj.faceGroups:
         if (("joint" in fg.name) or
            ("helper" in fg.name) or
-           ((not eyebrows) and
-           (("eyebrown" in fg.name) or ("cornea" in fg.name))) or
-           ((not lashes) and
-           ("lash" in fg.name)) or
            deleteGroup(fg.name, deleteGroups)):
             killGroups.append(fg.name)
 

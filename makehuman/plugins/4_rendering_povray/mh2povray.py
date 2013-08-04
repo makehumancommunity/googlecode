@@ -242,8 +242,7 @@ def povrayExportArray(obj, camera, path, settings):
     povraySizeData(obj, outputFileDescriptor)
 
     # Collect and prepare all objects.
-    rmeshes,_amt = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False,
-                                            eyebrows=False, lashes=False, subdivide = settings['subdivide'])
+    rmeshes,_amt = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False, subdivide = settings['subdivide'])
 
     # Write array data for the object.
     povrayWriteArray(outputFileDescriptor, rmeshes)
@@ -440,7 +439,7 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
 
     # Collect and prepare all objects.
     rmeshes,_amt = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, helpers=False, hidden=False,
-                                            eyebrows=False, lashes=True, subdivide = settings['subdivide'],
+                                            subdivide = settings['subdivide'],
                                             progressCallback = lambda p: progress(progbase+p*(nextpb-progbase),"Analyzing objects"))
     progbase = nextpb
 
@@ -850,7 +849,7 @@ def getImageFname(name, file, type = None, getext = False):
         return (out + ext, ext.lower()[1:])
     else:
         return out + ext
-    
+
 def getImageDef(name, file, type = None):
     (out, ext) = getImageFname(name, file, type, True)
     if ext == "tif":
