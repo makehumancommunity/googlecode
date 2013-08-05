@@ -100,7 +100,7 @@ def writeMaterialFile(fp, mat, name, outdir):
         blenddir = os.path.dirname(bpy.data.filepath)
         relpath =  bpy.path.relpath(tex.image.filepath)     # starts with //
         filepath = os.path.join(blenddir, relpath[2:])
-        texpath = os.path.basename(filepath)
+        texpath = os.path.basename(filepath).replace(" ","_")
 
         if mtex.use_map_color_diffuse:
             fp.write('diffuseTexture %s\n' % texpath)
@@ -121,8 +121,9 @@ def writeMaterialFile(fp, mat, name, outdir):
             fp.write('displacementTexture %s\n' % texpath)
             useDisplacement = "true"
 
-        print("Copy texture %s => %s" % (filepath, outdir))
-        shutil.copy(filepath, outdir)
+        trgpath = os.path.join(outdir, texpath)
+        print("Copy texture %s => %s" % (filepath, trgpath))
+        shutil.copy(filepath, trgpath)
 
     fp.write(
         '\n' +
