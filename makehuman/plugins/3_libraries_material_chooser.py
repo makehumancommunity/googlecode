@@ -374,7 +374,9 @@ class EthnicSkinBlender(object):
             blends.append( ('asian', asianWeight) )
 
         if len(blends) == 1:
-            return self.skinCache[blends[0][0]]
+            img = self.skinCache[blends[0][0]]
+            img.markModified()
+            return img
         else:
             img = image_operations.mix(self.skinCache[blends[0][0]], self.skinCache[blends[1][0]], blends[0][1], blends[1][1])
             if len(blends) > 2:

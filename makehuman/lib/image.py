@@ -203,3 +203,9 @@ class Image(object):
             data = color
 
         return type(self)(data = data)
+
+    def markModified(self):
+        """
+        Mark this image as modified.
+        """
+        self.modified = time.time()
