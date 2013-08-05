@@ -107,7 +107,7 @@ class ExpressionTaskView(gui3d.TaskView):
 
     def onHumanChanging(self, event):
         if event.change not in ['warp', 'material']:
-            log.debug("onHumanChanging %s" % event)
+            #log.debug("onHumanChanging %s" % event)
             warpmodifier.resetWarpBuffer()
 
 
