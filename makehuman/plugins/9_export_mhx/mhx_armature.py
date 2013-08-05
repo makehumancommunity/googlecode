@@ -68,7 +68,6 @@ class ExportArmature(Armature):
         self.visibleLayers = "00000001"
         self.scale = options.scale
 
-        self.recalcRoll = []
         self.objectProps = [("MhxRig", '"MHX"')]
         self.armatureProps = []
         self.customProps = []
@@ -77,7 +76,6 @@ class ExportArmature(Armature):
         self.poseInfo = {}
 
         self.visibleLayers = "0068056b"
-        self.recalcRoll = []
         self.objectProps = [("MhxRig", '"MHX"')]
 
 
@@ -212,13 +210,11 @@ class ExportArmature(Armature):
 
         for bone in self.bones.values():
             bgroup = getBoneGroup(bone)
-            posebone.addPoseBone(
+            posebone.writePoseBone(
                 fp, self, bone.name,
                 bone.customShape, bgroup,
                 bone.lockLocation, bone.lockRotation, bone.lockScale,
                 bone.ikDof, bone.flags, bone.constraints)
-
-
 
 
     def writeDrivers(self, fp):
@@ -399,12 +395,6 @@ NoScale False ;
   show_names False ;
   draw_type 'STICK' ;
   layers Array 1 1 1 1 1 1 1 1  1 1 1 1 1 1 1 1  1 1 1 1 1 1 1 1  1 1 1 1 1 1 1 1  ;
-""")
-
-        if self.recalcRoll:
-            fp.write("  RecalcRoll %s ;\n" % self.recalcRoll)
-
-        fp.write("""
   layers_protected Array 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  ;
   pose_position 'POSE' ;
   use_mirror_x False ;

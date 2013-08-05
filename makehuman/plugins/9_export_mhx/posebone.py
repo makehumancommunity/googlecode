@@ -27,25 +27,7 @@ import armature
 from armature.flags import *
 
 
-def addCSlider(fp, amt, bone, mx):
-    mn = "-"+mx
-    addPoseBone(fp, amt, bone, 'MHCube025', None, (0,1,0), (1,1,1), (1,1,1), (1,1,1), 0,
-        [('LimitLoc', C_OW_LOCAL+C_LTRA, 1, ['Const', (mn,mx, '0','0', mn,mx), (1,1,1,1,1,1)])])
-
-def addYSlider(fp, amt, bone, mx):
-    mn = "-"+mx
-    addPoseBone(fp, amt, bone, 'MHCube025', None, (1,1,0), (1,1,1), (1,1,1), (1,1,1), 0,
-        [('LimitLoc', C_OW_LOCAL+C_LTRA, 1, ['Const', ('0','0', '0','0', mn,mx), (1,1,1,1,1,1)])])
-
-def addXSlider(fp, amt, bone, mn, mx, dflt):
-    addPoseBone(fp, amt, bone, 'MHCube025', None, ((0,1,1), (dflt,0,0)), (1,1,1), (1,1,1), (1,1,1), 0,
-        [('LimitLoc', C_OW_LOCAL+C_LTRA, 1, ['Const', (mn,mx, '0','0', mn,mx), (1,1,1,1,1,1)])])
-
-#
-#    addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, flags, constraints):
-#
-
-def addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, flags, constraints):
+def writePoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, flags, constraints):
     try:
         (lockLoc, location) = locArg
     except:
@@ -142,15 +124,5 @@ def addPoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScal
 def rotationMode(flags):
     modes = ['QUATERNION', 'XYZ', 'XZY', 'YXZ', 'YZX', 'ZXY', 'ZYX']
     return modes[(flags&P_ROTMODE) >> 8]
-
-'''
-def boneGroupIndex(grp, amt):
-    index = 1
-    for (name, color) in amt.boneGroups:
-        if name == grp:
-            return index
-        index += 1
-    raise NameError("Unknown bonegroup %s" % grp)
-'''
 
 

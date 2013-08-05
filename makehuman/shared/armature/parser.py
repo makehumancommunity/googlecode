@@ -228,6 +228,7 @@ class Parser:
                     _,ptail = self.headsTails[bone.parent]
                     if head != ptail:
                         connector = Bone(amt, "_"+bone.name)
+                        connector.layers = L_HELP
                         connector.parent = bone.parent
                         bone.parent = connector.name
                         extras.append(connector)

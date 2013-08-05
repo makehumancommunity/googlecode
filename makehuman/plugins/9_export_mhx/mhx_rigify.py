@@ -35,7 +35,6 @@ class RigifyArmature(ExportArmature):
     def __init__(self, name, options):
         ExportArmature.__init__(self, name, options)
         self.visibleLayers = "08a80caa"
-        self.recalcRoll = []
         self.objectProps = [("MhxRig", '"Rigify"')]
 
 
