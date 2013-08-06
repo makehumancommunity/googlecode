@@ -23,6 +23,7 @@ Geometry export
 
 """
 
+import gui3d
 import numpy as np
 from .dae_node import rotateLoc
 
@@ -128,9 +129,13 @@ def writeGeometry(fp, rmesh, config):
         '      </mesh>\n' +
         '    </geometry>\n')
 
-    for name,shape in rmesh.shapes:
-        writeShapeKey(fp, name, shape, rmesh, config)
-    return
+    if rmesh.shapes:
+        t = 0
+        dt = 1.0/len(rmesh.shapes)
+        for name,shape in rmesh.shapes:
+            gui3d.app.progress(t, text=name)
+            t += dt
+            writeShapeKey(fp, name, shape, rmesh, config)
 
 
 def writeShapeKey(fp, name, shape, rmesh, config):
