@@ -2,6 +2,24 @@
 
 /**
  * Lit Sphere (spherically mapped captured light) shader.
+ *
+ **Project Name:**      MakeHuman
+ *
+ **Product Home Page:** http://www.makehuman.org/
+ *
+ **Code Home Page:**    http://code.google.com/p/makehuman/
+ *
+ **Authors:**           Jonas Hauquier
+ *
+ **Copyright(c):**      MakeHuman Team 2001-2013
+ *
+ **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
+ *
+ **Coding Standards:**  See http://www.makehuman.org/node/165
+ *
+ * Abstract
+ * --------
+ *
  * Has the effect of a specular material, shaded relative to the camera without
  * lights.
  * The normal is used as UV coordinates of the litsphere texture, which is a
