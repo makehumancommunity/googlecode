@@ -28,14 +28,10 @@ TODO
 import os.path
 import time
 import codecs
-import math
-import numpy as np
-import transformations as tm
 import log
 
 import gui3d
 import exportutils
-import posemode
 
 from . import dae_materials
 from . import dae_controller
@@ -47,14 +43,11 @@ from . import dae_node
 #
 Delta = [0,0.01,0]
 
-
 #
 # exportCollada(human, filepath, config):
 #
 
 def exportCollada(human, filepath, config):
-    #posemode.exitPoseMode()
-    #posemode.enterPoseMode()
     gui3d.app.progress(0, text="Preparing")
 
     time1 = time.clock()
@@ -90,90 +83,37 @@ def exportCollada(human, filepath, config):
         '    </contributor>\n' +
         '    <created>%s</created>\n' % date +
         '    <modified>%s</modified>\n' % date +
-        '    <unit meter="1.0" name="meter"/>\n' +
+        '    <unit meter="0.1" name="meter"/>\n' +
         '    <up_axis>Y_UP</up_axis>\n' +
-        '  </asset>\n' +
-        '  <library_images>\n')
+        '  </asset>\n')
 
-    for rmesh in rmeshes:
-        dae_materials.writeImages(fp, rmesh, config)
+    gui3d.app.progress(0.55, text="Exporting images")
+    dae_materials.writeLibraryImages(fp, rmeshes, config)
 
-    fp.write(
-        '  </library_images>\n' +
-        '  <library_effects>\n')
+    gui3d.app.progress(0.6, text="Exporting effects")
+    dae_materials.writeLibraryEffects(fp, rmeshes, config)
 
-    gui3d.app.progress(0.1, text="Exporting effects")
-    for rmesh in rmeshes:
-        dae_materials.writeEffects(fp, rmesh)
+    gui3d.app.progress(0.65, text="Exporting materials")
+    dae_materials.writeLibraryMaterials(fp, rmeshes, config)
 
-    fp.write(
-        '  </library_effects>\n' +
-        '  <library_materials>\n')
+    gui3d.app.progress(0.7, text="Exporting controllers")
+    dae_controller.writeLibraryControllers(fp, rmeshes, amt, config)
 
-    gui3d.app.progress(0.2, text="Exporting materials")
-    for rmesh in rmeshes:
-        dae_materials.writeMaterials(fp, rmesh)
+    gui3d.app.progress(0.75, text="Exporting geometry")
+    dae_geometry.writeLibraryGeometry(fp, rmeshes, config)
+
+    gui3d.app.progress(0.9, text="Exporting scene")
+    dae_node.writeLibraryVisualScenes(fp, rmeshes, amt, config)
 
     fp.write(
-        '  </library_materials>\n'+
-        '  <library_controllers>\n')
-
-    gui3d.app.progress(0.3, text="Exporting controllers")
-    for rmesh in rmeshes:
-        dae_controller.writeController(fp, rmesh, amt, config)
-
-    fp.write(
-        '  </library_controllers>\n'+
-        '  <library_geometries>\n')
-
-    dt = 0.4/len(rmeshes)
-    t = 0.4
-    for rmesh in rmeshes:
-        gui3d.app.progress(t, text="Exporting %s" % rmesh.name)
-        t += dt
-        dae_geometry.writeGeometry(fp, rmesh, config)
-
-    gui3d.app.progress(0.8, text="Exporting bones")
-    fp.write(
-        '  </library_geometries>\n\n' +
-        '  <library_visual_scenes>\n' +
-        '    <visual_scene id="Scene" name="Scene">\n' +
-        '      <node id="%s">\n' % name +
-        '        <matrix sid="transform">\n')
-
-
-    if config.rotate90X:
-        mat = tm.rotation_matrix(-math.pi/2, (1,0,0))
-    else:
-        mat = np.identity(4, float)
-    if config.rotate90Z:
-        rotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
-        mat = np.dot(mat, rotZ)
-    for i in range(4):
-        fp.write('          %.4f %.4f %.4f %.4f\n' % (mat[i][0], mat[i][1], mat[i][2], mat[i][3]))
-
-    fp.write('        </matrix>\n')
-
-    for root in amt.hierarchy:
-        dae_node.writeBone(fp, root, [0,0,0], 'layer="L1"', '    ', amt, config)
-
-    gui3d.app.progress(0.9, text="Exporting nodes")
-    for rmesh in rmeshes:
-        dae_node.writeNode(fp, "        ", rmesh, amt, config)
-
-    fp.write(
-        '      </node>\n' +
-        '    </visual_scene>\n' +
-        '  </library_visual_scenes>\n' +
         '  <scene>\n' +
         '    <instance_visual_scene url="#Scene"/>\n' +
         '  </scene>\n' +
         '</COLLADA>\n')
 
     fp.close()
+    gui3d.app.progress(1)
     time2 = time.clock()
     log.message("Wrote Collada file in %g s: %s" % (time2-time1, filepath))
-    gui3d.app.progress(1)
-    #posemode.exitPoseMode()
     return
 

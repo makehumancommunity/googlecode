@@ -23,7 +23,17 @@ Controller export
 
 """
 
-from .dae_node import rotateLoc
+from .dae_node import rotateLoc, goodBoneName
+
+#----------------------------------------------------------------------
+#   library_controllers
+#----------------------------------------------------------------------
+
+def writeLibraryControllers(fp, rmeshes, amt, config):
+    fp.write('\n  <library_controllers>\n')
+    for rmesh in rmeshes:
+        writeController(fp, rmesh, amt, config)
+    fp.write('  </library_controllers>\n')
 
 
 def writeController(fp, rmesh, amt, config):
@@ -50,7 +60,8 @@ def writeController(fp, rmesh, amt, config):
         '           ')
 
     for bone in amt.bones.values():
-        fp.write(' %s' % bone.name)
+        bname = goodBoneName(bone.name)
+        fp.write(' %s' % bname)
 
     fp.write('\n' +
         '          </IDREF_array>\n' +

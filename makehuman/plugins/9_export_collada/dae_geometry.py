@@ -23,11 +23,19 @@ Geometry export
 
 """
 
+import numpy as np
 from .dae_node import rotateLoc
 
-#
-#    writeGeometry(fp, rmesh, config):
-#
+#----------------------------------------------------------------------
+#   library_geometry
+#----------------------------------------------------------------------
+
+def writeLibraryGeometry(fp, rmeshes, config):
+    fp.write('\n  <library_geometries>\n')
+    for rmesh in rmeshes:
+        writeGeometry(fp, rmesh, config)
+    fp.write('  </library_geometries>\n')
+
 
 def writeGeometry(fp, rmesh, config):
     obj = rmesh.object

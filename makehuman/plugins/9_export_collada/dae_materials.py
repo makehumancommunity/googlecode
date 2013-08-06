@@ -25,9 +25,16 @@ Material export
 
 import os
 
-#
-#   Write images
-#
+#----------------------------------------------------------------------
+#   library_images
+#----------------------------------------------------------------------
+
+def writeLibraryImages(fp, rmeshes, config):
+    fp.write('\n  <library_images>\n')
+    for rmesh in rmeshes:
+        writeImages(fp, rmesh, config)
+    fp.write('  </library_images>\n')
+
 
 def writeImages(fp, rmesh, config):
     mat = rmesh.material
@@ -60,27 +67,15 @@ def writeImage(fp, filepath, config):
         '    </image>\n'
     )
 
-#
-#    writeEffects(fp, rmesh):
-#
+#----------------------------------------------------------------------
+#   library_effects
+#----------------------------------------------------------------------
 
-def writeIntensity(fp, tech, intensity):
-    fp.write('            <%s><float>%s</float></%s>\n' % (tech, intensity, tech))
-
-
-def writeTexture(fp, tech, filepath, color, intensity, s=1.0):
-    if not filepath:
-        return
-
-    fp.write('            <%s>\n' % tech)
-    if color:
-        fp.write('            <color>%.4f %.4f %.4f 1</color> \n' % (s*color.r, s*color.g, s*color.b))
-    if intensity:
-        fp.write('            <float>%s</float>\n' % intensity)
-    texname = getTextureName(filepath)
-    fp.write(
-        '              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % texname +
-        '            </%s>\n' % tech)
+def writeLibraryEffects(fp, rmeshes, config):
+    fp.write('\n  <library_effects>\n')
+    for rmesh in rmeshes:
+        writeEffects(fp, rmesh)
+    fp.write('  </library_effects>\n')
 
 
 def writeEffects(fp, rmesh):
@@ -137,9 +132,34 @@ def writeSurfaceSampler(fp, filepath):
         '          </sampler2D>\n' +
         '        </newparam>\n')
 
-#
-#    writeMaterials(fp, rmesh):
-#
+def writeIntensity(fp, tech, intensity):
+    fp.write('            <%s><float>%s</float></%s>\n' % (tech, intensity, tech))
+
+
+def writeTexture(fp, tech, filepath, color, intensity, s=1.0):
+    if not filepath:
+        return
+
+    fp.write('            <%s>\n' % tech)
+    if color:
+        fp.write('            <color>%.4f %.4f %.4f 1</color> \n' % (s*color.r, s*color.g, s*color.b))
+    if intensity:
+        fp.write('            <float>%s</float>\n' % intensity)
+    texname = getTextureName(filepath)
+    fp.write(
+        '              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % texname +
+        '            </%s>\n' % tech)
+
+#----------------------------------------------------------------------
+#   library_materials
+#----------------------------------------------------------------------
+
+def writeLibraryMaterials(fp, rmeshes, config):
+    fp.write('\n  <library_materials>\n')
+    for rmesh in rmeshes:
+        writeMaterials(fp, rmesh)
+    fp.write('  </library_materials>\n')
+
 
 def writeMaterials(fp, rmesh):
     mat = rmesh.material
