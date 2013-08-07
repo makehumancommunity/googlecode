@@ -70,9 +70,11 @@ settings = {
 
 
 #
-#   goodName(name):
-#   getFileName(pob, context, ext):
+#   File utilities
 #
+
+import os
+from maketarget.error import MHError
 
 def goodName(name):
     newName = name.replace('-','_').replace(' ','_')
@@ -80,12 +82,30 @@ def goodName(name):
 
 
 def getFileName(pob, folder, ext):
-    import os
     name = goodName(pob.name)
     outdir = '%s/%s' % (folder, name)
     outdir = os.path.realpath(os.path.expanduser(outdir))
     if not os.path.exists(outdir):
         print("Creating directory %s" % outdir)
-        os.makedirs(outdir)
+        try:
+            os.makedirs(outdir)
+        except FileNotFoundError:
+            raise MHError("Could not create directory %s" % outdir)
     outfile = os.path.join(outdir, "%s.%s" % (name, ext))
     return (outdir, outfile)
+
+
+def openOutputFile(filepath):
+    print("Create file \"%s\"" % filepath)
+    try:
+        return open(filepath, "w", encoding="utf-8", newline="\n")
+    except IOError:
+        raise MHError("Could not open\n\"%s\"     \nfor writing" % filepath)
+
+
+def openInputFile(filepath):
+    print("Read file \"%s\"" % filepath)
+    try:
+        return open(filepath, "rU")
+    except IOError:
+        raise MHError("Could not open\n\"%s\"     \nfor reading" % filepath)

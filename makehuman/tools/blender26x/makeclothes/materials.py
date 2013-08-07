@@ -25,8 +25,7 @@ import bpy
 import os
 import shutil
 from . import mc
-
-print("Reload materials")
+from maketarget.error import MHError
 
 def checkObjectHasDiffuseTexture(ob):
     """
@@ -41,13 +40,15 @@ def checkObjectHasDiffuseTexture(ob):
                 if mtex is None:
                     continue
                 if mtex.use_map_color_diffuse:
-                    return True
+                    tex = mtex.texture
+                    if tex.type == 'IMAGE' and tex.image is not None:
+                        return True
         return False
     else:
         return True
 
 
-def writeMaterial(fp, ob, folder):
+def writeMaterial(ob, folder):
     """
     Create an mhmat file and write material settings there.
     """
@@ -59,12 +60,9 @@ def writeMaterial(fp, ob, folder):
             name = mc.goodName(mat.name)
             _,filepath = mc.getFileName(ob, folder, "mhmat")
             outdir = os.path.dirname(filepath)
-            print("Create material file %s" % filepath)
-            try:
-                with open(filepath, "w", encoding="utf-8") as fp:
-                    matfile = writeMaterialFile(fp, mat, name, outdir)
-            except IOError:
-                raise error.MhcloError("Cannot create material file %s" % filepath)
+            fp = mc.openOutputFile(filepath)
+            matfile = writeMaterialFile(fp, mat, name, outdir)
+            fp.close()
             print("%s created" % filepath)
             return os.path.basename(filepath)
     return None
@@ -97,6 +95,8 @@ def writeMaterialFile(fp, mat, name, outdir):
         if mtex is None:
             continue
         tex = mtex.texture
+        if tex.type != 'IMAGE' or tex.image is None:
+            continue
         blenddir = os.path.dirname(bpy.data.filepath)
         relpath =  bpy.path.relpath(tex.image.filepath)     # starts with //
         filepath = os.path.join(blenddir, relpath[2:])

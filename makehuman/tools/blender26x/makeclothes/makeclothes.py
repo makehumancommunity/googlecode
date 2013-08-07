@@ -32,7 +32,7 @@ from bpy.props import *
 from mathutils import Vector
 
 from maketarget.utils import getMyDocuments
-from maketarget.error import MHError, handleMHError
+from maketarget.error import MHError
 from . import mc
 from . import materials
 
@@ -210,7 +210,7 @@ def findClothes(context, bob, pob, log):
         else:
             msg = (
             "Failed to find vert %d in group %s.\n" % (pv.index, gname) +
-            "Proxy index %d, Base index %d\n" % (pindex, bindex) +
+            "Clothes index %d, Human index %d\n" % (pindex, bindex) +
             "Vertex coordinates (%.4f %.4f %.4f)\n" % (pv.co[0], pv.co[1], pv.co[2])
             )
             selectVerts([pv], pob)
@@ -218,7 +218,7 @@ def findClothes(context, bob, pob, log):
         if mindist > 5:
             msg = (
             "Vertex %d is %f dm away from closest body vertex in group %s.\n" % (pv.index, mindist, gname) +
-            "Max allowed value is 5dm. Check base and proxy scales.\n" +
+            "Max allowed value is 5dm. Check human and clothes scales.\n" +
             "Vertex coordinates (%.4f %.4f %.4f)\n" % (pv.co[0], pv.co[1], pv.co[2])
             )
             selectVerts([pv], pob)
@@ -459,10 +459,10 @@ def midWeight(pv, r0, r1):
     return (1-w, w, 0)
 
 #
-#    printClothes(context, bob, pob, data):
+#    writeClothes(context, bob, pob, data):
 #
 
-def printClothesHeader(fp, scn):
+def writeClothesHeader(fp, scn):
     fp.write(
         "# author %s\n" % scn.MCAuthor +
         "# license %s\n" % scn.MCLicense +
@@ -477,13 +477,12 @@ def printClothesHeader(fp, scn):
     fp.write("\n")
 
 
-def printClothes(context, bob, pob, data):
+def writeClothes(context, bob, pob, data, matfile):
     scn = context.scene
     firstVert = 0
     (outpath, outfile) = mc.getFileName(pob, scn.MhClothesDir, "mhclo")
-    print("Creating clothes file %s" % outfile)
-    fp = open(outfile, "w", encoding="utf-8", newline="\n")
-    printClothesHeader(fp, scn)
+    fp = mc.openOutputFile(outfile)
+    writeClothesHeader(fp, scn)
     fp.write("name %s\n" % pob.name.replace(" ","_"))
     fp.write("obj_file %s.obj\n" % mc.goodName(pob.name))
     vnums = theSettings.bodyPartVerts[scn.MCBodyPart]
@@ -496,7 +495,7 @@ def printClothes(context, bob, pob, data):
         printScale(fp, bob, scn, 'z_scale', 1, vnums[1])
         printScale(fp, bob, scn, 'y_scale', 2, vnums[2])
 
-    printStuff(fp, pob, context)
+    writeStuff(fp, pob, context, matfile)
     printFaceNumbers(fp, pob)
 
     fp.write("verts %d\n" % (firstVert))
@@ -585,6 +584,7 @@ def reexportMhclo(context):
     scn.objects.active = pob
     bpy.ops.object.mode_set(mode='OBJECT')
     (outpath, outfile) = mc.getFileName(pob, scn.MhClothesDir, "mhclo")
+    matfile = materials.writeMaterial(pob, scn.MhClothesDir)
 
     lines = []
     print("Reading clothes file %s" % outfile)
@@ -593,8 +593,7 @@ def reexportMhclo(context):
         lines.append(line)
     fp.close()
 
-    print("Creating new clothes file %s" % outfile)
-    fp = open(outfile, "w", encoding="utf-8", newline="\n")
+    fp = mc.openOutputFile(outfile)
     doingStuff = False
     for line in lines:
         words = line.split()
@@ -604,7 +603,7 @@ def reexportMhclo(context):
             if words[1] in ["texVerts", "texFaces"]:
                 break
             elif words[1] == "z_depth":
-                printStuff(fp, pob, context)
+                writeStuff(fp, pob, context, matfile)
                 doingStuff = True
             elif words[1] == "use_projection":
                 doingStuff = False
@@ -623,7 +622,7 @@ def reexportMhclo(context):
 def exportDeleteVerts(context):
     bob = getHuman(context)
     path = os.path.realpath(os.path.expanduser("~/killverts.txt"))
-    fp = open(path, "w", encoding="utf-8", newline="\n")
+    fp = mc.openOutputFile(path)
     printDeleteVerts(fp, bob)
     fp.close()
     print("Delete verts written to %s" % path)
@@ -669,11 +668,11 @@ def printDeleteVerts(fp, bob):
     fp.write("\n")
 
 #
-#   printStuff(fp, pob, context):
+#   writeStuff(fp, pob, context, matfile):
 #   From z_depth to use_projection
 #
 
-def printStuff(fp, pob, context):
+def writeStuff(fp, pob, context, matfile):
     scn = context.scene
     fp.write("z_depth %d\n" % scn.MCZDepth)
 
@@ -708,7 +707,6 @@ def printStuff(fp, pob, context):
                 fp.write("uvtex_layer 1 %s\n" % uvtex1.name.replace(" ","_"))
             fp.write("objfile_layer 0\n")
 
-    matfile = materials.writeMaterial(fp, pob, scn.MhClothesDir)
     if matfile:
         fp.write("material %s\n" % matfile)
     fp.write("use_projection 0\n")
@@ -744,8 +742,7 @@ def exportObjFile(context):
     ob = getClothing(context)
     deleteStrayVerts(context, ob)
     (objpath, objfile) = mc.getFileName(ob, scn.MhClothesDir, "obj")
-    print("Open", objfile)
-    fp = open(objfile, "w", encoding="utf-8", newline="\n")
+    fp = mc.openOutputFile(objfile)
     fp.write("Exported from make_clothes.py\n")
 
     me = ob.data
@@ -896,8 +893,8 @@ def findTexVert(uv, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob):
 #
 
 def storeData(pob, bob, data):
-    fname = settingsFile("stored")
-    fp = open(fname, "w", encoding="utf-8", newline="\n")
+    outfile = settingsFile("stored")
+    fp = mc.openOutputFile(outfile)
     fp.write("%s\n" % pob.name)
     fp.write("%s\n" % bob.name)
     for (pv, exact, verts, wts, diff) in data:
@@ -918,7 +915,7 @@ def parse(string):
 def restoreData(context):
     (bob, pob) = getObjectPair(context)
     fname = settingsFile("stored")
-    fp = open(fname, "rU")
+    fp = mc.openInputFile(fname)
     status = 0
     data = []
     for line in fp:
@@ -978,15 +975,16 @@ def makeClothes(context, doFindClothes):
     checkSingleVGroups(pob, scn)
     if scn.MCLogging:
         logfile = '%s/clothes.log' % scn.MhClothesDir
-        log = open(logfile, "w", encoding="utf-8", newline="\n")
+        log = mc.openOutputFile(logfile)
     else:
         log = None
+    matfile = materials.writeMaterial(pob, scn.MhClothesDir)
     if doFindClothes:
         data = findClothes(context, bob, pob, log)
         storeData(pob, bob, data)
     else:
         (bob, data) = restoreData(context)
-    printClothes(context, bob, pob, data)
+    writeClothes(context, bob, pob, data, matfile)
     if log:
         log.close()
     return
@@ -1041,7 +1039,7 @@ def checkObjectOK(ob, context, isClothing):
         err = True
 
     if isClothing and not materials.checkObjectHasDiffuseTexture(ob):
-        word = "no diffuse texture"
+        word = "no diffuse image texture"
         err = True
 
     if word:
@@ -1093,8 +1091,8 @@ def offsetCloth(context):
     outpath = '%s/%s.mhclo' % (context.scene.MhClothesDir, mc.goodName(pob.name))
     outfile = os.path.realpath(os.path.expanduser(outpath))
     print("Modifying clothes file %s => %s" % (infile, outfile))
-    infp = open(infile, "r")
-    outfp = open(outfile, "w", encoding="utf-8", newline="\n")
+    infp = mc.openInputFile(infile)
+    outfp = mc.openOutputFile(outfile)
 
     status = 0
     alwaysOutside = context.scene['MCOutside']
@@ -1188,8 +1186,7 @@ def exportBlenderMaterial(me, path):
     matname = mc.goodName(mats[0].name)
     mhxfile = "%s_material.mhx" % matname
     mhxpath = os.path.join(path, mhxfile)
-    print("Open %s" % mhxpath)
-    fp = open(mhxpath, "w", encoding="utf-8", newline="\n")
+    fp = mc.openOutputFile(mhxpath)
     for tex in texs:
         exportTexture(tex, matname, fp)
     for mat in mats:
@@ -1716,7 +1713,7 @@ def readDefaultSettings(context):
     fname = settingsFile("settings")
     try:
         fp = open(fname, "rU")
-    except:
+    except FileNotFoundError:
         print("Did not find %s. Using default settings" % fname)
         return
 
@@ -1741,7 +1738,7 @@ def readDefaultSettings(context):
 
 def saveDefaultSettings(context):
     fname = settingsFile("settings")
-    fp = open(fname, "w", encoding="utf-8", newline="\n")
+    fp = mc.openOutputFile(fname)
     scn = context.scene
     for (prop, value) in scn.items():
         if prop[0:2] == "MC":
