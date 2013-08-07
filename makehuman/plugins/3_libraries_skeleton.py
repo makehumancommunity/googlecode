@@ -656,6 +656,7 @@ def load(app):
     if True:    # Change this in release
         debugtask = SkeletonDebugLibrary(category, maintask)
         debugtask.sortOrder = 3
+        category = app.getCategory('Utilities')
         category.addTask(debugtask)
 
 # This method is called when the plugin is unloaded from makehuman
