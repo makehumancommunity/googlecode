@@ -129,6 +129,9 @@ class ArmatureOptions:
 
 
     def fromSelector(self, selector):
+        if selector is None:
+            return
+
         self.useMuscles = selector.useMuscles.selected
         self.useReverseHip = selector.useReverseHip.selected
         #self.useCorrectives = selector.useCorrectives.selected
@@ -151,9 +154,11 @@ class ArmatureOptions:
         self.useMasterBone = selector.useMasterBone.selected
 
 
-    def reset(self, selector):
+    def reset(self, selector, useMuscles=False):
         self.__init__()
-        selector.fromOptions(self)
+        self.useMuscles = useMuscles
+        if selector is not None:
+            selector.fromOptions(self)
 
 
     def loadPreset(self, filename, selector, folder=mh.getSysDataPath("rigs/")):

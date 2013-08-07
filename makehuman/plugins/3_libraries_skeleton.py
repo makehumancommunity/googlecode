@@ -42,6 +42,11 @@ import armature
 import numpy as np
 import os
 
+
+#------------------------------------------------------------------------------------------
+#   class SkeletonAction
+#------------------------------------------------------------------------------------------
+
 class SkeletonAction(gui3d.Action):
     def __init__(self, name, library, before, after):
         super(SkeletonAction, self).__init__(name)
@@ -57,6 +62,7 @@ class SkeletonAction(gui3d.Action):
         self.library.chooseSkeleton(self.before)
         return True
 
+
 def _getSkeleton(self):
     log.debug("Get skeleton %s %s" % (self, self._skeleton))
     if not self._skeleton:
@@ -71,6 +77,7 @@ def _getSkeleton(self):
         self._skeleton.dirty = False
     return self._skeleton
 
+
 def _getVertexWeights(self):
     if not self.getSkeleton():
         return None
@@ -80,10 +87,18 @@ def _getVertexWeights(self):
     _, bodyWeights = self.animated.getMesh("base.obj")
     return bodyWeights
 
+
+#------------------------------------------------------------------------------------------
+#   class SkeletonLibrary
+#------------------------------------------------------------------------------------------
+
 class SkeletonLibrary(gui3d.TaskView):
 
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Skeleton')
+        self.debugLib = None
+        self.amtOptions = armature.options.ArmatureOptions()
+        self.optionsSelector = None
 
         self.systemRigs = mh.getSysDataPath('rigs')
         self.userRigs = os.path.join(mh.getPath(''), 'data', 'rigs')
@@ -120,8 +135,8 @@ class SkeletonLibrary(gui3d.TaskView):
         #   Display box
         #
 
-        displayBox = self.addLeftWidget(gui.GroupBox('Display'))
-        self.showHumanTggl = displayBox.addWidget(gui.ToggleButton("Show human"))
+        self.displayBox = self.addLeftWidget(gui.GroupBox('Display'))
+        self.showHumanTggl = self.displayBox.addWidget(gui.ToggleButton("Show human"))
         @self.showHumanTggl.mhEvent
         def onClicked(event):
             if self.showHumanTggl.selected:
@@ -130,7 +145,7 @@ class SkeletonLibrary(gui3d.TaskView):
                 self.human.hide()
         self.showHumanTggl.setSelected(True)
 
-        self.showJointsTggl = displayBox.addWidget(gui.ToggleButton("Show joints"))
+        self.showJointsTggl = self.displayBox.addWidget(gui.ToggleButton("Show joints"))
         @self.showJointsTggl.mhEvent
         def onClicked(event):
             if not self.jointsObj:
@@ -141,51 +156,31 @@ class SkeletonLibrary(gui3d.TaskView):
                 self.jointsObj.hide()
         self.showJointsTggl.setSelected(True)
 
-        '''
-        self.showWeightsTggl = displayBox.addWidget(gui.ToggleButton("Show bone weights"))
-        @self.showWeightsTggl.mhEvent
-        def onClicked(event):
-            if self.showWeightsTggl.selected:
-                # Highlight bone selected in bone explorer again
-                for rdio in self.boneSelector:
-                    if rdio.selected:
-                        self.highlightBone(str(rdio.text()))
-            else:
-                self.clearBoneWeights()
-        self.showWeightsTggl.setSelected(True)
-        '''
 
         #
         #   Preset box
         #
 
-        self.presetBox = self.addLeftWidget(gui.GroupBox('Rig Presets'))
+        self.presetBox = self.addRightWidget(gui.GroupBox('Rig Presets'))
 
         self.presetDefaultBtn = self.presetBox.addWidget(gui.Button("Default"))
         @self.presetDefaultBtn.mhEvent
         def onClicked(event):
-            self.amtOptions.reset(self.optionsSelector)
+            self.amtOptions.reset(self.optionsSelector, useMuscles=False)
             self.descrLbl.setText("Description: The default rig. Use this for weighting")
+            self.updateSkeleton()
+
+        self.presetMuscleBtn = self.presetBox.addWidget(gui.Button("Muscles"))
+        @self.presetMuscleBtn.mhEvent
+        def onClicked(event):
+            self.amtOptions.reset(self.optionsSelector, useMuscles=True)
+            self.descrLbl.setText("Description: The default rig with muscle bones. Use this for weighting muscles")
             self.updateSkeleton()
 
         self.presetGameBtn = self.presetBox.addWidget(gui.Button("Game"))
         @self.presetGameBtn.mhEvent
         def onClicked(event):
             descr = self.amtOptions.loadPreset("game", self.optionsSelector)
-            self.descrLbl.setText("Description: %s" % descr)
-            self.updateSkeleton()
-
-        self.presetSimpleBtn = self.presetBox.addWidget(gui.Button("Simple"))
-        @self.presetSimpleBtn.mhEvent
-        def onClicked(event):
-            descr = self.amtOptions.loadPreset("simple", self.optionsSelector)
-            self.descrLbl.setText("Description: %s" % descr)
-            self.updateSkeleton()
-
-        self.presetMediumBtn = self.presetBox.addWidget(gui.Button("Medium"))
-        @self.presetMediumBtn.mhEvent
-        def onClicked(event):
-            descr = self.amtOptions.loadPreset("medium", self.optionsSelector)
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
@@ -210,92 +205,12 @@ class SkeletonLibrary(gui3d.TaskView):
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
-        '''
-        #
-        #   Bone names. Different languages and target apps.
-        #
-        self.languageBox = self.addRightWidget(gui.GroupBox('Bone names'))
-
-        self.languages = OrderedDict()
-        self.languages["English"] = None
-        folder = mh.getSysDataPath("rigs/languages")
-        for filename in os.listdir(folder):
-            name,ext = os.path.splitext(filename)
-            filepath = os.path.join(folder, filename)
-            self.languages[name.capitalize()] = filepath
-
-        for language,filepath in self.languages.items():
-            button = self.languageBox.addWidget(gui.Button(language))
-            @button.mhEvent
-            def onClicked(event):
-                print "Language", language
-                locale = armature.options.Locale(filepath=filepath)
-                self.amtOptions.locale = locale
-                locale.load()
-                self.updateSkeleton()
-        '''
-        #
-        #   Options. For fine-tuning
-        #
-
-        self.optionsBox = self.addRightWidget(gui.GroupBox('Rig Options'))
-        self.optionsSelector = armature.options.ArmatureSelector(self.optionsBox)
-        self.amtOptions = armature.options.ArmatureOptions()
-        self.optionsSelector.fromOptions(self.amtOptions)
-
-        self.amtUpdateBtn = self.optionsBox.addWidget(gui.Button("Update Bones"))
-        @self.amtUpdateBtn.mhEvent
-        def onClicked(event):
-            self.updateSkeleton()
-            self.descrLbl.setText("No description available")
-
-
-        '''
-        self.filechooser = self.addRightWidget(fc.ListFileChooser(self.rigPaths, self.extension, 'Skeleton rig'))
-        self.addLeftWidget(self.filechooser.createSortBox())
-
-        @self.filechooser.mhEvent
-        def onFileSelected(filename):
-            if self.human.getSkeleton():
-                oldSkelFile = self.human.getSkeleton().options
-            else:
-                oldSkelFile = None
-            gui3d.app.do(SkeletonAction("Change skeleton",
-                                        self,
-                                        oldSkelFile,
-                                        filename))
-
-        @self.filechooser.mhEvent
-        def onRefresh(fileChooser):
-            noSkelPath = os.path.join(self.rigPaths[0], 'clear.rig')
-            fileChooser.addItem(noSkelPath, 'No skeleton', None)
-            if not self.human.getSkeleton():
-                self.filechooser.selectItem(noSkelPath)
-
-        self.filechooser.refresh()
-        '''
-
-        '''
-        self.boneBox = self.addLeftWidget(gui.GroupBox('Bones'))
-        self.boneSelector = []
-        '''
-
-        self.infoBox = self.addRightWidget(gui.GroupBox('Rig info'))
+        self.infoBox = self.addLeftWidget(gui.GroupBox('Rig info'))
         self.boneCountLbl = self.infoBox.addWidget(gui.TextView('Bones: '))
         self.descrLbl = self.infoBox.addWidget(gui.TextView('Description: '))
         self.descrLbl.setSizePolicy(gui.QtGui.QSizePolicy.Ignored, gui.QtGui.QSizePolicy.Preferred)
         self.descrLbl.setWordWrap(True)
 
-        '''
-        self.rigDescriptions = {
-            "soft1":       "Soft skinned rig. Simple version of the MHX reference rig containing only its deforming bones.",
-            "xonotic":     "Rig compatible with the open-source game Xonotic.",
-            "second_life": "Rig compatible with Second Life.",
-            "game":        "A simple rig with a minimal amount of bones. Has limited expressivity in hands and face.",
-            "humanik":     "Rig compatible with the HumanIK software.",
-            "rigid":       "Same as soft1 a simple version of the MHX reference rig, but with rigid weighting.",
-        }
-        '''
 
 
     def updateSkeleton(self):
@@ -376,14 +291,11 @@ class SkeletonLibrary(gui3d.TaskView):
                 gui3d.app.removeObject(self.skelObj)
                 self.skelObj = None
                 self.skelMesh = None
-            '''
-            self.filechooser.deselectAll()
-            self.selectedBone = None
-            self.reloadBoneExplorer()
             self.boneCountLbl.setText("Bones: ")
-            self.descrLbl.setText("Description: ")
-            self.filechooser.selectItem(os.path.join(self.rigPaths[0], 'clear.rig'))
-            '''
+
+            if self.debugLib:
+                self.debugLib.selectedBone = None
+                self.debugLib.reloadBoneExplorer()
             return
 
         # Load skeleton definition from options
@@ -405,15 +317,9 @@ class SkeletonLibrary(gui3d.TaskView):
         # (Re-)draw the skeleton
         self.drawSkeleton(self.human.getSkeleton())
 
-        '''
-        self.reloadBoneExplorer()
-        self.boneCountLbl.setText("Bones: %s" % self.human.getSkeleton().getBoneCount())
-        if self.human.getSkeleton().name in self.rigDescriptions.keys():
-            descr = self.rigDescriptions[self.human.getSkeleton().name]
-        else:
-            descr = "None available"
-        self.descrLbl.setText("Description: %s" % descr)
-        '''
+        if self.debugLib:
+            self.debugLib.reloadBoneExplorer()
+            self.boneCountLbl.setText("Bones: %s" % self.human.getSkeleton().getBoneCount())
 
 
     def drawSkeleton(self, skel):
@@ -442,61 +348,6 @@ class SkeletonLibrary(gui3d.TaskView):
         # Store a reference to the skeleton mesh object for other plugins
         self.human._skeleton.object = self.skelObj
 
-        '''
-        # Add event listeners to skeleton mesh for bone highlighting
-        @self.skelObj.mhEvent
-        def onMouseEntered(event):
-            """
-            Event fired when mouse hovers over a skeleton mesh facegroup
-            """
-            gui3d.TaskView.onMouseEntered(self, event)
-            try:
-                self.removeBoneHighlights()
-            except:
-                pass
-            self.highlightBone(event.group.name)
-
-        @self.skelObj.mhEvent
-        def onMouseExited(event):
-            """
-            Event fired when mouse hovers off of a skeleton mesh facegroup
-            """
-            gui3d.TaskView.onMouseExited(self, event)
-            try:
-                self.removeBoneHighlights()
-            except:
-                pass
-
-            # Highlight bone selected in bone explorer again
-            for rdio in self.boneSelector:
-                if rdio.selected:
-                    self.clearBoneWeights()
-                    self.highlightBone(str(rdio.text()))
-
-    def highlightBone(self, name):
-        # Highlight bones
-        self.selectedBone = name
-        setColorForFaceGroup(self.skelMesh, self.selectedBone, [216, 110, 39, 255])
-        gui3d.app.statusPersist(name)
-
-        # Draw bone weights
-        if self.showWeightsTggl.selected:
-            boneWeights = self.human.getVertexWeights()
-            self.showBoneWeights(name, boneWeights)
-
-        gui3d.app.redraw()
-
-    def removeBoneHighlights(self):
-        # Disable highlight on bone
-        if self.selectedBone:
-            setColorForFaceGroup(self.skelMesh, self.selectedBone, [255,255,255,255])
-            gui3d.app.statusPersist('')
-
-            self.clearBoneWeights()
-            self.selectedBone = None
-
-            gui3d.app.redraw()
-    '''
 
     def drawJointHelpers(self):
         """
@@ -527,7 +378,6 @@ class SkeletonLibrary(gui3d.TaskView):
         self.jointsMesh.markCoords(colr=True)
         self.jointsMesh.sync_color()
 
-        '''
         # Add event listeners to joint mesh for joint highlighting
         @self.jointsObj.mhEvent
         def onMouseEntered(event):
@@ -554,7 +404,7 @@ class SkeletonLibrary(gui3d.TaskView):
                 setColorForFaceGroup(self.jointsMesh, self.selectedJoint.name, [255,255,0,255])
                 gui3d.app.statusPersist('')
                 gui3d.app.redraw()
-        '''
+
 
     def showBoneWeights(self, boneName, boneWeights):
         mesh = self.human.meshData
@@ -573,39 +423,47 @@ class SkeletonLibrary(gui3d.TaskView):
         mesh.markCoords(verts, colr = True)
         mesh.sync_all()
 
+    def highlightBone(self, name):
+        if self.debugLib is None:
+            return
+        # Highlight bones
+        self.selectedBone = name
+        setColorForFaceGroup(self.skelMesh, self.selectedBone, [216, 110, 39, 255])
+        gui3d.app.statusPersist(name)
+
+        # Draw bone weights
+        if self.showWeightsTggl.selected:
+            boneWeights = self.human.getVertexWeights()
+            self.showBoneWeights(name, boneWeights)
+
+        gui3d.app.redraw()
+
+    def removeBoneHighlights(self):
+        if self.debugLib is None:
+            return
+        # Disable highlight on bone
+        if self.selectedBone:
+            setColorForFaceGroup(self.skelMesh, self.selectedBone, [255,255,255,255])
+            gui3d.app.statusPersist('')
+
+            self.clearBoneWeights()
+            self.selectedBone = None
+
+            gui3d.app.redraw()
+
     def clearBoneWeights(self):
         mesh = self.human.meshData
         mesh.color[...] = (255,255,255,255)
         mesh.markCoords(colr = True)
         mesh.sync_all()
 
-    def reloadBoneExplorer(self):
-        # Remove old radio buttons
-        for radioBtn in self.boneSelector:
-            radioBtn.hide()
-            radioBtn.destroy()
-        self.boneSelector = []
-
-        if not self.human.getSkeleton():
-            return
-
-        for bone in self.human.getSkeleton().getBones():
-            radioBtn = self.boneBox.addWidget(gui.RadioButton(self.boneSelector, bone.name))
-            @radioBtn.mhEvent
-            def onClicked(event):
-                for rdio in self.boneSelector:
-                    if rdio.selected:
-                        try:
-                            self.removeBoneHighlights()
-                        except:
-                            pass
-                        self.highlightBone(str(rdio.text()))
 
     def setHumanTransparency(self, enabled):
         if enabled:
             self.human.meshData.setTransparentPrimitives(len(self.human.meshData.fvert))
         else:
             self.human.meshData.setTransparentPrimitives(self.oldHumanTransp)
+
 
     def onHumanChanged(self, event):
         human = event.human
@@ -614,16 +472,19 @@ class SkeletonLibrary(gui3d.TaskView):
             human._skeleton.dirty = True
         self.humanChanged = True    # Used for updating joints
 
+
     def onHumanChanging(self, event):
         human = event.human
         if event.change == 'reset':
             self.chooseSkeleton(None)
+
 
     def onHumanRotated(self, event):
         if self.skelObj:
             self.skelObj.setRotation(gui3d.app.selectedHuman.getRotation())
         if self.jointsObj:
             self.jointsObj.setRotation(gui3d.app.selectedHuman.getRotation())
+
 
     def onHumanTranslated(self, event):
         if self.skelObj:
@@ -650,15 +511,152 @@ class SkeletonLibrary(gui3d.TaskView):
             file.write('skeleton %s ' % human.getSkeleton().options)
 
 
+#------------------------------------------------------------------------------------------
+#   class SkeletonDebugLibrary
+#------------------------------------------------------------------------------------------
+
+class SkeletonDebugLibrary(gui3d.TaskView):
+
+    def __init__(self, category, mainLib):
+        gui3d.TaskView.__init__(self, category, 'Skeleton Debug')
+        self.mainLib = mainLib
+        mainLib.debugLib = self
+
+        displayBox = mainLib.displayBox
+        mainLib.showWeightsTggl = displayBox.addWidget(gui.ToggleButton("Show bone weights"))
+        @mainLib.showWeightsTggl.mhEvent
+        def onClicked(event):
+            if mainLib.showWeightsTggl.selected:
+                # Highlight bone selected in bone explorer again
+                for rdio in self.boneSelector:
+                    if rdio.selected:
+                        mainLib.highlightBone(str(rdio.text()))
+            else:
+                mainLib.clearBoneWeights()
+        mainLib.showWeightsTggl.setSelected(True)
+
+        self.boneBox = self.addRightWidget(gui.GroupBox('Bones'))
+        self.boneSelector = []
+
+        # Add event listeners to skeleton mesh for bone highlighting
+        @mainLib.mhEvent
+        def onMouseEntered(event):
+            """
+            Event fired when mouse hovers over a skeleton mesh facegroup
+            """
+            gui3d.TaskView.onMouseEntered(self, event)
+            try:
+                mainLib.removeBoneHighlights()
+            except:
+                pass
+            self.highlightBone(event.group.name)
+
+        @mainLib.mhEvent
+        def onMouseExited(event):
+            """
+            Event fired when mouse hovers off of a skeleton mesh facegroup
+            """
+            gui3d.TaskView.onMouseExited(self, event)
+            try:
+                mainLib.removeBoneHighlights()
+            except:
+                pass
+
+            # Highlight bone selected in bone explorer again
+            for rdio in self.boneSelector:
+                if rdio.selected:
+                    mainLib.clearBoneWeights()
+                    mainLib.highlightBone(str(rdio.text()))
+
+        #
+        #   Options. For fine-tuning
+        #
+        self.optionsBox = self.addLeftWidget(gui.GroupBox('Rig Options'))
+        selector = mainLib.optionsSelector = armature.options.ArmatureSelector(self.optionsBox)
+        selector.fromOptions(mainLib.amtOptions)
+
+        self.amtUpdateBtn = self.optionsBox.addWidget(gui.Button("Update Bones"))
+        @self.amtUpdateBtn.mhEvent
+        def onClicked(event):
+            mainLib.updateSkeleton()
+            mainLib.descrLbl.setText("No description available")
+
+        #
+        #   Language. Different languages and target apps.
+        #
+        self.languageBox = self.addLeftWidget(gui.GroupBox('Language'))
+
+        self.languages = OrderedDict()
+        self.languages["English"] = None
+        folder = mh.getSysDataPath("rigs/languages")
+        for filename in os.listdir(folder):
+            if filename[0] == ".":
+                continue
+            name,ext = os.path.splitext(filename)
+            filepath = os.path.join(folder, filename)
+            self.languages[name.capitalize()] = filepath
+
+        for language,filepath in self.languages.items():
+            button = self.languageBox.addWidget(gui.Button(language))
+            @button.mhEvent
+            def onClicked(event):
+                print "Language", language
+                locale = armature.options.Locale(filepath=filepath)
+                mainLib.amtOptions.locale = locale
+                locale.load()
+                mainLib.updateSkeleton()
+
+
+    def reloadBoneExplorer(self):
+        # Remove old radio buttons
+        for radioBtn in self.boneSelector:
+            radioBtn.hide()
+            radioBtn.destroy()
+        self.boneSelector = []
+
+        human = self.mainLib.human
+
+        if not human.getSkeleton():
+            return
+
+        for bone in human.getSkeleton().getBones():
+            radioBtn = self.boneBox.addWidget(gui.RadioButton(self.boneSelector, bone.name))
+            @radioBtn.mhEvent
+            def onClicked(event):
+                for rdio in self.boneSelector:
+                    if rdio.selected:
+                        try:
+                            self.mainLib.removeBoneHighlights()
+                        except:
+                            pass
+                        self.mainLib.highlightBone(str(rdio.text()))
+
+
+    def onShow(self, event):
+        self.mainLib.onShow(event)
+
+    def onHide(self, event):
+        self.mainLib.onHide(event)
+
+
+#------------------------------------------------------------------------------------------
+#   Load plugin
+#------------------------------------------------------------------------------------------
+
 def load(app):
     category = app.getCategory('Pose/Animate')
-    taskview = SkeletonLibrary(category)
-    taskview.sortOrder = 3
-    category.addTask(taskview)
+    maintask = SkeletonLibrary(category)
+    maintask.sortOrder = 3
+    category.addTask(maintask)
 
     human = gui3d.app.selectedHuman
-    app.addLoadHandler('skeleton', taskview.loadHandler)
-    app.addSaveHandler(taskview.saveHandler)
+    app.addLoadHandler('skeleton', maintask.loadHandler)
+    app.addSaveHandler(maintask.saveHandler)
+
+    if True:    # Change this in release
+        debugtask = SkeletonDebugLibrary(category, maintask)
+        debugtask.sortOrder = 3
+        category.addTask(debugtask)
 
 # This method is called when the plugin is unloaded from makehuman
 # At the moment this is not used, but in the future it will remove the added GUI elements
