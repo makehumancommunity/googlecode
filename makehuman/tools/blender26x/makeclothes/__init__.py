@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.914",
+    "version": "0.915",
     "blender": (2, 6, 7),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -141,6 +141,9 @@ class MakeClothesPanel(bpy.types.Panel):
         layout.separator()
         layout.operator("mhclo.make_clothes")
         layout.separator()
+        layout.operator("mhclo.export_material")
+        layout.separator()
+
 
         '''
         layout.prop(scn, "MCShowAdvanced")
@@ -314,6 +317,7 @@ class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
             handleMHError(context)
         return{'FINISHED'}
 
+
 class OBJECT_OT_PrintClothesButton(bpy.types.Operator):
     bl_idname = "mhclo.print_clothes"
     bl_label = "Print mhclo file"
@@ -323,6 +327,21 @@ class OBJECT_OT_PrintClothesButton(bpy.types.Operator):
         setObjectMode(context)
         try:
             makeclothes.makeClothes(context, False)
+        except MHError:
+            handleMHError(context)
+        return{'FINISHED'}
+
+
+class OBJECT_OT_ExportMaterialButton(bpy.types.Operator):
+    bl_idname = "mhclo.export_material"
+    bl_label = "Export Material Only"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        setObjectMode(context)
+        try:
+            matfile = materials.writeMaterial(context.object, context.scene.MhClothesDir)
+            print("Exported \"%s\"" % matfile)
         except MHError:
             handleMHError(context)
         return{'FINISHED'}
