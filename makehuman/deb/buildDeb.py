@@ -121,6 +121,12 @@ if not os.path.exists(docdir):
 
 print "Doc dir: " + docdir
 
+applications = os.path.join(tmp,"applications")
+if not os.path.exists(applications)
+  os.mkdir(applications)
+
+print "Desktop shortcut dir: " + applications
+
 programdir = os.path.join(tmp,"makehuman")
 if not os.path.exists(programdir):
   os.mkdir(programdir)
@@ -177,6 +183,11 @@ os.system("sed -i -e 's/SVNREV/" + svnrev + "/' control")
 os.system("sed -i -e 's/PKGNAME/" + package_name + "/' control")
 os.system("sed -i -e 's/REPLACES/" + package_replaces + "/' control")
 os.system("sed -i -e 's/SIZE/" + size + "/' control")
+
+os.system("sed -i -e 's/REV/" + svnrev + "/' MakeHuman.desktop")
+
+shortcut = os.path.join(applications,"MakeMuman.desktop")
+os.system("mv MakeHuman.desktop " + shortcut)
 
 os.chdir(target)
 
