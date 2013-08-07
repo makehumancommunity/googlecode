@@ -34,5 +34,3 @@ shaderConfig spec true
 shaderConfig normal false
 shaderConfig displacement false
 
-// Set A7 UV map
-uvMap data/uvs/a7.obj
