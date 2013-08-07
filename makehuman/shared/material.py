@@ -24,7 +24,6 @@ MakeHuman Material format with parser and serializer.
 
 import log
 import os
-import meshstat
 
 class Color(object):
     def __init__(self, r=0.00, g=0.00, b=0.00):
@@ -905,10 +904,6 @@ class UVMap:
         self.filepath = filepath
         self.uvs = np.array(uvs)
         self.fuvs = np.array(fuvs)
-
-        if len(self.fuvs) != meshstat.numberOfFaces:
-            raise NameError("The file %s is corrupt. Number of faces %d != %d" %
-                (filepath, len(self.fuvs), meshstat.numberOfFaces))
 
 
 def loadUvObjFile(filepath):

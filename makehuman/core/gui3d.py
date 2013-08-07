@@ -329,6 +329,11 @@ class Object(events3d.EventHandler):
             uvset = material.UVMap(filename)
             uvset.read(mesh, filename)
 
+            if len(uvset.fuvs) != len(mesh.fuvs):
+                raise NameError("The UV file %s is not valid for mesh %s. \
+                Number of faces %d != %d" % (filepath, mesh.name, \
+                len(uvset.fuvs), len(mesh.fuvs)))
+
             mesh._materials = []
             mesh.createMaterial(uvset.materialName)
             mesh.setUVs(uvset.uvs)
