@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=MakeHuman REV
+Comment=Interactive design of anatomically correct 3d humans
+Exec=/usr/bin/makehuman
+Terminal=false
+Type=Application
+Icon=/usr/share/makehuman/makehuman.svg
+Categories=Graphics
+
