@@ -16,7 +16,7 @@ pre_deb_scripts = ["cleanpyc.sh","cleannpz.sh","compile_targets.py","compile_mod
 
 rsync = "/usr/bin/rsync"
 rsync_common_args = "-av --delete"
-rsync_main_excludes = ["deb","SConstruct",".svn","*.pyc","*.nsi","*.pyd","*.c","*.h"]
+rsync_main_excludes = ["deb","SConstruct",".svn","*.pyc","*.nsi","*.pyd","*.c","*.h","*.target"]
 
 svn = "/usr/bin/svn"
 
@@ -169,6 +169,8 @@ print rsynccontrol
 os.system(rsynccontrol)
 
 os.chdir(controldir)
+
+os.system('find ' + controldir + ' -name "*.target" -exec "rm" "-f" {} ";"')
 
 f = open(svnrevfile,"r")
 svnrev = f.readline().rstrip()
