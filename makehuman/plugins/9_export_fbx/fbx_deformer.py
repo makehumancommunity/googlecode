@@ -115,24 +115,33 @@ def writeShapeGeometry(fp, name, sname, shape):
 '        Indexes: *%d   {\n' % nVerts +
 '            a: ')
 
-        last = nVerts - 1
         shape = list(shape.items())
         shape.sort()
+
+        '''
+        last = nVerts - 1
         for n,data in enumerate(shape):
             vn,_ = data
             fp.write("%d" % vn)
             writeComma(fp, n, last)
+        '''
+        string = "".join( ['%d,' % data[0] for data in shape] )
+        fp.write(string[:-1])
 
-        fp.write(
+        fp.write('\n' +
 '        }\n' +
 '        Vertices: *%d   {\n' % (3*nVerts) +
 '            a: ')
 
+        '''
         last = nVerts - 1
         for n,data in enumerate(shape):
             _,dr = data
             fp.write("%.4f,%.4f,%.4f" % tuple(dr))
             writeComma(fp, n, last)
+        '''
+        string = "".join( ["%.4f,%.4f,%.4f," % tuple(data[1]) for data in shape] )
+        fp.write(string[:-1])
 
         fp.write(
 '        }\n' +

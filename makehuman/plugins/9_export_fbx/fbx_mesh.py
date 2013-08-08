@@ -77,22 +77,31 @@ def writeGeometryProp(fp, name, obj, config):
 '        Vertices: *%d {\n' % (3*nVerts) +
 '            a: ')
 
+    '''
     last = nVerts - 1
     for n,co in enumerate(obj.coord):
-        fp.write("%.4f,%.4f,%.4f" % (co[0], co[1], co[2]))
+        fp.write("%.4f,%.4f,%.4f" % (tuple(co)))
         writeComma(fp, n, last)
+    '''
+    string = "".join( ["%.4f,%.4f,%.4f," % (tuple(co)) for co in obj.coord] )
+    fp.write(string[:-1])
 
-    last = nFaces - 1
-    fp.write(
+    fp.write('\n' +
 '        } \n' +
 '        PolygonVertexIndex: *%d {\n' % (4*nFaces) +
 '            a: ')
+
+    '''
+    last = nFaces - 1
     for n,fv in enumerate(obj.fvert):
         if fv[3] == fv[0]:
             fp.write('%d,%d,%d' % (fv[0],fv[1],-1-fv[2]))
         else:
             fp.write('%d,%d,%d,%d' % (fv[0],fv[1],fv[2],-1-fv[3]))
         writeComma(fp, n, last)
+    '''
+    string = "".join( ['%d,%d,%d,%d,' % (fv[0],fv[1],fv[2],-1-fv[3]) for fv in obj.fvert] )
+    fp.write(string[:-1])
 
     # Must use normals for shapekeys
     obj.calcNormals()
@@ -110,10 +119,16 @@ def writeGeometryProp(fp, name, obj, config):
 '            Normals: *%d {\n' % (3*nNormals) +
 '                a: ')
 
+    '''
     last = nNormals - 1
     for n,no in enumerate(obj.vnorm):
         fp.write("%.4f,%.4f,%.4f" % tuple(no))
         writeComma(fp, n, last)
+    '''
+    string = "".join( ["%.4f,%.4f,%.4f," % tuple(no) for no in obj.vnorm] )
+    fp.write(string[:-1])
+
+
     fp.write(
 """
             }
@@ -196,16 +211,21 @@ def writeUvs1(fp, obj):
 '            UV: *%d {\n' % (2*nUvVerts) +
 '                a: ')
 
+    '''
     last = nUvVerts - 1
     for n,uv in enumerate(obj.texco):
         fp.write("%.4f,%.4f" % (uv[0], uv[1]))
         writeComma(fp, n, last)
+    '''
+    string = "".join( ["%.4f,%.4f," % tuple(uv) for uv in obj.texco] )
+    fp.write(string[:-1])
 
-    fp.write(
+    fp.write('\n' +
 '            } \n'
 '            UVIndex: *%d {\n' % (4*nUvFaces) +
 '                a: ')
 
+    '''
     last = nUvFaces - 1
     for n,fuv in enumerate(obj.fuvs):
         if fuv[3] == fuv[0]:
@@ -213,6 +233,10 @@ def writeUvs1(fp, obj):
         else:
             fp.write('%d,%d,%d,%d' % (fuv[0],fuv[1],fuv[2],fuv[3]))
         writeComma(fp, n, last)
+    '''
+    string = "".join( ['%d,%d,%d,%d,' % tuple(fuv) for fuv in obj.fuvs] )
+    fp.write(string[:-1])
+
     fp.write(
 """
             }
@@ -236,6 +260,7 @@ def writeUvs2(fp, obj):
 '            UV: *%d {\n' % (8*nUvFaces) +
 '                a: ')
 
+    '''
     last = 4*nUvFaces - 1
     n = 0
     for fuv in obj.fuvs:
@@ -244,16 +269,25 @@ def writeUvs2(fp, obj):
             fp.write('%.4f,%.4f' % (uv[0], uv[1]))
             writeComma(fp, n, last)
             n += 1
+    '''
+    string = ""
+    for fuv in obj.fuvs:
+        string += "".join( ['%.4f,%.4f,' % (tuple(obj.texco[vt])) for vt in fuv] )
+    fp.write(string[:-1])
 
-    fp.write(
+    fp.write('\n' +
 '            } \n'
 '            UVIndex: *%d {\n' % (4*nUvFaces) +
 '                a: ')
 
+    '''
     last = nUvFaces - 1
     for n,fuv in enumerate(obj.fuvs):
         fp.write('%d,%d,%d,%d' % (4*n,4*n+1,4*n+2,4*n+3))
         writeComma(fp, n, last)
+    '''
+    string = "".join( ['%d,%d,%d,%d,' % (4*n,4*n+1,4*n+2,4*n+3) for n in range(nUvFaces)] )
+    fp.write(string[:-1])
 
     fp.write(
 """
