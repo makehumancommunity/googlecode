@@ -43,7 +43,7 @@ class FbxConfig(Config):
 
         self.rigOptions = exporter.getRigOptions()
         if not self.rigOptions:
-            self.rigOptions = ArmatureOptions()
+            return
         self.rigOptions.setExportOptions(
             useExpressions = self.expressions,
             feetOnGround = self.feetOnGround,

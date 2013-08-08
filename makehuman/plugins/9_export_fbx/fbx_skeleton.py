@@ -147,6 +147,8 @@ def writeObjectDefs(fp, rmeshes, amt):
 #--------------------------------------------------------------------
 
 def writeObjectProps(fp, rmeshes, amt):
+    if amt is None:
+        return
     for bone in amt.bones.values():
         writeNodeAttributeProp(fp, bone)
     writeNodeProp(fp, amt)
@@ -219,6 +221,8 @@ def writeBoneProp(fp, bone):
 #--------------------------------------------------------------------
 
 def writeLinks(fp, rmeshes, amt):
+    if amt is None:
+        return
 
     ooLink(fp, 'Model::%s' % amt.name, 'Model::RootNode')
 
