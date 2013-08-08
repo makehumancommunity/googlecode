@@ -210,6 +210,7 @@ if os.path.exists(maketargetlicense):
 os.system("chown -R 0:0 " + target)
 os.system("chmod -R 644 " + target)
 os.system('find ' + target + ' -type d -exec "chmod" "755" {} ";"')
+os.system("chmod 755 " + target)
 
 for x in files_to_chmod_executable:
   if os.path.exists(x):
