@@ -191,6 +191,12 @@ os.system("sed -i -e 's/REV/" + svnrev + "/' MakeHuman.desktop")
 shortcut = os.path.join(applications,"MakeMuman.desktop")
 os.system("mv MakeHuman.desktop " + shortcut)
 
+os.chdir(scriptdir)
+changelog = os.path.join(docdir,"changelog")
+os.system('rm -f ' + changelog + '*')
+os.system('svn log >' + changelog)
+os.system('gzip -9v ' + changelog)
+
 os.chdir(target)
 
 copysrc = os.path.join(controldir,"copyright")
