@@ -122,7 +122,7 @@ if not os.path.exists(docdir):
 print "Doc dir: " + docdir
 
 applications = os.path.join(tmp,"applications")
-if not os.path.exists(applications)
+if not os.path.exists(applications):
   os.mkdir(applications)
 
 print "Desktop shortcut dir: " + applications
