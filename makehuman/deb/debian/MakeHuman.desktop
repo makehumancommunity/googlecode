@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=MakeHuman REV
-Comment=MakeHuman is a free, open source software which allows the creation of realistic 3D human characters fast and in a simplified manner, through the manipulation of controls for different human attributes.
+Comment=MakeHuman is a free, open source tool for creating realistic 3D human characters.
 Exec=/usr/bin/makehuman
 Terminal=false
 Type=Application
