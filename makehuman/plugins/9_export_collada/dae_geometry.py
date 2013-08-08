@@ -49,10 +49,7 @@ def writeGeometry(fp, rmesh, config):
         '          <float_array count="%d" id="%s-Position-array">\n' % (3*nVerts,rmesh.name) +
         '          ')
 
-
-    for co in obj.coord:
-        (x,y,z) = rotateLoc(co, config)
-        fp.write("%.4f %.4f %.4f " % (x,y,z))
+    fp.write( ''.join([("%.4f %.4f %.4f " % tuple(co)) for co in obj.coord]) )
 
     fp.write('\n' +
         '          </float_array>\n' +
@@ -75,9 +72,7 @@ def writeGeometry(fp, rmesh, config):
             '          <float_array count="%d" id="%s-Normals-array">\n' % (3*nNormals,rmesh.name) +
             '          ')
 
-        for no in obj.fnorm:
-            (x,y,z) = rotateLoc(no, config)
-            fp.write("%.4f %.4f %.4f " % (x,y,z))
+        fp.write( ''.join([("%.4f %.4f %.4f " % tuple(no)) for no in obj.fnorm]) )
 
         fp.write('\n' +
             '          </float_array>\n' +
@@ -97,9 +92,7 @@ def writeGeometry(fp, rmesh, config):
         '          <float_array count="%d" id="%s-UV-array">\n' % (2*nUvVerts,rmesh.name) +
         '           ')
 
-
-    for uv in obj.texco:
-        fp.write(" %.4f %.4f" % tuple(uv))
+    fp.write( ''.join([("%.4f %.4f " % tuple(uv)) for uv in obj.texco]) )
 
     fp.write('\n' +
         '          </float_array>\n' +
@@ -151,9 +144,8 @@ def writeShapeKey(fp, name, shape, rmesh, config):
     target = np.array(obj.coord)
     for n,dr in shape.items():
         target[n] += np.array(dr)
-    for co in target:
-        loc = rotateLoc(co, config)
-        fp.write(" %.4g %.4g %.4g" % tuple(loc))
+
+    fp.write( ''.join([("%.4f %.4f %.4f " % tuple(co)) for co in target]) )
 
     fp.write('\n' +
         '          </float_array>\n' +
@@ -195,21 +187,13 @@ def writeShapeKey(fp, name, shape, rmesh, config):
         #'          <input semantic="NORMAL" source="#%sMeshMorph_%s-normals" offset="1"/>\n' % (rmesh.name, name) +
         '          <vcount>')
 
-    for fv in obj.fvert:
-        if fv[0] == fv[3]:
-            fp.write("3 ")
-        else:
-            fp.write("4 ")
+    fp.write( ''.join(["4 " for fv in obj.fvert]) )
 
     fp.write('\n' +
         '          </vcount>\n' +
         '          <p>')
 
-    for fv in obj.fvert:
-        if fv[0] == fv[3]:
-            fp.write("%d %d %d " % (fv[0], fv[1], fv[2]))
-        else:
-            fp.write("%d %d %d %s " % (fv[0], fv[1], fv[2], fv[3]))
+    fp.write( ''.join([("%d %d %d %d " % (fv[0], fv[1], fv[2], fv[3])) for fv in obj.fvert]) )
 
     fp.write('\n' +
         '          </p>\n' +
@@ -222,7 +206,7 @@ def writeShapeKey(fp, name, shape, rmesh, config):
 #   writePolygons(fp, rmesh, config):
 #   writePolylist(fp, rmesh, config):
 #
-
+'''
 def writePolygons(fp, rmesh, config):
     obj = rmesh.object
     fp.write(
@@ -241,6 +225,7 @@ def writePolygons(fp, rmesh, config):
     fp.write('\n' +
         '        </polygons>\n')
     return
+'''
 
 def writePolylist(fp, rmesh, config):
     obj = rmesh.object
@@ -258,11 +243,7 @@ def writePolylist(fp, rmesh, config):
         '          <input offset="1" semantic="TEXCOORD" source="#%s-UV"/>\n' % rmesh.name +
         '          <vcount>')
 
-    for fv in obj.fvert:
-        if fv[0] == fv[3]:
-            fp.write('3 ')
-        else:
-            fp.write('4 ')
+    fp.write( ''.join(["4 " for fv in obj.fvert]) )
 
     fp.write('\n' +
         '          </vcount>\n'
@@ -270,16 +251,10 @@ def writePolylist(fp, rmesh, config):
 
     for fn,fv in enumerate(obj.fvert):
         fuv = obj.fuvs[fn]
-        if fv[0] == fv[3]:
-            nverts = 3
-        else:
-            nverts = 4
         if config.useNormals:
-            for n in range(nverts):
-                fp.write("%d %d %d " % (fv[n], fn, fuv[n]))
+            fp.write( ''.join([("%d %d %d " % (fv[n], fn, fuv[n])) for n in range(4)]) )
         else:
-            for n in range(nverts):
-                fp.write("%d %d " % (fv[n], fuv[n]))
+            fp.write( ''.join([("%d %d " % (fv[n], fuv[n])) for n in range(4)]) )
 
     fp.write(
         '          </p>\n' +
@@ -301,17 +276,4 @@ def checkFaces(rmesh, nVerts, nUvVerts):
                 raise NameError("uv %d > %d" % (uv, nUvVerts))
     return
 
-
-def rotateLoc(loc, config):
-    return loc
-    (x,y,z) = loc
-    if config.rotate90X:
-        yy = -z
-        z = y
-        y = yy
-    if config.rotate90Z:
-        yy = x
-        x = -y
-        y = yy
-    return (x,y,z)
 
