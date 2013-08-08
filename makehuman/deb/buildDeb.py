@@ -216,6 +216,10 @@ for x in files_to_chmod_executable:
   if os.path.exists(x):
     os.system("chmod 755 " + x)
 
+# make reeeeally sure we don't bring along any .svn junk since it seems it has a
+# tendency to bork ubuntu's graphical package manager
+os.system('find ' + destdir + ' -type d -name ".svn" -exec "rm" "-rf" {} ";"')
+
 outputdir = os.path.join(destdir,"output")
 
 if not os.path.exists(outputdir):
