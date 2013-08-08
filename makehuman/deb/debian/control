@@ -10,5 +10,9 @@ Provides: makehuman
 Replaces: REPLACES
 Architecture: all
 Installed-Size: SIZE
-Description: Some kind of description.
- I'll update this later
+Description: MakeHuman is a free, open source software which allows the creation of realistic 3D human characters fast and in a simplified manner, through the manipulation of controls for different human attributes.
+ .
+ Users are able to model human characters by manipulating the controls to modify various human characteristics such as gender, age, height, weight and ethnicity as well as low level details of things such as the eye's shape, mouth's shape or finger's length. Via a 'point and click' approach, users can preview and load poses, animation cycles, facial expressions, hair, shoes and clothes onto characters from the MakeHuman™'s Library.
+ .
+ The human characters created can be saved in the custom MakeHuman format (.mhm), rendered and exported in various formats such as Collada (.dae), Filbox (.fbx), MD5, Blender exchange (.mhx), Wavefront .obj, Stereolithography (.stl). The copyright © 2001-2012 is retained by the MakeHuman™ Team (makehuman.org) which grants you permission to use released code under the GNU Affero General Public License 3.0 (AGPL).
+
