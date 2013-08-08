@@ -46,28 +46,26 @@ class MhxConfig(Config):
         self.bodyShapes =           False # exporter.bodyShapes.selected
         self.useCustomTargets =     exporter.useCustomTargets.selected
 
-        if exporter.rigAdvanced.selected:
-            self.rigOptions = ArmatureOptions()
-            self.rigOptions.loadPreset("advanced", None, folder="plugins/9_export_mhx")
-        elif exporter.rigRigify.selected:
+        if exporter.useRigify.selected:
             self.rigOptions = RigifyOptions(self)
+            return
         else:
             self.rigOptions = exporter.getRigOptions()
             if not self.rigOptions:
                 self.rigOptions = ArmatureOptions()
+                self.rigOptions.loadPreset("advanced", None, folder="plugins/9_export_mhx")
 
-        if not exporter.rigRigify.selected:
-            self.rigOptions.setExportOptions(
-                useCustomShapes = True,
-                useConstraints = True,
-                useBoneGroups = True,
-                useCorrectives = self.bodyShapes,
-                useExpressions = self.expressions,
-                feetOnGround = self.feetOnGround,
-                useMasks = self.useMasks,
-                useTPose = self.useTPose,
-                useLeftRight = False,
-            )
+        self.rigOptions.setExportOptions(
+            useCustomShapes = True,
+            useConstraints = True,
+            useBoneGroups = True,
+            useCorrectives = self.bodyShapes,
+            useExpressions = self.expressions,
+            feetOnGround = self.feetOnGround,
+            useMasks = self.useMasks,
+            useTPose = self.useTPose,
+            useLeftRight = False,
+        )
 
 
 class ExporterMHX(Exporter):
@@ -88,13 +86,7 @@ class ExporterMHX(Exporter):
         #self.masks          = options.addWidget(gui.CheckBox("Clothes masks", False))
         #self.clothesRig     = options.addWidget(gui.CheckBox("Clothes rig", False))
         #self.cage           = options.addWidget(gui.CheckBox("Cage", False))
-        #self.advancedSpine  = options.addWidget(gui.CheckBox("Advanced spine", False))
-        #self.maleRig        = options.addWidget(gui.CheckBox("Male rig", False))
-
-        rigs = []
-        self.rigAdvanced     = options.addWidget(gui.RadioButton(rigs, "Advanced rig", True))
-        self.rigRigify       = options.addWidget(gui.RadioButton(rigs, "Rigify rig", False))
-        self.rigFromLibrary  = options.addWidget(gui.RadioButton(rigs, "Use rig from library", False))
+        self.useRigify      = options.addWidget(gui.CheckBox("Export for Rigify", False))
 
 
     def export(self, human, filename):
