@@ -157,6 +157,13 @@ class SkeletonLibrary(gui3d.TaskView):
 
         self.presetBox = self.addRightWidget(gui.GroupBox('Rig Presets'))
 
+        self.presetClearBtn = self.presetBox.addWidget(gui.Button("Clear"))
+        @self.presetClearBtn.mhEvent
+        def onClicked(event):
+            self.amtOptions.reset(self.optionsSelector, useMuscles=False)
+            self.descrLbl.setText("")
+            self.updateSkeleton(useOptions=False)
+
         self.presetDefaultBtn = self.presetBox.addWidget(gui.Button("Default"))
         @self.presetDefaultBtn.mhEvent
         def onClicked(event):
@@ -206,17 +213,19 @@ class SkeletonLibrary(gui3d.TaskView):
         self.descrLbl.setWordWrap(True)
 
 
-
-    def updateSkeleton(self):
+    def updateSkeleton(self, useOptions=True):
         if self.human.getSkeleton():
             oldSkelOptions = self.human.getSkeleton().options
         else:
             oldSkelOptions = None
         self.amtOptions.fromSelector(self.optionsSelector)
-        gui3d.app.do(SkeletonAction("Change skeleton",
-                                    self,
-                                    oldSkelOptions,
-                                    self.amtOptions))
+        if useOptions:
+            string = "Change skeleton"
+            options = self.amtOptions
+        else:
+            string = "Clear skeleton"
+            options = None
+        gui3d.app.do(SkeletonAction(string, self, oldSkelOptions, options))
 
 
     def onShow(self, event):
