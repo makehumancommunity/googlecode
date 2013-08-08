@@ -64,7 +64,8 @@ def exportCollada(human, filepath, config):
         rawTargets = rawTargets,
         useHelpers=config.useHelpers)
 
-    amt.calcBindMatrices()
+    if amt:
+        amt.calcBindMatrices()
 
     gui3d.app.progress(0.5, text="Exporting %s" % filepath)
 

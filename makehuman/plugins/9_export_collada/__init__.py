@@ -44,6 +44,7 @@ class DaeConfig(Config):
 
         self.rigOptions = exporter.getRigOptions()
         if not self.rigOptions:
+            return
             self.rigOptions = ArmatureOptions()
         self.rigOptions.setExportOptions(
             useExpressions = self.expressions,

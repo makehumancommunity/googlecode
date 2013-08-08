@@ -102,7 +102,8 @@ def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidd
         rmeshes = [richMesh] + rmeshes
 
     if config.scale != 1.0:
-        amt.rescale(config.scale)
+        if amt:
+            amt.rescale(config.scale)
         for rmesh in rmeshes:
             rmesh.rescale(config.scale)
 

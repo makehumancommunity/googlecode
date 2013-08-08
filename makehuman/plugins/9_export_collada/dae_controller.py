@@ -23,7 +23,7 @@ Controller export
 
 """
 
-from .dae_node import rotateLoc, goodBoneName
+from .dae_node import goodBoneName
 
 #----------------------------------------------------------------------
 #   library_controllers
@@ -32,19 +32,19 @@ from .dae_node import rotateLoc, goodBoneName
 def writeLibraryControllers(fp, rmeshes, amt, config):
     fp.write('\n  <library_controllers>\n')
     for rmesh in rmeshes:
-        writeController(fp, rmesh, amt, config)
+        if amt:
+            writeSkinController(fp, rmesh, amt, config)
+        if rmesh.shapes:
+            writeMorphController(fp, rmesh, config)
     fp.write('  </library_controllers>\n')
 
 
-def writeController(fp, rmesh, amt, config):
+def writeSkinController(fp, rmesh, amt, config):
     obj = rmesh.object
     rmesh.calculateSkinWeights(amt)
     nVerts = len(obj.coord)
-    nUvVerts = len(obj.texco)
-    nFaces = len(obj.fvert)
-    nWeights = len(rmesh.skinWeights)
     nBones = len(amt.bones)
-    nShapes = len(rmesh.shapes)
+    nWeights = len(rmesh.skinWeights)
 
     fp.write('\n' +
         '    <controller id="%s-skin">\n' % rmesh.name +
@@ -88,21 +88,6 @@ def writeController(fp, rmesh, amt, config):
         '        </source>\n' +
         '        <source id="%s-skin-poses">\n' % rmesh.name +
         '          <float_array count="%d" id="%s-skin-poses-array">' % (16*nBones,rmesh.name))
-
-
-    """
-    mat = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
-    for bone in amt.bones.values():
-        (x,y,z) = rotateLoc(bone.head, config)
-        mat[0][3] = -x
-        mat[1][3] = -y
-        mat[2][3] = -z
-        fp.write('\n            ')
-        for i in range(4):
-            for j in range(4):
-                fp.write('%.4f ' % mat[i][j])
-
-    """
 
     for bone in amt.bones.values():
         #bone.calcBindMatrix()
@@ -150,46 +135,45 @@ def writeController(fp, rmesh, amt, config):
         '      </skin>\n' +
         '    </controller>\n')
 
-    # Morph controller
 
-    if rmesh.shapes:
-        nShapes = len(rmesh.shapes)
+def writeMorphController(fp, rmesh, config):
+    nShapes = len(rmesh.shapes)
 
-        fp.write(
-            '    <controller id="%sMorph" name="%sMorph">\n' % (rmesh.name, rmesh.name)+
-            '      <morph source="#%sMesh" method="NORMALIZED">\n' % (rmesh.name) +
-            '        <source id="%sTargets">\n' % (rmesh.name) +
-            '          <IDREF_array id="%sTargets-array" count="%d">' % (rmesh.name, nShapes))
+    fp.write(
+        '    <controller id="%sMorph" name="%sMorph">\n' % (rmesh.name, rmesh.name)+
+        '      <morph source="#%sMesh" method="NORMALIZED">\n' % (rmesh.name) +
+        '    <source id="%sTargets">\n' % (rmesh.name) +
+        '          <IDREF_array id="%sTargets-array" count="%d">' % (rmesh.name, nShapes))
 
-        for key,_ in rmesh.shapes:
-            fp.write(" %sMeshMorph_%s" % (rmesh.name, key))
+    for key,_ in rmesh.shapes:
+        fp.write(" %sMeshMorph_%s" % (rmesh.name, key))
 
-        fp.write(
-            '        </IDREF_array>\n' +
-            '          <technique_common>\n' +
-            '            <accessor source="#%sTargets-array" count="%d" stride="1">\n' % (rmesh.name, nShapes) +
-            '              <param name="IDREF" type="IDREF"/>\n' +
-            '            </accessor>\n' +
-            '          </technique_common>\n' +
-            '        </source>\n' +
-            '        <source id="%sWeights">\n' % (rmesh.name) +
-            '          <float_array id="%sWeights-array" count="%d">' % (rmesh.name, nShapes))
+    fp.write(
+        '        </IDREF_array>\n' +
+        '          <technique_common>\n' +
+        '            <accessor source="#%sTargets-array" count="%d" stride="1">\n' % (rmesh.name, nShapes) +
+        '              <param name="IDREF" type="IDREF"/>\n' +
+        '            </accessor>\n' +
+        '          </technique_common>\n' +
+        '        </source>\n' +
+        '        <source id="%sWeights">\n' % (rmesh.name) +
+        '          <float_array id="%sWeights-array" count="%d">' % (rmesh.name, nShapes))
 
-        fp.write(nShapes*" 0")
+    fp.write(nShapes*" 0")
 
-        fp.write('\n' +
-            '        </float_array>\n' +
-            '          <technique_common>\n' +
-            '            <accessor source="#%sWeights-array" count="%d" stride="1">\n' % (rmesh.name, nShapes) +
-            '              <param name="MORPH_WEIGHT" type="float"/>\n' +
-            '            </accessor>\n' +
-            '          </technique_common>\n' +
-            '        </source>\n' +
-            '        <targets>\n' +
-            '          <input semantic="MORPH_TARGET" source="#%sTargets"/>\n' % (rmesh.name) +
-            '          <input semantic="MORPH_WEIGHT" source="#%sWeights"/>\n' % (rmesh.name) +
-            '        </targets>\n' +
-            '      </morph>\n' +
-            '    </controller>\n')
+    fp.write('\n' +
+        '        </float_array>\n' +
+        '          <technique_common>\n' +
+        '            <accessor source="#%sWeights-array" count="%d" stride="1">\n' % (rmesh.name, nShapes) +
+        '              <param name="MORPH_WEIGHT" type="float"/>\n' +
+        '            </accessor>\n' +
+        '          </technique_common>\n' +
+        '        </source>\n' +
+        '        <targets>\n' +
+        '          <input semantic="MORPH_TARGET" source="#%sTargets"/>\n' % (rmesh.name) +
+        '          <input semantic="MORPH_WEIGHT" source="#%sWeights"/>\n' % (rmesh.name) +
+        '        </targets>\n' +
+        '      </morph>\n' +
+        '    </controller>\n')
 
 

@@ -25,7 +25,6 @@ Geometry export
 
 import gui3d
 import numpy as np
-from .dae_node import rotateLoc
 
 #----------------------------------------------------------------------
 #   library_geometry
@@ -42,8 +41,6 @@ def writeGeometry(fp, rmesh, config):
     obj = rmesh.object
     nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
-    nWeights = len(rmesh.skinWeights)
-    nShapes = len(rmesh.shapes)
 
     fp.write('\n' +
         '    <geometry id="%sMesh" name="%s">\n' % (rmesh.name,rmesh.name) +
@@ -303,3 +300,18 @@ def checkFaces(rmesh, nVerts, nUvVerts):
             if uv > nUvVerts:
                 raise NameError("uv %d > %d" % (uv, nUvVerts))
     return
+
+
+def rotateLoc(loc, config):
+    return loc
+    (x,y,z) = loc
+    if config.rotate90X:
+        yy = -z
+        z = y
+        y = yy
+    if config.rotate90Z:
+        yy = x
+        x = -y
+        y = yy
+    return (x,y,z)
+
