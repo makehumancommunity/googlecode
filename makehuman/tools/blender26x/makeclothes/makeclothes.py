@@ -52,12 +52,32 @@ theSettings = mc.settings["hm08"]
 #
 
 def isClothing(ob):
-    return ((ob.type == 'MESH') and (not ob.MhHuman))
+    return ((ob.type == 'MESH') and not isOkHuman(ob))
+
+
+def isOkHuman(ob):
+    if not ob.MhHuman:
+        return False
+    if not theSettings:
+        return True
+    nverts = len(ob.data.vertices)
+    if nverts in getLastVertices():
+        return True
+    else:
+        ob.MhHuman = False
+        return False
+
+
+def getLastVertices():
+    vlist = [ vs[1] for vs in theSettings.vertices.values()]
+    vlist.append(theSettings.nTotalVerts)
+    vlist.sort()
+    return vlist
 
 
 def getHuman(context):
     for ob in context.scene.objects:
-        if ob.select and ob.MhHuman:
+        if ob.select and isOkHuman(ob):
             return ob
     raise MHError("No human selected")
 
@@ -65,6 +85,9 @@ def getHuman(context):
 def getClothing(context):
     for ob in context.scene.objects:
         if ob.select and isClothing(ob):
+            return ob
+    for ob in context.scene.objects:
+        if ob.select and not isOkHuman(ob):
             return ob
     raise MHError("No clothing selected")
 
@@ -75,7 +98,7 @@ def getObjectPair(context):
     scn = context.scene
     for ob in scn.objects:
         if ob.select:
-            if ob.MhHuman:
+            if isOkHuman(ob):
                 if human:
                     raise MHError("Two humans selected: %s and %s" % (human.name, ob.name))
                 else:
@@ -970,9 +993,11 @@ def makeClothes(context, doFindClothes):
     scn = context.scene
     checkNoTriangles(pob)
     checkObjectOK(bob, context, False)
+    autoVertexGroupsIfNecessary(bob, scn)
     checkAndVertexDiamonds(context, bob)
     checkObjectOK(pob, context, True)
-    checkSingleVGroups(pob, scn)
+    autoVertexGroupsIfNecessary(pob, scn)
+    checkSingleVertexGroups(pob, scn)
     if scn.MCLogging:
         logfile = '%s/clothes.log' % scn.MhClothesDir
         log = mc.openOutputFile(logfile)
@@ -1004,6 +1029,7 @@ def checkObjectOK(ob, context, isClothing):
     scn.objects.active = ob
     word = None
     err = False
+    line2 = "Apply, create or delete before proceeding.\n"
 
     if ob.location.length > Epsilon:
         word = "object translation"
@@ -1040,12 +1066,13 @@ def checkObjectOK(ob, context, isClothing):
 
     if isClothing and not materials.checkObjectHasDiffuseTexture(ob):
         word = "no diffuse image texture"
+        line2 = "Create texture or delete material before proceeding.\n"
         err = True
 
     if word:
         msg = "Object %s can not be used for clothes creation because it has %s.\n" % (ob.name, word)
         if err:
-            msg +=  "Apply, create or delete before continuing.\n"
+            msg +=  line2
             print(msg)
             raise MHError(msg)
         else:
@@ -1055,13 +1082,10 @@ def checkObjectOK(ob, context, isClothing):
     return
 
 #
-#   checkSingleVGroups(pob, scn):
+#   checkSingleVertexGroups(pob, scn):
 #
 
-def checkSingleVGroups(pob, scn):
-    if len(pob.vertex_groups) == 0:
-        autoVertexGroups(pob, scn)
-
+def checkSingleVertexGroups(pob, scn):
     for v in pob.data.vertices:
         n = 0
         for g in v.groups:
@@ -1575,11 +1599,17 @@ def removeVertexGroups(context, removeType):
 #   autoVertexGroups(ob, scn):
 #
 
+def autoVertexGroupsIfNecessary(ob, scn):
+    if len(ob.vertex_groups) == 0:
+        print("Found no vertex groups for %s." % ob)
+        autoVertexGroups(ob, scn)
+
+
 def autoVertexGroups(ob, scn):
     mid = ob.vertex_groups.new("Mid")
     left = ob.vertex_groups.new("Left")
     right = ob.vertex_groups.new("Right")
-    if ob.MhHuman:
+    if isOkHuman(ob):
         ob.vertex_groups.new("Delete")
         verts = getHumanVerts(ob.data, scn)
     else:
@@ -1596,7 +1626,10 @@ def autoVertexGroups(ob, scn):
                 (theSettings is None or vn < theSettings.nTotalVerts)):
                 left.add([vn], 1.0, 'REPLACE')
                 right.add([vn], 1.0, 'REPLACE')
-    print("Vertex groups auto assigned to %s" % scn.MCAutoGroupType.lower())
+    if ob.MhHuman:
+        print("Vertex groups auto assigned to human %s, part %s." % (ob, scn.MCAutoGroupType.lower()))
+    else:
+        print("Vertex groups auto assigned to clothing %s" % ob)
     return
 
 
@@ -1664,7 +1697,7 @@ def checkAndVertexDiamonds(context, ob):
     me = ob.data
     nverts = len(me.vertices)
 
-    if theSettings and (nverts not in getLastVertices()):
+    if not isOkHuman(ob):
         vertlines = ""
         for n in getLastVertices():
             vertlines += ("\n  %d" % n)
@@ -1689,13 +1722,6 @@ def checkAndVertexDiamonds(context, ob):
         bpy.ops.object.vertex_group_remove_from()
     bpy.ops.object.mode_set(mode='OBJECT')
     return
-
-
-def getLastVertices():
-    vlist = [ vs[1] for vs in theSettings.vertices.values()]
-    vlist.append(theSettings.nTotalVerts)
-    vlist.sort()
-    return vlist
 
 
 #
