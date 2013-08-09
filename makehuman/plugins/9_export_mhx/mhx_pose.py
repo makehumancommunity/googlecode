@@ -118,15 +118,13 @@ def writeShape(fp, pose, lr, shape, min, max, proxy, scale):
             name,pshape = pshapes[0]
             if len(pshape.keys()) > 0:
                 writeShapeHeader(fp, pose, lr, min, max)
-                for (pv, dr) in pshape.items():
-                    (dx, dy, dz) = dr
-                    fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (pv, dx, -dz, dy))
+                fp.write("".join( ["  sv %d %.4f %.4f %.4f ;\n" %  (pv, dx, -dz, dy) for (pv, dr) in pshape.items()] ))
                 fp.write("end ShapeKey\n")
                 return False
     else:
         writeShapeHeader(fp, pose, lr, min, max)
-        for (vn, dr) in shape.items():
-           fp.write("  sv %d %.4f %.4f %.4f ;\n" %  (vn, scale*dr[0], -scale*dr[2], scale*dr[1]))
+        s = scale
+        fp.write("".join( ["  sv %d %.4f %.4f %.4f ;\n" %  (vn, s*dr[0], -s*dr[2], s*dr[1]) for (vn, dr) in shape.items()] ))
         fp.write("end ShapeKey\n")
         return False
     return True

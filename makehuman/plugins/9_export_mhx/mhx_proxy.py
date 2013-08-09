@@ -78,8 +78,7 @@ NoScale False ;
     ox = amt.origin[0]
     oy = amt.origin[1]
     oz = amt.origin[2]
-    for x,y,z in proxy.getCoords():
-        fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(x-ox), scale*(-z+oz), scale*(y-oy)))
+    fp.write("".join( ["  v %.4f %.4f %.4f ;\n" % (scale*(x-ox), scale*(-z+oz), scale*(y-oy)) for x,y,z in proxy.getCoords()] ))
 
     fp.write("""
   end Verts
@@ -87,8 +86,7 @@ NoScale False ;
 """)
 
     obj = proxy.getObject()
-    for fv in obj.fvert:
-        fp.write("    f %d %d %d %d ;\n" % (fv[0], fv[1], fv[2], fv[3]))
+    fp.write("".join( ["    f %d %d %d %d ;\n" % tuple(fv) for fv in obj.fvert] ))
     #if False and proxy.faceNumbers:
     #    for ftn in proxy.faceNumbers:
     #        fp.write(ftn)
@@ -102,12 +100,9 @@ NoScale False ;
     fp.write(
         "  MeshTextureFaceLayer %s\n" % "Texture" +
         "    Data \n")
+    uvs = obj.texco
     for fuv in obj.fuvs:
-        fp.write("    vt")
-        for vt in fuv:
-            uv = obj.texco[vt]
-            fp.write(" %.4g %.4g" % tuple(uv))
-        fp.write(" ;\n")
+        fp.write("    vt" + "".join( [" %.4g %.4g" % tuple(uvs[vt]) for vt in fuv] ) + " ;\n")
     fp.write(
         "    end Data\n" +
         "  end MeshTextureFaceLayer\n")
@@ -130,12 +125,9 @@ NoScale False ;
             "    Data \n")
 
         if layer == proxy.objFileLayer:
+            uvs = obj.texco
             for fuv in obj.fuvs:
-                fp.write("    vt")
-                for vt in fuv:
-                    uv = obj.texco[vt]
-                    fp.write(" %.4g %.4g" % (uv[0], uv[1]))
-                fp.write(" ;\n")
+                fp.write("    vt" + "".join( [" %.4g %.4g" % tuple(uvs[vt]) for vt in fuv] ) + " ;\n")
         else:
             pass
 

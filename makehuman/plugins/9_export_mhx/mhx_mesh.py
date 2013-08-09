@@ -44,19 +44,14 @@ def writeMesh(fp, mesh, env):
     ox = amt.origin[0]
     oy = amt.origin[1]
     oz = amt.origin[2]
-    for co in mesh.coord:
-        fp.write("  v %.4f %.4f %.4f ;\n" % (scale*(co[0]-ox), scale*(-co[2]+oz), scale*(co[1]-oy)))
+    fp.write( "".join(["  v %.4f %.4f %.4f ;\n" % (scale*(co[0]-ox), scale*(-co[2]+oz), scale*(co[1]-oy)) for co in mesh.coord] ))
 
     fp.write("""
   end Verts
 
   Faces
 """)
-    for n,fv in enumerate(mesh.fvert):
-        if fv[0] == fv[3]:
-            raise NameError("Triangular face %d = %s encountered. MakeHuman meshes must be pure quad." % (n, fv))
-        else:
-            fp.write("    f %d %d %d %d ;\n" % tuple(fv))
+    fp.write( "".join(["    f %d %d %d %d ;\n" % tuple(fv) for fv in mesh.fvert] ))
 
     writeFaceNumbers(fp, env)
 
@@ -68,19 +63,13 @@ def writeMesh(fp, mesh, env):
 """)
 
     if env.human.uvset:
-        for ft in env.human.uvset.fuvs:
-            fp.write("    vt")
-            for vt in ft:
-                uv = env.human.uvset.uvs[vt]
-                fp.write(" %.4g %.4g" %(uv[0], uv[1]))
-            fp.write(" ;\n")
+        uvs = env.human.uvset.uvs
+        fuvs = env.human.uvset.fuvs
     else:
-        for n,fuv in enumerate(mesh.fuvs):
-            uv0 = mesh.texco[fuv[0]]
-            uv1 = mesh.texco[fuv[1]]
-            uv2 = mesh.texco[fuv[2]]
-            uv3 = mesh.texco[fuv[3]]
-            fp.write("    vt %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g ;\n" % (uv0[0], uv0[1], uv1[0], uv1[1], uv2[0], uv2[1], uv3[0], uv3[1]))
+        uvs = mesh.texco
+        fuvs = mesh.fuvs
+    for fuv in fuvs:
+        fp.write( "    vt" + "".join([" %.4g %.4g" %(tuple(uvs[vt])) for vt in fuv]) + " ;\n")
 
     fp.write("""
     end Data
@@ -192,10 +181,6 @@ def writeArmatureModifier(fp, env, proxy):
 #-------------------------------------------------------------------------------
 
 MaterialNumbers = {
-    ""          : 0,
-    "skin"      : 0,
-    "Material"  : 0,
-    "Default"  : 0,
     "nail"      : 1,
     "teeth"     : 1,
     "eye"       : 1,
@@ -216,8 +201,8 @@ def writeFaceNumbers(fp, env):
     else:
         obj = env.human.meshData
         fmats = numpy.zeros(len(obj.coord), int)
-        for fn,mtl in obj.materials.items():
-            fmats[fn] = MaterialNumbers[mtl]
+        #for fn,mtl in obj.materials.items():
+        #    fmats[fn] = MaterialNumbers[mtl]
 
         # TODO use facemask set on module3d instead (cant we reuse filterMesh from collect module?)
         deleteVerts = None
@@ -302,10 +287,10 @@ def writeVertexGroups(fp, env, proxy):
 
 def writeRigWeights(fp, weights):
     for grp in weights.keys():
-        fp.write("\n  VertexGroup %s\n" % grp)
-        for (v,w) in weights[grp]:
-            fp.write("    wv %d %.4f ;\n" % (v,w))
-        fp.write("  end VertexGroup\n")
+        fp.write(
+            "\n  VertexGroup %s\n" % grp +
+            "".join( ["    wv %d %.4g ;\n" % tuple(vw) for vw in weights[grp]] ) +
+            "  end VertexGroup\n")
     return
 
 
