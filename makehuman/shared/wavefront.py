@@ -147,23 +147,19 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
 
     # Vertices
     for obj in objects:
-        for co in obj.coord:
-            fp.write("v %.4g %.4g %.4g\n" % tuple(co))
+        fp.write("".join( ["v %.4g %.4g %.4g\n" % tuple(co) for co in obj.coord] ))
 
     # Vertex normals
     if config == None or config.useNormals:
         for obj in objects:
             obj.calcFaceNormals()
             #obj.calcVertexNormals()
-            for no in obj.fnorm:
-                no = no/math.sqrt(no.dot(no))
-                fp.write("vn %.4g %.4g %.4g\n" % tuple(no))
+            fp.write("".join( ["vn %.4g %.4g %.4g\n" % tuple(no/math.sqrt(no.dot(no))) for no in obj.fnorm] ))
 
     # UV vertices
     for obj in objects:
         if obj.has_uv:
-            for uv in obj.texco:
-                fp.write("vt %.4g %.4g\n" % tuple(uv))
+            fp.write("".join( ["vt %.4g %.4g\n" % tuple(uv) for uv in obj.texco] ))
 
     # Faces
     nVerts = 1
@@ -171,40 +167,27 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
     for obj in objects:
         fp.write("usemtl %s\n" % obj.material.name)
         fp.write("g %s\n" % obj.name)
-        for fn,fv in enumerate(obj.fvert):
-            fp.write('f ')
-            fuv = obj.fuvs[fn]
-            if fv[0] == fv[3]:
-                nv = 3
+
+        if config == None or config.useNormals:
+            if obj.has_uv:
+                for fn,fv in enumerate(obj.fvert):
+                    fuv = obj.fuvs[fn]
+                    line = [" %d/%d/%d" % (fv[n]+nVerts, fuv[n]+nTexVerts, fn) for n in range(4)]
+                    fp.write("f" + "".join(line) + "\n")
             else:
-                nv = 4
-            if config == None or config.useNormals:
-                if obj.has_uv:
-                    line = []
-                    for n in range(nv):
-                        vn = fv[n]+nVerts
-                        line.append("%d/%d/%d" % (vn, fuv[n]+nTexVerts, fn))
-                    fp.write(" ".join(line))
-                else:
-                    line = []
-                    for n in range(nv):
-                        vn = fv[n]+nVerts
-                        line.append("%d//%d" % (vn, fn))
-                    fp.write(" ".join(line))
+                for fn,fv in enumerate(obj.fvert):
+                    line = [" %d//%d" % (fv[n]+nVerts, fn) for n in range(4)]
+                    fp.write("f" + "".join(line) + "\n")
+        else:
+            if obj.has_uv:
+                for fn,fv in enumerate(obj.fvert):
+                    fuv = obj.fuvs[fn]
+                    line = [" %d/%d" % (fv[n]+nVerts, fuv[n]+nTexVerts) for n in range(4)]
+                    fp.write("f" + "".join(line) + "\n")
             else:
-                if obj.has_uv:
-                    line = []
-                    for n in range(nv):
-                        vn = fv[n]+nVerts
-                        line.append("%d/%d" % (vn, fuv[n]+nTexVerts))
-                    fp.write(" ".join(line))
-                else:
-                    line = []
-                    for n in range(nv):
-                        vn = fv[n]+nVerts
-                        line.append("%d" % (vn))
-                    fp.write(" ".join(line))
-            fp.write('\n')
+                for fv in obj.fvert:
+                    line = [" %d" % (fv[n]+nVerts) for n in range(4)]
+                    fp.write("f" + "".join(line) + "\n")
 
         nVerts += len(obj.coord)
         nTexVerts += len(obj.texco)
