@@ -64,36 +64,34 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
         useHelpers=config.useHelpers,
         subdivide=config.subdivide)
 
-    f = open(filepath, 'w')
+    fp = open(filepath, 'w')
     solid = name.replace(' ','_')
-    f.write('solid %s\n' % solid)
+    fp.write('solid %s\n' % solid)
 
     for rmesh in rmeshes:
         obj = rmesh.object
+        fp.write("".join( [(
+            'facet normal %f %f %f\n' % tuple(obj.fnorm[fn]) +
+            '\touter loop\n' +
+            '\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[0]]) +
+            '\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[1]]) +
+            '\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[2]]) +
+            '\tendloop\n' +
+            '\tendfacet\n' +
+            'facet normal %f %f %f\n' % tuple(obj.fnorm[fn]) +
+            '\touter loop\n' +
+            '\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[2]]) +
+            '\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[3]]) +
+            '\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[0]]) +
+            '\tendloop\n' +
+            '\tendfacet\n'
+            ) for fn,fv in enumerate(obj.fvert)] ))
 
-        for fn,fv in enumerate(obj.fvert):
-            f.write('facet normal %f %f %f\n' % tuple(obj.fnorm[fn]))
-            f.write('\touter loop\n')
-            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[0]]))
-            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[1]]))
-            f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[2]]))
-            f.write('\tendloop\n')
-            f.write('\tendfacet\n')
-
-            if fv[0] != fv[3]:
-                f.write('facet normal %f %f %f\n' % tuple(obj.fnorm[fn]))
-                f.write('\touter loop\n')
-                f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[2]]))
-                f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[3]]))
-                f.write('\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[0]]))
-                f.write('\tendloop\n')
-                f.write('\tendfacet\n')
-
-    f.write('endsolid %s\n' % solid)
-    f.close()
+    fp.write('endsolid %s\n' % solid)
+    fp.close()
 
 
-def exportStlBinary(human, filename, config, exportJoints = False):
+def exportStlBinary(human, filepath, config, exportJoints = False):
     """
     human:
       *Human*.  The object whose information is to be used for the export.
@@ -103,7 +101,6 @@ def exportStlBinary(human, filename, config, exportJoints = False):
       *Config*.  Export configuration.
     """
 
-    obj = human.meshData
     config.setHuman(human)
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
@@ -116,29 +113,31 @@ def exportStlBinary(human, filename, config, exportJoints = False):
         useHelpers=config.useHelpers,
         subdivide=config.subdivide)
 
-    # TL: should loop over rmesh (clothes etc) but only do nude human for now.
-
-    f = open(filename, 'wb')
-    f.write('\x00' * 80)
-    f.write(struct.pack('<I', 0))
+    fp = open(filepath, 'wb')
+    fp.write('\x00' * 80)
+    fp.write(struct.pack('<I', 0))
     count = 0
-    for fn,fverts in enumerate(obj.fvert):
-        fno = obj.fnorm[fn]
 
-        f.write(struct.pack('<fff', fno[0], fno[1], fno[2]))
-        f.write(struct.pack('<fff', fverts[0][0], fverts[0][1], fverts[0][2]))
-        f.write(struct.pack('<fff', fverts[1][0], fverts[1][1], fverts[1][2]))
-        f.write(struct.pack('<fff', fverts[2][0], fverts[2][1], fverts[2][2]))
-        f.write(struct.pack('<H', 0))
-        count += 1
+    for rmesh in rmeshes:
+        obj = rmesh.object
+        for fn,fv in enumerate(obj.fvert):
+            fno = obj.fnorm[fn]
+            co = obj.coord[fv]
 
-        f.write(struct.pack('<fff', fno[0], fno[1], fno[2]))
-        f.write(struct.pack('<fff', fverts[2][0], fverts[2][1], fverts[2][2]))
-        f.write(struct.pack('<fff', fverts[3][0], fverts[3][1], fverts[3][2]))
-        f.write(struct.pack('<fff', fverts[0][0], fverts[0][1], fverts[0][2]))
-        f.write(struct.pack('<H', 0))
-        count += 1
-    f.seek(80)
-    f.write(struct.pack('<I', count))
+            fp.write(struct.pack('<fff', fno[0], fno[1], fno[2]))
+            fp.write(struct.pack('<fff', co[0][0], co[0][1], co[0][2]))
+            fp.write(struct.pack('<fff', co[1][0], co[1][1], co[1][2]))
+            fp.write(struct.pack('<fff', co[2][0], co[2][1], co[2][2]))
+            fp.write(struct.pack('<H', 0))
+            count += 1
+
+            fp.write(struct.pack('<fff', fno[0], fno[1], fno[2]))
+            fp.write(struct.pack('<fff', co[2][0], co[2][1], co[2][2]))
+            fp.write(struct.pack('<fff', co[3][0], co[3][1], co[3][2]))
+            fp.write(struct.pack('<fff', co[0][0], co[0][1], co[0][2]))
+            fp.write(struct.pack('<H', 0))
+            count += 1
+    fp.seek(80)
+    fp.write(struct.pack('<I', count))
 
 
