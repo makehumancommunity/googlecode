@@ -1,7 +1,7 @@
-Name:	Xonotic
+Name:	MHX
 
 Bones:
-    hips		hips
+    root		hips
     spine		spine
     spine-1		spine-1
     chest		chest
@@ -9,11 +9,13 @@ Bones:
     head		head
 
     shoulder.L  	shoulder.L
+    deltoid.L		deltoid.L
     upper_arm.fk.L	upper_arm.L
     forearm.fk.L   	forearm.L
     hand.fk.L		hand.L
 
     shoulder.R  	shoulder.R
+    deltoid.R		deltoid.R
     upper_arm.fk.R	upper_arm.R
     forearm.fk.R   	forearm.R
     hand.fk.R		hand.R

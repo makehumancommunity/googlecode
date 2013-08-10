@@ -35,7 +35,7 @@ from . import target
 from . import mcp
 from . import utils
 from .utils import MocapError
-              
+
 #
 #    guessSrcArmature(rig, scn):
 #
@@ -45,26 +45,37 @@ def guessSrcArmature(rig, scn):
     bestMisses = 1000
     misses = {}
     bones = rig.data.bones
+
     for name in mcp.sourceArmatures.keys():
         amt = mcp.sourceArmatures[name]
         nMisses = 0
         for bone in bones:
             try:
                 amt[canonicalSrcName(bone.name)]
-            except:
+            except KeyError:
                 nMisses += 1
         misses[name] = nMisses
         if nMisses < bestMisses:
             best = amt
             bestName = name
             bestMisses = nMisses
+
     if bestMisses == 0:
-        scn.McpSourceRig = name
+        scn.McpSourceRig = bestName
     else:
-        for bone in bones:
-            print("'%s'" % bone.name)
+        print("Number of misses:")
         for (name, n) in misses.items():
-            print(name, n)
+            print("  %14s: %2d" % (name, n))
+        print("Best bone map for armature %s:" % bestName)
+        amt = mcp.sourceArmatures[bestName]
+        for bone in bones:
+            try:
+                bname,_ = amt[canonicalSrcName(bone.name)]
+                string = "     "
+            except KeyError:
+                string = " *** "
+                bname = "?"
+            print("%s %14s => %s" % (string, bone.name, bname))
         raise MocapError('Did not find matching armature. nMisses = %d' % bestMisses)
     return (best, bestName)
 
@@ -90,7 +101,7 @@ def findSrcArmature(context, rig):
 def setArmature(rig, scn):
     try:
         name = rig.McpArmature
-    except:    
+    except:
         name = scn.McpSourceRig
     if name:
         print("Setting armature to %s" % name)
@@ -101,7 +112,7 @@ def setArmature(rig, scn):
     mcp.srcArmature = mcp.sourceArmatures[name]
     print("Set armature %s" % name)
     return
-    
+
 #
 #   findSourceKey(mhx, struct):
 #
@@ -112,17 +123,17 @@ def findSourceKey(mhx, struct):
         if mhx == mhx1:
             return (bone, twist)
     return (None, 0)
-    
-    
+
+
 def getSourceRoll(mhx):
     (bone, roll) = findSourceKey(mhx, mcp.srcArmature)
     return roll
-            
-    
+
+
 def canonicalSrcName(string):
     return string.lower().replace(' ','_').replace('-','_')
-    
-    
+
+
 ###############################################################################
 #
 #    Source initialization
@@ -138,7 +149,7 @@ def isSourceInited(scn):
         return False
 
 
-def initSources(scn):       
+def initSources(scn):
     mcp.sourceArmatures = {}
     path = os.path.join(os.path.dirname(__file__), "source_rigs")
     for fname in os.listdir(path):
@@ -152,20 +163,20 @@ def initSources(scn):
     keys.sort()
     for key in keys:
         mcp.srcArmatureEnums.append((key,key,key))
-        
+
     bpy.types.Scene.McpSourceRig = EnumProperty(
         items = mcp.srcArmatureEnums,
         name = "Source rig",
         default = 'MB')
     scn.McpSourceRig = 'MB'
     print("Defined McpSourceRig")
-    return    
+    return
 
 
 def readSrcArmature(file, name):
     print("Read source file", file)
     fp = open(file, "r")
-    status = 0    
+    status = 0
     armature = {}
     for line in fp:
         words = line.split()
@@ -181,16 +192,16 @@ def readSrcArmature(file, name):
                 print("Ignored illegal line", line)
             elif status == 1:
                 for n in range(1,len(words)-2):
-                    key += "_" + words[n]                    
+                    key += "_" + words[n]
                 armature[canonicalSrcName(key)] = (utils.nameOrNone(words[-2]), float(words[-1]))
-    fp.close()                
-    return (name, armature)                
-    
+    fp.close()
+    return (name, armature)
+
 
 def ensureSourceInited(scn):
     if not isSourceInited(scn):
         initSources(scn)
-        
+
 
 class VIEW3D_OT_McpInitSourcesButton(bpy.types.Operator):
     bl_idname = "mcp.init_sources"
@@ -199,4 +210,4 @@ class VIEW3D_OT_McpInitSourcesButton(bpy.types.Operator):
 
     def execute(self, context):
         initSources(context.scene)
-        return{'FINISHED'}    
+        return{'FINISHED'}

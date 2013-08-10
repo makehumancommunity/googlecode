@@ -43,7 +43,7 @@ Deg2Rad = math.pi/180
 def getTrgBone(b):
     try:
         return mcp.trgBone[b]
-    except:
+    except KeyError:
         return None
 
 
@@ -80,13 +80,14 @@ def getTargetArmature(rig, scn):
 def guessArmature(rig, bones, scn):
     ensureTargetInited(scn)
     print("Guessing")
-    if 'KneePT_L' in bones:
-        return 'MHX'
-    else:
-        for (name, info) in mcp.targetInfo.items():
-            (boneAssoc, mcp.renames, mcp.ikBones) = info
-            if testTargetRig(name, bones, boneAssoc):
-                return name
+    amtList = ["MHX", "Default"]
+    for key in mcp.targetInfo.keys():
+        if key not in ["MHX", "Default"]:
+            amtList += key
+    for name in amtList:
+        (boneAssoc, mcp.renames, mcp.ikBones) = mcp.targetInfo[name]
+        if testTargetRig(name, bones, boneAssoc):
+            return name
     print("Bones", bones)
     raise MocapError("Did not recognize target armature %s" % rig.name)
 
@@ -149,16 +150,18 @@ TargetBoneNames = [
     ('hips',        'Root bone'),
     ('spine',        'Lower spine'),
     ('spine-1',        'Middle spine'),
-    ('Spine3',        'Upper spine'),
-    ('chest',        'Neck'),
+    ('chest',        'Upper spine'),
+    ('neck',        'Neck'),
     ('head',        'Head'),
     None,
     ('shoulder.L',    'L clavicle'),
+    ('deltoid.L',    'L deltoid'),
     ('upper_arm.L',        'L upper arm'),
     ('forearm.L',        'L forearm'),
     ('hand.L',        'L hand'),
     None,
     ('shoulder.R',    'R clavicle'),
+    ('deltoid.R',    'R deltoid'),
     ('upper_arm.R',        'R upper arm'),
     ('forearm.R',        'R forearm'),
     ('hand.R',        'R hand'),
@@ -213,8 +216,7 @@ def initTargets(scn):
     bpy.types.Scene.McpTargetRig = EnumProperty(
         items = mcp.trgArmatureEnums,
         name = "Target rig",
-        default = 'Xonotic')
-    scn.McpTargetRig = 'Xonotic'
+        default = 'Default')
     print("Defined McpTargetRig")
     return
 

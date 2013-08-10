@@ -354,7 +354,7 @@ def retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
     scn = context.scene
     if scn.McpUseTPose and not trgRig.McpHasTPose:
         scn.objects.active = trgRig
-        t_pose.createTPose(context)
+        t_pose.restTPose(context)
 
     if doFK:
         anim = setupMhxAnimation(scn, srcRig, trgRig)

@@ -23,12 +23,15 @@
 # Script copyright (C) MakeHuman Team 2001-2013
 # Coding Standards:    See http://www.makehuman.org/node/165
 
-import bpy, os
+import bpy
+import os
+import math
 from mathutils import Quaternion
 from .utils import MocapError
 from .io_json import *
+from . import target
 
-def createTPose(context):
+def restTPose(context):
     rig = context.object
     scn = context.scene
     if rig.McpHasTPose:
@@ -37,10 +40,16 @@ def createTPose(context):
 
     filepath = os.path.join(os.path.dirname(__file__), "t_pose.json")
     struct = loadJson(filepath)
+    unit = Quaternion()
 
     for name,value in struct:
-        pb = rig.pose.bones[name]
-        quat = Quaternion(value)
+        print(name)
+        bname = target.getTrgBone(name)
+        try:
+            pb = rig.pose.bones[bname]
+            quat = Quaternion(value)
+        except KeyError:
+            quat = unit
         pb.matrix_basis = quat.to_matrix().to_4x4()
         rest = quat.inverted()
         pb["McpRestW"] = rest.w
@@ -87,6 +96,7 @@ def clearTPose(context):
     scn = context.scene
     if not rig.McpHasTPose:
         print("%s has no defined T-pose" % rig)
+        return
 
     for pb in rig.pose.bones:
         try:
@@ -106,26 +116,24 @@ def setTPose(context):
     scn = context.scene
     if not rig.McpHasTPose:
         print("%s has no defined T-pose" % rig)
+        return
 
-    quat = Quaternion((1,0,0,0))
-    mat = quat.to_matrix().to_4x4()
+    unit = Quaternion().to_matrix().to_4x4()
     for pb in rig.pose.bones:
-        try:
-            qw = pb["McpRestW"]
-        except KeyError:
-            continue
-        pb.matrix_basis = mat
+        pb.matrix_basis = unit
     print("Set T-pose")
 
 
-class VIEW3D_OT_McpCreateTPoseButton(bpy.types.Operator):
-    bl_idname = "mcp.create_t_pose"
-    bl_label = "Create T-pose"
+class VIEW3D_OT_McpRestTPoseButton(bpy.types.Operator):
+    bl_idname = "mcp.rest_t_pose"
+    bl_label = "Rest T-pose"
+    bl_description = "Change rest pose to T-pose"
     bl_options = {'UNDO'}
 
     def execute(self, context):
         try:
-            createTPose(context)
+            target.getTargetArmature(context.object, context.scene)
+            restTPose(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
@@ -134,10 +142,12 @@ class VIEW3D_OT_McpCreateTPoseButton(bpy.types.Operator):
 class VIEW3D_OT_McpSetTPoseButton(bpy.types.Operator):
     bl_idname = "mcp.set_t_pose"
     bl_label = "Set T-pose"
+    bl_description = "Set pose to stored T-pose"
     bl_options = {'UNDO'}
 
     def execute(self, context):
         try:
+            target.getTargetArmature(context.object, context.scene)
             setTPose(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
@@ -147,10 +157,12 @@ class VIEW3D_OT_McpSetTPoseButton(bpy.types.Operator):
 class VIEW3D_OT_McpClearTPoseButton(bpy.types.Operator):
     bl_idname = "mcp.clear_t_pose"
     bl_label = "Clear T-pose"
+    bl_description = "Clear stored T-pose"
     bl_options = {'UNDO'}
 
     def execute(self, context):
         try:
+            target.getTargetArmature(context.object, context.scene)
             clearTPose(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
@@ -167,7 +179,10 @@ def saveTPose(context):
             bmat = pb.parent.matrix.inverted() * bmat
             rmat = pb.parent.bone.matrix_local.inverted() * rmat
         mat = rmat.inverted() * bmat
-        struct.append((pb.name, tuple(mat.to_quaternion())))
+        q = mat.to_quaternion()
+        magn = math.sqrt( (q.w-1)*(q.w-1) + q.x*q.x + q.y*q.y + q.z*q.z )
+        if magn > 1e-4:
+            struct.append((pb.name, tuple(q)))
     filepath = os.path.join(os.path.dirname(__file__), "t_pose.json")
     saveJson(struct, filepath)
 
@@ -175,10 +190,12 @@ def saveTPose(context):
 class VIEW3D_OT_McpSaveTPoseButton(bpy.types.Operator):
     bl_idname = "mcp.save_t_pose"
     bl_label = "Save T-pose"
+    bl_description = "Save current pose as T-pose (warning: changes T-pose definition permanently)"
     bl_options = {'UNDO'}
 
     def execute(self, context):
         try:
+            target.getTargetArmature(context.object, context.scene)
             saveTPose(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
