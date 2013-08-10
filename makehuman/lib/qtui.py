@@ -466,13 +466,6 @@ class Frame(QtGui.QMainWindow):
                 self.refreshLayout(child)
 
 class LogWindow(qtgui.ListView):
-    _logLevelColors = {
-        log.DEBUG: 'grey',
-        log.NOTICE: 'blue',
-        log.WARNING: 'darkorange',
-        log.ERROR: 'red',
-        log.CRITICAL: 'red'
-        }
 
     def __init__(self):
         super(LogWindow, self).__init__()
@@ -487,10 +480,11 @@ class LogWindow(qtgui.ListView):
         for i in xrange(self.count()):
             ilevel = self.getItemData(i)
             self.showItem(i, ilevel >= self.level)
+            self.setItemColor(i, log.getLevelColor(ilevel))
 
     def addLogMessage(self, text, level = None):
         index = self.count()
-        color = self._logLevelColors.get(level)
+        color = log.getLevelColor(level)
         self.addItem(text, color, level)
         self.showItem(index, level >= self.level)
 

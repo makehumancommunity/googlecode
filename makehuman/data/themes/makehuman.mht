@@ -2,3 +2,9 @@
 version 1.0.0
 creator Jonas Hauquier
 color clear 0.3 0.3 0.3
+
+logwindow_color DEBUG lightgrey
+logwindow_color NOTICE blue
+logwindow_color WARNING darkorange
+logwindow_color ERROR red
+logwindow_color CRITICAL red

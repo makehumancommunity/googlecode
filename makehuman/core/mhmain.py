@@ -675,6 +675,7 @@ class MHApplication(gui3d.Application, mh.Application):
 
         f = open(os.path.join(mh.getSysDataPath("themes/"), theme + ".mht"), 'r')
 
+        update_log = False
         for data in f.readlines():
             lineData = data.split()
 
@@ -685,6 +686,15 @@ class MHApplication(gui3d.Application, mh.Application):
                     if lineData[1] == "clear":
                         self.clearColor[:] = [float(val) for val in lineData[2:5]]
                         mh.setClearColor(float(lineData[2]), float(lineData[3]), float(lineData[4]), 1.0)
+                elif lineData[0] == "logwindow_color":
+                    logLevel = lineData[1]
+                    if hasattr(log, logLevel) and isinstance(getattr(log, logLevel), int):
+                        update_log = True
+                        logLevel = int(getattr(log, logLevel))
+                        log._logLevelColors[logLevel] = lineData[2]
+
+        if update_log:
+            self.log_window.updateView()
         log.debug("Loaded theme %s", mh.getSysDataPath('themes/'+theme+'.mht'))
 
         try:

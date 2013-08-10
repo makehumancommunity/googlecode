@@ -680,6 +680,9 @@ class ListView(QtGui.QListWidget, Widget):
     def getItemData(self, row):
         return self.item(row).getUserData()
 
+    def setItemColor(self, row, color):
+        self.item(row).setForeground(self.getBrush(color))
+
     def showItem(self, row, state):
         self.item(row).setHidden(not state)
 

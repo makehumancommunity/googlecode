@@ -90,6 +90,18 @@ class DowngradeFilter(logging.Filter):
             traceback.print_exc()
         return True
 
+_logLevelColors = {
+    DEBUG: 'grey',
+    NOTICE: 'blue',
+    WARNING: 'darkorange',
+    ERROR: 'red',
+    CRITICAL: 'red'
+}
+
+def getLevelColor(logLevel):
+    global _logLevelColors
+    return _logLevelColors.get(logLevel)
+
 class SplashLogHandler(logging.Handler):
     def emit(self, record):
         if G.app is not None and G.app.splash is not None:
