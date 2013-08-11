@@ -251,9 +251,9 @@ class Object3D(object):
         z2 = v3[:,2] - v1[:,2]
 
         fuv = self.texco[self.fuvs[f_ix]]
-        w1 = fvert[:,0,:]
-        w2 = fvert[:,1,:]
-        w3 = fvert[:,2,:]
+        w1 = fuv[:,0,:]
+        w2 = fuv[:,1,:]
+        w3 = fuv[:,2,:]
 
         s1 = w2[:,0] - w1[:,0]
         s2 = w3[:,0] - w1[:,0]
