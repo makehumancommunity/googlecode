@@ -64,7 +64,7 @@ class ModifierTaskView(gui3d.TaskView):
                 opts['min'] = temp
             if not 'label' in opts.keys():
                 opts['label'] = None
-                
+
         self.groupBoxes = []
         self.radioButtons = []
         self.sliders = []
@@ -102,7 +102,7 @@ class ModifierTaskView(gui3d.TaskView):
                         right = '-'.join([base, tname, tright])
                     else:
                         tname, opts = template
-                        resolveOptionsDict(opts)                       
+                        resolveOptionsDict(opts)
                         left = None
                         right = '-'.join([base, tname])
 
@@ -192,6 +192,8 @@ class FaceTaskView(ModifierTaskView):
     _group = 'face'
     _features = [
         ('head shape', 'head', [
+            ('head-age', 'less', 'more', {'cam' : 'frontView'}),
+            ('head-angle', 'in', 'out', {'cam' : 'rightView'}),
             ('head-oval', {'cam' : 'frontView'}),
             ('head-round', {'cam' : 'frontView'}),
             ('head-rectangular', {'cam' : 'frontView'}),
@@ -200,15 +202,24 @@ class FaceTaskView(ModifierTaskView):
             ('head-invertedtriangular', {'cam' : 'frontView'}),
             ('head-diamond', {'cam' : 'frontView'}),
             ]),
-        ('head', 'head', [
-            ('head-age', 'less', 'more', {'cam' : 'frontView'}),
-            ('head-angle', 'in', 'out', {'cam' : 'rightView'}),
+        ('head size', 'head', [
             ('head-scale-depth', 'less', 'more', {'cam' : 'rightView'}),
             ('head-scale-horiz', 'less', 'more', {'cam' : 'frontView'}),
             ('head-scale-vert', 'more', 'less', {'cam' : 'frontView'}),
             ('head-trans', 'in', 'out', {'cam' : 'frontView'}),
             ('head-trans', 'down', 'up', {'cam' : 'frontView'}),
             ('head-trans', 'forward', 'backward', {'cam' : 'rightView'}),
+            ]),
+        ('forehead', 'forehead', [
+            ('forehead-trans-depth', 'less', 'more', {'cam' : 'rightView'}),
+            ('forehead-scale-vert', 'less', 'more', {'cam' : 'rightView'}),
+            ('forehead-nubian', 'less', 'more', {'cam' : 'rightView'}),
+            ('forehead-temple', 'in', 'out', {'cam' : 'frontView'}),
+            ]),
+        ('eyebrows', 'eyebrows', [
+            ('eyebrows-trans-depth', 'less', 'more', {'cam' : 'rightView'}),
+            ('eyebrows-angle', 'up', 'down', {'cam' : 'frontView'}),
+            ('eyebrows-trans-vert', 'less', 'more', {'cam' : 'frontView'}),
             ]),
         ('neck', 'neck', [
             ('neck-scale-depth', 'less', 'more', {'cam' : 'rightView'}),
@@ -570,7 +581,7 @@ class MacroTaskView(ModifierTaskView):
 
     def syncStatus(self):
         human = gui3d.app.selectedHuman
-        
+
         if human.getGender() == 0.0:
             gender = gui3d.app.getLanguageString('female')
         elif human.getGender() == 1.0:
@@ -579,7 +590,7 @@ class MacroTaskView(ModifierTaskView):
             gender = gui3d.app.getLanguageString('neutral')
         else:
             gender = gui3d.app.getLanguageString('%.2f%% female, %.2f%% male') % ((1.0 - human.getGender()) * 100, human.getGender() * 100)
-        
+
         age = human.getAgeYears()
         muscle = (human.getMuscle() * 100.0)
         weight = (50 + (150 - 50) * human.getWeight())
