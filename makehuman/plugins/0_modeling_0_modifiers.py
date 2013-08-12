@@ -211,7 +211,7 @@ class FaceTaskView(ModifierTaskView):
             ('head-trans', 'forward', 'backward', {'cam' : 'rightView'}),
             ]),
         ('forehead', 'forehead', [
-            ('forehead-trans-depth', 'less', 'more', {'cam' : 'rightView'}),
+            ('forehead-trans-depth', 'forward', 'backward', {'cam' : 'rightView'}),
             ('forehead-scale-vert', 'less', 'more', {'cam' : 'rightView'}),
             ('forehead-nubian', 'less', 'more', {'cam' : 'rightView'}),
             ('forehead-temple', 'in', 'out', {'cam' : 'frontView'}),
@@ -225,9 +225,9 @@ class FaceTaskView(ModifierTaskView):
             ('neck-scale-depth', 'less', 'more', {'cam' : 'rightView'}),
             ('neck-scale-horiz', 'less', 'more', {'cam' : 'frontView'}),
             ('neck-scale-vert', 'more', 'less', {'cam' : 'frontView'}),
-            ('neck-trans', 'in', 'out', {'cam' : 'frontView'}),
-            ('neck-trans', 'down', 'up', {'cam' : 'frontView'}),
-            ('neck-trans', 'forward', 'backward', {'cam' : 'rightView'}),
+            ('neck-trans-horiz', 'in', 'out', {'cam' : 'frontView'}),
+            ('neck-trans-vert', 'down', 'up', {'cam' : 'frontView'}),
+            ('neck-trans-depth', 'forward', 'backward', {'cam' : 'rightView'}),
             ]),
         ('right eye', 'eyes', [
             ('r-eye-height1', 'min', 'max', {'cam' : 'frontView'}),
