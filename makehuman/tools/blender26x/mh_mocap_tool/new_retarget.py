@@ -354,7 +354,7 @@ def retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
     scn = context.scene
     if scn.McpUseTPose and not trgRig.McpHasTPose:
         scn.objects.active = trgRig
-        t_pose.restTPose(context)
+        t_pose.setTPoseAsRestPose(context)
 
     if doFK:
         anim = setupMhxAnimation(scn, srcRig, trgRig)
@@ -679,7 +679,7 @@ def loadRetargetSimplify(context, filepath):
     scn = context.scene
     (srcRig, trgRig) = load.readBvhFile(context, filepath, scn, False)
     load.renameAndRescaleBvh(context, srcRig, trgRig)
-    retargetMhxRig(context, srcRig, trgRig, True, scn.McpRetargetIK)
+    retargetMhxRig(context, srcRig, trgRig, True, False)
     scn = context.scene
     if scn.McpDoSimplify:
         simplify.simplifyFCurves(context, trgRig, False, False)
@@ -708,7 +708,7 @@ class VIEW3D_OT_NewRetargetMhxButton(bpy.types.Operator):
             target.getTargetArmature(trgRig, scn)
             for srcRig in context.selected_objects:
                 if srcRig != trgRig:
-                    retargetMhxRig(context, srcRig, trgRig, True, scn.McpRetargetIK)
+                    retargetMhxRig(context, srcRig, trgRig, True, False)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}

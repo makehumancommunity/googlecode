@@ -36,11 +36,10 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 """
 
 bl_info = {
-    "name": "MHX Mocap",
+    "name": "MakeMotion",
     "author": "Thomas Larsson",
-    "version": "0.901",
-    "blender": (2, 6, 3),
-    "api": 44000,
+    "version": "0.902",
+    "blender": (2, 6, 7),
     "location": "View3D > Properties > MHX Mocap",
     "description": "Mocap tool for MHX rig",
     "warning": "",
@@ -82,10 +81,8 @@ Batch run:
 
 # To support reload properly, try to access a package var, if it's there, reload everything
 if "bpy" in locals():
-    print("Reloading Mocap tool")
+    print("Reloading MakeMotion")
     import imp
-    #imp.reload(source_rigs)
-    #imp.reload(target_rigs)
     imp.reload(utils)
     imp.reload(io_json)
     imp.reload(mcp)
@@ -103,13 +100,11 @@ if "bpy" in locals():
     imp.reload(plant)
     imp.reload(sigproc)
 else:
-    print("Loading Mocap tool")
+    print("Loading MakeMotion")
     import bpy, os
     from bpy_extras.io_utils import ImportHelper
     from bpy.props import *
 
-    #from . import source_rigs
-    #from . import target_rigs
     from . import utils
     from . import io_json
     from . import mcp
@@ -133,7 +128,7 @@ else:
 #
 
 class MainPanel(bpy.types.Panel):
-    bl_label = "MH Mocap: Main v %s" % bl_info["version"]
+    bl_label = "MakeMotion: Main v %s" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     #bl_options = {'DEFAULT_CLOSED'}
@@ -144,8 +139,28 @@ class MainPanel(bpy.types.Panel):
             return True
 
     def draw(self, context):
-        self.layout.operator("mcp.load_and_retarget")
-        self.layout.separator()
+        layout = self.layout
+        scn = context.scene
+        layout.operator("mcp.load_and_retarget")
+
+        layout.separator()
+        layout.operator("mcp.retarget_ik")
+
+        layout.separator()
+        layout.label("Debugging")
+        #layout.prop(scn, "McpRot90Anim")
+        layout.prop(scn, "McpFlipYAxis")
+        layout.operator("mcp.load_bvh")
+        layout.operator("mcp.rename_bvh")
+        layout.operator("mcp.load_and_rename_bvh")
+
+        layout.separator()
+        layout.operator("mcp.new_retarget_mhx")
+
+        layout.separator()
+        layout.operator("mcp.simplify_fcurves")
+        layout.operator("mcp.rescale_fcurves")
+
 
 ########################################################################
 #
@@ -153,7 +168,7 @@ class MainPanel(bpy.types.Panel):
 #
 
 class OptionsPanel(bpy.types.Panel):
-    bl_label = "MH Mocap: Options"
+    bl_label = "MakeMotion: Options"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -168,58 +183,33 @@ class OptionsPanel(bpy.types.Panel):
         scn = context.scene
         ob = context.object
 
-        row = layout.row()
-        row.prop(scn, "McpAutoScale")
-        row.prop(scn, "McpBvhScale")
-        row = layout.row()
-        row.prop(scn, "McpStartFrame")
-        row.prop(scn, "McpEndFrame")
-        row = layout.row()
-        row.prop(scn, 'McpGuessSourceRig')
-        row.prop(scn, 'McpGuessTargetRig')
-        row = layout.row()
-        row.prop(scn, "McpUseSpineOffset")
-        row.prop(scn, "McpUseClavOffset")
+        layout.prop(scn, "McpAutoScale")
+        layout.prop(scn, "McpBvhScale")
+        layout.prop(scn, "McpStartFrame")
+        layout.prop(scn, "McpEndFrame")
+        layout.prop(scn, 'McpGuessSourceRig')
+        layout.prop(scn, 'McpGuessTargetRig')
+        layout.prop(scn, "McpUseSpineOffset")
+        layout.prop(scn, "McpUseClavOffset")
         layout.prop(scn, "McpUseTPose")
 
         layout.separator()
         layout.label("SubSample")
         layout.prop(scn, "McpDefaultSS")
         if not scn.McpDefaultSS:
-            row = layout.row()
-            row.prop(scn, "McpSubsample")
-            row.prop(scn, "McpSSFactor")
-            row = layout.row()
-            row.prop(scn, "McpRescale")
-            row.prop(scn, "McpRescaleFactor")
-            layout.operator("mcp.rescale_fcurves")
+            layout.prop(scn, "McpSubsample")
+            layout.prop(scn, "McpSSFactor")
+            layout.prop(scn, "McpRescale")
+            layout.prop(scn, "McpRescaleFactor")
 
         layout.separator()
         layout.label("Simplification")
         layout.prop(scn, "McpDoSimplify")
-        row = layout.row()
-        row.prop(scn, "McpErrorLoc")
-        row.prop(scn, "McpErrorRot")
-        row = layout.row()
-        row.prop(scn, "McpSimplifyVisible")
-        row.prop(scn, "McpSimplifyMarkers")
-        layout.operator("mcp.simplify_fcurves")
+        layout.prop(scn, "McpErrorLoc")
+        layout.prop(scn, "McpErrorRot")
+        layout.prop(scn, "McpSimplifyVisible")
+        layout.prop(scn, "McpSimplifyMarkers")
 
-        layout.separator()
-        layout.label("Debugging")
-        #layout.prop(scn, "McpRot90Anim")
-        layout.prop(scn, "McpFlipYAxis")
-        layout.operator("mcp.load_bvh")
-        layout.operator("mcp.rename_bvh")
-        layout.operator("mcp.load_and_rename_bvh")
-
-        layout.separator()
-        layout.operator("mcp.new_retarget_mhx")
-
-        layout.separator()
-        layout.label("IK retargeting")
-        layout.prop(scn, "McpRetargetIK")
-        layout.operator("mcp.retarget_ik")
 
 
         return
@@ -246,7 +236,7 @@ class OptionsPanel(bpy.types.Panel):
 #
 
 class EditPanel(bpy.types.Panel):
-    bl_label = "MH Mocap: Edit Actions"
+    bl_label = "MakeMotion: Edit Actions"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -349,7 +339,7 @@ class EditPanel(bpy.types.Panel):
 #
 
 class MhxSourceBonesPanel(bpy.types.Panel):
-    bl_label = "MH Mocap: Source armature"
+    bl_label = "MakeMotion: Source armature"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -395,7 +385,7 @@ class MhxSourceBonesPanel(bpy.types.Panel):
 #
 
 class MhxTargetBonesPanel(bpy.types.Panel):
-    bl_label = "MH Mocap: Target armature"
+    bl_label = "MakeMotion: Target armature"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -449,7 +439,7 @@ class MhxTargetBonesPanel(bpy.types.Panel):
 #
 
 class UtilityPanel(bpy.types.Panel):
-    bl_label = "MH Mocap: Utilities"
+    bl_label = "MakeMotion: Utilities"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -482,6 +472,14 @@ class UtilityPanel(bpy.types.Panel):
         #layout.prop(scn, "McpReallyDelete")
         layout.operator("mcp.delete").answer=""
         layout.operator("mcp.delete_hash")
+
+        layout.separator()
+        layout.label("T-pose")
+        layout.operator("mcp.set_t_pose")
+        layout.operator("mcp.clear_t_pose")
+        layout.operator("mcp.rest_t_pose")
+        layout.operator("mcp.rest_default_pose")
+        layout.operator("mcp.save_t_pose")
 
         return
         layout.operator("mcp.copy_angles_fk_ik")

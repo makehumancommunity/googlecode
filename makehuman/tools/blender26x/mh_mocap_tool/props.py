@@ -85,18 +85,10 @@ def initInterface(context):
         description="Use offset for clavicles",
         default=True)
 
-    bpy.types.Scene.McpRetargetIK = BoolProperty(
-        name="Retarget IK Automatically",
-        description="Include IK bones in retargeting",
-        default=False)
-
     bpy.types.Scene.McpNewRetarget = BoolProperty(
         name="New Retarget",
         description="Use new retarget",
         default=True)
-
-
-
 
     # Subsample and rescale
 
@@ -250,8 +242,32 @@ def initInterface(context):
         description = "Automatically change rest pose to T-pose",
         default = True)
 
-    bpy.types.Object.McpHasTPose = BoolProperty(
+    bpy.types.Object.McpTPoseLoaded = BoolProperty(
         default = False)
+
+    bpy.types.Object.McpRestTPose = BoolProperty(
+        default = False)
+
+    bpy.types.Object.McpTPoseFile = StringProperty(
+        default = "t_pose.json")
+
+    bpy.types.Object.McpArmatureName = StringProperty(
+        default = "")
+
+    bpy.types.Object.McpArmatureModifier = StringProperty(
+        default = "")
+
+    bpy.types.PoseBone.McpQuatW = FloatProperty(
+        default = 1.0 )
+
+    bpy.types.PoseBone.McpQuatX = FloatProperty(
+        default = 0.0 )
+
+    bpy.types.PoseBone.McpQuatY = FloatProperty(
+        default = 0.0 )
+
+    bpy.types.PoseBone.McpQuatZ = FloatProperty(
+        default = 0.0 )
 
     # Source and Target
 
