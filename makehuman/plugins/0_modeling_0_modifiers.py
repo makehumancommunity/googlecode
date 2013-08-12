@@ -237,7 +237,7 @@ class FaceTaskView(ModifierTaskView):
             ('r-eye-push2', 'in', 'out', {'cam' : 'frontView'}),
             ('r-eye-move', 'in', 'out', {'cam' : 'frontView'}),
             ('r-eye-move', 'up', 'down', {'cam' : 'frontView'}),
-            ('r-eye', 'small', 'big', {'cam' : 'frontView'}),
+            ('r-eye-size', 'small', 'big', {'cam' : 'frontView'}),
             ('r-eye-corner1', 'up', 'down', {'cam' : 'frontView'}),
             ('r-eye-corner2', 'up', 'down', {'cam' : 'frontView'})
             ]),
@@ -249,7 +249,7 @@ class FaceTaskView(ModifierTaskView):
             ('l-eye-push2', 'in', 'out', {'cam' : 'frontView'}),
             ('l-eye-move', 'in', 'out', {'cam' : 'frontView'}),
             ('l-eye-move', 'up', 'down', {'cam' : 'frontView'}),
-            ('l-eye', 'small', 'big', {'cam' : 'frontView'}),
+            ('l-eye-size', 'small', 'big', {'cam' : 'frontView'}),
             ('l-eye-corner1', 'up', 'down', {'cam' : 'frontView'}),
             ('l-eye-corner2', 'up', 'down', {'cam' : 'frontView'}),
             ]),
