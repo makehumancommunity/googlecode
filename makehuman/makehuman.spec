@@ -2,6 +2,9 @@
 VERSION="1.0alpha8"
 import sys
 import subprocess
+import zipfile
+import os
+import os.path
 
 def SvnInfo():
     import os
@@ -82,6 +85,7 @@ def SvnInfo():
     return get_svn_revision_1()
 
 VERSION="%s (%s)" % (VERSION,SvnInfo())
+VERSION_FN="%s-r%s" % (VERSION,SvnInfo())
 vfile = open(os.path.join("core","VERSION"),"w")
 vfile.write(VERSION)
 vfile.close()
@@ -113,9 +117,9 @@ def extra_datas(mydir):
     rec_glob("%s/*" % mydir, files)
     extra_datas = []
     for f in files:
-#        if mydir == 'data' and f.endswith(".target"):
-#            print "skipping %s" % f
-#        else:
+        if mydir == 'data' and f.endswith(".target"):
+            print "skipping %s" % f
+        else:
         extra_datas.append((f, f, 'DATA'))
 
     return extra_datas
@@ -173,5 +177,12 @@ elif sys.platform == 'win32':
         strip=None,
         upx=True,
         name='makehuman')
+    target_dir = os.path.join('dist','makehuman')
+    zip = zipfile.ZipFile('dist/makehuman-%s.zip' % VERSION_FN, 'w', zipfile.ZIP_DEFLATED)
+    rootlen = len(target_dir) + 1
+    for base, dirs, files in os.walk(target_dir):
+        for file in files:
+            fn = os.path.join(base, file)
+            zip.write(fn, fn[rootlen:])                           
         
 os.remove(os.path.join("core","VERSION"))
