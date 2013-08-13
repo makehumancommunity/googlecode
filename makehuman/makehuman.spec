@@ -120,7 +120,7 @@ def extra_datas(mydir):
         if mydir == 'data' and f.endswith(".target"):
             print "skipping %s" % f
         else:
-        extra_datas.append((f, f, 'DATA'))
+            extra_datas.append((f, f, 'DATA'))
 
     return extra_datas
 ###########################################
