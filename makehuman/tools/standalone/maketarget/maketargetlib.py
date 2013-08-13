@@ -259,7 +259,7 @@ class Target(object):
         lineNb = 0
         try:
             while data:
-            	lineNb = lineNb +1
+                lineNb = lineNb +1
                 dataList = data.split()
                 if dataList:
                     index = int(dataList[0])

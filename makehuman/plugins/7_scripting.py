@@ -437,19 +437,19 @@ class ScriptingExecuteTab(gui3d.TaskView):
 
             desiredWidth = self.widthEdit.getText()
             if(desiredWidth == None or not desiredWidth.isdigit()):
-            	dlg.prompt("Input error","Width and height must be valid integers","OK")
+                dlg.prompt("Input error","Width and height must be valid integers","OK")
                 return
 
             desiredHeight = self.heightEdit.getText()
             if(desiredHeight == None or not desiredHeight.isdigit()):
-            	dlg.prompt("Input error","Width and height must be valid integers","OK")
+                dlg.prompt("Input error","Width and height must be valid integers","OK")
                 return
 
             desiredWidth = int(desiredWidth)
             desiredHeight = int(desiredHeight)
 
             if(desiredHeight < 100 or desiredWidth < 100):
-            	dlg.prompt("Input error","Width and height must be at least 100 pixels each","OK")
+                dlg.prompt("Input error","Width and height must be at least 100 pixels each","OK")
                 return
 
             # This is because we're excluding a passepartout when doing screenshots.
@@ -520,7 +520,7 @@ class Scripting():
     def printDetailStack(self):
         log.message("SCRIPT: printDetailStack()")
         for target in self.human.targetsDetailStack.keys():
-		print str(self.human.targetsDetailStack[target]) + "\t" + target
+        print str(self.human.targetsDetailStack[target]) + "\t" + target
 
     def setAge(self,age):
         log.message("SCRIPT: setAge(" + str(age) + ")")

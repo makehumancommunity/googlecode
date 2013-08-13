@@ -325,9 +325,9 @@ class MakeTargetGUI(wx.App):
         if self.inputFromFolder:
             args.append("--dir=%s"% self.inputField.GetValue())
             if self.infolderTypeRadio.GetStringSelection() == "Target":
-            	args.append("--intype=target")
+                args.append("--intype=target")
             else:
-            	args.append("--intype=obj")
+                args.append("--intype=obj")
         elif self.inputField.GetValue():
             args.append("--in=%s"% self.inputField.GetValue())
             
@@ -343,7 +343,7 @@ class MakeTargetGUI(wx.App):
             args.append("--outtype")
             args.append("obj")
         else:
-        	args.append("target")
+            args.append("target")
         
         ## for DEBUGging
         if DEBUG:
