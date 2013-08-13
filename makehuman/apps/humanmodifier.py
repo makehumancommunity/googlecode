@@ -37,42 +37,42 @@ import targets
 
 # Gender
 # -
-# female    1.0 0.5 1.0
-# male      0.0 0.5 1.0
+# female          1.0  0.5  1.0
+# male            0.0  0.5  1.0
 
 # Age
 # -
-# baby      1.0 0.0 0.0 0.0
-# child     0.0 1.0 0.0 0.0
-# young     0.0 0.0 1.0 0.0
-# old       0.0 0.0 0.0 1.0
+# baby            1.0  0.0  0.0  0.0
+# child           0.0  1.0  0.0  0.0
+# young           0.0  0.0  1.0  0.0
+# old             0.0  0.0  0.0  1.0
 
 # Weight
 # -
-# light     1.0 0.0 0.0
-# averageWeight 0.0 1.0 0.0
-# heavy     0.0 0.0 1.0
+# light           1.0  0.0  0.0
+# averageWeight   0.0  1.0  0.0
+# heavy           0.0  0.0  1.0
 
 # Muscle
 # -
-# flaccid   1.0 0.0 0.0
-# averageTone   0.0 1.0 0.0
-# muscle    0.0 0.0 1.0
+# flaccid         1.0  0.0  0.0
+# averageTone     0.0  1.0  0.0
+# muscle          0.0  0.0  1.0
 
 # Height
 # -
-# dwarf     1.0 0.0 0.0
-# giant     0.0 0.0 1.0
+# dwarf           1.0  0.0  0.0
+# giant           0.0  0.0  1.0
 
 # BreastFirmness
 # -
-# firmness0 1.0 0.5 1.0
-# firmness1 0.0 0.5 1.0
+# firmness0       1.0  0.5  1.0
+# firmness1       0.0  0.5  1.0
 
 # BreastSize
 # -
-# cup1      1.0 0.0 0.0
-# cup2      0.0 0.0 1.0
+# cup1            1.0  0.0  0.0
+# cup2            0.0  0.0  1.0
 
 # African
 
