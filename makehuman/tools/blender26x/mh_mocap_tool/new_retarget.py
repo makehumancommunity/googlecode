@@ -302,7 +302,7 @@ def setupFkBones(srcRig, trgRig, boneAssoc, parAssoc, anim, scn):
 
 
         trgRoll = utils.getRoll(trgBone.bone)
-        srcRoll = source.getSourceRoll(srcName) * Deg2Rad
+        srcRoll = source.getSourceRoll(srcName, scn) * Deg2Rad
         diff = srcRoll - trgRoll
 
         if srcName in keepOffsets:

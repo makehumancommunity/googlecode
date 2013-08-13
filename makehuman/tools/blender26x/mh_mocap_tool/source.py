@@ -123,17 +123,20 @@ def setArmature(rig, scn):
 #   findSourceKey(mhx, struct):
 #
 
-def findSourceKey(mhx, struct):
+def findSourceKey(bname, struct):
     for bone in struct.keys():
-        (mhx1, twist) = struct[bone]
-        if mhx == mhx1:
+        (bname1, twist) = struct[bone]
+        if bname == bname1:
             return (bone, twist)
     return (None, 0)
 
 
-def getSourceRoll(mhx):
-    (bone, roll) = findSourceKey(mhx, mcp.srcArmature.armature)
-    return roll
+def getSourceRoll(bname, scn):
+    if scn.McpAutoCorrectTPose:
+        return 0
+    else:
+        _,roll = findSourceKey(bname, mcp.srcArmature.armature)
+        return roll
 
 
 def canonicalSrcName(string):

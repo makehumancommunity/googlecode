@@ -235,6 +235,7 @@ def loadTPose(rig):
 
     for name,value in struct:
         bname = getBoneName(rig, name)
+        print("  ", name, bname)
         try:
             pb = rig.pose.bones[bname]
             quat = Quaternion(value)
