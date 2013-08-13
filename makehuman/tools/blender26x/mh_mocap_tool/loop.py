@@ -34,8 +34,8 @@ from .utils import MocapError
 #   normalizeRotCurves(scn, rig, fcurves, frames)
 #
 
-        
-def normalizeRotCurves(scn, rig, fcurves, frames):        
+
+def normalizeRotCurves(scn, rig, fcurves, frames):
     hasQuat = {}
     for fcu in fcurves:
         (name, mode) = utils.fCurveIdentity(fcu)
@@ -46,8 +46,8 @@ def normalizeRotCurves(scn, rig, fcurves, frames):
         scn.frame_set(frame)
         for (name, pb) in hasQuat.items():
             pb.rotation_quaternion.normalize()
-            pb.keyframe_insert("rotation_quaternion", group=name)  
-    return            
+            pb.keyframe_insert("rotation_quaternion", group=name)
+    return
 
 #
 #   loopFCurves(context):
@@ -93,38 +93,38 @@ def loopFCurves(context):
                 #    restInv = restInv * parRest
 
                 for frame in frames:
-                    scn.frame_set(frame)    
+                    scn.frame_set(frame)
                     head = pb.head.copy() - (frame-minTime)*offs
                     diff = head - pb.bone.head_local
                     #if pb.parent:
-                    #    parMat = pb.parent.matrix.to_3x3()                        
-                    #    diff = parMat.inverted() * diff                        
-                    pb.location = restInv * diff                    
-                    pb.keyframe_insert("location", group=pb.name)  
+                    #    parMat = pb.parent.matrix.to_3x3()
+                    #    diff = parMat.inverted() * diff
+                    pb.location = restInv * diff
+                    pb.keyframe_insert("location", group=pb.name)
                 # pb.matrix_basis = pb.bone.matrix_local.inverted() * par.bone.matrix_local * par.matrix.inverted() * pb.matrix
 
         for fcu in fcurves:
             (name, mode) = utils.fCurveIdentity(fcu)
             if utils.isLocation(mode):
                 loopFCurve(fcu, minTime, maxTime, scn)
-    print("F-curves looped")                
+    print("F-curves looped")
     return
-    
-    
-    
+
+
+
 def loopFCurve(fcu, t0, tn, scn):
     delta = scn.McpLoopBlendRange
-    
+
     v0 = fcu.evaluate(t0)
     vn = fcu.evaluate(tn)
     fcu.keyframe_points.insert(frame=t0, value=v0)
     fcu.keyframe_points.insert(frame=tn, value=vn)
-    (mode, upper, lower, diff) = simplify.getFCurveLimits(fcu) 
-    if mode == 'location': 
-        dv = vn-v0        
+    (mode, upper, lower, diff) = simplify.getFCurveLimits(fcu)
+    if mode == 'location':
+        dv = vn-v0
     else:
         dv = 0.0
-        
+
     newpoints = []
     for dt in range(delta):
         eps = 0.5*(1-dt/delta)
@@ -138,7 +138,7 @@ def loopFCurve(fcu, t0, tn, scn):
         elif (v1 < lower) and (vm > upper):
             vm -= diff
         pt1 = (t1, (eps*vm + (1-eps)*v1))
-        
+
         t1 = t0-dt
         v1 = fcu.evaluate(t1) + dv
         tm = tn-dt
@@ -148,12 +148,12 @@ def loopFCurve(fcu, t0, tn, scn):
         elif (v1 < lower) and (vm > upper):
             v1 += diff
         ptm = (tm, eps*v1 + (1-eps)*vm)
-        
+
         #print("  ", pt1,ptm)
         newpoints.extend([pt1,ptm])
-        
+
     newpoints.sort()
-    for (t,v) in newpoints: 
+    for (t,v) in newpoints:
         fcu.keyframe_points.insert(frame=t, value=v)
     return
 
@@ -167,9 +167,9 @@ class VIEW3D_OT_McpLoopFCurvesButton(bpy.types.Operator):
             loopFCurves(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
-    
-#    
+        return{'FINISHED'}
+
+#
 #   repeatFCurves(context, nRepeats):
 #
 
@@ -196,7 +196,7 @@ def repeatFCurves(context, nRepeats):
                 fcu.keyframe_points.insert(t+dt, y+dy, options={'FAST'})
     print("F-curves repeated %d times" % nRepeats)
     return
-                
+
 class VIEW3D_OT_McpRepeatFCurvesButton(bpy.types.Operator):
     bl_idname = "mcp.repeat_fcurves"
     bl_label = "Repeat F-curves"
@@ -207,8 +207,8 @@ class VIEW3D_OT_McpRepeatFCurvesButton(bpy.types.Operator):
             repeatFCurves(context, context.scene.McpRepeatNumber)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
-    
+        return{'FINISHED'}
+
 
 #
 #   stitchActions(context):
@@ -260,7 +260,7 @@ def stitchActions(context):
 
     rig.animation_data.action = action.getAction(scn.McpOutputActionName)
     utils.setInterpolation(rig)
-    return        
+    return
 
 
 def translateFCurves(fcurves, dt):
@@ -270,12 +270,12 @@ def translateFCurves(fcurves, dt):
             kpts.reverse()
             for kp in kpts:
                 kp.co[0] += dt
-        elif dt < 0:                
+        elif dt < 0:
             for kp in fcu.keyframe_points:
                 kp.co[0] += dt
     return
-   
-    
+
+
 class VIEW3D_OT_McpStitchActionsButton(bpy.types.Operator):
     bl_idname = "mcp.stitch_actions"
     bl_label = "Stitch Actions"
@@ -286,22 +286,21 @@ class VIEW3D_OT_McpStitchActionsButton(bpy.types.Operator):
             stitchActions(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
-    
-    
+        return{'FINISHED'}
+
+
 #
-#   shiftBoneFCurves(context):
+#   shiftBoneFCurves(rig, scn):
 #   class VIEW3D_OT_McpShiftBoneFCurvesButton(bpy.types.Operator):
 #
 
-def shiftBoneFCurves(context):
-    frame = context.scene.frame_current
-    rig = context.object
+def shiftBoneFCurves(rig, scn):
+    frame = scn.frame_current
     act = utils.getAction(rig)
     if not act:
         return
-    (origLoc, origRot, touchedLoc, touchedRot) = setupOrigAndTouched(context, act, frame)
-    touchBones(rig, frame, touchedLoc, touchedRot)    
+    (origLoc, origRot, touchedLoc, touchedRot) = setupOrigAndTouched(rig, act, frame)
+    touchBones(rig, frame, touchedLoc, touchedRot)
     for fcu in act.fcurves:
         (name, mode) = utils.fCurveIdentity(fcu)
         try:
@@ -310,21 +309,21 @@ def shiftBoneFCurves(context):
             elif  utils.isLocation(mode):
                 dy = fcu.evaluate(frame) - origLoc[fcu.array_index][fcu.data_path]
         except:
-            continue     
+            continue
         for kp in fcu.keyframe_points:
             if kp.co[0] != frame:
                 kp.co[1] += dy
-    return
-    
-def setupOrigAndTouched(context, act, frame):
+
+
+def setupOrigAndTouched(rig, act, frame):
     origLoc = utils.quadDict()
     origRot = utils.quadDict()
     touchedLoc = {}
     touchedRot = {}
     for fcu in act.fcurves:
         (name, mode) = utils.fCurveIdentity(fcu)
-        for pb in context.selected_pose_bones:
-            if pb.name == name:
+        for pb in rig.pose.bones:
+            if pb.bone.select and pb.name == name:
                 #kp = fcu.keyframe_points[frame]
                 y = fcu.evaluate(frame)
                 if utils.isRotation(mode):
@@ -333,7 +332,8 @@ def setupOrigAndTouched(context, act, frame):
                 elif utils.isLocation(mode):
                     origLoc[fcu.array_index][fcu.data_path] = y
                     touchedLoc[pb.name] = True
-    return (origLoc, origRot, touchedLoc, touchedRot)                    
+    return (origLoc, origRot, touchedLoc, touchedRot)
+
 
 def touchBones(rig, frame, touchedLoc, touchedRot):
     for name in touchedRot.keys():
@@ -342,7 +342,7 @@ def touchBones(rig, frame, touchedLoc, touchedRot):
     for name in touchedLoc.keys():
         pb = rig.pose.bones[name]
         pb.keyframe_insert("location", frame=frame, group=pb.name)
-    return        
+
 
 class VIEW3D_OT_McpShiftBoneFCurvesButton(bpy.types.Operator):
     bl_idname = "mcp.shift_bone"
@@ -351,9 +351,9 @@ class VIEW3D_OT_McpShiftBoneFCurvesButton(bpy.types.Operator):
 
     def execute(self, context):
         try:
-            shiftBoneFCurves(context)
+            shiftBoneFCurves(context.object, context.scene)
             print("Bones shifted")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
-        
+        return{'FINISHED'}
+

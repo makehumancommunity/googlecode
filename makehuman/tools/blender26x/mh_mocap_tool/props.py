@@ -33,9 +33,9 @@ def initInterface(context):
 
     # Load and retarget
 
-    bpy.types.Scene.McpAdvanced = BoolProperty(
-        name="Advanced options",
-        description="Show advanced options",
+    bpy.types.Scene.McpShowDetailSteps = BoolProperty(
+        name="Detailed Steps",
+        description="Show retarget steps",
         default=False)
 
     bpy.types.Scene.McpBvhScale = FloatProperty(
@@ -89,6 +89,14 @@ def initInterface(context):
         name="New Retarget",
         description="Use new retarget",
         default=True)
+
+    bpy.types.Object.McpIsTargetRig = BoolProperty(
+        name="Is Target Rig",
+        default=False)
+
+    bpy.types.Object.McpIsSourceRig = BoolProperty(
+        name="Is Source Rig",
+        default=False)
 
     # Subsample and rescale
 
@@ -237,9 +245,14 @@ def initInterface(context):
 
     # T_Pose
 
-    bpy.types.Scene.McpUseTPose = BoolProperty(
+    bpy.types.Scene.McpUseTPoseAsRestPose = BoolProperty(
         name = "Auto Rest T-Pose",
         description = "Automatically change rest pose to T-pose",
+        default = True)
+
+    bpy.types.Scene.McpAutoCorrectTPose = BoolProperty(
+        name = "Auto Correct T-Pose",
+        description = "Automatically F-curves to fit T-pose at frame 0",
         default = True)
 
     bpy.types.Object.McpTPoseLoaded = BoolProperty(

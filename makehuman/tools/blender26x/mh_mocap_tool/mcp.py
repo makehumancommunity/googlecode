@@ -7,7 +7,7 @@
 #
 #  This program is distributed in  hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even  implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See 
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of  GNU General Public License
@@ -35,6 +35,10 @@ targetRolls = []
 targetMats = []
 actions = []
 
+#sourceArmatures = {}
+#targetArmature = {}
+#srcArmature = None
+#trgArmature = None
 
 F_Rev = 1
 F_LR = 2

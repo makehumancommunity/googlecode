@@ -256,6 +256,7 @@ def readBvhFile(context, filepath, scn, scan):
     if frameno == 1:
         print("Warning: No frames in range %d -- %d." % (startFrame, endFrame))
     renameBvhRig(rig, filepath)
+    rig.McpIsSourceRig = True
     return (rig, trgRig)
 
 #
@@ -409,7 +410,7 @@ def renameBones(srcRig, scn):
 def getTargetFromSource(srcName):
     lname = source.canonicalSrcName(srcName)
     try:
-        return mcp.srcArmature[lname]
+        return mcp.srcArmature.armature[lname]
     except KeyError:
         pass
     raise MocapError("No target bone corresponding to source bone %s (%s)" % (srcName, lname))
@@ -545,12 +546,15 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
     except:
         pass
 
+    from . import t_pose
     scn = context.scene
     scn.objects.active = srcRig
     scn.update()
     #(srcRig, srcBones, action) =  renameBvhRig(rig, filepath)
     target.getTargetArmature(trgRig, scn)
     source.findSrcArmature(context, srcRig)
+    print("RARB", srcRig, scn)
+    t_pose.addTPoseAtFrame0(srcRig, scn)
     renameBones(srcRig, scn)
     utils.setInterpolation(srcRig)
     rescaleRig(context.scene, trgRig, srcRig)

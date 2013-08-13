@@ -36,7 +36,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 """
 
 bl_info = {
-    "name": "MakeMotion",
+    "name": "MakeHumanMotion",
     "author": "Thomas Larsson",
     "version": "0.902",
     "blender": (2, 6, 7),
@@ -46,42 +46,9 @@ bl_info = {
     'wiki_url': "http://www.makehuman.org/node/285",
     "category": "MakeHuman"}
 
-"""
-Properties:
-Scale:
-    for BVH import. Choose scale so that the vertical distance between hands and feet
-    are the same for MHX and BVH rigs.
-    Good values are: CMU: 0.6, OSU: 0.1
-Start frame:
-    for BVH import
-Rot90:
-    for BVH import. Rotate armature 90 degrees, so Z points up.
-Simplify FCurves:
-    Include FCurve simplifcation.
-Max loc error:
-    Max error allowed for simplification of location FCurves
-Max rot error:
-    Max error allowed for simplification of rotation FCurves
-
-Buttons:
-Load BVH file (.bvh):
-    Load bvh file with Z up
-Silence constraints:
-    Turn off constraints that may conflict with mocap data.
-Retarget selected to MHX:
-    Retarget actions of selected BVH rigs to the active MHX rig.
-Simplify FCurves:
-    Simplifiy FCurves of active action, allowing max errors specified above.
-Load, retarget, simplify:
-    Load bvh file, retarget the action to the active MHX rig, and simplify FCurves.
-Batch run:
-    Load all bvh files in the given directory, whose name start with the
-    given prefix, and create actions (with simplified FCurves) for the active MHX rig.
-"""
-
 # To support reload properly, try to access a package var, if it's there, reload everything
 if "bpy" in locals():
-    print("Reloading MakeMotion")
+    print("Reloading MakeHumanMotion")
     import imp
     imp.reload(utils)
     imp.reload(io_json)
@@ -100,7 +67,7 @@ if "bpy" in locals():
     imp.reload(plant)
     imp.reload(sigproc)
 else:
-    print("Loading MakeMotion")
+    print("Loading MakeHumanMotion")
     import bpy, os
     from bpy_extras.io_utils import ImportHelper
     from bpy.props import *
@@ -122,13 +89,19 @@ else:
     from . import plant
     from . import sigproc
 
+
+def inset(layout):
+    split = layout.split(0.05)
+    split.label("")
+    return split.column()
+
 ########################################################################
 #
 #   class MainPanel(bpy.types.Panel):
 #
 
 class MainPanel(bpy.types.Panel):
-    bl_label = "MakeMotion: Main v %s" % bl_info["version"]
+    bl_label = "MakeHumanMotion: Main v %s" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     #bl_options = {'DEFAULT_CLOSED'}
@@ -147,19 +120,20 @@ class MainPanel(bpy.types.Panel):
         layout.operator("mcp.retarget_ik")
 
         layout.separator()
-        layout.label("Debugging")
-        #layout.prop(scn, "McpRot90Anim")
-        layout.prop(scn, "McpFlipYAxis")
-        layout.operator("mcp.load_bvh")
-        layout.operator("mcp.rename_bvh")
-        layout.operator("mcp.load_and_rename_bvh")
+        layout.prop(scn, "McpShowDetailSteps")
+        if scn.McpShowDetailSteps:
+            ins = inset(layout)
+            #ins.prop(scn, "McpFlipYAxis")
+            ins.operator("mcp.load_bvh")
+            ins.operator("mcp.rename_bvh")
+            ins.operator("mcp.load_and_rename_bvh")
 
-        layout.separator()
-        layout.operator("mcp.new_retarget_mhx")
+            ins.separator()
+            ins.operator("mcp.new_retarget_mhx")
 
-        layout.separator()
-        layout.operator("mcp.simplify_fcurves")
-        layout.operator("mcp.rescale_fcurves")
+            ins.separator()
+            ins.operator("mcp.simplify_fcurves")
+            ins.operator("mcp.rescale_fcurves")
 
 
 ########################################################################
@@ -168,7 +142,7 @@ class MainPanel(bpy.types.Panel):
 #
 
 class OptionsPanel(bpy.types.Panel):
-    bl_label = "MakeMotion: Options"
+    bl_label = "MakeHumanMotion: Options"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -191,7 +165,8 @@ class OptionsPanel(bpy.types.Panel):
         layout.prop(scn, 'McpGuessTargetRig')
         layout.prop(scn, "McpUseSpineOffset")
         layout.prop(scn, "McpUseClavOffset")
-        layout.prop(scn, "McpUseTPose")
+        layout.prop(scn, "McpUseTPoseAsRestPose")
+        layout.prop(scn, "McpAutoCorrectTPose")
 
         layout.separator()
         layout.label("SubSample")
@@ -236,7 +211,7 @@ class OptionsPanel(bpy.types.Panel):
 #
 
 class EditPanel(bpy.types.Panel):
-    bl_label = "MakeMotion: Edit Actions"
+    bl_label = "MakeHumanMotion: Edit Actions"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -255,13 +230,8 @@ class EditPanel(bpy.types.Panel):
             confirmPanel(layout, mcp.editConfirm, mcp.editString)
             return
 
-        layout.label("Global Edit and T-pose")
+        layout.label("Global Edit")
         layout.operator("mcp.shift_bone")
-        row = layout.row()
-        row.operator("mcp.set_t_pose")
-        row.operator("mcp.clear_t_pose")
-        layout.operator("mcp.rest_t_pose")
-        #layout.operator("mcp.save_t_pose")
 
         layout.separator()
         layout.label("Displace Animation")
@@ -339,7 +309,7 @@ class EditPanel(bpy.types.Panel):
 #
 
 class MhxSourceBonesPanel(bpy.types.Panel):
-    bl_label = "MakeMotion: Source armature"
+    bl_label = "MakeHumanMotion: Source armature"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -361,7 +331,7 @@ class MhxSourceBonesPanel(bpy.types.Panel):
         layout.prop(scn, "McpSourceRig")
 
         if scn.McpSourceRig:
-            bones = mcp.sourceArmatures[scn.McpSourceRig]
+            bones = mcp.sourceArmatures[scn.McpSourceRig].armature
             box = layout.box()
             for boneText in target.TargetBoneNames:
                 if not boneText:
@@ -385,7 +355,7 @@ class MhxSourceBonesPanel(bpy.types.Panel):
 #
 
 class MhxTargetBonesPanel(bpy.types.Panel):
-    bl_label = "MakeMotion: Target armature"
+    bl_label = "MakeHumanMotion: Target armature"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -439,7 +409,7 @@ class MhxTargetBonesPanel(bpy.types.Panel):
 #
 
 class UtilityPanel(bpy.types.Panel):
-    bl_label = "MakeMotion: Utilities"
+    bl_label = "MakeHumanMotion: Utilities"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -479,6 +449,7 @@ class UtilityPanel(bpy.types.Panel):
         layout.operator("mcp.clear_t_pose")
         layout.operator("mcp.rest_t_pose")
         layout.operator("mcp.rest_default_pose")
+        layout.operator("mcp.load_t_pose")
         layout.operator("mcp.save_t_pose")
 
         return

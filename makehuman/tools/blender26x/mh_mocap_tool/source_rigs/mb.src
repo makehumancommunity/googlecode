@@ -42,4 +42,6 @@ Armature:
 	rightfoot	foot.R		20 
 	righttoebase	toe.R		20
 
+T-pose:	cmu_tpose.json
+
 

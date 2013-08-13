@@ -36,6 +36,15 @@ from . import mcp
 from . import utils
 from .utils import MocapError
 
+
+class MocapSourceArmature:
+    def __init__(self):
+        self.name = None
+        self.armature = {}
+        self.tposeFile = None
+        self.tpose = {}
+
+
 #
 #    guessSrcArmature(rig, scn):
 #
@@ -51,33 +60,32 @@ def guessSrcArmature(rig, scn):
         nMisses = 0
         for bone in bones:
             try:
-                amt[canonicalSrcName(bone.name)]
+                amt.armature[canonicalSrcName(bone.name)]
             except KeyError:
                 nMisses += 1
         misses[name] = nMisses
         if nMisses < bestMisses:
             best = amt
-            bestName = name
             bestMisses = nMisses
 
     if bestMisses == 0:
-        scn.McpSourceRig = bestName
+        scn.McpSourceRig = best.name
     else:
         print("Number of misses:")
         for (name, n) in misses.items():
             print("  %14s: %2d" % (name, n))
-        print("Best bone map for armature %s:" % bestName)
-        amt = mcp.sourceArmatures[bestName]
+        print("Best bone map for armature %s:" % best.name)
+        amt = mcp.sourceArmatures[best.name]
         for bone in bones:
             try:
-                bname,_ = amt[canonicalSrcName(bone.name)]
+                bname,_ = amt.armature[canonicalSrcName(bone.name)]
                 string = "     "
             except KeyError:
                 string = " *** "
                 bname = "?"
             print("%s %14s => %s" % (string, bone.name, bname))
         raise MocapError('Did not find matching armature. nMisses = %d' % bestMisses)
-    return (best, bestName)
+    return best
 
 #
 #   findSrcArmature(context, rig):
@@ -86,13 +94,11 @@ def guessSrcArmature(rig, scn):
 def findSrcArmature(context, rig):
     scn = context.scene
     if scn.McpGuessSourceRig:
-        (mcp.srcArmature, name) = guessSrcArmature(rig, scn)
+        mcp.srcArmature = guessSrcArmature(rig, scn)
     else:
-        name = scn.McpSourceRig
-        mcp.srcArmature = mcp.sourceArmatures[name]
-    rig.McpArmature = name
-    print("Using matching armature %s." % name)
-    return
+        mcp.srcArmature = mcp.sourceArmatures[scn.McpSourceRig]
+    rig.McpArmature = mcp.srcArmature.name
+    print("Using matching armature %s." % rig.McpArmature)
 
 #
 #    setArmature(rig, scn)
@@ -126,7 +132,7 @@ def findSourceKey(mhx, struct):
 
 
 def getSourceRoll(mhx):
-    (bone, roll) = findSourceKey(mhx, mcp.srcArmature)
+    (bone, roll) = findSourceKey(mhx, mcp.srcArmature.armature)
     return roll
 
 
@@ -156,8 +162,9 @@ def initSources(scn):
         file = os.path.join(path, fname)
         (name, ext) = os.path.splitext(fname)
         if ext == ".src" and os.path.isfile(file):
-            (name, armature) = readSrcArmature(file, name)
-            mcp.sourceArmatures[name] = armature
+            armature = readSrcArmature(file, name)
+            print("ISS", armature)
+            mcp.sourceArmatures[armature.name] = armature
     mcp.srcArmatureEnums = []
     keys = list(mcp.sourceArmatures.keys())
     keys.sort()
@@ -170,14 +177,13 @@ def initSources(scn):
         default = 'MB')
     scn.McpSourceRig = 'MB'
     print("Defined McpSourceRig")
-    return
 
 
 def readSrcArmature(file, name):
     print("Read source file", file)
     fp = open(file, "r")
     status = 0
-    armature = {}
+    armature = MocapSourceArmature()
     for line in fp:
         words = line.split()
         if len(words) > 0:
@@ -185,17 +191,22 @@ def readSrcArmature(file, name):
             if key[0] == "#":
                 continue
             elif key == "name:":
-                name = words[1]
+                name = armature.name = words[1]
             elif key == "armature:":
                 status = 1
-            elif len(words) < 3:
+                amt = armature.armature
+            elif key == "t-pose:":
+                status = 0
+                armature.tposeFile = words[1]
+                print("T-pose", armature.tposeFile)
+            elif len(words) < 3 or key[-1] == ":":
                 print("Ignored illegal line", line)
             elif status == 1:
                 for n in range(1,len(words)-2):
                     key += "_" + words[n]
-                armature[canonicalSrcName(key)] = (utils.nameOrNone(words[-2]), float(words[-1]))
+                amt[canonicalSrcName(key)] = (utils.nameOrNone(words[-2]), float(words[-1]))
     fp.close()
-    return (name, armature)
+    return armature
 
 
 def ensureSourceInited(scn):

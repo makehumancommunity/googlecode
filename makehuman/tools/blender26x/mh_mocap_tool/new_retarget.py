@@ -135,7 +135,6 @@ def retargetFkBone(boneData, frame):
     # Set translation offset
     parent = boneData.parent
     if parent:
-        #print(name, parent.name)
         parMat = parent.srcMatrices[frame]
         parInv = parMat.inverted()
         loc = parMat * boneData.trgOffset
@@ -300,7 +299,6 @@ def setupFkBones(srcRig, trgRig, boneAssoc, parAssoc, anim, scn):
                 offs = trgBone.bone.head_local - trgParent.bone.head_local
                 boneData.trgOffset = parRestInv * Matrix.Translation(offs) * parRest
                 boneData.trgBakeMat = parRestInv * boneData.trgRestMat
-                #print(trgName, trgParent.name)
 
 
         trgRoll = utils.getRoll(trgBone.bone)
@@ -352,7 +350,7 @@ def retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
     from . import t_pose
 
     scn = context.scene
-    if scn.McpUseTPose and not trgRig.McpHasTPose:
+    if scn.McpUseTPoseAsRestPose:
         scn.objects.active = trgRig
         t_pose.setTPoseAsRestPose(context)
 
@@ -389,6 +387,8 @@ def retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
 
     utils.setInterpolation(trgRig)
     if doFK:
+        if scn.McpAutoCorrectTPose:
+            t_pose.autoCorrectFCurves(trgRig, scn)
         act = trgRig.animation_data.action
         act.name = trgRig.name[:4] + srcRig.name[2:]
         act.use_fake_user = True

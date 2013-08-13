@@ -27,4 +27,5 @@ Armature:
 	neck		neck		0
 	head		head		0
 
+T-pose:	eyes_tpose.json
 
