@@ -463,6 +463,7 @@ class GenderTaskView(ModifierTaskView):
             ('breast', 'down', 'up', {}),
             ('breast-dist', 'min', 'max', {}),
             ('breast-point', 'min', 'max', {}),
+            ('breast-volume-vert', 'up', 'down', {}),
             ]),
         ]
 
