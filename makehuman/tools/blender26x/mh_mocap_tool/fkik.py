@@ -86,6 +86,39 @@ def insertRotation(pb, mat):
         pb.keyframe_insert("rotation_euler", group=pb.name)
 
 
+def matchIkLeg(legIk, toeFk):
+    toeHead = toeFk.matrix.col[3]
+    toeY = toeFk.matrix.col[1]
+    tail = toeHead + toeY * toeFk.bone.length
+
+    rmat = toeFk.matrix.to_3x3()
+    rmat.col[2] = (0,0,-1)
+    rmat.row[2] = (0,0,-1)
+    rmat.normalize()
+
+    gmat = rmat.to_4x4()
+    legY = gmat.col[1]
+    head = tail - legY * legIk.bone.length
+    gmat.col[3] = head
+
+    pmat = getPoseMatrix(gmat, legIk)
+    insertLocation(legIk, pmat)
+    insertRotation(legIk, pmat)
+    return
+
+    updateScene()
+    print(toeFk.name)
+    print(toeFk.matrix)
+    print("TH", toeHead)
+    print("TT", tail)
+    print("LH", head)
+    print(rmat)
+    print(gmat)
+    print(pmat)
+    print(legIk.name)
+    print(legIk.matrix)
+
+
 def matchPoleTarget(pb, above, below):
     x = Vector(above.matrix.col[1][:3])
     y = Vector(below.matrix.col[1][:3])
@@ -110,7 +143,6 @@ def matchPoseReverse(pb, src):
     rmat.transpose()
     pmat = getPoseMatrix(rmat, pb)
     pb.matrix_basis = pmat
-    insertLocation(pb, pmat)
     insertRotation(pb, pmat)
 
 
@@ -143,8 +175,9 @@ def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
     if legIkToAnkle:
         matchPoseTranslation(ankleIk, footFk)
 
-    matchPoseTranslation(legIk, legFk)
-    matchPoseRotation(legIk, legFk)
+    #matchPoseTranslation(legIk, legFk)
+    #matchPoseRotation(legIk, legFk)
+    matchIkLeg(legIk, toeFk)
     updateScene()
 
     matchPoseReverse(toeIk, toeFk)
@@ -343,12 +376,17 @@ class VIEW3D_OT_ClearIkButton(bpy.types.Operator):
 
 def printHand(context):
         rig = context.object
+        '''
         handFk = rig.pose.bones["hand.fk.L"]
         handIk = rig.pose.bones["hand.ik.L"]
         print(handFk)
         print(handFk.matrix)
         print(handIk)
         print(handIk.matrix)
+        '''
+        footIk = rig.pose.bones["foot.ik.L"]
+        print(footIk)
+        print(footIk.matrix)
 
 
 class VIEW3D_OT_PrintHandsButton(bpy.types.Operator):

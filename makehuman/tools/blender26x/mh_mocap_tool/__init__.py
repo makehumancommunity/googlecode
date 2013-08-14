@@ -120,6 +120,7 @@ class MainPanel(bpy.types.Panel):
 
         layout.separator()
         layout.operator("mcp.transfer_to_ik")
+        layout.operator("mcp.print_hands")
 
         layout.separator()
         layout.prop(scn, "McpShowDetailSteps")
