@@ -40,10 +40,12 @@ copy .\tools\blender26x\mh_mocap_tool\*.json %1\mh_mocap_tool
 mkdir %1\mh_mocap_tool\target_rigs
 del %1\mh_mocap_tool\target_rigs\*.* /q
 copy .\tools\blender26x\mh_mocap_tool\target_rigs\*.trg %1\mh_mocap_tool\target_rigs
+copy .\tools\blender26x\mh_mocap_tool\target_rigs\*.json %1\mh_mocap_tool\target_rigs
 
 mkdir %1\mh_mocap_tool\source_rigs
 del %1\mh_mocap_tool\source_rigs\*.* /q
 copy .\tools\blender26x\mh_mocap_tool\source_rigs\*.src %1\mh_mocap_tool\source_rigs
+copy .\tools\blender26x\mh_mocap_tool\source_rigs\*.json %1\mh_mocap_tool\source_rigs
 
 echo All files copied
 
