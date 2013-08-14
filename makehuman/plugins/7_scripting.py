@@ -520,7 +520,7 @@ class Scripting():
     def printDetailStack(self):
         log.message("SCRIPT: printDetailStack()")
         for target in self.human.targetsDetailStack.keys():
-        print str(self.human.targetsDetailStack[target]) + "\t" + target
+            print str(self.human.targetsDetailStack[target]) + "\t" + target
 
     def setAge(self,age):
         log.message("SCRIPT: setAge(" + str(age) + ")")
