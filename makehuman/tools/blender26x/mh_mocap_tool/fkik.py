@@ -87,36 +87,45 @@ def insertRotation(pb, mat):
 
 
 def matchIkLeg(legIk, toeFk):
-    toeHead = toeFk.matrix.col[3]
-    toeY = toeFk.matrix.col[1]
-    tail = toeHead + toeY * toeFk.bone.length
-
     rmat = toeFk.matrix.to_3x3()
-    rmat.col[2] = (0,0,-1)
-    rmat.row[2] = (0,0,-1)
-    rmat.normalize()
+    tHead = Vector(toeFk.matrix.col[3][:3])
+    ty = rmat.col[1]
+    tail = tHead + ty * toeFk.bone.length
 
-    gmat = rmat.to_4x4()
-    legY = gmat.col[1]
-    head = tail - legY * legIk.bone.length
-    gmat.col[3] = head
+    x = rmat.col[0]
+    y = rmat.col[1]
+    z = rmat.col[2]
+    y[2] = 0
+    if y.length > 0.001:
+        y.normalize()
+        x -= x.dot(y)*y
+        x.normalize()
+        z = x.cross(y)
+    else:
+        y = rmat.col[1]
+
+    head = tail - y * legIk.bone.length
+    gmat = Matrix.Translation(head)
+    gmat.col[0][:3] = x
+    gmat.col[1][:3] = y
+    gmat.col[2][:3] = z
 
     pmat = getPoseMatrix(gmat, legIk)
     insertLocation(legIk, pmat)
     insertRotation(legIk, pmat)
-    return
 
-    updateScene()
-    print(toeFk.name)
-    print(toeFk.matrix)
-    print("TH", toeHead)
-    print("TT", tail)
-    print("LH", head)
-    print(rmat)
-    print(gmat)
-    print(pmat)
-    print(legIk.name)
-    print(legIk.matrix)
+    if 0 and legIk.name == "foot.ik.L":
+        updateScene()
+        print(toeFk.name)
+        print(toeFk.matrix)
+        print("TH", tHead)
+        print("TT", tail)
+        print("LH", head)
+        print(rmat)
+        print(gmat)
+        print(pmat)
+        print(legIk.name)
+        print(legIk.matrix)
 
 
 def matchPoleTarget(pb, above, below):
@@ -126,9 +135,10 @@ def matchPoleTarget(pb, above, below):
     n = x.cross(y)
     if abs(n.length) > 1e-4:
         z = x - y
-        n = n/n.length
+        n.normalize()
         z -= z.dot(n)*n
-        p = p0 + z/z.length*3.0
+        z.normalize()
+        p = p0 + 3.0*z
     else:
         p = p0
     gmat = Matrix.Translation(p)
@@ -163,8 +173,8 @@ def snapIkArm(rig, snapIk, snapFk, frame):
 
     matchPoleTarget(elbowPt, uparmFk, loarmFk)
 
-    matchPoseRotation(uparmIk, uparmFk)
-    matchPoseRotation(loarmIk, loarmFk)
+    #matchPoseRotation(uparmIk, uparmFk)
+    #matchPoseRotation(loarmIk, loarmFk)
 
 
 def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
@@ -187,8 +197,8 @@ def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
 
     matchPoleTarget(kneePt, uplegFk, lolegFk)
 
-    matchPoseRotation(uplegIk, uplegFk)
-    matchPoseRotation(lolegIk, lolegFk)
+    #matchPoseRotation(uplegIk, uplegFk)
+    #matchPoseRotation(lolegIk, lolegFk)
 
     if not legIkToAnkle:
         matchPoseTranslation(ankleIk, footFk)
