@@ -337,10 +337,12 @@ class FaceTaskView(ModifierTaskView):
             ('chin', 'prognathism1', 'prognathism2', {'cam' : 'rightView'}),
             ]),
         ('cheek', 'cheek', [
-            ('l-cheek', 'in', 'out', {'cam' : 'frontView'}),
-            ('l-cheek-bones', 'out', 'in', {'cam' : 'frontView'}),
-            ('r-cheek', 'in', 'out', {'cam' : 'frontView'}),
-            ('r-cheek-bones', 'out', 'in', {'cam' : 'frontView'}),
+            ('l-cheek-volume', 'deflate', 'inflate', {'cam' : 'frontView'}),                      
+            ('l-cheek-bones', 'in', 'out', {'cam' : 'frontView'}),
+            ('l-cheek-inner', 'deflate', 'inflate', {'cam' : 'frontView'}),
+            ('r-cheek-volume', 'deflate', 'inflate', {'cam' : 'frontView'}),
+            ('r-cheek-bones', 'in', 'out', {'cam' : 'frontView'}),
+            ('r-cheek-inner', 'deflate', 'inflate', {'cam' : 'frontView'}),            
             ]),
         ]
 
