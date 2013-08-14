@@ -156,7 +156,8 @@ class ModifierSlider(gui.Slider):
 
 
     def onChange(self, value):
-        gui3d.app.callAsync(self._onChange)
+        #gui3d.app.callAsync(self._onChange)
+        pass
 
     def _onChange(self):
         if self.slider.isSliderDown():
@@ -179,7 +180,8 @@ class ModifierSlider(gui.Slider):
         self.resetWarpTargets()
 
     def onRelease(self, w):
-        gui3d.app.callAsync(self._onChange)
+        #gui3d.app.callAsync(self._onChange)
+        self._onChange()
 
     def update(self):
         human = gui3d.app.selectedHuman
