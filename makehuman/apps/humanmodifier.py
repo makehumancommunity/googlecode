@@ -136,10 +136,10 @@ class ModifierSlider(gui.Slider):
         self.changing = value
         gui3d.app.callAsync(self._onChanging)
 
-
     def _onChanging(self):
         value = self.changing
         self.changing = None
+
         if gui3d.app.settings.get('realtimeUpdates', True):
             human = gui3d.app.selectedHuman
             if self.value is None:
@@ -151,12 +151,19 @@ class ModifierSlider(gui.Slider):
                         human.getSeedMesh().setVisibility(1)
                     human.getSubdivisionMesh(False).setVisibility(0)
             self.modifier.updateValue(human, value, gui3d.app.settings.get('realtimeNormalUpdates', True))
-            self.resetWarpTargets()
-            human.updateProxyMesh()
+            self.resetWarpTargets()  # Why? Good idea?
+            human.updateProxyMesh()  # Is this not too slow?
 
 
     def onChange(self, value):
+        gui3d.app.callAsync(self._onChange)
 
+    def _onChange(self):
+        if self.slider.isSliderDown():
+            # Don't do anything when slider is being clicked or dragged (onRelease triggers it)
+            return
+
+        value = self.getValue()
         human = gui3d.app.selectedHuman
         if self.value is None:
             self.value = self.modifier.getValue(human)
@@ -171,12 +178,16 @@ class ModifierSlider(gui.Slider):
         self.value = None
         self.resetWarpTargets()
 
+    def onRelease(self, w):
+        gui3d.app.callAsync(self._onChange)
 
     def update(self):
-
         human = gui3d.app.selectedHuman
-        self.setValue(self.modifier.getValue(human))
-
+        self.blockSignals(True)
+        if not self.slider.isSliderDown():
+            # Only update slider position when it is not being clicked or dragged
+            self.setValue(self.modifier.getValue(human))
+        self.blockSignals(False)
 
     # Overwrite for warp targets
     def resetWarpTargets(self):

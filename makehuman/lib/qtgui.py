@@ -310,6 +310,8 @@ class Slider(QtGui.QWidget, Widget):
         self.slider.setTracking(False)
         self.connect(self.slider, QtCore.SIGNAL('sliderMoved(int)'), self._changing)
         self.connect(self.slider, QtCore.SIGNAL('valueChanged(int)'), self._changed)
+        self.connect(self.slider, QtCore.SIGNAL('sliderReleased()'), self._released)
+        self.connect(self.slider, QtCore.SIGNAL('sliderPressed()'), self._pressed)
         self.slider.installEventFilter(self)
 
         self.label = QtGui.QLabel(self.text)
@@ -412,6 +414,12 @@ class Slider(QtGui.QWidget, Widget):
         value = self._i2f(value)
         self._sync(value)
         self.callEvent('onChange', value)
+
+    def _released(self):
+        self.callEvent('onRelease', self)
+
+    def _pressed(self):
+        self.callEvent('onPress', self)
 
     def _sync(self, value):
         if '%' in self.text:
@@ -701,7 +709,7 @@ class ListView(QtGui.QListWidget, Widget):
             if item.isChecked():
                 item.setChecked(False)
 
-	self.callEvent('onClearSelection', None)
+        self.callEvent('onClearSelection', None)
 
 class TextView(QtGui.QLabel, Widget):
     def __init__(self, label = ''):
@@ -805,10 +813,10 @@ class TextEdit(QtGui.QLineEdit, Widget):
         self.callEvent('onDownArrow', None)
 
 class DocumentEdit(QtGui.QTextEdit, Widget):
-    NoWrap		= QtGui.QTextEdit.NoWrap
-    WidgetWidth		= QtGui.QTextEdit.WidgetWidth
-    FixedPixelWidth	= QtGui.QTextEdit.FixedPixelWidth
-    FixedColumnWidth	= QtGui.QTextEdit.FixedColumnWidth
+    NoWrap          = QtGui.QTextEdit.NoWrap
+    WidgetWidth     = QtGui.QTextEdit.WidgetWidth
+    FixedPixelWidth = QtGui.QTextEdit.FixedPixelWidth
+    FixedColumnWidth= QtGui.QTextEdit.FixedColumnWidth
 
     def __init__(self, text=''):
         super(DocumentEdit, self).__init__(text)

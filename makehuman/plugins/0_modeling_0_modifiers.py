@@ -586,6 +586,9 @@ class MacroTaskView(ModifierTaskView):
     def syncRaceSliders(self, event):
         human = event.human
         for race, modifier, slider in self.raceSliders():
+            if slider.slider.isSliderDown():
+                # Do not update slider when it is being clicked or dragged
+                continue
             slider.setValue(1.0/3)
             value = modifier.getValue(human)
             modifier.setValue(human, value)
