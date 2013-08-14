@@ -31,7 +31,7 @@ from mathutils import *
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import *
 
-from . import utils, props, source, target, toggle, load, simplify
+from . import utils, props, source, target, load, simplify
 #from .target_rigs import rig_mhx
 from . import mcp
 from .utils import MocapError
@@ -349,15 +349,13 @@ def setupMhxAnimation(scn, srcRig, trgRig):
 def retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
     from . import t_pose
 
+    utils.setMhxIk(trgRig, False)
     scn = context.scene
     if scn.McpUseTPoseAsRestPose:
         scn.objects.active = trgRig
         t_pose.setTPoseAsRestPose(context)
 
-    if doFK:
-        anim = setupMhxAnimation(scn, srcRig, trgRig)
-    else:
-        anim = CAnimation(srcRig, trgRig)
+    anim = setupMhxAnimation(scn, srcRig, trgRig)
     frames = utils.activeFrames(srcRig)
 
     scn.objects.active = trgRig
@@ -485,189 +483,6 @@ def restoreTargetData(rig, data):
         for (cns, mute) in constraints:
             cns.mute = mute
 
-    return
-
-
-#########################################
-#
-#   FK-IK snapping.
-#
-#########################################
-
-def updateScene():
-    bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.mode_set(mode='POSE')
-
-
-def getPoseMatrix(mat, pb):
-    restInv = pb.bone.matrix_local.inverted()
-    if pb.parent:
-        parInv = pb.parent.matrix.inverted()
-        parRest = pb.parent.bone.matrix_local
-        return restInv * (parRest * (parInv * mat))
-    else:
-        return restInv * mat
-
-
-def getGlobalMatrix(mat, pb):
-    gmat = pb.bone.matrix_local * mat
-    if pb.parent:
-        parMat = pb.parent.matrix
-        parRest = pb.parent.bone.matrix_local
-        return parMat * (parRest.inverted() * gmat)
-    else:
-        return gmat
-
-
-def matchPoseTranslation(pb, fkPb, frame):
-    mat = getPoseMatrix(fkPb.matrix, pb)
-    insertLocation(pb, mat, frame)
-
-
-def insertLocation(pb, mat, frame):
-    pb.location = mat.to_translation()
-    pb.keyframe_insert("location", frame=frame, group=pb.name)
-
-
-def matchPoseRotation(pb, fkPb, frame):
-    mat = getPoseMatrix(fkPb.matrix, pb)
-    insertRotation(pb, mat, frame)
-
-
-def insertRotation(pb, mat, frame):
-    q = mat.to_quaternion()
-    if pb.rotation_mode == 'QUATERNION':
-        pb.rotation_quaternion = q
-        pb.keyframe_insert("rotation_quaternion", frame=frame, group=pb.name)
-    else:
-        pb.rotation_euler = q.to_euler(pb.rotation_mode)
-        pb.keyframe_insert("rotation_euler", frame=frame, group=pb.name)
-
-
-def matchPoseLocRot(pb, fkPb, frame):
-    mat = getPoseMatrix(fkPb.matrix, pb)
-    insertLocation(pb, mat, frame)
-    insertRotation(pb, mat, frame)
-
-
-def makePlanar(pb, rig, frame):
-    master = rig.pose.bones["MasterFloor"]
-    mmat = master.matrix.to_3x3()
-    pmat = pb.parent.matrix.to_3x3()
-    phead = pb.parent.matrix.to_translation()
-    ptail = phead + pmat.col[1]*pb.parent.bone.length
-
-    zmaster = mmat.col[2]
-    yvec = pmat.col[1].copy()
-    proj = zmaster.dot(yvec)
-    ymax = 0
-    ymin = -0.5
-    if proj > ymax:
-        proj = ymax
-    elif proj < 2*ymin:
-        proj = 0
-    elif proj < ymin:
-        proj = 2*ymin-proj
-    yvec -= proj*zmaster
-    yvec.normalize()
-    xvec = pmat.col[0].normalized()
-    zvec = xvec.cross(yvec)
-    head = ptail - yvec*pb.bone.length
-
-    nmat = Matrix()
-    for i in range(3):
-        nmat[i][0] = xvec[i]
-        nmat[i][1] = yvec[i]
-        nmat[i][2] = zvec[i]
-        nmat[i][3] = head[i]
-    mat = getPoseMatrix(nmat, pb)
-    insertRotation(pb, mat, frame)
-    insertLocation(pb, mat, frame)
-
-
-def matchPoseReverse(pb, fkPb, frame):
-    updateScene()
-    mat = getPoseMatrix(fkPb.matrix, pb)
-    mat = mat * Matrix.Rotation(math.pi, 4, 'Z')
-    mat[1][3] -= pb.bone.length
-    pb.matrix_basis = mat
-    insertLocation(pb, mat, frame)
-    insertRotation(pb, mat, frame)
-
-
-def matchPoseScale(pb, fkPb, frame):
-    mat = getPoseMatrix(fkPb.matrix, pb)
-    pb.scale = mat.to_scale()
-    #pb.keyframe_insert("scale", frame=frame, group=pb.name)
-
-
-def ik2fkArm(rig, ikBones, fkBones, suffix, frame):
-    (uparmIk, loarmIk, elbow, elbowPt, wrist) = ikBones
-    (uparmFk, loarmFk, elbowPtFk, handFk) = fkBones
-    matchPoseLocRot(wrist, handFk, frame)
-    matchPoseTranslation(elbow, elbowPtFk, frame)
-    matchPoseTranslation(elbowPt, elbowPtFk, frame)
-    return
-
-
-def ik2fkLeg(rig, ikBones, fkBones, legIkToAnkle, suffix, frame, first):
-    (uplegIk, lolegIk, kneePt, ankleIk, legIk, legFk, footIk, toeIk) = ikBones
-    (uplegFk, lolegFk, kneePtFk, footFk, toeFk) = fkBones
-
-    makePlanar(legFk, rig, frame)
-    updateScene()
-    #halt
-    matchPoseLocRot(legIk, legFk, frame)
-    matchPoseReverse(toeIk, toeFk, frame)
-    matchPoseReverse(footIk, footFk, frame)
-    matchPoseTranslation(kneePt, kneePtFk, frame)
-    if True or legIkToAnkle or first:
-        matchPoseTranslation(ankleIk, footFk, frame)
-    #halt
-    return
-
-
-def retargetIkBones(rig, frame, first):
-    if mcp.target == 'MHX':
-        lArmIkBones = getSnapBones(rig, "ArmIK", "_L")
-        lArmFkBones = getSnapBones(rig, "ArmFK", "_L")
-        rArmIkBones = getSnapBones(rig, "ArmIK", "_R")
-        rArmFkBones = getSnapBones(rig, "ArmFK", "_R")
-        lLegIkBones = getSnapBones(rig, "LegIK", "_L")
-        lLegFkBones = getSnapBones(rig, "LegFK", "_L")
-        rLegIkBones = getSnapBones(rig, "LegIK", "_R")
-        rLegFkBones = getSnapBones(rig, "LegFK", "_R")
-
-        ik2fkArm(rig, lArmIkBones, lArmFkBones, "_L", frame)
-        ik2fkArm(rig, rArmIkBones, rArmFkBones, "_R", frame)
-        ik2fkLeg(rig, lLegIkBones, lLegFkBones, rig["MhaLegIkToAnkle_L"], "_L", frame, first)
-        ik2fkLeg(rig, rLegIkBones, rLegFkBones, rig["MhaLegIkToAnkle_R"], "_R", frame, first)
-    else:
-        for (ik,fk) in mcp.ikBones:
-            ikPb = rig.pose.bones[ik]
-            fkPb = rig.pose.bones[fk]
-            matchPoseTranslation(ikPb, fkPb, frame)
-            matchPoseRotation(ikPb, fkPb, frame)
-    return
-
-#
-#
-#
-
-SnapBones = {
-    "ArmFK" : ["UpArm", "LoArm", "ElbowPTFK", "Hand"],
-    "ArmIK" : ["UpArmIK", "LoArmIK", "Elbow", "ElbowPT", "Wrist"],
-    "LegFK" : ["UpLeg", "LoLeg", "KneePTFK", "Foot", "Toe"],
-    "LegIK" : ["UpLegIK", "LoLegIK", "KneePT", "Ankle", "LegIK", "LegFK", "FootRev", "ToeRev"],
-}
-
-def getSnapBones(rig, key, suffix):
-    names = SnapBones[key]
-    pbones = []
-    for name in names:
-        pb = rig.pose.bones[name+suffix]
-        pbones.append(pb)
-    return tuple(pbones)
 
 #
 #    loadRetargetSimplify(context, filepath):
@@ -697,7 +512,7 @@ def loadRetargetSimplify(context, filepath):
 #
 
 class VIEW3D_OT_NewRetargetMhxButton(bpy.types.Operator):
-    bl_idname = "mcp.new_retarget_mhx"
+    bl_idname = "mcp.retarget_mhx"
     bl_label = "Retarget Selected To Active"
     bl_options = {'UNDO'}
 
@@ -709,22 +524,6 @@ class VIEW3D_OT_NewRetargetMhxButton(bpy.types.Operator):
             for srcRig in context.selected_objects:
                 if srcRig != trgRig:
                     retargetMhxRig(context, srcRig, trgRig, True, False)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
-
-
-class VIEW3D_OT_RetargetIKButton(bpy.types.Operator):
-    bl_idname = "mcp.retarget_ik"
-    bl_label = "Retarget IK Bones"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        try:
-            rig = context.object
-            scn = context.scene
-            target.getTargetArmature(rig, scn)
-            retargetMhxRig(context, rig, rig, False, True)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}

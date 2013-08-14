@@ -55,8 +55,9 @@ if "bpy" in locals():
     imp.reload(mcp)
     imp.reload(props)
     imp.reload(load)
-    imp.reload(new_retarget)
+    imp.reload(retarget)
     imp.reload(t_pose)
+    imp.reload(fkik)
     imp.reload(source)
     imp.reload(target)
     imp.reload(toggle)
@@ -77,8 +78,9 @@ else:
     from . import mcp
     from . import props
     from . import load
-    from . import new_retarget
+    from . import retarget
     from . import t_pose
+    from . import fkik
     from . import source
     from . import target
     from . import toggle
@@ -117,7 +119,7 @@ class MainPanel(bpy.types.Panel):
         layout.operator("mcp.load_and_retarget")
 
         layout.separator()
-        layout.operator("mcp.retarget_ik")
+        layout.operator("mcp.transfer_to_ik")
 
         layout.separator()
         layout.prop(scn, "McpShowDetailSteps")
@@ -129,11 +131,15 @@ class MainPanel(bpy.types.Panel):
             ins.operator("mcp.load_and_rename_bvh")
 
             ins.separator()
-            ins.operator("mcp.new_retarget_mhx")
+            ins.operator("mcp.retarget_mhx")
 
             ins.separator()
             ins.operator("mcp.simplify_fcurves")
             ins.operator("mcp.rescale_fcurves")
+
+            ins.separator()
+            ins.operator("mcp.clear_ik_animation")
+
 
 
 ########################################################################

@@ -46,7 +46,7 @@ def printMat3(string, mat, pad=""):
         for n in range(3):
             s += " %6.3f" % mat[m][n]
         print(s+"]")
- 
+
 def printMat4(string, mat, pad=""):
     if not mat:
         print("%s None" % string)
@@ -58,7 +58,7 @@ def printMat4(string, mat, pad=""):
         for n in range(4):
             s += " %6.3f" % mat[m][n]
         print(s+"]")
- 
+
 #
 #  quadDict():
 #
@@ -70,7 +70,38 @@ def quadDict():
         2: {},
         3: {},
     }
-    
+
+#
+#
+#
+
+def isMhxRig(rig):
+    try:
+        rig.pose.bones['thigh.ik.L']
+        return True
+    except KeyError:
+        return False
+
+
+def setMhxIk(rig, turnOn):
+    if isMhxRig(rig):
+        rig["MhaArmIk_L"] = turnOn
+        rig["MhaArmIk_R"] = turnOn
+        rig["MhaLegIk_L"] = turnOn
+        rig["MhaLegIk_R"] = turnOn
+
+        ikLayers = [2,4,18,20]
+        fkLayers = [3,5,19,21]
+        if turnOn:
+            first = ikLayers
+            second = fkLayers
+        else:
+            first = fkLayers
+            second = ikLayers
+        for n in first:
+            rig.data.layers[n] = True
+        for n in second:
+            rig.data.layers[n] = False
 
 #
 #   nameOrNone(string):
@@ -81,28 +112,28 @@ def nameOrNone(string):
         return None
     else:
         return string
-        
+
 #
 #   getRoll(bone):
 #
 
 def getRoll(bone):
     return getRollMat(bone.matrix_local)
-    
-    
-def getRollMat(mat):  
+
+
+def getRollMat(mat):
     quat = mat.to_3x3().to_quaternion()
     if abs(quat.w) < 1e-4:
         roll = pi
     else:
         roll = -2*atan(quat.y/quat.w)
     return roll
-    
+
 #
-#   getBone(name, rig):        
+#   getBone(name, rig):
 #
 
-def getBone(name, rig): 
+def getBone(name, rig):
     try:
         return rig.pose.bones[rig[name]]
     except:
@@ -111,7 +142,7 @@ def getBone(name, rig):
     try:
         mhxRig = rig["MhxRigType"]
     except:
-        return None    
+        return None
     if mhxRig in ["MHX", "Game", "Rorkimaru"]:
         try:
             return rig.pose.bones[name]
@@ -119,12 +150,12 @@ def getBone(name, rig):
             return None
     elif mhxRig == "Rigify":
         print("Not yet")
-    return None     
-    
+    return None
+
 #
 #   ikBoneList(rig):
 #
- 
+
 def ikBoneList(rig):
     list = []
     for name in ['Root', 'Wrist_L', 'Wrist_R', 'LegIK_L', 'LegIK_R']:
@@ -132,7 +163,7 @@ def ikBoneList(rig):
         if bone:
             list.append(bone)
     return list
-    
+
 #
 #   getAction(ob):
 #
@@ -145,16 +176,16 @@ def getAction(ob):
         return None
 
 #
-#   deleteAction(act):    
+#   deleteAction(act):
 #
 
-def deleteAction(act):    
+def deleteAction(act):
     act.use_fake_user = False
     if act.users == 0:
         bpy.data.actions.remove(act)
     else:
         print("%s has %d users" % (act, act.users))
-        
+
 #
 #   copyAction(act1, name):
 #
@@ -165,8 +196,8 @@ def copyAction(act1, name):
         fcu2 = act2.fcurves.new(fcu1.data_path, fcu1.array_index)
         for kp1 in fcu1.keyframe_points:
             fcu2.keyframe_points.insert(kp1.co[0], kp1.co[1], options={'FAST'})
-    return act2            
-        
+    return act2
+
 #
 #   activeFrames(ob):
 #
@@ -207,8 +238,8 @@ def findFCurve(path, index, fcurves):
         if (fcu.data_path == path and
             fcu.array_index == index):
             return fcu
-    return None            
-    
+    return None
+
 #
 #   isRotation(mode):
 #   isLocation(mode):
@@ -216,10 +247,10 @@ def findFCurve(path, index, fcurves):
 
 def isRotation(mode):
     return (mode[0:3] == 'rot')
-    
+
 def isLocation(mode):
     return (mode[0:3] == 'loc')
-    
+
 
 #
 #    setRotation(pb, mat, frame, group):
@@ -258,10 +289,10 @@ def setInterpolation(rig):
     return
 
 #
-#   insertRotationKeyFrame(pb, frame):    
+#   insertRotationKeyFrame(pb, frame):
 #
 
-def insertRotationKeyFrame(pb, frame):    
+def insertRotationKeyFrame(pb, frame):
     rotMode = pb.rotation_mode
     grp = pb.name
     if rotMode == "QUATERNION":
@@ -282,7 +313,7 @@ class MocapError(Exception):
         mcp.errorLines = value.split("\n")
     def __str__(self):
         return repr(self.value)
-  
+
 class ErrorOperator(bpy.types.Operator):
     bl_idname = "mcp.error"
     bl_label = "Mocap error"
@@ -307,7 +338,7 @@ import sys
 
 def initModules():
     basePath = os.path.realpath(".")
-    print("Path", basePath) 
+    print("Path", basePath)
     mcp.targetRigs = initModulesPath(basePath, "target_rigs")
     mcp.sourceRigs = initModulesPath(basePath, "source_rigs")
     return
@@ -327,6 +358,5 @@ def initModulesPath(basePath, subPath):
                 if fp:
                     fp.close()
         rignames.append(modname)
-    return rignames        
+    return rignames
 
-   

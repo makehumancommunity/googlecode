@@ -85,11 +85,6 @@ def initInterface(context):
         description="Use offset for clavicles",
         default=True)
 
-    bpy.types.Scene.McpNewRetarget = BoolProperty(
-        name="New Retarget",
-        description="Use new retarget",
-        default=True)
-
     bpy.types.Object.McpIsTargetRig = BoolProperty(
         name="Is Target Rig",
         default=False)
