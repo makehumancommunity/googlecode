@@ -66,7 +66,6 @@ if "bpy" in locals():
     imp.reload(loop)
     imp.reload(edit)
     imp.reload(plant)
-    imp.reload(sigproc)
 else:
     print("Loading MakeHumanMotion")
     import bpy, os
@@ -89,7 +88,6 @@ else:
     from . import loop
     from . import edit
     from . import plant
-    from . import sigproc
 
 
 def inset(layout):
@@ -293,19 +291,6 @@ class EditPanel(bpy.types.Panel):
         row.prop(scn, "McpPlantRotY")
         row.prop(scn, "McpPlantRotZ")
         layout.operator("mcp.plant")
-
-        layout.separator()
-        layout.label("Signal Processing")
-        layout.operator("mcp.calc_filters")
-        try:
-            fd = mcp.filterData[ob.name]
-        except:
-            fd = None
-        if fd:
-            layout.operator("mcp.discard_filters")
-            for k in range(fd.fb-1):
-                layout.prop(ob, '["s_%d"]' % k)
-            layout.operator("mcp.reconstruct_action")
 
 ########################################################################
 #
