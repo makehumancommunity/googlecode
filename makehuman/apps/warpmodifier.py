@@ -172,7 +172,13 @@ class WarpModifier (humanmodifier.SimpleModifier):
             except KeyError:
                 continue
         if abs(sumtargets-1) > 1e-3 and abs(sumtargets-2) > 1e-3:
-            log.debug("Inconsistent target sum %s: %s" % (sumtargets, human.targetsDetailStack.keys()))
+            log.debug("Inconsistent target sum %s.\nhuman.targetsDetailStack:" % sumtargets)
+            for key,value in human.targetsDetailStack.items():
+                log.debug("  %s: %s" % (key, value))
+            log.debug("self.refCharacters:")
+            for key,value in self.refCharacters.items():
+                log.debug("  %s: %s" % (key, value))
+            halt
 
         for charpath,value in human.targetsDetailStack.items():
             try:
