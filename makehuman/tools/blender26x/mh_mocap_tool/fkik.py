@@ -95,24 +95,25 @@ def matchIkLeg(legIk, toeFk):
     x = rmat.col[0]
     y = rmat.col[1]
     z = rmat.col[2]
+    if abs(y[2]) > abs(z[2]):
+        y = -z
     y[2] = 0
-    if y.length > 0.001:
-        y.normalize()
-        x -= x.dot(y)*y
-        x.normalize()
-        z = x.cross(y)
-    else:
-        y = rmat.col[1]
+    y.normalize()
+    x -= x.dot(y)*y
+    x.normalize()
+    z = x.cross(y)
 
-    head = tail - y * legIk.bone.length
-    gmat = Matrix.Translation(head)
+    gmat = Matrix()
     gmat.col[0][:3] = x
     gmat.col[1][:3] = y
     gmat.col[2][:3] = z
-
+    head = tail - y * legIk.bone.length
+    gmat.col[3][:3] = head
     pmat = getPoseMatrix(gmat, legIk)
+
     insertLocation(legIk, pmat)
     insertRotation(legIk, pmat)
+
 
     if 0 and legIk.name == "foot.ik.L":
         updateScene()

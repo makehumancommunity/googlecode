@@ -119,10 +119,6 @@ class MainPanel(bpy.types.Panel):
         layout.operator("mcp.load_and_retarget")
 
         layout.separator()
-        layout.operator("mcp.transfer_to_ik")
-        layout.operator("mcp.print_hands")
-
-        layout.separator()
         layout.prop(scn, "McpShowDetailSteps")
         if scn.McpShowDetailSteps:
             ins = inset(layout)
@@ -137,11 +133,6 @@ class MainPanel(bpy.types.Panel):
             ins.separator()
             ins.operator("mcp.simplify_fcurves")
             ins.operator("mcp.rescale_fcurves")
-
-            ins.separator()
-            ins.operator("mcp.clear_ik_animation")
-
-
 
 ########################################################################
 #
@@ -237,6 +228,12 @@ class EditPanel(bpy.types.Panel):
             confirmPanel(layout, mcp.editConfirm, mcp.editString)
             return
 
+        layout.label("Inverse Kinematics")
+        layout.operator("mcp.transfer_to_ik")
+        layout.operator("mcp.clear_ik_animation")
+        #layout.operator("mcp.print_hands")
+
+        layout.separator()
         layout.label("Global Edit")
         layout.operator("mcp.shift_bone")
 

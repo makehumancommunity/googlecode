@@ -142,6 +142,13 @@ def initInterface(context):
         min=0.001,
         default=0.1)
 
+    # Inverse kinematics
+
+    bpy.types.Scene.McpIkAdjustXY = BoolProperty(
+        name="IK Adjust XY",
+        description="Adjust XY coordinates of IK handle",
+        default=True)
+
     # Loop
 
     bpy.types.Scene.McpLoopBlendRange = IntProperty(
