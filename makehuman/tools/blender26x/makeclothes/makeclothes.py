@@ -26,7 +26,6 @@ import bpy
 import os
 import math
 import random
-import uuid
 import ast
 from bpy.props import *
 from mathutils import Vector
@@ -486,6 +485,12 @@ def midWeight(pv, r0, r1):
 #
 
 def writeClothesHeader(fp, scn):
+    if sys.platform == 'win32':
+        # Avoid error message in blender by using a version without ctypes
+        import uuid4 as uuid
+    else:
+        import uuid
+
     fp.write(
         "# author %s\n" % scn.MCAuthor +
         "# license %s\n" % scn.MCLicense +
