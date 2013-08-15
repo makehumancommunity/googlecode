@@ -133,8 +133,8 @@ class MeasureTaskView(gui3d.TaskView):
 
         measurements = [
             ('neck', ['neckcirc', 'neckheight']),
-            ('upperarm', ['upperarm', 'upperarmlength']),
-            ('lowerarm', ['lowerarmlength', 'wrist']),
+            ('upperarm', ['upperarm', 'upperarmlenght']),
+            ('lowerarm', ['lowerarmlenght', 'wrist']),
             ('torso', ['frontchest', 'bust', 'underbust', 'waist', 'napetowaist', 'waisttohip', 'shoulder']),
             ('hips', ['hips']),
             ('upperleg', ['upperlegheight', 'thighcirc']),
@@ -148,8 +148,8 @@ class MeasureTaskView(gui3d.TaskView):
             'neckcirc':'Neck circum',
             'neckheight':'Neck height',
             'upperarm':'Upper arm circum',
-            'upperarmlength':'Upperarm length',
-            'lowerarmlength':'Lowerarm length',
+            'upperarmlenght':'Upperarm length',
+            'lowerarmlenght':'Lowerarm length',
             'wrist':'Wrist circum',
             'frontchest':'Front chest dist',
             'bust':'Bust circum',
@@ -424,8 +424,8 @@ class Ruler:
         self.Measures['lowerlegheight'] = [6866,13338]
         self.Measures['calf'] = [7141,7142,7137,6994,6989,6988,6995,6997,6774,6775,6999,6803,6974,6972,6971,7002,7140,7139,7141]
         self.Measures['ankle'] = [6938,6937,6944,6943,6948,6784,6935,6766,6767,6954,6799,6955,6958,6949,6952,6941,6938]
-        self.Measures['upperarmlength'] = [9945,10696]
-        self.Measures['lowerarmlength'] = [9696,9945]
+        self.Measures['upperarmlenght'] = [9945,10696]
+        self.Measures['lowerarmlenght'] = [9696,9945]
         self.Measures['hips'] = [7298,2936,3527,2939,2940,3816,3817,3821,4487,3822,3823,3913,3915,4506,5688,4505,4504,4503,6858,6862,6861,6860,
                                             6785,6859,7094,7096,7188,7189,6878,7190,7194,7195,7294,7295,7247,7300,7298]
 
