@@ -52,86 +52,124 @@ def getRigAndPlane(scn):
     return rig,plane
 
 
-def floorFoot(context, useRight):
+def floorFoot(context):
     scn = context.scene
     rig,plane = getRigAndPlane(scn)
-    if useRight:
-        ikProp = "MhaLegIk_R"
-    else:
-        ikProp = "MhaLegIk_L"
     try:
-        useIk = rig[ikProp]
+        useIk = rig["MhaLegIk_L"] or rig["MhaLegIk_R"]
     except KeyError:
         useIk = False
     frames = utils.activeFrames(rig)
     if useIk:
-        floorIkFoot(rig, plane, scn, frames, useRight)
+        floorIkFoot(rig, plane, scn, frames)
     else:
-        floorFkFoot(rig, plane, scn, frames, useRight)
+        floorFkFoot(rig, plane, scn, frames)
 
 
-def floorFkFoot(rig, plane, scn, frames, useRight):
+def floorFkFoot(rig, plane, scn, frames):
     hipsName = target.getTrgBone("hips")
-    if useRight:
-        footName = target.getTrgBone("foot.R")
-        toeName = target.getTrgBone("toe.R")
-    else:
-        footName = target.getTrgBone("foot.L")
-        toeName = target.getTrgBone("toe.L")
-
-    if hipsName is None or footName is None or toeName is None:
-        raise MocapError(
-            "Did not find all bones:\n" +
-            "  hips: %s\n" % hips +
-            "  foot: %s\n" % foot +
-            "  toe: %s" % toe)
-
     hips = rig.pose.bones[hipsName]
-    foot = rig.pose.bones[footName]
-    toe = rig.pose.bones[toeName]
+    ez,origin = getPlaneInfo(plane)
 
     for frame in frames:
         scn.frame_set(frame)
         fkik.updateScene()
-        offset = 0
-
-        toeOffset = getTailOffset(toe, plane)
-        if toeOffset > offset:
-            offset = toeOffset
-
-        ballOffset = getTailOffset(foot, plane)
-        if ballOffset > offset:
-            offset = ballOffset
-
-        ball = toe.matrix.col[3]
-        y = toe.matrix.col[1]
-        heel = ball - y*foot.length
-        heelOffset = getOffset(heel, plane)
-        if heelOffset > offset:
-            offset = heelOffset
-
+        offset = getFkOffset(rig, ez, origin, ".L")
+        rOffset = getFkOffset(rig, ez, origin, ".R")
+        if rOffset > offset:
+            offset = rOffset
         print(frame, offset)
         if offset > 0:
-            gmat = hips.matrix.copy()
-            gmat.col[3][2] += offset
-            pmat = fkik.getPoseMatrix(gmat, hips)
-            fkik.insertLocation(hips, pmat)
+            addOffset(hips, offset, ez)
 
 
-def getOffset(point, plane):
-    point3 = Vector(point[:3])
+def getFkOffset(rig, ez, origin, suffix):
+    footName = target.getTrgBone("foot" + suffix)
+    toeName = target.getTrgBone("toe" + suffix)
+    foot = rig.pose.bones[footName]
+    toe = rig.pose.bones[toeName]
+
+    offset = getTailOffset(toe, ez, origin)
+    ballOffset = getTailOffset(foot, ez, origin)
+    if ballOffset > offset:
+        offset = ballOffset
+
+    ball = toe.matrix.col[3]
+    y = toe.matrix.col[1]
+    heel = ball - y*foot.length
+    heelOffset = getOffset(heel, ez, origin)
+    if heelOffset > offset:
+        offset = heelOffset
+
+    return offset
+
+
+def floorIkFoot(rig, plane, scn, frames):
+    root = rig.pose.bones["root"]
+    lleg = rig.pose.bones["foot.ik.L"]
+    rleg = rig.pose.bones["foot.ik.R"]
+    ez,origin = getPlaneInfo(plane)
+
+    for frame in frames:
+        scn.frame_set(frame)
+        fkik.updateScene()
+        offset = getIkOffset(rig, ez, origin, lleg, ".L")
+        rOffset = getIkOffset(rig, ez, origin, rleg, ".R")
+        if rOffset > offset:
+            offset = rOffset
+        print(frame, offset)
+        if offset > 0:
+            addOffset(lleg, offset, ez)
+            addOffset(rleg, offset, ez)
+            addOffset(root, offset, ez)
+
+
+def getIkOffset(rig, ez, origin, leg, suffix):
+    foot = rig.pose.bones["foot.rev" + suffix]
+    toe = rig.pose.bones["toe.rev" + suffix]
+
+    offset = getTailOffset(leg, ez, origin)
+
+    ballOffset = getTailOffset(toe, ez, origin)
+    if ballOffset > offset:
+        offset = ballOffset
+
+    ball = foot.matrix.col[3]
+    y = toe.matrix.col[1]
+    heel = ball + y*foot.length
+    heelOffset = getOffset(heel, ez, origin)
+    if heelOffset > offset:
+        offset = heelOffset
+
+    return offset
+
+
+def getPlaneInfo(plane):
     mat = plane.matrix_world.to_3x3().normalized()
     ez = mat[2]
-    vec = point3 - plane.location
+    origin = plane.location
+    return ez,origin
+
+
+def getOffset(point, ez, origin):
+    vec = Vector(point[:3]) - origin
     offset = -ez.dot(vec)
     return offset
 
 
-def getTailOffset(bone, plane):
+def getTailOffset(bone, ez, origin):
     head = bone.matrix.col[3]
     y = bone.matrix.col[1]
     tail = head + y*bone.length
-    return getOffset(tail, plane)
+    return getOffset(tail, ez, origin)
+
+
+def addOffset(pb, offset, ez):
+    gmat = pb.matrix.copy()
+    x,y,z = offset*ez
+    gmat.col[3] += Vector((x,y,z,0))
+    pmat = fkik.getPoseMatrix(gmat, pb)
+    fkik.insertLocation(pb, pmat)
 
 
 class VIEW3D_OT_McpFloorFootButton(bpy.types.Operator):
@@ -139,12 +177,11 @@ class VIEW3D_OT_McpFloorFootButton(bpy.types.Operator):
     bl_label = "Floor"
     bl_description = "Keep Foot Above Plane"
     bl_options = {'UNDO'}
-    useRight = BoolProperty()
 
     def execute(self, context):
         target.getTargetArmature(context.object, context.scene)
         try:
-            floorFoot(context, self.useRight)
+            floorFoot(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         print("FK Foot raise above plane")

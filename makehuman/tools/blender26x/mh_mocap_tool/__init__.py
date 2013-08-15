@@ -247,8 +247,7 @@ class EditPanel(bpy.types.Panel):
 
         layout.separator()
         layout.label("Floor")
-        layout.operator("mcp.floor_foot", text="Left Foot Above Floor").useRight=False
-        layout.operator("mcp.floor_foot", text="Right Foot Above Floor").useRight=True
+        layout.operator("mcp.floor_foot", text="Feet Above Floor")
 
         layout.separator()
         layout.label("Loop Animation")
