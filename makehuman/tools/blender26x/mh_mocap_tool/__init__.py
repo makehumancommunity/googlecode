@@ -65,7 +65,7 @@ if "bpy" in locals():
     imp.reload(action)
     imp.reload(loop)
     imp.reload(edit)
-    imp.reload(plant)
+    imp.reload(floor)
 else:
     print("Loading MakeHumanMotion")
     import bpy, os
@@ -87,7 +87,7 @@ else:
     from . import action
     from . import loop
     from . import edit
-    from . import plant
+    from . import floor
 
 
 def inset(layout):
@@ -246,6 +246,11 @@ class EditPanel(bpy.types.Panel):
         layout.operator("mcp.confirm_edit")
 
         layout.separator()
+        layout.label("Floor")
+        layout.operator("mcp.floor_foot", text="Left Foot Above Floor").useRight=False
+        layout.operator("mcp.floor_foot", text="Right Foot Above Floor").useRight=True
+
+        layout.separator()
         layout.label("Loop Animation")
         layout.prop(scn, "McpLoopBlendRange")
         row = layout.row()
@@ -276,21 +281,6 @@ class EditPanel(bpy.types.Panel):
         layout.prop(scn, "McpActionTarget")
         layout.prop(scn, "McpOutputActionName")
         layout.operator("mcp.stitch_actions")
-
-        layout.separator()
-        layout.label("Plant keys")
-        row = layout.row()
-        row.label("Source")
-        row.prop(scn, "McpPlantFrom", expand=True)
-        row = layout.row()
-        row.prop(scn, "McpPlantLocX")
-        row.prop(scn, "McpPlantLocY")
-        row.prop(scn, "McpPlantLocZ")
-        row = layout.row()
-        row.prop(scn, "McpPlantRotX")
-        row.prop(scn, "McpPlantRotY")
-        row.prop(scn, "McpPlantRotZ")
-        layout.operator("mcp.plant")
 
 ########################################################################
 #
