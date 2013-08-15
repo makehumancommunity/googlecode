@@ -488,7 +488,7 @@ def writeClothesHeader(fp, scn):
     import sys
     if sys.platform == 'win32':
         # Avoid error message in blender by using a version without ctypes
-        import uuid4 as uuid
+        from . import uuid4 as uuid
     else:
         import uuid
 
