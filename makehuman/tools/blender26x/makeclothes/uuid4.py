@@ -5,6 +5,9 @@ This file contains parts from the python standard library uuid module.
 __author__ = 'Ka-Ping Yee <ping@zesty.ca>'
 """
 
+int_ = int      # The built-in int type
+bytes_ = bytes  # The built-in bytes type
+
 def uuid4():
     """Generate a random UUID."""
 
@@ -24,15 +27,16 @@ class UUID4(object):
 
         if len(bytes) != 16:
             raise ValueError('bytes is not a 16-char string')
-        int = long(('%02x'*16) % tuple(map(ord, bytes)), 16)
+        assert isinstance(bytes, bytes_), repr(bytes)
+        int = int_(('%02x'*16) % tuple(bytes), 16)
 
         version = 4
         # Set the variant to RFC 4122.
-        int &= ~(0xc000 << 48L)
-        int |= 0x8000 << 48L
+        int &= ~(0xc000 << 48)
+        int |= 0x8000 << 48
         # Set the version number.
-        int &= ~(0xf000 << 64L)
-        int |= version << 76L
+        int &= ~(0xf000 << 64)
+        int |= version << 76
         self.__dict__['int'] = int
 
     def __repr__(self):
