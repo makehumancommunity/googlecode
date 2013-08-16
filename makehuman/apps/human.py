@@ -91,6 +91,18 @@ class Human(gui3d.Object):
         self.meshData.updateIndexBufferFaces()
 
 
+    def traceStacks(self):
+        log.debug("human.targetsDetailStack:")
+        for key,value in self.targetsDetailStack.items():
+            log.debug("  %s: %s" % (key, value))
+        log.debug("algos3d.targetBuffer:")
+        for key,value in algos3d.targetBuffer.items():
+            log.debug("  %s: %s" % (key, value))
+        log.debug("algos3d.warpTargetBuffer:")
+        for key,value in algos3d.warpTargetBuffer.items():
+            log.debug("  %s: %s" % (key, value))
+
+
     # Overriding hide and show to account for both human base and the hairs!
 
     def show(self):

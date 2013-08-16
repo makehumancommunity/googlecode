@@ -22,7 +22,9 @@ Abstract
 TODO
 """
 
+import algos3d
 import gui3d
+import humanmodifier
 import warpmodifier
 import os
 import mh
@@ -39,6 +41,45 @@ class GroupBoxRadioButton(gui.RadioButton):
 
     def onClicked(self, event):
         self.task.groupBox.showWidget(self.groupBox)
+
+
+class ExpressionSimpleModifier(humanmodifier.SimpleModifier):
+
+    def __init__(self, template):
+        humanmodifier.SimpleModifier.__init__(self, template)
+        self.eventType = 'expression'
+
+
+class ExpressionWarpModifier(warpmodifier.EthnicWarpModifier):
+
+    def __init__(self, template):
+        warpmodifier.EthnicWarpModifier(self, template, "face")
+        self.eventType = 'expression'
+
+
+class ExpressionModifierSlider(humanmodifier.ModifierSlider):
+
+    def __init__(self, taskview=None, value=0.0, min=0.0, max=1.0, label=None, modifier=None, valueConverter=None, image=None):
+        humanmodifier.ModifierSlider.__init__(self, value, min, max, label, valueConverter=valueConverter, image=image)
+        self.taskview = taskview
+
+    def onChange(self, value):
+        humanmodifier.ModifierSlider.onChange(self, value)
+        for target in self.modifier.targets:
+            self.taskview.addTarget(target)
+
+
+class ExpressionWarpSlider(warpmodifier.WarpSlider):
+
+    def __init__(self, taskview=None):
+        WarpSlider.__init__(self)
+        self.taskview = taskview
+
+    def onChange(self, value):
+        warpmodifier.WarpSlider.onChange(self, value)
+        for target in self.modifier.targets:
+            self.taskview.addTarget(target)
+
 
 #----------------------------------------------------------
 #   class ExpressionTaskView
@@ -66,6 +107,7 @@ class ExpressionTaskView(gui3d.TaskView):
         self.sliders = []
 
         self.modifiers = {}
+        self.targets = {}
 
         self.categoryBox = self.addRightWidget(gui.GroupBox('Category'))
         self.groupBox = self.addLeftWidget(gui.StackedBox())
@@ -77,12 +119,17 @@ class ExpressionTaskView(gui3d.TaskView):
 
             # Create sliders
             for subname in subnames:
-                modifier = warpmodifier.EthnicWarpModifier(
-                        'data/targets/expression/units/${ethnic}/%s-%s.target' % (name, subname),
-                        "face")
+                if _UseWarping:
+                    template = 'data/targets/expression/units/${ethnic}/%s-%s.target' % (name, subname)
+                    modifier = ExpressionWarpModifier(template)
+                    slider = box.addWidget(ExpressionWarpSlider(taskview=self, label=subname.capitalize(), modifier=modifier))
+                else:
+                    template = 'data/targets/expression/units/caucasian/%s-%s.target' % (name, subname)
+                    modifier = ExpressionSimpleModifier(template)
+                    slider = box.addWidget(ExpressionModifierSlider(taskview=self, value=0, label=subname.capitalize(), modifier=modifier))
 
+                slider.modifier = modifier
                 self.modifiers[name + '-' + subname] = modifier
-                slider = box.addWidget(warpmodifier.WarpSlider(label=subname.capitalize(), modifier=modifier))
                 self.sliders.append(slider)
                 modifier.slider = slider
             # Create radiobutton
@@ -106,9 +153,33 @@ class ExpressionTaskView(gui3d.TaskView):
 
 
     def onHumanChanging(self, event):
-        if event.change not in ['warp', 'material']:
-            #log.debug("onHumanChanging %s" % event)
-            warpmodifier.resetWarpBuffer()
+        if event.change not in ['expression', 'material']:
+            self.resetTargets()
+            #warpmodifier.resetWarpBuffer()
+
+
+    def addTarget(self, target):
+        trgpath,_ = target
+        #log.debug("ADD TARGET %s" % trgpath)
+        self.targets[trgpath] = True
+
+
+    def resetTargets(self):
+        #log.debug("EXPRESSION RESET %d targets" % len(self.targets))
+        if self.targets:
+            human = gui3d.app.selectedHuman
+            for target in self.targets:
+                human.setDetail(target, 0)
+            try:
+                del algos3d.targetBuffer[target]
+            except KeyError:
+                pass
+            try:
+                del algos3d.warpTargetBuffer[target]
+            except KeyError:
+                pass
+            self.targets = {}
+            human.applyAllTargets()
 
 
     def onHumanChanged(self, event):
@@ -165,17 +236,27 @@ class ExpressionAction(gui3d.Action):
             self.before[name] = modifier.getValue(self.human)
 
     def do(self):
-        self.taskView.loadExpression(self.filename, self.include)
+        task = self.taskView
+        task.resetTargets()
+        task.loadExpression(self.filename, self.include)
         self.human.applyAllTargets(gui3d.app.progress, True)
-        for slider in self.taskView.sliders:
+        for name in task.modifiers:
+            modifier = task.modifiers[name]
+            for target in modifier.targets:
+                task.addTarget(target)
+        for slider in task.sliders:
             slider.update()
         return True
 
     def undo(self):
+        task = self.taskView
+        task.resetTargets()
         for name, value in self.before.iteritems():
-            self.taskView.modifiers[name].setValue(self.human, value)
+            modifier = task.modifiers[name]
+            modifier.setValue(self.human, value)
+            task.addTarget(modifier.target)
         self.human.applyAllTargets(gui3d.app.progress, True)
-        for slider in self.taskView.sliders:
+        for slider in task.sliders:
             slider.update()
         return True
 
@@ -242,6 +323,8 @@ class VisemeLoadTaskView(MhmLoadTaskView):
 # This method is called when the plugin is loaded into makehuman
 # The app reference is passed so that a plugin can attach a new category, task, or other GUI elements
 
+
+_UseWarping = False
 
 def load(app):
     category = app.getCategory('Pose/Animate')
