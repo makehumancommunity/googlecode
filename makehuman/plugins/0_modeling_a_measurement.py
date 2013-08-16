@@ -322,21 +322,21 @@ class MeasureTaskView(gui3d.TaskView):
 
         mod = int(underbust)%5
         band = underbust - mod if mod < 2.5 else underbust - mod + 5
-        cup = max(0, int(round(((bust - underbust - 10) / 2))))
+        cup = min(max(0, int(round(((bust - underbust - 10) / 2)))), len(eucups)-1)
         self.eu.setText('EU: %d%s' % (band, eucups[cup]))
 
         jpcups = ['AAA', 'AA', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
 
         mod = int(underbust)%5
         band = underbust - mod if mod < 2.5 else underbust - mod + 5
-        cup = max(0, int(round(((bust - underbust - 5) / 2.5))))
+        cup = min(max(0, int(round(((bust - underbust - 5) / 2.5)))), len(jpcups)-1)
         self.jp.setText('JP: %d%s' % (band, jpcups[cup]))
 
         uscups = ['AA', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K']
 
         band = underbust * 0.393700787
         band = band + 5 if int(band)%2 else band + 4
-        cup = max(0, int(round((bust - underbust - 10) / 2)))
+        cup = min(max(0, int(round((bust - underbust - 10) / 2))), len(uscups)-1)
         self.us.setText('US: %d%s' % (band, uscups[cup]))
 
         ukcups = ['AA', 'A', 'B', 'C', 'D', 'DD', 'E', 'F', 'FF', 'G', 'GG', 'H']
