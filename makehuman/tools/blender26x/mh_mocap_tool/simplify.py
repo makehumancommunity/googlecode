@@ -62,8 +62,8 @@ def getActionFCurves(act, useVisible, useMarkers, scn):
         fcurves = act.fcurves
 
     if useMarkers:
-        (minTime, maxTime) = getMarkedTime(scn)        
-        if minTime == None:    
+        (minTime, maxTime) = utils.getMarkedTime(scn)
+        if minTime == None:
             print("Need two selected markers")
             return ([], 0, 0)
     else:
@@ -127,7 +127,7 @@ def simplifyFCurve(fcu, act, maxErrLoc, maxErrRot, minTime, maxTime):
     for n in keeps:
         newVerts.append(points[n].co.copy())
     nNewPoints = len(newVerts)
-    
+
     oldOffset = nBefore+nPoints
     newOffset = nBefore+nNewPoints
     for n in range(nAfter):
@@ -140,7 +140,7 @@ def simplifyFCurve(fcu, act, maxErrLoc, maxErrRot, minTime, maxTime):
         fcu.keyframe_points.remove(kp)
     for n in range(nNewPoints):
         fcu.keyframe_points[n+nBefore].co = newVerts[n]
-    return        
+    return
 
 #
 #    iterateFCurves(points, keeps, maxErr):
@@ -169,22 +169,6 @@ def iterateFCurves(points, keeps, maxErr):
     return new
 
 #
-#    getMarkedTime(scn):
-#
-
-def getMarkedTime(scn):
-    markers = []
-    for mrk in scn.timeline_markers:
-        if mrk.select:
-            markers.append(mrk.frame)
-    markers.sort()
-    if len(markers) >= 2:
-        return (markers[0], markers[-1])
-    else:
-        return (None, None)
-
-
-#
 #   rescaleFCurves(context, rig, factor):
 #
 
@@ -196,7 +180,7 @@ def rescaleFCurves(context, rig, factor):
         rescaleFCurve(fcu, factor)
     print("Curves rescaled")
     return
-    
+
 #
 #   rescaleFCurve(fcu, factor):
 #
@@ -209,7 +193,7 @@ def rescaleFCurve(fcu, factor):
     (tn,vn) = fcu.keyframe_points[n-1].co
     limitData = getFCurveLimits(fcu)
     (mode, upper, lower, diff) = limitData
-    
+
     tm = t0
     vm = v0
     inserts = []
@@ -224,7 +208,7 @@ def rescaleFCurve(fcu, factor):
         pk.co = (tn,vk)
         tm = tn
         vm = vk
-    
+
     addFCurveInserts(fcu, inserts, limitData)
     return
 
@@ -245,16 +229,16 @@ def getFCurveLimits(fcu):
         diff = 2
     else:
         upper = 0
-        lower = 0    
+        lower = 0
         diff = 0
     #print(words[1], mode, upper, lower)
-    return (mode, upper, lower, diff)   
+    return (mode, upper, lower, diff)
 
 #
 #   addFCurveInserts(fcu, inserts, limitData):
 #
 
-def addFCurveInserts(fcu, inserts, limitData):    
+def addFCurveInserts(fcu, inserts, limitData):
     (mode, upper, lower, diff) = limitData
     for (tm,vm,tn,vn) in inserts:
         tp = int((tm+tn)/2 - 0.1)
@@ -270,7 +254,7 @@ def addFCurveInserts(fcu, inserts, limitData):
             fcu.keyframe_points.insert(frame=tp, value=vp)
         if tq < tn:
             fcu.keyframe_points.insert(frame=tq, value=vq)
-    return            
+    return
 
 
 ########################################################################
@@ -289,7 +273,7 @@ class VIEW3D_OT_McpSimplifyFCurvesButton(bpy.types.Operator):
             simplifyFCurves(context, context.object, scn.McpSimplifyVisible, scn.McpSimplifyMarkers)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 class VIEW3D_OT_McpRescaleFCurvesButton(bpy.types.Operator):
     bl_idname = "mcp.rescale_fcurves"
@@ -302,5 +286,5 @@ class VIEW3D_OT_McpRescaleFCurvesButton(bpy.types.Operator):
             rescaleFCurves(context, context.object, scn.McpRescaleFactor)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
+        return{'FINISHED'}
 

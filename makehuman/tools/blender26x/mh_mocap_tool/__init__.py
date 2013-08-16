@@ -36,19 +36,19 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 """
 
 bl_info = {
-    "name": "MakeHumanMotion",
+    "name": "MakeHuman Mocap",
     "author": "Thomas Larsson",
-    "version": "0.902",
+    "version": "0.903",
     "blender": (2, 6, 7),
-    "location": "View3D > Properties > MHX Mocap",
-    "description": "Mocap tool for MHX rig",
+    "location": "Context > Armature > MakeHuman Mocap",
+    "description": "Mocap tool for MakeHuman character",
     "warning": "",
     'wiki_url': "http://www.makehuman.org/node/285",
     "category": "MakeHuman"}
 
 # To support reload properly, try to access a package var, if it's there, reload everything
 if "bpy" in locals():
-    print("Reloading MakeHumanMotion")
+    print("Reloading MakeHuman Mocap")
     import imp
     imp.reload(utils)
     imp.reload(io_json)
@@ -67,7 +67,7 @@ if "bpy" in locals():
     imp.reload(edit)
     imp.reload(floor)
 else:
-    print("Loading MakeHumanMotion")
+    print("Loading MakeHuman Mocap")
     import bpy, os
     from bpy_extras.io_utils import ImportHelper
     from bpy.props import *
@@ -101,9 +101,12 @@ def inset(layout):
 #
 
 class MainPanel(bpy.types.Panel):
-    bl_label = "MakeHumanMotion: Main v %s" % bl_info["version"]
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_label = "MakeHuman Mocap v %s: Main" % bl_info["version"]
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "data"
+    #bl_space_type = "VIEW_3D"
+    #bl_region_type = "UI"
     #bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -138,9 +141,12 @@ class MainPanel(bpy.types.Panel):
 #
 
 class OptionsPanel(bpy.types.Panel):
-    bl_label = "MakeHumanMotion: Options"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_label = "MakeHuman Mocap: Options"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "data"
+    #bl_space_type = "VIEW_3D"
+    #bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -207,9 +213,12 @@ class OptionsPanel(bpy.types.Panel):
 #
 
 class EditPanel(bpy.types.Panel):
-    bl_label = "MakeHumanMotion: Edit Actions"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_label = "MakeHuman Mocap: Edit Actions"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "data"
+    #bl_space_type = "VIEW_3D"
+    #bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -247,7 +256,11 @@ class EditPanel(bpy.types.Panel):
 
         layout.separator()
         layout.label("Floor")
-        layout.operator("mcp.floor_foot", text="Feet Above Floor")
+        row = layout.row()
+        row.prop(scn, "McpFloorLeft")
+        row.prop(scn, "McpFloorRight")
+        row.prop(scn, "McpFloorHips")
+        layout.operator("mcp.floor_foot")
 
         layout.separator()
         layout.label("Loop Animation")
@@ -287,9 +300,12 @@ class EditPanel(bpy.types.Panel):
 #
 
 class MhxSourceBonesPanel(bpy.types.Panel):
-    bl_label = "MakeHumanMotion: Source armature"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_label = "MakeHuman Mocap: Source armature"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "data"
+    #bl_space_type = "VIEW_3D"
+    #bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -333,9 +349,12 @@ class MhxSourceBonesPanel(bpy.types.Panel):
 #
 
 class MhxTargetBonesPanel(bpy.types.Panel):
-    bl_label = "MakeHumanMotion: Target armature"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_label = "MakeHuman Mocap: Target armature"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "data"
+    #bl_space_type = "VIEW_3D"
+    #bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -387,9 +406,12 @@ class MhxTargetBonesPanel(bpy.types.Panel):
 #
 
 class UtilityPanel(bpy.types.Panel):
-    bl_label = "MakeHumanMotion: Utilities"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
+    bl_label = "MakeHuman Mocap: Utilities"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "data"
+    #bl_space_type = "VIEW_3D"
+    #bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod

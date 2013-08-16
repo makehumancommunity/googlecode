@@ -65,7 +65,7 @@ def loopFCurves(context):
     if not fcurves:
         return
 
-    frames = utils.activeFrames(rig)
+    frames = utils.getActiveFrames(rig)
     normalizeRotCurves(scn, rig, fcurves, frames)
 
     hasLocation = {}

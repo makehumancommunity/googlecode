@@ -149,6 +149,23 @@ def initInterface(context):
         description="Adjust XY coordinates of IK handle",
         default=True)
 
+    # Floor
+
+    bpy.types.Scene.McpFloorLeft = BoolProperty(
+        name="Left",
+        description="Keep left foot above floor",
+        default=True)
+
+    bpy.types.Scene.McpFloorRight = BoolProperty(
+        name="Right",
+        description="Keep right foot above floor",
+        default=True)
+
+    bpy.types.Scene.McpFloorHips = BoolProperty(
+        name="Hips",
+        description="Also adjust character COM when keeping feet above floor",
+        default=True)
+
     # Loop
 
     bpy.types.Scene.McpLoopBlendRange = IntProperty(

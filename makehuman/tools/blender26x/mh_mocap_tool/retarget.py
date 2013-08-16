@@ -356,7 +356,7 @@ def retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
         t_pose.setTPoseAsRestPose(context)
 
     anim = setupMhxAnimation(scn, srcRig, trgRig)
-    frames = utils.activeFrames(srcRig)
+    frames = utils.getActiveFrames(srcRig)
 
     scn.objects.active = trgRig
     scn.update()

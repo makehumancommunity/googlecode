@@ -199,10 +199,10 @@ def copyAction(act1, name):
     return act2
 
 #
-#   activeFrames(ob):
+#   getActiveFrames(ob):
 #
 
-def activeFrames(ob):
+def getActiveFrames0(ob):
     active = {}
     if ob.animation_data is None:
         return []
@@ -212,9 +212,42 @@ def activeFrames(ob):
     for fcu in action.fcurves:
         for kp in fcu.keyframe_points:
             active[kp.co[0]] = True
+    return active
+
+
+def getActiveFrames(ob):
+    active = getActiveFrames0(ob)
     frames = list(active.keys())
     frames.sort()
     return frames
+
+
+def getActiveFramesBetweenMarkers(ob, scn):
+    minTime,maxTime = getMarkedTime(scn)
+    if minTime is None:
+        return getActiveFrames(ob)
+    active = getActiveFrames0(ob)
+    frames = []
+    for time in active.keys():
+        if time >= minTime and time <= maxTime:
+            frames.append(time)
+    frames.sort()
+    return frames
+
+#
+#    getMarkedTime(scn):
+#
+
+def getMarkedTime(scn):
+    markers = []
+    for mrk in scn.timeline_markers:
+        if mrk.select:
+            markers.append(mrk.frame)
+    markers.sort()
+    if len(markers) >= 2:
+        return (markers[0], markers[-1])
+    else:
+        return (None, None)
 
 #
 #   fCurveIdentity(fcu):

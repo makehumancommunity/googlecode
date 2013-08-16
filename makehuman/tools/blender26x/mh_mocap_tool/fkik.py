@@ -293,6 +293,8 @@ def clearIkAnimation(context):
     for fcu in ikFCurves:
         act.fcurves.remove(fcu)
 
+    utils.setMhxIk(rig, False)
+
 
 def transferToIk(context):
     from . import target
@@ -330,7 +332,7 @@ def transferToIk(context):
     lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
     rLegIkToAnkle = rig["MhaLegIkToAnkle_R"]
 
-    frames = utils.activeFrames(rig)
+    frames = utils.getActiveFramesBetweenMarkers(rig, scn)
     #frames = range(scn.frame_start, scn.frame_end+1)
     for n,frame in enumerate(frames):
         if n%10 == 0:

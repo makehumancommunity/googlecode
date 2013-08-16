@@ -59,7 +59,7 @@ def floorFoot(context):
         useIk = rig["MhaLegIk_L"] or rig["MhaLegIk_R"]
     except KeyError:
         useIk = False
-    frames = utils.activeFrames(rig)
+    frames = utils.getActiveFramesBetweenMarkers(rig, scn)
     if useIk:
         floorIkFoot(rig, plane, scn, frames)
     else:
@@ -69,15 +69,18 @@ def floorFoot(context):
 def floorFkFoot(rig, plane, scn, frames):
     hipsName = target.getTrgBone("hips")
     hips = rig.pose.bones[hipsName]
-    ez,origin = getPlaneInfo(plane)
+    ez,origin,rot = getPlaneInfo(plane)
 
     for frame in frames:
         scn.frame_set(frame)
         fkik.updateScene()
-        offset = getFkOffset(rig, ez, origin, ".L")
-        rOffset = getFkOffset(rig, ez, origin, ".R")
-        if rOffset > offset:
-            offset = rOffset
+        offset = 0
+        if scn.McpFloorLeft:
+            offset = getFkOffset(rig, ez, origin, ".L")
+        if scn.McpFloorRight:
+            rOffset = getFkOffset(rig, ez, origin, ".R")
+            if rOffset > offset:
+                offset = rOffset
         print(frame, offset)
         if offset > 0:
             addOffset(hips, offset, ez)
@@ -108,7 +111,7 @@ def floorIkFoot(rig, plane, scn, frames):
     root = rig.pose.bones["root"]
     lleg = rig.pose.bones["foot.ik.L"]
     rleg = rig.pose.bones["foot.ik.R"]
-    ez,origin = getPlaneInfo(plane)
+    ez,origin,rot = getPlaneInfo(plane)
 
     for frame in frames:
         scn.frame_set(frame)
@@ -119,9 +122,12 @@ def floorIkFoot(rig, plane, scn, frames):
             offset = rOffset
         print(frame, offset)
         if offset > 0:
-            addOffset(lleg, offset, ez)
-            addOffset(rleg, offset, ez)
-            addOffset(root, offset, ez)
+            if scn.McpFloorLeft:
+                addOffset(lleg, offset, ez)
+            if scn.McpFloorRight:
+                addOffset(rleg, offset, ez)
+            if scn.McpFloorHips:
+                addOffset(root, offset, ez)
 
 
 def getIkOffset(rig, ez, origin, leg, suffix):
@@ -146,9 +152,10 @@ def getIkOffset(rig, ez, origin, leg, suffix):
 
 def getPlaneInfo(plane):
     mat = plane.matrix_world.to_3x3().normalized()
-    ez = mat[2]
+    ez = mat.col[2]
     origin = plane.location
-    return ez,origin
+    rot = mat.to_4x4()
+    return ez,origin,rot
 
 
 def getOffset(point, ez, origin):
@@ -174,8 +181,8 @@ def addOffset(pb, offset, ez):
 
 class VIEW3D_OT_McpFloorFootButton(bpy.types.Operator):
     bl_idname = "mcp.floor_foot"
-    bl_label = "Floor"
-    bl_description = "Keep Foot Above Plane"
+    bl_label = "Keep Feet Above Floor"
+    bl_description = "Keep Feet Above Plane"
     bl_options = {'UNDO'}
 
     def execute(self, context):
