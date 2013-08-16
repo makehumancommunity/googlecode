@@ -36,27 +36,31 @@ class SceneLibraryTaskView(gui3d.TaskView):
         gui3d.TaskView.__init__(self, category, 'Scene')
         self.scene = scene.Scene()
 
-        leftTopBox = self.addLeftWidget(gui.GroupBox("Current scene"))
-        filebox = leftTopBox.addWidget(gui.TextView("Default.mhscene"))
-        
         sceneDir = mh.getPath('scenes')
         if not os.path.exists(sceneDir):
             os.makedirs(sceneDir)
-        defscene = os.path.join(sceneDir, "Default.mhscene")
-        if os.path.exists(defscene):
-            self.scene.load(defscene)
+        self.currentScene = os.path.join(sceneDir, "Default.mhscene")
+        if os.path.exists(self.currentScene):
+            self.scene.load(self.currentScene)
         else:
-            self.scene.save(defscene)
+            self.scene.save(self.currentScene)
         if not os.path.exists(os.path.join(sceneDir, "notfound.thumb")):
             shutil.copy(os.path.normpath(mh.getSysDataPath("uvs/notfound.thumb")), sceneDir)
         self.filechooser = self.addRightWidget( \
         fc.IconListFileChooser(sceneDir , 'mhscene', ['thumb', 'png'], 'notfound.thumb', 'Scene'))
         self.addLeftWidget(self.filechooser.createSortBox())
+        self.filechooser.enableAutoRefresh(False)
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
+            self.currentScene = filename
             self.scene.load(filename)
-            filebox.setText(os.path.basename(filename))
+
+    def onShow(self, event):
+        gui3d.TaskView.onShow(self, event)
+        self.filechooser.refresh()
+        self.filechooser.setHighlightedItem(self.currentScene)
+        self.filechooser.setFocus()
 
                 
 def load(app):
