@@ -43,6 +43,7 @@ from bpy.props import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 from . import mh
+from .error import MHError, handleMHError
 from . import utils
 from .utils import round, setObjectMode
 from . import import_obj
@@ -129,8 +130,11 @@ class VIEW3D_OT_ImportBaseMhcloButton(bpy.types.Operator):
 
     def execute(self, context):
         setObjectMode(context)
-        import_obj.importBaseMhclo(context, filepath=mt.baseMhcloFile)
-        afterImport(context, mt.baseMhcloFile, False, True)
+        try:
+            import_obj.importBaseMhclo(context, filepath=mt.baseMhcloFile)
+            afterImport(context, mt.baseMhcloFile, False, True)
+        except MHError:
+            handleMHError(context)
         return {'FINISHED'}
 
 
@@ -142,9 +146,29 @@ class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
 
     def execute(self, context):
         setObjectMode(context)
-        import_obj.importBaseObj(context, filepath=mt.baseObjFile)
-        afterImport(context, mt.baseObjFile, True, False)
+        try:
+            import_obj.importBaseObj(context, filepath=mt.baseObjFile)
+            afterImport(context, mt.baseObjFile, True, False)
+        except MHError:
+            handleMHError(context)
         return {'FINISHED'}
+
+
+def makeBaseObj(context):
+    mh.proxy = None
+    ob = context.object
+    for mod in ob.modifiers:
+        if mod.type == 'ARMATURE':
+            mod.show_in_editmode = True
+            mod.show_on_cage = True
+        else:
+            ob.modifiers.remove(mod)
+    utils.removeShapeKeys(ob)
+    ob.shape_key_add(name="Basis")
+    ob["NTargets"] = 0
+    ob.ProxyFile = ""
+    ob.ObjFile =  ""
+    ob.MhHuman = True
 
 
 class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
@@ -155,20 +179,10 @@ class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
 
     def execute(self, context):
         setObjectMode(context)
-        mh.proxy = None
-        ob = context.object
-        for mod in ob.modifiers:
-            if mod.type == 'ARMATURE':
-                mod.show_in_editmode = True
-                mod.show_on_cage = True
-            else:
-                ob.modifiers.remove(mod)
-        utils.removeShapeKeys(ob)
-        ob.shape_key_add(name="Basis")
-        ob["NTargets"] = 0
-        ob.ProxyFile = ""
-        ob.ObjFile =  ""
-        ob.MhHuman = True
+        try:
+            makeBaseObj(context)
+        except MHError:
+            handleMHError(context)
         return{'FINISHED'}
 
 
@@ -211,9 +225,27 @@ class VIEW3D_OT_DeleteIrrelevantButton(bpy.types.Operator):
 
     def execute(self, context):
         setObjectMode(context)
-        ob = context.object
-        deleteIrrelevant(ob, ob.MhAffectOnly)
+        try:
+            ob = context.object
+            deleteIrrelevant(ob, ob.MhAffectOnly)
+        except MHError:
+            handleMHError(context)
         return{'FINISHED'}
+
+
+def loadTargetFile(context, filepath):
+    global Comments
+    setObjectMode(context)
+    ob = context.object
+    settings = getSettings(ob)
+    if ob.MhMeshVertsDeleted:
+        _,Comments = utils.loadTarget(
+            filepath,
+            context,
+            irrelevant=settings.irrelevantVerts[ob.MhAffectOnly],
+            offset=settings.offsetVerts[ob.MhAffectOnly])
+    else:
+        _,Comments = utils.loadTarget(filepath, context)
 
 
 class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
@@ -234,18 +266,10 @@ class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        global Comments
-        setObjectMode(context)
-        ob = context.object
-        settings = getSettings(ob)
-        if ob.MhMeshVertsDeleted:
-            _,Comments = utils.loadTarget(
-                self.properties.filepath,
-                context,
-                irrelevant=settings.irrelevantVerts[ob.MhAffectOnly],
-                offset=settings.offsetVerts[ob.MhAffectOnly])
-        else:
-            _,Comments = utils.loadTarget(self.properties.filepath, context)
+        try:
+            loadTargetFile(context, self.properties.filepath)
+        except MHError:
+            handleMHError(context)
         print("Target loaded")
         return {'FINISHED'}
 
@@ -307,7 +331,10 @@ class VIEW3D_OT_LoadTargetFromMeshButton(bpy.types.Operator):
 
     def execute(self, context):
         setObjectMode(context)
-        loadTargetFromMesh(context)
+        try:
+            loadTargetFromMesh(context)
+        except MHError:
+            handleMHError(context)
         return {'FINISHED'}
 
 
@@ -343,9 +370,12 @@ class VIEW3D_OT_NewTargetButton(bpy.types.Operator):
 
     def execute(self, context):
         global Comments
-        bpy.ops.object.mode_set(mode='OBJECT')
-        Comments = []
-        newTarget(context)
+        try:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            Comments = []
+            newTarget(context)
+        except MHError:
+            handleMHError(context)
         return {'FINISHED'}
 
 #----------------------------------------------------------
@@ -466,16 +496,19 @@ class VIEW3D_OT_SaveTargetButton(bpy.types.Operator):
 
     def execute(self, context):
         setObjectMode(context)
-        ob = context.object
-        path = ob["FilePath"]
-        if mh.confirm:
-            mh.confirm = None
-            doSaveTarget(context, path)
-            print("Target saved")
-        else:
-            mh.confirm = "mh.save_target"
-            mh.confirmString = "Overwrite target file?"
-            mh.confirmString2 = ' "%s?"' % os.path.basename(path)
+        try:
+            ob = context.object
+            path = ob["FilePath"]
+            if mh.confirm:
+                mh.confirm = None
+                doSaveTarget(context, path)
+                print("Target saved")
+            else:
+                mh.confirm = "mh.save_target"
+                mh.confirmString = "Overwrite target file?"
+                mh.confirmString2 = ' "%s?"' % os.path.basename(path)
+        except MHError:
+            handleMHError(context)
         return{'FINISHED'}
 
 
@@ -498,7 +531,10 @@ class VIEW3D_OT_SaveasTargetButton(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
         setObjectMode(context)
-        doSaveTarget(context, self.properties.filepath)
+        try:
+            doSaveTarget(context, self.properties.filepath)
+        except MHError:
+            handleMHError(context)
         print("Target saved")
         return {'FINISHED'}
 
@@ -533,8 +569,11 @@ class VIEW3D_OT_ApplyTargetsButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        setObjectMode(context)
-        applyTargets(context)
+        try:
+            setObjectMode(context)
+            applyTargets(context)
+        except MHError:
+            handleMHError(context)
         return{'FINISHED'}
 
 #----------------------------------------------------------
@@ -586,15 +625,18 @@ class VIEW3D_OT_PruneTargetFileButton(bpy.types.Operator, ExportHelper):
         return (context.object and context.object.MhPruneEnabled)
 
     def execute(self, context):
-        setObjectMode(context)
-        ob = context.object
-        if ob.MhPruneWholeDir:
-            folder = os.path.dirname(self.properties.filepath)
-            pruneFolder(ob, folder)
-            print("Targets pruned")
-        else:
-            pruneTarget(ob, self.properties.filepath)
-            print("Target pruned")
+        try:
+            setObjectMode(context)
+            ob = context.object
+            if ob.MhPruneWholeDir:
+                folder = os.path.dirname(self.properties.filepath)
+                pruneFolder(ob, folder)
+                print("Targets pruned")
+            else:
+                pruneTarget(ob, self.properties.filepath)
+                print("Target pruned")
+        except MHError:
+            handleMHError(context)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -743,8 +785,11 @@ class VIEW3D_OT_FitTargetButton(bpy.types.Operator):
         return (not context.object.MhMeshVertsDeleted)
 
     def execute(self, context):
-        setObjectMode(context)
-        fitTarget(context)
+        try:
+            setObjectMode(context)
+            fitTarget(context)
+        except MHError:
+            handleMHError(context)
         return{'FINISHED'}
 
 #----------------------------------------------------------
@@ -790,8 +835,11 @@ class VIEW3D_OT_DiscardTargetButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        setObjectMode(context)
-        discardTarget(context)
+        try:
+            setObjectMode(context)
+            discardTarget(context)
+        except MHError:
+            handleMHError(context)
         return{'FINISHED'}
 
 
@@ -806,8 +854,11 @@ class VIEW3D_OT_DiscardAllTargetsButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        setObjectMode(context)
-        discardAllTargets(context)
+        try:
+            setObjectMode(context)
+            discardAllTargets(context)
+        except MHError:
+            handleMHError(context)
         return{'FINISHED'}
 
 #----------------------------------------------------------
@@ -959,13 +1010,38 @@ class VIEW3D_OT_SymmetrizeTargetButton(bpy.types.Operator):
     action = StringProperty()
 
     def execute(self, context):
-        setObjectMode(context)
-        symmetrizeTarget(context, (self.action=="Right"), (self.action=="Mirror"))
+        try:
+            setObjectMode(context)
+            symmetrizeTarget(context, (self.action=="Right"), (self.action=="Mirror"))
+        except MHError:
+            handleMHError(context)
         return{'FINISHED'}
 
 #----------------------------------------------------------
 #   Snapping
 #----------------------------------------------------------
+
+def snapWaist(context):
+    ob = context.object
+    settings = getSettings(ob)
+    if ob.MhIrrelevantDeleted:
+        offset = settings.offsetVerts['Skirt']
+    else:
+        offset = 0
+
+    nVerts = len(settings.skirtWaist)
+    if len(settings.tightsWaist) != nVerts:
+        halt
+    bpy.ops.object.mode_set(mode='OBJECT')
+    skey = ob.data.shape_keys.key_blocks[-1]
+    verts = skey.data
+    for n in range(nVerts):
+        verts[settings.skirtWaist[n]-offset].co = verts[settings.tightsWaist[n]-offset].co
+
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='DESELECT')
+    bpy.ops.object.mode_set(mode='OBJECT')
+
 
 class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
     bl_idname = "mh.snap_waist"
@@ -979,27 +1055,49 @@ class VIEW3D_OT_SnapWaistButton(bpy.types.Operator):
         return (ob.MhAffectOnly == 'Skirt' or not ob.MhIrrelevantDeleted)
 
     def execute(self, context):
-        setObjectMode(context)
-        ob = context.object
-        settings = getSettings(ob)
-        if ob.MhIrrelevantDeleted:
-            offset = settings.offsetVerts['Skirt']
-        else:
-            offset = 0
-
-        nVerts = len(settings.skirtWaist)
-        if len(settings.tightsWaist) != nVerts:
-            halt
-        bpy.ops.object.mode_set(mode='OBJECT')
-        skey = ob.data.shape_keys.key_blocks[-1]
-        verts = skey.data
-        for n in range(nVerts):
-            verts[settings.skirtWaist[n]-offset].co = verts[settings.tightsWaist[n]-offset].co
-
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_all(action='DESELECT')
-        bpy.ops.object.mode_set(mode='OBJECT')
+        try:
+            setObjectMode(context)
+            snapWaist(context)
+        except MHError:
+            handleMHError(context)
         return{'FINISHED'}
+
+
+def straightenSkirt(context):
+    ob = context.object
+    settings = getSettings(ob)
+    if ob.MhIrrelevantDeleted:
+        offset = settings.offsetVerts['Skirt']
+    else:
+        offset = 0
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+    skey = ob.data.shape_keys.key_blocks[-1]
+    verts = skey.data
+
+    for col in settings.XYSkirtColumns:
+        xsum = 0.0
+        ysum = 0.0
+        for vn in col:
+            xsum += verts[vn-offset].co[0]
+            ysum += verts[vn-offset].co[1]
+        x = xsum/len(col)
+        y = ysum/len(col)
+        for vn in col:
+            verts[vn-offset].co[0] = x
+            verts[vn-offset].co[1] = y
+
+    for row in settings.ZSkirtRows:
+        zsum = 0.0
+        for vn in row:
+            zsum += verts[vn-offset].co[2]
+        z = zsum/len(row)
+        for vn in row:
+            verts[vn-offset].co[2] = z
+
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='DESELECT')
+    bpy.ops.object.mode_set(mode='OBJECT')
 
 
 class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
@@ -1014,41 +1112,11 @@ class VIEW3D_OT_StraightenSkirtButton(bpy.types.Operator):
         return (ob.MhAffectOnly == 'Skirt' or not ob.MhIrrelevantDeleted)
 
     def execute(self, context):
-        setObjectMode(context)
-        ob = context.object
-        settings = getSettings(ob)
-        if ob.MhIrrelevantDeleted:
-            offset = settings.offsetVerts['Skirt']
-        else:
-            offset = 0
-
-        bpy.ops.object.mode_set(mode='OBJECT')
-        skey = ob.data.shape_keys.key_blocks[-1]
-        verts = skey.data
-
-        for col in settings.XYSkirtColumns:
-            xsum = 0.0
-            ysum = 0.0
-            for vn in col:
-                xsum += verts[vn-offset].co[0]
-                ysum += verts[vn-offset].co[1]
-            x = xsum/len(col)
-            y = ysum/len(col)
-            for vn in col:
-                verts[vn-offset].co[0] = x
-                verts[vn-offset].co[1] = y
-
-        for row in settings.ZSkirtRows:
-            zsum = 0.0
-            for vn in row:
-                zsum += verts[vn-offset].co[2]
-            z = zsum/len(row)
-            for vn in row:
-                verts[vn-offset].co[2] = z
-
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_all(action='DESELECT')
-        bpy.ops.object.mode_set(mode='OBJECT')
+        try:
+            setObjectMode(context)
+            straightenSkirt(context)
+        except MHError:
+            handleMHError(context)
         return{'FINISHED'}
 
 
@@ -1071,8 +1139,11 @@ class VIEW3D_OT_FixInconsistencyButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        setObjectMode(context)
-        fixInconsistency(context)
+        try:
+            setObjectMode(context)
+            fixInconsistency(context)
+        except MHError:
+            handleMHError(context)
         return{'FINISHED'}
 
 class VIEW3D_OT_SkipButton(bpy.types.Operator):

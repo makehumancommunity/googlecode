@@ -31,9 +31,6 @@ import log
 
 #import cProfile
 
-import armature
-from armature.pose import createPoseRig
-from armature.utils import debugCoords
 import posemode
 
 class PoseAction(gui3d.Action):

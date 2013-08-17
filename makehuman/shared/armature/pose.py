@@ -268,19 +268,36 @@ class Pose:
         log.message("Loading MHP file %s", filepath)
         amt = self.armature
         fp = open(filepath, "rU")
+        bname = None
+        mat = np.identity(4, float)
         for line in fp:
             words = line.split()
-            if len(words) < 5:
+            if len(words) < 4:
                 continue
-            elif words[1] in ["quat", "gquat"]:
-                pb = self.posebones[words[0]]
+            if words[0] != bname:
+                self.setMatrixPose(bname, mat)
+                bname = words[0]
+                mat = np.identity(4, float)
+            if words[1] in ["quat", "gquat"]:
                 quat = float(words[2]),float(words[3]),float(words[4]),float(words[5])
                 mat = tm.quaternion_matrix(quat)
                 if words[1] == "gquat":
+                    pb = self.posebones[words[0]]
                     mat = np.dot(la.inv(pb.bone.matrixRelative), mat)
-                pb.matrixPose[:3,:3] = mat[:3,:3]
+                    log.debug(mat)
+            elif words[1] == "scale":
+                scale = 1+float(words[2]), 1+float(words[3]), 1+float(words[4])
+                smat = tm.compose_matrix(scale=scale)
+                mat = np.dot(smat, mat)
+        self.setMatrixPose(bname, mat)
         fp.close()
         self.update()
+
+
+    def setMatrixPose(self, bname, mat):
+        if bname:
+            pb = self.posebones[bname]
+            pb.matrixPose[:,:3] = mat[:,:3]
 
 
     def readBvhFile(self, filepath):
@@ -709,6 +726,8 @@ class PoseBone:
 
 def createPoseRig(human):
     options = ArmatureOptions()
+    options.useMuscles = True
+    options.addConnectingBones = True
     amt = Pose(human, options)
     return amt
 

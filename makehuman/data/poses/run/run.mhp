@@ -1,73 +1,67 @@
 hips	gquat	1	-.006	0	0
-thigh.L	quat	.886	-.458	-.052	.030
-shin.L	quat	.856	.512	.057	-.038
-foot.L	quat	.997	-.073	-.003	.002
-toe.L	quat	.991	-.130	-.003	0
-thigh.R	quat	.967	.243	-.028	-.055
-shin.R	quat	.932	.352	-.039	-.066
-foot.R	quat	.986	.164	-.008	.005
-toe.R	quat	.997	-.066	.001	0
-spine	quat	.999	-.014	-.039	0
-spine-1	quat	.998	.059	0	0
-chest	quat	.997	.051	-.054	.002
-chest-1	quat	1	0	0	0
-shoulder.L	quat	.996	.034	-.040	-.069
-deltoid.L	quat	.999	-.002	.034	-.022
-upper_arm.L	quat	.931	.166	-.118	-.299
-forearm.L	quat	.891	.451	.014	.034
-hand.L	quat	.982	-.091	-.028	-.157
-palm_pinky.L	quat	1	0	0	0
-f_pinky.01.L	quat	.942	.334	0	0
-f_pinky.02.L	quat	.946	.322	0	0
-f_pinky.03.L	quat	.866	.499	0	0
-palm_ring.L	quat	1	0	0	0
-f_ring.01.L	quat	.942	.334	0	0
-f_ring.02.L	quat	.946	.322	0	0
-f_ring.03.L	quat	.866	.499	0	0
-palm_middle.L	quat	1	0	0	0
-f_middle.01.L	quat	.942	.334	0	0
-f_middle.02.L	quat	.946	.322	0	0
-f_middle.03.L	quat	.866	.499	0	0
-palm_index.L	quat	1	0	0	0
-f_index.01.L	quat	.942	.334	0	0
-f_index.02.L	quat	.946	.322	0	0
-f_index.03.L	quat	.866	.499	0	0
-thumb.01.L	quat	1	0	0	0
-thumb.02.L	quat	.999	.007	.008	-.002
-thumb.03.L	quat	.866	.499	0	0
-shoulder.R	quat	1	0	0	0
-deltoid.R	quat	1	0	0	0
-upper_arm.R	quat	.880	-.446	-.143	.073
-forearm.R	quat	.994	.090	.034	.033
-hand.R	quat	.964	-.202	-.009	.166
-palm_pinky.R	quat	1	0	0	0
-f_pinky.01.R	quat	1	0	0	0
-f_pinky.02.R	quat	1	0	0	0
-f_pinky.03.R	quat	1	0	0	0
-palm_middle.R	quat	1	0	0	0
-f_middle.01.R	quat	1	0	0	0
-f_middle.02.R	quat	1	0	0	0
-f_middle.03.R	quat	1	0	0	0
-palm_ring.R	quat	1	0	0	0
-f_ring.01.R	quat	1	0	0	0
-f_ring.02.R	quat	1	0	0	0
-f_ring.03.R	quat	1	0	0	0
-thumb.01.R	quat	1	0	0	0
-thumb.02.R	quat	1	0	0	0
-thumb.03.R	quat	1	0	0	0
-palm_index.R	quat	1	0	0	0
-f_index.01.R	quat	1	0	0	0
-f_index.02.R	quat	1	0	0	0
-f_index.03.R	quat	1	0	0	0
-neck	quat	1	0	0	0
-head	quat	1	0	0	0
-uplid.L	quat	1	0	0	0
-jaw	quat	1	0	0	0
-tongue_base	quat	1	0	0	0
-tongue_mid	quat	1	0	0	0
-tongue_tip	quat	1	0	0	0
-eye.R	quat	1	0	0	0
-eye.L	quat	1	0	0	0
-lolid.L	quat	1	0	0	0
-uplid.R	quat	1	0	0	0
-lolid.R	quat	1	0	0	0
+thigh.L	quat	.887	-.456	-.050	.028
+shin.L	quat	.856	.511	.056	-.036
+foot.L	quat	.997	-.071	-.001	.002
+toe.L	quat	.991	-.128	-.001	0
+soleus.L	quat	.999	.010	0	-.001
+soleus.L	scale	-.011	.011	0
+trg_knee.L	scale	.205	.274	.206
+femoris.L	quat	.996	-.080	-.001	-.012
+femoris.L	scale	.065	-.118	.065
+knee_fan.L	quat	.964	.266	0	-.001
+quadriceps.L	quat	.999	.023	0	.007
+quadriceps.L	scale	0	-.215	0
+thigh.R	quat	.968	.241	-.026	-.053
+shin.R	quat	.933	.350	-.037	-.064
+foot.R	quat	.986	.162	-.006	.005
+toe.R	quat	.997	-.064	0	0
+soleus.R	quat	.999	-.022	0	-.004
+soleus.R	scale	.038	-.036	0
+trg_knee.R	scale	.137	.183	.137
+femoris.R	quat	.998	-.059	0	.013
+femoris.R	scale	.034	-.065	.034
+knee_fan.R	quat	.983	.178	-.013	-.035
+quadriceps.R	quat	.999	-.042	0	-.003
+quadriceps.R	scale	0	.078	0
+spine	quat	.999	-.014	-.037	0
+spine-1	quat	.998	.057	0	0
+chest	quat	.997	.049	-.052	.001
+shoulder.L	quat	.996	.032	-.038	-.067
+deltoid.L	quat	.999	-.002	.032	-.022
+upper_arm.L	quat	.933	.164	-.116	-.297
+forearm.L	quat	.892	.449	.013	.032
+hand.L	quat	.983	-.089	-.026	-.155
+f_pinky.01.L	quat	.943	.332	0	0
+f_pinky.02.L	quat	.947	.320	0	0
+f_pinky.03.L	quat	.867	.497	0	0
+f_middle.01.L	quat	.943	.332	0	0
+f_middle.02.L	quat	.947	.320	0	0
+f_middle.03.L	quat	.867	.497	0	0
+f_index.01.L	quat	.943	.332	0	0
+f_index.02.L	quat	.947	.320	0	0
+f_index.03.L	quat	.867	.497	0	0
+f_ring.01.L	quat	.943	.332	0	0
+f_ring.02.L	quat	.947	.320	0	0
+f_ring.03.L	quat	.867	.497	0	0
+thumb.02.L	quat	1	.005	.006	0
+thumb.03.L	quat	.867	.497	0	0
+triceps.L	scale	.178	-.118	.178
+biceps.L	scale	.178	.237	.178
+elbow_fan.L	quat	.972	.231	.008	.016
+scapula.L	quat	.995	.036	.084	.021
+upper_arm.R	quat	.881	-.444	-.141	.071
+forearm.R	quat	.995	.088	.032	.031
+hand.R	quat	.965	-.200	-.007	.164
+elbow_fan.R	quat	.998	.045	.001	.017
+elbow_fan.R	scale	0	0	0
+biceps.R	scale	.034	.046	.035
+triceps.R	scale	.035	-.022	.034
+scapula.R	quat	.992	0	-.124	0
+trapezius.L	quat	.997	.012	0	.075
+trapezius.L	scale	0	.061	-.057
+lat_dorsi.L	quat	.999	.011	0	.014
+lat_dorsi.L	scale	-.008	.017	-.008
+pectoralis.L	quat	.999	-.038	0	.014
+pectoralis.L	scale	.008	-.017	.008
+stomach	quat	.998	-.058	-.001	-.023
+stomach	scale	.028	-.054	.028

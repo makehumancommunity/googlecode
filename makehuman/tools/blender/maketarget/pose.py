@@ -31,6 +31,7 @@ from bpy.props import *
 from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 from . import mh
+from .error import MHError, handleMHError
 from . import utils
 from .utils import round, setObjectMode
 
@@ -52,12 +53,12 @@ def saveMhpFile(context, filepath):
 
         fp = open(mhppath, "w", encoding="utf-8", newline="\n")
         root = rig.pose.bones[roots[0]]
-        writeMhpBones(fp, root)
+        writeMhpBones(fp, root, None)
         fp.close()
         print("Mhp file %s saved" % mhppath)
 
 
-def writeMhpBones(fp, pb):
+def writeMhpBones(fp, pb, log):
     b = pb.bone
     if pb.parent:
         string = "quat"
@@ -69,12 +70,28 @@ def writeMhpBones(fp, pb):
         matz = mat[2].copy()
         mat[1] = matz
         mat[2] = -maty
-    q = mat.to_quaternion()
+
+    t,q,s = mat.decompose()
     magn = math.sqrt(q.x*q.x + q.y*q.y + q.z*q.z)
     if magn > 1e-5:
         fp.write("%s\t%s\t%s\t%s\t%s\t%s\n" % (pb.name, string, round(q.w), round(q.x), round(q.y), round(q.z)))
+    s -= Vector((1,1,1))
+    if s.length > 1e-3 and isMuscleBone(pb):
+        fp.write("%s\t%s\t%s\t%s\t%s\n" % (pb.name, "scale", round(s[0]), round(s[1]), round(s[2])))
+        #log.write("%s %s\n%s\n" % (pb.name, s, m))
+
     for child in pb.children:
-        writeMhpBones(fp, child)
+        writeMhpBones(fp, child, log)
+
+
+def isMuscleBone(pb):
+    for cns in pb.constraints:
+        if (cns.type == 'STRETCH_TO' or
+            cns.type == 'TRANSFORM' or
+            cns.type == 'TRACK_TO' or
+            cns.type == 'COPY_ROTATION'):
+            return True
+    return False
 
 
 def loadMhpFile(context, filepath):
@@ -88,13 +105,14 @@ def loadMhpFile(context, filepath):
         fp = open(mhppath, "rU")
         for line in fp:
             words = line.split()
-            if len(words) < 5:
+            if len(words) < 4:
                 continue
             elif words[1] == "quat":
-                q = Quaternion((float(words[2]), float(words[3]), float(words[4]), float(words[5])))
-                mat = q.to_matrix().to_4x4()
                 pb = rig.pose.bones[words[0]]
-                pb.matrix_basis = mat
+                if not isMuscleBone(pb):
+                    q = Quaternion((float(words[2]), float(words[3]), float(words[4]), float(words[5])))
+                    mat = q.to_matrix().to_4x4()
+                    pb.matrix_basis = mat
             elif words[1] == "gquat":
                 q = Quaternion((float(words[2]), float(words[3]), float(words[4]), float(words[5])))
                 mat = q.to_matrix().to_4x4()
@@ -104,6 +122,10 @@ def loadMhpFile(context, filepath):
                 mat[2] = maty
                 pb = rig.pose.bones[words[0]]
                 pb.matrix_basis = pb.bone.matrix_local.inverted() * mat
+            elif words[1] == "scale":
+                pass
+            else:
+                raise MHError("Unknown line in mcp file:\n%s" % line)
         fp.close()
         print("Mhp file %s loaded" % mhppath)
 
@@ -128,7 +150,10 @@ class VIEW3D_OT_LoadMhpButton(bpy.types.Operator):
 
     def execute(self, context):
         setObjectMode(context)
-        loadMhpFile(context, self.properties.filepath)
+        try:
+            loadMhpFile(context, self.properties.filepath)
+        except MHError:
+            handleMHError(context)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -155,7 +180,10 @@ class VIEW3D_OT_SaveasMhpFileButton(bpy.types.Operator, ExportHelper):
 
     def execute(self, context):
         setObjectMode(context)
-        saveMhpFile(context, self.properties.filepath)
+        try:
+            saveMhpFile(context, self.properties.filepath)
+        except MHError:
+            handleMHError(context)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -271,8 +299,11 @@ class VIEW3D_OT_LoadBvhButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
-        setObjectMode(context)
-        loadBvhFile(context, self.properties.filepath)
+        try:
+            setObjectMode(context)
+            loadBvhFile(context, self.properties.filepath)
+        except MHError:
+            handleMHError(context)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -298,8 +329,11 @@ class VIEW3D_OT_SaveasBvhFileButton(bpy.types.Operator, ExportHelper):
         return context.object
 
     def execute(self, context):
-        setObjectMode(context)
-        saveBvhFile(context, self.properties.filepath)
+        try:
+            setObjectMode(context)
+            saveBvhFile(context, self.properties.filepath)
+        except MHError:
+            handleMHError(context)
         return {'FINISHED'}
 
     def invoke(self, context, event):
