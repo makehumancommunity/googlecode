@@ -151,7 +151,6 @@ class ModifierSlider(gui.Slider):
                         human.getSeedMesh().setVisibility(1)
                     human.getSubdivisionMesh(False).setVisibility(0)
             self.modifier.updateValue(human, value, gui3d.app.settings.get('realtimeNormalUpdates', True))
-            self.resetWarpTargets()  # Why? Good idea?
             human.updateProxyMesh()  # Is this not too slow?
 
 
@@ -177,7 +176,6 @@ class ModifierSlider(gui.Slider):
                 human.getSeedMesh().setVisibility(0)
             human.getSubdivisionMesh(False).setVisibility(1)
         self.value = None
-        self.resetWarpTargets()
 
     def onRelease(self, w):
         gui3d.app.callAsync(self._onChange)
@@ -190,13 +188,6 @@ class ModifierSlider(gui.Slider):
             # Only update slider position when it is not being clicked or dragged
             self.setValue(self.modifier.getValue(human))
         self.blockSignals(False)
-
-    # Overwrite for warp targets
-    def resetWarpTargets(self):
-        return
-        import warpmodifier
-        log.debug("Reset %s" % self)
-        warpmodifier.resetWarpBuffer()
 
 
 class GenericSlider(ModifierSlider):

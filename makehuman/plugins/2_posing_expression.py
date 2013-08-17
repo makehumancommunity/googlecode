@@ -59,27 +59,14 @@ class ExpressionWarpModifier(warpmodifier.EthnicWarpModifier):
 
 class ExpressionModifierSlider(humanmodifier.ModifierSlider):
 
-    def __init__(self, taskview=None, value=0.0, min=0.0, max=1.0, label=None, modifier=None, valueConverter=None, image=None):
-        humanmodifier.ModifierSlider.__init__(self, value, min, max, label, valueConverter=valueConverter, image=image)
+    def __init__(self, taskview=None, label=None, modifier=None):
+        humanmodifier.ModifierSlider.__init__(self, label=label, modifier=modifier)
         self.taskview = taskview
 
     def onChange(self, value):
         humanmodifier.ModifierSlider.onChange(self, value)
         for target in self.modifier.targets:
             self.taskview.addTarget(target)
-
-
-class ExpressionWarpSlider(warpmodifier.WarpSlider):
-
-    def __init__(self, taskview=None):
-        WarpSlider.__init__(self)
-        self.taskview = taskview
-
-    def onChange(self, value):
-        warpmodifier.WarpSlider.onChange(self, value)
-        for target in self.modifier.targets:
-            self.taskview.addTarget(target)
-
 
 #----------------------------------------------------------
 #   class ExpressionTaskView
@@ -122,12 +109,11 @@ class ExpressionTaskView(gui3d.TaskView):
                 if _UseWarping:
                     template = 'data/targets/expression/units/${ethnic}/%s-%s.target' % (name, subname)
                     modifier = ExpressionWarpModifier(template)
-                    slider = box.addWidget(ExpressionWarpSlider(taskview=self, label=subname.capitalize(), modifier=modifier))
                 else:
                     template = 'data/targets/expression/units/caucasian/%s-%s.target' % (name, subname)
                     modifier = ExpressionSimpleModifier(template)
-                    slider = box.addWidget(ExpressionModifierSlider(taskview=self, value=0, label=subname.capitalize(), modifier=modifier))
 
+                slider = box.addWidget(ExpressionModifierSlider(taskview=self, label=subname.capitalize(), modifier=modifier))
                 slider.modifier = modifier
                 self.modifiers[name + '-' + subname] = modifier
                 self.sliders.append(slider)

@@ -64,17 +64,6 @@ def saveWarpedTarget(shape, path):
     fp.close()
 
 #----------------------------------------------------------
-#   class WarpSlider
-#----------------------------------------------------------
-
-class WarpSlider(humanmodifier.ModifierSlider):
-
-    # Override
-    def resetWarpTargets(self):
-        #log.debug("Reset NOT %s" % self)
-        pass
-
-#----------------------------------------------------------
 #   class WarpModifier
 #----------------------------------------------------------
 
@@ -391,9 +380,11 @@ def findReplacementFile(filepath):
         (["/asian", "/african"], "/caucasian"),
         (["-baby"], "-child"),
         (["-child", "-old"], "-young"),
-        (["-male"], "-female"),
         (["/baby", "/child", "/old"], "/young"),
+        (["-male"], "-female"),
         (["/male"], "/female"),
+        (["-female"], "-male"),
+        (["/female"], "/male"),
     ]
 
     filepath1 = filepath
