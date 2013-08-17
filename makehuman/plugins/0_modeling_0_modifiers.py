@@ -360,6 +360,7 @@ class TorsoTaskView(ModifierTaskView):
             ('torso-trans', 'in', 'out', {'cam' : 'setGlobalCamera'}),
             ('torso-trans', 'down', 'up', {'cam' : 'setGlobalCamera'}),
             ('torso-trans', 'forward', 'backward', {'cam' : 'setGlobalCamera'}),
+            ('torso-vshape', 'less', 'more', {'cam' : 'setGlobalCamera'}),
             ]),
         ('Hip', 'hip', [
             ('hip-scale-depth', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
