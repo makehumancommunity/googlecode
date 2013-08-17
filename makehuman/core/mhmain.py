@@ -347,6 +347,7 @@ class MHApplication(gui3d.Application, mh.Application):
         # Load plugins not starting with _
         self.pluginsToLoad = glob.glob(mh.getSysPath(os.path.join("plugins/",'[!_]*.py')))
 
+        # Load plugin packages (folders with a file called __init__.py)
         for fname in os.listdir("plugins/"):
             if fname[0] != "_":
                 folder = os.path.join("plugins", fname)
@@ -391,6 +392,9 @@ class MHApplication(gui3d.Application, mh.Application):
                 log.message('Loading plugin %s', name)
                 module.load(self)
                 log.message('Loaded plugin %s', name)
+
+                # Process all non-user-input events in the queue to make sure
+                # any callAsync events are run.
                 self.processEvents()
             else:
                 self.modules[name] = None
@@ -458,7 +462,7 @@ class MHApplication(gui3d.Application, mh.Application):
         self.mainwin.resize(self.splash.width() - mainwinBorder[0], self.splash.height() - mainwinBorder[1])
         self.mainwin.move(self.splash.pos())
 
-        self.splash.setFormat('<br><br><b><font size="48" color="#ff0000">%s</font></b>')
+        #self.splash.setFormat('<br><br><b><font size="10" color="#ffffff">%s</font></b>')
 
         log.message('Loading human')
         self.loadHuman()
@@ -792,6 +796,9 @@ class MHApplication(gui3d.Application, mh.Application):
         else:
             self.progressBar.setProgress(value)
 
+        # Process all non-user-input events in the queue to run callAsync tasks.
+        # This is invoked here so events are processed in every step during the
+        # onStart() init sequence.
         self.processEvents()
 
     # Global dialog

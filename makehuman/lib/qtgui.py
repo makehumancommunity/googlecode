@@ -1130,19 +1130,34 @@ class FileEntryView(QtGui.QWidget, Widget):
 class SplashScreen(QtGui.QSplashScreen):
     def __init__(self, image):
         super(SplashScreen, self).__init__(G.app.mainwin, QtGui.QPixmap(image))
-        self._text = ''
-        self._format = '%s'
+        #self._text = ''
+        #self._format = '%s'
         self._stdout = sys.stdout
+        self.messageRect = QtCore.QRect(10, 10, self.width()-20, 100)
+        self.messageAlignment = QtCore.Qt.AlignLeft
+        self.message = ''
 
-    def setFormat(self, fmt):
-        self._format = fmt
+    #def setFormat(self, fmt):
+    #    self._format = fmt
 
     def escape(self, text):
         return text.replace('&','&amp;').replace('<','&lt;').replace('>','&gt;')
 
     def logMessage(self, text):
-        text = self._format % self.escape(text)
+        #text = self._format % self.escape(text)
+        text = self.escape(text)
         self.showMessage(text, alignment = QtCore.Qt.AlignHCenter)
+        self.message = text
+
+    def drawContents(self, painter):
+        pixMap = self.pixmap()
+        color = QtGui.QColor()
+        color.setNamedColor('#ffffff')
+        painter.setPen(color)
+        font = painter.font()
+        font.setPointSizeF(15)
+        painter.setFont(font)
+        painter.drawText(self.messageRect, self.messageAlignment, self.message);
 
 class StatusBar(QtGui.QStatusBar, Widget):
     def __init__(self):
