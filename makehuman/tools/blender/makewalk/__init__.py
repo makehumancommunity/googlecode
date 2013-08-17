@@ -36,19 +36,19 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 """
 
 bl_info = {
-    "name": "MakeHuman Mocap",
+    "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.903",
+    "version": "0.904",
     "blender": (2, 6, 7),
-    "location": "Context > Armature > MakeHuman Mocap",
+    "location": "Context > Armature > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
     "warning": "",
-    'wiki_url': "http://www.makehuman.org/node/285",
+    'wiki_url': "http://www.makehuman.org/doc/node/makewalk_user_interface.html",
     "category": "MakeHuman"}
 
 # To support reload properly, try to access a package var, if it's there, reload everything
 if "bpy" in locals():
-    print("Reloading MakeHuman Mocap")
+    print("Reloading MakeWalk")
     import imp
     imp.reload(utils)
     imp.reload(io_json)
@@ -67,7 +67,7 @@ if "bpy" in locals():
     imp.reload(edit)
     imp.reload(floor)
 else:
-    print("Loading MakeHuman Mocap")
+    print("Loading MakeWalk")
     import bpy, os
     from bpy_extras.io_utils import ImportHelper
     from bpy.props import *
@@ -101,7 +101,7 @@ def inset(layout):
 #
 
 class MainPanel(bpy.types.Panel):
-    bl_label = "MakeHuman Mocap v %s: Main" % bl_info["version"]
+    bl_label = "MakeWalk v %s: Main" % bl_info["version"]
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "data"
@@ -141,7 +141,7 @@ class MainPanel(bpy.types.Panel):
 #
 
 class OptionsPanel(bpy.types.Panel):
-    bl_label = "MakeHuman Mocap: Options"
+    bl_label = "MakeWalk: Options"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "data"
@@ -213,7 +213,7 @@ class OptionsPanel(bpy.types.Panel):
 #
 
 class EditPanel(bpy.types.Panel):
-    bl_label = "MakeHuman Mocap: Edit Actions"
+    bl_label = "MakeWalk: Edit Actions"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "data"
@@ -300,7 +300,7 @@ class EditPanel(bpy.types.Panel):
 #
 
 class MhxSourceBonesPanel(bpy.types.Panel):
-    bl_label = "MakeHuman Mocap: Source armature"
+    bl_label = "MakeWalk: Source armature"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "data"
@@ -349,7 +349,7 @@ class MhxSourceBonesPanel(bpy.types.Panel):
 #
 
 class MhxTargetBonesPanel(bpy.types.Panel):
-    bl_label = "MakeHuman Mocap: Target armature"
+    bl_label = "MakeWalk: Target armature"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "data"
@@ -406,7 +406,7 @@ class MhxTargetBonesPanel(bpy.types.Panel):
 #
 
 class UtilityPanel(bpy.types.Panel):
-    bl_label = "MakeHuman Mocap: Utilities"
+    bl_label = "MakeWalk: Utilities"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "data"
