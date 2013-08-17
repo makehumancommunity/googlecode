@@ -440,8 +440,7 @@ class MHApplication(gui3d.Application, mh.Application):
         self.selectedHuman.applyAllTargets(gui3d.app.progress)
         self.selectedHuman.callEvent('onChanged', events3d.HumanEvent(self.selectedHuman, 'reset'))
 
-        self.prompt('Warning', 'This is an alpha release, which means that there are still bugs present and features missing. Use at your own risk.',
-            'OK', helpId='alphaWarning')
+        self.prompt('Warning', 'MakeHuman is a character creation suite. It is designed for making anatomically correct humans.\nParts of this program may contain nudity.\nDo you want to proceed?', 'Yes', 'No', None, self.stop, 'nudityWarning')
         # self.splash.hide()
 
         gui3d.app.setFilenameCaption("Untitled")
