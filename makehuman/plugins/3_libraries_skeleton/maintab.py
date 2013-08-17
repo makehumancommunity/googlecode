@@ -230,7 +230,8 @@ class SkeletonLibrary(gui3d.TaskView):
 
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
-        gui3d.app.setGlobalCamera()
+        if gui3d.app.settings.get('cameraAutoZoom', True):
+            gui3d.app.setGlobalCamera()
 
         # Disable smoothing in skeleton library
         self.oldSmoothValue = self.human.isSubdivided()

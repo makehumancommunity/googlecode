@@ -149,7 +149,8 @@ class ExpressionTaskView(gui3d.TaskView):
         gui3d.TaskView.onShow(self, event)
         for slider in self.sliders:
             slider.update()
-        gui3d.app.setFaceCamera()
+        if gui3d.app.settings.get('cameraAutoZoom', True):
+            gui3d.app.setFaceCamera()
 
 
     def onHumanChanging(self, event):

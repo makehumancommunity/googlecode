@@ -143,7 +143,8 @@ class EyesTaskView(gui3d.TaskView):
         if self.human.eyesProxy and self.human.eyesProxy.file:
             self.filechooser.setHighlightedItem(self.human.eyesProxy.file)
         self.filechooser.setFocus()
-        gui3d.app.setFaceCamera()
+        if gui3d.app.settings.get('cameraAutoZoom', True):
+            gui3d.app.setFaceCamera()
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)

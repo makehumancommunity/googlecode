@@ -133,7 +133,8 @@ class HairTaskView(gui3d.TaskView):
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
         self.filechooser.setFocus()
-        gui3d.app.setFaceCamera()
+        if gui3d.app.settings.get('cameraAutoZoom', True):
+            gui3d.app.setFaceCamera()
 
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)

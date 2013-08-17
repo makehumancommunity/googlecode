@@ -102,7 +102,8 @@ class PoseLoadTaskView(gui3d.TaskView):
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
         self.filechooser.setFocus()
-        gui3d.app.setGlobalCamera()
+        if gui3d.app.settings.get('cameraAutoZoom', True):
+            gui3d.app.setGlobalCamera()
 
         self.posefile = posemode.enterPoseMode()
         if self.posefile:
