@@ -28,7 +28,7 @@ Skeletons are used for skeletal animation (skinning) and posing.
 
 import gui3d
 
-from . import maintab
+from . import skeletonlibrary
 
 #------------------------------------------------------------------------------------------
 #   Load plugin
@@ -36,7 +36,7 @@ from . import maintab
 
 def load(app):
     category = app.getCategory('Pose/Animate')
-    maintask = maintab.SkeletonLibrary(category)
+    maintask = skeletonlibrary.SkeletonLibrary(category)
     maintask.sortOrder = 3
     category.addTask(maintask)
 
