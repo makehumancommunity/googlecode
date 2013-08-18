@@ -126,7 +126,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
             target = None
         if target:
             if not isinstance(target, WarpTarget):
-                raise NameError("%s is not a warp target" % target)
+                raise TypeError("%s is not a warp target" % target)
         else:
             target = WarpTarget(self, human)
             algos3d.warpTargetBuffer[self.warppath] = target
@@ -293,7 +293,7 @@ def compileWarpTarget(modtype, template, human, bodypart):
     elif modtype == 'GenderAgeToneWeight':
         mod = GenderAgeToneWeightWarpModifier(template, bodypart)
     else:
-        raise NameError("compileWarpTarget modtype = %s" % modtype)
+        raise TypeError("compileWarpTarget modtype = %s" % modtype)
 
     return mod.compileWarpTarget(human)
 
@@ -346,7 +346,7 @@ def readTarget(filepath):
 
     try:
         fp = open(filepath, "rU")
-    except:
+    except IOError:
         fp = None
 
     if fp is None:
@@ -364,8 +364,7 @@ def readTarget(filepath):
         _warpGlobals.targetCache[filepath] = target
         return target
     else:
-        halt
-        return None
+        raise IOError("Can't find neither %s nor a replacement target" % filepath)
 
 
 def findReplacementFile(filepath):
