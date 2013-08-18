@@ -2,7 +2,7 @@
 #declare %%name%%_Material = material {
     texture {
         uv_mapping
-        pigment { image_map {%%texture%% interpolate 2}}
+        %%diffuse%%
         finish {
             specular 0
             roughness 1

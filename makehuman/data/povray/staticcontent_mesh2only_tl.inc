@@ -1,7 +1,4 @@
 
-// Assign default values.
-// This texture uses the standard pigment map as a uv-mapped pigment and adds a
-// little disruption to the surface normals.  
 #ifndef (%%name%%_Material)
 
 #declare %%name%%_Texture =
@@ -17,7 +14,7 @@
     }
     texture {
         pigment {rgbf 1}
-        normal {%%normal%%}
+        %%normal%%
         finish {
             specular %%edss%%
             roughness 2*%%rough%%
@@ -27,8 +24,8 @@
         }
     }
     texture {
-        pigment {image_map {png "%%name%%_texture.png" filter all 1}}
-        normal {%%normal%%}
+        %%diffusef1%%
+        %%normal%%
         finish { 
             specular %%spec%%
             roughness %%rough%%
@@ -43,7 +40,7 @@
 #declare %%name%%_Material = material {
     texture {
         uv_mapping
-        pigment_pattern {image_map {png "%%name%%_alpha.png" interpolate 2}}
+        pigment_pattern {%%alpha%%}
         texture_map {
             [0 pigment {color transmit 1.0}]
             [1 %%name%%_Texture]

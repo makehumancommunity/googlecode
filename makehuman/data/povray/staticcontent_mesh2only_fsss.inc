@@ -56,7 +56,7 @@ texture { // 2x multiplier layer.
     texture {TexMultiply_2x} 
     texture { // Red SSS channel. High blur.
         pigment { image_map {png "%%name%%_sss_redlmap.png" interpolate 2 transmit all 1/2} }
-        normal  {%%rednormal%%}
+        %%rednormal%%
         finish { 
             specular 0
             roughness 0.01
@@ -70,7 +70,7 @@ texture { // 2x multiplier layer.
     texture {TexMultiply_2x}
     texture { // Green SSS channel. Medium blur.
         pigment { image_map {png "%%name%%_sss_greenlmap.png" interpolate 2 transmit all 1/2} }
-        normal  {%%greennormal%%}
+        %%greennormal%%
         finish { 
             specular 6*%%edss%%  // EpiDermal Specularity Scattering.
             roughness 2*%%rough%%
@@ -84,7 +84,7 @@ texture { // 2x multiplier layer.
     texture {TexMultiply_2x}
     texture { // Blue SSS channel. No blur.
         pigment { image_map {png "%%name%%_sss_bluelmap.png" interpolate 2 transmit all 1/2} }
-        normal  {%%bluenormal%%}
+        %%bluenormal%%
         finish { 
             specular 0
             roughness 0.01
@@ -109,8 +109,8 @@ texture { // 2x multiplier layer.
         }
     }
     texture {
-        pigment {image_map {png "%%name%%_texture.png" filter all 1} }
-        normal  {%%normal%%}
+        %%diffusef1%%
+        %%normal%%
         finish { 
             specular %%spec%%
             roughness %%rough%%
@@ -124,8 +124,8 @@ texture { // 2x multiplier layer.
 
 #declare %%name%%_DiffuseTex =
     texture {
-        pigment {image_map {png "%%name%%_texture.png"} }
-        normal  {%%normal%%}
+        %%diffuse%%
+        %%normal%%
         finish { 
             specular %%spec%%
             roughness %%rough%%
@@ -140,7 +140,7 @@ texture { // 2x multiplier layer.
 #declare %%name%%_Material = material {
     texture {
         uv_mapping
-        pigment_pattern {image_map {png "%%name%%_alpha.png" interpolate 2}}
+        pigment_pattern {%%alpha%%}
         texture_map {
             [0 pigment {color transmit 1.0}]
             [1
@@ -156,4 +156,3 @@ texture { // 2x multiplier layer.
 
 #end
 
-                                                                            

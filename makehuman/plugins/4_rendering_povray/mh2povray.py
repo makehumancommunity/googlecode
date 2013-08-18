@@ -40,7 +40,6 @@ the exported files use 'untitled'.
 
 import os
 import string
-import shutil
 import projection
 import random
 import mh
@@ -49,6 +48,7 @@ import numpy
 import image_operations as imgop
 import gui3d
 from exportutils import collect
+from exportutils import matanalyzer
 import subprocess
 
 def downloadPovRay():
@@ -141,6 +141,7 @@ def povrayExport(settings):
                 'POV-Ray not found',
                 'You don\'t seem to have POV-Ray installed or the path is incorrect.',
                 'Download', 'Cancel', downloadPovRay)
+
 
 def povrayExportArray(obj, camera, path, settings):
     """
@@ -407,16 +408,11 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
         else:
             progressCallback(prog, desc)
 
-    # Certain blocks of SDL are mostly static and can be copied directly from reference
-    # files into the output files.
     nextpb = 0.6 - 0.4 * bool(settings['SSS'])
     progress (progbase,"Parsing data")
-    staticFile = mh.getSysDataPath('povray/staticcontent_mesh2only_fsss.inc') if settings['SSS'] else mh.getSysDataPath('povray/staticcontent_mesh2only_tl.inc')
 
     # Define some additional file locations
     outputSceneFile = path.replace('.inc', '.pov')
-    baseName = os.path.basename(path)
-    underScores = ''.ljust(len(baseName), '-')
     outputDirectory = os.path.dirname(path)
 
     # Make sure the directory exists
@@ -441,11 +437,55 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     rmeshes,_amt = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, useHelpers=False, hidden=False,
                                             subdivide = settings['subdivide'],
                                             progressCallback = lambda p: progress(progbase+p*(nextpb-progbase),"Analyzing objects"))
+
+    # Analyze the materials of each richmesh to povray compatible format.
+    MAfuncs = {
+        'diffusedef': lambda T, S: 'pigment {image_map {%(ft)s "%(fn)s" interpolate 2%(f)s%(t)s}}' % {
+            'ft': getImageFType(T.getSaveExt()),
+            'fn': T.getSaveName(),
+            'f': ' filter all ' + str(S['filter']) if 'filter' in S else "",
+            't': ' transmit all ' + str(S['transmit']) if 'transmit' in S else ""},
+        'bumpdef': lambda T, S: 'normal {bump_map {%(ft)s "%(fn)s"%(bs)s interpolate 2}%(bh)s}' % {
+            'ft': getImageFType(T.getSaveExt()),
+            'fn': T.getSaveName(),
+            'bs': ' bump_size ' + str(S['bumpsize']) if 'bumpsize' in S else "",
+            'bh': ' ' + str(S['bumphard']) if 'bumphard' in S else ""},
+        'alphadef': lambda T, S: 'image_map {%(ft)s "%(fn)s" interpolate 2}' % {
+            'ft': getImageFType(T.getSaveExt()),
+            'fn': T.getSaveName()},
+        'whitedef': lambda T, S: 'rgb%(bf)s%(bt)s <1,1,1%(f)s%(t)s>' % {
+            'bf': 'f' if 'filter' in S else "",
+            'bt': 't' if 'transmit' in S else "",
+            'f': ',' + str(S['filter']) if 'filter' in S else "",
+            't': ',' + str(S['transmit']) if 'transmit' in S else ""},
+        'pigment': lambda s: 'pigment {%s}' % s,
+        'lmap': lambda RM: projection.mapSceneLighting(settings['scene']),
+        'blurlev': lambda img, mult: (mult*(float(img.width)/1024)*float(settings['SSSA'])) if img else mult,
+        'mapmask': lambda RM: projection.mapMask()}
+    MAfuncs.update(imgop.analyzerfuncs)
+    materials = matanalyzer.MaterialAnalysis(rmeshes,
+                                 map = {
+        'diffuse':              (('mat.diffuse',),                                                                      'diffusedef', ('pigment', 'whitedef')),
+        'bump':                 (('mat.bumpMap', 'mat.displacementMap'),                                                'bumpdef', None),
+        'alpha':                (('mat.transparencyMap', ('getAlpha', 'diffuse')),                                      'alphadef', 'whitedef'),
+        'lmap':                 ((('getChannel', 'func.lmap', 1),),                                                     None, None),
+        'bllmap':               ((('blur', 'lmap', ('blurlev', 'lmap', 2.5), 13),),                                     None, None),
+        'bl2lmap':              ((('blur', 'bllmap', ('blurlev', 'lmap', 5.0), 13),),                                   None, None),
+        'sss_bluelmap':         ((('compose', ('list', 'black', 'black', 'lmap')),),                                    None, None),
+        'sss_greenlmap':        ((('compose', ('list', 'black', 'bllmap', 'black')),),                                  None, None),
+        'sss_redlmap':          ((('compose', ('list', 'bl2lmap', 'black', 'black')),),                                 None, None),
+        'sss_alpha':            ((('blur', ('shrinkMask', 'func.mapmask', 4), 4, 13),),                                 None, None),
+        'sss_bluebump':         ((('getChannel', 'bump', 1),),                                                          'bumpdef', None),
+        'sss_greenbump':        ((('blur', 'sss_bluebump', ('blurlev', 'sss_bluebump', 2.5), 15),),                     'bumpdef', None),
+        'sss_redbump':          ((('blur', 'sss_greenbump', ('blurlev', 'sss_bluebump', 5.0), 15),),                    'bumpdef', None),
+        'hairbump':             (('bump',),                                                                             'bumpdef', 'alpha.bumpdef'),
+        'black':                ((('black', 'lmap'),),                                                                  None, None)},
+                                 functions = MAfuncs)
     progbase = nextpb
 
     # If SSS is enabled, render the lightmaps.
     if settings['SSS'] == True:
-        povrayProcessSSS(rmeshes, outputDirectory, settings, lambda p: progress(progbase+p*(0.6-progbase),"Processing Subsurface Scattering"))
+        povrayProcessSSS(rmeshes, materials, outputDirectory, settings, lambda p: progress(progbase+p*(0.6-progbase),"Processing Subsurface Scattering"))
         progbase = 0.6
 
     # Write mesh data for the object.
@@ -453,48 +493,9 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     progbase = 0.9
     nextpb = 0.95
 
-    # Copy texture definitions to the output file.
-    progress(progbase,"Writing Materials")
-    writeLights(settings['scene'], outputFileDescriptor)
-    hmatfile = open(staticFile, 'r')
-    matlines = hmatfile.read()
-    hmatfile.close()
-    matlines = matlines.replace('%%spec%%', str(settings['skinoil']*settings['moist']))
-    matlines = matlines.replace('%%edss%%', str(settings['skinoil']*(1-settings['moist'])))
-    matlines = matlines.replace('%%rough%%', str(settings['rough']))
-    if settings['usebump'] and rmeshes[0].material.bumpMapTexture:
-        bumpDef = getImageDef(rmeshes[0].name, rmeshes[0].material.bumpMapTexture, 'bump')
-        matlines = matlines.replace(
-            '%%normal%%','bump_map {%s bump_size %s interpolate 2}' % (
-                bumpDef, str(settings['wrinkles'])))
-        if settings['SSS']:
-            matlines = matlines.replace(
-                '%%bluenormal%%','bump_map {%s bump_size 3*%s interpolate 2}' % (
-                    bumpDef, str(settings['wrinkles'])))
-            matlines = matlines.replace(
-                '%%greennormal%%','bump_map {png "%s_sss_greenbump.png" bump_size 3*%s interpolate 2}' % (
-                    rmeshes[0].name, str(settings['wrinkles'])))
-            matlines = matlines.replace(
-                '%%rednormal%%','bump_map {png "%s_sss_redbump.png" bump_size 3*%s interpolate 2}' % (
-                    rmeshes[0].name, str(settings['wrinkles'])))
-    else:
-        matlines = matlines.replace(
-            '%%normal%%','wrinkles %s scale 0.0002' % str(settings['wrinkles']))
-        if settings['SSS']:
-            matlines = matlines.replace(
-                '%%bluenormal%%','wrinkles 3*%s scale 0.0002' % str(settings['wrinkles']))
-            matlines = matlines.replace(
-                '%%greennormal%%','wrinkles 1.5*%s scale 0.0004' % str(settings['wrinkles']))
-            matlines = matlines.replace(
-                '%%rednormal%%','wrinkles 0.75*%s scale 0.0006' % str(settings['wrinkles']))
-    matlines = matlines.replace('%%name%%', rmeshes[0].name)
-    matlines = matlines.replace(
-        '%%ambience%%','<%f,%f,%f>' % settings['scene'].environment.ambience)
-    outputFileDescriptor.write(matlines)
-    outputFileDescriptor.write('\n')
-
     progress(progbase+0.65*(nextpb-progbase),"Writing Materials")
-    writeItemsMaterials(outputFileDescriptor, rmeshes, settings, outputDirectory)
+    writeLights(settings['scene'], outputFileDescriptor)
+    writeMaterials(outputFileDescriptor, rmeshes, materials, settings)
     outputFileDescriptor.close()
 
     # Write .pov scene file.
@@ -502,11 +503,11 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     progbase = nextpb
 
     nextpb = 1.0
-    writeTextures(rmeshes, settings, outputDirectory, lambda p: progress(progbase+p*(nextpb-progbase),"Writing Textures"))
+    writeTextures(materials, outputDirectory, lambda p: progress(progbase+p*(nextpb-progbase),"Writing Textures"))
 
     progress(1,"Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
 
-def writeTextures(rmeshes, settings, outDir, progressCallback = None):
+def writeTextures(materials, outDir, progressCallback = None):
     def progress(prog):
         if progressCallback == None:
             gui3d.app.progress(prog)
@@ -515,97 +516,64 @@ def writeTextures(rmeshes, settings, outDir, progressCallback = None):
     progress(0)
 
     i = 0.0
-    rmeshnum = float(len(rmeshes))
-    for rmesh in rmeshes:
-        copyTexture(rmesh.material.diffuseTexture, os.path.join(
-            outDir,getImageFname(rmesh.name, rmesh.material.diffuseTexture, 'texture')))
-        progress((i+0.3)/rmeshnum)
-        # Export bump map / displacement map.
-        if settings['usebump']:
-            if rmesh.material.bumpMapTexture:
-                copyTexture(rmesh.material.bumpMapTexture, os.path.join(
-                    outDir, getImageFname(rmesh.name, rmesh.material.bumpMapTexture, 'bump')))
-            elif rmesh.material.displacementMapTexture:
-                copyTexture(rmesh.material.displacementMapTexture, os.path.join(
-                    outDir, getImageFname(rmesh.name, rmesh.material.displacementMapTexture, 'bump')))
-        progress((i+0.6)/rmeshnum)
-        # Export transparency map.
-        if rmesh.material.transparencyMapTexture:
-            copyTexture(rmesh.material.transparencyMapTexture, os.path.join(
-                outDir,getImageFname(rmesh.name, rmesh.material.transparencyMapTexture, 'alpha')))
-        else:
-            imgop.getAlpha(imgop.Image(data = rmesh.material.diffuseTexture)).save(
-                path = os.path.join(outDir,"%s_alpha.png" % rmesh.name))
+    matnum = float(len(materials))
+    for mat in materials:
+        mat.diffuse.save(outDir)
+        progress((i+0.3)/matnum)
+        mat.bump.save(outDir)
+        progress((i+0.6)/matnum)
+        mat.alpha.save(outDir)
         i += 1.0
-        progress(i/rmeshnum)
+        progress(i/matnum)
 
-def writeItemsMaterials(hfile, rmeshes, settings, outDir):
-    for rmesh in rmeshes[1:]:
-        texdata = rmesh.material.diffuseTexture
-        if settings['usebump']:
-            bumpdata = rmesh.material.bumpMapTexture
-            if bumpdata is None:
-                bumpdata = rmesh.material.displacementMapTexture
-        else:
-            bumpdata = None
+def writeMaterials(hfile, rmeshes, materials, settings):
+    for rmesh in rmeshes:
         if rmesh.type == 'Hair':
             if settings['hairShine']:
                 hinfile = open (mh.getSysDataPath("povray/hair_2.inc"),'r')
             else:
                 hinfile = open (mh.getSysDataPath("povray/hair_0.inc"),'r')
+        elif rmesh.type == None:
+            if settings['SSS']:
+                hinfile = open(mh.getSysDataPath('povray/staticcontent_mesh2only_fsss.inc'), 'r')
+            else:
+                hinfile = open(mh.getSysDataPath('povray/staticcontent_mesh2only_tl.inc'), 'r')
         elif rmesh.type == 'Eyes':
             hinfile = open (mh.getSysDataPath("povray/eyes.inc"),'r')
         else:
             hinfile = open (mh.getSysDataPath("povray/clothes.inc"),'r')
         inlines = hinfile.read()
         hinfile.close()
-        inlines = inlines.replace ("%%name%%",rmesh.name)
+        
+        inlines = inlines.replace ('%%name%%',rmesh.name)
         inlines = inlines.replace (
-            "%%ambience%%", '<%f,%f,%f>' %
+            '%%ambience%%', '<%f,%f,%f>' %
             settings['scene'].environment.ambience)
+        inlines = inlines.replace('%%diffuse%%', materials[rmesh].diffuse.define())
+        inlines = inlines.replace('%%alpha%%', materials[rmesh].alpha.define())
         if rmesh.type == 'Hair':
             if settings['hairShine']:
-                inlines = inlines.replace ("%%spec%%",str(settings['hairSpec']))
-                inlines = inlines.replace ("%%hard%%",str(settings['hairHard']))
-                inlines = inlines.replace ("%%rough%%",str(settings['hairRough']))
-            inlines = inlines.replace (
-                "%%texture%%",
-                getImageDef(rmesh.name, texdata, 'texture'))
-            if bumpdata:
-                inlines = inlines.replace (
-                    "%%bumpmap%%",
-                    getImageDef(rmesh.name, bumpdata, 'bump'))
-            elif rmesh.material.transparencyMapTexture:
-                inlines = inlines.replace (
-                    "%%bumpmap%%",
-                    getImageDef(rmesh.name, rmesh.material.transparencyMapTexture, 'alpha'))
-            else:
-                inlines = inlines.replace (
-                    "%%bumpmap%%",
-                    'png "%s_alpha.png"' % rmesh.name)
+                inlines = inlines.replace('%%spec%%', str(settings['hairSpec']))
+                inlines = inlines.replace('%%rough%%', str(settings['hairRough']))
+            inlines = inlines.replace('%%diffusef1%%', materials[rmesh].diffuse.define({'filter':1.0}))
+            inlines = inlines.replace('%%normal%%', materials[rmesh].hairbump.define(
+                {'bumphard': settings['hairHard'] if settings['hairShine'] else 1.0}))
+        elif rmesh.type == None:
+            inlines = inlines.replace('%%spec%%', str(settings['skinoil']*settings['moist']))
+            inlines = inlines.replace('%%edss%%', str(settings['skinoil']*(1-settings['moist'])))
+            inlines = inlines.replace('%%rough%%', str(settings['rough']))
+            inlines = inlines.replace('%%diffusef1%%', materials[rmesh].diffuse.define({'filter':1.0}))
+            inlines = inlines.replace(
+                '%%normal%%', materials[rmesh].bump.define({'bumpsize':settings['wrinkles']}))
+            if settings['SSS']:
+                inlines = inlines.replace(
+                    '%%bluenormal%%', materials[rmesh].bump.define({'bumpsize':3*settings['wrinkles']}))
+                inlines = inlines.replace(
+                    '%%greennormal%%', materials[rmesh].sss_greenbump.define({'bumpsize':3*settings['wrinkles']}))
+                inlines = inlines.replace(
+                    '%%rednormal%%', materials[rmesh].sss_redbump.define({'bumpsize':3*settings['wrinkles']}))
         else:
-            if texdata:
-                inlines = inlines.replace (
-                    "%%texture%%", 'image_map {%s interpolate 2}' %
-                    getImageDef(rmesh.name, texdata, 'texture'))
-            else:
-                inlines = inlines.replace ("%%texture%%", 'rgb <1,1,1>')
-            if rmesh.type == 'Eyes':
-                if bumpdata:
-                    inlines = inlines.replace (
-                        "%%normal%%", 'normal {bump_map {%s interpolate 2}}' %
-                        getImageDef(rmesh.name, bumpdata, 'bump'))
-                else:
-                    inlines = inlines.replace (
-                        "%%normal%%", '// No bumpmap used.')
-            else:
-                if bumpdata:
-                    inlines = inlines.replace (
-                        "%%bumpmap%%", 'bump_map {%s interpolate 2}' %
-                        getImageDef(rmesh.name, bumpdata, 'bump'))
-                else:
-                    inlines = inlines.replace (
-                        "%%bumpmap%%", 'wrinkles 0.2 scale 0.0001')
+            inlines = inlines.replace('%%normal%%', materials[rmesh].bump.define())
         hfile.write(inlines)
 
 def povrayWriteMesh2(hfile, rmeshes, progressCallback = None):
@@ -774,7 +742,7 @@ def povrayWriteArray(hfile, rmeshes, progressCallback = None):
     povrayWriteMesh2(hfile,rmeshes[1:])
 
 
-def povrayProcessSSS(rmeshes, outDir, settings, progressCallback = None):
+def povrayProcessSSS(rmeshes, materials, outDir, settings, progressCallback = None):
 
     def progress(prog):
         if progressCallback == None:
@@ -783,52 +751,19 @@ def povrayProcessSSS(rmeshes, outDir, settings, progressCallback = None):
             progressCallback(prog)
     progress(0)
 
-    progbase = 0
-    nextpb = 1 - 0.65*settings['usebump']
-    # get lightmap
-    lmap = projection.mapSceneLighting(
-        settings['scene'],progressCallback = lambda p: progress(0.3*nextpb*p))
-    # prepare channels
-    lmap = imgop.getChannel(lmap,1)
-    alpha = imgop.shrinkSelection(projection.mapMask())
-    for i in range(3):
-        alpha = imgop.shrinkSelection(alpha)
-    black = mh.Image(data = imgop.numpy.zeros((lmap.height, lmap.width, 1), dtype=imgop.numpy.uint8))
-    # calculate blur level of each cannel, according to settings
-    sssa = float(settings['SSSA'])
-    # blue channel
-    imgop.compose([black,black,lmap]).save(
-        os.path.join(outDir, '%s_sss_bluelmap.png' % rmeshes[0].name))
-    # green channel
-    progress(0.4*nextpb)
-    lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*1.6*sssa, 13, lambda p: progress((0.4+0.3*p)*nextpb))
-    imgop.compose([black,lmap,black]).save(
-        os.path.join(outDir, '%s_sss_greenlmap.png' % rmeshes[0].name))
-    # red channel
-    progress(0.7*nextpb)
-    lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*3.2*sssa, 13, lambda p: progress((0.7+0.2*p)*nextpb))
-    alpha = imgop.blurred(alpha, 4, 13, lambda p: progress((0.9+0.1*p)*nextpb))
-    alpha.save(os.path.join(outDir, '%s_sss_alpha.png' % rmeshes[0].name))
-    imgop.compose([lmap,black,black]).save(
-        os.path.join(outDir, '%s_sss_redlmap.png' % rmeshes[0].name))
-    progbase = nextpb
-    progress(progbase)
-    if settings['usebump']:
-        bumpdata = rmeshes[0].material.bumpMapTexture
-        if bumpdata is None:
-            bumpdata = rmeshes[0].material.displacementMapTexture
-        if bumpdata:
-            # Export blurred bump maps
-            lmap = imgop.Image(data = bumpdata)
-            lmap = imgop.getChannel(lmap,1)
-            lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*1.6*sssa, 15,
-                                 lambda p: progress(progbase+0.5*p*(1-progbase)))
-            progress(progbase+0.5*(1-progbase))
-            lmap.save(os.path.join(outDir, '%s_sss_greenbump.png' % rmeshes[0].name))
-            lmap = imgop.blurred(lmap, (float(lmap.width)/1024)*3.2*sssa, 15,
-                                 lambda p: progress(progbase+(0.5+0.5*p)*(1-progbase)))
-            lmap.save(os.path.join(outDir, '%s_sss_redbump.png' % rmeshes[0].name))
-        progress(1.0)
+    # Export blurred channels
+    materials[0].sss_bluelmap.save(outDir)
+    progress(0.25)
+    materials[0].sss_greenlmap.save(outDir)
+    progress(0.45)
+    materials[0].sss_redlmap.save(outDir)
+    materials[0].sss_alpha.save(outDir)
+    progress(0.7)
+    # Export blurred bump maps
+    materials[0].sss_greenbump.save(outDir)
+    progress(0.85)
+    materials[0].sss_redbump.save(outDir)
+    progress(1.0)
 
 def getHumanName():
     sav = str(gui3d.app.getCategory('Files').getTaskByName('Save').fileentry.edit.text())
@@ -846,17 +781,22 @@ def getImageFname(name, file, type = None, getext = False):
         out += '_' + type
     ext = os.path.splitext(file)[-1] if isinstance(file, basestring) else ".png"
     if getext:
-        return (out + ext, ext.lower()[1:])
+        return (out + ext, ext.lower())
     else:
         return out + ext
 
 def getImageDef(name, file, type = None):
     (out, ext) = getImageFname(name, file, type, True)
+    ext = getImageFType(ext)
+    return ext + ' "' + out + '"'
+
+def getImageFType(ext):
+    ext = ext[1:]
     if ext == "tif":
         ext = "tiff"
     elif ext == "jpg":
         ext = "jpeg"
-    return ext + ' "' + out + '"'
+    return ext
 
 def copyTexture(tex, dst):
     if isinstance(tex, basestring):

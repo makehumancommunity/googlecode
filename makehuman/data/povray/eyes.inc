@@ -1,7 +1,7 @@
 #ifndef (%%name%%_Material)
 #declare %%name%%_Texture =
     texture {
-        pigment {%%texture%%}
+        %%diffuse%%
         %%normal%%
         finish {
             specular 1
@@ -16,7 +16,7 @@
 #declare %%name%%_Material = material {
     texture {
         uv_mapping
-        pigment_pattern {image_map {png "%%name%%_alpha.png" interpolate 2}}
+        pigment_pattern {%%alpha%%}
         texture_map {
             [0 pigment {color transmit 1.0}]
             [1 %%name%%_Texture]
