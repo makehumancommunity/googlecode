@@ -141,7 +141,7 @@ class MaterialAnalysis(object):
                     func = deffunc
                 else:
                     func = self.Object.analyzer.map[self.name][(1 if self.__nonzero__() else 2)]
-                    if func:
+                    if isinstance(func, basestring):
                         if " " in func:
                             fsp = func.split(" ", 1)
                             if fsp[0] == 'use':
@@ -151,6 +151,9 @@ class MaterialAnalysis(object):
                         if "." in func:
                             fsp = func.split(".", 1)
                             return getattr(self.Object, fsp[0]).define(options, fsp[1])
-                return self.Object.analyzer.functions[func](self, options) if func else ""
+                if isinstance(func, tuple):
+                    return self.Object.analyzer.functions[func[0]](*tuple(func[1:]))
+                else:
+                    return self.Object.analyzer.functions[func](self, options) if func else ""
         
 
