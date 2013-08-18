@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -31,9 +31,9 @@ import shutil
 import mh
 import scene
 
-class SceneLibraryTaskView(gui3d.TaskView):
+class SceneLibraryTaskView(gui3d.PoseModeTaskView):
     def __init__(self, category):
-        gui3d.TaskView.__init__(self, category, 'Scene')
+        gui3d.PoseModeTaskView.__init__(self, category, 'Scene')
         self.scene = scene.Scene()
 
         sceneDir = mh.getPath('scenes')
@@ -57,12 +57,12 @@ class SceneLibraryTaskView(gui3d.TaskView):
             self.scene.load(filename)
 
     def onShow(self, event):
-        gui3d.TaskView.onShow(self, event)
+        gui3d.PoseModeTaskView.onShow(self, event)
         self.filechooser.refresh()
         self.filechooser.setHighlightedItem(self.currentScene)
         self.filechooser.setFocus()
 
-                
+
 def load(app):
     category = app.getCategory('Rendering')
     taskview = SceneLibraryTaskView(category)

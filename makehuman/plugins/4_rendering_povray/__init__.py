@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -32,11 +32,11 @@ from . import mh2povray
 import gui3d
 import gui
 
-class PovrayTaskView(gui3d.TaskView):
+class PovrayTaskView(gui3d.PoseModeTaskView):
 
     def __init__(self, category):
-        gui3d.TaskView.__init__(self, category, 'Povray')
-        
+        gui3d.PoseModeTaskView.__init__(self, category, 'Povray')
+
         # for path to PovRay binaries file
         binary = ''
 
@@ -49,7 +49,7 @@ class PovrayTaskView(gui3d.TaskView):
         self.browse.setPath(povray_bin)
         if sys.platform == 'win32':
             self.browse.setFilter('Executable programs (*.exe);;All files (*.*)')
-        
+
         #
         if os.name == 'nt':
             #
@@ -92,7 +92,7 @@ class PovrayTaskView(gui3d.TaskView):
 
         # box
         #optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
-        
+
         #Buttons
         # Simplified the gui a bit for the average user. Uncomment to clutter it up with developer - useful stuff.
         #source=[]
@@ -105,7 +105,7 @@ class PovrayTaskView(gui3d.TaskView):
         #self.exportButton = optionsBox.addWidget(gui.RadioButton(action , 'Export only', selected = True))
         #self.exportandrenderButton = optionsBox.addWidget(gui.RadioButton(action , 'Export and render'))
         self.renderButton = optionsBox.addWidget(gui.Button('Render'))
-        
+
         @self.resBox.mhEvent
         def onChange(value):
             try:
@@ -120,9 +120,9 @@ class PovrayTaskView(gui3d.TaskView):
         def onChange(value):
             gui3d.app.settings['POV_AA'] = value
 
-        #        
+        #
         @self.renderButton.mhEvent
-        def onClicked(event):            
+        def onClicked(event):
             reload(mh2povray)  # Avoid having to close and reopen MH for every coding change (can be removed once testing is complete)
             # it is necessary to put this code here, so that it is executed with the 'renderButton.event'
             if os.name == 'nt':
@@ -154,7 +154,7 @@ class PovrayTaskView(gui3d.TaskView):
                                     'hairShine':True if self.hairShine.selected else False,
                                     'hairSpec': self.hairSpec.getValue(),
                                     'hairRough': (0.7*self.hairRough.getValue())**2,
-                                    'hairHard': 0.01*10**(4*self.hairHard.getValue())}) # exponential slider 
+                                    'hairHard': 0.01*10**(4*self.hairHard.getValue())}) # exponential slider
 
     @property
     def resWidth(self):
@@ -174,7 +174,7 @@ class PovrayTaskView(gui3d.TaskView):
 
     def onShow(self, event):
         self.renderButton.setFocus()
-        gui3d.TaskView.onShow(self, event)
+        gui3d.PoseModeTaskView.onShow(self, event)
 
 
 def load(app):

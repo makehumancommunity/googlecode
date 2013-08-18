@@ -33,7 +33,7 @@ import gui3d
 import mh
 import log
 
-class ViewerTaskView(gui3d.TaskView):
+class ViewerTaskView(gui3d.PoseModeTaskView):
     def __init__(self, category):
         super(ViewerTaskView, self).__init__(category, 'Viewer')
         self.image = self.addTopWidget(gui.ZoomableImageView())
@@ -57,7 +57,7 @@ class ViewerTaskView(gui3d.TaskView):
             if not self.path:
                 return
             self.image.setImage(self.path)
-                
+
     def setImage(self, path):
         self.path = path
         self.image.setImage(path)

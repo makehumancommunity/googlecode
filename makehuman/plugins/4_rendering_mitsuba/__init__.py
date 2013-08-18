@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -35,10 +35,10 @@ import gui3d
 import mh
 import gui
 
-class MitsubaTaskView(gui3d.TaskView):
+class MitsubaTaskView(gui3d.PoseModeTaskView):
 
     def __init__(self, category):
-        gui3d.TaskView.__init__(self, category, 'Mitsuba')
+        gui3d.PoseModeTaskView.__init__(self, category, 'Mitsuba')
 
         # Buttons
         pathBox = self.addLeftWidget(gui.GroupBox('Mitsuba  bin  path'))
@@ -58,14 +58,14 @@ class MitsubaTaskView(gui3d.TaskView):
             if os.path.isfile(path):
                 gui3d.app.settings['mitsuba_bin'] = path
                 self.path.setText(path)
-        
+
         # Type of lighting method
         lightingBox = self.addLeftWidget(gui.GroupBox('Integrators'))
         lighting = []
         self.dlButton = lightingBox.addWidget(gui.RadioButton(lighting, 'DirectLighting', selected = True))
         self.ptButton = lightingBox.addWidget(gui.RadioButton(lighting, 'Path Tracing'))
         self.pmButton = lightingBox.addWidget(gui.RadioButton(lighting, 'Photon Mapping'))
-        
+
         #
         samplerBox = self.addLeftWidget(gui.GroupBox('Sampler Options'))
         sampler = []
@@ -78,11 +78,11 @@ class MitsubaTaskView(gui3d.TaskView):
         self.guiButton = renderBox.addWidget(gui.RadioButton(source, 'Render GUI', selected = True))
         self.xmlButton = renderBox.addWidget(gui.RadioButton(source, 'Write XML'))
         self.renderButton = renderBox.addWidget(gui.Button('Render'))
-               
+
 
         @self.renderButton.mhEvent
-        def onClicked(event):            
-            
+        def onClicked(event):
+
             reload(mh2mitsuba)  # Avoid having to close and reopen MH for every coding change (can be removed once testing is complete)
             mh2mitsuba.MitsubaExport(gui3d.app.selectedHuman.mesh, gui3d.app,
                 {'source':'console' if self.consoleButton.selected else 'gui' if self.guiButton.selected else 'xml',
@@ -91,7 +91,7 @@ class MitsubaTaskView(gui3d.TaskView):
 
     def onShow(self, event):
         self.renderButton.setFocus()
-        gui3d.TaskView.onShow(self, event)
+        gui3d.PoseModeTaskView.onShow(self, event)
 
 # This method is called when the plugin is loaded into makehuman
 # The app reference is passed so that a plugin can attach a new category, task, or other GUI elements

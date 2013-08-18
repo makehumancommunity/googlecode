@@ -951,6 +951,32 @@ class Application(events3d.EventHandler):
             for task in category.tasks:
                 task.callEvent('onResized', event)
 
+
+class PoseModeTaskView(TaskView):
+    def __init__(self, category, name, label=None):
+        TaskView.__init__(self, category, name, label)
+        self.posefile = None
+
+    def enterPoseMode(self):
+        import posemode
+        self.posefile = posemode.enterPoseMode()
+        if self.posefile:
+            posemode.loadMhpFile(self.posefile)
+
+    def exitPoseMode(self):
+        import posemode
+        posemode.exitPoseMode(self.posefile)
+
+    def onShow(self, event):
+        TaskView.onShow(self, event)
+        self.enterPoseMode()
+
+    def onHide(self, event):
+        TaskView.onHide(self, event)
+        self.exitPoseMode()
+
+
+
 class Action(object):
     def __init__(self, name):
         self.name = name

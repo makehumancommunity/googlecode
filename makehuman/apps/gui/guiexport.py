@@ -30,7 +30,7 @@ import gui3d
 import posemode
 import log
 
-class ExportTaskView(gui3d.TaskView):
+class ExportTaskView(gui3d.PoseModeTaskView):
     def __init__(self, category):
 
         gui3d.TaskView.__init__(self, category, 'Export')
@@ -165,7 +165,7 @@ class ExportTaskView(gui3d.TaskView):
 
     def onShow(self, event):
 
-        gui3d.TaskView.onShow(self, event)
+        gui3d.PoseModeTaskView.onShow(self, event)
 
         self.fileentry.setFocus()
 
@@ -186,12 +186,10 @@ class ExportTaskView(gui3d.TaskView):
             skel.object.show()
         gui3d.app.redraw()
 
-        self.enterPoseMode()
-
 
     def onHide(self, event):
 
-        gui3d.TaskView.onHide(self, event)
+        gui3d.PoseModeTaskView.onHide(self, event)
 
         human = gui3d.app.selectedHuman
         camera = mh.cameras[0]
@@ -205,20 +203,8 @@ class ExportTaskView(gui3d.TaskView):
             skel.object.hide()
         gui3d.app.redraw()
 
-        self.exitPoseMode()
-
         for exporter, radio, _ in self.formats:
             if radio.selected:
                 exporter.onHide(self)
                 break
         self.recentlyShown = None
-
-
-    def enterPoseMode(self):
-        self.posefile = posemode.enterPoseMode()
-        if self.posefile:
-            posemode.loadMhpFile(self.posefile)
-
-
-    def exitPoseMode(self):
-        posemode.exitPoseMode(self.posefile)
