@@ -34,18 +34,20 @@ exported without the addition of extra string formatting code.
 """
 
 import os
+import log
 import numbers
 import shutil
 
 class MaterialAnalysis(object):
     def __init__(self, rmeshes, map, functions):
         self.map = map
+        self.rmeshes = rmeshes
         self.functions = functions
         self.objects = {rmesh:self.Object(self, rmesh) for rmesh in rmeshes}
 
     def __getitem__(self, key):
         if isinstance(key, numbers.Integral):
-            return self.objects.values()[key]
+            return self.objects[self.rmeshes[key]]
         else:
             return self.objects[key]
 
@@ -68,7 +70,7 @@ class MaterialAnalysis(object):
                 elif tex[0] == 'list':
                     return [self.getTex(t) for t in tex[1:]]
                 else:
-                    return self.analyzer.functions[tex[0]](*tuple([self.getTex(t) for t in tex[1:]]))
+                    return self.analyzer.functions[tex[0]](*tuple([self.getTex(t, cguard) for t in tex[1:]]))
             elif isinstance(tex, basestring):
                 if "." in tex:
                     txs = tex.split(".", 2)
