@@ -119,6 +119,7 @@ class MaterialAnalysis(object):
                 return None
 
             def getSaveExt(self):
+                tex = self.get()
                 return os.path.splitext(tex)[-1] if isinstance(tex, basestring) else ".png"
 
             def getSaveName(self, altTexName = None):
