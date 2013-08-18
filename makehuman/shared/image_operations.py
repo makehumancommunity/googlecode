@@ -166,3 +166,15 @@ def expandSelection(img, shrink = False):
         mask = numpy.logical_not(mask)
 
     return Image(data = 255*((mask[...,None]).astype(numpy.uint8)))
+
+
+analyzerfuncs = {
+    'black': lambda img: Image(data = numpy.zeros((img.height, img.width, 1), dtype=numpy.uint8)),
+    'blur': lambda img, lev, ker: blurred(img, lev, ker),
+    'compose': lambda l: compose(l),
+    'getChannel': lambda t, c: getChannel(t,c),
+    'getAlpha': lambda t: getAlpha(imgop.Image(data = t)),
+    'growMask': lambda t, p: growSelection(t, p),
+    'shrinkMask': lambda t, p: shrinkSelection(t, p)}
+
+
