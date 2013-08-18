@@ -152,7 +152,7 @@ class MaterialAnalysis(object):
                             fsp = func.split(".", 1)
                             return getattr(self.Object, fsp[0]).define(options, fsp[1])
                 if isinstance(func, tuple):
-                    return self.Object.analyzer.functions[func[0]](*tuple(func[1:]))
+                    return self.Object.analyzer.functions[func[0]](*tuple([self.Object.analyzer.functions[f](self, options) for f in func[1:]]))
                 else:
                     return self.Object.analyzer.functions[func](self, options) if func else ""
         
