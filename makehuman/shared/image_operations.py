@@ -128,11 +128,17 @@ def getAlpha(img):
 def getChannel(img, channel):
     return Image(data = img.data[:,:,(channel-1):channel])
 
-def growSelection(img):
-    return expandSelection(img)
+def growSelection(img, pixels = 1):
+    out = Image(img)
+    for i in xrange(pixels):
+        out = expandSelection(out)
+    return out
 
-def shrinkSelection(img):
-    return expandSelection(img, True)
+def shrinkSelection(img, pixels = 1):
+    out = Image(img)
+    for i in xrange(pixels):
+        out = expandSelection(out, True)
+    return out
 
 def expandSelection(img, shrink = False):
     '''
