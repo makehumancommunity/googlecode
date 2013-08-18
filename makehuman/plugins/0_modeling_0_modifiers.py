@@ -330,11 +330,11 @@ class FaceTaskView(ModifierTaskView):
             ('l-ear-flap', 'out', 'in', {'cam' : 'frontView'}),
             ]),
         ('chin', 'chin', [
-            ('chin', 'in', 'out', {'cam' : 'rightView'}),
+            ('chin-prominent', 'less', 'more', {'cam' : 'rightView'}),
             ('chin-width', 'min', 'max', {'cam' : 'frontView'}),
             ('chin-height', 'min', 'max', {'cam' : 'frontView'}),
-            ('chin', 'squared', 'round', {'cam' : 'frontView'}),
-            ('chin', 'prognathism1', 'prognathism2', {'cam' : 'rightView'}),
+            ('chin-bones', 'in', 'out', {'cam' : 'frontView'}),
+            ('chin-prognathism', 'less', 'more', {'cam' : 'rightView'}),
             ]),
         ('cheek', 'cheek', [
             ('l-cheek-volume', 'deflate', 'inflate', {'cam' : 'frontView'}),                      
