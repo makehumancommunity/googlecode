@@ -173,7 +173,7 @@ analyzerfuncs = {
     'blur': lambda img, lev, ker: blurred(img, lev, ker) if img else None,
     'compose': lambda l: compose(l),
     'getChannel': lambda t, c: getChannel(t,c) if t else None,
-    'getAlpha': lambda t: getAlpha(imgop.Image(data = t)) if t else None,
+    'getAlpha': lambda t: getAlpha(Image(data = t)) if t else None,
     'growMask': lambda t, p: growSelection(t, p) if t else None,
     'shrinkMask': lambda t, p: shrinkSelection(t, p) if t else None}
 
