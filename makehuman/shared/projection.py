@@ -379,10 +379,12 @@ def mapMask(dimensions = (1024, 1024)):
     """
     Create a texture map mask, for finding the texture map borders.
     """
-    
-    mesh = gui3d.app.selectedHuman.mesh
-    return mh.renderSkin(dimensions, mesh.vertsPerPrimitive, mesh.r_texco,
+    if mh.hasRenderSkin():
+        mesh = gui3d.app.selectedHuman.mesh
+        return mh.renderSkin(dimensions, mesh.vertsPerPrimitive, mesh.r_texco,
                          index = mesh.index, clearColor = (0, 0, 0, 0))
+    else:
+        raise NotImplementedError("There is no software implementation of mapMask yet.")
 
 def rasterizeHLines(dstImg, edges, delta, progress = None):
     flip = delta[:,0] < 0
