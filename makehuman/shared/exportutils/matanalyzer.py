@@ -140,16 +140,17 @@ class MaterialAnalysis(object):
                 if deffunc:
                     func = deffunc
                 else:
-                    func = self.object.analyzer.map[self.name][(1 if self.__nonzero__() else 2)]
-                    if " " in func:
-                        fsp = func.split(" ", 1)
-                        if fsp[0] == 'use':
-                            return getattr(self.Object, fsp[1]).define(options)
-                        else:
-                            raise NameError('"%s": Texture definition command does not exist' % fsp[0])
-                    if "." in func:
-                        fsp = func.split(".", 1)
-                        return getattr(self.Object, fsp[0]).define(options, fsp[1])
-                return self.Object.analyzer.functions[func](self, options) if func is not None else ""
+                    func = self.Object.analyzer.map[self.name][(1 if self.__nonzero__() else 2)]
+                    if func:
+                        if " " in func:
+                            fsp = func.split(" ", 1)
+                            if fsp[0] == 'use':
+                                return getattr(self.Object, fsp[1]).define(options)
+                            else:
+                                raise NameError('"%s": Texture definition command does not exist' % fsp[0])
+                        if "." in func:
+                            fsp = func.split(".", 1)
+                            return getattr(self.Object, fsp[0]).define(options, fsp[1])
+                return self.Object.analyzer.functions[func](self, options) if func else ""
         
 
