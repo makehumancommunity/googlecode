@@ -53,7 +53,7 @@ class ExpressionSimpleModifier(humanmodifier.SimpleModifier):
 class ExpressionWarpModifier(warpmodifier.EthnicWarpModifier):
 
     def __init__(self, template):
-        warpmodifier.EthnicWarpModifier(self, template, "face")
+        warpmodifier.EthnicWarpModifier.__init__(self, template, "face")
         self.eventType = 'expression'
 
 
