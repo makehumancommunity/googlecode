@@ -13,6 +13,9 @@ emissiveColor 0.1 0.0 0.4
 opacity 1.0
 translucency 0.0
 
+// Texture for those without shader support
+diffuseTexture data/litspheres/adaptive_skin_tone.png
+
 // Set LitSphere shader programme
 shader data/shaders/glsl/litsphere
 
