@@ -78,7 +78,10 @@ class Texture(object):
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
 
-        use_mipmaps = not (width in self._powers and height in self._powers) and not self._npot
+        use_mipmaps = False
+        if not (width in self._powers and height in self._powers) and not self._npot:
+            log.debug("Non-power-of-two textures not supported, building mipmaps for image with dimensions %sx%s.", width, height)
+            use_mipmaps = True
         if use_mipmaps and pixels is None:
             raise RuntimeError("Non-power-of-two textures not supported")
 
