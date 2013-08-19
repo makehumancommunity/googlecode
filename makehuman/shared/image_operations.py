@@ -122,13 +122,41 @@ def compose(channels):
         i += 1
     return Image(data = numpy.dstack(outch))
 
+def colorAsImage(color, image = None, width = None, height = None):
+    """
+    Create or modify an image filled with a single color.
+    """
+    components = min(4, len(color))
+    color = numpy.asarray(color[:components], dtype=numpy.uint8)
+
+    if image:
+        if image.components != components:
+            raise TypeError("Color (%s) does not have same amount of channels as image (%s)" % (color, image.components))
+        image.data[:,:] = color
+        image.markModified()
+        return image
+    else:
+        if width and height:
+            return Image(data = numpy.tile(color, (height, width)).reshape((height, width, components)))
+        else:
+            raise TypeError("Specify either image or width and height.")
+
 def getBlack(img):
-    return Image(data = numpy.zeros((img.height, img.width, 1), dtype=numpy.uint8))
+    """
+    Get a single black channel with the dimensions of the specified image.
+    """
+    return colorAsImage([0], image=None, width=img.height, height=img.width)
 
 def getWhite(img):
-    return Image(data = 255*numpy.ones((img.height, img.width, 1), dtype=numpy.uint8))
+    """
+    Get a single white channel with the dimensions of the specified image.
+    """
+    return colorAsImage([255], image=None, width=img.height, height=img.width)
 
 def getAlpha(img):
+    """
+    Returns the alpha channel of the specified image.
+    """
     c = img.components
     if c == 2 or c == 4:
         return Image(data = img.data[:,:,-1:])
@@ -136,6 +164,9 @@ def getAlpha(img):
         return getWhite(img)
 
 def getChannel(img, channel):
+    """
+    Create a new monochrome image from a single channel of another image.
+    """
     return Image(data = img.data[:,:,(channel-1):channel])
 
 def growSelection(img, pixels = 1):
