@@ -874,6 +874,35 @@ class Application(events3d.EventHandler):
             return category
         return self.addCategory(Category(name), sortOrder = sortOrder)
 
+    def getTask(self, category, task):
+        """
+        Retrieve a task by category and name.
+        Will not create a task or category if it does not exist.
+
+        Set category to None or False to search for a task by name. Will raise
+        an exception when the result is ambiguous (there are multiple tasks with
+        the same name in different categories).
+        This quickhand is mostly useful for shell usage, but dangerous to use in
+        a plugin.
+        """
+        if category:
+            if not category in self.categories.keys():
+                raise RuntimeWarning('Category with name "%s" does not exist.' % category)
+            c = self.getCategory(category)
+            if not task in c.tasksByName.keys():
+                raise RuntimeWarning('Category "%s" does not contain a task with name "%s".' % (category, task))
+            return c.getTaskByName(task)
+        else:
+            tasks = []
+            for c in self.categories.keys():
+                if task in self.getCategory(c).tasksByName.keys():
+                    tasks.append(self.getCategory(c).tasksByName[task])
+            if len(tasks) == 0:
+                raise RuntimeWarning('No task with name "%s" found.' % task)
+            if len(tasks) > 1:
+                raise RuntimeWarning('Ambiguous result for task "%s", there are multiple tasks with that name.' % task)
+            return tasks[0]
+
     # called from native
 
     def onMouseDownCallback(self, event):
