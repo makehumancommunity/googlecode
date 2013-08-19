@@ -462,7 +462,7 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
         'lmap': lambda RM: projection.mapSceneLighting(settings['scene']),
         'blurlev': lambda img, mult: (mult*(float(img.width)/1024)*float(settings['SSSA'])) if img else mult,
         'mapmask': lambda RM: projection.mapMask()}
-    MAfuncs.update(imgop.analyzerfuncs)
+    MAfuncs.update(matanalyzer.imgopfuncs)
     materials = matanalyzer.MaterialAnalysis(rmeshes,
                                  map = {
         'diffuse':              (('mat.diffuse',),                                                                      'diffusedef', ('pigment', 'whitedef')),

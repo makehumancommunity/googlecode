@@ -122,8 +122,18 @@ def compose(channels):
         i += 1
     return Image(data = numpy.dstack(outch))
 
+def getBlack(img):
+    return Image(data = numpy.zeros((img.height, img.width, 1), dtype=numpy.uint8))
+
+def getWhite(img):
+    return Image(data = 255*numpy.ones((img.height, img.width, 1), dtype=numpy.uint8))
+
 def getAlpha(img):
-    return Image(data = img.data[:,:,-1:])
+    c = img.components
+    if c == 2 or c == 4:
+        return Image(data = img.data[:,:,-1:])
+    else:
+        return getWhite(img)
 
 def getChannel(img, channel):
     return Image(data = img.data[:,:,(channel-1):channel])
@@ -166,15 +176,5 @@ def expandSelection(img, shrink = False):
         mask = numpy.logical_not(mask)
 
     return Image(data = 255*((mask[...,None]).astype(numpy.uint8)))
-
-
-analyzerfuncs = {
-    'black': lambda img: Image(data = numpy.zeros((img.height, img.width, 1), dtype=numpy.uint8)),
-    'blur': lambda img, lev, ker: blurred(Image(data = img), lev, ker) if img else None,
-    'compose': lambda l: compose(l),
-    'getChannel': lambda t, c: getChannel(Image(data = t),c) if t else None,
-    'getAlpha': lambda t: getAlpha(Image(data = t)) if t else None,
-    'growMask': lambda t, p: growSelection(Image(data = t), p) if t else None,
-    'shrinkMask': lambda t, p: shrinkSelection(Image(data = t), p) if t else None}
 
 

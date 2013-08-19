@@ -31,6 +31,10 @@ formatted strings for each texture, according to the passed instructions,
 so that texture definitions, specialized for each exporter, are directly
 exported without the addition of extra string formatting code.
 
+The module also includes several handy image_operations functions to use
+with the analyzer, by updating the functions dictionary with them before
+passing it to the class.
+
 """
 
 import os
@@ -156,4 +160,16 @@ class MaterialAnalysis(object):
                 else:
                     return self.Object.analyzer.functions[func](self, options) if func else ""
         
+
+import image_operations as imgop
+
+imgopfuncs = {
+    'black': lambda img: imgop.getBlack(img) if img else None,
+    'white': lambda img: imgop.getWhite(img) if img else None,
+    'blur': lambda img, lev, ker: imgop.blurred(imgop.Image(data = img), lev, ker) if img else None,
+    'compose': lambda l: imgop.compose(l),
+    'getChannel': lambda t, c: imgop.getChannel(imgop.Image(data = t),c) if t else None,
+    'getAlpha': lambda t: imgop.getAlpha(imgop.Image(data = t)) if t else None,
+    'growMask': lambda t, p: imgop.growSelection(imgop.Image(data = t), p) if t else None,
+    'shrinkMask': lambda t, p: imgop.shrinkSelection(imgop.Image(data = t), p) if t else None}
 
