@@ -417,7 +417,7 @@ def hasRenderSkin():
             bool(glGenRenderbuffers), bool(glBindRenderbuffer), bool(glRenderbufferStorage),
             bool(glGenFramebuffers), bool(glBindFramebuffer), bool(glFramebufferRenderbuffer)])
     return _hasRenderSkin
-               
+
 def renderSkin(dst, vertsPerPrimitive, verts, index = None, objectMatrix = None,
                texture = None, UVs = None, textureMatrix = None,
                color = None, clearColor = None):
@@ -427,7 +427,10 @@ def renderSkin(dst, vertsPerPrimitive, verts, index = None, objectMatrix = None,
     elif isinstance(dst, Image):
         dst = Texture(image = dst)
     elif isinstance(dst, tuple):
-        dst = Texture(size = dst)
+        dimensions = dst
+        dst = Texture(size = dimensions)
+        if dst.width < dimensions[0] or dst.height < dimensions[1]:
+            raise RuntimeError('Could not allocate render texture with dimensions: %s' % str(dst))
     else:
         raise RuntimeError('Unsupported destination: %r' % dst)
 

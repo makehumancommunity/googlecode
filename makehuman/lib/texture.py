@@ -85,6 +85,11 @@ class Texture(object):
         if use_mipmaps and pixels is None:
             raise RuntimeError("Non-power-of-two textures not supported")
 
+        if pixels == None:
+            # Zero fill pixel data to allocate
+            import numpy as np
+            pixels = np.zeros(width*height*components, dtype=np.uint8)
+
         if height == 1:
             glBindTexture(GL_TEXTURE_1D, self.textureId)
 

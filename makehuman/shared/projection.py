@@ -222,7 +222,11 @@ def mapImageGL(srcImg, mesh, leftTop, rightBottom):
 
 def mapImage(imgMesh, mesh, leftTop, rightBottom):
     if mh.hasRenderSkin():
-        return mapImageGL(imgMesh.mesh.object3d.textureTex, mesh, leftTop, rightBottom)
+        try:
+            return mapImageGL(imgMesh.mesh.object3d.textureTex, mesh, leftTop, rightBottom)
+        except:
+            log.debug("Hardware skin rendering failed, falling back to software render.")
+            return mapImageSoft(mh.Image(imgMesh.getTexture()), mesh, leftTop, rightBottom)
     else:
         return mapImageSoft(mh.Image(imgMesh.getTexture()), mesh, leftTop, rightBottom)
 
@@ -345,7 +349,11 @@ def mapLighting(lightpos = (-10.99, 20.0, 20.0), progressCallback = None):
     available, otherwise uses a slower software rasterizer.
     """
     if mh.hasRenderSkin():
-        return mapLightingGL(lightpos)
+        try:
+            return mapLightingGL(lightpos)
+        except:
+            log.debug("Hardware skin rendering failed, falling back to software render.")
+            return mapLightingSoft(lightpos, progressCallback)
     else:
         return mapLightingSoft(lightpos, progressCallback)
 
@@ -388,9 +396,14 @@ def mapMask(dimensions = (1024, 1024), progressCallback = None):
     Create a texture map mask, for finding the texture map borders.
     """
     if mh.hasRenderSkin():
-        mesh = gui3d.app.selectedHuman.mesh
-        return mh.renderSkin(dimensions, mesh.vertsPerPrimitive, mesh.r_texco,
-                         index = mesh.index, clearColor = (0, 0, 0, 0))
+        try:
+            mesh = gui3d.app.selectedHuman.mesh
+            return mh.renderSkin(dimensions, mesh.vertsPerPrimitive, 
+                                 mesh.r_texco, index = mesh.index, 
+                                 clearColor = (0, 0, 0, 0))
+        except:
+            log.debug("Hardware skin rendering failed, falling back to software render.")
+            return self.mapMaskSoft(dimensions, progressCallback)
     else:
         return self.mapMaskSoft(dimensions, progressCallback)
 
@@ -586,7 +599,11 @@ def mapUV():
     available, otherwise uses a slower software rasterizer.
     """
     if mh.hasRenderSkin():
-        return mapUVGL()
+        try:
+            return mapUVGL()
+        except:
+            log.debug("Hardware skin rendering failed, falling back to software render.")
+            return mapUVSoft()
     else:
         return mapUVSoft()
 
