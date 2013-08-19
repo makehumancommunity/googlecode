@@ -224,7 +224,8 @@ def mapImage(imgMesh, mesh, leftTop, rightBottom):
     if mh.hasRenderSkin():
         try:
             return mapImageGL(imgMesh.mesh.object3d.textureTex, mesh, leftTop, rightBottom)
-        except:
+        except Exception, e:
+            log.debug(e)
             log.debug("Hardware skin rendering failed, falling back to software render.")
             return mapImageSoft(mh.Image(imgMesh.getTexture()), mesh, leftTop, rightBottom)
     else:
@@ -351,7 +352,8 @@ def mapLighting(lightpos = (-10.99, 20.0, 20.0), progressCallback = None):
     if mh.hasRenderSkin():
         try:
             return mapLightingGL(lightpos)
-        except:
+        except Exception, e:
+            log.debug(e)
             log.debug("Hardware skin rendering failed, falling back to software render.")
             return mapLightingSoft(lightpos, progressCallback)
     else:
@@ -401,7 +403,8 @@ def mapMask(dimensions = (1024, 1024), progressCallback = None):
             return mh.renderSkin(dimensions, mesh.vertsPerPrimitive, 
                                  mesh.r_texco, index = mesh.index, 
                                  clearColor = (0, 0, 0, 0))
-        except:
+        except Exception, e:
+            log.debug(e)
             log.debug("Hardware skin rendering failed, falling back to software render.")
             return self.mapMaskSoft(dimensions, progressCallback)
     else:
@@ -601,7 +604,8 @@ def mapUV():
     if mh.hasRenderSkin():
         try:
             return mapUVGL()
-        except:
+        except Exception, e:
+            log.debug(e)
             log.debug("Hardware skin rendering failed, falling back to software render.")
             return mapUVSoft()
     else:
