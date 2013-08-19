@@ -92,11 +92,22 @@ class Image(object):
         image_qt.save(path, self._data)
 
     def toQImage(self):
-        if self.components == 3:
+        if self.components == 1:
             fmt = image_qt.QtGui.QImage.Format_RGB888
-        else:
+            h,w,c = self.data.shape
+            data = np.repeat(self.data[:,:,0], 3).reshape((h,w,3))
+        elif self.components == 2:
             fmt = image_qt.QtGui.QImage.Format_ARGB32
-        return image_qt.QtGui.QImage(self.data.tostring(), self.data.shape[0], self.data.shape[1], fmt)
+            h,w,c = self.data.shape
+            data = np.repeat(self.data[:,:,0], 3).reshape((h,w,3))
+            data = np.insert(data, 3, values=self.data[:,:,1], axis=2)
+        elif self.components == 3:
+            fmt = image_qt.QtGui.QImage.Format_RGB888
+            data = self.data
+        else: # components == 4
+            fmt = image_qt.QtGui.QImage.Format_ARGB32
+            data = self.data
+        return image_qt.QtGui.QImage(data.tostring(), data.shape[1], data.shape[0], fmt)
 
     def resized_(self, width, height):
         dw, dh = width, height
