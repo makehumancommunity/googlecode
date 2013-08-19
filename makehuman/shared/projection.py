@@ -69,6 +69,14 @@ class ColorShader(Shader):
     def shade(self, i, xy, uvw):
         return np.sum(self.colors[i][None,None,:,:] * uvw[...,[1,2,0]][:,:,:,None], axis=2)
 
+class MaskShader(Shader):
+    def __init__(self, color=[255,255,255,255]):
+        self.color = color
+
+    def shade(self, i, xy, uvw):
+        shape = list(xy.shape)[:-1]
+        return np.tile(self.color, shape).reshape(shape + [4])
+
 def RasterizeTriangles(dst, coords, shader, progress = None):
     """
     Software rasterizer.
@@ -375,7 +383,7 @@ def mapSceneLighting(scn, progressCallback = None):
     else:   # If the scene has no lights, return an empty lightmap.
         return mh.Image(data = np.zeros((1024, 1024, 1), dtype=np.uint8))
 
-def mapMask(dimensions = (1024, 1024)):
+def mapMask(dimensions = (1024, 1024), progressCallback = None):
     """
     Create a texture map mask, for finding the texture map borders.
     """
@@ -384,7 +392,47 @@ def mapMask(dimensions = (1024, 1024)):
         return mh.renderSkin(dimensions, mesh.vertsPerPrimitive, mesh.r_texco,
                          index = mesh.index, clearColor = (0, 0, 0, 0))
     else:
-        raise NotImplementedError("There is no software implementation of mapMask yet.")
+        return self.mapMaskSoft(dimensions, progressCallback)
+
+def mapMaskSoft(dimensions = (1024, 1024), progressCallback = None):
+    """
+    Create a texture mask for the selected human (software renderer).
+    """
+
+    mesh = gui3d.app.selectedHuman.mesh
+
+    W = dimensions[0]
+    H = dimensions[1]
+
+    components = 4
+    dstImg = mh.Image(width=W, height=H, components=components)
+    dstImg.data[...] = np.tile([0,0,0,255], (W,H)).reshape((W,H,4))
+
+    faces = getFaces(mesh)
+
+    coords = np.asarray([0,H])[None,None,:] + mesh.texco[mesh.fuvs[faces]] * np.asarray([W,-H])[None,None,:]
+    shape = mesh.fvert[faces].shape
+    shape = tuple(list(shape) + [components])
+    colors = np.repeat(1, np.prod(shape)).reshape(shape)
+
+    log.debug("mapMask: begin render")
+
+    def progress(base, i, n):
+        if progressCallback == None:
+            gui3d.app.progress(base + 0.5 * i / n, "Projecting mask")
+        else:
+            progressCallback(base + 0.5 * i / n)
+
+    RasterizeTriangles(dstImg, coords[:,[0,1,2],:], MaskShader(), progress = lambda i,n: progress(0.0,i,n))
+    RasterizeTriangles(dstImg, coords[:,[2,3,0],:], MaskShader(), progress = lambda i,n: progress(0.5,i,n))
+    gui3d.app.progress(1.0)
+
+    fixSeams(dstImg)
+
+    log.debug("mapMask: end render")
+
+    return dstImg
+
 
 def rasterizeHLines(dstImg, edges, delta, progress = None):
     flip = delta[:,0] < 0
