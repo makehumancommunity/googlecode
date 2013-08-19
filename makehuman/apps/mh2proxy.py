@@ -31,6 +31,7 @@ import mh
 from collections import OrderedDict
 
 import material
+import io_json
 
 _A7converter = None
 
@@ -144,6 +145,8 @@ class CProxy:
         self.material = material.Material(self.name)
 
         self.obj_file = None
+        self.vertexgroup_file = None
+        self.vertexGroups = None
         self.material_file = None
         self.mhxMaterial_file = None
         self.maskLayer = -1
@@ -206,6 +209,8 @@ class CProxy:
             obj = human.hairObj
         elif human.eyesProxy and uuid == human.eyesProxy.uuid:
             obj = human.eyesObj
+        elif human.proxy and uuid == human.proxy.uuid:
+            obj = human
         else:
             return None
         return obj.mesh.texture.replace('\\', '/')
@@ -261,7 +266,27 @@ class CProxy:
         return num/den
 
 
-    def getWeights(self, rawWeights):
+    def getWeights(self, rawWeights, amt=None):
+        if self.vertexGroups is not None:
+            weights = OrderedDict()
+            for name,data in self.vertexGroups:
+                for bone in amt.bones.values():
+                    if bone.origName == name:
+                        name1 = bone.name
+                        break
+                for name2 in [
+                    "DEF-"+name1,
+                    "DEF-"+name1.replace(".L", ".03.L"),
+                    "DEF-"+name1.replace(".R", ".03.R"),
+                    name1]:
+                    try:
+                        rawWeights[name2]
+                        weights[name2] = data
+                        break
+                    except KeyError:
+                        pass
+            return weights
+
         converter = self.getConverter()
         if converter:
             rawWeights = converter.getWeights1(rawWeights)
@@ -410,10 +435,16 @@ def readProxyFile(obj, filepath, type="Clothes", layer=4):
 
         elif key == 'obj_file':
             proxy.obj_file = getFileName(folder, words[1], ".obj")
+
+        elif key == 'vertexgroup_file':
+            proxy.vertexgroup_file = getFileName(folder, words[1], ".json")
+            proxy.vertexGroups = io_json.loadJson(proxy.vertexgroup_file)
+
         elif key == 'material':
             matFile = getFileName(folder, words[1], ".mhmat")
             proxy.material_file = matFile
             proxy.material.fromFile(matFile)
+
         elif key == 'mhx_material':
             # Read .mhx material file (or only set a filepath reference to it)
             # MHX material file is supposed to contain only shading parameters that are specific for blender export that are not stored in the .mhmat file
@@ -502,6 +533,9 @@ def readProxyFile(obj, filepath, type="Clothes", layer=4):
             proxy.shapekeys.append( words[1] )
         elif key == 'basemesh':
             proxy.basemesh = words[1]
+
+        elif key in ['objfile_layer', 'uvtex_layer']:
+            pass
 
 
         elif status == doRefVerts:

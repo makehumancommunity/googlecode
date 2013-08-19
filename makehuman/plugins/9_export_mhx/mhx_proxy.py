@@ -140,10 +140,10 @@ NoScale False ;
 
     mhx_mesh.writeVertexGroups(fp, env, proxy)
 
-    if proxy.useBaseMaterials:
-        mhx_mesh.writeBaseMaterials(fp, env)
-    elif proxy.material:
+    if proxy.material:
         fp.write("  Material %s_%s_%s ;" % (env.name, proxy.name, proxy.material.name))
+    elif proxy.useBaseMaterials:
+        mhx_mesh.writeBaseMaterials(fp, env)
 
 
     fp.write("""

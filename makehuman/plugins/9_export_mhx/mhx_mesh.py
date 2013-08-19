@@ -279,7 +279,7 @@ def writeVertexGroups(fp, env, proxy):
         writeRigWeights(fp, proxy.weights)
         return
     if proxy:
-        weights = proxy.getWeights(amt.vertexWeights)
+        weights = proxy.getWeights(amt.vertexWeights, amt)
     else:
         weights = amt.vertexWeights
     writeRigWeights(fp, weights)
