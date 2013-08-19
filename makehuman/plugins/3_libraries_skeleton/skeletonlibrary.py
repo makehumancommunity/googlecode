@@ -511,7 +511,7 @@ class SkeletonLibrary(gui3d.TaskView):
                 if os.path.isfile(skelPath):
                     self.chooseSkeleton(skelPath)
                     return
-            log.warn("Could not load rig %s, file does not exist." % skelFile)
+            log.warning("Could not load rig %s, file does not exist." % skelFile)
 
         # Make sure no skeleton is drawn
         if self.skelObj:
