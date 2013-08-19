@@ -406,9 +406,9 @@ def mapMask(dimensions = (1024, 1024), progressCallback = None):
         except Exception, e:
             log.debug(e)
             log.debug("Hardware skin rendering failed, falling back to software render.")
-            return self.mapMaskSoft(dimensions, progressCallback)
+            return mapMaskSoft(dimensions, progressCallback)
     else:
-        return self.mapMaskSoft(dimensions, progressCallback)
+        return mapMaskSoft(dimensions, progressCallback)
 
 def mapMaskSoft(dimensions = (1024, 1024), progressCallback = None):
     """
