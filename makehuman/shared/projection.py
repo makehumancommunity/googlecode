@@ -406,7 +406,7 @@ def mapMaskSoft(dimensions = (1024, 1024), progressCallback = None):
 
     components = 4
     dstImg = mh.Image(width=W, height=H, components=components)
-    dstImg.data[...] = np.tile([0,0,0,255], (W,H)).reshape((W,H,4))
+    dstImg.data[...] = np.tile([0,0,0,255], (W,H)).reshape((W,H,components))
 
     faces = getFaces(mesh)
 
