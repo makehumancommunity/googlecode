@@ -406,7 +406,7 @@ def mapMaskSoft(dimensions = (1024, 1024), progressCallback = None):
 
     components = 4
     dstImg = mh.Image(width=W, height=H, components=components)
-    dstImg.data[...] = np.tile([0,0,0,255], (W,H)).reshape((W,H,components))
+    dstImg.data[...] = np.tile([0,0,0,255], (H,W)).reshape((H,W,components))
 
     faces = getFaces(mesh)
 
@@ -432,7 +432,6 @@ def mapMaskSoft(dimensions = (1024, 1024), progressCallback = None):
     log.debug("mapMask: end render")
 
     return dstImg
-
 
 def rasterizeHLines(dstImg, edges, delta, progress = None):
     flip = delta[:,0] < 0
