@@ -195,6 +195,7 @@ def OnInit():
         debugdump.dump.appendMessage("GL.VENDOR: " + glGetString(GL_VENDOR))
         debugdump.dump.appendMessage("GL.RENDERER: " + glGetString(GL_RENDERER))
         debugdump.dump.appendMessage("GL.VERSION: " + glGetString(GL_VERSION))
+        debugdump.dump.appendMessage("GLSL.VERSION: " + glGetString(GL_SHADING_LANGUAGE_VERSION))
     except Exception as e:
         log.error("Failed to GL debug info to debug dump: %s", format(str(e)))
 
