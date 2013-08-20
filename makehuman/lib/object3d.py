@@ -177,6 +177,7 @@ class Object3D(object):
                 except Exception, e:
                     self._shaderObj = False
                     log.error(e, exc_info=True)
+                    log.warning("Failed to initialize shader (%s), falling back to fixed function shading.", self._shaderPath)
             self.parent.shaderChanged = False
         if self._shaderObj is False:
             return None
