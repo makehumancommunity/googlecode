@@ -19,6 +19,7 @@ Vertex groups
 """
 
 import bpy
+from bpy.props import *
 
 #
 #    removeVertexGroups(context):
@@ -464,4 +465,59 @@ class VIEW3D_OT_CreateLeftRightButton(bpy.types.Operator):
     def execute(self, context):
         createLeftRightGroups(context)
         return{'FINISHED'}
+
+
+def weightLid(context, lidname):
+    ob = context.object
+    lid = ob.vertex_groups[lidname]
+    head = ob.vertex_groups["head"]
+    d0 = 0.2
+    d1 = 0.8
+    w0 = 0.0
+
+    row = setupSelected(ob)
+    x0 = row[0][0]
+    x1 = row[-1][0]
+    for x,y,v in row:
+        d = (x-x0)/(x1-x0)
+        w = 1.0
+        if d < d0:
+            w = w0 + d/d0
+        elif d > d1:
+            w = w0 + 1.0 - (d-d1)/(1.0-d1)
+        if w < 0:
+            w = 0.0
+        elif w > 1.0:
+            w = 1.0
+        lid.add([v.index], w, 'REPLACE')
+        head.add([v.index], 1.0-w, 'REPLACE')
+        print(v.index, w)
+
+    bpy.ops.object.mode_set(mode='EDIT')
+
+
+def setupSelected(ob):
+    bpy.ops.object.mode_set(mode='OBJECT')
+    row = []
+    for v in ob.data.vertices:
+        if v.select:
+            row.append((v.co[0],v.co[1],v))
+    row.sort()
+    return row
+
+
+class VIEW3D_OT_WeightLidButton(bpy.types.Operator):
+    bl_idname = "mhw.weight_lid"
+    bl_label = "Weight Lid"
+    bl_options = {'UNDO'}
+    lidname = StringProperty()
+
+    def execute(self, context):
+        weightLid(context, self.lidname)
+        return{'FINISHED'}
+
+
+
+
+
 

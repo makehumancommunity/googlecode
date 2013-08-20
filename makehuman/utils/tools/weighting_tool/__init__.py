@@ -115,6 +115,10 @@ class MhxWeightToolsPanel(bpy.types.Panel):
             layout.operator("mhw.ramp_weight")
             layout.operator("mhw.create_left_right")
 
+            layout.separator()
+            layout.operator("mhw.weight_lid", text="Weight Upper Left Lid").lidname = "uplid.L"
+            layout.operator("mhw.weight_lid", text="Weight Lower Left Lid").lidname = "lolid.L"
+
 
         layout.prop(scn, "MhxShowSymmetry")
         if scn.MhxShowSymmetry:
