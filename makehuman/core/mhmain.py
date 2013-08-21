@@ -168,7 +168,7 @@ class MHApplication(gui3d.Application, mh.Application):
             'excludePlugins':[],
             'rtl': False,
             'sliderImages': True,
-            'guiTheme': 'default',
+            'guiTheme': 'makehuman',
             'preloadTargets': False
         }
 
@@ -477,7 +477,7 @@ class MHApplication(gui3d.Application, mh.Application):
 
         log.message('Loading theme')
         try:
-            self.setTheme(self.settings.get('guiTheme', 'default'))
+            self.setTheme(self.settings.get('guiTheme', 'makehuman'))
         except:
             self.setTheme("default")
 
