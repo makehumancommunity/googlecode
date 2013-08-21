@@ -27,7 +27,7 @@ import armature
 from armature.flags import *
 
 
-def writePoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, flags, constraints):
+def writePoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockScale, ik_dof, poseFlags, constraints):
     try:
         (lockLoc, location) = locArg
     except:
@@ -39,11 +39,11 @@ def writePoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockSc
     (lockRotX, lockRotY, lockRotZ) = lockRot
     (lockScaleX, lockScaleY, lockScaleZ) = lockScale
 
-    ikLin = (flags & P_IKLIN != 0)
-    ikRot = (flags & P_IKROT != 0)
-    lkRot4 = (flags & P_LKROT4 != 0)
-    lkRotW = (flags & P_LKROTW != 0)
-    hide = (flags & P_HID != 0)
+    ikLin = (poseFlags & P_IKLIN != 0)
+    ikRot = (poseFlags & P_IKROT != 0)
+    lkRot4 = (poseFlags & P_LKROT4 != 0)
+    lkRotW = (poseFlags & P_LKROTW != 0)
+    hide = (poseFlags & P_HID != 0)
 
     if not fp:
         #amt.createdArmature.bones[bone].constraints = mhx_constraints.getConstraints(bone, constraints, lockLoc, lockRot)
@@ -95,8 +95,8 @@ def writePoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockSc
     if customShape:
         fp.write("    custom_shape Refer Object %s ; \n" % customShape)
 
-    rotMode = rotationMode(flags)
-    fp.write("  rotation_mode '%s' ;\n" % rotMode)
+    rotMode = rotationMode(poseFlags)
+    fp.write("    rotation_mode '%s' ;\n" % rotMode)
 
     fp.write(
 "    use_ik_linear_control %s ; \n" % ikLin +
@@ -121,8 +121,8 @@ def writePoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockSc
     return
 
 
-def rotationMode(flags):
+def rotationMode(poseFlags):
     modes = ['QUATERNION', 'XYZ', 'XZY', 'YXZ', 'YZX', 'ZXY', 'ZYX']
-    return modes[(flags&P_ROTMODE) >> 8]
+    return modes[(poseFlags&P_ROTMODE) >> 8]
 
 

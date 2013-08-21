@@ -70,6 +70,7 @@ class Parser:
         self.drivers = []
         self.propDrivers = []
         self.lrPropDrivers = []
+        self.boneDrivers = []
 
         self.vertexGroupFiles = []
 
@@ -102,6 +103,12 @@ class Parser:
             rig_face.HeadsTails,
             rig_control.HeadsTails,
         ])
+
+        if options.useRevFoot:
+            addDict(rig_control.RevFootHeadsTails, self.headsTails)
+        else:
+            addDict(rig_control.RigifyFootHeadsTails, self.headsTails)
+            self.boneDrivers += rig_control.RigifyFootBoneDrivers
 
         if options.useConstraints:
             self.setConstraints(rig_bones.Constraints)
@@ -182,8 +189,12 @@ class Parser:
                 self.propDrivers += rig_control.HeadPropDrivers
 
         if options.useIkLegs and options.useConstraints:
-            self.addBones(rig_control.IkLegArmature, boneInfo)
-            self.setConstraints(rig_control.IkLegConstraints)
+            if options.useRevFoot:
+                self.addBones(rig_control.RevFootArmature, boneInfo)
+                self.setConstraints(rig_control.RevFootConstraints)
+            else:
+                self.addBones(rig_control.RigifyFootArmature, boneInfo)
+                self.setConstraints(rig_control.RigifyFootConstraints)
             #addDict(rig_control.IkLegChains, self.ikChains)
             addDict(rig_control.IkLegParents, self.parents)
             self.lrPropDrivers += rig_control.IkLegPropLRDrivers

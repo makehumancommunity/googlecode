@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -28,6 +28,7 @@ import log
 
 class CTarget:
     def __init__(self, var, target):
+        log.debug("CTARGET %s %s" % (var, target))
         self.variable = var
         if var.type == 'TRANSFORMS':
             (self.idtype, self.object, self.bone, self.type, self.flags) = target
@@ -35,12 +36,12 @@ class CTarget:
                 var.useLoc = True
         elif var.type == 'ROTATION_DIFF':
             (self.idtype, self.object, self.bone, self.flags) = target
-        elif var.type == 'SINGLE_PROP': 
+        elif var.type == 'SINGLE_PROP':
             (self.idtype, self.object, self.datapath) = target
-        
+
     def display(self):
         log.debug("      <CTarget %s %s>", self.idtype, self.object)
-                        
+
     def write25(self, fp):
         fp.write("          Target %s %s\n" % (self.object, self.idtype))
         if self.variable.type == 'TRANSFORMS':
@@ -48,14 +49,14 @@ class CTarget:
                 "             transform_type '%s' ;\n" % self.type +
                 "             bone_target '%s' ;\n" % self.bone)
             if self.flags & C_LOC:
-                fp.write("            transform_space 'LOCAL_SPACE' ;\n")
+                fp.write("             transform_space 'LOCAL_SPACE' ;\n")
             else:
-                fp.write("            transform_space 'WORLD_SPACE' ;\n")
+                fp.write("             transform_space 'WORLD_SPACE' ;\n")
         elif self.variable.type == 'ROTATION_DIFF':
             fp.write(
                 "            bone_target '%s' ;\n" % self.bone +
                 "            transform_space 'WORLD_SPACE' ; \n")
-        elif self.variable.type == 'SINGLE_PROP': 
+        elif self.variable.type == 'SINGLE_PROP':
             fp.write("            data_path '%s' ;\n" % self.datapath)
         fp.write("          end Target\n")
 
@@ -72,28 +73,28 @@ class CVariable:
         elif self.type == 'ROTATION_DIFF':
             drv.useKeypoints = True
             drv.useMod = False
-        elif self.type == 'SINGLE_PROP': 
+        elif self.type == 'SINGLE_PROP':
             if drv.coeffs:
                 drv.useMod = True
         else:
             raise NameError("Unknown driver var type %s" % self.type)
-        
+
     def display(self):
         log.debug("    <CVariable %s %s", self.name, self.type)
         for target in self.targets:
             target.display()
         log.debug("    >")
-                                
+
     def write25(self, fp):
         fp.write("        DriverVariable %s %s\n" % (self.name, self.type))
         for target in self.targets:
             target.write25(fp)
         fp.write("        end DriverVariable\n")
-    
-    
+
+
 class CDriver:
     def __init__(self, cond, drvdata, extra, channel, index, coeffs, variables):
-        self.cond = cond        
+        self.cond = cond
         try:
             (self.drvtype, self.expr) = drvdata
         except:
@@ -107,15 +108,15 @@ class CDriver:
         self.useKeypoints = False
         self.useMod = False
         for (var, type, targets) in variables:
-            self.variables.append( CVariable(var, self, type, targets) )    
+            self.variables.append( CVariable(var, self, type, targets) )
 
     def display(self):
         log.debug("  <CDriver %s %d", self.channel, self.index)
         for var in self.variables:
             var.display()
         log.debug("  >")
-    
-    def write25(self, fp):        
+
+    def write25(self, fp):
         fp.write("\n"+
             "    FCurve %s %d %s\n" % (self.channel, self.index, self.cond) +
             "      Driver %s\n" % self.drvtype )
@@ -154,8 +155,8 @@ class CDriver:
                 "      extrapolation 'CONSTANT' ;\n" +
                 "      lock False ;\n" +
                 "      select False ;\n" +
-                "    end FCurve\n")    
-    
+                "    end FCurve\n")
+
 #
 #    Functions
 #
@@ -194,7 +195,7 @@ def writePropDrivers(fp, amt, drivers, suffix, prefix):
         if suffix:
             bone = "%s.%s" % (bone, suffix)
         drv = writeDriver(fp, True, ('SCRIPTED', expr), "",
-            "pose.bones[\"%s\"].constraints[\"%s\"].influence" % (bone, cns), 
+            "pose.bones[\"%s\"].constraints[\"%s\"].influence" % (bone, cns),
             -1, (0,1), drvVars)
         driverList.append(drv)
     return driverList
@@ -206,11 +207,11 @@ def writeShapePropDrivers(fp, amt, skeys, proxy, prefix):
         if useThisShape(skey, proxy):
             drvVar = ("x", 'SINGLE_PROP', [('OBJECT', amt.name, '["%s%s"]' % (prefix, skey))])
             drv = writeDriver(fp, True, ('SCRIPTED', "x"), "",
-                "key_blocks[\"%s\"].value" % (skey), 
+                "key_blocks[\"%s\"].value" % (skey),
                 -1, (0,1), [drvVar])
             driverList.append(drv)
     return driverList
-    
+
 
 def writePropDriver(fp, amt, props, expr, dataPath, index):
     drvVars = []
@@ -219,7 +220,7 @@ def writePropDriver(fp, amt, props, expr, dataPath, index):
         drvVars.append( ("x%d" % n, 'SINGLE_PROP', [('OBJECT', amt.name, '["%s"]' % (prop))]) )
         n += 1
     return writeDriver(fp, True, ('SCRIPTED', expr), "", dataPath, index, (0,1), drvVars)
-    
+
 
 def writeTextureDrivers(fp, amt, drivers):
     driverList = []
@@ -254,25 +255,25 @@ def writeTargetDrivers(fp, drivers, rig, empties):
             continue
         elif lr:
             for suffix in ["_L", "_R"]:
-                drvVars = []        
+                drvVars = []
                 n = 0
                 for (bone, targ) in vars:
                     n += 1
-                    drvVars.append( ("x%d" % n, "ROTATION_DIFF", 
+                    drvVars.append( ("x%d" % n, "ROTATION_DIFF",
                         [('OBJECT', rig, bone+suffix, C_LOC),('OBJECT', rig, targ+suffix, C_LOC)]) )
                 drv = writeDriver(fp, True, ('SCRIPTED', expr), "", "key_blocks[\"%s\"].value" % (fname+suffix), -1, coeffs, drvVars)
                 driverList.append(drv)
-        else:                
-            drvVars = []        
+        else:
+            drvVars = []
             n = 0
             for (bone, targ) in vars:
                 n += 1
-                drvVars.append( ("x%d" % n, "ROTATION_DIFF", 
+                drvVars.append( ("x%d" % n, "ROTATION_DIFF",
                         [('OBJECT', rig, bone, C_LOC),('OBJECT', rig, targ, C_LOC)]) )
             drv = writeDriver(fp, True, ('SCRIPTED', expr), "", "key_blocks[\"%s\"].value" % (fname+suffix), -1, coeffs, drvVars)
             driverList.append(drv)
     return driverList
-    
+
 
 def writeMuscleDrivers(fp, drivers, rig):
     driverList = []
@@ -298,21 +299,24 @@ def writeRotDiffDrivers(fp, drivers, proxy):
         if useThisShape(shape, proxy):
             (targ1, targ2, keypoints) = vlist
             drvVars = [(targ2, 'ROTATION_DIFF', [
-            ('OBJECT', amt.name, targ1, C_LOC),
-            ('OBJECT', amt.name, targ2, C_LOC)] )]
+                ('OBJECT', amt.name, targ1, C_LOC),
+                ('OBJECT', amt.name, targ2, C_LOC)]
+             )]
             drv = writeDriver(fp, True, 'MIN', "", "key_blocks[\"%s\"].value" % (shape), -1, keypoints, drvVars)
             driverList.append(drv)
     return driverList
 
 
-def writeScriptedBoneDrivers(fp, bones):
+def writeScriptedBoneDrivers(fp, amt, boneDrivers):
     drivers = []
-    for (driven, driver, channel, expr) in bones:
-        drivers.append( 
+    for boneDriver in boneDrivers:
+        log.debug(boneDriver)
+        (driven, driver, channel, expr) = boneDriver
+        drivers.append(
             (driven, 'ROTE', ('SCRIPTED', expr), None, 0, (0, 1),
                 [("x", 'TRANSFORMS', [('OBJECT', amt.name, driver, channel, C_LOC)])]) )
     return writeDrivers(fp, True, drivers)
-    
+
 
 def writeDrivers(fp, cond, drivers):
     driverList = []

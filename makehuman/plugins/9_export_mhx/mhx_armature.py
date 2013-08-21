@@ -214,17 +214,19 @@ class ExportArmature(Armature):
                 fp, self, bone.name,
                 bone.customShape, bgroup,
                 bone.lockLocation, bone.lockRotation, bone.lockScale,
-                bone.ikDof, bone.flags, bone.constraints)
+                bone.ikDof, bone.poseFlags, bone.constraints)
 
 
     def writeDrivers(self, fp):
         parser = self.parser
-        if parser.lrPropDrivers or parser.drivers:
+        if (parser.lrPropDrivers or
+            parser.propDrivers or
+            parser.boneDrivers):
             fp.write("AnimationData %s True\n" % self.name)
             mhx_drivers.writePropDrivers(fp, self, parser.lrPropDrivers, "L", "Mha")
             mhx_drivers.writePropDrivers(fp, self, parser.lrPropDrivers, "R", "Mha")
             mhx_drivers.writePropDrivers(fp, self, parser.propDrivers, "", "Mha")
-            mhx_drivers.writeDrivers(fp, True, parser.drivers)
+            mhx_drivers.writeScriptedBoneDrivers(fp, self, parser.boneDrivers)
 
             fp.write(
 """

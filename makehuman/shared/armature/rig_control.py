@@ -38,6 +38,11 @@ Joints = [
 
     ('eyes',                'l', ((0.5, 'r-eye'), (0.5,'l-eye'))),
     ('gaze',                'o', ('eyes', (0,0,5))),
+
+    ('l-rock-2',            'v', 12872),
+    ('l-rock-1',            'v', 12859),
+    ('r-rock-2',            'v', 6275),
+    ('r-rock-1',            'v', 6262),
 ]
 
 PlaneJoints = [
@@ -64,17 +69,9 @@ HeadsTails = {
 
     'ankle.L' :         ('l-ankle', 'l-ankle-tip'),
     'ankle.ik.L' :      ('l-ankle', 'l-ankle-tip'),
-    'foot.ik.L' :       ('l-heel', 'l-toe-2'),
-    'foot_helper.L':    ('l-heel', 'l-toe-2'),
-    'toe.rev.L' :       ('l-toe-2', 'l-foot-1'),
-    'foot.rev.L' :      ('l-foot-1', 'l-ankle'),
 
     'ankle.R' :         ('r-ankle', 'r-ankle-tip'),
     'ankle.ik.R' :      ('r-ankle', 'r-ankle-tip'),
-    'foot.ik.R' :       ('r-heel', 'r-toe-2'),
-    'foot_helper.R':    ('r-heel', 'r-toe-2'),
-    'toe.rev.R' :       ('r-toe-2', 'r-foot-1'),
-    'foot.rev.R' :      ('r-foot-1', 'r-ankle'),
 
     # Pole Targets
     'knee.pt.ik.L' :    ('l-knee-pt', ('l-knee-pt', ysmall)),
@@ -149,7 +146,20 @@ HeadArmature = {
     'eyes' :            (0, 'head', 0, L_HELP),
 }
 
-IkLegArmature = {
+
+RevFootHeadsTails = {
+    'foot.ik.L' :       ('l-heel', 'l-toe-2'),
+    'foot_helper.L':    ('l-heel', 'l-toe-2'),
+    'toe.rev.L' :       ('l-toe-2', 'l-foot-1'),
+    'foot.rev.L' :      ('l-foot-1', 'l-ankle'),
+
+    'foot.ik.R' :       ('r-heel', 'r-toe-2'),
+    'foot_helper.R':    ('r-heel', 'r-toe-2'),
+    'toe.rev.R' :       ('r-toe-2', 'r-foot-1'),
+    'foot.rev.R' :      ('r-foot-1', 'r-ankle'),
+}
+
+RevFootArmature = {
     'hip.L' :          (0, 'hips', F_WIR, L_TWEAK),
     'foot.ik.L' :      (180*D, None, F_WIR|F_NOLOCK, L_LLEGIK),
     'foot_helper.L' :  (0, 'toe.fk.L', 0, L_HELP),
@@ -174,6 +184,81 @@ IkLegArmature = {
     'knee.pt.fk.R' :   (0, 'thigh.R', 0, L_HELP2),
     'knee.link.R' :    (0, 'thigh.ik.R', F_RES, L_RLEGIK+L_REXTRA),
 }
+
+
+RigifyFootHeadsTails = {
+    'foot.ik.L' :           ('l-heel', 'l-toe-2'),
+    #'foot.ik.L' :           ('l-ankle', ('l-ankle', (0,0,1))),
+    'foot.rocker.01.L':     ('l-rock-1', 'l-rock-2'),
+    'foot.rocker.02.L':     ('l-rock-2', 'l-rock-1'),
+    'foot.roll.01.L' :      ('l-heel', 'l-foot-1'),
+    'foot_roll.ik.L' :      ('l-heel', ('l-heel', (0,0,-1))),
+    'foot.roll.02.L' :      ('l-foot-1', 'l-heel'),
+    'foot_roll.ik.L' :      ('l-heel', ('l-heel', (0,0,-1))),
+    'foot.fwd.L' :          ('l-ankle', 'l-foot-1'),
+
+    'toe.socket.L' :        ('l-foot-1', ('l-foot-1', (0,0.5,1))),
+    'toe.parent.L' :        ('l-ankle', 'l-foot-1'),
+    'toe.fwd.L' :           ('l-foot-1', 'l-toe-2'),
+
+    'foot.ik.R' :           ('r-heel', 'r-toe-2'),
+    #'foot.ik.R' :           ('r-ankle', ('r-ankle', (0,0,1))),
+    'foot.rocker.01.R':     ('r-rock-1', 'r-rock-2'),
+    'foot.rocker.02.R':     ('r-rock-2', 'r-rock-1'),
+    'foot.roll.01.R' :      ('r-heel', 'r-foot-1'),
+    'foot_roll.ik.R' :      ('r-heel', ('r-heel', (0,0,-1))),
+    'foot.roll.02.R' :      ('r-foot-1', 'r-heel'),
+    'foot_roll.ik.R' :      ('r-heel', ('r-heel', (0,0,-1))),
+    'foot.fwd.R' :          ('r-ankle', 'r-foot-1'),
+
+    'toe.socket.R' :        ('r-foot-1', ('r-foot-1', (0,0.5,1))),
+    'toe.parent.R' :        ('r-ankle', 'r-foot-1'),
+    'toe.fwd.R' :           ('r-foot-1', 'r-toe-2'),
+}
+
+RigifyFootArmature = {
+    'hip.L' :               (0, 'hips', F_WIR, L_TWEAK),
+    'foot.ik.L' :           (0, None, F_WIR, L_LLEGIK),
+    'ankle.L' :             (0, None, F_WIR, L_LEXTRA),
+    'ankle.ik.L' :          (0, 'foot.ik.L', F_NOLOCK, L_HELP),
+
+    'foot_roll.ik.L' :      (0, 'foot.ik.L', F_WIR, L_LLEGIK, P_XYZ),
+    'foot.rocker.01.L' :    (0, 'foot.ik.L', 0, L_HELP, P_XYZ),
+    'foot.rocker.02.L' :    (0, 'foot.rocker.01.L', 0, L_HELP, P_XYZ),
+    'foot.roll.01.L' :      (0, 'foot.rocker.02.L', 0, L_HELP, P_XYZ),
+    'foot.roll.02.L' :      (0, 'foot.roll.01.L', 0, L_HELP, P_XYZ),
+    'foot.fwd.L' :          ('foot.L', 'foot.roll.02.L', 0, L_HELP),
+    'toe.fwd.L' :           ('toe.L', 'foot.fwd.L', 0, L_HELP),
+
+    'hip.R' :               (0, 'hips', F_WIR, L_TWEAK),
+    'foot.ik.R' :           (0, None, F_WIR, L_LLEGIK),
+    'ankle.R' :             (0, None, F_WIR, L_LEXTRA),
+    'ankle.ik.R' :          (0, 'foot.ik.R', F_NOLOCK, L_HELP),
+
+    'foot.rocker.01.R' :    (0, 'foot.ik.R', 0, L_HELP, P_XYZ),
+    'foot.rocker.02.R' :    (0, 'foot.rocker.01.R', 0, L_HELP, P_XYZ),
+    'foot.roll.01.R' :      (0, 'foot.rocker.02.R', 0, L_HELP, P_XYZ),
+    'foot.roll.02.R' :      (0, 'foot.roll.01.R', 0, L_HELP, P_XYZ),
+    'foot_roll.ik.R' :      (0, 'foot.ik.R', F_WIR, L_RLEGIK, P_XYZ),
+    'foot.fwd.R' :          ('foot.R', 'foot.roll.02.R', 0, L_HELP),
+    'toe.fwd.R' :           ('toe.R', 'foot.fwd.R', 0, L_HELP),
+
+    'knee.pt.ik.L' :        (0, 'foot.fwd.L', F_WIR|F_NOLOCK, L_LLEGIK+L_LEXTRA),
+    'knee.pt.fk.L' :        (0, 'thigh.L', 0, L_HELP2),
+    'knee.link.L' :         (0, 'thigh.ik.L', F_RES, L_LLEGIK+L_LEXTRA),
+
+    'knee.pt.ik.R' :        (0, 'foot.fwd.R', F_WIR|F_NOLOCK, L_RLEGIK+L_REXTRA),
+    'knee.pt.fk.R' :        (0, 'thigh.R', 0, L_HELP2),
+    'knee.link.R' :         (0, 'thigh.ik.R', F_RES, L_RLEGIK+L_REXTRA),
+}
+
+RigifyFootBoneDrivers = {
+    ('foot.rocker.01.L', 'foot_roll.ik.L', "ROT_Y", 'max(0,-x)'),
+    ('foot.rocker.02.L', 'foot_roll.ik.L', "ROT_Y", 'max(0,x)'),
+    ('foot.roll.01.L', 'foot_roll.ik.L', "ROT_X", '-min(0,x)'),
+    ('foot.roll.02.L', 'foot_roll.ik.L', "ROT_X", 'max(0,x)'),
+}
+
 
 IkArmArmature = {
     'arm_root.L' :     (0, 'shoulder.L', F_WIR, L_TWEAK),
@@ -310,7 +395,7 @@ HeadConstraints = {
         ],
 }
 
-IkLegConstraints = {
+RevFootConstraints = {
     'shin.ik.L' :   [
         ('LimitRot', C_OW_LOCAL, 1, ['Hint', (Hint,Hint, 0,0, 0,0), (1,0,0)])
         ],
@@ -337,6 +422,41 @@ IkLegConstraints = {
         ],
     'ankle.ik.R' :  [
          ('CopyLoc', 0, 1, ['Foot', 'foot.rev.R', (1,1,1), (0,0,0), 1, False]),
+         ('CopyLoc', 0, 0, ['Ankle', 'ankle.R', (1,1,1), (0,0,0), 0, False])
+        ],
+    'knee.link.L' : [
+         ('StretchTo', 0, 1, ['Stretch', 'knee.pt.ik.L', 0, 1, 3.0])
+        ],
+    'knee.link.R' : [
+         ('StretchTo', 0, 1, ['Stretch', 'knee.pt.ik.R', 0, 1, 3.0])
+        ],
+}
+
+RigifyFootConstraints = {
+    'shin.ik.L' :   [
+        ('LimitRot', C_OW_LOCAL, 1, ['Hint', (Hint,Hint, 0,0, 0,0), (1,0,0)])
+        ],
+    'shin.ik.R' :   [
+        ('LimitRot', C_OW_LOCAL, 1, ['Hint', (Hint,Hint, 0,0, 0,0), (1,0,0)])
+        ],
+    'foot.L' : [
+         ('CopyTrans', 0, 0, ['LegIK', 'foot.fwd.L', 0]),
+        ],
+    'foot.R' : [
+         ('CopyTrans', 0, 0, ['LegIK', 'foot.fwd.R', 0]),
+        ],
+    'toe.L' : [
+         ('CopyTrans', 0, 0, ['LegIK', 'toe.fwd.L', 0]),
+        ],
+    'toe.R' : [
+         ('CopyTrans', 0, 0, ['LegIK', 'toe.fwd.R', 0]),
+        ],
+    'ankle.ik.L' : [
+         ('CopyLoc', 0, 1, ['Foot', 'foot.fwd.L', (1,1,1), (0,0,0), 0, False]),
+         ('CopyLoc', 0, 0, ['Ankle', 'ankle.L', (1,1,1), (0,0,0), 0, False])
+        ],
+    'ankle.ik.R' :  [
+         ('CopyLoc', 0, 1, ['Foot', 'foot.fwd.R', (1,1,1), (0,0,0), 0, False]),
          ('CopyLoc', 0, 0, ['Ankle', 'ankle.R', (1,1,1), (0,0,0), 0, False])
         ],
     'knee.link.L' : [
@@ -433,7 +553,7 @@ IkLegPropLRDrivers = [
     ('shin', 'LegFK', ['LegIk'], '1-x1'),
     ('foot', 'LegFK', ['LegIk'], '1-x1'),
     ('foot', 'LegIK', ['LegIk', 'LegIkToAnkle'], 'x1*(1-x2)'),
-    #('foot', 'FreeIK', ['LegIk'], '1-x1'),
+    ('toe', 'LegFK', ['LegIk'], '1-x1'),
     ('toe', 'LegIK', ['LegIk', 'LegIkToAnkle'], 'x1*(1-x2)'),
     ('ankle.ik', 'Foot', ['LegIkToAnkle'], '1-x1'),
     ('ankle.ik', 'Ankle', ['LegIkToAnkle'], 'x1'),
@@ -551,3 +671,25 @@ KneeTargetDrivers = [
 ]
 
 
+'''
+    'MCH-hips_rh_ns_ch.L' :          (0, 'root', F_WIR, L_TWEAK),
+    'MCH-knee_hose_parent.L' :          (0, 'MCH-hips_rh_ns_ch.L', F_WIR, L_TWEAK),
+    'knee_hose.L' :          (0, 'MCH-knee_hose_parent.L', F_WIR, L_TWEAK),
+    'MCH-shin_hose_parent.L' :          (0, 'MCH-hips_rh_ns_ch.L', F_WIR, L_TWEAK),
+    'shin_hose.L' :          (0, 'MCH-shin_hose_parent.L', F_WIR, L_TWEAK),
+    'DEF-thigh.01.L' :          (0, 'MCH-hips_rh_ns_ch.L', F_WIR, L_TWEAK),
+    'MCH-thigh_hose_parent.L' :          (0, '', F_WIR, L_TWEAK),
+    'thigh_hose.L' :          (0, 'MCH-thigh_hose_parent.L', F_WIR, L_TWEAK),
+
+    'MCH-hips_ik_ns_ch.L' :          (0, 'root', F_WIR, L_TWEAK),
+    'MCH-shin.stretch.ik.L' :          (0, 'MCH-hips_ik_ns_ch.L', F_WIR, L_TWEAK),
+    'MCH-thigh.ik.L' :          (0, 'MCH-hips_ik_ns_ch.L', F_WIR, L_TWEAK),
+    'MCH-shin.ik.L' :          (0, 'MCH-thigh.ik.L', F_WIR, L_TWEAK),
+    'MCH-thigh.nostr.ik.L' :          (0, 'MCH-hips_ik_ns_ch.L', F_WIR, L_TWEAK),
+    'MCH-shin.nostr.ik.L' :          (0, 'MCH-thigh.nostr.ik.L', F_WIR, L_TWEAK),
+    'MCH-thigh.stretch.ik.L' :          (0, 'MCH-hips_ik_ns_ch.L', F_WIR, L_TWEAK),
+    'knee_target.ik.L' :          (0, 'MCH-hips_ik_ns_ch.L', F_WIR, L_TWEAK),
+
+    'MCH-hips_fk_ns_ch.L' :          (0, 'root', F_WIR, L_TWEAK),
+    'MCH-thigh.fk.L.socket1' :          (0, 'MCH-hips_fk_ns_ch.L', F_WIR, L_TWEAK),
+'''

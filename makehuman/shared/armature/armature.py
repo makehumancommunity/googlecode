@@ -161,6 +161,7 @@ class Bone:
         self.roll = 0
         self.parent = None
         self.setFlags(0)
+        self.poseFlags = 0
         self.layers = L_MAIN
         self.length = 0
         self.customShape = None
@@ -197,7 +198,11 @@ class Bone:
 
 
     def fromInfo(self, info):
-        self.roll, self.parent, flags, self.layers = info
+        if len(info) == 5:
+            self.roll, self.parent, flags, self.layers, self.poseFlags = info
+        else:
+            self.roll, self.parent, flags, self.layers = info
+            self.poseFlags = 0
         if self.parent and not flags & F_NOLOCK:
             self.lockLocation = (1,1,1)
         self.setFlags(flags)
