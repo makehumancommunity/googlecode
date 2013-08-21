@@ -254,11 +254,11 @@ class GenderAgeToneWeightWarpModifier (WarpModifier):
             for gender in ["female", "male"]:
                 for age in ["baby", "child", "young", "old"]:
                     path = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
-                    reftrg = path.replace("-${tone}", "").replace("-${weight}", "")
+                    reftrg = path.replace("-${tone}", "averagemuscle").replace("-${weight}", "averageweight")
                     refchar = mh.getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
                     base = mh.getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
-                    self.refCharacters[base] = refchar
-                    self.refTargets[base] = reftrg
+                    #self.refCharacters[base] = refchar
+                    #self.refTargets[base] = reftrg
 
                     for tone in ["minmuscle", "averagemuscle", "maxmuscle"]:
                         for weight in ["minweight", "averageweight", "maxweight"]:
@@ -370,20 +370,23 @@ def readTarget(filepath):
 def findReplacementFile(filepath):
     # If some targets are missing, try to find a good default
     replacements = [
-        (["-minmuscle"], "-flaccid"),
-        (["-maxmuscle"], "-muscle"),
-        (["-minweight"], "-light"),
-        (["-maxweight"], "-heavy"),
-        (["-averagemuscle"], ""),
-        (["-averageweight"], ""),
+        (["-minmuscle"], "-averagemuscle"),
+        (["-maxmuscle"], "-averagemuscle"),
+        (["-minweight"], "-averageweight"),
+        (["-maxweight"], "-averageweight"),
+        (["-asian", "-african"], "-caucasian"),
         (["/asian", "/african"], "/caucasian"),
+        (["\\asian", "\\african"], "\\caucasian"),
         (["-baby"], "-child"),
         (["-child", "-old"], "-young"),
         (["/baby", "/child", "/old"], "/young"),
+        (["\\baby", "\\child", "\\old"], "/young"),
         (["-male"], "-female"),
         (["/male"], "/female"),
+        (["\\male"], "\\female"),
         (["-female"], "-male"),
         (["/female"], "/male"),
+        (["\\female"], "\\male"),
     ]
 
     filepath1 = filepath
@@ -397,6 +400,7 @@ def findReplacementFile(filepath):
                     log.message("   Replaced %s\n  -> %s", filepath, filepath1)
                     return fp
                 except IOError:
+                    log.debug("  Tried %s" % filepath1)
                     tried.append(filepath1)
 
     string = "Warning: Found none of:"
