@@ -28,7 +28,6 @@ import log
 
 class CTarget:
     def __init__(self, var, target):
-        log.debug("CTARGET %s %s" % (var, target))
         self.variable = var
         if var.type == 'TRANSFORMS':
             (self.idtype, self.object, self.bone, self.type, self.flags) = target
@@ -310,7 +309,6 @@ def writeRotDiffDrivers(fp, drivers, proxy):
 def writeScriptedBoneDrivers(fp, amt, boneDrivers):
     drivers = []
     for boneDriver in boneDrivers:
-        log.debug(boneDriver)
         (driven, driver, channel, expr) = boneDriver
         drivers.append(
             (driven, 'ROTE', ('SCRIPTED', expr), None, 0, (0, 1),

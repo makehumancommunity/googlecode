@@ -13,7 +13,8 @@
         "useIkArms" : true,
         "useIkLegs" : true,
         "useFingers" : true,
-        "useRotationLimits" : true
+        "useRotationLimits" : true,
+        "useQuaternionsOnly" : false
     }
 }
 

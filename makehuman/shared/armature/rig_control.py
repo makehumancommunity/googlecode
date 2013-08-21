@@ -29,6 +29,13 @@ Joints = [
     ('l-ankle-tip',         'o', ('l-ankle', (0,0,-1))),
     ('r-ankle-tip',         'o', ('r-ankle', (0,0,-1))),
 
+    ('l-heel-y',            'v', 12877),
+    ('l-heel-z',            'v', 12442),
+    ('l-heel',              'p', ('l-toe-2', 'l-foot-1', 'l-heel-z')),
+    ('r-heel-y',            'v', 6280),
+    ('r-heel-z',            'v', 5845),
+    ('r-heel',              'p', ('r-toe-2', 'r-foot-1', 'r-heel-z')),
+
     ('eyes',                'l', ((0.5, 'r-eye'), (0.5,'l-eye'))),
     ('gaze',                'o', ('eyes', (0,0,5))),
 
@@ -145,11 +152,13 @@ RevFootHeadsTails = {
     'foot_helper.L':    ('l-heel', 'l-toe-2'),
     'toe.rev.L' :       ('l-toe-2', 'l-foot-1'),
     'foot.rev.L' :      ('l-foot-1', 'l-ankle'),
+    'heel.L' :          ('l-heel', ('l-heel', (0,0.5,0))),
 
     'foot.ik.R' :       ('r-heel', 'r-toe-2'),
     'foot_helper.R':    ('r-heel', 'r-toe-2'),
     'toe.rev.R' :       ('r-toe-2', 'r-foot-1'),
     'foot.rev.R' :      ('r-foot-1', 'r-ankle'),
+    'heel.R' :          ('r-heel', ('r-heel', (0,0.5,0))),
 }
 
 RevFootArmature = {
@@ -157,17 +166,19 @@ RevFootArmature = {
     'foot.ik.L' :      (180*D, None, F_WIR|F_NOLOCK, L_LLEGIK),
     'foot_helper.L' :  (0, 'toe.fk.L', 0, L_HELP),
     'toe.rev.L' :      ("PlaneToe.L", 'foot.ik.L', F_WIR, L_LLEGIK),
-    'foot.rev.L' :     ("PlaneFoot.L", 'toe.rev.L', F_WIR, L_LLEGIK),
+    'foot.rev.L' :     ("PlaneFoot.L", 'toe.rev.L', F_WIR, L_LLEGIK, P_XYZ),
     'ankle.L' :        (0, None, F_WIR, L_LEXTRA),
     'ankle.ik.L' :     (0, 'foot.rev.L', F_NOLOCK, L_HELP2),
+    'heel.L' :         (0, 'foot.L', 0, L_HELP),
 
     'hip.R' :          (0, 'hips', F_WIR, L_TWEAK),
     'foot.ik.R' :      (180*D, None, F_WIR|F_NOLOCK, L_RLEGIK),
     'foot_helper.R' :  (0, 'toe.fk.R', 0, L_HELP),
     'toe.rev.R' :      ("PlaneToe.R", 'foot.ik.R', F_WIR, L_RLEGIK),
-    'foot.rev.R' :     ("PlaneFoot.R", 'toe.rev.R', F_WIR, L_RLEGIK),
+    'foot.rev.R' :     ("PlaneFoot.R", 'toe.rev.R', F_WIR, L_RLEGIK, P_XYZ),
     'ankle.R' :        (0, None, F_WIR, L_REXTRA),
     'ankle.ik.R' :     (0, 'foot.rev.R', F_NOLOCK, L_HELP2),
+    'heel.R' :         (0, 'foot.R', 0, L_HELP),
 
     'knee.pt.ik.L' :   (0, 'foot.rev.L', F_WIR|F_NOLOCK, L_LLEGIK+L_LEXTRA),
     'knee.pt.fk.L' :   (0, 'thigh.L', 0, L_HELP2),
@@ -193,6 +204,7 @@ RigifyFootHeadsTails = {
     'toe.socket.L' :        ('l-foot-1', ('l-foot-1', (0,0.5,1))),
     'toe.parent.L' :        ('l-ankle', 'l-foot-1'),
     'toe.fwd.L' :           ('l-foot-1', 'l-toe-2'),
+    'heel.L' :          ('l-heel', ('l-heel', (0,0.5,0))),
 
     'foot.ik.R' :           ('r-heel', 'r-toe-2'),
     #'foot.ik.R' :           ('r-ankle', ('r-ankle', (0,0,1))),
@@ -207,6 +219,7 @@ RigifyFootHeadsTails = {
     'toe.socket.R' :        ('r-foot-1', ('r-foot-1', (0,0.5,1))),
     'toe.parent.R' :        ('r-ankle', 'r-foot-1'),
     'toe.fwd.R' :           ('r-foot-1', 'r-toe-2'),
+    'heel.R' :              ('r-heel', ('r-heel', (0,0.5,0))),
 }
 
 RigifyFootArmature = {
@@ -222,6 +235,7 @@ RigifyFootArmature = {
     'foot.roll.02.L' :      (0, 'foot.roll.01.L', 0, L_HELP, P_XYZ),
     'foot.fwd.L' :          ('foot.L', 'foot.roll.02.L', 0, L_HELP),
     'toe.fwd.L' :           ('toe.L', 'foot.fwd.L', 0, L_HELP),
+    'heel.L' :              (0, 'foot.L', 0, L_HELP),
 
     'hip.R' :               (0, 'hips', F_WIR, L_TWEAK),
     'foot.ik.R' :           (0, None, F_WIR, L_LLEGIK),
@@ -235,6 +249,7 @@ RigifyFootArmature = {
     'foot_roll.ik.R' :      (0, 'foot.ik.R', F_WIR, L_RLEGIK, P_XYZ),
     'foot.fwd.R' :          ('foot.R', 'foot.roll.02.R', 0, L_HELP),
     'toe.fwd.R' :           ('toe.R', 'foot.fwd.R', 0, L_HELP),
+    'heel.R' :             (0, 'foot.R', 0, L_HELP),
 
     'knee.pt.ik.L' :        (0, 'foot.fwd.L', F_WIR|F_NOLOCK, L_LLEGIK+L_LEXTRA),
     'knee.pt.fk.L' :        (0, 'thigh.L', 0, L_HELP2),

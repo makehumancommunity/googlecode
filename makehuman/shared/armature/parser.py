@@ -551,7 +551,7 @@ class Parser:
                 fkName = getFkName(base,ext)
                 self.headsTails[fkName] = headTail
                 fkBone = boneInfo[fkName] = Bone(amt, fkName)
-                fkBone.fromInfo((bname, fkParent, F_WIR, layer<<1))
+                fkBone.fromInfo((bname, fkParent, F_WIR, layer<<1, bone.poseFlags))
 
                 customShape = self.customShapes[bone.name]
                 self.customShapes[fkName] = customShape

@@ -43,6 +43,7 @@ class ArmatureOptions:
         self.useMuscles = False
         self.useRotationLimits = False
         self.addConnectingBones = False
+        self.useQuaternionsOnly = True
 
         self.mergeSpine = False
         self.mergeShoulders = False
