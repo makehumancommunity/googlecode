@@ -84,9 +84,9 @@ class Parser:
 
         #options.useMuscles = True
         if options.useMuscles:
-            self.vertexGroupFiles = ["head", "muscles", "hand", "tights_muscles", "skirt_muscles", "hair_muscles"]
+            self.vertexGroupFiles = ["head", "muscles", "hand", "tights_muscles", "skirt_muscles", "hair_muscles", "genitalia_muscles"]
         else:
-            self.vertexGroupFiles = ["head", "bones", "hand", "tights", "skirt", "hair"]
+            self.vertexGroupFiles = ["head", "bones", "hand", "tights", "skirt", "hair", "genitalia"]
 
         self.joints = (
             rig_joints.Joints +
