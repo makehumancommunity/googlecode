@@ -116,10 +116,13 @@ def floorIkFoot(rig, plane, scn, frames):
     for frame in frames:
         scn.frame_set(frame)
         fkik.updateScene()
-        offset = getIkOffset(rig, ez, origin, lleg, ".L")
-        rOffset = getIkOffset(rig, ez, origin, rleg, ".R")
-        if rOffset > offset:
-            offset = rOffset
+        offset = 0
+        if scn.McpFloorLeft:
+            offset = getIkOffset(rig, ez, origin, lleg)
+        if scn.McpFloorRight:
+            rOffset = getIkOffset(rig, ez, origin, rleg)
+            if rOffset > offset:
+                offset = rOffset
         print(frame, offset)
         if offset > 0:
             if scn.McpFloorLeft:
@@ -130,11 +133,17 @@ def floorIkFoot(rig, plane, scn, frames):
                 addOffset(root, offset, ez)
 
 
-def getIkOffset(rig, ez, origin, leg, suffix):
+def getIkOffset(rig, ez, origin, leg):
+    offset = getHeadOffset(leg, ez, origin)
+    tailOffset = getTailOffset(leg, ez, origin)
+    if tailOffset > offset:
+        offset = tailOffset
+    return offset
+
+
     foot = rig.pose.bones["foot.rev" + suffix]
     toe = rig.pose.bones["toe.rev" + suffix]
 
-    offset = getTailOffset(leg, ez, origin)
 
     ballOffset = getTailOffset(toe, ez, origin)
     if ballOffset > offset:
@@ -162,6 +171,11 @@ def getOffset(point, ez, origin):
     vec = Vector(point[:3]) - origin
     offset = -ez.dot(vec)
     return offset
+
+
+def getHeadOffset(bone, ez, origin):
+    head = bone.matrix.col[3]
+    return getOffset(head, ez, origin)
 
 
 def getTailOffset(bone, ez, origin):

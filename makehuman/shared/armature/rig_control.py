@@ -26,13 +26,6 @@ from .flags import *
 
 
 Joints = [
-    ('l-heel-y',            'v', 12877),
-    ('l-heel-z',            'l', ((-2.5,'l-toe-2'), (3.5,'l-foot-1'))),
-    ('l-heel',              'p', ('l-toe-2', 'l-foot-1', 'l-heel-z')),
-    ('r-heel-y',            'v', 6280),
-    ('r-heel-z',            'l', ((-2.5,'r-toe-2'), (3.5,'r-foot-1'))),
-    ('r-heel',              'p', ('r-toe-2', 'r-foot-1', 'r-heel-z')),
-
     ('l-ankle-tip',         'o', ('l-ankle', (0,0,-1))),
     ('r-ankle-tip',         'o', ('r-ankle', (0,0,-1))),
 

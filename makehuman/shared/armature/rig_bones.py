@@ -31,6 +31,13 @@ Joints = [
     ('l-toe-2',             'p', ('l-foot-2', 'l-foot-1', 'l-foot-2')),
     ('r-toe-2',             'p', ('r-foot-2', 'r-foot-1', 'r-foot-2')),
 
+    ('l-heel-y',            'v', 12877),
+    ('l-heel-z',            'v', 12442),
+    ('l-heel',              'p', ('l-toe-2', 'l-foot-1', 'l-heel-z')),
+    ('r-heel-y',            'v', 6280),
+    ('r-heel-z',            'v', 5845),
+    ('r-heel',              'p', ('r-toe-2', 'r-foot-1', 'r-heel-z')),
+
     ('l-kneecap',           'vo', (11223, 0,0,1)),
     ('r-kneecap',           'vo', (4605, 0,0,-1)),
 
@@ -137,11 +144,13 @@ HeadsTails = {
     'shin.L' :             ('l-knee', 'l-ankle'),
     'foot.L' :             ('l-ankle', 'l-foot-1'),
     'toe.L' :              ('l-foot-1', 'l-toe-2'),
+    'heel.L' :             ('l-heel', ('l-heel', (0,0.5,0))),
 
     'thigh.R' :            ('r-upper-leg', 'r-knee'),
     'shin.R' :             ('r-knee', 'r-ankle'),
     'foot.R' :             ('r-ankle', 'r-foot-1'),
     'toe.R' :              ('r-foot-1', 'r-toe-2'),
+    'heel.R' :             ('r-heel', ('r-heel', (0,0.5,0))),
 }
 
 Planes = {
@@ -241,11 +250,13 @@ Armature = {
     'shin.L' :             ("PlaneLeg.L", 'thigh.L', F_DEF|F_CON, L_LLEGFK),
     'foot.L' :             ("PlaneFoot.L", 'shin.L', F_DEF|F_CON, L_LLEGFK),
     'toe.L' :              ("PlaneToe.L", 'foot.L', F_DEF|F_CON, L_LLEGFK),
+    'heel.L' :             (0, 'foot.L', 0, L_HELP),
 
     'thigh.R' :            ("PlaneLeg.R", 'hips', F_DEF, L_RLEGFK),
     'shin.R' :             ("PlaneLeg.R", 'thigh.R', F_DEF|F_CON, L_RLEGFK),
     'foot.R' :             ("PlaneFoot.R", 'shin.R', F_DEF|F_CON, L_RLEGFK),
     'toe.R' :              ("PlaneToe.R", 'foot.R', F_DEF|F_CON, L_RLEGFK),
+    'heel.R' :             (0, 'foot.R', 0, L_HELP),
 }
 
 RotationLimits = {
