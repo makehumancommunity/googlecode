@@ -66,9 +66,22 @@ def floorFoot(context):
         floorFkFoot(rig, plane, scn, frames)
 
 
+def getFkFeetBones(rig, suffix):
+    foot = rig.pose.bones[ target.getTrgBone("foot" + suffix) ]
+    toe = rig.pose.bones[ target.getTrgBone("toe" + suffix) ]
+    try:
+        mBall = rig.pose.bones["ball.marker" + suffix]
+        mToe = rig.pose.bones["toe.marker" + suffix]
+        mHeel = rig.pose.bones["heel.marker" + suffix]
+    except KeyError:
+        mBall = mToe = mHeel = None
+    return foot,toe,mBall,mToe,mHeel
+
+
 def floorFkFoot(rig, plane, scn, frames):
-    hipsName = target.getTrgBone("hips")
-    hips = rig.pose.bones[hipsName]
+    hips = rig.pose.bones[ target.getTrgBone("hips") ]
+    lFoot,lToe,lmBall,lmToe,lmHeel = getFkFeetBones(rig, ".L")
+    rFoot,rToe,rmBall,rmToe,rmHeel = getFkFeetBones(rig, ".R")
     ez,origin,rot = getPlaneInfo(plane)
 
     for frame in frames:
@@ -76,9 +89,9 @@ def floorFkFoot(rig, plane, scn, frames):
         fkik.updateScene()
         offset = 0
         if scn.McpFloorLeft:
-            offset = getFkOffset(rig, ez, origin, ".L")
+            offset = getFkOffset(rig, ez, origin, lFoot, lToe, lmBall, lmToe, lmHeel)
         if scn.McpFloorRight:
-            rOffset = getFkOffset(rig, ez, origin, ".R")
+            rOffset = getFkOffset(rig, ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
             if rOffset > offset:
                 offset = rOffset
         print(frame, offset)
@@ -86,23 +99,27 @@ def floorFkFoot(rig, plane, scn, frames):
             addOffset(hips, offset, ez)
 
 
-def getFkOffset(rig, ez, origin, suffix):
-    footName = target.getTrgBone("foot" + suffix)
-    toeName = target.getTrgBone("toe" + suffix)
-    foot = rig.pose.bones[footName]
-    toe = rig.pose.bones[toeName]
+def getFkOffset(rig, ez, origin, foot, toe, mBall, mToe, mHeel):
+    if mBall:
+        offset = toeOffset = getHeadOffset(mToe, ez, origin)
+        ballOffset = getHeadOffset(mBall, ez, origin)
+        if ballOffset > offset:
+            offset = ballOffset
+        heelOffset = getHeadOffset(mHeel, ez, origin)
+        if heelOffset > offset:
+            offset = heelOffset
+    else:
+        offset = getTailOffset(toe, ez, origin)
+        ballOffset = getHeadOffset(toe, ez, origin)
+        if ballOffset > offset:
+            offset = ballOffset
 
-    offset = getTailOffset(toe, ez, origin)
-    ballOffset = getTailOffset(foot, ez, origin)
-    if ballOffset > offset:
-        offset = ballOffset
-
-    ball = toe.matrix.col[3]
-    y = toe.matrix.col[1]
-    heel = ball - y*foot.length
-    heelOffset = getOffset(heel, ez, origin)
-    if heelOffset > offset:
-        offset = heelOffset
+        ball = toe.matrix.col[3]
+        y = toe.matrix.col[1]
+        heel = ball - y*foot.length
+        heelOffset = getOffset(heel, ez, origin)
+        if heelOffset > offset:
+            offset = heelOffset
 
     return offset
 

@@ -195,6 +195,7 @@ class Parser:
             else:
                 self.addBones(rig_control.RigifyFootArmature, boneInfo)
                 self.setConstraints(rig_control.RigifyFootConstraints)
+            self.addBones(rig_control.MarkerArmature, boneInfo)
             #addDict(rig_control.IkLegChains, self.ikChains)
             addDict(rig_control.IkLegParents, self.parents)
             self.lrPropDrivers += rig_control.IkLegPropLRDrivers

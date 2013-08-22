@@ -86,49 +86,35 @@ def insertRotation(pb, mat):
         pb.keyframe_insert("rotation_euler", group=pb.name)
 
 
-def getVectors(rmat):
-    x = Vector(rmat.col[0])
-    y = Vector(rmat.col[1])
-    z = Vector(rmat.col[2])
-    return x,y,z
-
-
-def getNewXZ(x, y):
-    y.normalize()
-    x -= x.dot(y)*y
-    x.normalize()
-    z = x.cross(y)
-    return x,y,z
-
-
-def matchIkLeg(legIk, toeFk, heel):
+def matchIkLeg(legIk, toeFk, mBall, mToe, mHeel):
     rmat = toeFk.matrix.to_3x3()
     tHead = Vector(toeFk.matrix.col[3][:3])
     ty = rmat.col[1]
     tail = tHead + ty * toeFk.bone.length
 
-    # 1. foot.ik is flat
-    x1,y1,z1 = getVectors(rmat)
-    if abs(y1[2]) > abs(z1[2]):
-        y1 = -z1
-    y1[2] = 0
-    x1,y1,z1 = getNewXZ(x1, y1)
-    head1 = tail - y1 * legIk.bone.length
+    zBall = mBall.matrix.col[3][2]
+    zToe = mToe.matrix.col[3][2]
+    zHeel = mHeel.matrix.col[3][2]
 
-    # 2. foot.ik starts at heel
-    x2,y2,z2 = getVectors(rmat)
-    hHead = Vector(heel.matrix.col[3][:3])
-    y2 = tail - hHead
-    x2,y2,z2 = getNewXZ(x2, y2)
-    head2 = tail - y2 * legIk.bone.length
+    x = Vector(rmat.col[0])
+    y = Vector(rmat.col[1])
+    z = Vector(rmat.col[2])
 
-    # Select minimal z coordinate
-    if head1[2] < head2[2]:
-        x,y,z = x1,y1,z1
-        head = head1
+    if zHeel > zBall and zHeel > zToe:
+        # 1. foot.ik is flat
+        if abs(y[2]) > abs(z[2]):
+            y = -z
+        y[2] = 0
     else:
-        x,y,z = x2,y2,z2
-        head = head2
+        # 2. foot.ik starts at heel
+        hHead = Vector(mHeel.matrix.col[3][:3])
+        y = tail - hHead
+
+    y.normalize()
+    x -= x.dot(y)*y
+    x.normalize()
+    z = x.cross(y)
+    head = tail - y * legIk.bone.length
 
     # Create matrix
     gmat = Matrix()
@@ -193,7 +179,7 @@ def snapIkArm(rig, snapIk, snapFk, frame):
 
 def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
 
-    (uplegIk, lolegIk, kneePt, ankleIk, legIk, legFk, footIk, toeIk, heel) = snapIk
+    (uplegIk, lolegIk, kneePt, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
     (uplegFk, lolegFk, kneePtFk, footFk, toeFk) = snapFk
 
     if legIkToAnkle:
@@ -201,12 +187,12 @@ def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
 
     #matchPoseTranslation(legIk, legFk)
     #matchPoseRotation(legIk, legFk)
-    matchIkLeg(legIk, toeFk, heel)
+    matchIkLeg(legIk, toeFk, mBall, mToe, mHeel)
     updateScene()
 
-    matchPoseReverse(toeIk, toeFk)
+    matchPoseReverse(toeRev, toeFk)
     updateScene()
-    matchPoseReverse(footIk, footFk)
+    matchPoseReverse(footRev, footFk)
     updateScene()
 
     matchPoleTarget(kneePt, uplegFk, lolegFk)
@@ -225,7 +211,7 @@ SnapBonesAlpha8 = {
     "ArmIK" : ["upper_arm.ik", "forearm.ik", None, "elbow.pt.ik", "hand.ik"],
     "Leg"   : ["thigh", "shin", "foot", "toe"],
     "LegFK" : ["thigh.fk", "shin.fk", "knee.pt.fk", "foot.fk", "toe.fk"],
-    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "ankle.ik", "foot.ik", "foot_helper", "foot.rev", "toe.rev", "heel"],
+    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
 }
 
 def getSnapBones(rig, key, suffix):
