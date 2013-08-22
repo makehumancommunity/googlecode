@@ -312,16 +312,6 @@ FingerArmature = {
     'pinky.R' :        ('f_pinky.01.R', 'palm_pinky.R', F_WIR, L_RHANDIK),
 }
 
-IkArmParents = {
-    'upper_arm.L' :     'arm_hinge.L',
-    'upper_arm.R' :     'arm_hinge.R',
-}
-
-IkLegParents = {
-    'thigh.L' :         'hip.L',
-    'thigh.R' :         'hip.R',
-}
-
 CoordinateSystems = [
     ("upper_arm.L", "forearm.L"),
     ("forearm.L", "hand.L"),
@@ -395,6 +385,19 @@ IkLegChains = {
     "foot" :        ("DownStream", L_LLEGIK, "Leg"),
     "toe" :         ("DownStream", L_LLEGIK, "Leg"),
 }
+
+IkArmParents = {
+    'upper_arm' :     'arm_hinge',
+}
+
+IkLegParents = {
+    'thigh' :         'hip',
+}
+
+LegMarkers = [
+    'toe', 'ball', 'heel'
+]
+
 
 Hint = 18*D
 

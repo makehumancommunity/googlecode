@@ -200,6 +200,7 @@ class Parser:
             addDict(rig_control.IkLegParents, self.parents)
             self.lrPropDrivers += rig_control.IkLegPropLRDrivers
             self.addIkChains(rig_bones.Armature, boneInfo, rig_control.IkLegChains)
+            self.reparentMarkers(rig_control.LegMarkers, boneInfo)
 
         if options.useIkArms and options.useConstraints:
             self.addBones(rig_control.IkArmArmature, boneInfo)
@@ -511,6 +512,14 @@ class Parser:
 
     def getParent(self, bone):
         return bone.parent
+
+
+    def reparentMarkers(self, markers, boneInfo):
+        for suffix in [".L", ".R"]:
+            for bname in markers:
+                bone = boneInfo[bname + ".marker" + suffix]
+                words = bone.parent.rsplit(".", 1)
+                bone.parent = words[0] + ".fk" + suffix
 
 
     def addIkChains(self, generic, boneInfo, ikChains):
