@@ -39,6 +39,8 @@ class Human(gui3d.Object):
 
         gui3d.Object.__init__(self, [0, 0, 0], mesh, True)
 
+        self.hasWarpTargets = False
+
         self.MIN_AGE = 1.0
         self.MAX_AGE = 90.0
         self.MID_AGE = 25.0
@@ -97,10 +99,11 @@ class Human(gui3d.Object):
             log.debug("  %s: %s" % (key, value))
         log.debug("algos3d.targetBuffer:")
         for key,value in algos3d.targetBuffer.items():
-            log.debug("  %s: %s" % (key, value))
-        log.debug("algos3d.warpTargetBuffer:")
-        for key,value in algos3d.warpTargetBuffer.items():
-            log.debug("  %s: %s" % (key, value))
+            if isinstance(target.modifier, PoseModifier):
+                stars = " *** "
+            else:
+                stars = " "
+            log.debug("  %s:%s%s" % (key, stars, value))
 
 
     # Overriding hide and show to account for both human base and the hairs!

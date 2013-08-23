@@ -122,6 +122,34 @@ class ExpressionTaskView(gui3d.TaskView):
             radio = self.categoryBox.addWidget(GroupBoxRadioButton(self, self.radioButtons, name.capitalize(), box, selected=len(self.radioButtons) == 0))
 
         self.groupBox.showWidget(self.groupBoxes[0])
+
+        # Debug: Select warp method
+
+        self.warpMethodBox = self.addRightWidget(gui.GroupBox('Warp Method'))
+        self.warpMethodButtons = []
+        self.nowarpBtn = self.warpMethodBox.addWidget(GroupBoxRadioButton(self, self.warpMethodButtons, "No Warping", self.warpMethodBox, selected=True))
+        self.warp1Btn = self.warpMethodBox.addWidget(GroupBoxRadioButton(self, self.warpMethodButtons, "Warp 1", self.warpMethodBox, selected=False))
+        self.warp2Btn = self.warpMethodBox.addWidget(GroupBoxRadioButton(self, self.warpMethodButtons, "Warp 2", self.warpMethodBox, selected=False))
+
+        @self.nowarpBtn.mhEvent
+        def onClicked(event):
+            import warp, warpmodifier
+            warp.warpMethod = 0
+            warpmodifier.resetWarpBuffer()
+
+        @self.warp1Btn.mhEvent
+        def onClicked(event):
+            import warp, warpmodifier
+            warp.warpMethod = 1
+            warpmodifier.resetWarpBuffer()
+
+        @self.warp2Btn.mhEvent
+        def onClicked(event):
+            import warp, warpmodifier
+            warp.warpMethod = 2
+            warpmodifier.resetWarpBuffer()
+
+
         # self.hideAllBoxes()
         # self.groupBoxes[0].show()
 
@@ -142,7 +170,7 @@ class ExpressionTaskView(gui3d.TaskView):
     def onHumanChanging(self, event):
         if event.change not in ['expression', 'material']:
             self.resetTargets()
-            #warpmodifier.resetWarpBuffer()
+            warpmodifier.resetWarpBuffer()
 
 
     def addTarget(self, target):
@@ -159,10 +187,6 @@ class ExpressionTaskView(gui3d.TaskView):
                 human.setDetail(target, 0)
             try:
                 del algos3d.targetBuffer[target]
-            except KeyError:
-                pass
-            try:
-                del algos3d.warpTargetBuffer[target]
             except KeyError:
                 pass
             self.targets = {}
@@ -311,7 +335,7 @@ class VisemeLoadTaskView(MhmLoadTaskView):
 # The app reference is passed so that a plugin can attach a new category, task, or other GUI elements
 
 
-_UseWarping = False
+_UseWarping = True
 
 def load(app):
     category = app.getCategory('Pose/Animate')

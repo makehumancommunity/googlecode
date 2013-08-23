@@ -48,7 +48,6 @@ import log
 import mh
 
 targetBuffer = {}
-warpTargetBuffer = {}
 
 
 class Target:
@@ -77,6 +76,10 @@ class Target:
 
         self.name = name
         self.morphFactor = -1
+
+        if self.name is None:
+            # Warp target - don't load from disk
+            return
 
         try:
             self._load(self.name)
@@ -257,11 +260,6 @@ def getTarget(obj, targetPath):
 
     try:
         return targetBuffer[targetPath]
-    except KeyError:
-        pass
-
-    try:
-        return warpTargetBuffer[targetPath]
     except KeyError:
         pass
 

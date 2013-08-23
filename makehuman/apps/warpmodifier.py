@@ -43,12 +43,20 @@ from core import G
 
 class WarpTarget(algos3d.Target):
 
-    def __init__(self, modifier, human):
+    def __init__(self, shape, modifier, human):
 
-        algos3d.Target.__init__(self, human.meshData, modifier.warppath)
+        algos3d.Target.__init__(self, human.meshData, None)
 
         self.human = human
         self.modifier = modifier
+
+        data = list(shape.items())
+        data.sort()
+        raw = np.asarray(data, dtype=algos3d.Target.dtype)
+        self.verts = raw['index']
+        self.data = raw['vector']
+
+        self.faces = human.meshData.getFacesForVertices(self.verts)
 
 
     def __repr__(self):
@@ -75,11 +83,13 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
         string = template.replace('$','').replace('{','').replace('}','')
         warppath = os.path.join(mh.getPath(""), "warp", string)
+        '''
         if not os.path.exists(os.path.dirname(warppath)):
             os.makedirs(os.path.dirname(warppath))
         if not os.path.exists(warppath):
             fp = open(warppath, "w")
             fp.close()
+        '''
 
         humanmodifier.SimpleModifier.__init__(self, warppath)
         self.eventType = 'warp'
@@ -105,9 +115,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         humanmodifier.SimpleModifier.setValue(self, human, value)
         return
         log.debug("SETVAL")
-        loglist(algos3d.targetBuffer)
-        loglist(algos3d.warpTargetBuffer)
-        loglist(human.targetsDetailStack)
+        human.traceStacks()
 
 
     def updateValue(self, human, value, updateNormals=1):
@@ -121,17 +129,18 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
     def compileTargetIfNecessary(self, human):
         try:
-            target = algos3d.warpTargetBuffer[self.warppath]
+            target = algos3d.targetBuffer[self.warppath]
         except KeyError:
             target = None
         if target:
             if not isinstance(target, WarpTarget):
                 raise TypeError("%s is not a warp target" % target)
         else:
-            target = WarpTarget(self, human)
-            algos3d.warpTargetBuffer[self.warppath] = target
             shape = self.compileWarpTarget(human)
-            saveWarpedTarget(shape, self.warppath)
+            target = WarpTarget(shape, self, human)
+            algos3d.targetBuffer[self.warppath] = target
+            human.hasWarpTargets = True
+            #saveWarpedTarget(shape, self.warppath)
 
 
     def compileWarpTarget(self, human):
@@ -275,13 +284,16 @@ def resetWarpBuffer():
     global _warpGlobals
     import gui3d
 
-    if algos3d.warpTargetBuffer:
+    human = gui3d.app.selectedHuman
+    if human.hasWarpTargets:
         log.debug("WARP RESET")
-        human = gui3d.app.selectedHuman
-        for trgpath in algos3d.warpTargetBuffer:
-            human.setDetail(trgpath, 0)
-        algos3d.warpTargetBuffer = {}
+        for path,target in algos3d.targetBuffer.items():
+            if isinstance(target, WarpTarget):
+                log.debug("  DEL %s" % path)
+                human.setDetail(path, 0)
+                del algos3d.targetBuffer[path]
         human.applyAllTargets()
+        human.hasWarpTargets = False
 
 #----------------------------------------------------------
 #   Call from exporter

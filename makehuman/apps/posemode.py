@@ -101,10 +101,11 @@ def touchStorage():
 def clearPoseDetails(human):
     for path in human.targetsDetailStack.keys():
         try:
-            target = algos3d.warpTargetBuffer[path]
+            target = algos3d.targetBuffer[path]
         except KeyError:
             continue
-        if isinstance(target.modifier, PoseModifier):
+        if (isinstance(target, warpmodifier.WarpTarget) and
+            isinstance(target.modifier, PoseModifier)):
             target.modifier.updateValue(human, 0.0)
             human.setDetail(path, 0)
     human.applyAllTargets()
