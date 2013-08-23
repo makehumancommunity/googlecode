@@ -94,16 +94,17 @@ class Human(gui3d.Object):
 
 
     def traceStacks(self):
+        import warpmodifier
         log.debug("human.targetsDetailStack:")
         for key,value in self.targetsDetailStack.items():
             log.debug("  %s: %s" % (key, value))
         log.debug("algos3d.targetBuffer:")
-        for key,value in algos3d.targetBuffer.items():
-            if isinstance(target.modifier, PoseModifier):
+        for path,target in algos3d.targetBuffer.items():
+            if isinstance(target, warpmodifier.WarpTarget):
                 stars = " *** "
             else:
                 stars = " "
-            log.debug("  %s:%s%s" % (key, stars, value))
+            log.debug("  %s:%s%s" % (path, stars, target))
 
 
     # Overriding hide and show to account for both human base and the hairs!
