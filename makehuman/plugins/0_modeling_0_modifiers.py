@@ -287,8 +287,7 @@ class FaceTaskView(ModifierTaskView):
             ('mouth-trans', 'forward', 'backward', {'cam' : 'rightView'}),
             ]),
         ('mouth size details', 'mouth', [
-            ('mouth-lowerlip-height', 'min', 'max', {'cam' : 'frontView'}),
-            ('mouth-lowerlip-middle', 'up', 'down', {'cam' : 'frontView'}),
+            ('mouth-lowerlip-height', 'min', 'max', {'cam' : 'frontView'}),            
             ('mouth-lowerlip-width', 'min', 'max', {'cam' : 'frontView'}),
             ('mouth-upperlip-height', 'min', 'max', {'cam' : 'frontView'}),
             ('mouth-upperlip-width', 'min', 'max', {'cam' : 'frontView'}),
