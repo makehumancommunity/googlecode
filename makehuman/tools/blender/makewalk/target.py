@@ -83,7 +83,7 @@ def guessArmature(rig, bones, scn):
     amtList = ["MHX", "Default"]
     for key in mcp.targetInfo.keys():
         if key not in ["MHX", "Default"]:
-            amtList += key
+            amtList.append(key)
     for name in amtList:
         (boneAssoc, mcp.renames, mcp.ikBones) = mcp.targetInfo[name]
         if testTargetRig(name, bones, boneAssoc):

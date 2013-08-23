@@ -68,6 +68,11 @@ def applyRestPose(context, value):
         if ob.type != 'MESH':
             continue
 
+        scn.objects.active = ob
+        if ob != context.object:
+            raise StandardError("Context switch did not take:\nob = %s\nc.ob = %s\nc.aob = %s" %
+                (ob, context.object, context.active_object))
+
         if (ob.McpArmatureName == rig.name and
             ob.McpArmatureModifier != ""):
             mod = ob.modifiers[ob.McpArmatureModifier]
@@ -79,14 +84,14 @@ def applyRestPose(context, value):
                 if (mod.type == 'ARMATURE' and
                     mod.object == rig):
                     children.append(ob)
-                    ob.McpArmatureName = rig.name
-                    ob.McpArmatureModifier = mod.name
-                    scn.objects.active = ob
                     bpy.ops.object.modifier_apply(apply_as='SHAPE', modifier=mod.name)
                     ob.data.shape_keys.key_blocks[mod.name].value = value
+                    ob.McpArmatureName = rig.name
+                    ob.McpArmatureModifier = mod.name
                     break
 
     scn.objects.active = rig
+    bpy.ops.object.mode_set(mode='POSE')
     bpy.ops.pose.armature_apply()
     for ob in children:
         name = ob.McpArmatureModifier
@@ -192,6 +197,21 @@ class VIEW3D_OT_McpRestDefaultPoseButton(bpy.types.Operator):
         try:
             initRig(context)
             setDefaultPoseAsRestPose(context)
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
+        return{'FINISHED'}
+
+
+class VIEW3D_OT_McpRestCurrentPoseButton(bpy.types.Operator):
+    bl_idname = "mcp.rest_current_pose"
+    bl_label = "Current Pose => Rest Pose"
+    bl_description = "Change rest pose to current pose"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        try:
+            initRig(context)
+            applyRestPose(context, 1.0)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
