@@ -38,9 +38,9 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.905",
+    "version": "0.906",
     "blender": (2, 6, 7),
-    "location": "Context > Armature > MakeWalk",
+    "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
     "warning": "",
     'wiki_url': "http://www.makehuman.org/doc/node/makewalk_user_interface.html",
@@ -102,13 +102,8 @@ def inset(layout):
 
 class MainPanel(bpy.types.Panel):
     bl_label = "MakeWalk v %s: Main" % bl_info["version"]
-
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = "data"
-
-    #bl_space_type = "VIEW_3D"
-    #bl_region_type = "UI"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
 
     @classmethod
     def poll(cls, context):
@@ -143,14 +138,8 @@ class MainPanel(bpy.types.Panel):
 
 class OptionsPanel(bpy.types.Panel):
     bl_label = "MakeWalk: Options"
-
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = "data"
-
-    #bl_space_type = "VIEW_3D"
-    #bl_region_type = "UI"
-
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -218,14 +207,8 @@ class OptionsPanel(bpy.types.Panel):
 
 class EditPanel(bpy.types.Panel):
     bl_label = "MakeWalk: Edit Actions"
-
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = "data"
-
-    #bl_space_type = "VIEW_3D"
-    #bl_region_type = "UI"
-
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -308,14 +291,8 @@ class EditPanel(bpy.types.Panel):
 
 class MhxSourceBonesPanel(bpy.types.Panel):
     bl_label = "MakeWalk: Source armature"
-
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = "data"
-
-    #bl_space_type = "VIEW_3D"
-    #bl_region_type = "UI"
-
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -360,14 +337,8 @@ class MhxSourceBonesPanel(bpy.types.Panel):
 
 class MhxTargetBonesPanel(bpy.types.Panel):
     bl_label = "MakeWalk: Target armature"
-
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = "data"
-
-    #bl_space_type = "VIEW_3D"
-    #bl_region_type = "UI"
-
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "TOOLS"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -420,14 +391,8 @@ class MhxTargetBonesPanel(bpy.types.Panel):
 
 class UtilityPanel(bpy.types.Panel):
     bl_label = "MakeWalk: Utilities"
-
-    #bl_space_type = 'PROPERTIES'
-    #bl_region_type = 'WINDOW'
-    #bl_context = "data"
-
     bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-
+    bl_region_type = "TOOLS"
     bl_options = {'DEFAULT_CLOSED'}
 
     @classmethod
@@ -463,11 +428,14 @@ class UtilityPanel(bpy.types.Panel):
         layout.label("T-pose")
         layout.operator("mcp.set_t_pose")
         layout.operator("mcp.clear_t_pose")
-        layout.operator("mcp.rest_t_pose")
-        layout.operator("mcp.rest_default_pose")
-        layout.operator("mcp.rest_current_pose")
         layout.operator("mcp.load_t_pose")
         layout.operator("mcp.save_t_pose")
+
+        layout.separator()
+        layout.label("Rest Pose")
+        layout.operator("mcp.rest_current_pose")
+        layout.operator("mcp.rest_t_pose")
+        layout.operator("mcp.rest_default_pose")
 
         return
         layout.operator("mcp.copy_angles_fk_ik")
