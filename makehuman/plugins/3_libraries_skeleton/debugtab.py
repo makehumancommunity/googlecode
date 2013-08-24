@@ -43,6 +43,7 @@ class SkeletonDebugLibrary(gui3d.TaskView):
         self.mainLib = mainLib
         mainLib.debugLib = self
 
+        '''
         displayBox = mainLib.displayBox
         mainLib.showWeightsTggl = displayBox.addWidget(gui.ToggleButton("Show bone weights"))
         @mainLib.showWeightsTggl.mhEvent
@@ -55,6 +56,7 @@ class SkeletonDebugLibrary(gui3d.TaskView):
             else:
                 mainLib.clearBoneWeights()
         mainLib.showWeightsTggl.setSelected(True)
+        '''
 
         self.boneBox = self.addRightWidget(gui.GroupBox('Bones'))
         self.boneSelector = []
@@ -105,6 +107,7 @@ class SkeletonDebugLibrary(gui3d.TaskView):
         #
         #   Language. Different languages and target apps.
         #
+        '''
         self.languageBox = self.addLeftWidget(gui.GroupBox('Language'))
 
         self.languages = OrderedDict()
@@ -126,6 +129,7 @@ class SkeletonDebugLibrary(gui3d.TaskView):
                 mainLib.amtOptions.locale = locale
                 locale.load()
                 mainLib.updateSkeleton()
+        '''
 
 
     def reloadBoneExplorer(self):

@@ -129,6 +129,7 @@ class SkeletonLibrary(gui3d.TaskView):
         #   Display box
         #
 
+        '''
         self.displayBox = self.addLeftWidget(gui.GroupBox('Display'))
         self.showHumanTggl = self.displayBox.addWidget(gui.ToggleButton("Show human"))
         @self.showHumanTggl.mhEvent
@@ -149,6 +150,7 @@ class SkeletonLibrary(gui3d.TaskView):
             else:
                 self.jointsObj.hide()
         self.showJointsTggl.setSelected(True)
+        '''
 
 
         #
@@ -167,15 +169,15 @@ class SkeletonLibrary(gui3d.TaskView):
         self.presetDefaultBtn = self.presetBox.addWidget(gui.Button("Default"))
         @self.presetDefaultBtn.mhEvent
         def onClicked(event):
-            self.amtOptions.reset(self.optionsSelector, useMuscles=False)
-            self.descrLbl.setText("Description: The default rig. Use this for weighting")
+            descr = self.amtOptions.loadPreset("default", self.optionsSelector)
+            self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
         self.presetMuscleBtn = self.presetBox.addWidget(gui.Button("Muscles"))
         @self.presetMuscleBtn.mhEvent
         def onClicked(event):
-            self.amtOptions.reset(self.optionsSelector, useMuscles=True)
-            self.descrLbl.setText("Description: The default rig with muscle bones. Use this for weighting muscles")
+            descr = self.amtOptions.loadPreset("muscles", self.optionsSelector)
+            self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
         self.presetGameBtn = self.presetBox.addWidget(gui.Button("Game"))
@@ -245,8 +247,8 @@ class SkeletonLibrary(gui3d.TaskView):
         if self.skelObj:
             self.skelObj.show()
 
-        if not self.jointsObj:
-            self.drawJointHelpers()
+        #if not self.jointsObj:
+        #    self.drawJointHelpers()
 
         #self.filechooser.refresh()
 
@@ -255,7 +257,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
         # Re-draw joints positions if human has changed
         if self.humanChanged:
-            self.drawJointHelpers()
+            #self.drawJointHelpers()
             self.humanChanged = False
 
 
@@ -440,9 +442,8 @@ class SkeletonLibrary(gui3d.TaskView):
         gui3d.app.statusPersist(name)
 
         # Draw bone weights
-        if self.showWeightsTggl.selected:
-            boneWeights = self.human.getVertexWeights()
-            self.showBoneWeights(name, boneWeights)
+        boneWeights = self.human.getVertexWeights()
+        self.showBoneWeights(name, boneWeights)
 
         gui3d.app.redraw()
 
