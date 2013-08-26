@@ -224,12 +224,27 @@ class SamplerUniform(Uniform):
 
 class Shader(object):
     _supported = None
+    _glsl_version = None
 
     @classmethod
     def supported(cls):
         if cls._supported is None:
             cls._supported = bool(glCreateProgram)
         return cls._supported
+
+    @classmethod
+    def glslVersion(cls):
+        if cls._glsl_version is None:
+            if not cls.supported():
+                cls._glsl_version = (0,0)
+                return cls._glsl_version
+
+            import re
+            glsl_version_str = OpenGL.GL.glGetString(OpenGL.GL.GL_SHADING_LANGUAGE_VERSION)
+            glsl_version = re.search('[0-9]\.[0-9]+',glsl_version_str).group(0)
+            glsl_v_major, glsl_v_minor = glsl_version.split('.')
+            cls._glsl_version = (int(glsl_v_major), int(glsl_v_minor))
+        return cls._glsl_version
 
     def __init__(self, path, defines = []):
         if not self.supported():
