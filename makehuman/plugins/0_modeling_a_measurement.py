@@ -119,7 +119,13 @@ class MeasureTaskView(gui3d.TaskView):
 
         self.measureMesh.setCoords(np.zeros((count, 3), dtype=np.float32))
         self.measureMesh.setUVs(np.zeros((1, 2), dtype=np.float32))
-        self.measureMesh.setFaces(np.arange(count).reshape((-1,2)))
+        if count % 2 == 0:
+            s = np.arange(count)
+        else:
+            s = np.zeros(count+1, dtype=np.uint32)
+            s[:count] = np.arange(count)
+            s[count] = s[0]
+        self.measureMesh.setFaces(s.reshape((-1,2)))
 
         self.measureMesh.setCameraProjection(0)
         self.measureMesh.setShadeless(True)
