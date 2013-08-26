@@ -349,8 +349,8 @@ def setupMhxAnimation(scn, srcRig, trgRig):
 def retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
     from . import t_pose
 
-    utils.setMhxIk(trgRig, False)
     scn = context.scene
+    utils.setMhxIk(trgRig, True, True, False)
     if scn.McpUseTPoseAsRestPose:
         scn.objects.active = trgRig
         t_pose.setTPoseAsRestPose(context)

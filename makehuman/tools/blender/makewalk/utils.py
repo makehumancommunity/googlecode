@@ -83,16 +83,16 @@ def isMhxRig(rig):
         return False
 
 
-def setMhxIk(rig, scn, turnOn):
+def setMhxIk(rig, useArms, useLegs, turnOn):
     if isMhxRig(rig):
         ikLayers = []
         fkLayers = []
-        if scn.McpFkIkArms:
+        if useArms:
             rig["MhaArmIk_L"] = turnOn
             rig["MhaArmIk_R"] = turnOn
             ikLayers += [2,18]
             fkLayers += [3,19]
-        if scn.McpFkIkLegs:
+        if useLegs:
             rig["MhaLegIk_L"] = turnOn
             rig["MhaLegIk_R"] = turnOn
             ikLayers += [4,20]

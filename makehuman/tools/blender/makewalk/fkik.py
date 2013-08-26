@@ -302,7 +302,7 @@ def clearAnimation(context, type):
     for fcu in ikFCurves:
         act.fcurves.remove(fcu)
 
-    utils.setMhxIk(rig, scn, (type=="FK"))
+    utils.setMhxIk(rig, scn.McpFkIkArms, scn.McpFkIkLegs, (type=="FK"))
 
 
 def transferToFk(context):
@@ -326,7 +326,7 @@ def transferToFk(context):
     #muteAllConstraints(rig, True)
 
     oldLayers = list(rig.data.layers)
-    utils.setMhxIk(rig, scn, True)
+    utils.setMhxIk(rig, scn.McpFkIkArms, scn.McpFkIkLegs, True)
     rig.data.layers = 14*[True] + 2*[False] + 14*[True] + 2*[False]
 
     lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
@@ -346,7 +346,7 @@ def transferToFk(context):
             snapFkLeg(rig, rLegSnapIk, rLegSnapFk, frame, rLegIkToAnkle)
 
     rig.data.layers = oldLayers
-    utils.setMhxIk(rig, scn, False)
+    utils.setMhxIk(rig, scn.McpFkIkArms, scn.McpFkIkLegs, False)
     utils.setInterpolation(rig)
     #muteAllConstraints(rig, False)
 
@@ -372,7 +372,7 @@ def transferToIk(context):
     #muteAllConstraints(rig, True)
 
     oldLayers = list(rig.data.layers)
-    utils.setMhxIk(rig, scn, False)
+    utils.setMhxIk(rig, scn.McpFkIkArms, scn.McpFkIkLegs, False)
     rig.data.layers = 14*[True] + 2*[False] + 14*[True] + 2*[False]
 
     lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
@@ -393,7 +393,7 @@ def transferToIk(context):
             snapIkLeg(rig, rLegSnapIk, rLegSnapFk, frame, rLegIkToAnkle)
 
     rig.data.layers = oldLayers
-    utils.setMhxIk(rig, scn, True)
+    utils.setMhxIk(rig, scn.McpFkIkArms, scn.McpFkIkLegs, True)
     utils.setInterpolation(rig)
     #muteAllConstraints(rig, False)
 
