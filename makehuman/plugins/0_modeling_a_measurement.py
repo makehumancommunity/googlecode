@@ -115,17 +115,17 @@ class MeasureTaskView(gui3d.TaskView):
         self.measureMesh = module3d.Object3D('measure', 2)
         fg = self.measureMesh.createFaceGroup('measure')
 
+        names = []
+        for n,v in self.ruler.Measures.items():
+            if len(v) % 2 != 0:
+                names.append(n)
+        raise RuntimeError("One or more measurement rulers contain an uneven number of vertex indices. It's required that they are pairs indicating the begin and end point of every line to draw. Rulers with uneven index count: %s" % ", ".join(names))
+        del names
         count = max([len(vertIdx) for vertIdx in self.ruler.Measures.values()])
 
         self.measureMesh.setCoords(np.zeros((count, 3), dtype=np.float32))
         self.measureMesh.setUVs(np.zeros((1, 2), dtype=np.float32))
-        if count % 2 == 0:
-            s = np.arange(count)
-        else:
-            s = np.zeros(count+1, dtype=np.uint32)
-            s[:count] = np.arange(count)
-            s[count] = s[0]
-        self.measureMesh.setFaces(s.reshape((-1,2)))
+        self.measureMesh.setFaces(np.arange(count).reshape((-1,2)))
 
         self.measureMesh.setCameraProjection(0)
         self.measureMesh.setShadeless(True)
