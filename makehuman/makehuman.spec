@@ -85,7 +85,7 @@ def SvnInfo():
     return get_svn_revision_1()
 
 VERSION="%s (%s)" % (VERSION,SvnInfo())
-VERSION_FN="%s-r%s" % (VERSION,SvnInfo())
+VERSION_FN="%s" % (SvnInfo())
 vfile = open(os.path.join("core","VERSION"),"w")
 vfile.write(VERSION)
 vfile.close()
@@ -178,7 +178,7 @@ elif sys.platform == 'win32':
         upx=True,
         name='makehuman')
     target_dir = os.path.join('dist','makehuman')
-    zip = zipfile.ZipFile('dist/makehuman-%s.zip' % VERSION_FN, 'w', zipfile.ZIP_DEFLATED)
+    zip = zipfile.ZipFile('dist/makehumansvn-%s-win32.zip' % VERSION_FN, 'w', zipfile.ZIP_DEFLATED)
     rootlen = len(target_dir) + 1
     for base, dirs, files in os.walk(target_dir):
         for file in files:
