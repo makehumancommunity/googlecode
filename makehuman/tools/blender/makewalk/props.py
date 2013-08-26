@@ -109,10 +109,10 @@ def initInterface(context):
         description="Rescale F-curves after loading",
         default=False)
 
-    bpy.types.Scene.McpRescaleFactor = IntProperty(
+    bpy.types.Scene.McpRescaleFactor = FloatProperty(
         name="Rescale Factor",
         description="Factor for rescaling time",
-        min=1, default=1)
+        min=0.01, max=100, default=1.0)
 
     bpy.types.Scene.McpDefaultSS = BoolProperty(
         name="Use default subsample",
@@ -147,6 +147,16 @@ def initInterface(context):
     bpy.types.Scene.McpIkAdjustXY = BoolProperty(
         name="IK Adjust XY",
         description="Adjust XY coordinates of IK handle",
+        default=True)
+
+    bpy.types.Scene.McpFkIkArms = BoolProperty(
+        name="Arms",
+        description="Include arms in FK/IK snapping",
+        default=False)
+
+    bpy.types.Scene.McpFkIkLegs = BoolProperty(
+        name="Legs",
+        description="Include legs in FK/IK snapping",
         default=True)
 
     # Floor

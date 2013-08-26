@@ -25,6 +25,7 @@
 
 import bpy
 from mathutils import Vector, Matrix
+from bpy.props import *
 
 from . import mcp, utils
 from .utils import MocapError
@@ -162,10 +163,20 @@ def matchPoseScale(pb, src):
     pb.keyframe_insert("scale", group=pb.name)
 
 
+def snapFkArm(rig, snapIk, snapFk, frame):
+
+    (uparmFk, loarmFk, handFk) = snapFk
+    (uparmIk, loarmIk, elbow, elbowPt, handIk) = snapIk
+
+    matchPoseRotation(uparmFk, uparmIk)
+    matchPoseRotation(loarmFk, loarmIk)
+    matchPoseRotation(handFk, handIk)
+
+
 def snapIkArm(rig, snapIk, snapFk, frame):
 
     (uparmIk, loarmIk, elbow, elbowPt, handIk) = snapIk
-    (uparmFk, loarmFk, elbowPtFk, handFk) = snapFk
+    (uparmFk, loarmFk, handFk) = snapFk
 
     matchPoseTranslation(handIk, handFk)
     matchPoseRotation(handIk, handFk)
@@ -177,10 +188,22 @@ def snapIkArm(rig, snapIk, snapFk, frame):
     #matchPoseRotation(loarmIk, loarmFk)
 
 
+def snapFkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
+
+    (uplegIk, lolegIk, kneePt, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
+    (uplegFk, lolegFk, footFk, toeFk) = snapFk
+
+    matchPoseRotation(uplegFk, uplegIk)
+    matchPoseRotation(lolegFk, lolegIk)
+    if not legIkToAnkle:
+        matchPoseReverse(footFk, footRev)
+        matchPoseReverse(toeFk, toeRev)
+
+
 def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
 
     (uplegIk, lolegIk, kneePt, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
-    (uplegFk, lolegFk, kneePtFk, footFk, toeFk) = snapFk
+    (uplegFk, lolegFk, footFk, toeFk) = snapFk
 
     if legIkToAnkle:
         matchPoseTranslation(ankleIk, footFk)
@@ -207,10 +230,10 @@ def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
 
 SnapBonesAlpha8 = {
     "Arm"   : ["upper_arm", "forearm", "hand"],
-    "ArmFK" : ["upper_arm.fk", "forearm.fk", "elbow.pt.fk", "hand.fk"],
+    "ArmFK" : ["upper_arm.fk", "forearm.fk", "hand.fk"],
     "ArmIK" : ["upper_arm.ik", "forearm.ik", None, "elbow.pt.ik", "hand.ik"],
     "Leg"   : ["thigh", "shin", "foot", "toe"],
-    "LegFK" : ["thigh.fk", "shin.fk", "knee.pt.fk", "foot.fk", "toe.fk"],
+    "LegFK" : ["thigh.fk", "shin.fk", "foot.fk", "toe.fk"],
     "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
 }
 
@@ -243,25 +266,7 @@ def muteConstraints(constraints, value):
         cns.mute = value
 
 
-'''
-def transferToIkAtFrame(rig, frame, first):
-    if mcp.target == 'MHX':
-
-
-        snapIkArm(rig, lArmIkBones, lArmFkBones, "_L", frame)
-        snapIkArm(rig, rArmIkBones, rArmFkBones, "_R", frame)
-        snapIkLeg(rig, lLegIkBones, lLegFkBones, rig["MhaLegIkToAnkle_L"], "_L", frame, first)
-        snapIkLeg(rig, rLegIkBones, rLegFkBones, rig["MhaLegIkToAnkle_R"], "_R", frame, first)
-
-    else:
-        for (ik,fk) in mcp.ikBones:
-            ikPb = rig.pose.bones[ik]
-            fkPb = rig.pose.bones[fk]
-            matchPoseTranslation(ikPb, fkPb, frame)
-            matchPoseRotation(ikPb, fkPb, frame)
-'''
-
-def clearIkAnimation(context):
+def clearAnimation(context, type):
     from . import target
 
     rig = context.object
@@ -275,9 +280,14 @@ def clearIkAnimation(context):
     target.getTargetArmature(rig, scn)
 
     ikBones = []
-    for bname in SnapBonesAlpha8["ArmIK"] + SnapBonesAlpha8["LegIK"]:
-        if bname is not None:
-            ikBones += [bname+".L", bname+".R"]
+    if scn.McpFkIkArms:
+        for bname in SnapBonesAlpha8["Arm" + type]:
+            if bname is not None:
+                ikBones += [bname+".L", bname+".R"]
+    if scn.McpFkIkLegs:
+        for bname in SnapBonesAlpha8["Leg" + type]:
+            if bname is not None:
+                ikBones += [bname+".L", bname+".R"]
 
     ikFCurves = []
     for fcu in act.fcurves:
@@ -287,12 +297,58 @@ def clearIkAnimation(context):
             ikFCurves.append(fcu)
 
     if ikFCurves == []:
-        raise MocapError("IK bones have no animation")
+        raise MocapError("%s bones have no animation" % type)
 
     for fcu in ikFCurves:
         act.fcurves.remove(fcu)
 
-    utils.setMhxIk(rig, False)
+    utils.setMhxIk(rig, scn, (type=="FK"))
+
+
+def transferToFk(context):
+    from . import target
+
+    rig = context.object
+    scn = context.scene
+    if not utils.isMhxRig(rig):
+        raise MocapError("Can only transfer to FK with MHX rig")
+    target.getTargetArmature(rig, scn)
+
+    lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
+    lArmSnapFk,lArmCnsFk = getSnapBones(rig, "ArmFK", "_L")
+    rArmSnapIk,rArmCnsIk = getSnapBones(rig, "ArmIK", "_R")
+    rArmSnapFk,rArmCnsFk = getSnapBones(rig, "ArmFK", "_R")
+    lLegSnapIk,lLegCnsIk = getSnapBones(rig, "LegIK", "_L")
+    lLegSnapFk,lLegCnsFk = getSnapBones(rig, "LegFK", "_L")
+    rLegSnapIk,rLegCnsIk = getSnapBones(rig, "LegIK", "_R")
+    rLegSnapFk,rLegCnsFk = getSnapBones(rig, "LegFK", "_R")
+
+    #muteAllConstraints(rig, True)
+
+    oldLayers = list(rig.data.layers)
+    utils.setMhxIk(rig, scn, True)
+    rig.data.layers = 14*[True] + 2*[False] + 14*[True] + 2*[False]
+
+    lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
+    rLegIkToAnkle = rig["MhaLegIkToAnkle_R"]
+
+    frames = utils.getActiveFramesBetweenMarkers(rig, scn)
+    for n,frame in enumerate(frames):
+        if n%10 == 0:
+            print(frame)
+        scn.frame_set(frame)
+        updateScene()
+        if scn.McpFkIkArms:
+            snapFkArm(rig, lArmSnapIk, lArmSnapFk, frame)
+            snapFkArm(rig, rArmSnapIk, rArmSnapFk, frame)
+        if scn.McpFkIkLegs:
+            snapFkLeg(rig, lLegSnapIk, lLegSnapFk, frame, lLegIkToAnkle)
+            snapFkLeg(rig, rLegSnapIk, rLegSnapFk, frame, rLegIkToAnkle)
+
+    rig.data.layers = oldLayers
+    utils.setMhxIk(rig, scn, False)
+    utils.setInterpolation(rig)
+    #muteAllConstraints(rig, False)
 
 
 def transferToIk(context):
@@ -313,19 +369,10 @@ def transferToIk(context):
     rLegSnapIk,rLegCnsIk = getSnapBones(rig, "LegIK", "_R")
     rLegSnapFk,rLegCnsFk = getSnapBones(rig, "LegFK", "_R")
 
-    '''
-    muteConstraints(lArmCnsIk, True)
-    muteConstraints(lArmCnsFk, True)
-    muteConstraints(rArmCnsIk, True)
-    muteConstraints(rArmCnsFk, True)
-    muteConstraints(lLegCnsIk, True)
-    muteConstraints(lLegCnsFk, True)
-    muteConstraints(rLegCnsIk, True)
-    muteConstraints(rLegCnsFk, True)
-    '''
+    #muteAllConstraints(rig, True)
 
     oldLayers = list(rig.data.layers)
-    utils.setMhxIk(rig, False)
+    utils.setMhxIk(rig, scn, False)
     rig.data.layers = 14*[True] + 2*[False] + 14*[True] + 2*[False]
 
     lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
@@ -338,30 +385,56 @@ def transferToIk(context):
             print(frame)
         scn.frame_set(frame)
         updateScene()
-        snapIkArm(rig, lArmSnapIk, lArmSnapFk, frame)
-        snapIkArm(rig, rArmSnapIk, rArmSnapFk, frame)
-        snapIkLeg(rig, lLegSnapIk, lLegSnapFk, frame, lLegIkToAnkle)
-        snapIkLeg(rig, rLegSnapIk, rLegSnapFk, frame, rLegIkToAnkle)
+        if scn.McpFkIkArms:
+            snapIkArm(rig, lArmSnapIk, lArmSnapFk, frame)
+            snapIkArm(rig, rArmSnapIk, rArmSnapFk, frame)
+        if scn.McpFkIkLegs:
+            snapIkLeg(rig, lLegSnapIk, lLegSnapFk, frame, lLegIkToAnkle)
+            snapIkLeg(rig, rLegSnapIk, rLegSnapFk, frame, rLegIkToAnkle)
 
     rig.data.layers = oldLayers
-    utils.setMhxIk(rig, True)
+    utils.setMhxIk(rig, scn, True)
     utils.setInterpolation(rig)
+    #muteAllConstraints(rig, False)
 
-    '''
-    muteConstraints(lArmCnsIk, False)
-    muteConstraints(lArmCnsFk, False)
-    muteConstraints(rArmCnsIk, False)
-    muteConstraints(rArmCnsFk, False)
-    muteConstraints(lLegCnsIk, False)
-    muteConstraints(lLegCnsFk, False)
-    muteConstraints(rLegCnsIk, False)
-    muteConstraints(rLegCnsFk, False)
-    '''
+
+def muteAllConstraints(rig, value):
+    lArmSnapIk,lArmCnsIk = getSnapBones(rig, "ArmIK", "_L")
+    lArmSnapFk,lArmCnsFk = getSnapBones(rig, "ArmFK", "_L")
+    rArmSnapIk,rArmCnsIk = getSnapBones(rig, "ArmIK", "_R")
+    rArmSnapFk,rArmCnsFk = getSnapBones(rig, "ArmFK", "_R")
+    lLegSnapIk,lLegCnsIk = getSnapBones(rig, "LegIK", "_L")
+    lLegSnapFk,lLegCnsFk = getSnapBones(rig, "LegFK", "_L")
+    rLegSnapIk,rLegCnsIk = getSnapBones(rig, "LegIK", "_R")
+    rLegSnapFk,rLegCnsFk = getSnapBones(rig, "LegFK", "_R")
+
+    muteConstraints(lArmCnsIk, value)
+    muteConstraints(lArmCnsFk, value)
+    muteConstraints(rArmCnsIk, value)
+    muteConstraints(rArmCnsFk, value)
+    muteConstraints(lLegCnsIk, value)
+    muteConstraints(lLegCnsFk, value)
+    muteConstraints(rLegCnsIk, value)
+    muteConstraints(rLegCnsFk, value)
+
+
+class VIEW3D_OT_TransferToFkButton(bpy.types.Operator):
+    bl_idname = "mcp.transfer_to_fk"
+    bl_label = "Transfer IK => FK"
+    bl_description = "Transfer IK animation to FK bones"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        try:
+            transferToFk(context)
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
+        return{'FINISHED'}
 
 
 class VIEW3D_OT_TransferToIkButton(bpy.types.Operator):
     bl_idname = "mcp.transfer_to_ik"
-    bl_label = "Transfer To IK Bones"
+    bl_label = "Transfer FK => IK"
     bl_description = "Transfer FK animation to IK bones"
     bl_options = {'UNDO'}
 
@@ -373,15 +446,16 @@ class VIEW3D_OT_TransferToIkButton(bpy.types.Operator):
         return{'FINISHED'}
 
 
-class VIEW3D_OT_ClearIkButton(bpy.types.Operator):
-    bl_idname = "mcp.clear_ik_animation"
-    bl_label = "Clear IK Animation"
-    bl_description = "Clear Animation For IK Bones"
+class VIEW3D_OT_ClearAnimationButton(bpy.types.Operator):
+    bl_idname = "mcp.clear_animation"
+    bl_label = "Clear Animation"
+    bl_description = "Clear Animation For FK or IK Bones"
     bl_options = {'UNDO'}
+    type = StringProperty()
 
     def execute(self, context):
         try:
-            clearIkAnimation(context)
+            clearAnimation(context, self.type)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}

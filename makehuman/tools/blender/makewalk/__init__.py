@@ -164,13 +164,13 @@ class OptionsPanel(bpy.types.Panel):
         layout.prop(scn, "McpAutoCorrectTPose")
 
         layout.separator()
-        layout.label("SubSample")
+        layout.label("SubSample and Rescale")
         layout.prop(scn, "McpDefaultSS")
         if not scn.McpDefaultSS:
             layout.prop(scn, "McpSubsample")
             layout.prop(scn, "McpSSFactor")
-            layout.prop(scn, "McpRescale")
-            layout.prop(scn, "McpRescaleFactor")
+        layout.prop(scn, "McpRescale")
+        layout.prop(scn, "McpRescaleFactor")
 
         layout.separator()
         layout.label("Simplification")
@@ -226,13 +226,20 @@ class EditPanel(bpy.types.Panel):
             return
 
         layout.label("Inverse Kinematics")
+        row = layout.row()
+        row.prop(scn, "McpFkIkArms")
+        row.prop(scn, "McpFkIkLegs")
         layout.operator("mcp.transfer_to_ik")
-        layout.operator("mcp.clear_ik_animation")
+        layout.operator("mcp.transfer_to_fk")
+        layout.operator("mcp.clear_animation", text="Clear IK Animation").type = "IK"
+        layout.operator("mcp.clear_animation", text="Clear FK Animation").type = "FK"
         #layout.operator("mcp.print_hands")
 
         layout.separator()
         layout.label("Global Edit")
         layout.operator("mcp.shift_bone")
+        layout.prop(scn, "McpRescaleFactor")
+        layout.operator("mcp.rescale_fcurves")
 
         layout.separator()
         layout.label("Displace Animation")
