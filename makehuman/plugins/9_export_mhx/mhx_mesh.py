@@ -221,7 +221,7 @@ def writeFaceNumbers(fp, env):
             elif fg.name in ["helper-skirt", "helper-l-eye", "helper-r-eye"]:
                 fmats[fmask] = 5
             elif fg.name[0:7] == "helper-":
-                fmats[fmask] = 1
+                fmats[fmask] = 5
 
         if deleteVerts != None:
             for fn,fverts in enumerate(obj.fvert):
