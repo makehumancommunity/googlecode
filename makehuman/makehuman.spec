@@ -97,6 +97,13 @@ except subprocess.CalledProcessError:
     print "check that compile_targets.py is working correctly"
     sys.exit(1)
 
+###COMPILE MODELS
+try:
+    subprocess.check_call(["python","compile_models.py"])
+except subprocess.CalledProcessError:
+    print "check that compile_models.py is working correctly"
+    sys.exit(1)
+
 a = Analysis(['makehuman.py'],
              pathex=['lib','core','shared','apps','apps/gui', 'plugins'],
              hiddenimports=[],
