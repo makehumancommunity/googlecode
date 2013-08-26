@@ -103,7 +103,7 @@ class Object3D(object):
         self.object3d = None
         self.vmap = None
         self.tmap = None
-        self.priority = 0
+        self._priority = 0
         self.cull = 0
         self.MAX_FACES = 8
 
@@ -825,7 +825,6 @@ class Object3D(object):
         :param shadeless: Whether or not the object is unaffected by lights.
         :type shadeless: Boolean
         """
-
         self.shadeless = shadeless
 
     def setCull(self, cull):
@@ -836,6 +835,46 @@ class Object3D(object):
         :type cull: 0 => no culling, >0 => draw front faces, <0 => draw back faces
         """
         self.cull = cull
+
+    def getPriority(self):
+        """
+        The rendering priority of this object.
+        Objects with higher priorities will be drawn later.
+
+        Common priorities used:
+        file                                 description       2D/3D priority
+
+        0_modeling_background.py             background          2D    -90
+        core/mhmain.py                       human               3D      0
+        3_libraries_clothes_chooser.py       clothing            3D     10
+        3_libraries_polygon_hair_chooser.py  hair                3D     20
+        2_posing_armature.py                 armature            3D     30
+        0_modeling_a_measurement.py          measureMesh         2D     50
+        5_settings_censor.py                 censor rectangles   2D     80
+        apps/gui/guifiles.py                 black frame         2D     90
+        """
+        return self._priority
+
+    def setPriority(self, priority):
+        """
+        Set the rendering priority of this object.
+        Objects with higher priorities will be drawn later.
+
+        Common priorities used:
+        file                                 description       2D/3D priority
+
+        0_modeling_background.py             background          2D    -90
+        core/mhmain.py                       human               3D      0
+        3_libraries_clothes_chooser.py       clothing            3D     10
+        3_libraries_polygon_hair_chooser.py  hair                3D     20
+        2_posing_armature.py                 armature            3D     30
+        0_modeling_a_measurement.py          measureMesh         2D     50
+        5_settings_censor.py                 censor rectangles   2D     80
+        apps/gui/guifiles.py                 black frame         2D     90
+        """
+        self._priority = priority
+
+    priority = property(getPriority, setPriority)
 
     def setDepthless(self, depthless):
         """
