@@ -119,7 +119,8 @@ class MeasureTaskView(gui3d.TaskView):
         for n,v in self.ruler.Measures.items():
             if len(v) % 2 != 0:
                 names.append(n)
-        raise RuntimeError("One or more measurement rulers contain an uneven number of vertex indices. It's required that they are pairs indicating the begin and end point of every line to draw. Rulers with uneven index count: %s" % ", ".join(names))
+        if len(names) > 0:
+            raise RuntimeError("One or more measurement rulers contain an uneven number of vertex indices. It's required that they are pairs indicating the begin and end point of every line to draw. Rulers with uneven index count: %s" % ", ".join(names))
         del names
         count = max([len(vertIdx) for vertIdx in self.ruler.Measures.values()])
 
