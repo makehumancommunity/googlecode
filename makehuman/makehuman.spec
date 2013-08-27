@@ -106,7 +106,7 @@ except subprocess.CalledProcessError:
 
 a = Analysis(['makehuman.py'],
              pathex=['lib','core','shared','apps','apps/gui', 'plugins'],
-             hiddenimports=[],
+             hiddenimports=['exportutils'],
              hookspath=None,
              runtime_hooks=None
              )
