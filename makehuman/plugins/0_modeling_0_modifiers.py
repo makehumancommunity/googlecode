@@ -91,7 +91,8 @@ class ModifierTaskView(gui3d.TaskView):
                     resolveOptionsDict(opts, 'macro')
                     modifier = humanmodifier.MacroModifier(base, tname, tvar)
                     self.modifiers[tvar] = modifier
-                    slider = humanmodifier.MacroSlider(modifier, opts['label'], None,
+                    tpath = '-'.join(template[1:-1])
+                    slider = humanmodifier.MacroSlider(modifier, opts['label'], ('%s.png' % tpath).lower(),
                                                        opts['cam'], opts['min'], opts['max'])
                 else:
                     paired = len(template) == 4
