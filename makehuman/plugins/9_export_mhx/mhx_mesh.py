@@ -212,16 +212,16 @@ def writeFaceNumbers(fp, env):
             fmask = obj.getFaceMaskForGroups([fg.name])
             if deleteGroup(fg.name, deleteGroups):
                 fmats[fmask] = 4
-            elif fg.name[0:6] == "joint-":
-                fmats[fmask] = 2
             elif fg.name == "helper-tights":
                 fmats[fmask] = 3
-            elif fg.name in ["helper-hair", "helper-genital"]:
+            elif fg.name in ["helper-hair", "joint-ground"]:
                 fmats[fmask] = 6
-            elif fg.name in ["helper-skirt", "helper-l-eye", "helper-r-eye"]:
+            elif fg.name == "helper-skirt":
                 fmats[fmask] = 5
+            elif fg.name[0:6] == "joint-":
+                fmats[fmask] = 2
             elif fg.name[0:7] == "helper-":
-                fmats[fmask] = 5
+                fmats[fmask] = 4
 
         if deleteVerts != None:
             for fn,fverts in enumerate(obj.fvert):
