@@ -104,9 +104,9 @@ except subprocess.CalledProcessError:
     print "check that compile_models.py is working correctly"
     sys.exit(1)
 
-a = Analysis(['makehuman.py'],
+a = Analysis(['makehuman.py', 'shared/exportutils/collect.py'],
              pathex=['lib','core','shared','apps','apps/gui', 'plugins'],
-             hiddenimports=['exportutils'],
+             hiddenimports=[],
              hookspath=None,
              runtime_hooks=None
              )
