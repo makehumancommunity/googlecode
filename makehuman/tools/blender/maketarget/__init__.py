@@ -144,6 +144,10 @@ class MakeTargetPanel(bpy.types.Panel):
             layout.operator("mh.new_target")
             layout.operator("mh.load_target")
             layout.operator("mh.load_target_from_mesh")
+            if rig and rig.type == 'ARMATURE':
+                layout.separator()
+                layout.operator("mh.create_statue_from_pose")
+                layout.operator("mh.load_statue_minus_pose")
 
         elif utils.isTarget(ob):
             if not ob.data.shape_keys:

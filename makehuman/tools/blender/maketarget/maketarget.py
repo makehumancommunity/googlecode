@@ -171,6 +171,15 @@ def makeBaseObj(context):
     ob.MhHuman = True
 
 
+def unmakeBaseObj(ob):
+    utils.removeShapeKeys(ob)
+    try:
+        del ob["NTargets"]
+    except KeyError:
+        pass
+    ob.MhHuman = False
+
+
 class VIEW3D_OT_MakeBaseObjButton(bpy.types.Operator):
     bl_idname = "mh.make_base_obj"
     bl_label = "Set As Base"
@@ -281,31 +290,27 @@ class VIEW3D_OT_LoadTargetButton(bpy.types.Operator):
 #   loadTargetFromMesh(context):
 #----------------------------------------------------------
 
-def loadTargetFromMesh(context):
+def getMeshes(context):
     ob = context.object
-    if not utils.isBaseOrTarget(ob):
-        raise NameError("Active object %s is not a base object" % ob.name)
     scn = context.scene
+    if not utils.isBaseOrTarget(ob):
+        raise MHError("Active object %s is not a base object" % ob.name)
     trg = None
     for ob1 in scn.objects:
         if ob1.select and ob1.type == 'MESH' and ob1 != ob:
             trg = ob1
             break
     if not trg:
-        raise NameError("Two meshes must be selected")
+        raise MHError("Two meshes must be selected")
     bpy.ops.object.mode_set(mode='OBJECT')
+    return ob,trg,scn
 
-    scn.objects.active = trg
-    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
 
+def createNewMeshShape(ob, name, scn):
     scn.objects.active = ob
-    name = trg.name
     skey = ob.shape_key_add(name=name, from_mix=False)
     ob.active_shape_key_index = utils.shapeKeyLen(ob) - 1
     skey.name = name
-    nVerts = len(ob.data.vertices)
-    for v in trg.data.vertices[0:nVerts]:
-        skey.data[v.index].co = v.co
     skey.slider_min = -1.0
     skey.slider_max = 1.0
     skey.value = 1.0
@@ -314,8 +319,18 @@ def loadTargetFromMesh(context):
     ob["NTargets"] += 1
     ob["FilePath"] = 0
     ob.SelectedOnly = False
+    return skey
+
+
+def loadTargetFromMesh(context):
+    ob,trg,scn = getMeshes(context)
+    scn.objects.active = trg
+    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+    skey = createNewMeshShape(ob, trg.name, scn)
+    nVerts = len(ob.data.vertices)
+    for v in trg.data.vertices[0:nVerts]:
+        skey.data[v.index].co = v.co
     scn.objects.unlink(trg)
-    return
 
 
 class VIEW3D_OT_LoadTargetFromMeshButton(bpy.types.Operator):
@@ -333,6 +348,159 @@ class VIEW3D_OT_LoadTargetFromMeshButton(bpy.types.Operator):
         setObjectMode(context)
         try:
             loadTargetFromMesh(context)
+        except MHError:
+            handleMHError(context)
+        return {'FINISHED'}
+
+
+#----------------------------------------------------------
+#   loadTargetFromMesh(context):
+#----------------------------------------------------------
+
+def applyArmature(context):
+    ob = context.object
+    scn = context.scene
+    rig = ob.parent
+    if rig is None or rig.type != 'ARMATURE':
+        raise MHError("Parent of %s is not an armature" % ob)
+
+    bpy.ops.object.duplicate()
+    bpy.ops.object.shape_key_remove(all=True)
+    bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Armature")
+    statue = context.object
+    statue.name = "Statue"
+    statue.parent = None
+    return ob,rig,statue
+
+
+def createStatueFromPose(context):
+    ob,rig,statue = applyArmature(context)
+    scn = context.scene
+    scn.objects.active = statue
+    scn.layers = statue.layers = 10*[False] + [True] + 9*[False]
+    unmakeBaseObj(statue)
+
+
+class VIEW3D_OT_CreateStatueFromPoseButton(bpy.types.Operator):
+    bl_idname = "mh.create_statue_from_pose"
+    bl_label = "Create Statue From Pose"
+    bl_description = "Apply the current pose to the mesh"
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        return context.object
+        #return (context.object and not context.object.MhMeshVertsDeleted)
+
+    def execute(self, context):
+        setObjectMode(context)
+        try:
+            createStatueFromPose(context)
+        except MHError:
+            handleMHError(context)
+        return {'FINISHED'}
+
+
+#----------------------------------------------------------
+#   loadStatueMinusPose(context):
+#----------------------------------------------------------
+
+def loadStatueMinusPose(context):
+    ob,statue,scn = getMeshes(context)
+    ob,rig,posed = applyArmature(context)
+    posed.name = "Temporary"
+    print(ob)
+    print(statue)
+    print(posed)
+
+    scn = context.scene
+    nVerts = len(ob.data.vertices)
+
+    relMats = {}
+    for vg in ob.vertex_groups:
+        try:
+            pb = rig.pose.bones[vg.name]
+        except KeyError:
+            pb = None
+        if pb:
+            relMats[vg.index] = pb.bone.matrix_local * pb.matrix.inverted()
+            #relMats[vg.index] = pb.bone.matrix_local.inverted() * pb.matrix
+        else:
+            print("Skipping vertexgroup %s" % vg.name)
+            relMats[vg.index] = Matrix().identity()
+
+    svs = statue.data.vertices
+    pvs = posed.data.vertices
+    ovs = ob.data.vertices
+
+    skey = createNewMeshShape(ob, "Posed", scn)
+    relmat = Matrix()
+    y = Vector((0,0,0,1))
+    for v in ob.data.vertices:
+        vn = v.index
+        diff = svs[vn].co - pvs[vn].co
+        if diff.length > -1e-4:
+            relmat.zero()
+            w2sum = 0.0
+            for g in v.groups:
+                w2 = g.weight * g.weight
+                relmat += w2 * relMats[g.group]
+                w2sum += w2
+            factor = 1.0/w2sum
+            relmat *= factor
+
+            y[:3] = svs[vn].co
+            x = relmat * y
+            skey.data[vn].co = Vector(x[:3])
+
+            xdiff = skey.data[vn].co - ovs[vn].co
+
+            if xdiff.length > 1 or vn == 10425:
+                print("\nVert", vn, xdiff.length)
+                print("d (%.4f %.4f %.4f)" % tuple(diff))
+                print("xd (%.4f %.4f %.4f)" % tuple(xdiff))
+                checkRotationMatrix(relmat)
+                print("Rel", relmat)
+                s = pvs[vn].co
+                print("s ( %.4f  %.4f  %.4f) ( %.4f  %.4f  %.4f)" % (s[0],s[1],s[2],y[0],y[1],y[2]))
+                o = ovs[vn].co
+                print("v (%.4f %.4f %.4f) (%.4f %.4f %.4f)" % (o[0],o[1],o[2],x[0],x[1],x[2]))
+                print("r (%.4f %.4f %.4f)" % tuple(skey.data[vn].co))
+
+                for g in v.groups:
+                    print("\nGrp %d %f" % (g.group, g.weight))
+                    print("Rel", relMats[g.group])
+
+                #halt
+
+    scn.objects.unlink(statue)
+    scn.objects.unlink(posed)
+
+
+def checkRotationMatrix(mat):
+    for n in range(3):
+        vec = mat.col[n]
+        if abs(vec.length-1) > 0.1:
+            print("No rot %d %f\n%s" % (n, vec.length, mat))
+            return True
+    return False
+
+
+class VIEW3D_OT_LoadMeshMinusPoseButton(bpy.types.Operator):
+    bl_idname = "mh.load_statue_minus_pose"
+    bl_label = "Load Statue Minus Pose"
+    bl_description = "Make selected mesh a shapekey of active mesh, and subtract the current pose."
+    bl_options = {'UNDO'}
+
+    @classmethod
+    def poll(self, context):
+        return context.object
+        #return (context.object and not context.object.MhMeshVertsDeleted)
+
+    def execute(self, context):
+        setObjectMode(context)
+        try:
+            loadStatueMinusPose(context)
         except MHError:
             handleMHError(context)
         return {'FINISHED'}

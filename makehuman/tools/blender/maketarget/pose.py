@@ -108,7 +108,10 @@ def loadMhpFile(context, filepath):
             if len(words) < 4:
                 continue
             elif words[1] == "quat":
-                pb = rig.pose.bones[words[0]]
+                try:
+                    pb = rig.pose.bones[words[0]]
+                except KeyError:
+                    continue
                 if not isMuscleBone(pb):
                     q = Quaternion((float(words[2]), float(words[3]), float(words[4]), float(words[5])))
                     mat = q.to_matrix().to_4x4()
@@ -149,9 +152,11 @@ class VIEW3D_OT_LoadMhpButton(bpy.types.Operator):
         return context.object
 
     def execute(self, context):
+        from .maketarget import makeBaseObj
         setObjectMode(context)
         try:
             loadMhpFile(context, self.properties.filepath)
+            makeBaseObj(context)
         except MHError:
             handleMHError(context)
         return {'FINISHED'}
