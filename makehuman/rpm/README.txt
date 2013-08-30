@@ -37,7 +37,7 @@ STEP 4 RUN MAKEHUMAN
 --------------------
 Change working directory to the root of the makehuman tree:
 
-  cd makehuan
+  cd makehuman
 
 Then run:
 
