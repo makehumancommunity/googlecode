@@ -23,7 +23,7 @@ TODO
 """
 
 import os
-import gui3d
+from core import G
 import algos3d
 from armature.pose import createPoseRig
 from armature.utils import debugCoords
@@ -138,7 +138,7 @@ def enterPoseMode():
         return
     log.message("Enter pose mode")
     _inPoseMode = True
-    filepath = _storage.store(gui3d.app.selectedHuman)
+    filepath = _storage.store(G.app.selectedHuman)
     log.message("Pose mode entered: %s" % filepath)
     return filepath
 
@@ -148,7 +148,7 @@ def exitPoseMode(filepath=None):
     if not _inPoseMode:
         return
     log.message("Exit pose mode: %s" % filepath)
-    _storage.restore(gui3d.app.selectedHuman, filepath)
+    _storage.restore(G.app.selectedHuman, filepath)
     _inPoseMode = False
     log.message("Pose mode exited")
 
@@ -171,7 +171,7 @@ def changePoseMode(event):
 
 def loadMhpFile(filepath, pose=None, clearOnly=False):
 
-    human = gui3d.app.selectedHuman
+    human = G.app.selectedHuman
     if not pose:
         pose = createPoseRig(human)
 

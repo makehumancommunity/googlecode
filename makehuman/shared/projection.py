@@ -28,7 +28,7 @@ UV map creator
 """
 
 import numpy as np
-import gui3d
+from core import G
 import mh
 import log
 import matrix
@@ -109,9 +109,9 @@ def RasterizeTriangles(dst, coords, shader, progress = None):
         dst.data[miny[i]:maxy[i],minx[i]:maxx[i],:][mask] = col[mask]
 
 def getCamera(mesh):
-    ex, ey, ez = gui3d.app.modelCamera.eye
+    ex, ey, ez = G.app.modelCamera.eye
     eye = np.matrix([ex,ey,ez,1]).T
-    fx, fy, fz = gui3d.app.modelCamera.focus
+    fx, fy, fz = G.app.modelCamera.focus
     focus = np.matrix([fx,fy,fz,1]).T
     transform = mesh.transform.I
     eye = v4to3(transform * eye)
@@ -129,7 +129,7 @@ def getFaces(mesh):
     return faces
 
 def mapImageSoft(srcImg, mesh, leftTop, rightBottom):
-    dstImg = mh.Image(gui3d.app.selectedHuman.getTexture())
+    dstImg = mh.Image(G.app.selectedHuman.getTexture())
 
     dstW = dstImg.width
     dstH = dstImg.height
@@ -139,10 +139,10 @@ def mapImageSoft(srcImg, mesh, leftTop, rightBottom):
     camera = getCamera(mesh)
     faces = getFaces(mesh)
 
-    # log.debug('matrix: %s', gui3d.app.modelCamera.getConvertToScreenMatrix())
+    # log.debug('matrix: %s', G.app.modelCamera.getConvertToScreenMatrix())
 
     texco = np.asarray([0,dstH])[None,None,:] + mesh.texco[mesh.fuvs[faces]] * np.asarray([dstW,-dstH])[None,None,:]
-    matrix = np.asarray(gui3d.app.modelCamera.getConvertToScreenMatrix(mesh))
+    matrix = np.asarray(G.app.modelCamera.getConvertToScreenMatrix(mesh))
     coord = np.concatenate((mesh.coord[mesh.fvert[faces]], np.ones((len(faces),4,1))), axis=-1)
     # log.debug('texco: %s, coord: %s', texco.shape, coord.shape)
     coord = np.sum(matrix[None,None,:,:] * coord[:,:,None,:], axis = -1)
@@ -172,7 +172,7 @@ def mapImageSoft(srcImg, mesh, leftTop, rightBottom):
     # log.debug('%s %s', texco.shape, uva.shape)
 
     def progress(base, i, n):
-        gui3d.app.progress(base + 0.5 * i / n)
+        G.app.progress(base + 0.5 * i / n)
 
     # log.debug('src: %s, dst: %s', srcImg.data.shape, dstImg.data.shape)
 
@@ -180,7 +180,7 @@ def mapImageSoft(srcImg, mesh, leftTop, rightBottom):
 
     RasterizeTriangles(dstImg, texco[:,[0,1,2],:], UvAlphaShader(dstImg, srcImg, uva[:,[0,1,2],:]), progress = lambda i,n: progress(0.0,i,n))
     RasterizeTriangles(dstImg, texco[:,[2,3,0],:], UvAlphaShader(dstImg, srcImg, uva[:,[2,3,0],:]), progress = lambda i,n: progress(0.5,i,n))
-    gui3d.app.progress(1.0)
+    G.app.progress(1.0)
 
     log.debug("mapImage: end render")
 
@@ -189,7 +189,7 @@ def mapImageSoft(srcImg, mesh, leftTop, rightBottom):
 def mapImageGL(srcImg, mesh, leftTop, rightBottom):
     log.debug("mapImageGL: 1")
 
-    dstImg = gui3d.app.selectedHuman.meshData.object3d.textureTex
+    dstImg = G.app.selectedHuman.meshData.object3d.textureTex
 
     dstW = dstImg.width
     dstH = dstImg.height
@@ -201,7 +201,7 @@ def mapImageGL(srcImg, mesh, leftTop, rightBottom):
 
     coords = mesh.r_texco
 
-    texmat = gui3d.app.modelCamera.getConvertToScreenMatrix(mesh)
+    texmat = G.app.modelCamera.getConvertToScreenMatrix(mesh)
     texmat = matrix.scale((1/(right - left), 1/(top - bottom), 1)) * matrix.translate((-left, -bottom, 0)) * texmat
     texmat = np.asarray(texmat)
 
@@ -262,7 +262,7 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), progressCallback = None):
     Create a lightmap for the selected human (software renderer).
     """
 
-    mesh = gui3d.app.selectedHuman.mesh
+    mesh = G.app.selectedHuman.mesh
 
     W = 1024
     H = 1024
@@ -290,13 +290,13 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), progressCallback = None):
 
     def progress(base, i, n):
         if progressCallback == None:
-            gui3d.app.progress(base + 0.5 * i / n, "Projecting lightmap")
+            G.app.progress(base + 0.5 * i / n, "Projecting lightmap")
         else:
             progressCallback(base + 0.5 * i / n)
 
     RasterizeTriangles(dstImg, coords[:,[0,1,2],:], ColorShader(colors[:,[0,1,2],:]), progress = lambda i,n: progress(0.0,i,n))
     RasterizeTriangles(dstImg, coords[:,[2,3,0],:], ColorShader(colors[:,[2,3,0],:]), progress = lambda i,n: progress(0.5,i,n))
-    gui3d.app.progress(1.0)
+    G.app.progress(1.0)
 
     fixSeams(dstImg)
 
@@ -311,7 +311,7 @@ def mapLightingGL(lightpos = (-10.99, 20.0, 20.0)):
     Create a lightmap for the selected human (hardware accelerated).
     """
 
-    mesh = gui3d.app.selectedHuman.mesh
+    mesh = G.app.selectedHuman.mesh
 
     W = 1024
     H = 1024
@@ -369,7 +369,7 @@ def mapSceneLighting(scn, progressCallback = None):
         else:
             pass
 
-    humanRot = gui3d.app.selectedHuman.getRotation()
+    humanRot = G.app.selectedHuman.getRotation()
     def calcLightPos(light):
         return tuple(
             matrix.transform3(
@@ -399,7 +399,7 @@ def mapMask(dimensions = (1024, 1024), progressCallback = None):
     """
     if mh.hasRenderSkin():
         try:
-            mesh = gui3d.app.selectedHuman.mesh
+            mesh = G.app.selectedHuman.mesh
             return mh.renderSkin(dimensions, mesh.vertsPerPrimitive, 
                                  mesh.r_texco, index = mesh.index, 
                                  clearColor = (0, 0, 0, 0))
@@ -415,7 +415,7 @@ def mapMaskSoft(dimensions = (1024, 1024), progressCallback = None):
     Create a texture mask for the selected human (software renderer).
     """
 
-    mesh = gui3d.app.selectedHuman.mesh
+    mesh = G.app.selectedHuman.mesh
 
     W = dimensions[0]
     H = dimensions[1]
@@ -435,13 +435,13 @@ def mapMaskSoft(dimensions = (1024, 1024), progressCallback = None):
 
     def progress(base, i, n):
         if progressCallback == None:
-            gui3d.app.progress(base + 0.5 * i / n, "Projecting mask")
+            G.app.progress(base + 0.5 * i / n, "Projecting mask")
         else:
             progressCallback(base + 0.5 * i / n)
 
     RasterizeTriangles(dstImg, coords[:,[0,1,2],:], MaskShader(), progress = lambda i,n: progress(0.0,i,n))
     RasterizeTriangles(dstImg, coords[:,[2,3,0],:], MaskShader(), progress = lambda i,n: progress(0.5,i,n))
-    gui3d.app.progress(1.0)
+    G.app.progress(1.0)
 
     fixSeams(dstImg)
 
@@ -511,7 +511,7 @@ def mapUVSoft():
     (software rasterizer).
     """
 
-    mesh = gui3d.app.selectedHuman.mesh
+    mesh = G.app.selectedHuman.mesh
 
     W = 2048
     H = 2048
@@ -549,11 +549,11 @@ def mapUVSoft():
     log.debug("mapUV: begin render")
 
     def progress(base, i, n):
-        gui3d.app.progress(base + 0.5 * i / n, "Projecting UV map")
+        G.app.progress(base + 0.5 * i / n, "Projecting UV map")
 
     rasterizeHLines(dstImg, hedges, hdelta, progress = lambda i,n: progress(0.0,i,n))
     rasterizeVLines(dstImg, vedges, vdelta, progress = lambda i,n: progress(0.5,i,n))
-    gui3d.app.progress(1.0)
+    G.app.progress(1.0)
 
     log.debug("mapUV: end render")
 
@@ -565,7 +565,7 @@ def mapUVGL():
     (hardware accelerated).
     """
 
-    mesh = gui3d.app.selectedHuman.mesh
+    mesh = G.app.selectedHuman.mesh
 
     W = 2048
     H = 2048

@@ -25,14 +25,14 @@ TODO
 import sys
 import os
 import numpy
-import mh
+from getpath import getPath
 import log
 
 
 def listCustomFiles(config):
     files = []
     if config.useCustomTargets:
-        folder = os.path.join(mh.getPath(''), 'custom')
+        folder = os.path.join(getPath(''), 'custom')
         files += readCustomFolder(folder, config)
     return files
 

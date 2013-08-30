@@ -42,8 +42,8 @@ def calcJointPos(obj, joint):
 #-------------------------------------------------------------------------------
 
 def debugCoords(string):
-    import gui3d
-    obj = gui3d.app.selectedHuman.meshData
+    from core import G
+    obj = G.app.selectedHuman.meshData
     selection = obj.coord[[3630,3631,3632,3633,13634,13635,13636,13637]]
     log.debug("DebugCoords: %s" % string)
     #log.debug(str(selection))

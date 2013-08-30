@@ -45,7 +45,7 @@ __docformat__ = 'restructuredtext'
 import os
 import numpy as np
 import log
-import mh
+from getpath import getSysDataPath
 
 targetBuffer = {}
 
@@ -153,7 +153,7 @@ class Target:
     def _load_binary(self, name):
         if Target.npzfile is None:
             try:
-                npzname = mh.getSysDataPath('targets.npz')
+                npzname = getSysDataPath('targets.npz')
                 Target.npzfile = np.load(npzname)
                 Target.npztime = os.path.getmtime(npzname)
             except:

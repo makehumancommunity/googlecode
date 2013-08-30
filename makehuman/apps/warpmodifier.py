@@ -27,7 +27,7 @@ __docformat__ = 'restructuredtext'
 import math
 import numpy as np
 from operator import mul
-import mh
+from getpath import getPath, getSysDataPath
 import os
 
 import algos3d
@@ -82,7 +82,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         _warpGlobals.modifiers.append(self)
 
         string = template.replace('$','').replace('{','').replace('}','')
-        warppath = os.path.join(mh.getPath(""), "warp", string)
+        warppath = os.path.join(getPath(""), "warp", string)
         '''
         if not os.path.exists(os.path.dirname(warppath)):
             os.makedirs(os.path.dirname(warppath))
@@ -227,10 +227,10 @@ class EthnicWarpModifier (WarpModifier):
 
         for ethnic in ["caucasian", "african", "asian"]:
             reftrg = self.template.replace("${ethnic}", ethnic)
-            refchar = mh.getSysDataPath("targets/macrodetails/%s-female-young.target" % (ethnic))
+            refchar = getSysDataPath("targets/macrodetails/%s-female-young.target" % (ethnic))
             for gender in ["female", "male"]:
                 for age in ["baby", "child", "young", "old"]:
-                    base = mh.getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
+                    base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
                     self.refCharacters[base] = refchar
                     self.refTargets[base] = reftrg
 
@@ -264,14 +264,14 @@ class GenderAgeToneWeightWarpModifier (WarpModifier):
                 for age in ["baby", "child", "young", "old"]:
                     path = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
                     reftrg = path.replace("-${tone}", "averagemuscle").replace("-${weight}", "averageweight")
-                    refchar = mh.getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
-                    base = mh.getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
+                    refchar = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
+                    base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
                     #self.refCharacters[base] = refchar
                     #self.refTargets[base] = reftrg
 
                     for tone in ["minmuscle", "averagemuscle", "maxmuscle"]:
                         for weight in ["minweight", "averageweight", "maxweight"]:
-                            univ = mh.getSysDataPath("targets/macrodetails/universal-%s-%s-%s-%s.target") % (gender, age, tone, weight)
+                            univ = getSysDataPath("targets/macrodetails/universal-%s-%s-%s-%s.target") % (gender, age, tone, weight)
                             self.refCharacters[univ] = univ
                             self.refTargets[univ] = path.replace("${tone}", tone).replace("${weight}", weight)
 
@@ -282,9 +282,9 @@ class GenderAgeToneWeightWarpModifier (WarpModifier):
 
 def resetWarpBuffer():
     global _warpGlobals
-    import gui3d
+    from core import G
 
-    human = gui3d.app.selectedHuman
+    human = G.app.selectedHuman
     if human.hasWarpTargets:
         log.debug("WARP RESET")
         for path,target in algos3d.targetBuffer.items():
@@ -346,7 +346,7 @@ def readTarget(filepath):
     # If neither, read target
     #log.debug("READTAR %s" % filepath)
     words = filepath.rsplit("-",3)
-    if words[0] == mh.getSysDataPath("targets/macrodetails/universal"):
+    if words[0] == getSysDataPath("targets/macrodetails/universal"):
         if words[1] == "averagemuscle":
             if words[2] == "averageweight.target":
                 return {}
@@ -437,7 +437,7 @@ class GlobalWarpData:
             return self._landMarks[bodypart]
 
         self._landMarks = {}
-        folder = mh.getSysDataPath("landmarks")
+        folder = getSysDataPath("landmarks")
         for file in os.listdir(folder):
             (name, ext) = os.path.splitext(file)
             if ext != ".lmk":

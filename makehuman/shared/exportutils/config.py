@@ -23,7 +23,7 @@ TODO
 """
 
 import os
-import mh
+from getpath import getPath, getSysDataPath
 import log
 import shutil
 
@@ -110,7 +110,7 @@ class Config:
 
         if self.cage:
             obj = gui3d.app.selectedHuman
-            filepath = mh.getSysDataPath("cages/cage/cage.mhclo")
+            filepath = getSysDataPath("cages/cage/cage.mhclo")
             proxy = mh2proxy.readProxyFile(obj, filepath, type="Cage", layer=4)
             proxy.update(obj)
             proxies[name] = proxy
@@ -192,9 +192,9 @@ def getExistingProxyFile(path, uuid, category):
     else:
         file = os.path.basename(path)
         paths = []
-        folder = os.path.join(mh.getPath(''), 'data', category)
+        folder = os.path.join(getPath(''), 'data', category)
         addProxyFiles(file, folder, paths, 6)
-        folder = mh.getSysDataPath(category)
+        folder = getSysDataPath(category)
         addProxyFiles(file, folder, paths, 6)
         for path in paths:
             uuid1 = scanFileForUuid(path)

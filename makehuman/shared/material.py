@@ -246,9 +246,9 @@ class Material(object):
                 self._shader = getFilePath(words[1], self.filepath)
             if words[0] == "uvMap":
                 self._uvMap = getFilePath(words[1], self.filepath)
-                import mh
+                from getpath import getSysDataPath
                 if self._uvMap and \
-                   os.path.realpath(self._uvMap) == os.path.realpath(mh.getSysDataPath('uvs/default.obj')):
+                   os.path.realpath(self._uvMap) == os.path.realpath(getSysDataPath('uvs/default.obj')):
                     # uvs/default.obj is a meta-file that refers to the default uv set
                     self._uvMap = None
             if words[0] == "shaderParam":
@@ -384,9 +384,9 @@ class Material(object):
 
     def setUVMap(self, uvMap):
         self._uvMap = getFilePath(uvMap, self.filepath)
-        import mh
+        from getpath import getSysDataPath
         if self._uvMap and \
-           os.path.realpath(self._uvMap) == os.path.realpath(mh.getSysDataPath('uvs/default.obj')):
+           os.path.realpath(self._uvMap) == os.path.realpath(getSysDataPath('uvs/default.obj')):
             # uvs/default.obj is a meta-file that refers to the default uv set
             self._uvMap = None
 
@@ -864,12 +864,12 @@ def getFilePath(filename, folder = None):
     if os.path.isfile(filename):
         return os.path.abspath(filename)
     # Search in user data folder
-    import mh
-    userPath = os.path.join(mh.getPath(''), filename)
+    from getpath import getPath, getSysDataPath
+    userPath = os.path.join(getPath(''), filename)
     if os.path.isfile(userPath):
         return os.path.abspath(userPath)
     # Search in system data path
-    sysPath = mh.getSysDataPath(filename)
+    sysPath = getSysDataPath(filename)
     if os.path.isfile(sysPath):
         return os.path.abspath(sysPath)
 

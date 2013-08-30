@@ -23,10 +23,11 @@ Generic modifiers
 TODO
 """
 
-import mh
 import gui
 import gui3d
 import humanmodifier
+import modifierslider
+from core import G
 import log
 import targets
 
@@ -92,7 +93,7 @@ class ModifierTaskView(gui3d.TaskView):
                     modifier = humanmodifier.MacroModifier(base, tname, tvar)
                     self.modifiers[tvar] = modifier
                     tpath = '-'.join(template[1:-1])
-                    slider = humanmodifier.MacroSlider(modifier, opts['label'], ('%s.png' % tpath).lower(),
+                    slider = modifierslider.MacroSlider(modifier, opts['label'], ('%s.png' % tpath).lower(),
                                                        opts['cam'], opts['min'], opts['max'])
                 else:
                     paired = len(template) == 4
@@ -124,7 +125,7 @@ class ModifierTaskView(gui3d.TaskView):
                         clashIndex += 1
 
                     self.modifiers[modifierName] = modifier
-                    slider = humanmodifier.UniversalSlider(modifier, opts['label'], '%s.png' % tpath,
+                    slider = modifierslider.UniversalSlider(modifier, opts['label'], '%s.png' % tpath,
                                                            opts['cam'], opts['min'], opts['max'])
 
                 box.addWidget(slider)
@@ -148,7 +149,7 @@ class ModifierTaskView(gui3d.TaskView):
                 if name[:2] not in ("r-", "l-")]
 
     def updateMacro(self):
-        human = gui3d.app.selectedHuman
+        human = G.app.selectedHuman
         for modifier in self.modifiers.itervalues():
             if isinstance(modifier, humanmodifier.MacroModifier):
                 modifier.setValue(human, modifier.getValue(human))
@@ -156,7 +157,7 @@ class ModifierTaskView(gui3d.TaskView):
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
 
-        if gui3d.app.settings.get('cameraAutoZoom', True):
+        if G.app.settings.get('cameraAutoZoom', True):
             self.setCamera()
 
         for slider in self.sliders:
@@ -347,7 +348,7 @@ class FaceTaskView(ModifierTaskView):
         ]
 
     def setCamera(self):
-        gui3d.app.setFaceCamera()
+        G.app.setFaceCamera()
 
 class TorsoTaskView(ModifierTaskView):
     _name = 'Torso'
@@ -563,23 +564,23 @@ class MacroTaskView(ModifierTaskView):
                 yield (variable, modifier, slider)
 
     def syncStatus(self):
-        human = gui3d.app.selectedHuman
+        human = G.app.selectedHuman
 
         if human.getGender() == 0.0:
-            gender = gui3d.app.getLanguageString('female')
+            gender = G.app.getLanguageString('female')
         elif human.getGender() == 1.0:
-            gender = gui3d.app.getLanguageString('male')
+            gender = G.app.getLanguageString('male')
         elif abs(human.getGender() - 0.5) < 0.01:
-            gender = gui3d.app.getLanguageString('neutral')
+            gender = G.app.getLanguageString('neutral')
         else:
-            gender = gui3d.app.getLanguageString('%.2f%% female, %.2f%% male') % ((1.0 - human.getGender()) * 100, human.getGender() * 100)
+            gender = G.app.getLanguageString('%.2f%% female, %.2f%% male') % ((1.0 - human.getGender()) * 100, human.getGender() * 100)
 
         age = human.getAgeYears()
         muscle = (human.getMuscle() * 100.0)
         weight = (50 + (150 - 50) * human.getWeight())
         coords = human.meshData.getCoords([8223,12361,13155])
         height = human.getHeightCm()
-        if gui3d.app.settings['units'] == 'metric':
+        if G.app.settings['units'] == 'metric':
             units = 'cm'
         else:
             units = 'in'
@@ -599,7 +600,7 @@ class MacroTaskView(ModifierTaskView):
             slider.setValue(value)
 
     def setStatus(self, format, *args):
-        gui3d.app.statusPersist(format, *args)
+        G.app.statusPersist(format, *args)
 
     def onShow(self, event):
         self.syncStatus()
@@ -624,7 +625,7 @@ class MacroTaskView(ModifierTaskView):
 def load(app):
     category = app.getCategory('Modelling')
 
-    gui3d.app.noSetCamera = (lambda: None)
+    G.app.noSetCamera = (lambda: None)
 
     for type in [MacroTaskView, GenderTaskView, FaceTaskView, TorsoTaskView, ArmsLegsTaskView, AsymmTaskView]:
         taskview = category.addTask(type(category))

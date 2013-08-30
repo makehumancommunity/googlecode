@@ -25,10 +25,13 @@ TODO
 import os
 import log
 import zipfile
-import mh
+from getpath import getSysDataPath
 
 class Component(object):
+    # Defines reserved value keywords and which category they map to
+    # Used for specifying dependencies between targets using their filename
     _cat_data = [
+       # category     values
         ('gender',   ['male', 'female']),
         ('age',      ['baby', 'child', 'young', 'old']),
         ('race',     ['caucasian', 'asian', 'african']),
@@ -156,7 +159,7 @@ class Targets(object):
                     dir[head] = {}
                 add_file(dir[head], tail)
 
-        with zipfile.ZipFile(mh.getSysDataPath('targets.npz'), 'r') as npzfile:
+        with zipfile.ZipFile(getSysDataPath('targets.npz'), 'r') as npzfile:
             for file in npzfile.infolist():
                 name = file.filename
                 if not name.endswith('.index.npy'):
@@ -165,7 +168,7 @@ class Targets(object):
                 path = name.split('/')
                 add_file(cls._files, path)
 
-        with open(mh.getSysDataPath('images.list'), 'r') as imgfile:
+        with open(getSysDataPath('images.list'), 'r') as imgfile:
             for line in imgfile:
                 name = line.rstrip()
                 if not name.endswith('.png'):
@@ -239,5 +242,5 @@ _targets = None
 def getTargets():
     global _targets
     if _targets is None:
-        _targets = Targets(mh.getSysDataPath('targets'))
+        _targets = Targets(getSysDataPath('targets'))
     return _targets

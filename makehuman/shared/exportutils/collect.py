@@ -24,21 +24,12 @@ Blender by collada_import.py.
 TODO
 """
 
-import module3d
-import mh
-import files3d
 import os
-import time
 import numpy
 import shutil
 
-import export
-import mh2proxy
 import richmesh
 import log
-import catmull_clark_subdivision as cks
-
-from .config import Config
 
 #
 #   readTargets(config):

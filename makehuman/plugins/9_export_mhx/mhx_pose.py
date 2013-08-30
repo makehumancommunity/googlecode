@@ -28,6 +28,10 @@ import mh
 import exportutils
 
 from . import mhx_drivers
+from core import G
+
+def callback(progress, text=""):
+    G.app.progress(text)
 
 #-------------------------------------------------------------------------------
 #
@@ -95,7 +99,7 @@ def writeCorrectives(fp, env, drivers, folder, landmarks, proxy, t0, t1):
     except KeyError:
         shapeList = None
     if shapeList is None:
-        shapeList = exportutils.shapekeys.readCorrectives(drivers, env.human, folder, landmarks, t0, t1)
+        shapeList = exportutils.shapekeys.readCorrectives(drivers, env.human, folder, landmarks, t0, t1, callback)
         amt.loadedShapes[folder] = shapeList
     for (shape, pose, lr) in shapeList:
         empty = writeShape(fp, pose, lr, shape, 0, 1, proxy, env.config.scale)
@@ -151,7 +155,7 @@ def writeShapeKeys(fp, env, name, proxy):
 "  end ShapeKey\n")
 
     if isHuman and amt.options.facepanel:
-        shapeList = exportutils.shapekeys.readFaceShapes(env.human, rig_panel.BodyLanguageShapeDrivers, 0.6, 0.7)
+        shapeList = exportutils.shapekeys.readFaceShapes(env.human, rig_panel.BodyLanguageShapeDrivers, 0.6, 0.7, callback)
         for (pose, shape, lr, min, max) in shapeList:
             writeShape(fp, pose, lr, shape, min, max, proxy, scale)
 
@@ -161,7 +165,7 @@ def writeShapeKeys(fp, env, name, proxy):
         except KeyError:
             shapeList = None
         if shapeList is None:
-            shapeList = exportutils.shapekeys.readExpressionUnits(env.human, 0.7, 0.9)
+            shapeList = exportutils.shapekeys.readExpressionUnits(env.human, 0.7, 0.9, callback)
             env.loadedShapes["expressions"] = shapeList
         for (pose, shape) in shapeList:
             writeShape(fp, pose, "Sym", shape, -1, 2, proxy, scale)
@@ -203,7 +207,7 @@ def writeShapeKeys(fp, env, name, proxy):
             mhx_drivers.writeShapePropDrivers(fp, amt, [name], proxy, "Mhc")
 
         if config.expressions:
-            mhx_drivers.writeShapePropDrivers(fp, amt, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs")
+            mhx_drivers.writeShapePropDrivers(fp, amt, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs", callback)
 
         if amt.options.facepanel and amt.options.rigtype=='mhx':
             mhx_drivers.writeShapeDrivers(fp, amt, rig_panel.BodyLanguageShapeDrivers, proxy)
@@ -217,9 +221,9 @@ def writeShapeKeys(fp, env, name, proxy):
     fp.write("  end AnimationData\n\n")
 
     if config.expressions and not proxy:
-        exprList = exportutils.shapekeys.readExpressionMhm(mh.getSysDataPath("expressions"))
+        exprList = exportutils.shapekeys.readExpressionMhm(mh.getSysDataPath("expressions"), callback)
         writeExpressions(fp, exprList, "Expression")
-        visemeList = exportutils.shapekeys.readExpressionMhm(mh.getSysDataPath("visemes"))
+        visemeList = exportutils.shapekeys.readExpressionMhm(mh.getSysDataPath("visemes"), callback)
         writeExpressions(fp, visemeList, "Viseme")
 
     fp.write(

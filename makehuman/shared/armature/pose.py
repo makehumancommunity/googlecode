@@ -22,9 +22,7 @@ Abstract
 Pose
 """
 
-import os
 import math
-import gui3d
 import log
 from collections import OrderedDict
 

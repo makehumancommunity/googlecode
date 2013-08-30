@@ -23,8 +23,7 @@ Common base class for all exporters.
 """
 
 import os
-import gui
-import gui3d
+from core import G
 import log
 
 
@@ -35,6 +34,8 @@ class Exporter(object):
         self.filter = 'All Files (*.*)'
 
     def build(self, options, taskview):
+        import gui
+
         self.taskview       = taskview
         self.useTexFolder   = options.addWidget(gui.CheckBox("Separate texture folder", True))
         self.useHelpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
@@ -47,18 +48,18 @@ class Exporter(object):
         raise NotImplementedError()
 
     def getRigType(self):
-        if not hasattr(gui3d.app.selectedHuman, "getSkeleton"):
+        if not hasattr(G.app.selectedHuman, "getSkeleton"):
             return None
-        skel = gui3d.app.selectedHuman.getSkeleton()
+        skel = G.app.selectedHuman.getSkeleton()
         if skel:
             return skel.name
         else:
             return None
 
     def getRigOptions(self):
-        if not hasattr(gui3d.app.selectedHuman, "getSkeleton"):
+        if not hasattr(G.app.selectedHuman, "getSkeleton"):
             return None
-        skel = gui3d.app.selectedHuman.getSkeleton()
+        skel = G.app.selectedHuman.getSkeleton()
         if skel:
             return skel.options
         else:

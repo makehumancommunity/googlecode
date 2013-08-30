@@ -24,11 +24,10 @@ Parser for armature
 
 import os
 import math
-import gui3d
 import log
 from collections import OrderedDict
 import io_json
-import mh
+from getpath import getSysPath
 
 import numpy as np
 import numpy.linalg as la
@@ -805,7 +804,7 @@ class Parser:
     def readVertexGroupFiles(self, files):
         vgroups = OrderedDict()
         for file in files:
-            filepath = os.path.join(mh.getSysPath("shared/armature/data"), "vgrp_"+file+".json")
+            filepath = os.path.join(getSysPath("shared/armature/data"), "vgrp_"+file+".json")
             log.message("Loading %s" % filepath)
             vglist = io_json.loadJson(filepath)
             for key,data in vglist:

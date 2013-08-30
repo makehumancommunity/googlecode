@@ -24,9 +24,8 @@ Armature options
 """
 
 import os
-import gui
 import io_json
-import mh
+from getpath import getSysDataPath
 
 class ArmatureOptions:
     def __init__(self):
@@ -165,7 +164,7 @@ class ArmatureOptions:
             selector.fromOptions(self)
 
 
-    def loadPreset(self, filename, selector, folder=mh.getSysDataPath("rigs/")):
+    def loadPreset(self, filename, selector, folder=getSysDataPath("rigs/")):
         filepath = os.path.join(folder, filename + ".json")
         struct = io_json.loadJson(filepath)
         self.__init__()
@@ -205,6 +204,7 @@ class ArmatureSelector:
     def __init__(self, box):
         self.box = box
 
+        import gui
         self.useMuscles = box.addWidget(gui.ToggleButton("Muscle bones (MHX only)"))
         self.useReverseHip = box.addWidget(gui.ToggleButton("Reverse hips"))
         self.addConnectingBones = box.addWidget(gui.ToggleButton("Connecting bones"))

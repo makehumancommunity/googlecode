@@ -27,15 +27,13 @@ using either the Aqsis or Renderman engine.
 The MakeHuman data structures are transposed into renderman objects.
 """
 
-import mh
+from getpath import getPath, getSysPath, getSysDataPath
 import os
 import aljabr
 import subprocess
 import projection
-#import hair
 import time
 import math
-import gui3d
 
 class ImageLight:
 
@@ -47,8 +45,8 @@ class ImageLight:
             dstImg = projection.mapLighting()
             #dstImg.resize(128, 128);
 
-            dstImg.save(os.path.join(mh.getPath(''), 'data', 'skins', 'lighting.png'))
-            #gui3d.app.selectedHuman.setTexture(os.path.join(mh.getPath(''), 'data', 'skins', 'lighting.tga'))
+            dstImg.save(os.path.join(getPath(''), 'data', 'skins', 'lighting.png'))
+            #G.app.selectedHuman.setTexture(os.path.join(getPath(''), 'data', 'skins', 'lighting.tga'))
 
 
 class MaterialParameter:
@@ -489,20 +487,20 @@ class RMRScene:
         self.renderResult = ""
 
         #resource paths
-        self.renderPath = os.path.join(mh.getPath('render'), 'renderman_output')
+        self.renderPath = os.path.join(getPath('render'), 'renderman_output')
         self.ribsPath = os.path.join(self.renderPath, 'ribFiles')
         self.usrShaderPath = os.path.join(self.ribsPath, 'shaders')
         
         #Texture paths
         self.usrTexturePath = os.path.join(self.ribsPath, 'textures')
-        self.applicationPath = mh.getSysPath()
-        self.appTexturePath = mh.getSysDataPath('textures')
-        self.hairTexturePath = mh.getSysDataPath('hairstyles')
-        self.skinTexturePath = os.path.join(mh.getPath(''), 'data', 'skins')
+        self.applicationPath = getSysPath()
+        self.appTexturePath = getSysDataPath('textures')
+        self.hairTexturePath = getSysDataPath('hairstyles')
+        self.skinTexturePath = os.path.join(getPath(''), 'data', 'skins')
         
         #self.appObjectPath = os.path.join(self.applicationPath, 'data', '3dobjs')
         self.worldFileName = os.path.join(self.ribsPath,"world.rib").replace('\\', '/')
-        self.lightsFolderPath = os.path.join(mh.getSysDataPath('lights'), 'aqsis')       
+        self.lightsFolderPath = os.path.join(getSysDataPath('lights'), 'aqsis')       
 
         #mainscenefile
         self.sceneFileName = os.path.join(self.ribsPath, "scene.rib")
@@ -811,10 +809,12 @@ class RenderThread(Thread):
         self.renderPath = ""
 
     def progress(self, progress, status=None):
+        import mh
         mh.callAsyncThread(self.app.progress, progress, status)
 
 
     def prompt(self):
+        import mh
         mh.callAsyncThread(self.app.prompt,
                            "Render finished", "The image is saved in {0}".format(self.renderPath),
                            "OK", helpId="'renderFinishedPrompt'")

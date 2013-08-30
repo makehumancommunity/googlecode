@@ -24,9 +24,7 @@ TODO
 
 import random
 import gui3d
-import humanmodifier
 import events3d
-import mh
 import gui
 
 class RandomTaskView(gui3d.TaskView):

@@ -542,13 +542,23 @@ class Application(QtGui.QApplication, events3d.EventHandler):
             self.log_window.addLogMessage(text, level)
 
     def processEvents(self, flags = QtCore.QEventLoop.ExcludeUserInputEvents):
+        """
+        Process any asynchronous events in the queue without having to return
+        to the qt main event loop. Especially useful for making sure that any
+        callAsync tasks are run.
+        Excluding user input events (which is set as the default flag) prevents
+        unwanted recursions caused by an event firing another event because of
+        user interaction.
+        """
         super(Application, self).processEvents(flags)
 
     def event(self, event):
         self.logger_event.debug('event(%s)', event)
         if event.type() == QtCore.QEvent.User:
+            # Handle custom user-defined event (AsyncEvent)
             event.callback(*event.args, **event.kwargs)
             return True
+        # Handle standard Qt event
         return super(Application, self).event(event)
 
     def notify(self, object, event):
@@ -581,6 +591,9 @@ class Application(QtGui.QApplication, events3d.EventHandler):
         self.postEvent(self, event)
 
     def callAsync(self, func, *args, **kwargs):
+        """
+        Invoke an asynchronous event.
+        """
         self.logger_async.debug('callAsync: %s(%s, %s)', func, args, kwargs)
         self._postAsync(AsyncEvent(func, args, kwargs))
 
@@ -600,4 +613,9 @@ def setShortcut(modifier, key, action):
     action.setShortcut(QtGui.QKeySequence(modifier + key))
 
 def callAsyncThread(func, *args, **kwargs):
+    """
+    Invoke callAsync from another thread than that of the main window.
+    This can be used to allow other threads access to the GUI (qt only allows
+    GUI access from the main thread).
+    """
     G.app.messages.post(AsyncEvent(func, args, kwargs))

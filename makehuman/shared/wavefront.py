@@ -235,8 +235,7 @@ def writeMaterial(fp, mat, texPathConf = None):
     #writeTexture(fp, "map_Disp", mat.specularMapTexture, texPathConf)
     #writeTexture(fp, "map_Disp", mat.displacementMapTexture, texPathConf)
 
-    #import mh
-    #writeTexture(fp, "map_Kd", os.path.join(mh.getSysDataPath("textures"), "texture.png"), texPathConf)
+    #writeTexture(fp, "map_Kd", os.path.join(getpath.getSysDataPath("textures"), "texture.png"), texPathConf)
 
 
 def writeTexture(fp, key, filepath, pathConfig = None):

@@ -24,10 +24,11 @@ TODO
 
 import os
 import numpy
-import gui3d
+import guicommon
 import exportutils
+from core import G
+from getpath import getSysDataPath
 import log
-import mh
 from collections import OrderedDict
 
 import material
@@ -174,9 +175,9 @@ class CProxy:
 
 
     def getObject(self):
-        import gui3d, object3d, module3d
+        import object3d, module3d
 
-        human = gui3d.app.selectedHuman
+        human = G.app.selectedHuman
         if self.type == "Clothes":
             obj = human.clothesObjs[self.getUuid()]
         elif self.type == "Proxy":
@@ -194,7 +195,7 @@ class CProxy:
         else:
             raise NameError("Unknown proxy type %s" % self.type)
 
-        if isinstance(obj, gui3d.Object):
+        if isinstance(obj, guicommon.Object):
             obj = obj.mesh
         if not (isinstance(obj, module3d.Object3D) or isinstance(obj, object3d.Object3D)):
             raise NameError("%s is not an object" % obj)
@@ -240,8 +241,8 @@ class CProxy:
         if self.basemesh in ["alpha_7", "alpha7"]:
             global _A7converter
             if _A7converter is None:
-                _A7converter = readProxyFile(gui3d.app.selectedHuman.meshData, mh.getSysDataPath("3dobjs/a7_converter.proxy"), type="Converter")
-            print "Converting clothes with", _A7converter
+                _A7converter = readProxyFile(G.app.selectedHuman.meshData, getSysDataPath("3dobjs/a7_converter.proxy"), type="Converter")
+            log.debug("Converting clothes with %s", _A7converter)
             return _A7converter
         elif self.basemesh == "hm08":
             return None

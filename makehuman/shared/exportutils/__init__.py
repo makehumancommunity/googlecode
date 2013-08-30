@@ -29,3 +29,6 @@ from . import custom
 from . import shapekeys
 from . import uvset
 """
+
+from types import ModuleType
+import sys

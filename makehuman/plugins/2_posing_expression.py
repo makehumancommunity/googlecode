@@ -25,6 +25,7 @@ TODO
 import algos3d
 import gui3d
 import humanmodifier
+import modifierslider
 import warpmodifier
 import os
 import mh
@@ -57,14 +58,14 @@ class ExpressionWarpModifier(warpmodifier.EthnicWarpModifier):
         self.eventType = 'expression'
 
 
-class ExpressionModifierSlider(humanmodifier.ModifierSlider):
+class ExpressionModifierSlider(modifierslider.ModifierSlider):
 
     def __init__(self, taskview=None, label=None, modifier=None):
-        humanmodifier.ModifierSlider.__init__(self, label=label, modifier=modifier)
+        modifierslider.ModifierSlider.__init__(self, label=label, modifier=modifier)
         self.taskview = taskview
 
     def onChange(self, value):
-        humanmodifier.ModifierSlider.onChange(self, value)
+        modifierslider.ModifierSlider.onChange(self, value)
         for target in self.modifier.targets:
             self.taskview.addTarget(target)
 

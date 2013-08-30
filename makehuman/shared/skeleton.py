@@ -80,9 +80,9 @@ class Skeleton(object):
         """
 
         from armature.armature import setupArmature
-        import gui3d
+        from core import G
 
-        amt = setupArmature("python", gui3d.app.selectedHuman, options)
+        amt = setupArmature("python", G.app.selectedHuman, options)
         for bone in amt.bones.values():
             self.addBone(bone.name, bone.parent, bone.head, bone.tail, bone.roll)
 

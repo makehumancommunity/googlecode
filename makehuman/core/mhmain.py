@@ -1047,10 +1047,12 @@ class MHApplication(gui3d.Application, mh.Application):
     def symmetryRight(self):
         human = self.selectedHuman
         human.applySymmetryRight()
+        mh.redraw()
 
     def symmetryLeft(self):
         human = self.selectedHuman
         human.applySymmetryLeft()
+        mh.redraw()
 
     def symmetry(self):
         human = self.selectedHuman

@@ -25,12 +25,10 @@ TODO
 import os
 import math
 import meshstat
-import gui3d
-import warp
 import warpmodifier
 import algos3d
 import log
-import mh
+from getpath import getSysDataPath
 
 
 #----------------------------------------------------------
@@ -57,7 +55,7 @@ def setupExpressions(folder, prefix):
     return(expressions)
 
 
-ExpressionUnits = setupExpressions(mh.getSysDataPath("targets/expression/units/caucasian"), "")
+ExpressionUnits = setupExpressions(getSysDataPath("targets/expression/units/caucasian"), "")
 
 #----------------------------------------------------------
 #   Loop
@@ -141,12 +139,12 @@ def loopGendersAges(name, human, typ):
 
 def targetFileName(typ, name, gender, age):
     #if typ == "Expressions":
-    #    return (mh.getSysDataPath('targets/expression/%s_%s/neutral_%s_%s_%s.target') % (gender, age, gender, age, name) )
+    #    return (getSysDataPath('targets/expression/%s_%s/neutral_%s_%s_%s.target') % (gender, age, gender, age, name) )
     if typ == "ExpressionUnits":
-        return (mh.getSysDataPath('targets/expression/units/caucasian/%s_%s/%s.target') %  (gender, age, name) )
+        return (getSysDataPath('targets/expression/units/caucasian/%s_%s/%s.target') %  (gender, age, name) )
     elif typ == "Corrective":
         (part, pose) = name
-        return (mh.getSysDataPath("shared/mhx/targets/correctives/%s/caucasian/%s-%s/%s.target") % (part, gender, age, pose))
+        return (getSysDataPath("shared/mhx/targets/correctives/%s/caucasian/%s-%s/%s.target") % (part, gender, age, pose))
     else:
         raise NameError("Unknown type %s" % typ)
 
@@ -173,7 +171,7 @@ def readShape(filename):
 #
 #----------------------------------------------------------
 
-def readFaceShapes(human, drivers, t0, t1):
+def readFaceShapes(human, drivers, t0, t1, progressCallback = None):
     shapeList = []
     shapes = {}
     t,dt = initTimes(drivers.keys(), 0.0, 1.0)
@@ -195,7 +193,8 @@ def readFaceShapes(human, drivers, t0, t1):
         except:
             doLoad = True
         if doLoad:
-            gui3d.app.progress(t, text="Reading face shape %s" % fname)
+            if progressCallback:
+                progressCallback(t, text="Reading face shape %s" % fname)
 
             shape = warpmodifier.compileWarpTarget(
                     'shared/mhx/targets/body_language/${gender}-${age}/%s.target' % fname,
@@ -209,16 +208,17 @@ def readFaceShapes(human, drivers, t0, t1):
     return shapeList
 
 
-def readExpressionUnits(human, t0, t1):
+def readExpressionUnits(human, t0, t1, progressCallback = None):
     shapeList = []
     t,dt = initTimes(ExpressionUnits, 0.0, 1.0)
 
     for name in ExpressionUnits:
-        gui3d.app.progress(t, text="Reading expression %s" % name)
+        if progressCallback:
+            progressCallback(t, text="Reading expression %s" % name)
 
         shape = warpmodifier.compileWarpTarget(
                 "Ethnic",
-                mh.getSysDataPath('targets/expression/units/${ethnic}/%s.target') % name,
+                getSysDataPath('targets/expression/units/${ethnic}/%s.target') % name,
                 human,
                 "face")
 
@@ -227,12 +227,13 @@ def readExpressionUnits(human, t0, t1):
     return shapeList
 
 
-def readCorrectives(drivers, human, folder, landmarks, t0, t1):
+def readCorrectives(drivers, human, folder, landmarks, t0, t1, progressCallback = None):
     shapeList = []
     t,dt = initTimes(drivers, 0.0, 1.0)
 
     for (pose, lr, expr, vars) in drivers:
-        gui3d.app.progress(t, text="Reading corrective %s %s" % (folder, pose))
+        if progressCallback:
+            progressCallback(t, text="Reading corrective %s %s" % (folder, pose))
 
         shape = warpmodifier.compileWarpTarget(
                 'GenderAgeToneWeight',

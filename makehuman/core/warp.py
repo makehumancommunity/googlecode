@@ -83,9 +83,6 @@ where A = HT H, b = HT b, where HT is the transpose of H.
 
 import math
 import numpy as np
-import sys
-import imp
-import os
 import log
 
 #----------------------------------------------------------

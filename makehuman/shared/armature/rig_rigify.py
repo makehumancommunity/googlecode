@@ -22,8 +22,7 @@ Abstract
 Rigify-specific non-deform bones
 """
 
-import armature
-from armature.flags import *
+from .flags import *
 
 Joints = [
     ('l-ball-1',            'vo', (12889, -0.5, 0, 0)),

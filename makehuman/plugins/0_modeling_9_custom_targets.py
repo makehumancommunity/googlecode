@@ -32,6 +32,7 @@ import mh
 import algos3d
 import os
 import humanmodifier
+import modifierslider
 import gui
 
 class FolderButton(gui.RadioButton):
@@ -127,7 +128,7 @@ class CustomTargetsTaskView(gui3d.TaskView):
 
         modifier = humanmodifier.SimpleModifier(os.path.join(targetPath, targetFile))
         self.modifiers[targetName] = modifier
-        self.sliders.append(box.addWidget(humanmodifier.ModifierSlider(value=0, label=targetName, modifier=modifier)))
+        self.sliders.append(box.addWidget(modifierslider.ModifierSlider(value=0, label=targetName, modifier=modifier)))
 
     def syncSliders(self):
 

@@ -26,13 +26,14 @@ and manipulating subtextures as Image objects.
 """
 
 import os
-import mh
+import inifile
+import image
 
 def combine(image, mhstx):
-    img = mh.Image(image)
+    img = image.Image(image)
     f = open(mhstx, 'rU')
     try:
-        subTextures = mh.parseINI(f.read(), [("(","["), (")","]")])
+        subTextures = inifile.parseINI(f.read(), [("(","["), (")","]")])
     except:
         log.warning("subtextures.combine(%s)", mhstx, exc_info=True)
         f.close()
@@ -42,7 +43,7 @@ def combine(image, mhstx):
     texdir = os.path.dirname(mhstx)
     for subTexture in subTextures:
         path = os.path.join(texdir, subTexture['txt'])
-        subImg = mh.Image(path)
+        subImg = image.Image(path)
         x, y = subTexture['dst']
         img.blit(subImg, x, y)
 

@@ -28,6 +28,7 @@ import numpy as np
 import gui3d
 import module3d
 import humanmodifier
+import modifierslider
 import mh
 import gui
 import log
@@ -85,10 +86,10 @@ class GroupBoxRadioButton(gui.RadioButton):
         self.task.groupBox.showWidget(self.groupBox)
         self.task.onSliderFocus(self.groupBox.children[0])
 
-class MeasureSlider(humanmodifier.ModifierSlider):
+class MeasureSlider(modifierslider.ModifierSlider):
     def __init__(self, label, task, measure, modifier):
 
-        humanmodifier.ModifierSlider.__init__(self, value=0.0, min=-1.0, max=1.0,
+        modifierslider.ModifierSlider.__init__(self, value=0.0, min=-1.0, max=1.0,
             label=label, modifier=modifier, valueConverter=MeasurementValueConverter(task, measure, modifier))
         self.measure = measure
         self.task = task

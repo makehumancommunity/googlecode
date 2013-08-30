@@ -25,15 +25,16 @@ TODO
 __docformat__ = 'restructuredtext'
 
 import algos3d
-import gui3d
+import guicommon
+from core import G
 import events3d
 import operator
 import math
 import re
 import numpy as np
-import gui
 import log
 import targets
+
 
 # Gender
 # -
@@ -80,7 +81,7 @@ import targets
 
 # Caucasian
 
-class DetailAction(gui3d.Action):
+class DetailAction(guicommon.Action):
     def __init__(self, human, before, after, update=True):
         super(DetailAction, self).__init__('Change detail')
         self.human = human
@@ -91,7 +92,7 @@ class DetailAction(gui3d.Action):
     def do(self):
         for (target, value) in self.after.iteritems():
             self.human.setDetail(target, value)
-        self.human.applyAllTargets(gui3d.app.progress, update=self.update)
+        self.human.applyAllTargets(G.app.progress, update=self.update)
         return True
 
     def undo(self):
@@ -100,7 +101,7 @@ class DetailAction(gui3d.Action):
         self.human.applyAllTargets()
         return True
 
-class ModifierAction(gui3d.Action):
+class ModifierAction(guicommon.Action):
     def __init__(self, human, modifier, before, after, postAction):
         super(ModifierAction, self).__init__('Change modifier')
         self.human = human
@@ -111,112 +112,15 @@ class ModifierAction(gui3d.Action):
 
     def do(self):
         self.modifier.setValue(self.human, self.after)
-        self.human.applyAllTargets(gui3d.app.progress)
+        self.human.applyAllTargets(G.app.progress)
         self.postAction()
         return True
 
     def undo(self):
         self.modifier.setValue(self.human, self.before)
-        self.human.applyAllTargets(gui3d.app.progress)
+        self.human.applyAllTargets(G.app.progress)
         self.postAction()
         return True
-
-class ModifierSlider(gui.Slider):
-
-    def __init__(self, value=0.0, min=0.0, max=1.0, label=None, modifier=None, valueConverter=None, image=None):
-        super(ModifierSlider, self).__init__(value, min, max, label, valueConverter=valueConverter, image=image)
-        self.modifier = modifier
-        self.value = None
-        self.changing = None
-
-    def onChanging(self, value):
-        if self.changing is not None:
-            self.changing = value
-            return
-        self.changing = value
-        gui3d.app.callAsync(self._onChanging)
-
-    def _onChanging(self):
-        value = self.changing
-        self.changing = None
-
-        if gui3d.app.settings.get('realtimeUpdates', True):
-            human = gui3d.app.selectedHuman
-            if self.value is None:
-                self.value = self.modifier.getValue(human)
-                if human.isSubdivided():
-                    if human.isProxied():
-                        human.getProxyMesh().setVisibility(1)
-                    else:
-                        human.getSeedMesh().setVisibility(1)
-                    human.getSubdivisionMesh(False).setVisibility(0)
-            self.modifier.updateValue(human, value, gui3d.app.settings.get('realtimeNormalUpdates', True))
-            human.updateProxyMesh()  # Is this not too slow?
-
-
-    def onChange(self, value):
-        #gui3d.app.callAsync(self._onChange)
-        pass
-
-    def _onChange(self):
-        if self.slider.isSliderDown():
-            # Don't do anything when slider is being clicked or dragged (onRelease triggers it)
-            return
-
-        value = self.getValue()
-        human = gui3d.app.selectedHuman
-        if self.value is None:
-            self.value = self.modifier.getValue(human)
-        if self.value != value:
-            gui3d.app.do(ModifierAction(human, self.modifier, self.value, value, self.update))
-        if human.isSubdivided():
-            if human.isProxied():
-                human.getProxyMesh().setVisibility(0)
-            else:
-                human.getSeedMesh().setVisibility(0)
-            human.getSubdivisionMesh(False).setVisibility(1)
-        self.value = None
-
-    def onRelease(self, w):
-        gui3d.app.callAsync(self._onChange)
-        #self._onChange()
-
-    def update(self):
-        human = gui3d.app.selectedHuman
-        self.blockSignals(True)
-        if not self.slider.isSliderDown():
-            # Only update slider position when it is not being clicked or dragged
-            self.setValue(self.modifier.getValue(human))
-        self.blockSignals(False)
-
-
-class GenericSlider(ModifierSlider):
-    @staticmethod
-    def findImage(name):
-        if name is None:
-            return None
-        name = name.lower()
-        return targets.getTargets().images.get(name, name)
-
-    def __init__(self, min, max, modifier, label, image, view):
-        image = self.findImage(image)
-        super(GenericSlider, self).__init__(min=min, max=max, label=label, modifier=modifier, image=image)
-        self.view = getattr(gui3d.app, view)
-
-    def onFocus(self, event):
-        super(GenericSlider, self).onFocus(event)
-        if gui3d.app.settings.get('cameraAutoZoom', True):
-            self.view()
-
-class MacroSlider(GenericSlider):
-    def __init__(self, modifier, label, image, view, min = 0.0, max = 1.0):
-        super(MacroSlider, self).__init__(min=min, max=max, modifier=modifier, label=label, image=image, view=view)
-
-class UniversalSlider(GenericSlider):
-    def __init__(self, modifier, label, image, view, min = None, max = 1.0):
-        if min is None:
-            min = -1.0 if modifier.left is not None else 0.0
-        super(UniversalSlider, self).__init__(min, max, modifier, label, image, view)
 
 class BaseModifier(object):
 
@@ -236,7 +140,7 @@ class BaseModifier(object):
         return sum([human.getDetail(target[0]) for target in self.targets])
 
     def buildLists(self):
-        human = gui3d.app.selectedHuman
+        human = G.app.selectedHuman
         # Collect vertex and face indices if we didn't yet
         if self.verts is None and self.faces is None:
             # Collect verts

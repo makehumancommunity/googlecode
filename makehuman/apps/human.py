@@ -24,20 +24,20 @@ TODO
 
 import numpy as np
 import algos3d
-import gui3d
+import guicommon
+from core import G
 import os
 import humanmodifier
 import events3d
-import warp
-import mh
+from getpath import getSysDataPath
 import log
 import material
 
-class Human(gui3d.Object):
+class Human(guicommon.Object):
 
     def __init__(self, mesh, hairObj=None, eyesObj=None):
 
-        gui3d.Object.__init__(self, [0, 0, 0], mesh, True)
+        guicommon.Object.__init__(self, [0, 0, 0], mesh, True)
 
         self.hasWarpTargets = False
 
@@ -76,7 +76,7 @@ class Human(gui3d.Object):
         self.bodyZones = ['l-eye','r-eye', 'jaw', 'nose', 'mouth', 'head', 'neck', 'torso', 'hip', 'pelvis', 'r-upperarm', 'l-upperarm', 'r-lowerarm', 'l-lowerarm', 'l-hand',
                           'r-hand', 'r-upperleg', 'l-upperleg', 'r-lowerleg', 'l-lowerleg', 'l-foot', 'r-foot', 'ear']
 
-        self.material = material.fromFile(mh.getSysDataPath('skins/default.mhmat'))
+        self.material = material.fromFile(getSysDataPath('skins/default.mhmat'))
         self._defaultMaterial = material.Material().copyFrom(self.material)
 
     def getFaceMask(self):
@@ -138,7 +138,7 @@ class Human(gui3d.Object):
 
     def setPosition(self, position):
         dv = [x-y for x, y in zip(position, self.getPosition())]
-        gui3d.Object.setPosition(self, position)
+        guicommon.Object.setPosition(self, position)
         if self.hairObj:
             self.hairObj.setPosition([x+y for x, y in zip(self.hairObj.getPosition(), dv)])
         if self.eyesObj:
@@ -150,7 +150,7 @@ class Human(gui3d.Object):
         self.callEvent('onTranslated', self)
 
     def setRotation(self, rotation):
-        gui3d.Object.setRotation(self, rotation)
+        guicommon.Object.setRotation(self, rotation)
         if self.hairObj:
             self.hairObj.setRotation(rotation)
         if self.eyesObj:
@@ -162,7 +162,7 @@ class Human(gui3d.Object):
         self.callEvent('onRotated', self)
 
     def setSolid(self, *args, **kwargs):
-        gui3d.Object.setSolid(self, *args, **kwargs)
+        guicommon.Object.setSolid(self, *args, **kwargs)
         if self.hairObj:
             self.hairObj.setSolid(*args, **kwargs)
         if self.eyesObj:
@@ -172,7 +172,7 @@ class Human(gui3d.Object):
                 obj.setSolid(*args, **kwargs)
 
     def setSubdivided(self, *args, **kwargs):
-        gui3d.Object.setSubdivided(self, *args, **kwargs)
+        guicommon.Object.setSubdivided(self, *args, **kwargs)
         if self.hairObj:
             self.hairObj.setSubdivided(*args, **kwargs)
         if self.eyesObj:
@@ -632,8 +632,6 @@ class Human(gui3d.Object):
         if self.isSubdivided():
             self.getSubdivisionMesh()
 
-        mh.redraw()
-
     def storeMesh(self):
         log.message("Storing mesh status")
         self.meshStored = self.meshData.coord.copy()
@@ -700,8 +698,8 @@ class Human(gui3d.Object):
                 elif lineData[0] == 'tags':
                     for tag in lineData:
                         log.message('Tag %s', tag)
-                elif lineData[0] in gui3d.app.loadHandlers:
-                    gui3d.app.loadHandlers[lineData[0]](self, lineData)
+                elif lineData[0] in G.app.loadHandlers:
+                    G.app.loadHandlers[lineData[0]](self, lineData)
                 else:
                     log.message('Could not load %s', lineData)
 
@@ -721,7 +719,7 @@ class Human(gui3d.Object):
         f.write('version 1.0.0\n')
         f.write('tags %s\n' % tags)
 
-        for handler in gui3d.app.saveHandlers:
+        for handler in G.app.saveHandlers:
             handler(self, f)
 
         f.close()
