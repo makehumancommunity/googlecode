@@ -348,7 +348,7 @@ class MHApplication(gui3d.Application, mh.Application):
         self.pluginsToLoad = glob.glob(mh.getSysPath(os.path.join("plugins/",'[!_]*.py')))
 
         # Load plugin packages (folders with a file called __init__.py)
-        for fname in os.listdir("plugins/"):
+        for fname in os.listdir(mh.getSysPath("plugins/")):
             if fname[0] != "_":
                 folder = os.path.join("plugins", fname)
                 if os.path.isdir(folder) and ("__init__.py" in os.listdir(folder)):
