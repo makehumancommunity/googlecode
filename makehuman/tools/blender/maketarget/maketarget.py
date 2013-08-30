@@ -364,6 +364,8 @@ def applyArmature(context):
     if rig is None or rig.type != 'ARMATURE':
         raise MHError("Parent of %s is not an armature" % ob)
 
+    bpy.ops.object.select_all(action='DESELECT')
+    ob.select = True
     bpy.ops.object.duplicate()
     bpy.ops.object.shape_key_remove(all=True)
     bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Armature")
@@ -409,11 +411,7 @@ def loadStatueMinusPose(context):
     ob,statue,scn = getMeshes(context)
     ob,rig,posed = applyArmature(context)
     posed.name = "Temporary"
-    print(ob)
-    print(statue)
-    print(posed)
 
-    scn = context.scene
     nVerts = len(ob.data.vertices)
 
     relMats = {}
@@ -423,8 +421,7 @@ def loadStatueMinusPose(context):
         except KeyError:
             pb = None
         if pb:
-            relMats[vg.index] = pb.bone.matrix_local * pb.matrix.inverted()
-            #relMats[vg.index] = pb.bone.matrix_local.inverted() * pb.matrix
+            relMats[vg.index] = pb.matrix * pb.bone.matrix_local.inverted()
         else:
             print("Skipping vertexgroup %s" % vg.name)
             relMats[vg.index] = Matrix().identity()
@@ -433,47 +430,55 @@ def loadStatueMinusPose(context):
     pvs = posed.data.vertices
     ovs = ob.data.vertices
 
-    skey = createNewMeshShape(ob, "Posed", scn)
+    skey = createNewMeshShape(ob, statue.name, scn)
     relmat = Matrix()
     y = Vector((0,0,0,1))
     for v in ob.data.vertices:
         vn = v.index
         diff = svs[vn].co - pvs[vn].co
-        if diff.length > -1e-4:
+        if diff.length > 1e-4:
             relmat.zero()
-            w2sum = 0.0
+            wsum = 0.0
             for g in v.groups:
-                w2 = g.weight * g.weight
-                relmat += w2 * relMats[g.group]
-                w2sum += w2
-            factor = 1.0/w2sum
+                w = g.weight
+                relmat += w * relMats[g.group]
+                wsum += w
+            factor = 1.0/wsum
             relmat *= factor
 
             y[:3] = svs[vn].co
-            x = relmat * y
+            x = relmat.inverted() * y
             skey.data[vn].co = Vector(x[:3])
+
+            z = relmat * x
 
             xdiff = skey.data[vn].co - ovs[vn].co
 
-            if xdiff.length > 1 or vn == 10425:
-                print("\nVert", vn, xdiff.length)
+            if False and vn in [8059]:
+                print("\nVert", vn, diff.length, xdiff.length)
+                print("det", relmat.determinant())
                 print("d (%.4f %.4f %.4f)" % tuple(diff))
                 print("xd (%.4f %.4f %.4f)" % tuple(xdiff))
                 checkRotationMatrix(relmat)
                 print("Rel", relmat)
+                print("Inv", relmat.inverted())
+
                 s = pvs[vn].co
-                print("s ( %.4f  %.4f  %.4f) ( %.4f  %.4f  %.4f)" % (s[0],s[1],s[2],y[0],y[1],y[2]))
+                print("s ( %.4f  %.4f  %.4f)" % (s[0],s[1],s[2]))
+                print("x ( %.4f  %.4f  %.4f)" % (x[0],x[1],x[2]))
+                print("y ( %.4f  %.4f  %.4f)" % (y[0],y[1],y[2]))
+                print("z ( %.4f  %.4f  %.4f)" % (z[0],z[1],z[2]))
                 o = ovs[vn].co
-                print("v (%.4f %.4f %.4f) (%.4f %.4f %.4f)" % (o[0],o[1],o[2],x[0],x[1],x[2]))
+                print("o (%.4f %.4f %.4f)" % (o[0],o[1],o[2]))
                 print("r (%.4f %.4f %.4f)" % tuple(skey.data[vn].co))
 
                 for g in v.groups:
-                    print("\nGrp %d %f" % (g.group, g.weight))
+                    print("\nGrp %d %f %f" % (g.group, g.weight, relMats[g.group].determinant()))
                     print("Rel", relMats[g.group])
 
                 #halt
 
-    scn.objects.unlink(statue)
+    #scn.objects.unlink(statue)
     scn.objects.unlink(posed)
 
 
