@@ -86,11 +86,11 @@ def setupCustomRig(config):
             imported = True
         except:
             imported = False
-        if True or not imported:
-            log.message("Importing module %s", modname)
-            mod = __import__(modname)
-            sys.modules[modname] = mod
-            log.message("%s imported", mod)
+        #if True or not imported:
+        #    log.message("Importing module %s", modname)
+        #    mod = __import__(modname)
+        #    sys.modules[modname] = mod
+        #    log.message("%s imported", mod)
         mod = sys.modules[modname]
         log.message("Adding %s.Joints", modname)
         joints += mod.Joints
