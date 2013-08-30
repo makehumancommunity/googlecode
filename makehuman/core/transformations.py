@@ -1877,40 +1877,9 @@ def is_same_transform(matrix0, matrix1):
     return numpy.allclose(matrix0, matrix1)
 
 
-def _import_module(module_name, warn=True, prefix='_py_', ignore='_'):
-    """Try import all public attributes from module into global namespace.
-
-    Existing attributes with name clashes are renamed with prefix.
-    Attributes starting with underscore are ignored by default.
-
-    Return True on successful import.
-
-    """
-    sys.path.append(os.path.dirname(__file__))
-    try:
-        module = __import__(module_name)
-    except ImportError:
-        sys.path.pop()
-        if warn:
-            warnings.warn("failed to import module " + module_name)
-    else:
-        sys.path.pop()
-        for attr in dir(module):
-            if ignore and attr.startswith(ignore):
-                continue
-            if prefix:
-                if attr in globals():
-                    globals()[prefix + attr] = globals()[attr]
-                elif warn:
-                    warnings.warn("no Python implementation of " + attr)
-            globals()[attr] = getattr(module, attr)
-        return True
-
-
 __version__ = '2012.01.01'
 __docformat__ = 'restructuredtext en'
 
-# _import_module('_transformations')
 
 if __name__ == "__main__":
     import doctest
