@@ -13,7 +13,7 @@ BuildRequires:  python
 Vendor:         MakeHuman.org
 Packager:       Joel Palmius <joepal1976@hotmail.com>
 Provides:       makehuman
-Requires:       python, numpy, PyOpenGL, PyQt4, pysvn
+Requires:       python >= 2.7, numpy, PyOpenGL, PyQt4, pysvn
 Source:         makehumansvn-REV-1.tar.gz
 BuildArch:      noarch
 Summary:        Free, open source tool for creating realistic 3D human characters.
