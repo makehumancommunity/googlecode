@@ -48,7 +48,6 @@ if [ $? -ne 0 ]; then
 fi
 
 %build
-echo "HELLO!!!!"
 mkdir -p usr/share
 mkdir -p usr/bin
 cd makehuman
@@ -56,6 +55,7 @@ cd makehuman
 ./cleanpyc.sh
 python compile_targets.py
 python compile_models.py
+find . -name "*.target" -exec "rm" "-f" {} ";"
 cd ..
 mv makehuman/rpm/makehuman usr/bin/makehuman
 mv makehuman usr/share
