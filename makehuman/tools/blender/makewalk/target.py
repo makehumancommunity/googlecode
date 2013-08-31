@@ -121,10 +121,10 @@ def getName(name, names):
 
 
 def testTargetRig(name, bones, rigBones):
-    #print("Testing %s" % name)
+    print("Testing %s" % name)
     for (b, mb) in rigBones:
         if b not in bones:
-            #print("Failed to find", b, mb)
+            print("Failed to find bone %s (%s)" % (b, mb))
             return False
     return True
 

@@ -259,7 +259,7 @@ def loadTPose(rig):
         try:
             pb = rig.pose.bones[bname]
             quat = Quaternion(value)
-        except KeyError:
+        except:
             quat = Quaternion()
         pb.matrix_basis = quat.to_matrix().to_4x4()
         pb.McpQuatW = quat.w

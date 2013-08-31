@@ -6,8 +6,9 @@
     "bones" : {
         "hips":         "Hips",
         "spine":        "Spine",
-        "chest":        "Spine1",
-        "chest-1":      "Spine2",
+        "spine-1":      "Spine1",
+        "chest":        "Spine2",
+        "chest-1":      "Spine3",
         "neck":         "Neck",
         "head":         "Head",
 

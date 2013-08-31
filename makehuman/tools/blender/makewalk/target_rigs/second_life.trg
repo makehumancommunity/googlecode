@@ -1,36 +1,34 @@
 Name:	Second_Life
 
 Bones:
-	mPelvis		hips
-	mTorso		spine
-	mChest		chest
-	mNeck		neck
-	mHead		head
+    hip			hips
+    abdomen		spine
+    chest		chest
+    neck		neck
+    head		head
 
-	mCollarLeft	shoulder.L
-	mShoulderLeft	upper_arm.L
-	mElbowLeft	forearm.L
-	mWristLeft	hand.L
+    lCollar	  	shoulder.L
+    lShldr		upper_arm.L
+    lForeArm	   	forearm.L
+    lHand		hand.L
+
+    rCollar	  	shoulder.R
+    rShldr		upper_arm.R
+    rForeArm   		forearm.R
+    rHand		hand.R
+
+    lThigh  		thigh.L
+    lShin   		shin.L
+    lFoot		foot.L
 	
-	mCollarRight	shoulder.R
-	mShoulderRight	upper_arm.R
-	mElbowRight	forearm.R
-	mWristRight	hand.R
+    rThigh  		thigh.R
+    rShin   		shin.R
+    rFoot		foot.R
 
-	mHipLeft	thigh.L
-	mKneeLeft	shin.L
-	mAnkleLeft	foot.L
-	mFootLeft	toe.L
-
-	mHipRight	thigh.R
-	mKneeRight	shin.R
-	mAnkleRight	foot.R
-	mFootRight	toe.R
-
-Renames:
-	#mCollarLeft	mChest
-	#mCollarRight	mChest
 
 IkBones:
+
+Renames:
+
 
 
