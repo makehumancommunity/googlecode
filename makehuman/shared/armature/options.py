@@ -29,6 +29,7 @@ from getpath import getSysDataPath
 
 class ArmatureOptions:
     def __init__(self):
+        self.customAttrs = []
         self.setDefaults()
 
     def setDefaults(self):
@@ -37,6 +38,11 @@ class ArmatureOptions:
         self.locale = None
         self.scale = 1.0
         self.boneMap = None
+
+        # Remove custom attributes
+        for c in self.customAttrs:
+            delattr(self, c)
+        self.customAttrs = []
 
         self.useMasterBone = False
         self.useHeadControl = False
@@ -187,6 +193,8 @@ class ArmatureOptions:
         except KeyError:
             settings = {}
         for key,value in settings.items():
+            if not hasattr(self, key):
+                self.customAttrs.append(key)
             setattr(self, key, value)
 
         if selector is not None:
