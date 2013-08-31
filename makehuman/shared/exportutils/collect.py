@@ -36,7 +36,7 @@ import log
 #
 
 from .shapekeys import readExpressionUnits
-#from .custom import listCustomFiles, readCustomTarget
+from .custom import listCustomFiles, readCustomTarget
 
 def readTargets(human, config):
     targets = []
@@ -44,7 +44,6 @@ def readTargets(human, config):
         shapeList = readExpressionUnits(human, 0, 1)
         targets += shapeList
 
-    '''
     if config.useCustomTargets:
         files = listCustomFiles(config)
 
@@ -53,7 +52,6 @@ def readTargets(human, config):
             log.message("    %s", path)
             shape = readCustomTarget(path)
             targets.append((name,shape))
-    '''
 
     return targets
 
@@ -63,7 +61,6 @@ def readTargets(human, config):
 #
 
 def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidden=False, subdivide = False, progressCallback=None):
-    #from armature.armature import setupArmature
 
     def progress(prog):
         if progressCallback == None:
@@ -77,8 +74,11 @@ def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidd
         config.setHuman(human)
 
     rmeshes = []
-    #amt = setupArmature(name, human, config.rigOptions)
-    amt = None
+
+    # TODO 'setup' armature should have happened when it was selected from the skeleton library, or in the exporter plugin. Remove dependency from exportutils to armature package.
+    from armature.armature import setupArmature
+    amt = setupArmature(name, human, config.rigOptions)
+
     richMesh = richmesh.getRichMesh(human.meshData, None, None, rawTargets, amt)
     richMesh.name = name
     if amt:
