@@ -29,7 +29,9 @@ from getpath import getSysDataPath
 
 class ArmatureOptions:
     def __init__(self):
+        self.setDefaults()
 
+    def setDefaults(self):
         self.rigtype = "Default"
         self.description = ""
         self.locale = None
@@ -158,7 +160,7 @@ class ArmatureOptions:
 
 
     def reset(self, selector, useMuscles=False):
-        self.__init__()
+        self.setDefaults()
         self.useMuscles = useMuscles
         if selector is not None:
             selector.fromOptions(self)
@@ -167,7 +169,7 @@ class ArmatureOptions:
     def loadPreset(self, filename, selector, folder=getSysDataPath("rigs/")):
         filepath = os.path.join(folder, filename + ".json")
         struct = io_json.loadJson(filepath)
-        self.__init__()
+        self.setDefaults()
         try:
             self.rigtype = struct["name"]
         except KeyError:
@@ -185,8 +187,9 @@ class ArmatureOptions:
         except KeyError:
             settings = {}
         for key,value in settings.items():
-            expr = ("self.%s = %s" % (key, value))
-            exec(expr)
+            import ast
+            value = ast.literal_eval(value)
+            setattr(self, key, value)
 
         if selector is not None:
             selector.fromOptions(self)
