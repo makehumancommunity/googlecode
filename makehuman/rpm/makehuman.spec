@@ -36,7 +36,7 @@ liberal license for output content. This means that artists are given the
 freedom to use their creations for both commercial and non-commercial 
 purposes. The copyright © 2001-2013 is retained by the MakeHuman™ Team 
 (makehuman.org) which grants you permission to use released code under the GNU 
-Affero General Public License 3.0 (AGPL).Longer description of makehuman
+Affero General Public License 3.0 (AGPL).
 
 %prep
 cd $RPM_BUILD_DIR
