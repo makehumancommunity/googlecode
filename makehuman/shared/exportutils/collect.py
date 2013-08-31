@@ -72,6 +72,7 @@ def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidd
             progressCallback (prog)
 
     if not config:
+        from .config import Config
         config = Config()
         config.setHuman(human)
 
@@ -110,6 +111,7 @@ def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidd
     for rmesh in rmeshes:
         progress(progbase+(i/rmeshnum)*(1-progbase))
         if subdivide:
+            import catmull_clark_subdivision as cks
             subMesh = cks.createSubdivisionObject(
                 rmesh.object, lambda p: progress(progbase+((i+p)/rmeshnum)*(1-progbase)))
             rmesh.fromObject(subMesh, rmesh.weights, rawTargets)
