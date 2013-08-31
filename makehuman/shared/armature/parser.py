@@ -255,12 +255,6 @@ class Parser:
                 if gizmo:
                     self.gizmos[gizmo] = struct[gizmo]
 
-        if False and options.custom:
-            (custJoints, custHeadsTails, custArmature, self.customProps) = exportutils.custom.setupCustomRig(options)
-            self.joints += custJoints
-            self.headsTails += custHeadsTails
-            self.boneDefs += custArmature
-
         vgroups = self.getVertexGroups(boneInfo)
 
         if options.merge:
