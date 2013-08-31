@@ -64,6 +64,8 @@ class ModifierSlider(gui.Slider):
         pass
 
     def _onChange(self):
+        import humanmodifier
+
         if self.slider.isSliderDown():
             # Don't do anything when slider is being clicked or dragged (onRelease triggers it)
             return
@@ -73,8 +75,8 @@ class ModifierSlider(gui.Slider):
         if self.value is None:
             self.value = self.modifier.getValue(human)
         if self.value != value:
-            G.app.do(ModifierAction(human, self.modifier, self.value, value, self.update))
-            #G.app.do(ModifierAction(human, self.modifier, self.value, value, self.update))
+            G.app.do(humanmodifier.ModifierAction(human, self.modifier, self.value, value, self.update))
+            #G.app.do(humanmodifier.ModifierAction(human, self.modifier, self.value, value, self.update))
         if human.isSubdivided():
             if human.isProxied():
                 human.getProxyMesh().setVisibility(0)
