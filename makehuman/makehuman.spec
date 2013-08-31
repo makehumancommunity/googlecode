@@ -84,6 +84,22 @@ def SvnInfo():
     
     return get_svn_revision_1()
 
+
+def get_plugin_files():
+    import glob
+    # plugin modules
+    pluginModules = glob.glob(os.path.join("plugins/",'[!_]*.py'))
+
+    # plugin packages
+    for fname in os.listdir("plugins/"):
+        if fname[0] != "_":
+            folder = os.path.join("plugins", fname)
+            if os.path.isdir(folder) and ("__init__.py" in os.listdir(folder)):
+                pluginModules.append(os.path.join(folder, "__init__.py"))
+
+    return pluginModules
+
+
 VERSION="%s (%s)" % (VERSION,SvnInfo())
 VERSION_FN="%s" % (SvnInfo())
 vfile = open(os.path.join("core","VERSION"),"w")
@@ -104,7 +120,7 @@ except subprocess.CalledProcessError:
     print "check that compile_models.py is working correctly"
     sys.exit(1)
 
-a = Analysis(['makehuman.py', 'shared/exportutils/collect.py'],
+a = Analysis(['makehuman.py'] + get_plugin_files(),
              pathex=['lib','core','shared','apps','apps/gui', 'plugins'],
              hiddenimports=[],
              hookspath=None,
@@ -134,10 +150,10 @@ def extra_datas(mydir):
 
 # append all of our necessary subdirectories
 a.datas += extra_datas('data')
-a.datas += extra_datas('lib')
-a.datas += extra_datas('core')
-a.datas += extra_datas('shared')
-a.datas += extra_datas('apps')
+#a.datas += extra_datas('lib')
+#a.datas += extra_datas('core')
+#a.datas += extra_datas('shared')
+#a.datas += extra_datas('apps')
 a.datas += extra_datas('plugins')
 a.datas += extra_datas('tools')
 a.datas += extra_datas('utils')
