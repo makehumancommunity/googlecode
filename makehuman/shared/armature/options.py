@@ -27,9 +27,8 @@ import os
 import io_json
 from getpath import getSysDataPath
 
-class ArmatureOptions:
+class ArmatureOptions(object):
     def __init__(self):
-        self.customAttrs = []
         self.setDefaults()
 
     def setDefaults(self):
@@ -39,10 +38,8 @@ class ArmatureOptions:
         self.scale = 1.0
         self.boneMap = None
 
-        # Remove custom attributes
-        for c in self.customAttrs:
-            delattr(self, c)
-        self.customAttrs = []
+        # Reset custom attributes
+        self.settings = dict()
 
         self.useMasterBone = False
         self.useHeadControl = False
@@ -84,6 +81,17 @@ class ArmatureOptions:
         self.advancedSpine = False
         self.clothesRig = False
 
+    def __getattr__(self, name):
+        """
+        Override of getattr to allow setting custom attributes by filling
+        a self.settings dict.
+        Custom attributes can be easily reset be clearing the dict.
+        """
+        if name in self.settings:
+            return self.settings[name]
+        else:
+            # Default behaviour
+            return object.__getattribute__(self, name)
 
     def setExportOptions(self,
             useCustomShapes = False,
@@ -193,9 +201,7 @@ class ArmatureOptions:
         except KeyError:
             settings = {}
         for key,value in settings.items():
-            if not hasattr(self, key):
-                self.customAttrs.append(key)
-            setattr(self, key, value)
+            self.settings[key] = value
 
         if selector is not None:
             selector.fromOptions(self)
