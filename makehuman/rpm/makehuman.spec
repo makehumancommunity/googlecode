@@ -56,7 +56,7 @@ cd makehuman
 python compile_targets.py
 python compile_models.py
 find . -name "*.target" -exec "rm" "-f" {} ";"
-rm -rf deb rpm utils tools docs SConstruct setup.nsi makehuman.rc makehuman.spec main.c *.bat
+rm -rf deb utils tools docs SConstruct setup.nsi makehuman.rc makehuman.spec main.c *.bat
 cd ..
 mv makehuman/rpm/makehuman usr/bin/makehuman
 mv makehuman usr/share
