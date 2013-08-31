@@ -41,7 +41,6 @@ import mh2proxy
 import exportutils
 import warpmodifier
 import posemode
-import exportutils
 
 from . import posebone
 from . import mhx_materials

@@ -184,9 +184,9 @@ class ArmatureOptions:
             settings = struct["settings"]
         except KeyError:
             settings = {}
-        #for key,value in settings.items():
-        #    expr = ("self.%s = %s" % (key, value))
-        #    exec(expr)
+        for key,value in settings.items():
+            expr = ("self.%s = %s" % (key, value))
+            exec(expr)
 
         if selector is not None:
             selector.fromOptions(self)

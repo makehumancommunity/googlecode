@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -22,13 +22,13 @@ Abstract
 Export utilities available to all exporters.
 """
 
-"""
+
 from . import collect
 from . import config
 from . import custom
 from . import shapekeys
 from . import uvset
-"""
+
 
 from types import ModuleType
 import sys
