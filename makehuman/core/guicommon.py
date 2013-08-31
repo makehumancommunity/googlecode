@@ -200,6 +200,7 @@ class Object(events3d.EventHandler):
             self.mesh.setVisibility(1)
 
         if proxy:
+            import files3d
             self.proxy = proxy
             self.__proxyMesh = files3d.loadMesh(proxy.obj_file)
             for attr in ('x', 'y', 'z', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz',
