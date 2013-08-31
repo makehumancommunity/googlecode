@@ -187,8 +187,6 @@ class ArmatureOptions:
         except KeyError:
             settings = {}
         for key,value in settings.items():
-            import ast
-            value = ast.literal_eval(value)
             setattr(self, key, value)
 
         if selector is not None:
