@@ -798,7 +798,7 @@ class Parser:
     def readVertexGroupFiles(self, files):
         vgroups = OrderedDict()
         for file in files:
-            filepath = os.path.join(getSysPath("shared/armature/data"), "vgrp_"+file+".json")
+            filepath = os.path.join(getSysPath("data/vertexgroups"), "vgrp_"+file+".json")
             log.message("Loading %s" % filepath)
             vglist = io_json.loadJson(filepath)
             for key,data in vglist:
