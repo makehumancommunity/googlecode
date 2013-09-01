@@ -56,7 +56,8 @@ cd makehuman
 ./cleanpyc.sh
 python compile_targets.py
 python compile_models.py
-mv deb/debian/MakeHuman.desktop ../usr/share/applications
+grep -v Name deb/debian/MakeHuman.desktop > ../usr/share/applications/MakeHuman.desktop
+echo "Name=MakeHuman REV" >> ../usr/share/applications/MakeHuman.desktop
 find . -name "*.target" -exec "rm" "-f" {} ";"
 rm -rf deb utils tools docs SConstruct setup.nsi makehuman.rc makehuman.spec main.c *.bat
 cd ..
