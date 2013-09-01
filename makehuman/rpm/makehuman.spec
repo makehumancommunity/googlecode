@@ -69,5 +69,6 @@ mv $RPM_BUILD_DIR/usr $RPM_BUILD_ROOT/usr
 
 %files
 /usr/share/makehuman
+/usr/share/applications
 /usr/bin/makehuman
 
