@@ -995,6 +995,7 @@ def restoreData(context):
 #
 
 def makeClothes(context, doFindClothes):
+    from .project import saveClosest
     (bob, pob) = getObjectPair(context)
     scn = context.scene
     checkNoTriangles(pob)
@@ -1004,6 +1005,7 @@ def makeClothes(context, doFindClothes):
     checkObjectOK(pob, context, True)
     autoVertexGroupsIfNecessary(pob, scn)
     checkSingleVertexGroups(pob, scn)
+    saveClosest({})
     if scn.MCLogging:
         logfile = '%s/clothes.log' % scn.MhClothesDir
         log = mc.openOutputFile(logfile)
@@ -1741,6 +1743,7 @@ def settingsFile(name):
         os.makedirs(outdir)
     return os.path.join(outdir, "make_clothes.%s" % name)
 
+
 def readDefaultSettings(context):
     fname = settingsFile("settings")
     try:
@@ -1767,6 +1770,7 @@ def readDefaultSettings(context):
             scn[prop] = string
     fp.close()
     return
+
 
 def saveDefaultSettings(context):
     fname = settingsFile("settings")

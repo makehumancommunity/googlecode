@@ -162,10 +162,10 @@ class MakeClothesPanel(bpy.types.Panel):
         layout.prop(scn, "MCShowUVProject")
         if scn.MCShowUVProject:
             ins = inset(layout)
-            ins.operator("mhclo.recover_seams")
-            ins.operator("mhclo.set_seams")
+            ins.operator("mhclo.create_seam_object")
+            ins.operator("mhclo.auto_seams")
             ins.operator("mhclo.project_uvs")
-            ins.operator("mhclo.reexport_mhclo")
+            ins.operator("mhclo.reexport_files")
             ins.separator()
 
         layout.prop(scn, "MCShowExportDetails")
@@ -645,29 +645,29 @@ class VIEW3D_OT_AutoVertexGroupsButton(bpy.types.Operator):
 #    class OBJECT_OT_RecoverSeamsButton(bpy.types.Operator):
 #
 
-class OBJECT_OT_RecoverSeamsButton(bpy.types.Operator):
-    bl_idname = "mhclo.recover_seams"
+class OBJECT_OT_CreateSeamObjectButton(bpy.types.Operator):
+    bl_idname = "mhclo.create_seam_object"
     bl_label = "Recover seams"
     bl_options = {'UNDO'}
 
     def execute(self, context):
         setObjectMode(context)
         try:
-            project.recoverSeams(context)
+            project.createSeamObject(context)
         except MHError:
             handleMHError(context)
         return{'FINISHED'}
 
 
-class OBJECT_OT_SetSeamsButton(bpy.types.Operator):
-    bl_idname = "mhclo.set_seams"
-    bl_label = "Set seams"
+class OBJECT_OT_AutoSeamsButton(bpy.types.Operator):
+    bl_idname = "mhclo.auto_seams"
+    bl_label = "Auto seams"
     bl_options = {'UNDO'}
 
     def execute(self, context):
         setObjectMode(context)
         try:
-            project.setSeams(context)
+            project.autoSeams(context)
         except MHError:
             handleMHError(context)
         return{'FINISHED'}
@@ -697,15 +697,16 @@ class OBJECT_OT_ProjectUVsButton(bpy.types.Operator):
 #   class OBJECT_OT_ReexportMhcloButton(bpy.types.Operator):
 #
 
-class OBJECT_OT_ReexportMhcloButton(bpy.types.Operator):
-    bl_idname = "mhclo.reexport_mhclo"
-    bl_label = "Reexport Mhclo file"
+class OBJECT_OT_ReexportFilesButton(bpy.types.Operator):
+    bl_idname = "mhclo.reexport_files"
+    bl_label = "Reexport files"
     bl_options = {'UNDO'}
 
     def execute(self, context):
         setObjectMode(context)
         try:
             project.reexportMhclo(context)
+            makeclothes.exportObjFile(context)
         except MHError:
             handleMHError(context)
         return{'FINISHED'}

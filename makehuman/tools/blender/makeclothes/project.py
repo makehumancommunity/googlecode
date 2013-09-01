@@ -453,24 +453,129 @@ def getUvLoc(vn, f, uvface):
     raise MHError("Vertex %d not in face %d??" % (vn,f))
 
 #
-#   recoverSeams(context):
+#   Recover seams
 #
 
-def recoverSeams(context):
+def createSeamObject(context):
     ob = getHuman(context)
     scn = context.scene
     getFaces(ob.data)
     texFaces = getTexFaces(ob.data, 0)
-    (vertList, pairList, edgeList) = getSeams(ob, texFaces, scn)
-    vcoList = coordList(vertList, ob.data.vertices)
+    vertList, pairList, _edgeList = getSeams(ob, texFaces, scn)
+    coords = coordList(vertList, ob.data.vertices)
     sme = bpy.data.meshes.new("Seams")
-    sme.from_pydata(vcoList, pairList, [])
+    sme.from_pydata(coords, pairList, [])
     sme.update(calc_edges=True)
     sob = bpy.data.objects.new("Seams", sme)
     sob.show_x_ray = True
     scn.objects.link(sob)
-    print("Seams recovered for object %s\n" % ob.name)
+    print("Seam object %s created")
     return
+
+
+def autoSeams(context):
+    (bob, pob) = getObjectPair(context)
+    checkObjectOK(bob, context, False)
+    checkObjectOK(pob, context, True)
+    scn = context.scene
+
+    # Do operator stuff first, because they move verts in memory.
+    scn.objects.active = pob
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.mark_seam(clear=True)
+    bpy.ops.mesh.select_all(action='DESELECT')
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    getFaces(bob.data)
+    texFaces = getTexFaces(bob.data, 0)
+    (bvnums, _pairList, bedges) = getSeams(bob, texFaces, scn)
+
+    pVertEdges = {}
+    for pv in pob.data.vertices:
+        pVertEdges[pv.index] = []
+    for pe in pob.data.edges:
+        pVertEdges[pe.vertices[0]].append(pe)
+        pVertEdges[pe.vertices[1]].append(pe)
+
+    closest = readClosets(pob)
+    #closest = {}
+    if not closest:
+        print("Associate base and proxy verts. This can be slow.")
+        for bv in bob.data.vertices:
+            if bv.index % 1000 == 0:
+                print(bv.index)
+            mindist = 1e12
+            best = None
+            for pv in pob.data.vertices:
+                vec = pv.co - bv.co
+                if vec.length < mindist:
+                    best = pv
+                    mindist = vec.length
+            closest[bv.index] = best
+        saveClosest(closest)
+    for pv in closest.values():
+        pv.select = True
+
+    print("Marking proxy seams")
+
+    for be in bedges:
+        pv0 = closest[be.vertices[0]]
+        pv1 = closest[be.vertices[1]]
+        #print("Mark", be.index, tuple(be.vertices), pv0.index, pv1.index)
+        markEdges(pv0, pv1, pob, pVertEdges, {}, 5)
+
+
+def markEdges(pv0, pv1, pob, pVertEdges, taken, depth):
+    if pv0 == pv1 or depth < 0:
+        return
+    vec = pv0.co - pv1.co
+    bestVert = bestEdge = None
+    minDist = 1e6
+
+    for pe in pVertEdges[pv0.index]:
+        try:
+            taken[pe]
+            continue
+        except KeyError:
+            pass
+        pv2 = pob.data.vertices[pe.vertices[0]]
+        if pv2.index == pv0.index:
+            pv2 = pob.data.vertices[pe.vertices[1]]
+        vec = pv2.co - pv1.co
+        if vec.length < minDist:
+            minDist = vec.length
+            bestVert = pv2
+            bestEdge = pe
+
+    if bestVert is not None:
+        #print("    %d - %d - %d (%.6f) %d" % (pv0.index, bestVert.index, pv1.index, minDist, bestEdge.index))
+        bestEdge.use_seam = True
+        taken[bestEdge] = True
+        markEdges(bestVert, pv1, pob, pVertEdges, taken, depth-1)
+
+
+def saveClosest(closest):
+    fname = settingsFile("closest")
+    fp = mc.openOutputFile(fname)
+    if fp:
+        for bvn,pv in closest.items():
+            fp.write("%d %d\n" % (bvn, pv.index))
+        fp.close()
+
+
+def readClosets(pob):
+    closest = {}
+    fname = settingsFile("closest")
+    try:
+        fp = open(fname, "rU")
+    except FileNotFoundError:
+        print("Did not find %s." % fname)
+        return closest
+    for line in fp:
+        words = line.split()
+        closest[int(words[0])] = pob.data.vertices[int(words[1])]
+    fp.close()
+    return closest
 
 
 def setSeams(context):

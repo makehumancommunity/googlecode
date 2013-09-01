@@ -274,7 +274,7 @@ def unVertexDiamonds(context):
             for vn in f.vertices:
                 me.vertices[vn].select = True
     bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.object.vertex_group_remove_from(all=True)
+    bpy.ops.object.vertex_group_remove_from(use_all_groups=True)
     bpy.ops.object.mode_set(mode='OBJECT')
     return
 
@@ -295,7 +295,7 @@ class VIEW3D_OT_UnvertexSelectedButton(bpy.types.Operator):
 
     def execute(self, context):
         bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.object.vertex_group_remove_from(all=True)
+        bpy.ops.object.vertex_group_remove_from(use_all_groups=True)
         bpy.ops.object.mode_set(mode='OBJECT')
         print("Selected unvertexed")
         return{'FINISHED'}
