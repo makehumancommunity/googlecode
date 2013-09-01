@@ -27,7 +27,7 @@ import math
 import log
 from collections import OrderedDict
 import io_json
-from getpath import getSysPath
+from getpath import getSysDataPath
 
 import numpy as np
 import numpy.linalg as la
@@ -798,7 +798,7 @@ class Parser:
     def readVertexGroupFiles(self, files):
         vgroups = OrderedDict()
         for file in files:
-            filepath = os.path.join(getSysPath("data/vertexgroups"), "vgrp_"+file+".json")
+            filepath = os.path.join(getSysDataPath("vertexgroups"), "vgrp_"+file+".json")
             log.message("Loading %s" % filepath)
             vglist = io_json.loadJson(filepath)
             for key,data in vglist:
