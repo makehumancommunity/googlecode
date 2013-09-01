@@ -49,12 +49,14 @@ fi
 
 %build
 mkdir -p usr/share
+mkdir -p usr/share/applications
 mkdir -p usr/bin
 cd makehuman
 ./cleannpz.sh
 ./cleanpyc.sh
 python compile_targets.py
 python compile_models.py
+mv deb/debian/MakeHuman.desktop usr/share/applications
 find . -name "*.target" -exec "rm" "-f" {} ";"
 rm -rf deb utils tools docs SConstruct setup.nsi makehuman.rc makehuman.spec main.c *.bat
 cd ..
