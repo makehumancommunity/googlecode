@@ -136,7 +136,8 @@ def projectUVs(bob, pob, context):
     table = {}
     bFaces = getFaces(bob.data)
     bTexFaces = getTexFaces(bob.data, 0)
-    if scn.MCMHVersion != "None":
+    if (scn.MCMHVersion != "None" and
+        len(bob.data.vertices) > theSettings.vertices["Penis"][0]):
         modifyTexFaces(bFaces, bTexFaces)
     for (pv, exact, verts, wts, diff) in data:
         if exact:
@@ -265,7 +266,6 @@ def getTexFaces(me, ln):
 
 
 def modifyTexFaces(meFaces, texFaces):
-    global theSettings
     from . import helpers
     for idx,uvs in helpers.TexFaces.items():
         texFaces[idx].uvs = uvs

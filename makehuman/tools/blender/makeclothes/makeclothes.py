@@ -1810,12 +1810,11 @@ def init():
         maketarget.maketarget.init()
 
     for skey in theShapeKeys:
-        expr = (
-    'bpy.types.Scene.MC%s = BoolProperty(\n' % skey +
-    '   name="%s", \n' % skey +
-    '   description="Shapekey %s affects clothes",\n' % skey +
-    '   default=False)')
-        exec(expr)
+        prop = BoolProperty(
+            name = skey,
+            description = "Shapekey %s affects clothes" % skey,
+            default = False)
+        setattr(bpy.types.Scene, 'MC%s' % skey, prop)
 
     bpy.types.Scene.MCMaterials = BoolProperty(
         name="Materials",

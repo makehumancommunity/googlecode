@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.916",
+    "version": "0.917",
     "blender": (2, 6, 7),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -159,9 +159,6 @@ class MakeClothesPanel(bpy.types.Panel):
             ins.separator()
         '''
 
-        '''
-        # UV projection. Currently hidden, but should be revived if
-        # masking comes back
         layout.prop(scn, "MCShowUVProject")
         if scn.MCShowUVProject:
             ins = inset(layout)
@@ -170,7 +167,6 @@ class MakeClothesPanel(bpy.types.Panel):
             ins.operator("mhclo.project_uvs")
             ins.operator("mhclo.reexport_mhclo")
             ins.separator()
-        '''
 
         layout.prop(scn, "MCShowExportDetails")
         if scn.MCShowExportDetails:

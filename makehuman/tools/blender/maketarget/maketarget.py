@@ -1401,8 +1401,7 @@ def initBatch():
         file = os.path.join(folder, fname)
         if os.path.isdir(file) and fname[0] != ".":
             TargetSubPaths.append(fname)
-            expr = 'bpy.types.Scene.Mh%s = BoolProperty(name="%s")' % (fname,fname)
-            exec(expr)
+            setattr(bpy.types.Scene, "Mh%s" % fname, BoolProperty(name=fname))
             scn["Mh%s" % fname] = False
     return
 
