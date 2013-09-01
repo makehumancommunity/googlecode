@@ -558,8 +558,8 @@ class Application(events3d.EventHandler):
         self.mouseDownObject = object
 
         # Send event to the object
-
-        object.callEvent('onMouseDown', event)
+        if object:
+            object.callEvent('onMouseDown', event)
 
     def onMouseUpCallback(self, event):
         if event.button == 4 or event.button == 5:
