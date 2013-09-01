@@ -200,7 +200,7 @@ def writePropDrivers(fp, amt, drivers, suffix, prefix):
     return driverList
 
 
-def writeShapePropDrivers(fp, amt, skeys, proxy, prefix):
+def writeShapePropDrivers(fp, amt, skeys, proxy, prefix, callback=None):
     driverList = []
     for skey in skeys:
         if useThisShape(skey, proxy):
