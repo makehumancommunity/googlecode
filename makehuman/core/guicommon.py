@@ -234,6 +234,7 @@ class Object(events3d.EventHandler):
         Returns the subdivided mesh data.
 
         """
+        import catmull_clark_subdivision as cks
 
         if self.isProxied():
             if not self.__proxySubdivisionMesh:
