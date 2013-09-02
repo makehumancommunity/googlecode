@@ -27,6 +27,7 @@ Skeletons are used for skeletal animation (skinning) and posing.
 # TODO add sort by number of bones
 
 import gui3d
+import mh
 
 from . import skeletonlibrary
 
@@ -44,7 +45,7 @@ def load(app):
     app.addLoadHandler('skeleton', maintask.loadHandler)
     app.addSaveHandler(maintask.saveHandler)
 
-    if True:    # Change this in release
+    if not mh.isRelease():
         from . import debugtab
         debugtask = debugtab.SkeletonDebugLibrary(category, maintask)
         debugtask.sortOrder = 3

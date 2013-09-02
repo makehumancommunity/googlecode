@@ -254,6 +254,8 @@ def parse_arguments():
     # optional arguments
     parser.add_argument('-v', '--version', action='version', version=getVersionStr())
     parser.add_argument("--noshaders", action="store_true", help="disable shaders")
+    if not isRelease():
+        parser.add_argument("-t", "--runtests", action="store_true", help="run test suite (for developers)")
 
     # optional positional arguments
     parser.add_argument("mhmFile", default=None, nargs='?', help=".mhm file to load")
