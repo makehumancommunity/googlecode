@@ -453,11 +453,14 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
         'alphadef': lambda T, S: 'image_map {%(ft)s "%(fn)s" interpolate 2}' % {
             'ft': getImageFType(T.getSaveExt()),
             'fn': T.getSaveName()},
-        'whitedef': lambda T, S: 'rgb%(bf)s%(bt)s <1,1,1%(f)s%(t)s>' % {
+        'colordef': lambda T, S: 'rgb%(bf)s%(bt)s <#color#%(f)s%(t)s>' % {
             'bf': 'f' if 'filter' in S else "",
             'bt': 't' if 'transmit' in S else "",
             'f': ',' + str(S['filter']) if 'filter' in S else "",
             't': ',' + str(S['transmit']) if 'transmit' in S else ""},
+        'makecolor': lambda s, ct = (1,1,1): s.replace('#color#', '%s,%s,%s' % ct),
+        # For some reason colors are brighter when rendered. I halve the gamma by squaring.
+        'getDiffuseColor': lambda T, S: tuple([v*v for v in T.Object.rmesh.material.diffuseColor.values]),
         'pigment': lambda s: 'pigment {%s}' % s,
         'lmap': lambda RM: projection.mapSceneLighting(settings['scene']),
         'blurlev': lambda img, mult: (mult*(float(img.width)/1024)*float(settings['SSSA'])) if img else mult,
@@ -465,9 +468,9 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     MAfuncs.update(matanalyzer.imgopfuncs)
     materials = matanalyzer.MaterialAnalysis(rmeshes,
                                  map = {
-        'diffuse':              (('mat.diffuse',),                                                                      'diffusedef', ('pigment', 'whitedef')),
-        'bump':                 (('mat.bumpMap', 'mat.displacementMap'),                                                'bumpdef', None),
-        'alpha':                (('mat.transparencyMap', ('getAlpha', 'diffuse')),                                      'alphadef', 'whitedef'),
+        'diffuse':              (('mat.diffuse',),                                                                      'diffusedef', ('pigment', ('makecolor', 'colordef', 'getDiffuseColor'))),
+        'bump':                 (('mat.bump', 'mat.displacement'),                                                      'bumpdef', None),
+        'alpha':                (('mat.transparency', ('getAlpha', 'diffuse')),                                         'alphadef', ('makecolor', 'colordef', ('param', (1,1,1)))),
         'lmap':                 ((('getChannel', 'func.lmap', 1),),                                                     None, None),
         'bllmap':               ((('blur', 'lmap', ('blurlev', 'lmap', 2.5), 13),),                                     None, None),
         'bl2lmap':              ((('blur', 'bllmap', ('blurlev', 'lmap', 5.0), 13),),                                   None, None),

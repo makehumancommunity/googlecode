@@ -79,7 +79,11 @@ class MaterialAnalysis(object):
                 if "." in tex:
                     txs = tex.split(".", 2)
                     if txs[0] == "mat":
-                        return getattr(self.rmesh.material, txs[1] + 'Texture')
+                        if (getattr(self.rmesh.material, 'supports' + txs[1].capitalize())() and
+                            self.rmesh.material.shaderConfig['spec' if txs[1] == 'specular' else txs[1]]):
+                            return getattr(self.rmesh.material, txs[1] + ('' if txs[1] == 'diffuse' else 'Map') + 'Texture')
+                        else:
+                            return None
                     elif txs[0] == "func":
                         if txs[1] in self.analyzer.functions:
                             if len(txs) == 2:
@@ -140,26 +144,33 @@ class MaterialAnalysis(object):
                     else:
                         tex.save(dest)
 
-            def define(self, options = {}, deffunc = None):
-                if deffunc:
-                    func = deffunc
-                else:
-                    func = self.Object.analyzer.map[self.name][(1 if self.__nonzero__() else 2)]
-                    if isinstance(func, basestring):
-                        if " " in func:
-                            fsp = func.split(" ", 1)
-                            if fsp[0] == 'use':
-                                return getattr(self.Object, fsp[1]).define(options)
-                            else:
-                                raise NameError('"%s": Texture definition command does not exist' % fsp[0])
-                        if "." in func:
-                            fsp = func.split(".", 1)
+            def define(self, options = {}, func = None):
+                def analyzeDef(tdi):
+                    if isinstance(tdi, basestring):
+                        if "." in tdi:      # First we resolve the texture scope.
+                            fsp = tdi.split(".", 1)
                             return getattr(self.Object, fsp[0]).define(options, fsp[1])
-                if isinstance(func, tuple):
-                    return self.Object.analyzer.functions[func[0]](*tuple([self.Object.analyzer.functions[f](self, options) for f in func[1:]]))
-                else:
-                    return self.Object.analyzer.functions[func](self, options) if func else ""
-        
+                        elif " " in tdi:    # If the scope is the current texture, we execute any commands.
+                            fsp = tdi.split(" ", 1)
+                            if fsp[0] == 'use':                 # Use the definition from another texture type for writing this definition.
+                                return getattr(self.Object, fsp[1]).define(options)
+                            else:                               # Command does not exist. Raise an error.
+                                raise NameError('"%s": Texture definition command does not exist' % fsp[0])
+                        else:               # If no commands are issued, we write the definition using the given function.
+                            return self.Object.analyzer.functions[tdi](self, options)
+                    elif isinstance(tdi, tuple):
+                        return (tdi[1] if tdi[0] == 'param'     # 'param' overrides analysis and passes the second element directly.
+                                else self.Object.analyzer.functions[tdi[0]](*tuple(
+                                    [analyzeDef(f) for f in tdi[1:]])))
+                    elif tdi is None:
+                        return ""
+                    else:
+                        return tdi
+
+                if not func:
+                    func = self.Object.analyzer.map[self.name][(1 if self.__nonzero__() else 2)]
+                return analyzeDef(func)
+                    
 
 import image_operations as imgop
 
