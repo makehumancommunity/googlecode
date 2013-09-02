@@ -33,6 +33,8 @@ from getpath import getSysDataPath
 import log
 import material
 
+from makehuman import getBasemeshVersion, getShortVersion, getVersionStr, getVersion
+
 class Human(guicommon.Object):
 
     def __init__(self, mesh, hairObj=None, eyesObj=None):
@@ -715,8 +717,8 @@ class Human(guicommon.Object):
     def save(self, filename, tags):
 
         f = open(filename, 'w')
-        f.write('# Written by makehuman 1.0.0 alpha 8\n')
-        f.write('version 1.0.0\n')
+        f.write('# Written by MakeHuman %s\n' % getVersionStr())
+        f.write('version %s\n' % getShortVersion())
         f.write('tags %s\n' % tags)
 
         for handler in G.app.saveHandlers:

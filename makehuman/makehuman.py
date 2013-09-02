@@ -31,7 +31,48 @@ import string
 import re
 import subprocess
 
-# print >> sys.stderr,  os.getcwd()
+## Version information #########################################################
+version = [1, 0]                        # Major and minor version number
+release = False                         # False for nightly
+versionSub = "Alpha 8"                  # Short version description
+meshVersion = "hm08"                    # Version identifier of the basemesh
+
+_versionStr = ".".join( [str(v) for v in version] ) + " " + versionSub
+################################################################################
+
+def isRelease():
+    """
+    True when release version, False for nightly (dev) build
+    """
+    return release
+
+def getVersion():
+    """
+    Comparable version as list of ints
+    """
+    return version
+
+def getVersionStr():
+    """
+    Verbose version as string, for displaying and information
+    """
+    if isRelease():
+        return _versionStr
+    else:
+        return _versionStr + " r" + os.environ['SVNREVISION'] + (" [%s]" % os.environ['SVNREVISION_SOURCE'])
+
+def getShortVersion():
+    """
+    Useful for tagging assets
+    """
+    return versionSub.replace(' ', '_').lower()
+
+def getBasemeshVersion():
+    """
+    Version of the human basemesh
+    """
+    return meshVersion
+
 
 def find_mydocuments():
     os.environ['MYDOCUMENTS'] = os.path.expanduser('~')
