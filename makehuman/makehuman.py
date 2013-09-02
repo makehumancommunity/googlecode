@@ -244,11 +244,30 @@ def debug_dump():
         import log
         log.error("Could not create debug dump", exc_info=True)
 
+def parse_arguments():
+    if len(sys.argv) < 2:
+        return
+
+    import argparse    # requires python >= 2.7
+    parser = argparse.ArgumentParser()
+
+    # optional arguments
+    parser.add_argument('-v', '--version', action='version', version=getVersionStr())
+    parser.add_argument("--noshaders", action="store_true", help="disable shaders")
+
+    # optional positional arguments
+    parser.add_argument("mhmFile", default=None, nargs='?', help=".mhm file to load")
+
+    parser.parse_args()
+    #parser.mhmFile
+    #parser.noshaders
+
 def main():
     get_platform_paths()
     redirect_standard_streams()
     set_sys_path()
     get_svn_revision()
+    parse_arguments()
     make_user_dir()
     init_logging()
     debug_dump()
