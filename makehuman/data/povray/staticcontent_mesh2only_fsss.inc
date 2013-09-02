@@ -102,7 +102,7 @@ texture { // 2x multiplier layer.
             specular 0
             roughness 0.01
             phong 0 phong_size 0
-            ambient rgb 2*%%ambience%%
+            ambient %%2xambience%%
             diffuse 0
             reflection {0}
             conserve_energy
@@ -130,7 +130,7 @@ texture { // 2x multiplier layer.
             specular %%spec%%
             roughness %%rough%%
             phong 0 phong_size 0
-            ambient rgb %%ambience%%
+            ambient %%ambience%%
             diffuse 1
             reflection {0}
             conserve_energy

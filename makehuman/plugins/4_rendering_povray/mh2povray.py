@@ -461,6 +461,10 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
         'makecolor': lambda s, ct = (1,1,1): s.replace('#color#', '%s,%s,%s' % ct),
         # For some reason colors are brighter when rendered. I halve the gamma by squaring.
         'getDiffuseColor': lambda T, S: tuple([v*v for v in T.Object.rmesh.material.diffuseColor.values]),
+        'getAmbience': lambda T, S: tuple([
+            (v1*v2*S['multiply'] if 'multiply' in S else v1*v2)
+            for (v1, v2) in zip(T.Object.rmesh.material.ambientColor.values,
+                                settings['scene'].environment.ambience)]),
         'pigment': lambda s: 'pigment {%s}' % s,
         'lmap': lambda RM: projection.mapSceneLighting(settings['scene']),
         'blurlev': lambda img, mult: (mult*(float(img.width)/1024)*float(settings['SSSA'])) if img else mult,
@@ -482,6 +486,7 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
         'sss_greenbump':        ((('blur', 'sss_bluebump', ('blurlev', 'sss_bluebump', 2.5), 15),),                     'bumpdef', None),
         'sss_redbump':          ((('blur', 'sss_greenbump', ('blurlev', 'sss_bluebump', 5.0), 15),),                    'bumpdef', None),
         'hairbump':             (('bump',),                                                                             'bumpdef', 'alpha.bumpdef'),
+        'ambient':              ((True,),                                                                               ('makecolor', 'colordef', 'getAmbience'), None),
         'black':                ((('black', 'lmap'),),                                                                  None, None)},
                                  functions = MAfuncs)
     progbase = nextpb
@@ -548,10 +553,8 @@ def writeMaterials(hfile, rmeshes, materials, settings):
         inlines = hinfile.read()
         hinfile.close()
         
-        inlines = inlines.replace ('%%name%%',rmesh.name)
-        inlines = inlines.replace (
-            '%%ambience%%', '<%f,%f,%f>' %
-            settings['scene'].environment.ambience)
+        inlines = inlines.replace('%%name%%', rmesh.name)
+        inlines = inlines.replace('%%ambience%%', materials[rmesh].ambient.define())
         inlines = inlines.replace('%%diffuse%%', materials[rmesh].diffuse.define())
         inlines = inlines.replace('%%alpha%%', materials[rmesh].alpha.define())
         if rmesh.type == 'Hair':
@@ -566,6 +569,7 @@ def writeMaterials(hfile, rmeshes, materials, settings):
             inlines = inlines.replace('%%edss%%', str(settings['skinoil']*(1-settings['moist'])))
             inlines = inlines.replace('%%rough%%', str(settings['rough']))
             inlines = inlines.replace('%%diffusef1%%', materials[rmesh].diffuse.define({'filter':1.0}))
+            inlines = inlines.replace('%%2xambience%%', materials[rmesh].ambient.define({'multiply':2}))
             inlines = inlines.replace(
                 '%%normal%%', materials[rmesh].bump.define({'bumpsize':settings['wrinkles']}))
             if settings['SSS']:

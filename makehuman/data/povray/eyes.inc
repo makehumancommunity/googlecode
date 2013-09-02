@@ -7,7 +7,7 @@
             specular 1
             roughness 0.008
             phong 0 phong_size 0 
-            ambient rgb %%ambience%%
+            ambient %%ambience%%
             diffuse 1
             conserve_energy
         }
