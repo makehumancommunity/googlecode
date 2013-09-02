@@ -27,14 +27,20 @@ import os
 import io_json
 from getpath import getSysDataPath
 
-class ArmatureOptions:
+class ArmatureOptions(object):
     def __init__(self):
+        self._setDefaults(resetSettings = True)
 
+    def _setDefaults(self, resetSettings = False):
         self.rigtype = "Default"
         self.description = ""
         self.locale = None
         self.scale = 1.0
         self.boneMap = None
+
+        if resetSettings:
+            # Reset custom attributes
+            self.settings = dict()
 
         self.useMasterBone = False
         self.useHeadControl = False
@@ -76,6 +82,17 @@ class ArmatureOptions:
         self.advancedSpine = False
         self.clothesRig = False
 
+    def __getattr__(self, name):
+        """
+        Override of getattr to allow setting custom attributes by filling
+        a self.settings dict.
+        Custom attributes can be easily reset be clearing the dict.
+        """
+        if name in self.settings:
+            return self.settings[name]
+        else:
+            # Default behaviour
+            return object.__getattribute__(self, name)
 
     def setExportOptions(self,
             useCustomShapes = False,
@@ -157,8 +174,8 @@ class ArmatureOptions:
         self.useMasterBone = selector.useMasterBone.selected
 
 
-    def reset(self, selector, useMuscles=False):
-        self.__init__()
+    def reset(self, selector, useMuscles=False, resetSettings = False):
+        self._setDefaults(resetSettings)
         self.useMuscles = useMuscles
         if selector is not None:
             selector.fromOptions(self)
@@ -167,7 +184,7 @@ class ArmatureOptions:
     def loadPreset(self, filename, selector, folder=getSysDataPath("rigs/")):
         filepath = os.path.join(folder, filename + ".json")
         struct = io_json.loadJson(filepath)
-        self.__init__()
+        self._setDefaults()
         try:
             self.rigtype = struct["name"]
         except KeyError:
@@ -185,8 +202,7 @@ class ArmatureOptions:
         except KeyError:
             settings = {}
         for key,value in settings.items():
-            # It is more important that the code works than that it is "elegant"!
-            setattr(self, key, value)
+            self.settings[key] = value
 
         if selector is not None:
             selector.fromOptions(self)
