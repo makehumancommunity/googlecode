@@ -36,8 +36,6 @@ class SaveTaskView(gui3d.TaskView):
         
         gui3d.TaskView.__init__(self, category, 'Save')
 
-        modelPath = mh.getPath('models')
-            
         self.fileentry = self.addTopWidget(gui.FileEntryView('Save', mode='save'))
         self.fileentry.setDirectory(mh.getPath('models'))
         self.fileentry.setFilter('MakeHuman Models (*.mhm)')
@@ -57,40 +55,44 @@ class SaveTaskView(gui3d.TaskView):
 
         @self.fileentry.mhEvent
         def onFileSelected(filename):
-            if not filename.lower().endswith('.mhm'):
-                filename += '.mhm'
+            self.saveMHM(filename)
 
-            path = os.path.normpath(os.path.join(modelPath, filename))
+    def saveMHM(self, filename):
+        if not filename.lower().endswith('.mhm'):
+            filename += '.mhm'
 
-            dir, name = os.path.split(path)
-            name, ext = os.path.splitext(name)
+        modelPath = mh.getPath('models')
+        path = os.path.normpath(os.path.join(modelPath, filename))
 
-            if not os.path.exists(dir):
-                os.makedirs(dir)
+        dir, name = os.path.split(path)
+        name, ext = os.path.splitext(name)
 
-            # Save the thumbnail
+        if not os.path.exists(dir):
+            os.makedirs(dir)
 
-            ((x0,y0,z0),(x1,y1,z1)) = self.selection.mesh.calcBBox()
-            x0,y0,z0 = gui3d.app.guiCamera.convertToScreen(x0, y0, 0)
-            x1,y1,z1 = gui3d.app.guiCamera.convertToScreen(x1, y1, 0)
-            log.debug('grab rectangle: %d %d %d %d', x0, y0, x1, y1)
-            mh.grabScreen(int(x0+1), int(y1+1), int(x1-x0-1), int(y0-y1-1), os.path.join(dir, name + '.thumb'))
+        # Save the thumbnail
 
-            # Save the model
+        ((x0,y0,z0),(x1,y1,z1)) = self.selection.mesh.calcBBox()
+        x0,y0,z0 = gui3d.app.guiCamera.convertToScreen(x0, y0, 0)
+        x1,y1,z1 = gui3d.app.guiCamera.convertToScreen(x1, y1, 0)
+        log.debug('grab rectangle: %d %d %d %d', x0, y0, x1, y1)
+        mh.grabScreen(int(x0+1), int(y1+1), int(x1-x0-1), int(y0-y1-1), os.path.join(dir, name + '.thumb'))
 
-            human = gui3d.app.selectedHuman
-            human.save(path, name)
-            gui3d.app.modified = False
-            #gui3d.app.clearUndoRedo()
+        # Save the model
 
-            gui3d.app.setFilenameCaption(filename)
-            gui3d.app.setFileModified(False)
+        human = gui3d.app.selectedHuman
+        human.save(path, name)
+        gui3d.app.modified = False
+        #gui3d.app.clearUndoRedo()
 
-            self.parent.tasksByName['Load'].fileentry.text = dir
-            self.parent.tasksByName['Load'].fileentry.edit.setText(dir)
-            self.parent.tasksByName['Load'].fileentry.setDirectory(dir)
+        gui3d.app.setFilenameCaption(filename)
+        gui3d.app.setFileModified(False)
 
-            mh.changeCategory('Modelling')
+        self.parent.tasksByName['Load'].fileentry.text = dir
+        self.parent.tasksByName['Load'].fileentry.edit.setText(dir)
+        self.parent.tasksByName['Load'].fileentry.setDirectory(dir)
+
+        mh.changeCategory('Modelling')
 
     def onShow(self, event):
 

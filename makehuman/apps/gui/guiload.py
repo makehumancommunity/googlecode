@@ -120,25 +120,27 @@ class LoadTaskView(gui3d.TaskView):
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
+            self.loadMHM(filename)
 
-            human = gui3d.app.selectedHuman
+    def loadMHM(self, filename):
+        human = gui3d.app.selectedHuman
 
-            human.load(filename, True, gui3d.app.progress)
+        human.load(filename, True, gui3d.app.progress)
 
-            del gui3d.app.undoStack[:]
-            del gui3d.app.redoStack[:]
-            gui3d.app.modified = False
-            gui3d.app.clearUndoRedo()
+        del gui3d.app.undoStack[:]
+        del gui3d.app.redoStack[:]
+        gui3d.app.modified = False
+        gui3d.app.clearUndoRedo()
 
-            name = os.path.basename(filename).replace('.mhm', '')
+        name = os.path.basename(filename).replace('.mhm', '')
 
-            self.parent.tasksByName['Save'].fileentry.text = name
-            self.parent.tasksByName['Save'].fileentry.edit.setText(name)
-            
-            gui3d.app.setFilenameCaption(filename)
-            gui3d.app.setFileModified(False)
+        self.parent.tasksByName['Save'].fileentry.text = name
+        self.parent.tasksByName['Save'].fileentry.edit.setText(name)
+        
+        gui3d.app.setFilenameCaption(filename)
+        gui3d.app.setFileModified(False)
 
-            mh.changeCategory('Modelling')
+        mh.changeCategory('Modelling')
 
     def onShow(self, event):
 

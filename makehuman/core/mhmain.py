@@ -102,6 +102,7 @@ class PluginsTaskView(gui3d.TaskView):
 
 class MHApplication(gui3d.Application, mh.Application):
     def __init__(self):
+        self.args = dict()
         if G.app is not None:
             raise RuntimeError('MHApplication is a singleton')
         G.app = self
@@ -338,7 +339,8 @@ class MHApplication(gui3d.Application, mh.Application):
         self.getCategory("Materials")
         self.getCategory("Pose/Animate")
         self.getCategory("Rendering")
-        self.addCategory(guifiles.FilesCategory())
+        self.files = guifiles.FilesCategory()
+        self.addCategory(self.files)
 
     def loadPlugins(self):
 
@@ -443,8 +445,8 @@ class MHApplication(gui3d.Application, mh.Application):
         self.prompt('Warning', 'MakeHuman is a character creation suite. It is designed for making anatomically correct humans.\nParts of this program may contain nudity.\nDo you want to proceed?', 'Yes', 'No', None, self.stop, 'nudityWarning')
         # self.splash.hide()
 
-        from shader import Shader
-        if not Shader.supported() or Shader.glslVersion() < (1,20):
+        if not self.args.get('noshaders', False) and \
+          ( not mh.Shader.supported() or mh.Shader.glslVersion() < (1,20) ):
             self.prompt('Warning', 'Your system does not support OpenGL shaders (GLSL v1.20 required).\nOnly simple shading will be available.', 'Ok', None, None, None, 'glslWarning')
 
         gui3d.app.setFilenameCaption("Untitled")
@@ -456,6 +458,8 @@ class MHApplication(gui3d.Application, mh.Application):
         self.redraw()
 
     def startupSequence(self):
+        self._processCommandlineArgs(beforeLoaded = True)
+
         mainwinSize = (self.mainwin.width(), self.mainwin.height())
         mainwinPos = (self.mainwin.pos().x(), self.mainwin.pos().y())
         mainwinFrame = (self.mainwin.frameGeometry().width(), self.mainwin.frameGeometry().height())
@@ -517,6 +521,24 @@ class MHApplication(gui3d.Application, mh.Application):
         else:
             self.mainwin.resize(mainwinSize[0], mainwinSize[1])
             self.mainwin.move(mainwinPos[0], mainwinPos[1])
+
+        self._processCommandlineArgs(beforeLoaded = False)
+
+    def _processCommandlineArgs(self, beforeLoaded):
+        if beforeLoaded:
+            if self.args.get('noshaders', False):
+                log.message("Force shaders disabled")
+                mh.Shader._supported = False
+
+        else: # After application is loaded
+            if self.args.get('mhmFile', None):
+                mhmFile = self.args.get('mhmFile')
+                log.message("Loading MHM file %s (as specified by commandline argument)", mhmFile)
+                self.files.load.loadMHM(mhmFile)
+            if self.args.get('runtests', False):
+                log.message("Running test suite")
+                import testsuite
+                testsuite.runAll()
 
     # Events
     def onStart(self, event):

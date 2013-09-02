@@ -246,7 +246,7 @@ def debug_dump():
 
 def parse_arguments():
     if len(sys.argv) < 2:
-        return
+        return dict()
 
     import argparse    # requires python >= 2.7
     parser = argparse.ArgumentParser()
@@ -258,24 +258,24 @@ def parse_arguments():
         parser.add_argument("-t", "--runtests", action="store_true", help="run test suite (for developers)")
 
     # optional positional arguments
-    parser.add_argument("mhmFile", default=None, nargs='?', help=".mhm file to load")
+    parser.add_argument("mhmFile", default=None, nargs='?', help=".mhm file to load (optional)")
 
-    parser.parse_args()
-    #parser.mhmFile
-    #parser.noshaders
+    argOptions = vars(parser.parse_args())
+    return argOptions
 
 def main():
     get_platform_paths()
     redirect_standard_streams()
     set_sys_path()
     get_svn_revision()
-    parse_arguments()
+    args = parse_arguments()
     make_user_dir()
     init_logging()
     debug_dump()
 
     from mhmain import MHApplication
     application = MHApplication()
+    application.args = args
     application.run()
 
     #import cProfile
