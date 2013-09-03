@@ -70,7 +70,6 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
         # Options box
         optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
         self.doSubdivide = optionsBox.addWidget(gui.CheckBox('Subdivide mesh', True))
-        self.usebump = optionsBox.addWidget(gui.CheckBox('Use bump maps', True))
         self.useSSS = optionsBox.addWidget(gui.CheckBox('Use S.S. Scattering', True))
         self.SSSA = optionsBox.addWidget(gui.Slider(value=0.5, label="SSS Amount"))
 
@@ -150,7 +149,6 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
                                     'moist': self.moist.getValue(), # percentage
                                     'rough':0.001 *(10**(2*(1-self.tension.getValue()))), # exponential slider
                                     'wrinkles': 0.5*self.grain.getValue(),
-                                    'usebump': True if self.usebump.selected else False,
                                     'hairShine':True if self.hairShine.selected else False,
                                     'hairSpec': self.hairSpec.getValue(),
                                     'hairRough': (0.7*self.hairRough.getValue())**2,
