@@ -111,30 +111,49 @@ class MaterialAnalysis(object):
             def __nonzero__(self):
                 return bool(self.get())
 
+            # Process, if needed, and get the final texure.
             def get(self, cguard = []):
+                
+                # After the texture has been processed once, save it in a variable,
+                # and return it the next time it is requested, instead of reprocessing.
                 if self.isCompiled:
                     return self.compiled
-                self.isCompiled = True
+                else:
+                    self.isCompiled = True
+                
+                # Cross - guard to prevent infinite loops.
                 if self in cguard:
-                    # Cross - guard to prevent infinite loops.
                     self.compiled = None
                     return None
-                cguard.append(self)
-                for tex in self.Object.analyzer.map[self.name][0]:
+                else:
+                    cguard.append(self)
+
+                # Get list of alternative textures by looking up Texture.name in the map.
+                texlist = self.Object.analyzer.map[self.name][0]
+                if not isinstance(texlist, list):
+                    texlist = [texlist]
+                    
+                # Return the first texture in the map list that exists.
+                for tex in texlist:
                     rt = self.Object.getTex(tex, cguard)
                     if rt is not None:
                         self.compiled = rt
                         return rt
+
+                # If no texture was found, return None.
                 self.compiled = None
                 return None
 
+            # Get the extension that the saved texture will have.
             def getSaveExt(self):
                 tex = self.get()
                 return os.path.splitext(tex)[-1] if isinstance(tex, basestring) else ".png"
 
+            # Get the filename that the saved texture will have.
             def getSaveName(self, altTexName = None):
                 return self.Object.rmesh.name + "_" + (altTexName if altTexName else self.name) + self.getSaveExt()
             
+            # Save the final texture.
             def save(self, path):
                 tex = self.get()
                 if tex is not None:
@@ -144,8 +163,12 @@ class MaterialAnalysis(object):
                     else:
                         tex.save(dest)
 
+            # Write exporter definition for the texture.
             def define(self, options = {}, func = None):
+
+                # Function to analyze definition-writer functions.
                 def analyzeDef(tdi):
+                    
                     if isinstance(tdi, basestring):
                         if "." in tdi:      # First we resolve the texture scope.
                             fsp = tdi.split(".", 1)
@@ -167,8 +190,11 @@ class MaterialAnalysis(object):
                     else:
                         return tdi
 
+                # Use the first provided definition-writer function if the texture exists,
+                # else the second (2nd and 3rd map tuple item respectively).
                 if not func:
                     func = self.Object.analyzer.map[self.name][(1 if self.__nonzero__() else 2)]
+
                 return analyzeDef(func)
                     
 
