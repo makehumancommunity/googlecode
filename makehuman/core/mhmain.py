@@ -36,7 +36,6 @@ import gui3d
 import animation3d
 import human
 import guifiles
-from aljabr import centroid
 import algos3d
 #import posemode
 import gui
@@ -98,7 +97,7 @@ class PluginsTaskView(gui3d.TaskView):
         self.scroll.setWidget(self.pluginsBox)
 
         for module in sorted(gui3d.app.modules):
-            check = self.pluginsBox.addWidget(PluginCheckBox(module))
+            self.pluginsBox.addWidget(PluginCheckBox(module))
 
 class MHApplication(gui3d.Application, mh.Application):
     def __init__(self):
@@ -400,7 +399,7 @@ class MHApplication(gui3d.Application, mh.Application):
                 self.processEvents()
             else:
                 self.modules[name] = None
-        except Exception, e:
+        except Exception, _:
             log.warning('Could not load %s', name, exc_info=True)
 
     def unloadPlugins(self):
@@ -412,7 +411,7 @@ class MHApplication(gui3d.Application, mh.Application):
                 log.message('Unloading plugin %s', name)
                 module.unload(self)
                 log.message('Unloaded plugin %s', name)
-            except Exception, e:
+            except Exception, _:
                 log.warning('Could not unload %s', name, exc_info=True)
 
     def loadGui(self):
@@ -838,7 +837,6 @@ class MHApplication(gui3d.Application, mh.Application):
 
         human = self.selectedHuman
         tl = animation3d.Timeline(0.20)
-        cam = self.modelCamera
         if view == 'front':
             tl.append(animation3d.CameraAction(self.modelCamera, None,
                 [center[0], center[1], distance,
@@ -868,7 +866,7 @@ class MHApplication(gui3d.Application, mh.Application):
 
         human = self.selectedHuman
         vertices = human.meshData.getCoords(human.meshData.getVerticesForGroups(groupNames))
-        center = centroid(vertices)
+        center = vertices.mean(axis=0)
 
         self.setCameraCenterViewDistance(center, view, distance)
 
@@ -877,7 +875,6 @@ class MHApplication(gui3d.Application, mh.Application):
         human = self.selectedHuman
 
         tl = animation3d.Timeline(0.20)
-        cam = self.modelCamera
         tl.append(animation3d.CameraAction(self.modelCamera, None, [0,0,60, 0,0,0, 0,1,0]))
         tl.append(animation3d.PathAction(human, [human.getPosition(), [0.0, 0.0, 0.0]]))
         tl.append(animation3d.RotateAction(human, human.getRotation(), [0.0, 0.0, 0.0]))
@@ -924,25 +921,25 @@ class MHApplication(gui3d.Application, mh.Application):
         self.setTargetCamera(("l-lowerarm", "l-upperarm"), distance=30)
 
     def setLeftArmTopCamera(self):
-        self.setTargetCamera(("l-lowerarm", "l-upperarm"), top, distance=30)
+        self.setTargetCamera(("l-lowerarm", "l-upperarm"), 'top', distance=30)
 
     def setRightArmFrontCamera(self):
         self.setTargetCamera(("r-lowerarm", "r-upperarm"), distance=30)
 
     def setRightArmTopCamera(self):
-        self.setTargetCamera(("r-lowerarm", "r-upperarm"), top, distance=30)
+        self.setTargetCamera(("r-lowerarm", "r-upperarm"), 'top', distance=30)
 
     def setLeftLegFrontCamera(self):
         self.setTargetCamera(("l-lowerleg", "l-upperleg"), distance=30)
 
     def setLeftLegLeftCamera(self):
-        self.setTargetCamera(("l-lowerleg", "l-upperleg"), left, distance=30)
+        self.setTargetCamera(("l-lowerleg", "l-upperleg"), 'left', distance=30)
 
     def setRightLegFrontCamera(self):
         self.setTargetCamera(("r-lowerleg", "r-upperleg"), distance=30)
 
     def setRightLegRightCamera(self):
-        self.setTargetCamera(("r-lowerleg", "r-upperleg"), right, distance=30)
+        self.setTargetCamera(("r-lowerleg", "r-upperleg"), 'right', distance=30)
 
     # Shortcuts
     def setShortcut(self, modifier, key, action):
