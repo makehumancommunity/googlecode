@@ -493,7 +493,7 @@ class RMRScene:
         
         #Texture paths
         self.usrTexturePath = os.path.join(self.ribsPath, 'textures')
-        self.applicationPath = getSysPath()
+        self.applicationPath = getSysPath('')
         self.appTexturePath = getSysDataPath('textures')
         self.hairTexturePath = getSysDataPath('hairstyles')
         self.skinTexturePath = os.path.join(getPath(''), 'data', 'skins')
