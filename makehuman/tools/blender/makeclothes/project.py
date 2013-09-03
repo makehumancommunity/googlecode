@@ -514,7 +514,8 @@ def autoSeams(context):
             closest[bv.index] = best
         saveClosest(closest)
     for pv in closest.values():
-        pv.select = True
+        pass
+        #pv.select = True
 
     print("Marking proxy seams")
 
@@ -523,6 +524,40 @@ def autoSeams(context):
         pv1 = closest[be.vertices[1]]
         #print("Mark", be.index, tuple(be.vertices), pv0.index, pv1.index)
         markEdges(pv0, pv1, pob, pVertEdges, {}, 5)
+
+    return
+    print("Optimizing")
+
+    for pf in pob.data.polygons:
+        nseams = 0
+        edges = []
+        for verts in pf.edge_keys:
+            pe = findEdge(verts, pVertEdges)
+            edges.append(pe)
+            if pe.use_seam:
+                nseams += 1
+        if nseams == 3:
+            pf.select = True
+            for pe in edges:
+                pe.use_seam = not pe.use_seam
+            halt
+
+def otherEnd(e, v, ob):
+    v1 = ob.data.vertices[e.vertices[0]]
+    if v1.index == v.index:
+        v1 = ob.data.vertices[e.vertices[1]]
+    return v1
+
+
+def findEdge(verts, vertEdges):
+    vn1,vn2 = verts
+    for e in vertEdges[vn1]:
+        if e in vertEdges[vn2]:
+            return e
+    print(verts)
+    print(vertEdges[vn1])
+    print(vertEdges[vn2])
+    halt
 
 
 def markEdges(pv0, pv1, pob, pVertEdges, taken, depth):
@@ -538,9 +573,7 @@ def markEdges(pv0, pv1, pob, pVertEdges, taken, depth):
             continue
         except KeyError:
             pass
-        pv2 = pob.data.vertices[pe.vertices[0]]
-        if pv2.index == pv0.index:
-            pv2 = pob.data.vertices[pe.vertices[1]]
+        pv2 = otherEnd(pe, pv0, pob)
         vec = pv2.co - pv1.co
         if vec.length < minDist:
             minDist = vec.length

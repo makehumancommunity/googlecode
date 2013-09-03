@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.917",
+    "version": "0.918",
     "blender": (2, 6, 7),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -462,7 +462,20 @@ class OBJECT_OT_MakeHumanButton(bpy.types.Operator):
         setObjectMode(context)
         try:
             ob = context.object
-            ob.MhHuman = self.isHuman
+            if self.isHuman:
+                nverts = len(ob.data.vertices)
+                okVerts = makeclothes.getLastVertices()
+                if nverts in okVerts:
+                    ob.MhHuman = True
+                else:
+                    raise MHError(
+                        "Illegal number of vertices: %d\n" % nverts +
+                        "An MakeHuman human must have\n" +
+                        "".join(["  %d\n" % n for n in okVerts]) +
+                        "vertices"
+                        )
+            else:
+                ob.MhHuman = False
             print("Object %s: Human = %s" % (ob.name, ob.MhHuman))
         except MHError:
             handleMHError(context)
