@@ -29,18 +29,14 @@ from getpath import getSysDataPath
 
 class ArmatureOptions(object):
     def __init__(self):
-        self._setDefaults(resetSettings = True)
+        self._setDefaults()
 
-    def _setDefaults(self, resetSettings = False):
+    def _setDefaults(self):
         self.rigtype = "Default"
         self.description = ""
         self.locale = None
         self.scale = 1.0
         self.boneMap = None
-
-        if resetSettings:
-            # Reset custom attributes
-            self.settings = dict()
 
         self.useMasterBone = False
         self.useHeadControl = False
@@ -81,18 +77,6 @@ class ArmatureOptions(object):
         self.facepanel = False
         self.advancedSpine = False
         self.clothesRig = False
-
-    def __getattr__(self, name):
-        """
-        Override of getattr to allow setting custom attributes by filling
-        a self.settings dict.
-        Custom attributes can be easily reset be clearing the dict.
-        """
-        if name in self.settings:
-            return self.settings[name]
-        else:
-            # Default behaviour
-            return object.__getattribute__(self, name)
 
     def setExportOptions(self,
             useCustomShapes = False,
@@ -174,8 +158,8 @@ class ArmatureOptions(object):
         self.useMasterBone = selector.useMasterBone.selected
 
 
-    def reset(self, selector, useMuscles=False, resetSettings = False):
-        self._setDefaults(resetSettings)
+    def reset(self, selector, useMuscles=False):
+        self._setDefaults()
         self.useMuscles = useMuscles
         if selector is not None:
             selector.fromOptions(self)
@@ -202,7 +186,10 @@ class ArmatureOptions(object):
         except KeyError:
             settings = {}
         for key,value in settings.items():
-            self.settings[key] = value
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                log.warning("Unknown property defined in armature options file %s" % filename)
 
         if selector is not None:
             selector.fromOptions(self)
