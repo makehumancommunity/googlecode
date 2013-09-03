@@ -29,7 +29,7 @@ The MakeHuman data structures are transposed into renderman objects.
 
 from getpath import getPath, getSysPath, getSysDataPath
 import os
-import aljabr
+import numpy as np
 import subprocess
 import projection
 import time
@@ -102,8 +102,8 @@ class RMRLight:
 
         RMRLight.lightCounter += 1
         self.ribsPath = ribsPath
-        self.position = position
-        self.lookAt = lookAt
+        self.position = np.array(position, dtype=np.float32)
+        self.lookAt = np.array(lookAt, dtype=np.float32)
         self.type = type
         self.intensity = intensity
         self.color = [1,1,1]
@@ -195,7 +195,7 @@ class RMRLight:
             self.shadowRotate(ribfile, yrot, 0.0, 1.0, 0.0)
 
     def placeShadowCamera(self, ribfile):
-        direction = aljabr.vsub(self.lookAt, self.position)
+        direction = self.lookAt - self.position
         #print "VIEW",self.lookAt, self.position
         #print "DIRECTION: ", direction
         self.shadowProjection(ribfile)

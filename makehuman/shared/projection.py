@@ -35,12 +35,9 @@ import matrix
 import scene
 import image_operations
 
-def v4to3(v): #unused.
+def v4to3(v):
     v = np.asarray(v)
     return v[:3,0] / v[3:,0]
-
-def vnorm(v):
-    return v / np.sqrt(np.sum(v ** 2, axis=-1))[...,None]
 
 class Shader(object):
     pass
@@ -116,7 +113,7 @@ def getCamera(mesh):
     transform = mesh.transform.I
     eye = v4to3(transform * eye)
     focus = v4to3(transform * focus)
-    camera = vnorm(eye - focus)
+    camera = matrix.normalize(eye - focus)
     # log.debug('%s %s %s', eye, focus, camera)
     return camera
 
@@ -142,10 +139,10 @@ def mapImageSoft(srcImg, mesh, leftTop, rightBottom):
     # log.debug('matrix: %s', G.app.modelCamera.getConvertToScreenMatrix())
 
     texco = np.asarray([0,dstH])[None,None,:] + mesh.texco[mesh.fuvs[faces]] * np.asarray([dstW,-dstH])[None,None,:]
-    matrix = np.asarray(G.app.modelCamera.getConvertToScreenMatrix(mesh))
+    matrix_ = np.asarray(G.app.modelCamera.getConvertToScreenMatrix(mesh))
     coord = np.concatenate((mesh.coord[mesh.fvert[faces]], np.ones((len(faces),4,1))), axis=-1)
     # log.debug('texco: %s, coord: %s', texco.shape, coord.shape)
-    coord = np.sum(matrix[None,None,:,:] * coord[:,:,None,:], axis = -1)
+    coord = np.sum(matrix_[None,None,:,:] * coord[:,:,None,:], axis = -1)
     # log.debug('coord: %s', coord.shape)
     coord = coord[:,:,:2] / coord[:,:,3:]
     # log.debug('coord: %s', coord.shape)
@@ -271,7 +268,7 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), progressCallback = None):
     dstImg.data[...] = 0
 
     delta = lightpos - mesh.coord
-    ld = vnorm(delta)
+    ld = matrix.normalize(delta)
     del delta
     s = np.sum(ld * mesh.vnorm, axis=-1)
     del ld
@@ -317,7 +314,7 @@ def mapLightingGL(lightpos = (-10.99, 20.0, 20.0)):
     H = 1024
 
     delta = lightpos - mesh.coord
-    ld = vnorm(delta)
+    ld = matrix.normalize(delta)
     del delta
     s = np.sum(ld * mesh.vnorm, axis=-1)
     del ld

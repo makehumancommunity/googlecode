@@ -37,7 +37,7 @@ from math import pi
 import numpy as np
 import numpy.linalg as la
 import transformations as tm
-import aljabr
+import matrix
 
 import log
 
@@ -406,10 +406,10 @@ class Bone(object):
             return self.getRestHeadPos()
 
     def getRestDirection(self):
-        return aljabr.vnorm(self.getRestOffset())
+        return matrix.normalize(self.getRestOffset())
 
     def getRestOrientationQuat(self):
-        return aljabr.matrix2Quaternion(self.matRestGlobal)
+        return tm.quaternion_from_matrix(self.matRestGlobal)
 
     def getRoll(self):
         """
@@ -458,7 +458,7 @@ class Bone(object):
             log.debug("%s", str(quat))
             quat[index] = angle/1000
             log.debug("%s", str(quat))
-            normalizeQuaternion(quat)
+            _normalizeQuaternion(quat)
             log.debug("%s", str(quat))
             self.matPose = tm.quaternion_matrix(quat)
             return quat[0]*1000
@@ -641,6 +641,16 @@ def quatAngles(quat):
                  2*math.atan(quat[3]/qw)
                )
 
+def _normalizeQuaternion(quat):
+    r2 = quat[1]*quat[1] + quat[2]*quat[2] + quat[3]*quat[3]
+    if r2 > 1:
+        r2 = 1
+    if quat[0] >= 0:
+        sign = 1
+    else:
+        sign = -1
+    quat[0] = sign*math.sqrt(1-r2)
+
 def getHumanJointPosition(mesh, jointName):
     """
     Get the position of a joint from the human mesh.
@@ -649,7 +659,7 @@ def getHumanJointPosition(mesh, jointName):
     """
     fg = mesh.getFaceGroup(jointName)
     verts = mesh.getCoords(mesh.getVerticesForGroups([fg.name]))
-    return aljabr.centroid(verts)
+    return verts.mean(axis=0)
 
 def loadRig(options, mesh):
     """

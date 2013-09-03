@@ -36,7 +36,6 @@ import os
 import codecs
 import numpy as np
 import numpy.linalg as la
-import aljabr
 import exportutils
 import skeleton
 import log
@@ -352,7 +351,7 @@ def writeAnimation(filepath, human, config, animTrack):
         if config.zUp:
             transformationMat = np.dot(ZYRotation, np.dot(transformationMat,la.inv(ZYRotation)))
             pos = pos[[0,2,1]] * [1,-1,1]
-        orientationQuat = aljabr.matrix2Quaternion(transformationMat)
+        orientationQuat = tm.quaternion_from_matrix(quat)
 
         qx = orientationQuat[0]
         qy = orientationQuat[1]
@@ -381,7 +380,7 @@ def writeAnimation(filepath, human, config, animTrack):
             #transformationMat = np.dot(transformationMat[:3,:3], baseRot)
 
             pos += bases[bIdx][0]
-            orientationQuat = aljabr.matrix2Quaternion(transformationMat)
+            orientationQuat = tm.quaternion_from_matrix(transformationMat)
             qx = orientationQuat[0]
             qy = orientationQuat[1]
             qz = orientationQuat[2]
