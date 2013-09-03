@@ -34,18 +34,15 @@ illustrating the use of the include file.
 
 The filenames and object names exported are based on the human's current name,
 which is the name that was used when saving the MHM model. In case it's unsaved,
-the exported files use 'untitled'.
+the exported files use 'Untitled'.
 
 """
 
 import os
-import string
+import re
 import projection
-import random
 import mh
 import log
-import numpy
-import image_operations as imgop
 import gui3d
 from exportutils import collect
 from exportutils import matanalyzer
@@ -77,10 +74,9 @@ def povrayExport(settings):
             gui3d.app.statusPersist('Rendering complete')
             mh.removeTimer(povwatchTimer)
 
-    settings['name'] = string.replace(getHumanName(), " ", "_")
+    settings['name'] = re.sub('[^0-9a-zA-Z]+', '_', getHumanName())
     log.message('POV-Ray Export of object: %s', settings['name'])
 
-    camera = gui3d.app.modelCamera
     settings['resw'] = gui3d.app.settings.get('rendering_width', 800)
     settings['resh'] = gui3d.app.settings.get('rendering_height', 600)
 
@@ -103,202 +99,39 @@ def povrayExport(settings):
             povray_bin += '/povray'
         log.debug('Povray path: %s', povray_bin)
 
-    if settings['action'] == 'render':
-        if os.path.isfile(povray_bin):
+    if os.path.isfile(povray_bin):
 
-            # Export the files.
-            # The format option defines whether a simple mesh2 object is to be generated
-            # or the more flexible but slower array and macro combo is to be generated.
-            if settings['format'] == 'array':
-                povrayExportArray(gui3d.app.selectedHuman.mesh, camera, path, settings)
-            if settings['format'] == 'mesh2':
-                povrayExportMesh2(gui3d.app.selectedHuman.mesh, camera, path, settings)
+        # Export the files.
+        povrayExportMesh2(path, settings)
 
-            outputDirectory = os.path.dirname(path)
-            log.debug('out folder: %s', outputDirectory)
+        outputDirectory = os.path.dirname(path)
+        log.debug('out folder: %s', outputDirectory)
 
-            # Prepare command line.
-            if os.name == 'nt':
-                cmdLine = (povray_bin, 'MHRENDER', '/EXIT')
-            else:
-                cmdLine = (povray_bin, 'MHRENDER')
-
-            # Pass parameters by writing an .ini file.
-            iniFD = open(os.path.join(outputDirectory, 'MHRENDER.ini'), 'w')
-            iniFD.write('Input_File_Name="%s.pov"\n' % settings['name'] +
-                        '+W%d +H%d +a%s +am2\n' %
-                        (settings['resw'], settings['resh'], settings['AA']))
-            iniFD.close()
-
-            # Run POV-Ray, and observe it while it renders.
-            povwatchApp = subprocess.Popen(cmdLine, cwd = os.path.dirname(path))
-            gui3d.app.statusPersist('POV - Ray is rendering.')
-            povwatchPath = path.replace('.inc','.png')
-            povwatchTimer = mh.addTimer(1000, lambda: povwatch())
-
+        # Prepare command line.
+        if os.name == 'nt':
+            cmdLine = (povray_bin, 'MHRENDER', '/EXIT')
         else:
-            gui3d.app.prompt(
-                'POV-Ray not found',
-                'You don\'t seem to have POV-Ray installed or the path is incorrect.',
-                'Download', 'Cancel', downloadPovRay)
+            cmdLine = (povray_bin, 'MHRENDER')
 
+        # Pass parameters by writing an .ini file.
+        iniFD = open(os.path.join(outputDirectory, 'MHRENDER.ini'), 'w')
+        iniFD.write('Input_File_Name="%s.pov"\n' % settings['name'] +
+                    '+W%d +H%d +a%s +am2\n' %
+                    (settings['resw'], settings['resh'], settings['AA']))
+        iniFD.close()
 
-def povrayExportArray(obj, camera, path, settings):
-    """
-    This function exports data in the form of arrays of data the can be used to
-    reconstruct a humanoid object using some very simple POV-Ray macros. These macros
-    can build this data into a variety of different POV-Ray objects, including a
-    mesh2 object that represents the human figure much as it was displayed in MakeHuman.
+        # Run POV-Ray, and observe it while it renders.
+        povwatchApp = subprocess.Popen(cmdLine, cwd = os.path.dirname(path))
+        gui3d.app.statusPersist('POV - Ray is rendering.')
+        povwatchPath = path.replace('.inc','.png')
+        povwatchTimer = mh.addTimer(1000, lambda: povwatch())
 
-    These macros can also generate a union of spheres at the vertices and a union of
-    cylinders that follow the edges of the mesh. A parameter on the mesh2 macro can be
-    used to generate a slightly inflated or deflated mesh.
-
-    The generated output file always starts with a standard header, is followed by a set
-    of array definitions containing the object data and is ended by a standard set of
-    POV-Ray object definitions.
-
-    Parameters
-    ----------
-
-    obj:
-      *3D object*. The object to export. This should be the humanoid object with
-      uv-mapping data and Face Groups defined.
-
-    camera:
-      *Camera object*. The camera to render from.
-
-    path:
-      *string*. The file system path to the output files that need to be generated.
-    """
-
-  # Certain files and blocks of SDL are mostly static and can be copied directly
-  # from reference files into the generated output directories or files.
-
-    headerFile = mh.getSysDataPath('povray/headercontent.inc')
-    staticFile = mh.getSysDataPath('povray/staticcontent.inc')
-    sceneFile = mh.getSysDataPath('povray/makehuman.pov')
-    groupingsFile = mh.getSysDataPath('povray/makehuman_groupings.inc')
-    pigmentMap = gui3d.app.selectedHuman.mesh.texture
-
-  # Define some additional file related strings
-
-    outputSceneFile = path.replace('.inc', '.pov')
-    baseName = os.path.basename(path)
-    nameOnly = string.replace(baseName, '.inc', '')
-    underScores = ''.ljust(len(baseName), '-')
-    outputDirectory = os.path.dirname(path)
-
-  # Make sure the directory exists
-
-    if not os.path.isdir(outputDirectory):
-        try:
-            os.makedirs(outputDirectory)
-        except:
-            log.error('Error creating export directory.')
-            return 0
-
-  # Open the output file in Write mode
-
-    try:
-        outputFileDescriptor = open(path, 'w')
-    except:
-        log.error('Error opening file to write data.')
-        return 0
-
-  # Write the file name into the top of the comment block that starts the file.
-
-    outputFileDescriptor.write('// %s\n' % baseName)
-    outputFileDescriptor.write('// %s\n' % underScores)
-
-  # Copy the header file SDL straight across to the output file
-
-    try:
-        headerFileDescriptor = open(headerFile, 'r')
-    except:
-        log.error('Error opening file to read standard headers.')
-        return 0
-    headerLines = headerFileDescriptor.read()
-    outputFileDescriptor.write(headerLines)
-    outputFileDescriptor.write('''
-
-''')
-    headerFileDescriptor.close()
-
-  # Declare POV_Ray variables containing the current makehuman camera.
-
-    povrayCameraData(camera, resolution, outputFileDescriptor)
-
-    outputFileDescriptor.write('#declare MakeHuman_TranslateX      = %s;\n' % -obj.x)
-    outputFileDescriptor.write('#declare MakeHuman_TranslateY      = %s;\n' % obj.y)
-    outputFileDescriptor.write('#declare MakeHuman_TranslateZ      = %s;\n\n' % obj.z)
-
-    outputFileDescriptor.write('#declare MakeHuman_RotateX         = %s;\n' % obj.rx)
-    outputFileDescriptor.write('#declare MakeHuman_RotateY         = %s;\n' % -obj.ry)
-    outputFileDescriptor.write('#declare MakeHuman_RotateZ         = %s;\n\n' % obj.rz)
-
-  # Calculate some useful values and add them to the output as POV-Ray variable
-  # declarations so they can be readily accessed from a POV-Ray scene file.
-
-    povraySizeData(obj, outputFileDescriptor)
-
-    # Collect and prepare all objects.
-    rmeshes,_amt = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, useHelpers=False, hidden=False, subdivide = settings['subdivide'])
-
-    # Write array data for the object.
-    povrayWriteArray(outputFileDescriptor, rmeshes)
-
-  # Copy macro and texture definitions straight across to the output file.
-
-    try:
-        staticContentFileDescriptor = open(staticFile, 'r')
-    except:
-        log.error('Error opening file to read static content.')
-        return 0
-    staticContentLines = staticContentFileDescriptor.read()
-    outputFileDescriptor.write(staticContentLines)
-    outputFileDescriptor.write('\n')
-    staticContentFileDescriptor.close()
-
-  # The POV-Ray include file is complete
-
-    outputFileDescriptor.close()
-    log.message("POV-Ray '#include' file generated.")
-
-  # Copy a sample scene file across to the output directory
-
-    try:
-        sceneFileDescriptor = open(sceneFile, 'r')
-    except:
-        log.error('Error opening file to read standard scene file.')
-        return 0
-    try:
-        outputSceneFileDescriptor = open(outputSceneFile, 'w')
-    except:
-        log.error('Error opening file to write standard scene file.')
-        return 0
-    sceneLines = sceneFileDescriptor.read()
-    sceneLines = string.replace(sceneLines, 'xxFileNamexx', nameOnly)
-    sceneLines = string.replace(sceneLines, 'xxUnderScoresxx', underScores)
-    sceneLines = string.replace(sceneLines, 'xxLowercaseFileNamexx', nameOnly.lower())
-    outputSceneFileDescriptor.write(sceneLines)
-
-    # Copy the skin texture file into the output directory
-    collect.copy(pigmentMap, os.path.join(outputDirectory, "texture.png"))
-
-
-  # Copy the makehuman_groupings.inc file into the output directory
-
-    try:
-        shutil.copy(groupingsFile, outputDirectory)
-    except (IOError, os.error), why:
-        log.error("Can't copy %s" % str(why))
-
-  # Job done
-
-    outputSceneFileDescriptor.close()
-    sceneFileDescriptor.close()
-    log.message('Sample POV-Ray scene file generated.')
+    else:
+        gui3d.app.prompt(
+            'POV-Ray not found',
+            'You don\'t seem to have POV-Ray installed or the path is incorrect.',
+            'Download', 'Cancel', downloadPovRay)
+            
 
 def writeCamera(hfile, camera, settings):
     hfile.write("camera {\n  orthographic\n")
@@ -379,20 +212,13 @@ def writeConstants(hfile, settings):
     hfile.write('#declare MakeHuman_Height    = %s;\n' % (maxY - minY))
     hfile.write('#declare MakeHuman_Depth     = %s;\n\n' % (maxZ - minZ))
 
-def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
+def povrayExportMesh2(path, settings, progressCallback = None):
     """
     This function exports data in the form of a mesh2 humanoid object. The POV-Ray
     file generated is fairly inflexible, but is highly efficient.
 
     Parameters
     ----------
-
-    obj:
-      *3D object*. The object to export. This should be the humanoid object with
-      uv-mapping data and Face Groups defined.
-
-    camera:
-      *Camera object*. The camera to render from.
 
     path:
       *string*. The file system path to the output files that need to be generated.
@@ -472,22 +298,22 @@ def povrayExportMesh2(obj, camera, path, settings, progressCallback = None):
     MAfuncs.update(matanalyzer.imgopfuncs)
     materials = matanalyzer.MaterialAnalysis(rmeshes,
                                  map = {
-        'diffuse':              ('mat.diffuse',                                                                         'diffusedef', ('pigment', ('makecolor', 'colordef', 'getDiffuseColor'))),
-        'bump':                 (['mat.bump', 'mat.displacement'],                                                      'bumpdef', None),
-        'alpha':                (['mat.transparency', ('getAlpha', 'diffuse')],                                         'alphadef', ('makecolor', 'colordef', ('param', (1,1,1)))),
-        'lmap':                 (('getChannel', 'func.lmap', 1),                                                        None, None),
-        'bllmap':               (('blur', 'lmap', ('blurlev', 'lmap', 2.5), 13),                                        None, None),
-        'bl2lmap':              (('blur', 'bllmap', ('blurlev', 'lmap', 5.0), 13),                                      None, None),
-        'sss_bluelmap':         (('compose', ('list', 'black', 'black', 'lmap')),                                       None, None),
-        'sss_greenlmap':        (('compose', ('list', 'black', 'bllmap', 'black')),                                     None, None),
-        'sss_redlmap':          (('compose', ('list', 'bl2lmap', 'black', 'black')),                                    None, None),
-        'sss_alpha':            (('blur', ('shrinkMask', 'func.mapmask', 4), 4, 13),                                    None, None),
-        'sss_bluebump':         (('getChannel', 'bump', 1),                                                             'bumpdef', None),
-        'sss_greenbump':        (('blur', 'sss_bluebump', ('blurlev', 'sss_bluebump', 2.5), 15),                        'bumpdef', None),
-        'sss_redbump':          (('blur', 'sss_greenbump', ('blurlev', 'sss_bluebump', 5.0), 15),                       'bumpdef', None),
-        'hairbump':             ('bump',                                                                                'bumpdef', 'alpha.bumpdef'),
-        'ambient':              (True,                                                                                  ('makecolor', 'colordef', 'getAmbience'), None),
-        'black':                (('black', 'lmap'),                                                                     None, None)},
+        'diffuse':              (['mat.diffuse'],                                                                         'diffusedef', ('pigment', ('makecolor', 'colordef', 'getDiffuseColor'))),
+        'bump':                 (['mat.bump', 'mat.displacement'],                                                        'bumpdef', None),
+        'alpha':                (['mat.transparency', ('getAlpha', 'diffuse')],                                           'alphadef', ('makecolor', 'colordef', ('param', (1,1,1)))),
+        'lmap':                  [('getChannel', 'func.lmap', 1)],
+        'bllmap':                [('blur', 'lmap', ('blurlev', 'lmap', 2.5), 13)],
+        'bl2lmap':               [('blur', 'bllmap', ('blurlev', 'lmap', 5.0), 13)],
+        'sss_bluelmap':          [('compose', ('list', 'black', 'black', 'lmap'))],
+        'sss_greenlmap':         [('compose', ('list', 'black', 'bllmap', 'black'))],
+        'sss_redlmap':           [('compose', ('list', 'bl2lmap', 'black', 'black'))],
+        'sss_alpha':             [('blur', ('shrinkMask', 'func.mapmask', 4), 4, 13)],
+        'sss_bluebump':         ([('getChannel', 'bump', 1)],                                                             'bumpdef', None),
+        'sss_greenbump':        ([('blur', 'sss_bluebump', ('blurlev', 'sss_bluebump', 2.5), 15)],                        'bumpdef', None),
+        'sss_redbump':          ([('blur', 'sss_greenbump', ('blurlev', 'sss_bluebump', 5.0), 15)],                       'bumpdef', None),
+        'hairbump':             (['bump'],                                                                                'bumpdef', 'alpha.bumpdef'),
+        'ambient':              ([None],                                                                                  ('makecolor', 'colordef', 'getAmbience')),
+        'black':                 [('black', 'lmap')]},
                                  functions = MAfuncs)
     progbase = nextpb
 
@@ -643,111 +469,6 @@ def povrayWriteMesh2(hfile, rmeshes, progressCallback = None):
 
         i += 1.0
         progress(i/rmeshnum)
-
-def povrayWriteArray(hfile, rmeshes, progressCallback = None):
-
-    def progress(prog):
-        if progressCallback == None:
-            gui3d.app.progress(prog)
-        else:
-            progressCallback(prog)
-    progress(0)
-
-    obj = rmeshes[0].object
-
-    # Vertices
-    hfile.write('#declare MakeHuman_VertexArray = array[%s] {\n  ' % len(obj.coord))
-    for co in obj.coord:
-        hfile.write('<%s,%s,%s>' % (co[0], co[1], co[2]))
-    hfile.write("\n}\n\n")
-
-    # Normals
-    hfile.write('#declare MakeHuman_NormalArray = array[%s] {\n  ' % len(obj.vnorm))
-    for no in obj.vnorm:
-        hfile.write('<%s,%s,%s>' % (no[0], no[1], no[2]))
-    hfile.write("\n}\n\n")
-
-    faces = [f for f in obj.faces if not 'joint-' in f.group.name]
-
-    # UV Vectors
-    hfile.write('#declare MakeHuman_UVArray = array[%s] {\n  ' % len(obj.texco))
-    for uv in obj.texco:
-
-        hfile.write('<%s,%s>' % (uv[0], uv[1]))
-
-    # hfile.write("\n")
-    hfile.write("\n}\n\n")
-
-    # Faces
-    hfile.write('#declare MakeHuman_FaceArray = array[%s][3] {\n  ' % (len(faces) * 2))
-    for f in faces:
-        hfile.write('{%s,%s,%s}' % (f.verts[0].idx, f.verts[1].idx, f.verts[2].idx))
-        hfile.write('{%s,%s,%s}' % (f.verts[2].idx, f.verts[3].idx, f.verts[0].idx))
-    hfile.write("\n}\n\n")
-
-    # FaceGroups - Write a POV-Ray array to the output stream and build a list of indices
-    # that can be used to cross-reference faces to the Face Groups that they're part of.
-    hfile.write('#declare MakeHuman_FaceGroupArray = array[%s] {\n  ' % obj.faceGroupCount)
-    fgIndex = 0
-    faceGroupIndex = {}
-    for fg in obj.faceGroups:
-        faceGroupIndex[fg.name] = fgIndex
-        hfile.write('  "%s",\n' % fg.name)
-        fgIndex += 1
-    hfile.write("}\n\n")
-
-    # FaceGroupIndex
-    hfile.write('#declare MakeHuman_FaceGroupIndexArray = array[%s] {\n  ' % len(faces))
-    for f in faces:
-        hfile.write('%s,' % faceGroupIndex[f.group.name])
-    hfile.write("\n}\n\n")
-
-    # UV Indices for each face
-    hfile.write('#declare MakeHuman_UVIndexArray = array[%s][3] {\n  ' % (len(faces) * 2))
-    for f in faces:
-        hfile.write('{%s,%s,%s}' % (f.uv[0], f.uv[1], f.uv[2]))
-        hfile.write('{%s,%s,%s}' % (f.uv[2], f.uv[3], f.uv[0]))
-    hfile.write("\n}\n\n")
-
-    # Joint Positions
-    faceGroupExtents = {}
-    for f in obj.faces:
-        if 'joint-' in f.group.name:
-
-      # Compare the components of each vertex to find the min and max values for this faceGroup
-
-            if f.group.name in faceGroupExtents:
-                maxX = max([f.verts[0].co[0], f.verts[1].co[0], f.verts[2].co[0], f.verts[3].co[0], faceGroupExtents[f.group.name][3]])
-                maxY = max([f.verts[0].co[1], f.verts[1].co[1], f.verts[2].co[1], f.verts[3].co[1], faceGroupExtents[f.group.name][4]])
-                maxZ = max([f.verts[0].co[2], f.verts[1].co[2], f.verts[2].co[2], f.verts[3].co[2], faceGroupExtents[f.group.name][5]])
-                minX = min([f.verts[0].co[0], f.verts[1].co[0], f.verts[2].co[0], f.verts[3].co[0], faceGroupExtents[f.group.name][0]])
-                minY = min([f.verts[0].co[1], f.verts[1].co[1], f.verts[2].co[1], f.verts[3].co[1], faceGroupExtents[f.group.name][1]])
-                minZ = min([f.verts[0].co[2], f.verts[1].co[2], f.verts[2].co[2], f.verts[3].co[2], faceGroupExtents[f.group.name][2]])
-            else:
-                maxX = max([f.verts[0].co[0], f.verts[1].co[0], f.verts[2].co[0], f.verts[3].co[0]])
-                maxY = max([f.verts[0].co[1], f.verts[1].co[1], f.verts[2].co[1], f.verts[3].co[1]])
-                maxZ = max([f.verts[0].co[2], f.verts[1].co[2], f.verts[2].co[2], f.verts[3].co[2]])
-                minX = min([f.verts[0].co[0], f.verts[1].co[0], f.verts[2].co[0], f.verts[3].co[0]])
-                minY = min([f.verts[0].co[1], f.verts[1].co[1], f.verts[2].co[1], f.verts[3].co[1]])
-                minZ = min([f.verts[0].co[2], f.verts[1].co[2], f.verts[2].co[2], f.verts[3].co[2]])
-            faceGroupExtents[f.group.name] = [minX, minY, minZ, maxX, maxY, maxZ]
-
-    # Write out the centre position of each joint
-    for fg in obj.faceGroups:
-        if 'joint-' in fg.name:
-            jointVarName = string.replace(fg.name, '-', '_')
-            jointCentreX = (faceGroupExtents[fg.name][0] + faceGroupExtents[fg.name][3]) / 2
-            jointCentreY = (faceGroupExtents[fg.name][1] + faceGroupExtents[fg.name][4]) / 2
-            jointCentreZ = (faceGroupExtents[fg.name][2] + faceGroupExtents[fg.name][5]) / 2
-
-      # jointCentre  = "<"+jointCentreX+","+jointCentreY+","+jointCentreZ+">"
-
-            hfile.write('#declare MakeHuman_%s=<%s,%s,%s>;\n' % (jointVarName, jointCentreX, jointCentreY, jointCentreZ))
-    hfile.write("\n\n")
-
-    #TEMP# Write the rest using Mesh2 format.
-    povrayWriteMesh2(hfile,rmeshes[1:])
-
 
 def povrayProcessSSS(rmeshes, materials, outDir, settings, progressCallback = None):
 

@@ -129,7 +129,12 @@ class MaterialAnalysis(object):
                     cguard.append(self)
 
                 # Get list of alternative textures by looking up Texture.name in the map.
-                texlist = self.Object.analyzer.map[self.name][0]
+                mapentry = self.Object.analyzer.map[self.name]
+                if isinstance(mapentry, tuple):
+                    texlist = mapentry[0]
+                else:   # Enable the user to avoid tuples if the Texture has no definition.
+                    texlist = mapentry
+                # Enable the user to avoid creating a list if the Texture has no alternatives.
                 if not isinstance(texlist, list):
                     texlist = [texlist]
                     
@@ -190,10 +195,17 @@ class MaterialAnalysis(object):
                     else:
                         return tdi
 
-                # Use the first provided definition-writer function if the texture exists,
-                # else the second (2nd and 3rd map tuple item respectively).
                 if not func:
-                    func = self.Object.analyzer.map[self.name][(1 if self.__nonzero__() else 2)]
+                    # Get the map item associated with the current Texture.
+                    mapitem = self.Object.analyzer.map[self.name]
+                    if len(mapitem) == 2:
+                        # If it has only 1 definition-writer function, use it.
+                        func = mapitem[1]
+                    else:
+                        # Else, use the first provided definition-writer function
+                        # if the texture exists, else the second
+                        # (2nd and 3rd map tuple item respectively).
+                        func = mapitem[(1 if self.__nonzero__() else 2)]
 
                 return analyzeDef(func)
                     

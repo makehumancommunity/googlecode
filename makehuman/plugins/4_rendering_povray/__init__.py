@@ -69,7 +69,6 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
         filter = []
         # Options box
         optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
-        self.doSubdivide = optionsBox.addWidget(gui.CheckBox('Subdivide mesh', True))
         self.useSSS = optionsBox.addWidget(gui.CheckBox('Use S.S. Scattering', True))
         self.SSSA = optionsBox.addWidget(gui.Slider(value=0.5, label="SSS Amount"))
 
@@ -89,20 +88,6 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
         self.hairRough = materialsBox.addWidget(gui.Slider(value=0.4, label="Shine coverage"))
         self.hairHard = materialsBox.addWidget(gui.Slider(value=0.5, label="Hair hardness"))
 
-        # box
-        #optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
-
-        #Buttons
-        # Simplified the gui a bit for the average user. Uncomment to clutter it up with developer - useful stuff.
-        #source=[]
-        #self.iniButton = optionsBox.addWidget(gui.RadioButton(source, 'Use ini settings'))
-        #self.guiButton = optionsBox.addWidget(gui.RadioButton(source, 'Use gui settings', selected = True))
-        #format=[]
-        #self.arrayButton = optionsBox.addWidget(gui.RadioButton(format, 'Array  format'))
-        #self.mesh2Button = optionsBox.addWidget(gui.RadioButton(format, 'Mesh2 format', selected = True))
-        #action=[]
-        #self.exportButton = optionsBox.addWidget(gui.RadioButton(action , 'Export only', selected = True))
-        #self.exportandrenderButton = optionsBox.addWidget(gui.RadioButton(action , 'Export and render'))
         self.renderButton = optionsBox.addWidget(gui.Button('Render'))
 
         @self.resBox.mhEvent
@@ -136,11 +121,8 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
             if sys.platform == 'linux2':
                 binary = 'linux'
             #
-            mh2povray.povrayExport({'source':'gui',         # 'ini' if self.iniButton.selected else 'gui',
-                                    'format':'mesh2',       # 'array' if self.arrayButton.selected else 'mesh2',
-                                    'action':'render',      # 'export' if self.exportButton.selected else 'render',
-                                    'scene': gui3d.app.getCategory('Rendering').getTaskByName('Scene').scene,
-                                    'subdivide':True if self.doSubdivide.selected else False,
+            mh2povray.povrayExport({'scene': gui3d.app.getCategory('Rendering').getTaskByName('Scene').scene,
+                                    'subdivide': gui3d.app.actions.smooth.isChecked(),
                                     'AA': 0.5-0.49*self.AAbox.getValue(),
                                     'bintype': binary,
                                     'SSS': True if self.useSSS.selected else False,
