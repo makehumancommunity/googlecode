@@ -39,6 +39,9 @@ def v4to3(v):
     v = np.asarray(v)
     return v[:3,0] / v[3:,0]
 
+def vnormalize(v):
+    return v / np.sqrt(np.sum(v ** 2, axis=-1))[...,None]
+
 class Shader(object):
     pass
 
@@ -113,7 +116,7 @@ def getCamera(mesh):
     transform = mesh.transform.I
     eye = v4to3(transform * eye)
     focus = v4to3(transform * focus)
-    camera = matrix.normalize(eye - focus)
+    camera = vnormalize(eye - focus)
     # log.debug('%s %s %s', eye, focus, camera)
     return camera
 
@@ -268,7 +271,7 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), progressCallback = None):
     dstImg.data[...] = 0
 
     delta = lightpos - mesh.coord
-    ld = matrix.normalize(delta)
+    ld = vnormalize(delta)
     del delta
     s = np.sum(ld * mesh.vnorm, axis=-1)
     del ld
@@ -314,7 +317,7 @@ def mapLightingGL(lightpos = (-10.99, 20.0, 20.0)):
     H = 1024
 
     delta = lightpos - mesh.coord
-    ld = matrix.normalize(delta)
+    ld = vnormalize(delta)
     del delta
     s = np.sum(ld * mesh.vnorm, axis=-1)
     del ld
