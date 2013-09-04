@@ -1,0 +1,28 @@
+# Material definition for MakeHuman benchmark clothes
+
+name penisMaterial
+
+// Color shading attributes
+ambientColor 1.0 1.0 1.0
+diffuseColor  0.5 0 1
+diffuseIntensity 0.8
+specularColor  1 1 1
+specularIntensity 0.5
+specularHardness 50
+opacity 1
+
+// Textures and properties
+diffuseTexture male_genital.png
+normalmapTexture male_genital_norm.png
+normalmapIntensity 1.0
+
+// Shader programme
+shader data/shaders/glsl/phong
+
+// Configure built-in shader defines
+shaderConfig diffuse true
+shaderConfig bump True
+shaderConfig normal  false
+shaderConfig displacement  false
+shaderConfig spec  false
+shaderConfig vertexColors true
