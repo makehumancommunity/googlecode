@@ -44,7 +44,7 @@ import projection
 import mh
 import log
 import gui3d
-import Progress
+from progress import Progress
 from exportutils import collect
 from exportutils import matanalyzer
 import subprocess
@@ -228,7 +228,7 @@ def povrayExportMesh2(path, settings):
       *dictionary*. Settings passed from the GUI.
     """
 
-    progress = Progress.Progress(0, "Parsing Data")
+    progress = Progress(0, "Parsing Data")
 
     # Define some additional file locations
     outputSceneFile = path.replace('.inc', '.pov')
@@ -332,7 +332,7 @@ def povrayExportMesh2(path, settings):
     progress(1.0, None, "Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
 
 def writeTextures(materials, outDir):
-    progress = Progress.Progress(len(materials))
+    progress = Progress(len(materials))
 
     for mat in materials:
         mat.diffuse.save(outDir)
@@ -343,7 +343,7 @@ def writeTextures(materials, outDir):
         progress.step()
 
 def writeMaterials(hfile, rmeshes, materials, settings):
-    progress = Progress.Progress(len(rmeshes))
+    progress = Progress(len(rmeshes))
     for rmesh in rmeshes:
         if rmesh.type == 'Hair':
             if settings['hairShine']:
@@ -394,7 +394,7 @@ def writeMaterials(hfile, rmeshes, materials, settings):
         progress.step()
 
 def povrayWriteMesh2(hfile, rmeshes):
-    progress = Progress.Progress(len(rmeshes))
+    progress = Progress(len(rmeshes))
 
     for rmesh in rmeshes:
         obj = rmesh.object
@@ -446,7 +446,7 @@ def povrayWriteMesh2(hfile, rmeshes):
         progress.step()
 
 def povrayProcessSSS(rmeshes, materials, outDir, settings):
-    progress = Progress.Progress()
+    progress = Progress()
 
     # Export blurred channels
     materials[0].sss_bluelmap.save(outDir)
