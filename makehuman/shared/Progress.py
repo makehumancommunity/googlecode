@@ -47,7 +47,7 @@ def foo():
 # Usage in steps.
 
 def bar():
-    progress = Progress.Progress(12)
+    progress = Progress.Progress(42)
 
     ... # step 1 #
     progress.step()
@@ -55,7 +55,7 @@ def bar():
     progress.step()
     ....
     ....
-    ... # step 12 #
+    ... # step 42 #
     progress.step()
 
 
