@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-POV-Ray Export functions.
+Material Analysis class.
 
 **Project Name:**      MakeHuman
 

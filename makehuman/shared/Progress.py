@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-POV-Ray Export functions.
+Definition of Progress class.
 
 **Project Name:**      MakeHuman
 
