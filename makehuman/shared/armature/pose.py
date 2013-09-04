@@ -207,6 +207,13 @@ class Pose:
             if human.eyesObj.isSubdivided():
                 human.eyesObj.getSubdivisionMesh()
 
+        if human.genitalsObj and human.genitalsProxy:
+            mesh = human.genitalsObj.getSeedMesh()
+            human.genitalsProxy.update(mesh)
+            mesh.update()
+            if human.genitalsObj.isSubdivided():
+                human.genitalsObj.getSubdivisionMesh()
+
         for (name,clo) in human.clothesObjs.items():
             if clo:
                 mesh = clo.getSeedMesh()

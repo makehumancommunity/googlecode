@@ -352,6 +352,8 @@ class AnimationLibrary(gui3d.TaskView):
             self.human.hairObj.show()
         if self.human.eyesObj:
             self.human.eyesObj.show()
+        if self.human.genitalsObj:
+            self.human.genitalsObj.show()
 
         # Reset smooth setting
         self.human.setSubdivided(self.oldSmoothValue)
@@ -538,14 +540,22 @@ class AnimationLibrary(gui3d.TaskView):
                 weights = skeleton.getProxyWeights(self.human.eyesProxy, bodyWeights, self.human.eyesObj.mesh)
                 self.human.animated.addMesh(self.human.eyesObj.mesh, weights)
                 self.human.eyesObj.show()
+
+            # Genitals
+            if self.human.genitalsObj and self.human.genitalsProxy:
+                weights = skeleton.getProxyWeights(self.human.genitalsProxy, bodyWeights, self.human.genitalsObj.mesh)
+                self.human.animated.addMesh(self.human.genitalsObj.mesh, weights)
+                self.human.genitalsObj.show()
         else:
-            # Hide not animated proxies (clothes and hair and eyes)
+            # Hide not animated proxies (clothes and hair and eyes and genitals)
             for (name,obj) in self.human.clothesObjs.items():
                 obj.hide()
             if self.human.hairObj:
                 self.human.hairObj.hide()
             if self.human.eyesObj:
                 self.human.eyesObj.hide()
+            if self.human.genitalsObj:
+                self.human.genitalsObj.hide()
 
     def updateProxies(self):
         """
@@ -570,6 +580,13 @@ class AnimationLibrary(gui3d.TaskView):
             mesh.update()
             if self.human.eyesObj.isSubdivided():
                 self.human.eyesObj.getSubdivisionMesh()
+
+        if self.human.genitalsObj and self.human.genitalsProxy:
+            mesh = self.human.genitalsObj.getSeedMesh()
+            self.human.genitalsProxy.update(mesh)
+            mesh.update()
+            if self.human.genitalsObj.isSubdivided():
+                self.human.genitalsObj.getSubdivisionMesh()
 
         for (name,clo) in self.human.clothesObjs.items():
             if clo:

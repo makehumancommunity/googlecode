@@ -37,7 +37,7 @@ from makehuman import getBasemeshVersion, getShortVersion, getVersionStr, getVer
 
 class Human(guicommon.Object):
 
-    def __init__(self, mesh, hairObj=None, eyesObj=None):
+    def __init__(self, mesh, hairObj=None, eyesObj=None, genitalsObj=None):
 
         guicommon.Object.__init__(self, [0, 0, 0], mesh, True)
 
@@ -59,6 +59,8 @@ class Human(guicommon.Object):
         self.hairProxy = None
         self.eyesObj = eyesObj
         self.eyesProxy = None
+        self.genitalsObj = genitalsObj
+        self.genitalsProxy = None
         self.clothesObjs = {}
         self.clothesProxies = {}
         self.activeClothing = None
@@ -113,10 +115,9 @@ class Human(guicommon.Object):
 
     def show(self):
         self.visible = True
-        if self.hairObj:
-            self.hairObj.show()
-        if self.eyesObj:
-            self.eyesObj.show()
+        for obj in [self.hairObj, self.eyesObj, self.genitalsObj]:
+            if obj:
+                obj.show()
         for obj in self.clothesObjs.values():
             if obj:
                 obj.show()
@@ -126,10 +127,9 @@ class Human(guicommon.Object):
     def hide(self):
 
         self.visible = False
-        if self.hairObj:
-            self.hairObj.hide()
-        if self.eyesObj:
-            self.eyesObj.hide()
+        for obj in [self.hairObj, self.eyesObj, self.genitalsObj]:
+            if obj:
+                obj.hide()
         for obj in self.clothesObjs.values():
             if obj:
                 obj.hide()
@@ -141,10 +141,9 @@ class Human(guicommon.Object):
     def setPosition(self, position):
         dv = [x-y for x, y in zip(position, self.getPosition())]
         guicommon.Object.setPosition(self, position)
-        if self.hairObj:
-            self.hairObj.setPosition([x+y for x, y in zip(self.hairObj.getPosition(), dv)])
-        if self.eyesObj:
-            self.eyesObj.setPosition([x+y for x, y in zip(self.eyesObj.getPosition(), dv)])
+        for obj in [self.hairObj, self.eyesObj, self.genitalsObj]:
+            if obj:
+                obj.setPosition([x+y for x, y in zip(obj.getPosition(), dv)])
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setPosition([x+y for x, y in zip(obj.getPosition(), dv)])
@@ -153,10 +152,9 @@ class Human(guicommon.Object):
 
     def setRotation(self, rotation):
         guicommon.Object.setRotation(self, rotation)
-        if self.hairObj:
-            self.hairObj.setRotation(rotation)
-        if self.eyesObj:
-            self.eyesObj.setRotation(rotation)
+        for obj in [self.hairObj, self.eyesObj, self.genitalsObj]:
+            if obj:
+                obj.setRotation(rotation)
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setRotation(rotation)
@@ -165,20 +163,18 @@ class Human(guicommon.Object):
 
     def setSolid(self, *args, **kwargs):
         guicommon.Object.setSolid(self, *args, **kwargs)
-        if self.hairObj:
-            self.hairObj.setSolid(*args, **kwargs)
-        if self.eyesObj:
-            self.eyesObj.setSolid(*args, **kwargs)
+        for obj in [self.hairObj, self.eyesObj, self.genitalsObj]:
+            if obj:
+                obj.setSolid(*args, **kwargs)
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setSolid(*args, **kwargs)
 
     def setSubdivided(self, *args, **kwargs):
         guicommon.Object.setSubdivided(self, *args, **kwargs)
-        if self.hairObj:
-            self.hairObj.setSubdivided(*args, **kwargs)
-        if self.eyesObj:
-            self.eyesObj.setSubdivided(*args, **kwargs)
+        for obj in [self.hairObj, self.eyesObj, self.genitalsObj]:
+            if obj:
+                obj.setSubdivided(*args, **kwargs)
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setSubdivided(*args, **kwargs)

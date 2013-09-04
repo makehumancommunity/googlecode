@@ -54,6 +54,7 @@ def writePose(fp, env):
     proxyShapes('Clothes', 'T_Clothes', env, fp)
     proxyShapes('Hair', 'T_Clothes', env, fp)
     proxyShapes('Eyes', 'T_Clothes', env, fp)
+    proxyShapes('Genitals', 'T_Clothes', env, fp)
 
     fp.write("#if toggle&T_Mesh\n")
     writeShapeKeys(fp, env, "%sMesh" % env.name, None)
@@ -144,7 +145,7 @@ def writeShapeKeys(fp, env, name, proxy):
     scale = config.scale
 
     isHuman = ((not proxy) or proxy.type == 'Proxy')
-    isHair = (proxy and proxy.type in ['Hair','Eyes'])
+    isHair = (proxy and proxy.type in ['Hair','Eyes', 'Genitals'])
     useCorrectives = (
         False and
         config.bodyShapes and

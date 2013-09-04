@@ -25,7 +25,7 @@ Material library plugin.
 
 __docformat__ = 'restructuredtext'
 
-import material 
+import material
 import os
 import gui3d
 import mh
@@ -68,11 +68,13 @@ class MaterialTaskView(gui3d.TaskView):
         self.systemClothes = os.path.join(mh.getSysDataPath('clothes'), 'materials')
         self.systemHair = mh.getSysDataPath('hairstyles')
         self.systemEyes = mh.getSysDataPath('eyes')
+        self.systemGenitals = mh.getSysDataPath('genitals')
 
         self.userSkins = os.path.join(mh.getPath(''), 'data', 'skins')
         self.userClothes = os.path.join(mh.getPath(''), 'data', 'clothes', 'materials')
         self.userHair = os.path.join(mh.getPath(''), 'data', 'hairstyles')
         self.userEyes = os.path.join(mh.getPath(''), 'data', 'eyes')
+        self.userGenitals = os.path.join(mh.getPath(''), 'data', 'genitals')
 
         for path in (self.userSkins, self.userClothes, self.userEyes):
             if not os.path.exists(path):
@@ -108,6 +110,9 @@ class MaterialTaskView(gui3d.TaskView):
                     mat))
             elif obj == 'eyes':
                 gui3d.app.do(MaterialAction(human.eyesObj,
+                    mat))
+            elif obj == 'genitals':
+                gui3d.app.do(MaterialAction(human.genitalsObj,
                     mat))
             else: # Clothes
                 if obj:
@@ -179,6 +184,13 @@ class MaterialTaskView(gui3d.TaskView):
             else:
                 self.materials = self.defaultEyes
             selectedMat = human.eyesObj.material.filename
+        elif obj == 'genitals':
+            proxy = human.genitalsProxy
+            if proxy:
+                self.materials = [os.path.dirname(proxy.file)] + self.defaultGenitals
+            else:
+                self.materials = self.defaultGenitals
+            selectedMat = human.genitalsObj.material.filename
         else: # Clothes
             if obj:
                 uuid = obj
@@ -239,6 +251,11 @@ class MaterialTaskView(gui3d.TaskView):
                 proxy = human.eyesProxy
                 filepath = self.getMaterialPath(filepath, proxy.file)
                 human.eyesObj.material = material.fromFile(filepath)
+                return
+            elif human.genitalsProxy and human.genitalsProxy.getUuid() == uuid:
+                proxy = human.genitalsProxy
+                filepath = self.getMaterialPath(filepath, proxy.file)
+                human.genitalsObj.material = material.fromFile(filepath)
                 return
             elif not uuid in human.clothesProxies.keys():
                 log.error("Could not load material for object with uuid %s!" % uuid)
@@ -304,6 +321,11 @@ class MaterialTaskView(gui3d.TaskView):
             proxy = human.eyesProxy
             eyesObj = human.eyesObj
             materialPath = self.getRelativeMaterialPath(eyesObj.material.filename, proxy.file)
+            file.write('material %s %s\n' % (proxy.getUuid(), materialPath))
+        if human.genitalsObj and human.genitalsProxy:
+            proxy = human.genitalsProxy
+            genitalsObj = human.genitalsObj
+            materialPath = self.getRelativeMaterialPath(genitalsObj.material.filename, proxy.file)
             file.write('material %s %s\n' % (proxy.getUuid(), materialPath))
 
     def syncMedia(self):

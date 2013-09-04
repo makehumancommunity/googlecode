@@ -188,6 +188,8 @@ class CProxy:
             obj = human.hairObj
         elif self.type == "Eyes":
             obj = human.eyesObj
+        elif self.type == "Genitals":
+            obj = human.genitalsObj
         elif self.type == "Cage":
             return None
         elif self.type == "Converter":
@@ -210,6 +212,8 @@ class CProxy:
             obj = human.hairObj
         elif human.eyesProxy and uuid == human.eyesProxy.uuid:
             obj = human.eyesObj
+        elif human.genitalsProxy and uuid == human.genitalsProxy.uuid:
+            obj = human.genitalsObj
         elif human.proxy and uuid == human.proxy.uuid:
             obj = human
         else:

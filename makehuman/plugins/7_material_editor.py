@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -217,7 +217,7 @@ class ShaderTaskView(gui3d.TaskView):
             if os.path.basename(w21.value) == "default.obj":
                 w21.value = None
                 obj.setUVMap(None)
-            else: 
+            else:
                 obj.setUVMap(w21.value)
 
         w22 = self.materialBox.addWidget(TextValue("Material name", mat.name))
@@ -308,6 +308,8 @@ class ShaderTaskView(gui3d.TaskView):
             return self.human.hairObj
         if selected == 'eyes':
             return self.human.eyesObj
+        if selected == 'genitals':
+            return self.human.genitalsObj
 
         return self.human.clothesObjs[selected]
 

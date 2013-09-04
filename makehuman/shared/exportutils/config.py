@@ -77,7 +77,7 @@ class Config:
         """
         Get the proxy list from the current state of the set human object.
         Proxy list will contain all proxy items such as proxy mesh and clothes,
-        hair, eyes and cages.
+        hair, eyes, genitals and cages.
         """
         if not self.human:
             return {}
@@ -91,7 +91,13 @@ class Config:
 
         if self.human.eyesProxy:
             proxy = self.human.eyesProxy
-            proxy.layer = 2
+            proxy.layer = 0
+            name = self.goodName(proxy.name)
+            proxies[name] = proxy
+
+        if self.human.genitalsProxy:
+            proxy = self.human.genitalsProxy
+            proxy.layer = 0
             name = self.goodName(proxy.name)
             proxies[name] = proxy
 

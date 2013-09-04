@@ -48,6 +48,7 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
         self.skinRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Skin", selected=True))
         self.hairRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Hair", selected=False))
         self.eyesRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Eyes", selected=False))
+        self.genitalsRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Genitals", selected=False))
 
         @self.skinRadio.mhEvent
         def onClicked(event):
@@ -67,6 +68,12 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
                 self.selected = 'eyes'
                 self.callEvent('onActivate', self.selected)
 
+        @self.genitalsRadio.mhEvent
+        def onClicked(event):
+            if self.genitalsRadio.selected:
+                self.selected = 'genitals'
+                self.callEvent('onActivate', self.selected)
+
         self.clothesBox = gui.GroupBox('Clothes')
         self.layout.addWidget(self.clothesBox)
         self.clothesSelections = []
@@ -75,10 +82,13 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
         if self._selected == 'eyes' and not self.human.eyesObj:
             return 'skin'
 
+        if self._selected == 'genitals' and not self.human.genitalsObj:
+            return 'skin'
+
         if self._selected == 'hair' and not self.human.hairObj:
             return 'skin'
 
-        if self._selected in ['skin', 'hair', 'eyes'] or \
+        if self._selected in ['skin', 'hair', 'eyes', 'genitals'] or \
            self._selected in self.human.clothesObjs.keys():
             return self._selected
         else:
@@ -89,11 +99,15 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
             self._selected = 'skin'
             return
 
+        if self._selected == 'genitals' and not self.human.genitalsObj:
+            self._selected = 'skin'
+            return
+
         if self._selected == 'hair' and not self.human.hairObj:
             self._selected = 'skin'
             return
 
-        if value in ['skin', 'hair', 'eyes'] or \
+        if value in ['skin', 'hair', 'eyes', 'genitals'] or \
            value in self.human.clothesObjs.keys():
             self._selected = value
         else:
@@ -117,6 +131,12 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
         else:
             self.eyesRadio.setEnabled(False)
         self.eyesRadio.setChecked(selected == 'eyes')
+
+        if self.human.genitalsObj:
+            self.genitalsRadio.setEnabled(True)
+        else:
+            self.genitalsRadio.setEnabled(False)
+        self.genitalsRadio.setChecked(selected == 'genitals')
 
         self._populateClothesSelector()
 

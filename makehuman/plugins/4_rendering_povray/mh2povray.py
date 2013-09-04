@@ -132,7 +132,7 @@ def povrayExport(settings):
             'POV-Ray not found',
             'You don\'t seem to have POV-Ray installed or the path is incorrect.',
             'Download', 'Cancel', downloadPovRay)
-            
+
 
 def writeCamera(hfile, camera, settings):
     hfile.write("camera {\n  orthographic\n")
@@ -308,7 +308,7 @@ def povrayExportMesh2(path, settings):
         'ambient':              ([None],                                                                                  ('makecolor', 'colordef', 'getAmbience')),
         'black':                 [('black', 'lmap')]},
                                  functions = MAfuncs)
-    
+
     # If SSS is enabled, render the lightmaps.
     progress(0.25, 0.6, "Processing SubSurface Scattering")
     if settings['SSS'] == True:
@@ -325,7 +325,7 @@ def povrayExportMesh2(path, settings):
 
     # Write .pov scene file.
     writeScene(outputSceneFile, rmeshes, settings)
-    
+
     progress(0.95, 0.99, "Writing Textures")
     writeTextures(materials, outputDirectory)
 
@@ -361,7 +361,7 @@ def writeMaterials(hfile, rmeshes, materials, settings):
             hinfile = open (mh.getSysDataPath("povray/clothes.inc"),'r')
         inlines = hinfile.read()
         hinfile.close()
-        
+
         inlines = inlines.replace('%%name%%', rmesh.name)
         inlines = inlines.replace('%%ambience%%', materials[rmesh].ambient.define())
         inlines = inlines.replace('%%diffuse%%', materials[rmesh].diffuse.define())
