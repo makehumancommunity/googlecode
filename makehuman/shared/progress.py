@@ -192,8 +192,7 @@ class Progress(object):
     # (automatically when progress reaches 1.0).
     def finish(self):
         global current_Progress_
-        # Avoid  'False' parent here.
-        if self.parent or self.parent is None:
+        if self.parent != False:
             current_Progress_ = self.parent
 
 
