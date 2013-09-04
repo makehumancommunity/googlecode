@@ -301,7 +301,8 @@ class OBJECT_OT_SnapSelectedVertsButton(bpy.types.Operator):
 
 class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
     bl_idname = "mhclo.make_clothes"
-    bl_label = "Make clothes"
+    bl_label = "Make Clothes"
+    bl_description = "Associate clothes vertices with human triangles."
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -316,7 +317,7 @@ class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
 
 class OBJECT_OT_PrintClothesButton(bpy.types.Operator):
     bl_idname = "mhclo.print_clothes"
-    bl_label = "Print mhclo file"
+    bl_label = "Print Mhclo File"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -331,6 +332,7 @@ class OBJECT_OT_PrintClothesButton(bpy.types.Operator):
 class OBJECT_OT_ExportMaterialButton(bpy.types.Operator):
     bl_idname = "mhclo.export_material"
     bl_label = "Export Material Only"
+    bl_description = "Export current material to mhmat file without remaking clothes."
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -387,7 +389,7 @@ class OBJECT_OT_ExportDeleteVertsButton(bpy.types.Operator):
 
 class OBJECT_OT_ExportObjFileButton(bpy.types.Operator):
     bl_idname = "mhclo.export_obj_file"
-    bl_label = "Export Obj file"
+    bl_label = "Export Obj File"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -405,7 +407,7 @@ class OBJECT_OT_ExportObjFileButton(bpy.types.Operator):
 
 class OBJECT_OT_ExportBaseUvsPyButton(bpy.types.Operator):
     bl_idname = "mhclo.export_base_uvs_py"
-    bl_label = "Export base UV py file"
+    bl_label = "Export Base UV Py File"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -435,7 +437,7 @@ class OBJECT_OT_SelectHelpersButton(bpy.types.Operator):
 
 class OBJECT_OT_ExportBlenderMaterialButton(bpy.types.Operator):
     bl_idname = "mhclo.export_blender_material"
-    bl_label = "Export Blender material"
+    bl_label = "Export Blender Material"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -454,7 +456,8 @@ class OBJECT_OT_ExportBlenderMaterialButton(bpy.types.Operator):
 
 class OBJECT_OT_MakeHumanButton(bpy.types.Operator):
     bl_idname = "mhclo.set_human"
-    bl_label = "Make human"
+    bl_label = "Make Human"
+    bl_description = "Declare the active object as a human/clothing"
     bl_options = {'UNDO'}
     isHuman = BoolProperty()
 
@@ -488,6 +491,7 @@ class OBJECT_OT_MakeHumanButton(bpy.types.Operator):
 class OBJECT_OT_LoadHumanButton(bpy.types.Operator):
     bl_idname = "mhclo.load_human"
     bl_label = "Load human"
+    bl_description = "Load human mesh (with or without helper geometry)."
     bl_options = {'UNDO'}
     helpers = BoolProperty()
 
@@ -540,6 +544,7 @@ class OBJECT_OT_LoadHumanButton(bpy.types.Operator):
 class OBJECT_OT_ExamineBoundaryButton(bpy.types.Operator):
     bl_idname = "mhclo.examine_boundary"
     bl_label = "Examine boundary"
+    bl_description = "Select the six boundary vertices for inspection"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -626,6 +631,7 @@ class VIEW3D_OT_DeleteHelpersButton(bpy.types.Operator):
 class VIEW3D_OT_RemoveVertexGroupsButton(bpy.types.Operator):
     bl_idname = "mhclo.remove_vertex_groups"
     bl_label = "Remove vertex groups"
+    bl_description = "Remove all vertex groups from active mesh"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -643,6 +649,7 @@ class VIEW3D_OT_RemoveVertexGroupsButton(bpy.types.Operator):
 class VIEW3D_OT_AutoVertexGroupsButton(bpy.types.Operator):
     bl_idname = "mhclo.auto_vertex_groups"
     bl_label = "Auto vertex groups"
+    bl_description = "Automatically create vertex groups needed for association of clothes vertices with human triangles"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -660,7 +667,8 @@ class VIEW3D_OT_AutoVertexGroupsButton(bpy.types.Operator):
 
 class OBJECT_OT_CreateSeamObjectButton(bpy.types.Operator):
     bl_idname = "mhclo.create_seam_object"
-    bl_label = "Recover seams"
+    bl_label = "Create Seam Object"
+    bl_description = "Create a new object with edges at UV seams"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -674,7 +682,8 @@ class OBJECT_OT_CreateSeamObjectButton(bpy.types.Operator):
 
 class OBJECT_OT_AutoSeamsButton(bpy.types.Operator):
     bl_idname = "mhclo.auto_seams"
-    bl_label = "Auto seams"
+    bl_label = "Auto Seams"
+    bl_description = "Create clothes seams at human seams. Needs manual correction afterwards."
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -692,6 +701,7 @@ class OBJECT_OT_AutoSeamsButton(bpy.types.Operator):
 class OBJECT_OT_ProjectUVsButton(bpy.types.Operator):
     bl_idname = "mhclo.project_uvs"
     bl_label = "Project UVs"
+    bl_description = "Project human UVs to clothes UVs. Needs manual correction afterwards."
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -713,6 +723,7 @@ class OBJECT_OT_ProjectUVsButton(bpy.types.Operator):
 class OBJECT_OT_ReexportFilesButton(bpy.types.Operator):
     bl_idname = "mhclo.reexport_files"
     bl_label = "Reexport files"
+    bl_description = "Reexport mhclo and obj files. Typically done after UV projection."
     bl_options = {'UNDO'}
 
     def execute(self, context):
