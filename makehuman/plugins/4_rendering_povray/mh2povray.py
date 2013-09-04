@@ -44,6 +44,7 @@ import projection
 import mh
 import log
 import gui3d
+import Progress
 from exportutils import collect
 from exportutils import matanalyzer
 import subprocess
@@ -212,7 +213,7 @@ def writeConstants(hfile, settings):
     hfile.write('#declare MakeHuman_Height    = %s;\n' % (maxY - minY))
     hfile.write('#declare MakeHuman_Depth     = %s;\n\n' % (maxZ - minZ))
 
-def povrayExportMesh2(path, settings, progressCallback = None):
+def povrayExportMesh2(path, settings):
     """
     This function exports data in the form of a mesh2 humanoid object. The POV-Ray
     file generated is fairly inflexible, but is highly efficient.
@@ -227,15 +228,7 @@ def povrayExportMesh2(path, settings, progressCallback = None):
       *dictionary*. Settings passed from the GUI.
     """
 
-    progbase = 0
-    def progress (prog, desc):
-        if progressCallback == None:
-            gui3d.app.progress(prog, desc)
-        else:
-            progressCallback(prog, desc)
-
-    nextpb = 0.6 - 0.4 * bool(settings['SSS'])
-    progress (progbase,"Parsing data")
+    progress = Progress.Progress(0, "Parsing Data")
 
     # Define some additional file locations
     outputSceneFile = path.replace('.inc', '.pov')
@@ -260,9 +253,9 @@ def povrayExportMesh2(path, settings, progressCallback = None):
     writeConstants(outputFileDescriptor, settings)
 
     # Collect and prepare all objects.
+    progress(0.01, 0.2, "Analyzing Objects")
     rmeshes,_amt = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, useHelpers=False, hidden=False,
-                                            subdivide = settings['subdivide'],
-                                            progressCallback = lambda p: progress(progbase+p*(nextpb-progbase),"Analyzing objects"))
+                                            subdivide = settings['subdivide'])
 
     # Analyze the materials of each richmesh to povray compatible format.
     MAfuncs = {
@@ -315,52 +308,42 @@ def povrayExportMesh2(path, settings, progressCallback = None):
         'ambient':              ([None],                                                                                  ('makecolor', 'colordef', 'getAmbience')),
         'black':                 [('black', 'lmap')]},
                                  functions = MAfuncs)
-    progbase = nextpb
-
+    
     # If SSS is enabled, render the lightmaps.
+    progress(0.25, 0.6, "Processing SubSurface Scattering")
     if settings['SSS'] == True:
-        povrayProcessSSS(rmeshes, materials, outputDirectory, settings, lambda p: progress(progbase+p*(0.6-progbase),"Processing Subsurface Scattering"))
-        progbase = 0.6
+        povrayProcessSSS(rmeshes, materials, outputDirectory, settings)
 
     # Write mesh data for the object.
-    povrayWriteMesh2(outputFileDescriptor, rmeshes, lambda p: progress(progbase+p*(0.9-progbase),"Writing Objects"))
-    progbase = 0.9
-    nextpb = 0.95
+    progress(0.6, 0.9, "Writing Objects")
+    povrayWriteMesh2(outputFileDescriptor, rmeshes)
 
-    progress(progbase+0.65*(nextpb-progbase),"Writing Materials")
+    progress(0.9, 0.95, "Writing Materials")
     writeLights(settings['scene'], outputFileDescriptor)
     writeMaterials(outputFileDescriptor, rmeshes, materials, settings)
     outputFileDescriptor.close()
 
     # Write .pov scene file.
     writeScene(outputSceneFile, rmeshes, settings)
-    progbase = nextpb
+    
+    progress(0.95, 0.99, "Writing Textures")
+    writeTextures(materials, outputDirectory)
 
-    nextpb = 1.0
-    writeTextures(materials, outputDirectory, lambda p: progress(progbase+p*(nextpb-progbase),"Writing Textures"))
+    progress(1.0, None, "Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
 
-    progress(1,"Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
+def writeTextures(materials, outDir):
+    progress = Progress.Progress(len(materials))
 
-def writeTextures(materials, outDir, progressCallback = None):
-    def progress(prog):
-        if progressCallback == None:
-            gui3d.app.progress(prog)
-        else:
-            progressCallback(prog)
-    progress(0)
-
-    i = 0.0
-    matnum = float(len(materials))
     for mat in materials:
         mat.diffuse.save(outDir)
-        progress((i+0.3)/matnum)
+        progress.substep(0.33)
         mat.bump.save(outDir)
-        progress((i+0.6)/matnum)
+        progress.substep(0.67)
         mat.alpha.save(outDir)
-        i += 1.0
-        progress(i/matnum)
+        progress.step()
 
 def writeMaterials(hfile, rmeshes, materials, settings):
+    progress = Progress.Progress(len(rmeshes))
     for rmesh in rmeshes:
         if rmesh.type == 'Hair':
             if settings['hairShine']:
@@ -408,18 +391,11 @@ def writeMaterials(hfile, rmeshes, materials, settings):
         else:
             inlines = inlines.replace('%%normal%%', materials[rmesh].bump.define())
         hfile.write(inlines)
+        progress.step()
 
-def povrayWriteMesh2(hfile, rmeshes, progressCallback = None):
+def povrayWriteMesh2(hfile, rmeshes):
+    progress = Progress.Progress(len(rmeshes))
 
-    def progress(prog):
-        if progressCallback == None:
-            gui3d.app.progress(prog)
-        else:
-            progressCallback(prog)
-    progress(0)
-
-    i = 0.0
-    rmeshnum = float(len(rmeshes))
     for rmesh in rmeshes:
         obj = rmesh.object
 
@@ -431,21 +407,21 @@ def povrayWriteMesh2(hfile, rmeshes, progressCallback = None):
         for co in obj.coord:
             hfile.write('<%s,%s,%s>' % (-co[0],co[1],co[2]))
         hfile.write('\n  }\n\n')
-        progress((i+0.142)/rmeshnum)
+        progress.substep(0.14)
 
         # Normals
         hfile.write('  normal_vectors {\n      %s\n  ' % len(obj.vnorm))
         for no in obj.vnorm:
             hfile.write('<%s,%s,%s>' % (-no[0],no[1],no[2]))
         hfile.write('\n  }\n\n')
-        progress((i+0.286)/rmeshnum)
+        progress.substep(0.28)
 
         # UV Vectors
         hfile.write('  uv_vectors {\n      %s\n  ' % len(obj.texco))
         for uv in obj.texco:
             hfile.write('<%s,%s>' % tuple(uv))
         hfile.write('\n  }\n\n')
-        progress((i+0.428)/rmeshnum)
+        progress.substep(0.43)
 
         nTriangles = 2*len(obj.fvert) # MH faces are quads.
 
@@ -454,7 +430,7 @@ def povrayWriteMesh2(hfile, rmeshes, progressCallback = None):
             hfile.write('<%s,%s,%s>' % (fverts[0], fverts[1], fverts[2]))
             hfile.write('<%s,%s,%s>' % (fverts[2], fverts[3], fverts[0]))
         hfile.write('\n  }\n\n')
-        progress((i+0.714)/rmeshnum)
+        progress.substep(0.71)
 
 
         # UV Indices for each face
@@ -467,17 +443,10 @@ def povrayWriteMesh2(hfile, rmeshes, progressCallback = None):
         # Write the end squiggly bracket for the mesh2 object declaration
         hfile.write('\n      uv_mapping\n}\n\n')
 
-        i += 1.0
-        progress(i/rmeshnum)
+        progress.step()
 
-def povrayProcessSSS(rmeshes, materials, outDir, settings, progressCallback = None):
-
-    def progress(prog):
-        if progressCallback == None:
-            gui3d.app.progress(prog)
-        else:
-            progressCallback(prog)
-    progress(0)
+def povrayProcessSSS(rmeshes, materials, outDir, settings):
+    progress = Progress.Progress()
 
     # Export blurred channels
     materials[0].sss_bluelmap.save(outDir)
@@ -485,6 +454,7 @@ def povrayProcessSSS(rmeshes, materials, outDir, settings, progressCallback = No
     materials[0].sss_greenlmap.save(outDir)
     progress(0.45)
     materials[0].sss_redlmap.save(outDir)
+    progress(0.6)
     materials[0].sss_alpha.save(outDir)
     progress(0.7)
     # Export blurred bump maps
