@@ -376,15 +376,16 @@ class CLimitLocConstraint(CConstraint):
 
     def writeMhx(self, amt, fp):
         scale = amt.scale
+
         fp.write(
             "    Constraint %s LIMIT_LOCATION True\n" % self.name +
             "      use_transform_limit True ;\n" +
-            "      max_x %s*theScale ;\n" % self.xmax*scale +
-            "      max_y %s*theScale ;\n" % self.ymax*scale +
-            "      max_z %s*theScale ;\n" % self.zmax*scale +
-            "      min_x %s*theScale ;\n" % self.xmin*scale +
-            "      min_y %s*theScale ;\n" % self.ymin*scale +
-            "      min_z %s*theScale ;\n" % self.zmin*scale +
+            "      max_x %s*theScale ;\n" % (self.xmax*scale) +
+            "      max_y %s*theScale ;\n" % (self.ymax*scale) +
+            "      max_z %s*theScale ;\n" % (self.zmax*scale) +
+            "      min_x %s*theScale ;\n" % (self.xmin*scale) +
+            "      min_y %s*theScale ;\n" % (self.ymin*scale) +
+            "      min_z %s*theScale ;\n" % (self.zmin*scale) +
             "      use_max_x %s ;\n" % self.usemaxx +
             "      use_max_y %s ;\n" % self.usemaxy +
             "      use_max_z %s ;\n" % self.usemaxz +
