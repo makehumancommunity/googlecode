@@ -28,7 +28,85 @@ It takes care automatically for subroutines,
 so that the programmer can avoid passing progress callbacks,
 and only state the subroutine's impact on the progress, out of it.
 
+*-- Usage --*
+
+import Progress
+
+
+# Standard usage.
+
+def foo():
+    progress = Progress.Progress()
+
+    ... # do stuff #
+    progress(0.7)
+    ... # more stuff #
+    progress(1.0)
+
+
+# Usage in steps.
+
+def bar():
+    progress = Progress.Progress(12)
+
+    ... # step 1 #
+    progress.step()
+    ... # step 2 #
+    progress.step()
+    ....
+    ....
+    ... # step 12 #
+    progress.step()
+
+
+# Usage in loops.
+
+def baz(items):
+    progress = Progress.Progress(len(items))
+
+    for item in items:
+        ... # do stuff #
+        progress.substep(0.3)
+        ... # more stuff #
+        progress.substep(0.6)
+        ... # even more stuff #
+        progress.step()
+
+
+# All together!!!
+# (ie. time consuming functions that include
+#  subroutines in them, that may have their own progress handler.)
+# [This example shows the use of descriptions too.]
+
+def FooBarBaz():
+    progress = Progress.Progress()
+
+    progress(0, 0.3, "Getting some foo")
+    somefoo = foo()
+
+    progress(0.3, 0.7, "Getting two bars", 2)
+    bar1 = bar()
+    bar2 = bar()
+
+    progress(0.7, 0.99, "Bazzing them all together")
+    bazzable = [somefoo, bar1, bar2]
+    baz(bazzable)
+
+    progress(1.0, None, "I've finished bazzing. Call me bazzer.")
+
+
+----
+
+Note: Progress is newbie-proof, ie. if you tell it that you'll
+      call bar() 2 times (like above) and you call it 4,
+      it won't explode, but when you call the 3rd bar(), it will
+      start counting progress again from the point it was before you
+      called the first bar() [which actually might be useful as a hack].
+      It also has no problem if you call it only 1 time, it will just do
+      the half progress to the next step, then jump to 0.7 of baz().
+
 """
+
 
 import gui3d
 
