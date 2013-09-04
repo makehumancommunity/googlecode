@@ -30,13 +30,13 @@ and only state the subroutine's impact on the progress, out of it.
 
 *-- Usage --*
 
-import Progress
+from progress import Progress
 
 
 # Standard usage.
 
 def foo():
-    progress = Progress.Progress()
+    progress = Progress()
 
     ... # do stuff #
     progress(0.7)
@@ -47,7 +47,7 @@ def foo():
 # Usage in steps.
 
 def bar():
-    progress = Progress.Progress(42)
+    progress = Progress(42)
 
     ... # step 1 #
     progress.step()
@@ -62,7 +62,7 @@ def bar():
 # Usage in loops.
 
 def baz(items):
-    progress = Progress.Progress(len(items))
+    progress = Progress(len(items))
 
     for item in items:
         ... # do stuff #
@@ -79,7 +79,7 @@ def baz(items):
 # [This example shows the use of descriptions too.]
 
 def FooBarBaz():
-    progress = Progress.Progress()
+    progress = Progress()
 
     progress(0, 0.3, "Getting some foo")
     somefoo = foo()
@@ -108,15 +108,13 @@ Note: Progress is newbie-proof, ie. if you tell it that you'll
 """
 
 
-import gui3d
-
-global current
-current = None
+global current_Progress_
+current_Progress_ = None
 
 
 class Progress(object):
-    def __init__(self, steps = 0, desc = None):
-        global current
+    def __init__(self, steps = 0, desc = None, progressCallback = None):
+        global current_Progress_
         self.prepared = False
         self.progress = 0.0
         self.steps = steps
@@ -126,22 +124,22 @@ class Progress(object):
         self.farend = 1.0
         self.nextstart = 0.0
         self.nextend = 1.0
-
-        if current is None:
+            
+        if current_Progress_ is None:
             # Generic case, where the progress bar is updated directly.
             self.parent = None
-            current = self
+            current_Progress_ = self
             self.start = 0.0
             self.end = 1.0
             if desc is None:
                 self.description = ""
             else:
                 self.description = desc
-        elif current.prepared:
+        elif current_Progress_.prepared:
             # Effect a subroutine progress update handler
             # if the programmer has told us its impact.
-            self.parent = current
-            current = self
+            self.parent = current_Progress_
+            current_Progress_ = self
             self.parent.childcreated()
             self.start = self.parent.nextstart
             self.end = self.parent.nextend
@@ -149,6 +147,18 @@ class Progress(object):
             # In this case the programmer doesn't care about the
             # progress updates of the current subroutine.
             self.parent = False
+
+        # Get the callback that updates MH's progress bar.
+        # Has mechanism to avoid importing gui3d, if possible.
+        if self.parent is None:
+            if progressCallback is None:
+                import gui3d
+                self.progressCallback = gui3d.app.progress
+            else: # In this case the user provided us with a custom
+                #   progress callback to use instead of importing gui3d.
+                self.progressCallback = progressCallback
+        else: # In this case we need no gui3d (most of cases).
+            self.progressCallback = None
 
 
     # Internal method to be called by subroutine progress hanlders,
@@ -174,17 +184,17 @@ class Progress(object):
         if self.parent:
             self.parent.update(amount)
         elif self.parent is None:
-            gui3d.app.progress(amount, self.description)
+            self.progressCallback(amount, self.description)
 
 
     # Method to be called when a subroutine has finished,
     # either explicitly (by the user), or implicitly
     # (automatically when progress reaches 1.0).
     def finish(self):
-        global current
+        global current_Progress_
         # Avoid  'False' parent here.
         if self.parent or self.parent is None:
-            current = self.parent
+            current_Progress_ = self.parent
 
 
     # Method useful for smaller tasks that take a number of steps
