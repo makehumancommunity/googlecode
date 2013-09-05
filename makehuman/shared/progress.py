@@ -156,6 +156,7 @@ class Progress(object):
                 self.progressCallback = gui3d.app.progress
             else: # In this case the user provided us with a custom
                 #   progress callback to use instead of importing gui3d.
+                #   Update: They can pass False to completely avoid gui3d.
                 self.progressCallback = progressCallback
         else: # In this case we need no gui3d (most of cases).
             self.progressCallback = None
@@ -183,7 +184,7 @@ class Progress(object):
         amount = self.start + (self.end - self.start)*amount
         if self.parent:
             self.parent.update(amount)
-        elif self.parent is None:
+        elif self.parent is None and self.progressCallback != False:
             self.progressCallback(amount, self.description)
 
 
