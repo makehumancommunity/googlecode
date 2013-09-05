@@ -31,6 +31,7 @@ __docformat__ = 'restructuredtext'
 
 import os
 import gui3d
+from progress import Progress
 import codecs
 import numpy as np
 import transformations
@@ -41,19 +42,9 @@ import log
 feetOnGround = True
 
 def exportOgreMesh(human, filepath, config, progressCallback = None):
+    progress = Progress()
 
-    progbase = 0
-    def progress(prog, desc = None):
-        if desc:
-            progress.lastDesc = desc
-        if progressCallback == None:
-            gui3d.app.progress(prog, progress.lastDesc)
-        else:
-            progressCallback(prog, progress.lastDesc)
-    progress.lastDesc = ""
-
-    nextpb = 0.05
-    progress(progbase,"Parsing data")
+    progress(0, 0.05, "Parsing data")
     obj = human.meshData
     config.setHuman(human)
     config.feetOnGround = False    # TODO translate skeleton with feet-on-ground offset too
@@ -61,38 +52,27 @@ def exportOgreMesh(human, filepath, config, progressCallback = None):
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
     name = formatName(config.goodName(os.path.splitext(filename)[0]))
-    progbase = nextpb
 
-    nextpb = 0.2
-    progress(progbase, "Collecting Objects")
+    progress(0.05, 0.2, "Collecting Objects")
     rmeshes,_amt = exportutils.collect.setupObjects(
         name,
         human,
         config=config,
         useHelpers=config.useHelpers,
-        subdivide=config.subdivide,
-        progressCallback=lambda p: progress(progbase+(nextpb-progbase)*p))
-    progbase = nextpb
+        subdivide=config.subdivide)
 
-    nextpb = 0.95 - 0.05 * bool(human.getSkeleton());
-    writeMeshFile(human, filepath, rmeshes, config,
-                  progressCallback=lambda p: progress(progbase+(nextpb-progbase)*p))
+    progress(0.2, 0.95 - 0.35*bool(human.getSkeleton()), "Writing Objects")
+    writeMeshFile(human, filepath, rmeshes, config)
     if human.getSkeleton():
-        progress(0.8, "Writing Skeleton")
+        progress(0.6, 0.95, "Writing Skeleton")
         writeSkeletonFile(human, filepath, config)
-    progress(0.95, "Writing Materials")
+    progress(0.95, 0.99, "Writing Materials")
     writeMaterialFile(human, filepath, rmeshes, config)
-    progress(1.0)
+    progress(1.0, None, "Ogre export finished.")
 
 
 def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
-
-    progbase = 0
-    def progress(prog):
-        if progressCallback is not None:
-            progressCallback(prog)
-        else:
-            pass
+    progress = Progress(len(rmeshes))
 
     filename = os.path.basename(filepath)
     name = formatName(config.goodName(os.path.splitext(filename)[0]))
@@ -103,7 +83,6 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
     f.write('<mesh>\n')
     f.write('    <submeshes>\n')
 
-    rmeshnum = float(len(rmeshes))
     for rmeshIdx, rmesh in enumerate(rmeshes):
         obj = rmesh.object
         # Make sure vertex normals are calculated
@@ -129,11 +108,9 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
             if obj.vertsPerPrimitive == 4:
                 f.write('                <face v1="%s" v2="%s" v3="%s" />\n' % (fv[2], fv[3], fv[0]))
         f.write('            </faces>\n')
-        progbase = float(rmeshIdx)/rmeshnum + 0.2
-        progress(progbase)
+        progress.substep(0.2)
 
         # Vertices
-        nextpb = float(rmeshIdx)/rmeshnum + 0.8 - 0.08*bool(human.getSkeleton())
         f.write('            <geometry vertexcount="%s">\n' % numVerts)
         f.write('                <vertexbuffer positions="true" normals="true">\n')
         #f.write('                <vertexbuffer positions="true">\n')
@@ -149,7 +126,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
             f.write('                        <normal x="%s" y="%s" z="%s" />\n' % (norm[0], norm[1], norm[2]))
             f.write('                    </vertex>\n')
         f.write('                </vertexbuffer>\n')
-        progress(nextpb)
+        progress.substep(0.8 - 0.1*bool(human.getSkeleton()))
 
         # UV Texture Coordinates
         f.write('                <vertexbuffer texture_coord_dimensions_0="2" texture_coords="1">\n')
@@ -164,7 +141,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
             f.write('                    </vertex>\n')
         f.write('                </vertexbuffer>\n')
         f.write('            </geometry>\n')
-        progress(float(rmeshIdx)/rmeshnum + 1.0 - 0.1*bool(human.getSkeleton()))
+        progress.substep(0.99 - 0.1*bool(human.getSkeleton()))
 
         # Skeleton bone assignments
         if human.getSkeleton():
@@ -209,7 +186,8 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
                         # unused coord
                         pass
             f.write('            </boneassignments>\n')
-            progress(float(rmeshIdx)/rmeshnum + 1.0)
+
+        progress.step()
         f.write('        </submesh>\n')
 
     f.write('    </submeshes>\n')
@@ -225,6 +203,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
 
 
 def writeSkeletonFile(human, filepath, config):
+    Pprogress = Progress(3)  # Parent.
     filename = os.path.basename(filepath)
     name = formatName(config.goodName(os.path.splitext(filename)[0]))
     filename = name + ".skeleton.xml"
@@ -237,6 +216,7 @@ def writeSkeletonFile(human, filepath, config):
     f.write('<!-- Exported from MakeHuman (www.makehuman.org) -->\n')
     f.write('<skeleton>\n')
     f.write('    <bones>\n')
+    progress = Progress(len(skel.getBones()))
     for bIdx, bone in enumerate(skel.getBones()):
         pos = bone.getRestOffset()
         if feetOnGround and not bone.parent:
@@ -247,15 +227,21 @@ def writeSkeletonFile(human, filepath, config):
         f.write('                <axis x="1" y="0" z="0" />\n')
         f.write('            </rotation>\n')
         f.write('        </bone>\n')
+        progress.step()
     f.write('    </bones>\n')
+    Pprogress.step()
 
     f.write('    <bonehierarchy>\n')
+    progress = Progress(len(skel.getBones()))
     for bone in skel.getBones():
         if bone.parent:
             f.write('        <boneparent bone="%s" parent="%s" />\n' % (bone.name, bone.parent.name))
+        progress.step()
     f.write('    </bonehierarchy>\n')
+    Pprogress.step()
 
     if not hasattr(human, 'animations'):
+        Pprogress(1.0)
         return
     f.write('    <animations>\n')
     for anim in human.animations:
@@ -263,9 +249,11 @@ def writeSkeletonFile(human, filepath, config):
     f.write('    </animations>\n')
     f.write('</skeleton>')
     f.close()
+    Pprogress.step()
 
 
 def writeMaterialFile(human, filepath, rmeshes, config):
+    progress = Progress(len(rmeshes))
     folderpath = os.path.dirname(filepath)
     name = formatName(config.goodName(os.path.splitext(os.path.basename(filepath))[0]))
     filename = name + ".material"
@@ -300,9 +288,11 @@ def writeMaterialFile(human, filepath, rmeshes, config):
         f.write('        }\n')
         f.write('    }\n')
         f.write('}\n')
+        progress.step()
     f.close()
 
 def writeAnimation(human, fp, animTrack):
+    progress = Progress(len(human.getSkeleton().getBones()))
     log.message("Exporting animation %s.", animTrack.name)
     fp.write('        <animation name="%s" length="%s">\n' % (animTrack.name, animTrack.getPlaytime()))
     fp.write('            <tracks>\n')
@@ -324,6 +314,7 @@ def writeAnimation(human, fp, animTrack):
             fp.write('                        </keyframe>\n')
         fp.write('                    </keyframes>\n')
         fp.write('                </track>\n')
+        progress.step()
     fp.write('            </tracks>\n')
     fp.write('        </animation>\n')
 

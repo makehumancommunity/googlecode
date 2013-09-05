@@ -118,6 +118,7 @@ class Progress(object):
         self.prepared = False
         self.progress = 0.0
         self.steps = steps
+        self.stepsdone = 0
 
         self.children = 0
         self.farstart = 0.0
@@ -179,7 +180,7 @@ class Progress(object):
     # progress bar and parent progress handler updating.
     def update(self, amount):
         self.progress = amount
-        if self.progress >= 1.0:
+        if self.progress >= 0.999999: # Not using 1.0 for precision safety.
             self.finish()
         amount = self.start + (self.end - self.start)*amount
         if self.parent:
@@ -213,13 +214,15 @@ class Progress(object):
             self.numsubs = numsubs
 
             diff = 1.0/self.steps
+            self.stepsdone += 1
+            self.progress = self.stepsdone*diff
 
-            self.farstart = self.progress + diff
-            self.farend = self.progress + 2*diff
+            self.farstart = self.progress
+            self.farend = self.progress + diff
             self.children = 0
             self.prepared = True
             
-            self.update(self.progress + diff)
+            self.update(self.progress)
 
 
     # Method useful for tasks that process data in loops,
