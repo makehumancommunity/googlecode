@@ -113,7 +113,7 @@ current_Progress_ = None
 
 
 class Progress(object):
-    def __init__(self, steps = 0, desc = None, progressCallback = None):
+    def __init__(self, steps = 0, progressCallback = None):
         global current_Progress_
         self.prepared = False
         self.progress = 0.0
@@ -132,10 +132,7 @@ class Progress(object):
             current_Progress_ = self
             self.start = 0.0
             self.end = 1.0
-            if desc is None:
-                self.description = ""
-            else:
-                self.description = desc
+            self.description = ""
         elif current_Progress_.prepared:
             # Effect a subroutine progress update handler
             # if the programmer has told us its impact.

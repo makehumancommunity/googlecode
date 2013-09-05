@@ -228,8 +228,9 @@ def povrayExportMesh2(path, settings):
       *dictionary*. Settings passed from the GUI.
     """
 
-    progress = Progress(0, "Parsing Data")
+    progress = Progress()
 
+    progress(0, 0.01, "Parsing Data")
     # Define some additional file locations
     outputSceneFile = path.replace('.inc', '.pov')
     outputDirectory = os.path.dirname(path)
