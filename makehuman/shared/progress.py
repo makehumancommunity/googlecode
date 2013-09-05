@@ -197,14 +197,29 @@ class Progress(object):
             current_Progress_ = self.parent
 
 
-    # Method useful for smaller tasks that take a number of steps
-    # to complete, which are small enough to not need progress control.
-    def step(self):
+    # Method useful for smaller tasks that take a number
+    # of roughly equivalent steps to complete.
+    # Update: Each step may accept children Progress objects.
+    def step(self, desc = None, numsubs = 1):
+
+        if desc is None:
+            self.description = ""
+        else:
+            self.description = desc
         
         if self.steps == 0:
             self.update(1.0)
         else:
-            self.update(self.progress + 1.0/self.steps)
+            self.numsubs = numsubs
+
+            diff = 1.0/self.steps
+
+            self.farstart = self.progress + diff
+            self.farend = self.progress + 2*diff
+            self.children = 0
+            self.prepared = True
+            
+            self.update(self.progress + diff)
 
 
     # Method useful for tasks that process data in loops,
