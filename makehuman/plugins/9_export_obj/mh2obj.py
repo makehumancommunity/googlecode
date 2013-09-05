@@ -25,12 +25,14 @@ Exports proxy mesh to obj
 import wavefront
 import os
 import exportutils
+from progress import Progress
 
 #
 #    exportObj(human, filepath, config):
 #
 
 def exportObj(human, filepath, config=None):
+    progress = Progress(0, False)
     if config is None:
         config = exportutils.config.Config()
     obj = human.meshData
@@ -39,15 +41,16 @@ def exportObj(human, filepath, config=None):
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
 
+    progress(0, 0.3, "Collecting Objects")
     rmeshes,_amt = exportutils.collect.setupObjects(
         name,
         human,
         config=config,
         useHelpers=config.useHelpers,
         subdivide=config.subdivide)
-
+    
+    progress(0.3, 1.0, "Writing Objects")
     objects = [rmesh.object for rmesh in rmeshes]
     wavefront.writeObjFile(filepath, objects, True, config)
 
-    return
-
+    progress(1.0, None, "OBJ Export finished. Output file: %s" % filepath)

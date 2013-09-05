@@ -119,6 +119,7 @@ class Progress(object):
         self.progress = 0.0
         self.steps = steps
         self.stepsdone = 0
+        self.description = None
 
         self.children = 0
         self.farstart = 0.0
@@ -132,7 +133,6 @@ class Progress(object):
             current_Progress_ = self
             self.start = 0.0
             self.end = 1.0
-            self.description = ""
         elif current_Progress_.prepared:
             # Effect a subroutine progress update handler
             # if the programmer has told us its impact.
@@ -175,15 +175,23 @@ class Progress(object):
 
     # Internal method that is responsible for the actual
     # progress bar and parent progress handler updating.
-    def update(self, amount):
+    def update(self, amount, childDescription = None):
         self.progress = amount
         if self.progress >= 0.999999: # Not using 1.0 for precision safety.
             self.finish()
         amount = self.start + (self.end - self.start)*amount
         if self.parent:
-            self.parent.update(amount)
+            if self.description:
+                self.parent.update(amount, self.description)
+            else:
+                self.parent.update(amount, childDescription)
         elif self.parent is None and self.progressCallback != False:
-            self.progressCallback(amount, self.description)
+            if self.description:
+                self.progressCallback(amount, self.description)
+            elif childDescription:
+                self.progressCallback(amount, childDescription)
+            else:
+                self.progressCallback(amount, "")
 
 
     # Method to be called when a subroutine has finished,
@@ -200,9 +208,7 @@ class Progress(object):
     # Update: Each step may accept children Progress objects.
     def step(self, desc = None, numsubs = 1):
 
-        if desc is None:
-            self.description = ""
-        else:
+        if desc:
             self.description = desc
         
         if self.steps == 0:
@@ -235,10 +241,8 @@ class Progress(object):
     # Basic method for progress updating.
     # It overloads the () operator of the constructed object.
     def __call__(self, progress, end = None, desc = None, numsubs = None):
-        
-        if desc is None:
-            self.description = ""
-        else:
+
+        if desc:
             self.description = desc
         
         if numsubs is None:
