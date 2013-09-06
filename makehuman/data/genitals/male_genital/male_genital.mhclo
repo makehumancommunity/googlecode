@@ -5,6 +5,7 @@ uuid 38976469-2024-4a2f-acfb-7e7edb39642f
 basemesh hm08
 
 name male_genital
+transparent yes
 obj_file male_genital.obj
 x_scale 5399 11998 1.7412
 z_scale 962 5320 2.2613
