@@ -498,7 +498,7 @@ class MHApplication(gui3d.Application, mh.Application):
         log.message('Loading done')
 
         # Make an explicit reset to avoid init glitch (issue 732)
-        self.resetHuman()
+        # self.resetHuman()
 
         log.message('')
 
