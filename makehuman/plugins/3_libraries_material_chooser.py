@@ -420,8 +420,6 @@ class EthnicSkinBlender(object):
         HumanChangedEvent.
         """
         # TODO still needs a way to react on proxy material changes
-        print 'event'
-        print event.change
 
         # Ethnicity macro targets changed
         if event.change == "caucasian" or event.change == "african" or \
@@ -453,7 +451,6 @@ class EthnicSkinBlender(object):
         img.sourcePath = mh.getSysDataPath("litspheres/adaptive_skin_tone.png")
 
         for obj in objects:
-            print "set img for obj %s" % obj
             obj.setShaderParameter("litsphereTexture", img)
 
     def getEthnicityBlendMaterial(self):
