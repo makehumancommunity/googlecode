@@ -1,4 +1,4 @@
-# Material definition for MakeHuman benchmark clothes
+# Default material for MakeHuman genitals
 
 name penisMaterial
 
@@ -17,10 +17,13 @@ normalmapTexture male_genital_norm.png
 normalmapIntensity 1.0
 
 // Shader programme
-shader data/shaders/glsl/phong
+shader data/shaders/glsl/litsphere
+
+// Define custom uniform values to pass to supporting shaders
+shaderParam litsphereTexture data/litspheres/adaptive_skin_tone.png
 
 // Configure built-in shader defines
-shaderConfig diffuse true
+shaderConfig diffuse false
 shaderConfig bump True
 shaderConfig normal  false
 shaderConfig displacement  false
