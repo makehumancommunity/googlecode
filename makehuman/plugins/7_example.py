@@ -26,6 +26,7 @@ TODO
 import gui3d
 import mh
 import gui
+import log
 
 class ExampleTaskView(gui3d.TaskView):
 
@@ -107,15 +108,15 @@ class ExampleTaskView(gui3d.TaskView):
         
         self.meshSlider = box.addWidget(gui.Slider(value=0.5, label='Mesh distort %0.2f'))
         
-        self.meshStored = False
+        self.isMeshStored = False
         @self.meshSlider.mhEvent
         def onChanging(value):
             human = gui3d.app.selectedHuman
-            if self.meshStored:
-                human.restoreMesh()
+            if self.isMeshStored:
+                self.restoreMesh(human)
             else:
-                human.storeMesh()
-                self.meshStored = True
+                self.storeMesh(human)
+                self.isMeshStored = True
             human.mesh.coord += human.mesh.vnorm * value
             human.mesh.markCoords(coor=True)
             human.mesh.update()
@@ -124,10 +125,20 @@ class ExampleTaskView(gui3d.TaskView):
         def onChange(value):
             human = gui3d.app.selectedHuman
             human.applyAllTargets()
-            self.meshStored = False
+            self.isMeshStored = False
             human.mesh.coord += human.mesh.vnorm * value
             human.mesh.markCoords(coor=True)
             human.mesh.update()
+
+    def storeMesh(self, human):
+        log.message("Storing mesh status")
+        self.meshStored = human.meshData.coord.copy()
+        self.meshStoredNormals = human.meshData.vnorm.copy()
+
+    def restoreMesh(self, human):
+        human.meshData.coord[...] = self.meshStored
+        human.meshData.vnorm[...] = self.meshStoredNormals
+        human.meshData.markCoords(coor=True, norm=True)
 
     def onShow(self, event):
         gui3d.app.statusPersist('This is an example plugin; see plugins/6_help_example_plugin.py')

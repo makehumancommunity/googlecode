@@ -27,7 +27,6 @@ import algos3d
 import guicommon
 from core import G
 import os
-import humanmodifier
 import events3d
 from getpath import getSysDataPath
 import log
@@ -54,7 +53,6 @@ class Human(guicommon.Object):
 
         self.maskFaces()
 
-        self.hairModelling = False #temporary variable for easier integration of makehair, will be cleaned later.
         self.hairObj = hairObj
         self.hairProxy = None
         self.eyesObj = eyesObj
@@ -63,17 +61,11 @@ class Human(guicommon.Object):
         self.genitalsProxy = None
         self.clothesObjs = {}
         self.clothesProxies = {}
-        self.activeClothing = None
+
         self.targetsDetailStack = {}  # All details targets applied, with their values
         self.symmetryModeEnabled = False
 
-        self.enableUVInterpolation = 0
-        self.targetUVBuffer = {}
-
-        self.uvset = None
-
-        self.meshStored = []
-        self.meshStoredNormals = []
+        self.uvset = None   # TODO probably deprecated (old UV library) but still referenced by MHX exporter
 
         self.setDefaultValues()
 
@@ -277,7 +269,7 @@ class Human(guicommon.Object):
         """
         ageYears = float(ageYears)
         if ageYears < self.MIN_AGE or ageYears > self.MAX_AGE:
-            raise RuntimeError("Invalid age specified, should be minimum %s and maximum %s." % (MIN_AGE, MAX_AGE))
+            raise RuntimeError("Invalid age specified, should be minimum %s and maximum %s." % (self.MIN_AGE, self.MAX_AGE))
         if ageYears < self.MID_AGE:
             age = (ageYears - self.MIN_AGE) / ((self.MID_AGE - self.MIN_AGE) * 2)
         else:
@@ -298,7 +290,7 @@ class Human(guicommon.Object):
           1 |baby\ / \ /   \    /
             |     \   \      /
             |    / \ / \  /    \ young
-            ______________________________> age
+          0 ______________________________> age
                0  0.1875 0.5      1
         """
         if self.age < 0.5:
@@ -635,16 +627,6 @@ class Human(guicommon.Object):
         self.updateProxyMesh()
         if self.isSubdivided():
             self.getSubdivisionMesh()
-
-    def storeMesh(self):
-        log.message("Storing mesh status")
-        self.meshStored = self.meshData.coord.copy()
-        self.meshStoredNormals = self.meshData.vnorm.copy()
-
-    def restoreMesh(self):
-        self.meshData.coord[...] = self.meshStored
-        self.meshData.vnorm[...] = self.meshStoredNormals
-        self.meshData.markCoords(coor=True, norm=True)
 
     def setDefaultValues(self):
         self.age = 0.5
