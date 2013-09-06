@@ -24,6 +24,7 @@ TODO
 
 import os
 import gui3d
+import events3d
 import mh
 import files3d
 import mh2proxy
@@ -89,6 +90,7 @@ class GenitalsTaskView(gui3d.TaskView):
             human.genitalsProxy = None
 
         if os.path.basename(mhclo) == "clear.mhclo":
+            self.signalChange(human)
             return
 
         human.genitalsProxy = mh2proxy.readProxyFile(human.meshData, mhclo, type="Genitals", layer=3)
@@ -125,6 +127,13 @@ class GenitalsTaskView(gui3d.TaskView):
 
         self.adaptGenitalsToHuman(human)
         human.genitalsObj.setSubdivided(human.isSubdivided())
+
+        self.signalChange(human)
+
+    def signalChange(self, human):
+        event = events3d.HumanEvent(human, 'proxy')
+        event.proxy = 'genitals'
+        human.callEvent('onChanged', event)
 
     def adaptGenitalsToHuman(self, human):
 

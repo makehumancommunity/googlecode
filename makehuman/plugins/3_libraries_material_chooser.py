@@ -217,10 +217,10 @@ class MaterialTaskView(gui3d.TaskView):
         gui3d.TaskView.onHide(self, event)
 
     def onHumanChanging(self, event):
-        self.skinBlender.onSkinUpdateEvent(event)
+        self.skinBlender.update(event)
 
     def onHumanChanged(self, event):
-        self.skinBlender.onSkinUpdateEvent(event)
+        self.skinBlender.update(event)
 
     def loadHandler(self, human, values):
 
@@ -357,6 +357,13 @@ class MaterialTaskView(gui3d.TaskView):
 import image
 import image_operations
 class EthnicSkinBlender(object):
+    """
+    Skin blender for the adaptive_skin_tone litsphere texture. Makes sure that
+    the texture is set to a blend of the three ethnic skin tones based on the
+    human macro settings.
+    To be replaced by a more complete and general texture blending system in the
+    future.
+    """
     # TODO move this someplace else (in Human maybe?) In the future we probably want a more generic mechanism for blending textures
 
     def __init__(self, human):
@@ -365,22 +372,89 @@ class EthnicSkinBlender(object):
                            'african'   : image.Image(mh.getSysDataPath('litspheres/skinmat_african.png')),
                            'asian'    : image.Image(mh.getSysDataPath('litspheres/skinmat_asian.png')) }
 
-    def onSkinUpdateEvent(self, event):
-        if "litsphereTexture" not in self.human.meshData.shaderParameters:
+    def _getObjects(self):
+        """
+        Returns human objects where it makes sense to add a skin tone texture
+        """
+        # TODO this is a good candidate for a shared helper method. Better even if it was implemented using a generic proxy management system and allows filtering and exclusion of proxy groups.
+        result = []
+        result.append(self.human)
+        #if self.human.eyesObj:
+        #    result.append(self.human.eyesObj)
+        #if self.human.hairObj:
+        #    result.append(self.human.hairObj)
+        if self.human.genitalsObj:
+            result.append(self.human.genitalsObj)
+        #for clo in self.human.clothesObjs:
+        #    result.append(clo)
+        return result
+
+    def _usingAdaptiveSkin(self, objects):
+        """
+        Verify whether adaptive skin tone material is in use as litsphere 
+        shader parameter.
+        """
+        result = []
+
+        for obj in objects:
+            if "litsphereTexture" in obj.material.shaderParameters:
+                param = self.human.meshData.shaderParameters["litsphereTexture"]
+                if self._isAdaptiveSkinToneTex(param):
+                    result.append(obj)
+        return result
+
+    def _isAdaptiveSkinToneTex(self, textureParam):
+        # An Image object instead of a texture location on disk (str)
+        # indicates a dynamic blended texture
+        if textureParam and (isinstance(textureParam, image.Image)):
+            return True
+
+        # Test whether the texture is set to the adaptive skin tone tex
+        if os.path.realpath(textureParam) == os.path.realpath( \
+           mh.getSysDataPath("litspheres/adaptive_skin_tone.png") ):
+            return True
+
+    def _reactUponEvent(self, event):
+        """
+        Determine whether skin blender should react upon the specified
+        HumanChangedEvent.
+        """
+        # TODO still needs a way to react on proxy material changes
+        print 'event'
+        print event.change
+
+        # Ethnicity macro targets changed
+        if event.change == "caucasian" or event.change == "african" or \
+          event.change == "asian":
+            return True
+
+        # Human material changed
+        if event.change == "material":
+            return True
+
+        # Genitals proxy changed
+        if event.change == "proxy":
+            return event.proxy == "genitals" and self.human.genitalsObj
+
+    def update(self, event):
+        if not self._reactUponEvent(event):
             return
 
-        current = self.human.meshData.shaderParameters["litsphereTexture"]
-        if current and (isinstance(current, image.Image) or \
-           os.path.realpath(current) == os.path.realpath(mh.getSysDataPath("litspheres/adaptive_skin_tone.png"))):
-            if event.change == "caucasian" or event.change == "african" or \
-              event.change == "asian" or event.change == "material":
-                self.updateAdaptiveSkin()
+        objects = self._usingAdaptiveSkin(self._getObjects())
 
-    def updateAdaptiveSkin(self):
+        if len(objects) == 0:
+            return
+
+        self.updateAdaptiveSkin(objects)
+
+    def updateAdaptiveSkin(self, objects):
         img = self.getEthnicityBlendMaterial()
         # Set parameter so the image can be referenced when material is written to file
         img.sourcePath = mh.getSysDataPath("litspheres/adaptive_skin_tone.png")
-        self.human.setShaderParameter("litsphereTexture", img)
+
+        for obj in objects:
+            print "set img for obj %s" % obj
+            obj.setShaderParameter("litsphereTexture", img)
 
     def getEthnicityBlendMaterial(self):
         caucasianWeight = self.human.getCaucasian()

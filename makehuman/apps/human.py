@@ -53,12 +53,12 @@ class Human(guicommon.Object):
 
         self.maskFaces()
 
-        self.hairObj = hairObj
-        self.hairProxy = None
-        self.eyesObj = eyesObj
-        self.eyesProxy = None
-        self.genitalsObj = genitalsObj
-        self.genitalsProxy = None
+        self._hairObj = hairObj
+        self._hairProxy = None
+        self._eyesObj = eyesObj
+        self._eyesProxy = None
+        self._genitalsObj = genitalsObj
+        self._genitalsProxy = None
         self.clothesObjs = {}
         self.clothesProxies = {}
 
@@ -74,6 +74,69 @@ class Human(guicommon.Object):
 
         self.material = material.fromFile(getSysDataPath('skins/default.mhmat'))
         self._defaultMaterial = material.Material().copyFrom(self.material)
+
+
+    # TODO introduce better system for managing proxies, nothing done for clothes yet
+    def setHairProxy(self, proxy):
+        self._hairProxy = proxy
+        event = events3d.HumanEvent(self, 'proxy')
+        event.proxy = 'hair'
+        self.callEvent('onChanged', event)
+    def getHairProxy(self):
+        return self._hairProxy
+
+    hairProxy = property(getHairProxy, setHairProxy)
+
+    def setHairObj(self, obj):
+        self._hairObj = obj
+        event = events3d.HumanEvent(self, 'proxyObj')
+        event.obj = 'hair'
+        self.callEvent('onChanged', event)
+    def getHairObj(self):
+        return self._hairObj
+
+    hairObj = property(getHairObj, setHairObj)
+
+    def setEyesProxy(self, proxy):
+        self._eyesProxy = proxy
+        event = events3d.HumanEvent(self, 'proxy')
+        event.proxy = 'eyes'
+        self.callEvent('onChanged', event)
+    def getEyesProxy(self):
+        return self._eyesProxy
+
+    eyesProxy = property(getEyesProxy, setEyesProxy)
+
+    def setEyesObj(self, obj):
+        self._eyesObj = obj
+        event = events3d.HumanEvent(self, 'proxyObj')
+        event.obj = 'eyes'
+        self.callEvent('onChanged', event)
+    def getEyesObj(self):
+        return self._eyesObj
+
+    eyesObj = property(getEyesObj, setEyesObj)
+
+    def setGenitalsProxy(self, proxy):
+        self._genitalsProxy = proxy
+        event = events3d.HumanEvent(self, 'proxy')
+        event.proxy = 'genitals'
+        self.callEvent('onChanged', event)
+    def getGenitalsProxy(self):
+        return self._genitalsProxy
+
+    genitalsProxy = property(getGenitalsProxy, setGenitalsProxy)
+
+    def setGenitalsObj(self, obj):
+        self._genitalsObj = obj
+        event = events3d.HumanEvent(self, 'proxyObj')
+        event.obj = 'genitals'
+        self.callEvent('onChanged', event)
+    def getGenitalsObj(self):
+        return self._genitalsObj
+
+    genitalsObj = property(getGenitalsObj, setGenitalsObj)
+
 
     def getFaceMask(self):
         mesh = self.meshData
@@ -174,30 +237,6 @@ class Human(guicommon.Object):
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setSubdivided(*args, **kwargs)
-
-    def setShader(self, path):
-        """
-        Make sure the seed mesh is updated as well, so that visual appearence
-        of the mesh remains consistent during dragging of target sliders.
-        Because while dragging sliders, the original seed mesh is shown.
-        """
-        self.mesh.setShader(path)
-        if self.isSubdivided() or self.isProxied():
-            # Update seed mesh
-            self.getSeedMesh().setShader(path)
-
-    def setShaderParameter(self, name, value):
-        """
-        This method updates the shader parameters for the currently shown human
-        mesh, but also that of the original seed mesh if it is subdivided or
-        proxied. Use this method when you want to stream in shader parameters
-        while sliders are being moved, because while dragging only the seed mesh
-        is shown.
-        """
-        self.mesh.setShaderParameter(name, value)
-        if self.isSubdivided() or self.isProxied():
-            # Update seed mesh
-            self.getSeedMesh().setShaderParameter(name, value)
 
     def setGender(self, gender):
         """
