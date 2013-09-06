@@ -303,7 +303,6 @@ class Object(events3d.EventHandler):
 
     def _setMeshUVMap(self, filename, mesh):
         import material
-        import numpy as np
 
         if filename == mesh.material.uvMap:
             # No change, do nothing
@@ -334,7 +333,7 @@ class Object(events3d.EventHandler):
 
             if len(uvset.fuvs) != len(mesh.fuvs):
                 raise NameError("The UV file %s is not valid for mesh %s. \
-                Number of faces %d != %d" % (filepath, mesh.name, \
+                Number of faces %d != %d" % (filename, mesh.name, \
                 len(uvset.fuvs), len(mesh.fuvs)))
 
             mesh._materials = []
@@ -344,6 +343,32 @@ class Object(events3d.EventHandler):
 
         mesh.changeFaceMask(faceMask)
         mesh.updateIndexBuffer()
+
+    def setShader(self, path):
+        """
+        Set shader
+        Make sure the seed mesh is updated as well, so that visual appearence
+        of the mesh remains consistent during dragging of target sliders.
+        Because while dragging sliders, the original seed mesh is shown.
+        """
+        self.mesh.setShader(path)
+        if self.isSubdivided() or self.isProxied():
+            # Update seed mesh
+            self.getSeedMesh().setShader(path)
+
+    def setShaderParameter(self, name, value):
+        """
+        This method updates the shader parameters for the currently shown mesh
+        object, but also that of the original seed mesh if it is subdivided or
+        proxied. 
+        Use this method when you want to stream in shader parameters to human
+        while sliders are being moved, because while dragging only the seed mesh
+        is shown.
+        """
+        self.mesh.setShaderParameter(name, value)
+        if self.isSubdivided() or self.isProxied():
+            # Update seed mesh
+            self.getSeedMesh().setShaderParameter(name, value)
 
     def setUVMap(self, filename):
         subdivided = self.isSubdivided()
