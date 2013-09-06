@@ -153,12 +153,10 @@ class GenitalsTaskView(gui3d.TaskView):
 
         human = event.human
         if event.change == 'reset':
-            log.message("resetting genitals")
             if human.genitalsObj:
                 gui3d.app.removeObject(human.genitalsObj)
                 human.genitalsObj = None
                 human.genitalsProxy = None
-            self.setGenitals(human, mh.getSysDataPath("genitals/high-poly/high-poly.mhclo"))
             self.filechooser.deselectAll()
         else:
             if gui3d.app.settings.get('realtimeUpdates', False):
