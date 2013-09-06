@@ -27,6 +27,15 @@ import gui
 from export import Exporter
 from exportutils.config import Config
 
+# For deriving custom mhx exporters
+from . import mhx_main
+from . import mhx_mesh
+from . import mhx_materials
+from . import mhx_armature
+from . import mhx_pose
+from . import mhx_proxy
+from . import mhx_writer
+from . import mhx_rigify
 
 class MhxConfig(Config):
 
@@ -90,8 +99,6 @@ class ExporterMHX(Exporter):
 
 
     def export(self, human, filename):
-        from . import mhx_main
-        #from mhx import mhx_main
         self.taskview.exitPoseMode()
         mhx_main.exportMhx(human, filename("mhx"), MhxConfig(self))
         self.taskview.enterPoseMode()

@@ -39,7 +39,6 @@ import log
 
 import mh2proxy
 import exportutils
-import warpmodifier
 import posemode
 
 from . import mhx_writer
@@ -79,17 +78,18 @@ def exportMhx(human, filepath, config):
     if config.scale != 1.0:
         amt.rescale(config.scale)
     proxies = config.getProxies()
-    writer = MainWriter(name, human, amt, config, proxies)
+    writer = Writer(name, human, amt, config, proxies)
     writer.writeFile(fp)
     fp.close()
     log.message("%s exported" % filepath.encode('utf-8'))
     gui3d.app.progress(1.0)
 
 
-class MainWriter(mhx_writer.Writer):
+class Writer(mhx_writer.Writer):
 
     def __init__(self, name, human, amt, config, proxies):
         mhx_writer.Writer.__init__(self)
+
         self.name = name
         self.human = human
         self.armature = amt
@@ -97,13 +97,13 @@ class MainWriter(mhx_writer.Writer):
         self.proxies = proxies
         self.customTargetFiles = exportutils.custom.listCustomFiles(config)
 
+        self.matWriter = mhx_materials.Writer().fromOtherWriter(self)
+        self.meshWriter = mhx_mesh.Writer().fromOtherWriter(self)
+        self.proxyWriter = mhx_proxy.Writer(self.matWriter, self.meshWriter).fromOtherWriter(self)
+        self.poseWriter = mhx_pose.Writer().fromOtherWriter(self)
+
 
     def writeFile(self, fp):
-        matWriter = mhx_materials.Writer().fromOtherWriter(self)
-        meshWriter = mhx_mesh.Writer().fromOtherWriter(self)
-        proxyWriter = mhx_proxy.Writer(matWriter, meshWriter).fromOtherWriter(self)
-        poseWriter = mhx_pose.Writer().fromOtherWriter(self)
-
         amt = self.armature
         config = self.config
 
@@ -121,23 +121,23 @@ class MainWriter(mhx_writer.Writer):
 
         gui3d.app.progress(0.15, text="Exporting materials")
         fp.write("\nNoScale False ;\n\n")
-        matWriter.writeMaterials(fp)
+        self.matWriter.writeMaterials(fp)
 
         if config.cage:
-            proxyWriter.writeProxyType('Cage', 'T_Cage', fp, 0.2, 0.25)
+            self.proxyWriter.writeProxyType('Cage', 'T_Cage', fp, 0.2, 0.25)
 
         gui3d.app.progress(0.25, text="Exporting main mesh")
         fp.write("#if toggle&T_Mesh\n")
-        meshWriter.writeMesh(fp, self.human.meshData)
+        self.meshWriter.writeMesh(fp, self.human.meshData)
         fp.write("#endif\n")
 
-        proxyWriter.writeProxyType('Proxy', 'T_Proxy', fp, 0.35, 0.4)
-        proxyWriter.writeProxyType('Clothes', 'T_Clothes', fp, 0.4, 0.55)
-        proxyWriter.writeProxyType('Hair', 'T_Clothes', fp, 0.55, 0.58)
-        proxyWriter.writeProxyType('Eyes', 'T_Clothes', fp, 0.58, 0.59)
-        proxyWriter.writeProxyType('Genitals', 'T_Clothes', fp, 0.59, 0.6)
+        self.proxyWriter.writeProxyType('Proxy', 'T_Proxy', fp, 0.35, 0.4)
+        self.proxyWriter.writeProxyType('Clothes', 'T_Clothes', fp, 0.4, 0.55)
+        self.proxyWriter.writeProxyType('Hair', 'T_Clothes', fp, 0.55, 0.58)
+        self.proxyWriter.writeProxyType('Eyes', 'T_Clothes', fp, 0.58, 0.59)
+        self.proxyWriter.writeProxyType('Genitals', 'T_Clothes', fp, 0.59, 0.6)
 
-        poseWriter.writePose(fp)
+        self.poseWriter.writePose(fp)
 
         self.writeGroups(fp)
         amt.writeFinal(fp)

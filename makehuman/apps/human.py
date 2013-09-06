@@ -65,8 +65,6 @@ class Human(guicommon.Object):
         self.targetsDetailStack = {}  # All details targets applied, with their values
         self.symmetryModeEnabled = False
 
-        self.uvset = None   # TODO probably deprecated (old UV library) but still referenced by MHX exporter
-
         self.setDefaultValues()
 
         self.bodyZones = ['l-eye','r-eye', 'jaw', 'nose', 'mouth', 'head', 'neck', 'torso', 'hip', 'pelvis', 'r-upperarm', 'l-upperarm', 'r-lowerarm', 'l-lowerarm', 'l-hand',

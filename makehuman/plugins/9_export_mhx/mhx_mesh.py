@@ -63,12 +63,8 @@ class Writer(mhx_writer.Writer):
         Data
     """)
 
-        if self.human.uvset:
-            uvs = self.human.uvset.uvs
-            fuvs = self.human.uvset.fuvs
-        else:
-            uvs = mesh.texco
-            fuvs = mesh.fuvs
+        uvs = mesh.texco
+        fuvs = mesh.fuvs
         for fuv in fuvs:
             fp.write( "    vt" + "".join([" %.4g %.4g" %(tuple(uvs[vt])) for vt in fuv]) + " ;\n")
 
@@ -181,85 +177,63 @@ class Writer(mhx_writer.Writer):
     #   Face numbers
     #-------------------------------------------------------------------------------
 
-    MaterialNumbers = {
-        "nail"      : 1,
-        "teeth"     : 1,
-        "eye"       : 1,
-        "cornea"    : 1,
-        "brow"      : 1,
-        "joint"     : 2,
-        "red"       : 3,
-        "green"     : 4,
-        "blue"      : 5,
-        "yellow"    : 6,
-    }
-
     def writeFaceNumbers(self, fp):
         from exportutils.collect import deleteGroup
 
-        if self.human.uvset:
-            pass
-        else:
-            obj = self.human.meshData
-            fmats = numpy.zeros(len(obj.coord), int)
-            #for fn,mtl in obj.materials.items():
-            #    fmats[fn] = MaterialNumbers[mtl]
+        obj = self.human.meshData
+        fmats = numpy.zeros(len(obj.coord), int)
 
-            # TODO use facemask set on module3d instead (cant we reuse filterMesh from collect module?)
-            deleteVerts = None
-            deleteGroups = []
+        # TODO use facemask set on module3d instead (cant we reuse filterMesh from collect module?)
+        deleteVerts = None
+        deleteGroups = []
 
-            for fg in obj.faceGroups:
-                fmask = obj.getFaceMaskForGroups([fg.name])
-                if deleteGroup(fg.name, deleteGroups):
-                    fmats[fmask] = 4
-                elif fg.name == "helper-tights":
-                    fmats[fmask] = 3
-                elif fg.name in ["helper-hair", "joint-ground"]:
-                    fmats[fmask] = 6
-                elif fg.name == "helper-skirt":
-                    fmats[fmask] = 5
-                elif fg.name[0:6] == "joint-":
-                    fmats[fmask] = 2
-                elif fg.name[0:7] == "helper-":
-                    fmats[fmask] = 4
+        for fg in obj.faceGroups:
+            fmask = obj.getFaceMaskForGroups([fg.name])
+            if deleteGroup(fg.name, deleteGroups):
+                fmats[fmask] = 4
+            elif fg.name == "helper-tights":
+                fmats[fmask] = 3
+            elif fg.name in ["helper-hair", "joint-ground"]:
+                fmats[fmask] = 6
+            elif fg.name == "helper-skirt":
+                fmats[fmask] = 5
+            elif fg.name[0:6] == "joint-":
+                fmats[fmask] = 2
+            elif fg.name[0:7] == "helper-":
+                fmats[fmask] = 4
 
-            if deleteVerts != None:
-                for fn,fverts in enumerate(obj.fvert):
-                    if deleteVerts[fverts[0]]:
-                        fmats[fn] = 6
+        if deleteVerts != None:
+            for fn,fverts in enumerate(obj.fvert):
+                if deleteVerts[fverts[0]]:
+                    fmats[fn] = 6
 
-            mn = -1
-            fn = 0
-            f0 = 0
-            for fverts in obj.fvert:
-                if fmats[fn] != mn:
-                    if fn != f0:
-                        fp.write("  ftn %d %d 1 ;\n" % (fn-f0, mn))
-                    mn = fmats[fn]
-                    f0 = fn
-                fn += 1
-            if fn != f0:
-                fp.write("  ftn %d %d 1 ;\n" % (fn-f0, mn))
+        mn = -1
+        fn = 0
+        f0 = 0
+        for fverts in obj.fvert:
+            if fmats[fn] != mn:
+                if fn != f0:
+                    fp.write("  ftn %d %d 1 ;\n" % (fn-f0, mn))
+                mn = fmats[fn]
+                f0 = fn
+            fn += 1
+        if fn != f0:
+            fp.write("  ftn %d %d 1 ;\n" % (fn-f0, mn))
 
     #-------------------------------------------------------------------------------
     #   Material access
     #-------------------------------------------------------------------------------
 
     def writeBaseMaterials(self, fp):
-        if self.human.uvset:
-            for mat in self.human.uvset.materials:
-                fp.write("  Material %s_%s ;\n" % (self.name, mat.name))
-        else:
-            fp.write(
-    "  Material %sSkin ;\n" % self.name +
-    "  Material %sShiny ;\n" % self.name +
-    "  Material %sInvisio ;\n" % self.name +
-    "  Material %sRed ;\n" % self.name +
-    "  Material %sGreen ;\n" % self.name +
-    "  Material %sBlue ;\n" % self.name +
-    "  Material %sYellow ;\n" % self.name
-    )
+        fp.write(
+            "  Material %sSkin ;\n" % self.name +
+            "  Material %sShiny ;\n" % self.name +
+            "  Material %sInvisio ;\n" % self.name +
+            "  Material %sRed ;\n" % self.name +
+            "  Material %sGreen ;\n" % self.name +
+            "  Material %sBlue ;\n" % self.name +
+            "  Material %sYellow ;\n" % self.name
+        )
 
 
     def writeHideAnimationData(self, fp, amt, prefix, name):

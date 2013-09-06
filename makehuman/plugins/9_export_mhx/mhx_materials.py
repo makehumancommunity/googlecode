@@ -179,10 +179,6 @@ class Writer(mhx_writer.Writer):
         human = self.human
         mat = human.material
 
-        if human.uvset:
-            self.writeMultiMaterials(fp)
-            return
-
         texnames = self.writeTextures(fp, mat, self.name)
 
         fp.write(
@@ -325,88 +321,6 @@ class Writer(mhx_writer.Writer):
                 n += 1
         fp.write("#endif\n")
         return
-
-    #-------------------------------------------------------------------------------
-    #   Multi materials
-    #-------------------------------------------------------------------------------
-
-    TX_SCALE = 1
-    TX_BW = 2
-
-    TexInfo = {
-        "diffuse" :     ("COLOR", "use_map_color_diffuse", "diffuse_color_factor", 0),
-        "specular" :    ("SPECULAR", "use_map_specular", "specular_factor", TX_BW),
-        "alpha" :       ("ALPHA", "use_map_alpha", "alpha_factor", TX_BW),
-        "translucency": ("TRANSLUCENCY", "use_map_translucency", "translucency_factor", TX_BW),
-        "bump" :        ("NORMAL", "use_map_normal", "normal_factor", TX_SCALE|TX_BW),
-        "displacement": ("DISPLACEMENT", "use_map_displacement", "displacement_factor", TX_SCALE|TX_BW),
-    }
-
-    def writeMultiMaterials(self, fp):
-        config = self.config
-        uvset = self.human.uvset
-
-        for mat in uvset.materials:
-            for tex in mat.textures:
-                name = os.path.basename(tex.file)
-                fp.write("Image %s\n" % name)
-                newpath = config.copyTextureToNewLocation(tex)
-                fp.write(
-                    "  Filename %s ;\n" % newpath +
-    #                "  alpha_mode 'PREMUL' ;\n" +
-                    "end Image\n\n" +
-                    "Texture %s IMAGE\n" % name +
-                    "  Image %s ;\n" % name +
-                    "end Texture\n\n")
-
-            fp.write("Material %s_%s\n" % (self.name, mat.name))
-            alpha = False
-            for (key, value) in mat.settings:
-                if key == "alpha":
-                    alpha = True
-                    fp.write(
-                    "  use_transparency True ;\n" +
-                    "  use_raytrace False ;\n" +
-                    "  use_shadows False ;\n" +
-                    "  use_transparent_shadows False ;\n" +
-                    "  alpha %s ;\n" % value)
-                elif key in ["diffuse_color", "specular_color"]:
-                    fp.write("  %s Array %s %s %s ;\n" % (key, value[0], value[1], value[2]))
-                elif key in ["diffuse_intensity", "specular_intensity"]:
-                    fp.write("  %s %s ;\n" % (key, value))
-            if not alpha:
-                fp.write("  use_transparent_shadows True ;\n")
-
-            n = 0
-            for tex in mat.textures:
-                name = os.path.basename(tex.file)
-                if len(tex.types) > 0:
-                    (key, value) = tex.types[0]
-                else:
-                    (key, value) = ("diffuse", "1")
-                (type, use, factor, flags) = TexInfo[key]
-                diffuse = False
-                fp.write(
-                    "  MTex %d %s UV %s\n" % (n, name, type) +
-                    "    texture Refer Texture %s ;\n" % name)
-                for (key, value) in tex.types:
-                    (type, use, factor, flags) = TexInfo[key]
-                    if flags & TX_SCALE:
-                        scale = "*theScale"
-                    else:
-                        scale = ""
-                    fp.write(
-                    "    %s True ;\n" % use +
-                    "    %s %s%s ;\n" % (factor, value, scale))
-                    if flags & TX_BW:
-                        fp.write("    use_rgb_to_intensity True ;\n")
-                    if key == "diffuse":
-                        diffuse = True
-                if not diffuse:
-                    fp.write("    use_map_color_diffuse False ;\n")
-                fp.write("  end MTex\n")
-                n += 1
-            fp.write("end Material\n\n")
 
     #-------------------------------------------------------------------------------
     #   Masking
