@@ -12,7 +12,7 @@ specularHardness 50
 opacity 1
 
 // Textures and properties
-diffuseTexture data/litspheres/adaptive_skin_tone.png
+diffuseTexture male_genital.png
 normalmapTexture male_genital_norm.png
 normalmapIntensity 1.0
 
