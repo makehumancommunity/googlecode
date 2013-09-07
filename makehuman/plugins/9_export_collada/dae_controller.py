@@ -24,28 +24,35 @@ Controller export
 """
 
 from .dae_node import goodBoneName
+from progress import Progress
 
 #----------------------------------------------------------------------
 #   library_controllers
 #----------------------------------------------------------------------
 
 def writeLibraryControllers(fp, rmeshes, amt, config):
+    progress = Progress(len(rmeshes), False)
     fp.write('\n  <library_controllers>\n')
     for rmesh in rmeshes:
         if amt:
             writeSkinController(fp, rmesh, amt, config)
+        progress.substep(0.5)
         if rmesh.shapes:
             writeMorphController(fp, rmesh, config)
+        progress.step()
     fp.write('  </library_controllers>\n')
 
 
 def writeSkinController(fp, rmesh, amt, config):
+    progress = Progress()
+    progress(0, 0.1)
     obj = rmesh.object
     rmesh.calculateSkinWeights(amt)
     nVerts = len(obj.coord)
     nBones = len(amt.bones)
     nWeights = len(rmesh.skinWeights)
 
+    progress(0.1, 0.2)
     fp.write('\n' +
         '    <controller id="%s-skin">\n' % rmesh.name +
         '      <skin source="#%sMesh">\n' % rmesh.name +
@@ -63,6 +70,7 @@ def writeSkinController(fp, rmesh, amt, config):
         bname = goodBoneName(bone.name)
         fp.write(' %s' % bname)
 
+    progress(0.2, 0.4)
     fp.write('\n' +
         '          </IDREF_array>\n' +
         '          <technique_common>\n' +
@@ -89,6 +97,7 @@ def writeSkinController(fp, rmesh, amt, config):
         '        <source id="%s-skin-poses">\n' % rmesh.name +
         '          <float_array count="%d" id="%s-skin-poses-array">' % (16*nBones,rmesh.name))
 
+    progress(0.4, 0.6)
     for bone in amt.bones.values():
         #bone.calcBindMatrix()
         mat = bone.bindMatrix
@@ -99,6 +108,7 @@ def writeSkinController(fp, rmesh, amt, config):
                 fp.write(' %.4f' % mat[i,j])
         fp.write('\n')
 
+    progress(0.6, 0.8)
     fp.write('\n' +
         '          </float_array>\n' +
         '          <technique_common>\n' +
@@ -120,6 +130,7 @@ def writeSkinController(fp, rmesh, amt, config):
     for wts in rmesh.vertexWeights:
         fp.write('%d ' % len(wts))
 
+    progress(0.8, 0.99)
     fp.write('\n' +
         '          </vcount>\n'
         '          <v>\n' +
@@ -135,8 +146,12 @@ def writeSkinController(fp, rmesh, amt, config):
         '      </skin>\n' +
         '    </controller>\n')
 
+    progress(1)
+
 
 def writeMorphController(fp, rmesh, config):
+    progress = Progress()
+    progress(0, 0.7)
     nShapes = len(rmesh.shapes)
 
     fp.write(
@@ -159,6 +174,7 @@ def writeMorphController(fp, rmesh, config):
         '        <source id="%sWeights">\n' % (rmesh.name) +
         '          <float_array id="%sWeights-array" count="%d">' % (rmesh.name, nShapes))
 
+    progress(0.7, 0.99)
     fp.write(nShapes*" 0")
 
     fp.write('\n' +
@@ -175,5 +191,7 @@ def writeMorphController(fp, rmesh, config):
         '        </targets>\n' +
         '      </morph>\n' +
         '    </controller>\n')
+
+    progress(1)
 
 
