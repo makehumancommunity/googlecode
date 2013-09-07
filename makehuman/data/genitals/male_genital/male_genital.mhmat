@@ -12,12 +12,10 @@ specularHardness 50
 opacity 1
 
 // Textures and properties
-diffuseTexture male_genital.png
 normalmapTexture male_genital_norm.png
 normalmapIntensity 1.0
-
-// For providing alpha-only to litsphere shader
-transparencymapTexture male_genital_alpha.png
+// Only alpha channel is used from diffuse texture, because of ALPHA_MAP define 
+diffuseTexture male_genital.png
 
 // Shader programme
 shader data/shaders/glsl/litsphere
@@ -25,7 +23,7 @@ shader data/shaders/glsl/litsphere
 // Define custom uniform values to pass to supporting shaders
 shaderParam litsphereTexture data/litspheres/adaptive_skin_tone.png
 
-// Enable alpha-only mapping in litsphere
+// Enable alpha-only mapping in litsphere, uses alpha from diffuse texture
 shaderDefine ALPHA_MAP
 
 // Configure built-in shader defines
