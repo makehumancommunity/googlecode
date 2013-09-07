@@ -24,15 +24,18 @@ Material export
 """
 
 import os
+from progress import Progress
 
 #----------------------------------------------------------------------
 #   library_images
 #----------------------------------------------------------------------
 
 def writeLibraryImages(fp, rmeshes, config):
+    progress = Progress(len(rmeshes), False)
     fp.write('\n  <library_images>\n')
     for rmesh in rmeshes:
         writeImages(fp, rmesh, config)
+        progress.step()
     fp.write('  </library_images>\n')
 
 
@@ -48,7 +51,6 @@ def writeImages(fp, rmesh, config):
         writeImage(fp, mat.normalMapTexture, config)
     if mat.displacementMapTexture:
         writeImage(fp, mat.displacementMapTexture, config)
-
 
 def getTextureName(filepath):
     texfile = os.path.basename(filepath)
@@ -72,13 +74,17 @@ def writeImage(fp, filepath, config):
 #----------------------------------------------------------------------
 
 def writeLibraryEffects(fp, rmeshes, config):
+    progress = Progress(len(rmeshes), False)
     fp.write('\n  <library_effects>\n')
     for rmesh in rmeshes:
         writeEffects(fp, rmesh)
+        progress.step()
     fp.write('  </library_effects>\n')
 
 
 def writeEffects(fp, rmesh):
+    progress = Progress()
+    
     mat = rmesh.material
     fp.write(
        '    <effect id="%s-effect">\n' % mat.name.replace(" ", "_") +
@@ -89,6 +95,7 @@ def writeEffects(fp, rmesh):
     writeSurfaceSampler(fp, mat.normalMapTexture)
     writeSurfaceSampler(fp, mat.bumpMapTexture)
     writeSurfaceSampler(fp, mat.displacementMapTexture)
+    progress(0.33)
 
     fp.write(
         '        <technique sid="common">\n' +
@@ -101,7 +108,8 @@ def writeEffects(fp, rmesh):
     writeTexture(fp, 'normal', mat.normalMapTexture, None, mat.normalMapIntensity)
     writeTexture(fp, 'bump', mat.bumpMapTexture, None, mat.bumpMapIntensity)
     writeTexture(fp, 'displacement', mat.displacementMapTexture, None, mat.displacementMapIntensity)
-
+    progress(0.67)
+    
     fp.write(
         '          </phong>\n' +
         '          <extra/>\n' +
@@ -114,6 +122,7 @@ def writeEffects(fp, rmesh):
         '      </profile_COMMON>\n' +
         '      <extra><technique profile="MAX3D"><double_sided>1</double_sided></technique></extra>\n' +
         '    </effect>\n')
+    progress(1)
 
 
 def writeSurfaceSampler(fp, filepath):
@@ -155,9 +164,11 @@ def writeTexture(fp, tech, filepath, color, intensity, s=1.0):
 #----------------------------------------------------------------------
 
 def writeLibraryMaterials(fp, rmeshes, config):
+    progress = Progress(len(rmeshes), False)
     fp.write('\n  <library_materials>\n')
     for rmesh in rmeshes:
         writeMaterials(fp, rmesh)
+        progress.step()
     fp.write('  </library_materials>\n')
 
 

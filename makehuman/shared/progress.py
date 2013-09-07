@@ -115,7 +115,7 @@ current_Progress_ = None
 class Progress(object):
     def __init__(self, steps = 0, progressCallback = None):
         global current_Progress_
-        self.prepared = False
+        
         self.progress = 0.0
         self.steps = steps
         self.stepsdone = 0
@@ -125,8 +125,16 @@ class Progress(object):
         self.farstart = 0.0
         self.farend = 1.0
         self.nextstart = 0.0
-        self.nextend = 1.0
-            
+
+        if steps > 0:
+            self.prepared = True
+            self.nextend = 1.0/steps
+            self.numsubs = 1
+        else:
+            self.prepared = False
+            self.nextend = 1.0
+            self.numsubs = 0
+        
         if current_Progress_ is None:
             # Generic case, where the progress bar is updated directly.
             self.parent = None
@@ -179,7 +187,8 @@ class Progress(object):
         self.progress = amount
         if self.progress >= 0.999999: # Not using 1.0 for precision safety.
             self.finish()
-        amount = self.start + (self.end - self.start)*amount
+        if self.parent != False:
+            amount = self.start + (self.end - self.start)*amount
         if self.parent:
             if self.description:
                 self.parent.update(amount, self.description)

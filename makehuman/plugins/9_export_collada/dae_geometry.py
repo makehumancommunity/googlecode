@@ -25,19 +25,25 @@ Geometry export
 
 import gui3d
 import numpy as np
+from progress import Progress
 
 #----------------------------------------------------------------------
 #   library_geometry
 #----------------------------------------------------------------------
 
 def writeLibraryGeometry(fp, rmeshes, config):
+    progress = Progress(len(rmeshes), False)
     fp.write('\n  <library_geometries>\n')
     for rmesh in rmeshes:
         writeGeometry(fp, rmesh, config)
+        progress.step()
     fp.write('  </library_geometries>\n')
 
 
 def writeGeometry(fp, rmesh, config):
+    progress = Progress()
+    progress(0)
+    
     obj = rmesh.object
     nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
@@ -50,7 +56,7 @@ def writeGeometry(fp, rmesh, config):
         '          ')
 
     fp.write( ''.join([("%.4f %.4f %.4f " % tuple(co)) for co in obj.coord]) )
-
+    
     fp.write('\n' +
         '          </float_array>\n' +
         '          <technique_common>\n' +
@@ -61,6 +67,7 @@ def writeGeometry(fp, rmesh, config):
         '            </accessor>\n' +
         '          </technique_common>\n' +
         '        </source>\n')
+    progress(0.2)
 
     # Normals
 
@@ -73,7 +80,7 @@ def writeGeometry(fp, rmesh, config):
             '          ')
 
         fp.write( ''.join([("%.4f %.4f %.4f " % tuple(no)) for no in obj.fnorm]) )
-
+        
         fp.write('\n' +
             '          </float_array>\n' +
             '          <technique_common>\n' +
@@ -84,6 +91,7 @@ def writeGeometry(fp, rmesh, config):
             '            </accessor>\n' +
             '          </technique_common>\n' +
             '        </source>\n')
+        progress(0.35)
 
     # UV coordinates
 
@@ -103,6 +111,7 @@ def writeGeometry(fp, rmesh, config):
         '            </accessor>\n' +
         '          </technique_common>\n' +
         '        </source>\n')
+    progress(0.5, 0.7)
 
     # Faces
 
@@ -112,28 +121,32 @@ def writeGeometry(fp, rmesh, config):
         '        </vertices>\n')
 
     checkFaces(rmesh, nVerts, nUvVerts)
+    progress(0.7, 0.9)
     #writePolygons(fp, rmesh, config)
     writePolylist(fp, rmesh, config)
+    progress(0.9, 0.99)
 
     fp.write(
         '      </mesh>\n' +
         '    </geometry>\n')
 
     if rmesh.shapes:
-        t = 0
-        dt = 1.0/len(rmesh.shapes)
+        shaprog = Progress(len(rmesh.shapes))
         for name,shape in rmesh.shapes:
-            gui3d.app.progress(t, text=name)
-            t += dt
             writeShapeKey(fp, name, shape, rmesh, config)
+            shaprog.step()
+
+    progress(1)
 
 
 def writeShapeKey(fp, name, shape, rmesh, config):
+    progress = Progress()
     obj = rmesh.object
     nVerts = len(obj.coord)
 
     # Verts
 
+    progress(0)
     fp.write(
         '    <geometry id="%sMeshMorph_%s" name="%s">\n' % (rmesh.name, name, name) +
         '      <mesh>\n' +
@@ -157,6 +170,7 @@ def writeShapeKey(fp, name, shape, rmesh, config):
         '            </accessor>\n' +
         '          </technique_common>\n' +
         '        </source>\n')
+    progress(0.3)
 
     # Normals
     """
@@ -175,6 +189,7 @@ def writeShapeKey(fp, name, shape, rmesh, config):
         '          </technique_common>\n' +
         '        </source>\n')
     """
+    progress(0.6)
 
     # Polylist
 
@@ -200,6 +215,7 @@ def writeShapeKey(fp, name, shape, rmesh, config):
         '        </polylist>\n' +
         '      </mesh>\n' +
         '    </geometry>\n')
+    progress(1)
 
 
 #
@@ -228,6 +244,7 @@ def writePolygons(fp, rmesh, config):
 '''
 
 def writePolylist(fp, rmesh, config):
+    progress = Progress(2)
     obj = rmesh.object
     fp.write(
         '        <polylist count="%d">\n' % len(obj.fvert) +
@@ -248,6 +265,7 @@ def writePolylist(fp, rmesh, config):
     fp.write('\n' +
         '          </vcount>\n'
         '          <p>')
+    progress.step()
 
     for fn,fv in enumerate(obj.fvert):
         fuv = obj.fuvs[fn]
@@ -259,6 +277,7 @@ def writePolylist(fp, rmesh, config):
     fp.write(
         '          </p>\n' +
         '        </polylist>\n')
+    progress.step()
     return
 
 #
