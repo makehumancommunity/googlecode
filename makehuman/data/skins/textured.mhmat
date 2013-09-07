@@ -1,7 +1,7 @@
 # Material definition for DefaultSkinTextured
 
 name DefaultSkinTextured
-ambientColor 0.8 0.5 0.5
+ambientColor 0.8 0.8 0.8
 diffuseColor 0.819607843137 0.490196078431 0.388235294118
 diffuseIntensity 1.0
 specularColor 1.0 1.0 0.8
