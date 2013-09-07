@@ -33,6 +33,8 @@ import log
 import gui3d
 import exportutils
 
+from progress import Progress
+
 from . import dae_materials
 from . import dae_controller
 from . import dae_geometry
@@ -48,14 +50,15 @@ Delta = [0,0.01,0]
 #
 
 def exportCollada(human, filepath, config):
-    gui3d.app.progress(0, text="Preparing")
-
+    progress = Progress()
+    
     time1 = time.clock()
     config.setHuman(human)
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
 
+    progress(0, 0.5, "Preparing")
     rawTargets = exportutils.collect.readTargets(human, config)
     rmeshes,amt = exportutils.collect.setupObjects(
         name,
@@ -67,7 +70,7 @@ def exportCollada(human, filepath, config):
     if amt:
         amt.calcBindMatrices()
 
-    gui3d.app.progress(0.5, text="Exporting %s" % filepath)
+    progress(0.5, 0.55, "Exporting %s" % filepath)
 
     try:
         fp = codecs.open(filepath, 'w', encoding="utf-8")
@@ -88,22 +91,22 @@ def exportCollada(human, filepath, config):
         '    <up_axis>Y_UP</up_axis>\n' +
         '  </asset>\n')
 
-    gui3d.app.progress(0.55, text="Exporting images")
+    progress(0.55, 0.6, "Exporting images")
     dae_materials.writeLibraryImages(fp, rmeshes, config)
 
-    gui3d.app.progress(0.6, text="Exporting effects")
+    progress(0.6, 0.65, "Exporting effects")
     dae_materials.writeLibraryEffects(fp, rmeshes, config)
 
-    gui3d.app.progress(0.65, text="Exporting materials")
+    progress(0.65, 0.7, "Exporting materials")
     dae_materials.writeLibraryMaterials(fp, rmeshes, config)
 
-    gui3d.app.progress(0.7, text="Exporting controllers")
+    progress(0.7, 0.75, "Exporting controllers")
     dae_controller.writeLibraryControllers(fp, rmeshes, amt, config)
 
-    gui3d.app.progress(0.75, text="Exporting geometry")
+    progress(0.75, 0.9, "Exporting geometry")
     dae_geometry.writeLibraryGeometry(fp, rmeshes, config)
 
-    gui3d.app.progress(0.9, text="Exporting scene")
+    progress(0.9, 0.99, "Exporting scene")
     dae_node.writeLibraryVisualScenes(fp, rmeshes, amt, config)
 
     fp.write(
@@ -113,7 +116,7 @@ def exportCollada(human, filepath, config):
         '</COLLADA>\n')
 
     fp.close()
-    gui3d.app.progress(1)
+    progress(1, None, "Export finished.")
     time2 = time.clock()
     log.message("Wrote Collada file in %g s: %s" % (time2-time1, filepath))
     return
