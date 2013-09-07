@@ -79,10 +79,13 @@ class MaterialAnalysis(object):
                 if "." in tex:
                     txs = tex.split(".", 2)
                     if txs[0] == "mat":
-                        if (getattr(self.rmesh.material, 'supports' + txs[1].capitalize())() and
-                            self.rmesh.material.shaderConfig['spec' if txs[1] == 'specular' else txs[1]]):
-                            return getattr(self.rmesh.material, txs[1] + ('' if txs[1] == 'diffuse' else 'Map') + 'Texture')
-                        else:
+                        try:
+                            if (getattr(self.rmesh.material, 'supports' + txs[1].capitalize())() and
+                                self.rmesh.material.shaderConfig['spec' if txs[1] == 'specular' else txs[1]]):
+                                return getattr(self.rmesh.material, txs[1] + ('' if txs[1] == 'diffuse' else 'Map') + 'Texture')
+                            else:
+                                return None
+                        except KeyError: # In case the material has no shader config for the texture
                             return None
                     elif txs[0] == "func":
                         if txs[1] in self.analyzer.functions:
