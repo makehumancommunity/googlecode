@@ -405,22 +405,19 @@ def povrayWriteMesh2(hfile, rmeshes):
 
         # Vertices
         hfile.write('  vertex_vectors {\n      %s\n  ' % len(obj.coord))
-        for co in obj.coord:
-            hfile.write('<%s,%s,%s>' % (-co[0],co[1],co[2]))
+        hfile.write(''.join([('<%.5f,%.5f,%.5f>' % tuple(co)) for co in obj.coord]))
         hfile.write('\n  }\n\n')
         progress.substep(0.14)
 
         # Normals
         hfile.write('  normal_vectors {\n      %s\n  ' % len(obj.vnorm))
-        for no in obj.vnorm:
-            hfile.write('<%s,%s,%s>' % (-no[0],no[1],no[2]))
+        hfile.write(''.join([('<%.5f,%.5f,%.5f>' % tuple(no)) for no in obj.vnorm]))
         hfile.write('\n  }\n\n')
         progress.substep(0.28)
 
         # UV Vectors
         hfile.write('  uv_vectors {\n      %s\n  ' % len(obj.texco))
-        for uv in obj.texco:
-            hfile.write('<%s,%s>' % tuple(uv))
+        hfile.write(''.join([('<%.5f,%.5f>' % tuple(uv)) for uv in obj.texco]))
         hfile.write('\n  }\n\n')
         progress.substep(0.43)
 
