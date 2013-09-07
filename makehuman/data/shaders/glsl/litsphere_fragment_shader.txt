@@ -79,7 +79,7 @@ void main() {
     #ifdef DIFFUSE
         vec4 diffuse = texture2D(diffuseTexture, gl_TexCoord[0].xy).rgba;
         gl_FragColor.rgb = shading * diffuse.rgb * vec3(2.0 - (shading.r + shading.g + shading.b)/3.0);
-        gl_FragColor.a = diffuse.a
+        gl_FragColor.a = diffuse.a;
     #else
         gl_FragColor.rgb = shading.rgb;
         #ifdef ALPHA_MAP
