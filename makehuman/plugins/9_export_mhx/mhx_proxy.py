@@ -38,6 +38,7 @@ class Writer(mhx_writer.Writer):
 
     def __init__(self, matWriter, meshWriter):
         mhx_writer.Writer.__init__(self)
+        self.type = "mhx_proxy"
         self.matWriter = matWriter
         self.meshWriter = meshWriter
 
@@ -96,10 +97,6 @@ class Writer(mhx_writer.Writer):
 
         obj = proxy.getObject()
         fp.write("".join( ["    f %d %d %d %d ;\n" % tuple(fv) for fv in obj.fvert] ))
-        #if False and proxy.faceNumbers:
-        #    for ftn in proxy.faceNumbers:
-        #        fp.write(ftn)
-        #else:
         fp.write("    ftall 0 1 ;\n")
 
         fp.write("  end Faces\n")

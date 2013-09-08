@@ -59,7 +59,6 @@ class ArmatureOptions(object):
         self.useDeformNames = False
         self.useIkArms = False
         self.useIkLegs = False
-        self.useRevFoot = True
         self.useFingers = False
 
         # Options set by exporters
@@ -120,7 +119,6 @@ class ArmatureOptions(object):
             "   useDeformNames : %s\n" % self.useDeformNames +
             "   useIkArms : %s\n" % self.useIkArms +
             "   useIkLegs : %s\n" % self.useIkLegs +
-            "   useRevFoot : %s\n" % self.useRevFoot +
             "   useFingers : %s\n" % self.useFingers +
             "   useMasterBone : %s\n" % self.useMasterBone +
             "   useCorrectives : %s\n" % self.useCorrectives +
@@ -151,7 +149,6 @@ class ArmatureOptions(object):
         self.useSplitNames = selector.useSplitBones.selected
         self.useIkArms = selector.useIkArms.selected
         self.useIkLegs = selector.useIkLegs.selected
-        self.useRevFoot = selector.useRevFoot.selected
         self.useDeformBones = selector.useDeformBones.selected
         self.useDeformNames = selector.useDeformBones.selected
 
@@ -223,7 +220,6 @@ class ArmatureSelector:
         self.useDeformBones = box.addWidget(gui.ToggleButton("Deform bones (MHX only)"))
         self.useIkArms = box.addWidget(gui.ToggleButton("Arm IK (MHX only)"))
         self.useIkLegs = box.addWidget(gui.ToggleButton("Leg IK (MHX only)"))
-        self.useRevFoot = box.addWidget(gui.ToggleButton("Reverse Foot IK (MHX only)"))
         self.useFingers = box.addWidget(gui.ToggleButton("Finger controls (MHX only)"))
 
         self.useMasterBone = box.addWidget(gui.ToggleButton("Master bone"))
@@ -245,7 +241,6 @@ class ArmatureSelector:
         self.useDeformBones.setSelected(options.useDeformBones)
         self.useIkArms.setSelected(options.useIkArms)
         self.useIkLegs.setSelected(options.useIkLegs)
-        self.useRevFoot.setSelected(options.useRevFoot)
         self.useFingers.setSelected(options.useFingers)
 
         self.useMasterBone.setSelected(options.useMasterBone)

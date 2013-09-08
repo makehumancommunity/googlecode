@@ -34,6 +34,11 @@ from . import mhx_drivers
 
 class Writer(mhx_writer.Writer):
 
+    def __init__(self):
+        mhx_writer.Writer.__init__(self)
+        self.type == "mhx_materials"
+
+
     def writeTexture(self, fp, filepath, prefix, channel):
         texname = prefix+"_"+channel
         imgname = os.path.basename(filepath)

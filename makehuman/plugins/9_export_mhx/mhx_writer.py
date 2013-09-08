@@ -25,6 +25,7 @@ MHX Writer base class
 class Writer:
     def __init__(self):
         self.name = None
+        self.type = "undefined"
         self.human = None
         self.armature = None
         self.config = None
@@ -32,6 +33,9 @@ class Writer:
         self.customTargetFiles = None
         self.loadedShapes = {}
         self.customProps = []
+
+    def __repr__(self):
+        return ("<Writer %s>" % self.type)
 
     def fromOtherWriter(self, writer):
         self.name = writer.name

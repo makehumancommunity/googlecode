@@ -103,11 +103,7 @@ class Parser:
             rig_control.HeadsTails,
         ])
 
-        if options.useRevFoot:
-            addDict(rig_control.RevFootHeadsTails, self.headsTails)
-        else:
-            addDict(rig_control.RigifyFootHeadsTails, self.headsTails)
-            self.boneDrivers += rig_control.RigifyFootBoneDrivers
+        addDict(rig_control.RevFootHeadsTails, self.headsTails)
 
         if options.useConstraints:
             self.setConstraints(rig_bones.Constraints)
@@ -188,12 +184,8 @@ class Parser:
                 self.propDrivers += rig_control.HeadPropDrivers
 
         if options.useIkLegs and options.useConstraints:
-            if options.useRevFoot:
-                self.addBones(rig_control.RevFootArmature, boneInfo)
-                self.setConstraints(rig_control.RevFootConstraints)
-            else:
-                self.addBones(rig_control.RigifyFootArmature, boneInfo)
-                self.setConstraints(rig_control.RigifyFootConstraints)
+            self.addBones(rig_control.RevFootArmature, boneInfo)
+            self.setConstraints(rig_control.RevFootConstraints)
             self.addBones(rig_control.MarkerArmature, boneInfo)
             #addDict(rig_control.IkLegChains, self.ikChains)
             addDict(rig_control.IkLegParents, self.parents)

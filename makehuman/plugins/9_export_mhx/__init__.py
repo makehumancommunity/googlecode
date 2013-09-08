@@ -27,7 +27,12 @@ import gui
 from export import Exporter
 from exportutils.config import Config
 
-# For deriving custom mhx exporters
+# Access to submodules for derived mhx exporters.
+# The idea is that I can use a custom mhx exporter
+# for experimentation, without affecting official
+# MH code. This is somewhat tricky because
+# import 9_export_mhx
+# yields a syntax error.
 from . import mhx_main
 from . import mhx_mesh
 from . import mhx_materials

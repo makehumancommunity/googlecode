@@ -44,6 +44,11 @@ def callback(progress, text=""):
 
 class Writer(mhx_writer.Writer):
 
+    def __init__(self):
+        mhx_writer.Writer.__init__(self)
+        self.type == "mhx_pose"
+
+
     def writePose(self, fp):
         amt = self.armature
         config = self.config

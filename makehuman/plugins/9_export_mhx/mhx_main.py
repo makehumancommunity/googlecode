@@ -91,6 +91,7 @@ class Writer(mhx_writer.Writer):
         mhx_writer.Writer.__init__(self)
 
         self.name = name
+        self.type = "mhx_main"
         self.human = human
         self.armature = amt
         self.config = config
