@@ -105,10 +105,11 @@ def exportMd5(human, filepath, config):
             boneprog.step()
     f.write('}\n\n')
 
-    progress(0.3, 0.8, "Writing Objects")
-    objprog = Progress(len(rmeshes))
+    progress(0.3, 0.8, "Writing Objects", len(rmeshes))
     for rmeshIdx, rmesh in enumerate(rmeshes):
         # rmesh.type: None is human, "Proxy" is human proxy, "Clothes" for clothing and "Hair" for hair
+        objprog = Progress()
+        
         obj = rmesh.object
 
         obj.calcFaceNormals()
@@ -136,6 +137,7 @@ def exportMd5(human, filepath, config):
 
         # Collect vertex weights
         if human.getSkeleton():
+            objprog(0, 0.2)
             bodyWeights = human.getVertexWeights()
 
             if rmesh.type:
@@ -188,9 +190,10 @@ def exportMd5(human, filepath, config):
                 if vert not in vertWeights:
                     # Weight vertex completely to origin joint
                     vertWeights[vert] = [(0, 1.0)]
-            objprog.substep(0.3)
+            objprog(0.2, 0.3)
         else:
             vertWeights = None
+            objprog(0, 0.3)
 
         # Write vertices
         wCount = 0
@@ -206,7 +209,7 @@ def exportMd5(human, filepath, config):
             # vert [vertIndex] ( [texU] [texV] ) [weightIndex] [weightElem]
             f.write('\tvert %d ( %f %f ) %d %d\n' % (vert, u, 1.0-v, wCount, numWeights))
             wCount = wCount + numWeights
-        objprog.substep(0.5)
+        objprog(0.3, 0.5)
 
         # Write faces
         f.write('\n\tnumtris %d\n' % numFaces)
@@ -218,9 +221,10 @@ def exportMd5(human, filepath, config):
             if fv[0] != fv[3]:
                 f.write('\ttri %d %d %d %d\n' % (fn, fv[0], fv[3], fv[2]))
                 fn += 1
-        objprog.substep(0.7)
+        objprog(0.5, 0.99)
 
         # Write bone weighting
+        bwprog = Progress(len(obj.r_coord)).HighFrequency(200)
         if human.getSkeleton():
             f.write('\n\tnumweights %d\n' % wCount)
             wCount = 0
@@ -245,6 +249,7 @@ def exportMd5(human, filepath, config):
                     # weight [weightIndex] [jointIndex] [weightValue] ( [xPos] [yPos] [zPos] )
                     f.write('\tweight %d %d %f ( %f %f %f )\n' % (wCount, jointIdx, jointWght, relPos[0], relPos[1], relPos[2]))
                     wCount = wCount +1
+                bwprog.step()
         else:
             # No skeleton selected: Attach all vertices to the root with weight 1.0
             f.write('\n\tnumweights %d\n' % (numVerts))
@@ -260,13 +265,14 @@ def exportMd5(human, filepath, config):
 
                 f.write('\tweight %d %d %f ( %f %f %f )\n' % (idx, 0, 1.0, co[0], co[1], co[2]))
                 # Note: MD5 has a z-up coordinate system
+                bwprog.step()
         f.write('}\n\n')
-        objprog.step()
+        objprog(1)
     f.close()
 
     progress(0.8, 0.99, "Writing Animations")
     if human.getSkeleton() and hasattr(human, 'animations'):
-        animprog = Progress(len(human.anumations))
+        animprog = Progress(len(human.animations))
         for anim in human.animations:
             writeAnimation(filepath, human, config, anim.getAnimationTrack())
             animprog.step()

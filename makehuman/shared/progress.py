@@ -268,3 +268,33 @@ class Progress(object):
             self.prepared = False
 
         self.update(progress)
+
+
+    ## Specialized methods follow ##
+
+
+    # Method that prepares the Progress object to run in a hispeed loop
+    # with high number of repetitions, which needs to progress the bar
+    # while looping without adding callback overhead.
+    # WARNING: ALWAYS test the overhead. Don't use this
+    # in extremely fast loops or it might slow them down.
+    def HighFrequency(self, interval):
+
+        # Loop number interval between progress updates.
+        self.HFI = interval
+
+        # Replace original step method with the high frequency step.
+        self.dostep = self.step
+        self.step = self.HFstep
+
+        return self
+
+
+    # Replacement method to be called in a hispeed loop instead of step().
+    # It is replaced internally on HighFrequency() (call step() to use it).
+    def HFstep(self):
+
+        if self.stepsdone % self.HFI > 0 and self.stepsdone < self.steps - 1:
+            self.stepsdone +=1
+        else:
+            self.dostep()
