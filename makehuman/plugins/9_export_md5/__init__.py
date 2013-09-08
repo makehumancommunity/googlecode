@@ -24,6 +24,7 @@ TODO
 
 import gui3d
 import gui
+from progress import Progress
 from export import Exporter
 from exportutils.config import Config
 
@@ -60,6 +61,9 @@ class ExporterMD5(Exporter):
         from . import mh2md5
         cfg = MD5Config(self)
         cfg.selectedOptions(self)
+
+        progress = Progress()
+        progress(0, 1)
         mh2md5.exportMd5(human, filename("md5mesh"), cfg)
 
     def onShow(self, exportTaskView):
