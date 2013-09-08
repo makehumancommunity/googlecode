@@ -24,6 +24,7 @@ TODO
 
 import codecs
 import gui3d
+from progress import Progress
 
 def exportSkel(filename):
 
@@ -34,10 +35,16 @@ def exportSkel(filename):
 
     f = codecs.open(filename, 'w', encoding="utf-8")
 
-    for bone in human.getSkeleton().getBones():
+    bones = human.getSkeleton().getBones()
+    progress = Progress(len(bones))
+    progress(0, None, "Writing Bones")
+    
+    for bone in bones:
         writeBone(f, bone)
+        progress.step()
 
     f.close()
+    progress(1, None, "Skeleton export finished")
 
 def writeBone(f, bone):
 
