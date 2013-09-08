@@ -1072,10 +1072,10 @@ def checkObjectOK(ob, context, isClothing):
         word = "no texture layers"
         err = True
 
-    if isClothing and not materials.checkObjectHasDiffuseTexture(ob):
-        word = "no diffuse image texture"
-        line2 = "Create texture or delete material before proceeding.\n"
-        err = True
+    #if isClothing and not materials.checkObjectHasDiffuseTexture(ob):
+    #    word = "no diffuse image texture"
+    #    line2 = "Create texture or delete material before proceeding.\n"
+    #    err = True
 
     if word:
         msg = "Object %s can not be used for clothes creation because it has %s.\n" % (ob.name, word)

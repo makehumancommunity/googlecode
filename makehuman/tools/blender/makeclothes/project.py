@@ -581,10 +581,8 @@ def markEdges(pv0, pv1, pob, pVertEdges, taken, depth):
             bestEdge = pe
 
     if bestVert is not None:
-        print("    %d - %d - %d (%.6f) %d" % (pv0.index, bestVert.index, pv1.index, minDist, bestEdge.index))
+        #print("    %d - %d - %d (%.6f) %d" % (pv0.index, bestVert.index, pv1.index, minDist, bestEdge.index))
         bestEdge.use_seam = True
-        pv0.select = True
-        bestVert.select = True
         taken[bestEdge] = True
         markEdges(bestVert, pv1, pob, pVertEdges, taken, depth-1)
 

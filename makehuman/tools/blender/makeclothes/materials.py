@@ -27,6 +27,7 @@ import shutil
 from . import mc
 from maketarget.error import MHError
 
+'''
 def checkObjectHasDiffuseTexture(ob):
     """
     An object must either lack material, or have a diffuse texture.
@@ -46,7 +47,7 @@ def checkObjectHasDiffuseTexture(ob):
         return False
     else:
         return True
-
+'''
 
 def writeMaterial(ob, folder):
     """
@@ -91,8 +92,8 @@ def writeMaterialFile(fp, mat, name, outdir):
         '// Textures and properties\n')
 
     useDiffuse = useSpecular = useBump = useNormal = useDisplacement = "false"
-    for mtex in mat.texture_slots:
-        if mtex is None:
+    for slotNo,mtex in enumerate(mat.texture_slots):
+        if mtex is None or not mat.use_textures[slotNo]:
             continue
         tex = mtex.texture
         if tex.type != 'IMAGE' or tex.image is None:
