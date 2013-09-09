@@ -54,11 +54,6 @@ def load(path):
 
     del a,r,g,b
 
-    dir, file = os.path.split(path)
-    base, last = os.path.split(dir)
-    if last.lower() == 'fonts' and np.all(data[...,1:] - data[...,:1] == 0):
-        data = data[...,:1]
-
     data = np.ascontiguousarray(data)
 
     return data
