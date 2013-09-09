@@ -225,6 +225,13 @@ def initInterface(context):
         maxlen=24,
         default="")
 
+    # Edit
+
+    bpy.types.Object.McpUndoAction = StringProperty(
+        default="")
+
+    bpy.types.Object.McpActionName = StringProperty(
+        default="")
 
     # Plant
 
