@@ -35,7 +35,6 @@ def exportObj(human, filepath, config=None):
     progress = Progress(0, False)
     if config is None:
         config = exportutils.config.Config()
-    obj = human.meshData
     config.setHuman(human)
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)

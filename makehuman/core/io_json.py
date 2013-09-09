@@ -58,7 +58,7 @@ def saveJson(struct, filepath, binary=False):
 
 def encodeJsonData(data, pad=""):
     if isinstance(data, bool):
-        if data == True:
+        if data:
             return "true"
         else:
             return "false"

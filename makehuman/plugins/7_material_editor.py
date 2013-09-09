@@ -498,7 +498,7 @@ class UniformValue(gui.GroupBox):
             return TextureValue(self, value, defaultPath)
         if type == bool:
             return BooleanValue(self, value)
-        return TextView('???')
+        return gui.TextView('???')
 
     def onActivate(self, arg=None):
         values = [[widget.value

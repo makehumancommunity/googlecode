@@ -25,72 +25,6 @@ This module contains classes for commonly used geometry
 import module3d
 import numpy as np
 
-class NineSliceMesh(module3d.Object3D):
-    
-    """
-    A 9 slice mesh. It is a mesh with fixed size borders and a resizeable center.
-    This makes sure the borders of a group box are not stretched.
-    
-    :param width: The width.
-    :type width: int or float
-    :param height: The height.
-    :type height: int or float
-    :param texture: The texture.
-    :type texture: str
-    :param border: The border, a list of 4 int or float elements.
-    :type border: list
-    """
-    
-    def __init__(self, width, height, texture, border):
-        
-        module3d.Object3D.__init__(self, '9slice_' + texture + '_' + str(border))
-        
-        t = module3d.getTexture(texture)
-        
-        # Make sure fractions are calculated correctly
-        textureWidth = float(t.width)
-        textureHeight = float(t.height)
-        
-        # Make up some dimesnions when the texture is missing
-        if not textureWidth or not textureHeight:
-            textureWidth = border[0] + border[2] + 1
-            textureHeight = border[1] + border[3] + 1
-        
-        # create group
-        fg = self.createFaceGroup('9slice')
-        
-        xc = [0, border[0], width  - border[2], width]
-        yc = [0, border[1], height - border[3], height]
-
-        xuv = [0.0, border[0] / textureWidth, (textureWidth - border[2]) / textureWidth, 1.0]
-        yuv = [1.0, 1.0 - border[1] / textureHeight, 1.0 - (textureHeight - border[3]) / textureHeight, 0.0]
-        
-        # The 16 vertices
-        v = [(x, y, 0.0) for y in yc for x in xc]
-
-        # The 16 uv values
-        uv = [(x, y) for y in yuv for x in xuv]
-
-        # The 18 faces (9 quads)
-        f = [[o+4, o+5, o+1, o] for y in xrange(3) for x in xrange(3) for o in [x + y * 4]]
-
-        self.setCoords(v)
-        self.setUVs(uv)
-        self.setFaces(f, f, fg.idx)
-
-        self.border = border
-        self.setTexture(texture)
-        self.setCameraProjection(1)
-        self.setShadeless(1)
-        self.updateIndexBuffer()
-    
-    def resize(self, width, height):
-        xc = [0, self.border[0], width  - self.border[2], width]
-        yc = [0, self.border[1], height - self.border[3], height]
-        v = [(x, y, 0.0) for y in yc for x in xc]
-        self.changeCoords(v)
-        self.update()
-    
 class RectangleMesh(module3d.Object3D):
 
     """
@@ -193,7 +127,6 @@ class RectangleMesh(module3d.Object3D):
         return dx, dy
        
 class FrameMesh(module3d.Object3D):
-
     """
     A wire rectangle.
 

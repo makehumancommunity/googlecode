@@ -26,7 +26,6 @@ TODO
 # -*- coding: utf-8 -*-
 
 import sys
-import pprint
 import traceback
 
 import gui3d

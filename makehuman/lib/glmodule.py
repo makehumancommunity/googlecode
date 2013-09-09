@@ -22,9 +22,6 @@ Abstract
 TODO
 """
 
-import sys
-import math
-import atexit
 import numpy as np
 
 import OpenGL
@@ -39,7 +36,6 @@ from OpenGL.GL.ARB.texture_multisample import *
 
 from core import G
 from image import Image
-import matrix
 import debugdump
 import log
 from texture import Texture
@@ -225,14 +221,15 @@ def OnInit():
     glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight)
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos)
     glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR) #  If we enable this, we have stronger specular highlights
+    # TODO use mesh.material properties in drawMesh()
     glMaterialfv(GL_FRONT, GL_AMBIENT, MatAmb)               # Set Material Ambience
     glMaterialfv(GL_FRONT, GL_DIFFUSE, MatDif)               # Set Material Diffuse
     glMaterialfv(GL_FRONT, GL_SPECULAR, MatSpc)              # Set Material Specular
     glMaterialfv(GL_FRONT, GL_SHININESS, MatShn)             # Set Material Shininess
     # glMaterialfv(GL_FRONT, GL_EMISSION, MatEms)            # Set Material Emission
     glEnable(GL_LIGHT0)
-    glEnable(GL_COLOR_MATERIAL)
-    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
+    glEnable(GL_COLOR_MATERIAL)     # Vertex colors affect materials (lighting is enabled)
+    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)   # Vertex colors affect ambient and diffuse of material
     # glEnable(GL_TEXTURE_2D)
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
     glEnable(GL_BLEND)

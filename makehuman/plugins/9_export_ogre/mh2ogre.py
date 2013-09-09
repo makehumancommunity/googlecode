@@ -30,10 +30,8 @@ A description of this format can be found here: https://bitbucket.org/sinbad/ogr
 __docformat__ = 'restructuredtext'
 
 import os
-import gui3d
 from progress import Progress
 import codecs
-import numpy as np
 import transformations
 import exportutils
 import skeleton
@@ -45,7 +43,6 @@ def exportOgreMesh(human, filepath, config, progressCallback = None):
     progress = Progress()
 
     progress(0, 0.05, "Parsing data")
-    obj = human.meshData
     config.setHuman(human)
     config.feetOnGround = False    # TODO translate skeleton with feet-on-ground offset too
     # TODO account for config.scale in skeleton

@@ -30,7 +30,6 @@ from PyQt4 import QtCore, QtGui
 
 import qtgui as gui
 import mh
-import log
 
 class ThumbnailCache(object):
     aspect_mode = QtCore.Qt.KeepAspectRatioByExpanding
@@ -434,7 +433,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
             for root, dirs, files in os.walk(path):
                 for f in files:
                     ext = os.path.splitext(f)[1][1:].lower()
-                    if ext in self.extension:
+                    if ext in extensions:
                         if f.lower().endswith('.' + ext):
                             yield os.path.join(root, f)
 

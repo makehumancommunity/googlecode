@@ -406,8 +406,8 @@ class ScriptingExecuteTab(gui3d.TaskView):
 
         @self.execButton.mhEvent
         def onClicked(event):
-            width = G.windowWidth;
-            height = G.windowHeight;
+            #width = G.windowWidth;
+            #height = G.windowHeight;
 
             global MHScript
             global scriptingView
@@ -525,14 +525,14 @@ class Scripting():
     def setAge(self,age):
         log.message("SCRIPT: setAge(" + str(age) + ")")
         self.human.setAge(age)
-        humanmodifier.MacroModifier('macrodetails', None, 'Age', 0.0, 1.0).setValue(gui3d.app.selectedHuman, age)
+        humanmodifier.MacroModifier('macrodetails', None, 'Age').setValue(gui3d.app.selectedHuman, age)
         self.human.applyAllTargets()
         mh.redraw()
 
     def setWeight(self,weight):
         log.message("SCRIPT: setWeight(" + str(weight) + ")")
         self.human.setWeight(weight)
-        humanmodifier.MacroModifier('macrodetails', 'universal', 'Weight', 0.0, 1.0).setValue(gui3d.app.selectedHuman, weight)
+        humanmodifier.MacroModifier('macrodetails', 'universal', 'Weight').setValue(gui3d.app.selectedHuman, weight)
         self.human.applyAllTargets()
         mh.redraw()
 

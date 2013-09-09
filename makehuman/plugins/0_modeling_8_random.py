@@ -46,7 +46,7 @@ class RandomTaskView(gui3d.TaskView):
         @self.create.mhEvent
         def onClicked(event):
             
-            human = gui3d.app.selectedHuman
+            #human = gui3d.app.selectedHuman
             # human.resetMeshValues()
             self.lastRandoms = {}
             
@@ -139,7 +139,7 @@ class RandomTaskView(gui3d.TaskView):
     def setModifiers(self):
 
         human = gui3d.app.selectedHuman
-        sliderMul = self.amount.getValue()
+        #sliderMul = self.amount.getValue()
 
         if self.macro.selected:
             human.setGender( self.getRandom('gender', 0, 1 ))

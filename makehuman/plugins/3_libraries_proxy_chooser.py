@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
+Proxy mesh library
+
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -19,7 +21,8 @@
 Abstract
 --------
 
-TODO
+Library plugin for variations of the human mesh. Usually with reduced polygon
+count or geometry adapted to special cases.
 """
 
 import os.path
@@ -137,22 +140,18 @@ class ProxyTaskView(gui3d.TaskView):
         gui3d.TaskView.onHide(self, event)
 
     def onHumanChanging(self, event):
-
         human = event.human
         if event.change == 'reset':
             human.setProxy(None)
             self.filechooser.deselectAll()
 
     def onHumanChanged(self, event):
-
-        human = event.human
+        pass
 
     def loadHandler(self, human, values):
-
         self.setProxy(human, values[1])
 
     def saveHandler(self, human, file):
-
         if human.proxy:
             file.write('proxy %s\n' % human.proxy.file)
 

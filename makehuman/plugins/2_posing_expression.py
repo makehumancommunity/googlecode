@@ -120,7 +120,7 @@ class ExpressionTaskView(gui3d.TaskView):
                 self.sliders.append(slider)
                 modifier.slider = slider
             # Create radiobutton
-            radio = self.categoryBox.addWidget(GroupBoxRadioButton(self, self.radioButtons, name.capitalize(), box, selected=len(self.radioButtons) == 0))
+            self.categoryBox.addWidget(GroupBoxRadioButton(self, self.radioButtons, name.capitalize(), box, selected=len(self.radioButtons) == 0))
 
         self.groupBox.showWidget(self.groupBoxes[0])
 
@@ -134,19 +134,19 @@ class ExpressionTaskView(gui3d.TaskView):
 
         @self.nowarpBtn.mhEvent
         def onClicked(event):
-            import warp, warpmodifier
+            import warp
             warp.warpMethod = 0
             warpmodifier.resetWarpBuffer()
 
         @self.warp1Btn.mhEvent
         def onClicked(event):
-            import warp, warpmodifier
+            import warp
             warp.warpMethod = 1
             warpmodifier.resetWarpBuffer()
 
         @self.warp2Btn.mhEvent
         def onClicked(event):
-            import warp, warpmodifier
+            import warp
             warp.warpMethod = 2
             warpmodifier.resetWarpBuffer()
 

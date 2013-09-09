@@ -22,7 +22,6 @@ Abstract
 Scene library.
 """
 
-import gui
 import gui3d
 import filechooser as fc
 

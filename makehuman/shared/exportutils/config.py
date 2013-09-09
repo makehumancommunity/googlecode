@@ -22,6 +22,7 @@ Abstract
 TODO
 """
 
+from core import G
 import os
 from getpath import getPath, getSysDataPath
 import log
@@ -115,7 +116,8 @@ class Config:
             proxies[name] = proxy
 
         if self.cage:
-            obj = gui3d.app.selectedHuman
+            import mh2proxy
+            obj = G.app.selectedHuman
             filepath = getSysDataPath("cages/cage/cage.mhclo")
             proxy = mh2proxy.readProxyFile(obj, filepath, type="Cage", layer=4)
             proxy.update(obj)

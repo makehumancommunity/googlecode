@@ -419,14 +419,14 @@ def getShader(path, defines=[], cache=None):
             try:
                 shader.initShader()
                 shader.modified = mtime
-            except RuntimeError, text:
+            except RuntimeError, _:
                 log.error("Error loading shader %s", cacheName, exc_info=True)
                 shader = False
     else:
         try:
             shader = Shader(path, defines)
             shader.modified = mtime
-        except RuntimeError, text:
+        except RuntimeError, _:
             log.error("Error loading shader %s", path, exc_info=True)
             shader = False
 
@@ -438,6 +438,6 @@ def reloadShaders():
     for path in _shaderCache:
         try:
             _shaderCache[path].initShader()
-        except RuntimeError, text:
+        except RuntimeError, _:
             log.error("Error loading shader %s", path, exc_info=True)
             _shaderCache[path] = False

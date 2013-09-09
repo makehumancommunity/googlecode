@@ -23,7 +23,6 @@ TODO
 """
 
 import sys
-import atexit
 import log
 
 from PyQt4 import QtCore, QtGui, QtOpenGL
@@ -273,12 +272,10 @@ class VLayout(QtGui.QLayout):
         return child
 
     def _doLayout(self, x, y, width, height, real=False):
-        last = None
         for i, child in enumerate(self._children):
             widget = child.widget()
             if widget and not widget.isVisible():
                 continue
-            last = i
 
         x1 = x + width
         y1 = y + height
@@ -359,6 +356,7 @@ class Frame(QtGui.QMainWindow):
         if qtVersion[0] >= 4 and qtVersion[1] >= 2:
             self.setWindowIcon(QtGui.QIcon("icons/makehuman_bg.svg"))
         else:
+            # Older Qt libraries do not support svg icons
             self.setWindowIcon(QtGui.QIcon("icons/makehuman.bmp"))
 
         self.setAttribute(QtCore.Qt.WA_KeyCompression, False)

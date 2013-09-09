@@ -27,7 +27,6 @@ import os
 import mh
 import gui
 import gui3d
-import posemode
 import log
 
 class ExportTaskView(gui3d.PoseModeTaskView):

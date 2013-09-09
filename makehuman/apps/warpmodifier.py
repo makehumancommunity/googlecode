@@ -24,7 +24,6 @@ TODO
 
 __docformat__ = 'restructuredtext'
 
-import math
 import numpy as np
 from operator import mul
 from getpath import getPath, getSysDataPath
@@ -263,9 +262,9 @@ class GenderAgeToneWeightWarpModifier (WarpModifier):
             for gender in ["female", "male"]:
                 for age in ["baby", "child", "young", "old"]:
                     path = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
-                    reftrg = path.replace("-${tone}", "averagemuscle").replace("-${weight}", "averageweight")
-                    refchar = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
-                    base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
+                    #reftrg = path.replace("-${tone}", "averagemuscle").replace("-${weight}", "averageweight")
+                    #refchar = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
+                    #base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
                     #self.refCharacters[base] = refchar
                     #self.refTargets[base] = reftrg
 
@@ -437,11 +436,11 @@ class GlobalWarpData:
 
         self._landMarks = {}
         folder = getSysDataPath("landmarks")
-        for file in os.listdir(folder):
-            (name, ext) = os.path.splitext(file)
+        for file_ in os.listdir(folder):
+            (name, ext) = os.path.splitext(file_)
             if ext != ".lmk":
                 continue
-            path = os.path.join(folder, file)
+            path = os.path.join(folder, file_)
             with open(path, "r") as fp:
                 landmark = []
                 for line in fp:

@@ -30,7 +30,7 @@ from PyQt4 import QtCore, QtGui
 from core import G
 import events3d
 import language
-import log
+#import log
 from getpath import getSysDataPath, getPath, isSubPath
 
 def getLanguageString(text):
@@ -776,7 +776,7 @@ class TextEdit(QtGui.QLineEdit, Widget):
         elif validator == floatValidator:
             qvalidator = QtGui.QDoubleValidator()
         elif validator == filenameValidator:
-            qvalidator = QtGui.QRegExpValidator(QRegExp(r'[^\/:*?"<>|]*'))
+            qvalidator = QtGui.QRegExpValidator(QtCore.QRegExp(r'[^\/:*?"<>|]*'))
         else:
             qvalidator = None
         super(TextEdit, self).setValidator(qvalidator)
@@ -844,9 +844,9 @@ class ProgressBar(QtGui.QProgressBar, Widget):
         self.setVisible(visible)
 
     def setProgress(self, progress, redraw=True):
-        min = self.minimum()
-        max = self.maximum()
-        self.setValue(min + progress * (max - min))
+        min_ = self.minimum()
+        max_ = self.maximum()
+        self.setValue(min_ + progress * (max_ - min_))
 
 class ShortcutEdit(QtGui.QLabel, Widget):
     def __init__(self, shortcut):
@@ -1150,7 +1150,6 @@ class SplashScreen(QtGui.QSplashScreen):
         self.message = text
 
     def drawContents(self, painter):
-        pixMap = self.pixmap()
         color = QtGui.QColor()
         color.setNamedColor('#ffffff')
         painter.setPen(color)
@@ -1230,7 +1229,6 @@ class VScrollLayout(QtGui.QLayout):
 
     def setGeometry(self, rect):
         super(VScrollLayout, self).setGeometry(rect)
-        self._position
         # log.debug('VScrollLayout.setGeometry: position: %d', self._position)
         # log.debug('VScrollLayout.setGeometry: %d %d %d %d', rect.x(), rect.y(), rect.width(), rect.height())
         if self._child is None:

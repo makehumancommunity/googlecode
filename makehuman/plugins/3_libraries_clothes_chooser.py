@@ -161,7 +161,6 @@ class ClothesTaskView(gui3d.TaskView):
                 del human.clothesObjs[name]
             human.clothesProxies = {}
             self.clothesList = []
-            human.activeClothing = None
             self.updateFaceMasks(self.faceHidingTggl.selected)
             return
 
@@ -230,8 +229,6 @@ class ClothesTaskView(gui3d.TaskView):
             gui3d.app.removeObject(clo)
             del human.clothesObjs[uuid]
             self.clothesList.remove(uuid)
-            if human.activeClothing == uuid:
-                human.activeClothing = None
             proxy = human.clothesProxies[uuid]
             del human.clothesProxies[uuid]
             self.updateFaceMasks(self.faceHidingTggl.selected)
@@ -248,7 +245,7 @@ class ClothesTaskView(gui3d.TaskView):
             log.error("Could not load mesh for clothing object %s", proxy.name)
             return
 
-        mat = mesh.material = proxy.material
+        mesh.material = proxy.material
 
         clo = gui3d.app.addObject(gui3d.Object(human.getPosition(), mesh))
         clo.setRotation(human.getRotation())
@@ -265,7 +262,6 @@ class ClothesTaskView(gui3d.TaskView):
         clo.mesh.priority = 10
         human.clothesObjs[uuid] = clo
         human.clothesProxies[uuid] = proxy
-        human.activeClothing = uuid
         self.clothesList.append(uuid)
 
         # TODO Disabled until conflict with new filechooser is sorted out
@@ -290,8 +286,6 @@ class ClothesTaskView(gui3d.TaskView):
                         gui3d.app.removeObject(oldClo)
                         del human.clothesObjs[oldUuid]
                         self.clothesList.remove(oldUuid)
-                        if human.activeClothing == oldUuid:
-                            human.activeClothing = None
                         log.message("Removed clothing %s with known tag %s", oldUuid, tag)
                     else:
                         log.message("Kept clothing %s with known tag %s", oldUuid, tag)
@@ -424,7 +418,6 @@ class ClothesTaskView(gui3d.TaskView):
                 del human.clothesObjs[uuid]
                 del human.clothesProxies[uuid]
             self.clothesList = []
-            human.activeClothing = None
             self.filechooser.deselectAll()
             self.highlightedPiece = None
             for _,proxy in self.cache.items():

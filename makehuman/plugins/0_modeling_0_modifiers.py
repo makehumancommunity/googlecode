@@ -29,7 +29,6 @@ import humanmodifier
 import modifierslider
 from core import G
 import log
-import targets
 
 class GroupBoxRadioButton(gui.RadioButton):
     def __init__(self, task, group, label, groupBox, selected=False):
@@ -82,7 +81,7 @@ class ModifierTaskView(gui3d.TaskView):
             self.groupBoxes.append(box)
 
             # Create radiobutton
-            radio = self.categoryBox.addWidget(GroupBoxRadioButton(self, self.radioButtons, title, box, selected = len(self.radioButtons) == 0))
+            self.categoryBox.addWidget(GroupBoxRadioButton(self, self.radioButtons, title, box, selected = len(self.radioButtons) == 0))
 
             # Create sliders
             for index, template in enumerate(templates):
@@ -164,8 +163,6 @@ class ModifierTaskView(gui3d.TaskView):
             slider.update()
 
     def onHumanChanged(self, event):
-        human = event.human
-
         for slider in self.sliders:
             slider.update()
 
@@ -578,7 +575,6 @@ class MacroTaskView(ModifierTaskView):
         age = human.getAgeYears()
         muscle = (human.getMuscle() * 100.0)
         weight = (50 + (150 - 50) * human.getWeight())
-        coords = human.meshData.getCoords([8223,12361,13155])
         height = human.getHeightCm()
         if G.app.settings['units'] == 'metric':
             units = 'cm'

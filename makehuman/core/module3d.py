@@ -428,7 +428,6 @@ class Object3D(object):
         self.coord[indices] = coords
 
     def setUVs(self, uvs):
-        ntexco = len(uvs)
         self.texco = np.asarray(uvs, dtype=np.float32)
         self.utexc = True
 

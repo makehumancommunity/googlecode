@@ -27,7 +27,6 @@ import gui3d
 import mh
 import files3d
 import mh2proxy
-import gui
 import filechooser as fc
 import log
 
@@ -121,7 +120,7 @@ class EyesTaskView(gui3d.TaskView):
             human.eyesObj.mesh.setTransparentPrimitives(0)
         human.eyesObj.mesh.priority = 5
 
-        eyesName = human.eyesObj.mesh.name.split('.')[0]
+        #eyesName = human.eyesObj.mesh.name.split('.')[0]
 
         self.adaptEyesToHuman(human)
         human.eyesObj.setSubdivided(human.isSubdivided())

@@ -27,7 +27,6 @@ a MH model.
 import gui3d
 import mh
 import gui
-import module3d
 import log
 
 import os
@@ -35,8 +34,6 @@ import numpy as np
 
 import bvh
 import skeleton
-import skeleton_drawing
-import animation
 import filechooser
 
 _jointMappingCache = {}
@@ -268,7 +265,7 @@ class AnimationLibrary(gui3d.TaskView):
         return anim
 
     def loadAnimation(self, uuid, animName):
-        if not human.getSkeleton():
+        if not self.human.getSkeleton():
             log.error("Cannot load animations when no skeleton is selected.")
             gui3d.app.statusPersist("Error: cannot load animations when no skeleton is selected.")
             return
@@ -738,7 +735,7 @@ def loadAnimationTrack(anim):
     bvhRig = bvh.load(anim.getPath(), swapYZ)
     if anim.collection.scale != 1.0:
         # Scale rig
-        bvhRig.scale(scale)
+        bvhRig.scale(anim.collection.scale)
         # Scale is only useful when using the joint locations of the BVH rig
         # or when drawing the BVH rig.
 

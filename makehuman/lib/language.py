@@ -36,18 +36,18 @@ class Language(object):
         self.missingStrings = set()
         self.rtl = False
 
-    def setLanguage(self, language):
+    def setLanguage(self, lang):
         self.languageStrings = None
-        path = os.path.join(getSysDataPath("languages/"), language + ".ini")
+        path = os.path.join(getSysDataPath("languages/"), lang + ".ini")
         if not os.path.isfile(path):
             return
         with open(path, 'rU') as f:
             try:
                 self.languageStrings = json.loads(f.read())
             except:
-                log.error('Error in language file %s', language, exc_info=True)
+                log.error('Error in language file %s', lang, exc_info=True)
                 self.languageStrings = None
-        self.language = language
+        self.language = lang
         self.rtl = False
         if self.languageStrings and '__options__' in self.languageStrings:
             self.rtl = self.languageStrings['__options__'].get('rtl', False)

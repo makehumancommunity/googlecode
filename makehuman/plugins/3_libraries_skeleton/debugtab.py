@@ -24,7 +24,6 @@ Allows a selection of skeletons which can be exported with the MH character.
 Skeletons are used for skeletal animation (skinning) and posing.
 """
 
-import os
 from collections import OrderedDict
 
 import mh
@@ -72,7 +71,7 @@ class SkeletonDebugLibrary(gui3d.TaskView):
                 mainLib.removeBoneHighlights()
             except:
                 pass
-            self.highlightBone(event.group.name)
+            mainLib.highlightBone(event.group.name)
 
         @mainLib.mhEvent
         def onMouseExited(event):

@@ -47,16 +47,16 @@ class RichMesh(object):
         self.vertexMapping = None   # Maps vertex index of original object to the attached filtered object
 
 
-    @property
-    def proxy(self):
+    def getProxy(self):
         return self._proxy
 
-    @proxy.setter
-    def proxy(self, newProxy):
+    def setProxy(self, newProxy):
         self._proxy = newProxy
         self.type = newProxy.type
         if newProxy.material:
             self.material = newProxy.material
+
+    proxy = property(getProxy, setProxy)
 
     def fromProxy(self, coords, texVerts, faceVerts, faceUvs, weights, shapes, material):
         for fv in faceVerts:

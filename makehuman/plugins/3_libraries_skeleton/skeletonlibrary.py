@@ -25,7 +25,6 @@ Main skeleton tab
 import mh
 import gui
 import gui3d
-import module3d
 import log
 from collections import OrderedDict
 #import filechooser as fc
@@ -486,7 +485,6 @@ class SkeletonLibrary(gui3d.TaskView):
 
 
     def onHumanChanging(self, event):
-        human = event.human
         if event.change == 'reset':
             self.chooseSkeleton(None)
 

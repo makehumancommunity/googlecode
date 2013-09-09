@@ -29,7 +29,6 @@ __docformat__ = 'restructuredtext'
 
 import gui3d
 import mh
-import algos3d
 import os
 import humanmodifier
 import modifierslider
@@ -90,7 +89,7 @@ class CustomTargetsTaskView(gui3d.TaskView):
         for root, dirs, files in os.walk(self.targetsPath):
 
             groupBox = self.targetsBox.addWidget(gui.GroupBox('Targets'))
-            button = self.folderBox.addWidget(FolderButton(self, group, os.path.basename(root), groupBox, len(self.folderBox.children) == 0))
+            self.folderBox.addWidget(FolderButton(self, group, os.path.basename(root), groupBox, len(self.folderBox.children) == 0))
             self.folders.append(groupBox)
 
             for f in files:

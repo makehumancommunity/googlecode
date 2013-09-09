@@ -93,7 +93,8 @@ class PoseLoadTaskView(gui3d.TaskView):
 
         @self.update.mhEvent
         def onClicked(event):
-            self.syncMedia()
+            #self.syncMedia()
+            pass
 
 
     def onShow(self, event):

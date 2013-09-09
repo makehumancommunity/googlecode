@@ -23,7 +23,6 @@ TODO
 """
 
 import os
-import log
 import zipfile
 from getpath import getSysDataPath
 
@@ -118,7 +117,7 @@ class Targets(object):
 
     def walk_dirs(self, root, base):
         dirs = os.listdir(root)
-        xdirs = [dir.replace('-','_') for dir in dirs]
+        xdirs = [dir_.replace('-','_') for dir_ in dirs]
         for name in sorted(dirs):
             path = os.path.join(root, name).replace('\\','/')
             if os.path.isfile(path) and not path.lower().endswith('.target'):
@@ -160,8 +159,8 @@ class Targets(object):
                 add_file(dir[head], tail)
 
         with zipfile.ZipFile(getSysDataPath('targets.npz'), 'r') as npzfile:
-            for file in npzfile.infolist():
-                name = file.filename
+            for file_ in npzfile.infolist():
+                name = file_.filename
                 if not name.endswith('.index.npy'):
                     continue
                 name = name[:-10] + '.target'
@@ -182,10 +181,10 @@ class Targets(object):
             path = list(reversed(path.split('/')))
         else:
             path = list(reversed(path))
-        dir = cls._files
+        dir_ = cls._files
         while path:
-            dir = dir[path.pop()]
-        return dir
+            dir_ = dir_[path.pop()]
+        return dir_
 
     @classmethod
     def listdir(cls, path):
@@ -203,7 +202,7 @@ class Targets(object):
 
     def walk_zip(self, root, base):
         dirs = self.listdir(root)
-        xdirs = [dir.replace('-','_') for dir in dirs]
+        xdirs = [dir_.replace('-','_') for dir_ in dirs]
         for name in sorted(dirs):
             path = root + [name]
             if self.isfile(path) and not path[-1].lower().endswith('.target'):

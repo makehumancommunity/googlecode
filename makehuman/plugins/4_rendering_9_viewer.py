@@ -26,7 +26,6 @@ like textures, bump maps etc.
 """
 
 import os
-import shutil
 
 import gui
 import gui3d

@@ -200,10 +200,10 @@ class SubdivisionObject(Object3D):
 
         progress(9)
 
-        map = np.argsort(self.evert[:,0,:].flat)
-        vi = self.evert[:,0,:].flat[map]
-        ei = np.mgrid[:len(self.evert),:2][0].flat[map].astype(np.uint32)
-        del map
+        map_ = np.argsort(self.evert[:,0,:].flat)
+        vi = self.evert[:,0,:].flat[map_]
+        ei = np.mgrid[:len(self.evert),:2][0].flat[map_].astype(np.uint32)
+        del map_
         ix, first = np.unique(vi, return_index=True)
         n = first[1:] - first[:-1]
         n = np.hstack((n, np.array([len(vi) - first[-1]])))

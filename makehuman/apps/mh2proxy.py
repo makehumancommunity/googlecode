@@ -25,7 +25,6 @@ TODO
 import os
 import numpy
 import guicommon
-import exportutils
 from core import G
 from getpath import getSysDataPath
 import log
@@ -166,7 +165,6 @@ class CProxy:
         self.weights = None
         self.clothings = []
         self.transparencies = dict()
-        #self.textures = []
         return
 
 
@@ -384,10 +382,7 @@ doWeights = 2
 doDeleteVerts = 3
 
 def readProxyFile(obj, filepath, type="Clothes", layer=4):
-    if not isinstance(filepath, basestring):
-        raise NameError("Bug readProxyFile %s" % filepath)
     folder = os.path.realpath(os.path.expanduser(os.path.dirname(filepath)))
-    objfile = None
 
     try:
         fp = open(filepath, "rU")
@@ -395,12 +390,11 @@ def readProxyFile(obj, filepath, type="Clothes", layer=4):
         log.error("*** Cannot open %s", filepath)
         return None
 
-    tails = {}
     proxy = CProxy(filepath, type, layer)
     proxy.deleteVerts = numpy.zeros(len(obj.coord), bool)
 
-    useProjection = True
-    ignoreOffset = False
+    proxy.useProjection = True
+    proxy.ignoreOffset = False
     scales = numpy.array((1.0,1.0,1.0), float)
     status = 0
     vnum = 0
@@ -487,13 +481,11 @@ def readProxyFile(obj, filepath, type="Clothes", layer=4):
             proxy.zScaleData = getScaleData(words)
             scales[2] = proxy.getScale(proxy.zScaleData, obj, 2)
         elif key == 'use_projection':
-            useProjection = int(words[1])
+            proxy.useProjection = int(words[1])
         elif key == 'ignoreOffset':
-            ignoreOffset = int(words[1])
+            proxy.ignoreOffset = int(words[1])
         elif key == 'delete':
             proxy.deleteGroups.append(words[1])
-        elif key == 'delete_connected':
-            selectConnected(proxy, obj, int(words[1]))
 
         elif key == 'mask_uv_layer':
             if len(words) > 1:
@@ -512,8 +504,6 @@ def readProxyFile(obj, filepath, type="Clothes", layer=4):
         elif key == 'transparencies':
             uuid = words[1]
             proxy.transparencies[uuid] = words[2].lower() in ["1", "yes", "true", "enable", "enabled"]
-        elif key == 'textures':
-            proxy.textures.append( (words[1], words[2]) )
 
         # Blender-only properties
         elif key == 'wire':
@@ -584,35 +574,6 @@ def getFileName(folder, file, suffix):
         return os.path.join(folder, file)
     else:
         return os.path.join(folder, file+suffix)
-
-'''
-# TODO eliminate duplicate OBJ loaders, don't include OBJ data in .proxy files
-def copyObjFile(proxy):
-    try:
-        fp = open(proxy.obj_file, "rU")
-    except:
-        log.error("*** Cannot open %s", proxy.obj_file)
-        return False
-
-    proxy.texVerts = []
-    proxy.texFaces = []
-    layer = proxy.objFileLayer
-    proxy.texVertsLayers[layer] = proxy.texVerts
-    proxy.texFacesLayers[layer] = proxy.texFaces
-    theGroup = None
-    for line in fp:
-        words= line.split()
-        if len(words) == 0:
-            pass
-        elif words[0] == 'vt':
-            newTexVert(1, words, proxy)
-        elif words[0] == 'f':
-            newFace(1, words, theGroup, proxy)
-        elif words[0] == 'g':
-            theGroup = words[1]
-    fp.close()
-    return True
-'''
 
 def getScaleData(words):
     v1 = int(words[1])

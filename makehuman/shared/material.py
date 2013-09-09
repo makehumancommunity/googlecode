@@ -456,16 +456,6 @@ class Material(object):
     specularHardness = property(getSpecularHardness, setSpecularHardness)
 
 
-    def getTransparencyColor(self):
-        #return self._transparencyColor.values
-        return self._transparencyColor
-
-    def setTransparencyColor(self, color):
-        self._transparencyColor.copyFrom(color)
-
-    transparencyColor = property(getTransparencyColor, setTransparencyColor)
-
-
     def getTransparencyIntensity(self):
         return self._transparencyIntensity
 

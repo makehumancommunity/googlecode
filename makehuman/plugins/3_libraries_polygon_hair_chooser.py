@@ -27,7 +27,6 @@ import gui3d
 import mh
 import files3d
 import mh2proxy
-import gui
 import filechooser as fc
 import log
 
@@ -114,7 +113,7 @@ class HairTaskView(gui3d.TaskView):
         human.hairObj.mesh.setTransparentPrimitives(len(human.hairObj.mesh.fvert))
         human.hairObj.mesh.priority = 20
 
-        hairName = human.hairObj.mesh.name.split('.')[0]
+        #hairName = human.hairObj.mesh.name.split('.')[0]
 
         self.adaptHairToHuman(human)
         human.hairObj.setSubdivided(human.isSubdivided())

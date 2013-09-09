@@ -114,7 +114,7 @@ class MeasureTaskView(gui3d.TaskView):
         self.ruler = Ruler()
 
         self.measureMesh = module3d.Object3D('measure', 2)
-        fg = self.measureMesh.createFaceGroup('measure')
+        self.measureMesh.createFaceGroup('measure')
 
         names = []
         for n,v in self.ruler.Measures.items():
@@ -149,8 +149,6 @@ class MeasureTaskView(gui3d.TaskView):
             ('lowerleg', ['lowerlegheight', 'calf']),
             ('ankle', ['ankle']),
         ]
-
-        metric = gui3d.app.settings['units'] == 'metric'
 
         sliderLabel = {
             'neckcirc':'Neck circum',
@@ -226,10 +224,6 @@ class MeasureTaskView(gui3d.TaskView):
 
         human = gui3d.app.selectedHuman
         measure = self.ruler.getMeasure(human, measure, gui3d.app.settings['units'])
-        #if gui3d.app.settings['units'] == 'metric':
-        #    return '%.1f cm' % measure
-        #else:
-        #    return '%.1f in' % measure
         return measure
 
     def hideAllBoxes(self):

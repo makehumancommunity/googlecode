@@ -312,7 +312,7 @@ def povrayExportMesh2(path, settings):
 
     # If SSS is enabled, render the lightmaps.
     progress(0.25, 0.6, "Processing SubSurface Scattering")
-    if settings['SSS'] == True:
+    if settings['SSS']:
         povrayProcessSSS(rmeshes, materials, outputDirectory, settings)
 
     # Write mesh data for the object.
@@ -495,6 +495,8 @@ def getImageFType(ext):
     return ext
 
 def copyTexture(tex, dst):
+    import shutil
+
     if isinstance(tex, basestring):
         shutil.copy(tex, dst)
     else:

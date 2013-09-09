@@ -1,8 +1,32 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+Freehand editing plugin
+
+**Project Name:**      MakeHuman
+
+**Product Home Page:** http://www.makehuman.org/
+
+**Code Home Page:**    http://code.google.com/p/makehuman/
+
+**Authors:**           Glynn Clements
+
+**Copyright(c):**      MakeHuman Team 2001-2013
+
+**Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
+
+**Coding Standards:**  See http://www.makehuman.org/node/165
+
+Abstract
+--------
+
+Freehand sculpting edit tool.
+"""
 
 import math
 import os
 import numpy as np
-import events3d
 import gui3d
 import mh
 import gui
@@ -120,7 +144,7 @@ class EditingTaskView(gui3d.TaskView):
 
     def buildCircle(self):
         self.circleMesh = module3d.Object3D('circle', 2)
-        fg = self.circleMesh.createFaceGroup('circle')
+        self.circleMesh.createFaceGroup('circle')
 
         self.circleMesh.setCoords(np.zeros((180, 3), dtype=np.float32))
         self.circleMesh.setUVs(np.zeros((1, 2), dtype=np.float32))
@@ -183,7 +207,6 @@ class EditingTaskView(gui3d.TaskView):
 
     def onMouseMoved(self, event):
         self.updatePosition(event.x, event.y)
-        human = gui3d.app.selectedHuman
         picked = gui3d.app.getSelectedFaceGroupAndObject()
         if picked is None:
             self.circle.hide()

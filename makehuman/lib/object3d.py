@@ -22,7 +22,6 @@ Abstract
 TODO
 """
 
-import math
 import numpy as np
 import glmodule as gl
 import texture

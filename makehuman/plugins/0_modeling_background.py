@@ -25,10 +25,8 @@ TODO
 __docformat__ = 'restructuredtext'
 
 import os
-import numpy as np
 
 import gui3d
-import events3d
 import geometry3d
 import mh
 import projection
@@ -271,8 +269,6 @@ class BackgroundChooser(gui3d.TaskView):
         self.backgroundImage.setPosition(self.human.getPosition()) # TODO other Z offset?
 
     def onHumanChanging(self, event):
-
-        human = event.human
         if event.change == 'reset':
             for side in self.sides.keys():
                 self.filenames[side] = None
@@ -445,12 +441,11 @@ class TextureProjectionView(gui3d.TaskView) :
         self.human.mesh.configureShading(diffuse = self.oldDiffuseShaderSetting)
 
     def onHumanChanging(self, event):
-
-        human = event.human
         # TL: Disabled because texture.png is not found.
         # Not sure if the is still relevant
         #if event.change == 'reset':
         #    texture.reloadTexture(os.path.join(mh.getSysDataPath('textures/texture.png')))
+        pass
 
     def projectBackground(self):
         if not self.backgroundChooserView.isBackgroundShowing():

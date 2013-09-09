@@ -226,7 +226,7 @@ def reloadTextures():
     for path in _textureCache:
         try:
             _textureCache[path].loadImage(path)
-        except RuntimeError, text:
+        except RuntimeError, _:
             log.error("Error loading texture %s", path, exc_info=True)
 
 def reloadTexture(path):

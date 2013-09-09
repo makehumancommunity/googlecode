@@ -22,7 +22,6 @@ Abstract
 TODO
 """
 
-import gui
 from export import Exporter
 
 class ExporterSkel(Exporter):

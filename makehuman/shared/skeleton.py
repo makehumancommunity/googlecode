@@ -275,6 +275,7 @@ class Skeleton(object):
                 quat = float(words[2]),float(words[3]),float(words[4]),float(words[5])
                 mat = tm.quaternion_matrix(quat)
                 if words[1] == "gquat":
+                    bone = self.bones[boneIdx]
                     mat = np.dot(la.inv(bone.matRestRelative), mat)
                 poseMats[boneIdx] = mat[:3,:3]
 
@@ -374,7 +375,7 @@ class Bone(object):
         try:
             self.matPoseVerts = np.dot(self.matPoseGlobal, la.inv(self.matRestGlobal))
         except:
-            log.debug("Cannot calculate pose verts matrix for bone %s %s %s", self.name, self.head, self.tail)
+            log.debug("Cannot calculate pose verts matrix for bone %s %s %s", self.name, self.getRestHeadPos(), self.getRestTailPos())
             log.debug("Non-singular rest matrix %s", self.matRestGlobal)
 
     def getHead(self):
@@ -387,7 +388,7 @@ class Bone(object):
         """
         The tail position of this bone in world space.
         """
-        tail4 = dot(self.matPoseGlobal, self.yvector4)
+        tail4 = np.dot(self.matPoseGlobal, self.yvector4)
         return tail4[:3].copy()
 
     def getLength(self):
@@ -488,8 +489,7 @@ class Bone(object):
         local coordinates.
         Axis should be 0, 1 or 2 for rotation around x, y or z axis.
         """
-        # TODO non-existing class CBone
-        mat = tm.rotation_matrix(angle*D, CBone.Axes[axis])
+        mat = tm.rotation_matrix(angle*D, Bone.Axes[axis])
         if rotWorld:
             mat = np.dot(mat, self.matPoseGlobal)
             self.matPoseGlobal[:3,:3] = mat[:3,:3]
@@ -539,9 +539,9 @@ class Bone(object):
         pose = self.getPoseFromGlobal()
 
         az,ay,ax = tm.euler_from_matrix(pose, axes='szyx')
-        rot = tm.rotation_matrix(-ay + self.roll, CBone.Axes[1])
+        rot = tm.rotation_matrix(-ay + self.roll, Bone.Axes[1])
         self.matPoseGlobal[:3,:3] = np.dot(self.matPoseGlobal[:3,:3], rot[:3,:3])
-        pose2 = self.getPoseFromGlobal()
+        #pose2 = self.getPoseFromGlobal()
 
     ## TODO decouple this specific method from general armature?
     ## It is used by constraints.py and is related to IK
@@ -562,7 +562,7 @@ class Bone(object):
             zlen = math.sqrt(np.dot(zvec,zvec))
             zvec = zvec / zlen
             angle0 = math.asin( np.dot(xvec,zvec) )
-            rot = tm.rotation_matrix(angle - angle0, CBone.Axes[1])
+            rot = tm.rotation_matrix(angle - angle0, Bone.Axes[1])
             self.matPoseGlobal[:3,:3] = np.dot(self.matPoseGlobal[:3,:3], rot[:3,:3])
 
     def getPoseFromGlobal(self):
@@ -667,7 +667,6 @@ def loadRig(options, mesh):
     Returns the skeleton and vertex-to-bone weights.
     Weights are of format: {"boneName": [ (vertIdx, weight), ...], ...}
     """
-    import os
     from armature.options import ArmatureOptions
 
     #rigName = os.path.splitext(os.path.basename(filename))[0]
@@ -819,8 +818,6 @@ def __getRotation(bone, sourceMapping, targetMapping):
     return 0.0
 
 def getRetargetMapping(sourceRig, targetRig, skel):
-    import os
-
     sourceMapping = None
     targetMapping = None
     result = []
@@ -882,12 +879,11 @@ def getRestPoseCompensation(srcSkel, tgtSkel, boneMapping, excludedTgtBones = ["
     bones (you could consider removing "Hips" from the list, though).
     The target skeleton will be set to its rest pose.
     """
-    import animation
-
     result = []
 
     # Determine pose to place target rig in the same rest pose as src rig
-    pose = animation.emptyPose(tgtSkel.getBoneCount())
+    #import animation
+    #pose = animation.emptyPose(tgtSkel.getBoneCount())
 
     tgtSkel.setToRestPose()
 

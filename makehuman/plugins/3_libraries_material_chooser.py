@@ -83,6 +83,7 @@ class MaterialTaskView(gui3d.TaskView):
         self.defaultClothes = [self.systemClothes, self.userClothes]
         self.defaultHair = [self.systemHair, self.userHair]
         self.defaultEyes = [self.systemEyes, self.userEyes]
+        self.defaultGenitals = [self.systemGenitals, self.userGenitals]
 
         self.materials = self.defaultClothes
 
@@ -131,10 +132,8 @@ class MaterialTaskView(gui3d.TaskView):
 
 
     def onShow(self, event):
-
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
-        human = self.human
 
         self.reloadMaterialChooser(self.humanObjSelector.selected)
 

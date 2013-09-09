@@ -23,7 +23,6 @@ Geometry export
 
 """
 
-import gui3d
 import numpy as np
 from progress import Progress
 
