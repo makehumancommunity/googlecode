@@ -201,11 +201,7 @@ True
 
 from __future__ import division, print_function
 
-import sys
-import os
-import warnings
 import math
-
 import numpy
 
 

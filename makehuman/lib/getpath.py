@@ -25,9 +25,6 @@ Utility module for finding the user home path.
 import sys
 import os
 
-if sys.platform == 'win32':
-    import _winreg
-
 def getPath(type = None):
     if isinstance(type, (str, unicode)):
         typeStr = str(type)
@@ -37,13 +34,14 @@ def getPath(type = None):
         raise TypeError("String expected")
 
     if sys.platform == 'win32':
+        import _winreg
         keyname = r'Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
-        name = 'Personal'
+        #name = 'Personal'
         k = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, keyname)
-        value, type = _winreg.QueryValueEx(k, 'Personal')
-        if type == _winreg.REG_EXPAND_SZ:
+        value, type_ = _winreg.QueryValueEx(k, 'Personal')
+        if type_ == _winreg.REG_EXPAND_SZ:
             path = _winreg.ExpandEnvironmentStrings(value)
-        elif type == _winreg.REG_SZ:
+        elif type_ == _winreg.REG_SZ:
             path = value
         else:
             raise RuntimeError("Couldn't determine user folder")

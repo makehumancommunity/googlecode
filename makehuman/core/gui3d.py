@@ -23,14 +23,11 @@ This module contains classes defined to implement widgets that provide utility f
 to the graphical user interface.
 """
 
-import os.path
 import weakref
 
 import events3d
 import module3d
 import mh
-import files3d
-import catmull_clark_subdivision as cks
 import log
 import selection
 import object3d
@@ -348,6 +345,8 @@ class Application(events3d.EventHandler):
         self.mouseDownObject = None
         self.enteredObject = None
         self.fullscreen = False
+
+        self.tabs = None    # Assigned in mhmain.py
 
     def addObject(self, object):
         """

@@ -27,7 +27,6 @@ This file starts the MakeHuman python application.
 from __future__ import absolute_import  # Fix 'from . import x' statements on python 2.6
 import sys
 import os
-import string
 import re
 import subprocess
 
@@ -83,9 +82,9 @@ def find_mydocuments():
             for x in ['Software', 'Microsoft', 'Windows', 'CurrentVersion', 'Explorer', 'Shell Folders']:
                 k = _winreg.OpenKey(k, x)
 
-            name, type = _winreg.QueryValueEx(k, 'Personal')
+            name, type_ = _winreg.QueryValueEx(k, 'Personal')
 
-            if type == 1:
+            if type_ == 1:
                 os.environ['MYDOCUMENTS'] = name
         except Exception as e:
             print >> sys.stderr,  "error: " + format(str(e))
@@ -162,9 +161,9 @@ def get_svn_revision_1():
 def get_svn_revision():
     #[BAL 07/13/2013] use the VERSION file if it exists. This is created and managed using pyinstaller.
     if os.path.exists(os.path.join("core","VERSION")):
-        version = open(os.path.join("core","VERSION")).read().strip()
-        print >> sys.stderr,  "VERSION file detected using value from version file: %s" % version
-        os.environ['SVNREVISION'] = version
+        version_ = open(os.path.join("core","VERSION")).read().strip()
+        print >> sys.stderr,  "VERSION file detected using value from version file: %s" % version_
+        os.environ['SVNREVISION'] = version_
         os.environ['SVNREVISION_SOURCE'] = "core/VERSION static revision data"
     else:
         print >> sys.stderr,  "NO VERSION file detected retrieving revision info from SVN"
@@ -240,7 +239,7 @@ def debug_dump():
     try:
         import debugdump
         debugdump.dump.reset()
-    except Exception as e:
+    except Exception as _:
         import log
         log.error("Could not create debug dump", exc_info=True)
 

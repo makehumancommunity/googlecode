@@ -282,7 +282,6 @@ class GenderAgeToneWeightWarpModifier (WarpModifier):
 
 def resetWarpBuffer():
     global _warpGlobals
-    from core import G
 
     human = G.app.selectedHuman
     if human.hasWarpTargets:

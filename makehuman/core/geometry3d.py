@@ -266,15 +266,15 @@ class Cube(module3d.Object3D):
 
         module3d.Object3D.__init__(self, 'cube_%s' % texture)
         
-        width = width
-        height = height or width
-        depth = depth or width
+        self.width = width
+        self.height = height or width
+        self.depth = depth or width
         
         # create group
         fg = self.createFaceGroup('cube')
         
         # The 8 vertices
-        v = [(x,y,z) for z in [0,depth] for y in [0,height] for x in [0,width]]
+        v = [(x,y,z) for z in [0,self.depth] for y in [0,self.height] for x in [0,self.width]]
 
         #         /0-----1\
         #        / |     | \

@@ -33,10 +33,6 @@ def which(program):
     """
     Checks whether a program exists, similar to http://en.wikipedia.org/wiki/Which_(Unix)
     """
-
-    import os
-    import sys
-    
     if sys.platform == "win32" and not program.endswith(".exe"):
         program += ".exe"
         

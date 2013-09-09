@@ -46,11 +46,12 @@ def loadJson(filepath):
 def saveJson(struct, filepath, binary=False):
     if binary:
         bytes = json.dumps(struct)
-        with gzip.open(realpath, 'wb') as fp:
+        with gzip.open(filepath, 'wb') as fp:
             fp.write(bytes)
     else:
-        string = encodeJsonData(data, "    ")
-        with open(filepath, "w", encoding="utf-8") as fp:
+        import codecs
+        string = encodeJsonData(struct, "    ")
+        with codecs.open(filepath, "w", encoding="utf-8") as fp:
             fp.write(string)
             fp.write("\n")
 

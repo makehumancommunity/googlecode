@@ -29,8 +29,6 @@ import guicommon
 from core import G
 import events3d
 import operator
-import math
-import re
 import numpy as np
 import log
 import targets
@@ -128,6 +126,7 @@ class BaseModifier(object):
         self.verts = None
         self.faces = None
         self.eventType = 'modifier'
+        self.targets = []
 
     def setValue(self, human, value):
         value = self.clampValue(value)
@@ -135,6 +134,12 @@ class BaseModifier(object):
 
         for target in self.targets:
             human.setDetail(target[0], value * reduce(operator.mul, [factors[factor] for factor in target[1]]))
+
+    def clampValue(self, value):
+        raise NotImplementedError()
+
+    def getFactors(self, human, value):
+        raise NotImplementedError()
 
     def getValue(self, human):
         return sum([human.getDetail(target[0]) for target in self.targets])
@@ -172,7 +177,7 @@ class BaseModifier(object):
         # Update vertices
         if updateNormals:
             human.meshData.calcNormals(1, 1, self.verts, self.faces)
-        human.meshData.update(self.verts, updateNormals)
+        human.meshData.update()
         human.callEvent('onChanging', events3d.HumanEvent(human, self.eventType))
 
 class Modifier(BaseModifier):

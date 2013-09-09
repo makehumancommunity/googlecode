@@ -175,7 +175,7 @@ class Target:
             np.save(iname, index)
             np.save(vname, vector)
             return iname, vname
-        except StandardError, e:
+        except StandardError, _:
             log.error('error saving %s', name)
 
     def _load(self, name):
@@ -183,7 +183,7 @@ class Target:
         logger.debug('loading target %s', name)
         try:
             self._load_binary(name)
-        except StandardError, e:
+        except StandardError, _:
             self._load_text(name)
         logger.debug('loaded target %s', name)
 
@@ -220,7 +220,7 @@ class Target:
             if calcNormals:
                 obj.calcNormals(1, 1, dstVerts, facesToRecalculate)
             if update:
-                obj.update(dstVerts)
+                obj.update()
 
             return True
 

@@ -85,7 +85,7 @@ def saveBinaryMesh(obj, path):
     fgstr, fgidx = packStringList(fg.name for fg in obj._faceGroups)
     mtlstr, mtlidx = packStringList(obj._materials)
 
-    vars = dict(
+    vars_ = dict(
         coord = obj.coord,
         vface = obj.vface,
         nfaces = obj.nfaces,
@@ -99,9 +99,9 @@ def saveBinaryMesh(obj, path):
         mtlidx = mtlidx)
 
     if obj.has_uv:
-        vars['fuvs']  = obj.fuvs
+        vars_['fuvs']  = obj.fuvs
 
-    np.savez(path, **vars)
+    np.savez(path, **vars_)
 
 def loadBinaryMesh(obj, path):
     log.debug('loadBinaryMesh: np.load()')
@@ -169,6 +169,8 @@ def loadMesh(path, locX=0, locY=0, locZ=0, loadColors=1):
 
     locZ:
       *float* Z location of loaded obj, default = 0
+
+    Note: loadColors is currently unused
     """
     name = os.path.basename(path)
     obj = module3d.Object3D(name)

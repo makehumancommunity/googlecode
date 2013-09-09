@@ -193,7 +193,7 @@ class EventHandler(object):
                 profiler.accum('method(event)', globals(), locals())
             else:
                 method(event)
-        except Exception, e:
+        except Exception, _:
             log.warning('Exception during event %s', eventType, exc_info=True)
         EventHandler._depth -= 1
         if topLevel:

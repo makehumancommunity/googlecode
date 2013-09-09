@@ -22,9 +22,7 @@ Abstract
 Common base class for all exporters.
 """
 
-import os
 from core import G
-import log
 
 
 class Exporter(object):
