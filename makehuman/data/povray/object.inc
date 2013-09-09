@@ -1,15 +1,13 @@
 #ifndef (%%name%%_Material)
 #declare %%name%%_Texture =
     texture {
-        %%diffuse%%
+        %%pigment%%
         %%normal%%
         finish {
-            specular 1
-            roughness 0.008
-            phong 0 phong_size 0 
-            ambient %%ambience%%
-            diffuse 1
-            conserve_energy
+            specular %%specular%%
+            roughness %%roughness%% 
+            ambient %%ambient%%
+            diffuse %%diffuse%%
         }
     }
 

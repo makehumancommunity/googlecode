@@ -79,14 +79,7 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
         self.AAbox = settingsBox.addWidget(gui.Slider(value=gui3d.app.settings.get('POV_AA', 0.5), label="AntiAliasing"))
 
         materialsBox = self.addRightWidget(gui.GroupBox('Materials'))
-        self.skinoil = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin oil"))
         self.moist = materialsBox.addWidget(gui.Slider(value=0.7, label="Moisturization"))
-        self.tension = materialsBox.addWidget(gui.Slider(value=0.7, label="Skin tension"))
-        self.grain = materialsBox.addWidget(gui.Slider(value=0.5, label="Skin graininess"))
-        self.hairShine = materialsBox.addWidget(gui.CheckBox('Hair shine', False))
-        self.hairSpec = materialsBox.addWidget(gui.Slider(value=0.45, label="Shine strength"))
-        self.hairRough = materialsBox.addWidget(gui.Slider(value=0.4, label="Shine coverage"))
-        self.hairHard = materialsBox.addWidget(gui.Slider(value=0.5, label="Hair hardness"))
 
         self.renderButton = optionsBox.addWidget(gui.Button('Render'))
 
@@ -127,14 +120,7 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
                                     'bintype': binary,
                                     'SSS': True if self.useSSS.selected else False,
                                     'SSSA': self.SSSA.getValue() + 0.01, # blur strength. Prevent zero
-                                    'skinoil': 0.001 *(10**(4*self.skinoil.getValue())), # exponential slider
-                                    'moist': self.moist.getValue(), # percentage
-                                    'rough':0.001 *(10**(2*(1-self.tension.getValue()))), # exponential slider
-                                    'wrinkles': 0.5*self.grain.getValue(),
-                                    'hairShine':True if self.hairShine.selected else False,
-                                    'hairSpec': self.hairSpec.getValue(),
-                                    'hairRough': (0.7*self.hairRough.getValue())**2,
-                                    'hairHard': 0.01*10**(4*self.hairHard.getValue())}) # exponential slider
+                                    'moist': self.moist.getValue()})
 
     @property
     def resWidth(self):

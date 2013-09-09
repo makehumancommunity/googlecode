@@ -265,11 +265,10 @@ def povrayExportMesh2(path, settings):
             'fn': T.getSaveName(),
             'f': ' filter all ' + str(S['filter']) if 'filter' in S else "",
             't': ' transmit all ' + str(S['transmit']) if 'transmit' in S else ""},
-        'bumpdef': lambda T, S: 'normal {bump_map {%(ft)s "%(fn)s"%(bs)s interpolate 2}%(bh)s}' % {
+        'bumpdef': lambda T, S: 'normal {bump_map {%(ft)s "%(fn)s" interpolate 2} %(bi)f}' % {
             'ft': getImageFType(T.getSaveExt()),
             'fn': T.getSaveName(),
-            'bs': ' bump_size ' + str(S['bumpsize']) if 'bumpsize' in S else "",
-            'bh': ' ' + str(S['bumphard']) if 'bumphard' in S else ""},
+            'bi': T.Object.rmesh.material.bumpMapIntensity if T.successfulAlternative == 0 else T.Object.rmesh.material.displacementMapIntensity},
         'alphadef': lambda T, S: 'image_map {%(ft)s "%(fn)s" interpolate 2}' % {
             'ft': getImageFType(T.getSaveExt()),
             'fn': T.getSaveName()},
@@ -285,6 +284,9 @@ def povrayExportMesh2(path, settings):
             (v1*v2*S['multiply'] if 'multiply' in S else v1*v2)
             for (v1, v2) in zip(T.Object.rmesh.material.ambientColor.values,
                                 settings['scene'].environment.ambience)]),
+        'specular': lambda T, S: str(T.Object.rmesh.material.specularIntensity),
+        'roughness': lambda T, S: str(T.Object.rmesh.material.specularHardness),
+        'diffuseInt': lambda T, S: str(T.Object.rmesh.material.diffuseIntensity),
         'pigment': lambda s: 'pigment {%s}' % s,
         'lmap': lambda RM: projection.mapSceneLighting(settings['scene']),
         'blurlev': lambda img, mult: (mult*(float(img.width)/1024)*float(settings['SSSA'])) if img else mult,
@@ -307,6 +309,9 @@ def povrayExportMesh2(path, settings):
         'sss_redbump':          ([('blur', 'sss_greenbump', ('blurlev', 'sss_bluebump', 5.0), 15)],                       'bumpdef', None),
         'hairbump':             (['bump'],                                                                                'bumpdef', 'alpha.bumpdef'),
         'ambient':              ([None],                                                                                  ('makecolor', 'colordef', 'getAmbience')),
+        'specular':             ([None],                                                                                  'specular'),
+        'roughness':            ([None],                                                                                  'roughness'),
+        'diffuseInt':           ([None],                                                                                  'diffuseInt'),
         'black':                 [('black', 'lmap')]},
                                  functions = MAfuncs)
 
@@ -347,48 +352,36 @@ def writeMaterials(hfile, rmeshes, materials, settings):
     progress = Progress(len(rmeshes))
     for rmesh in rmeshes:
         if rmesh.type == 'Hair':
-            if settings['hairShine']:
-                hinfile = open (mh.getSysDataPath("povray/hair_2.inc"),'r')
-            else:
-                hinfile = open (mh.getSysDataPath("povray/hair_0.inc"),'r')
-        elif rmesh.type == None:
+                hinfile = open (mh.getSysDataPath("povray/hair.inc"),'r')
+        elif rmesh.type == None:    # if has sss.
             if settings['SSS']:
-                hinfile = open(mh.getSysDataPath('povray/staticcontent_mesh2only_fsss.inc'), 'r')
+                hinfile = open(mh.getSysDataPath('povray/sss.inc'), 'r')
             else:
-                hinfile = open(mh.getSysDataPath('povray/staticcontent_mesh2only_tl.inc'), 'r')
-        elif rmesh.type == 'Eyes':
-            hinfile = open (mh.getSysDataPath("povray/eyes.inc"),'r')
+                hinfile = open(mh.getSysDataPath('povray/skin.inc'), 'r')
         else:
-            hinfile = open (mh.getSysDataPath("povray/clothes.inc"),'r')
+            hinfile = open (mh.getSysDataPath("povray/object.inc"),'r')
         inlines = hinfile.read()
         hinfile.close()
 
         inlines = inlines.replace('%%name%%', rmesh.name)
-        inlines = inlines.replace('%%ambience%%', materials[rmesh].ambient.define())
-        inlines = inlines.replace('%%diffuse%%', materials[rmesh].diffuse.define())
+        inlines = inlines.replace('%%pigment%%', materials[rmesh].diffuse.define())
+        inlines = inlines.replace('%%pigmentf1%%', materials[rmesh].diffuse.define({'filter':1.0}))
         inlines = inlines.replace('%%alpha%%', materials[rmesh].alpha.define())
-        if rmesh.type == 'Hair':
-            if settings['hairShine']:
-                inlines = inlines.replace('%%spec%%', str(settings['hairSpec']))
-                inlines = inlines.replace('%%rough%%', str(settings['hairRough']))
-            inlines = inlines.replace('%%diffusef1%%', materials[rmesh].diffuse.define({'filter':1.0}))
-            inlines = inlines.replace('%%normal%%', materials[rmesh].hairbump.define(
-                {'bumphard': settings['hairHard'] if settings['hairShine'] else 1.0}))
-        elif rmesh.type == None:
-            inlines = inlines.replace('%%spec%%', str(settings['skinoil']*settings['moist']))
-            inlines = inlines.replace('%%edss%%', str(settings['skinoil']*(1-settings['moist'])))
-            inlines = inlines.replace('%%rough%%', str(settings['rough']))
-            inlines = inlines.replace('%%diffusef1%%', materials[rmesh].diffuse.define({'filter':1.0}))
-            inlines = inlines.replace('%%2xambience%%', materials[rmesh].ambient.define({'multiply':2}))
+        inlines = inlines.replace('%%ambient%%', materials[rmesh].ambient.define())
+        inlines = inlines.replace('%%2xambient%%', materials[rmesh].ambient.define({'multiply':2}))
+        inlines = inlines.replace('%%diffuse%%', materials[rmesh].diffuseInt.define())
+        inlines = inlines.replace('%%specular%%', materials[rmesh].specular.define())
+        inlines = inlines.replace('%%roughness%%', materials[rmesh].roughness.define())
+        inlines = inlines.replace('%%moist%%', str(settings['moist']))
+        if settings['SSS'] and rmesh.type == None:  # -- has sss.
             inlines = inlines.replace(
-                '%%normal%%', materials[rmesh].bump.define({'bumpsize':settings['wrinkles']}))
-            if settings['SSS']:
-                inlines = inlines.replace(
-                    '%%bluenormal%%', materials[rmesh].bump.define({'bumpsize':3*settings['wrinkles']}))
-                inlines = inlines.replace(
-                    '%%greennormal%%', materials[rmesh].sss_greenbump.define({'bumpsize':3*settings['wrinkles']}))
-                inlines = inlines.replace(
-                    '%%rednormal%%', materials[rmesh].sss_redbump.define({'bumpsize':3*settings['wrinkles']}))
+                '%%bluenormal%%', materials[rmesh].bump.define())
+            inlines = inlines.replace(
+                '%%greennormal%%', materials[rmesh].sss_greenbump.define())
+            inlines = inlines.replace(
+                '%%rednormal%%', materials[rmesh].sss_redbump.define())
+        if rmesh.type == 'Hair':
+            inlines = inlines.replace('%%normal%%', materials[rmesh].hairbump.define())
         else:
             inlines = inlines.replace('%%normal%%', materials[rmesh].bump.define())
         hfile.write(inlines)
@@ -446,19 +439,23 @@ def povrayWriteMesh2(hfile, rmeshes):
 def povrayProcessSSS(rmeshes, materials, outDir, settings):
     progress = Progress()
 
+    #for rmesh in rmeshes:
+    #    if rmesh.#sssisenabled#:
+
+    rmesh = rmeshes[0] ##
     # Export blurred channels
-    materials[0].sss_bluelmap.save(outDir)
+    materials[rmesh].sss_bluelmap.save(outDir)
     progress(0.25)
-    materials[0].sss_greenlmap.save(outDir)
+    materials[rmesh].sss_greenlmap.save(outDir)
     progress(0.45)
-    materials[0].sss_redlmap.save(outDir)
+    materials[rmesh].sss_redlmap.save(outDir)
     progress(0.6)
-    materials[0].sss_alpha.save(outDir)
+    materials[rmesh].sss_alpha.save(outDir)
     progress(0.7)
     # Export blurred bump maps
-    materials[0].sss_greenbump.save(outDir)
+    materials[rmesh].sss_greenbump.save(outDir)
     progress(0.85)
-    materials[0].sss_redbump.save(outDir)
+    materials[rmesh].sss_redbump.save(outDir)
     progress(1.0)
 
 def getHumanName():

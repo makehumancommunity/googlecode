@@ -142,13 +142,16 @@ class MaterialAnalysis(object):
                     texlist = [texlist]
                     
                 # Return the first texture in the map list that exists.
+                self.successfulAlternative = -1
                 for tex in texlist:
+                    self.successfulAlternative += 1
                     rt = self.Object.getTex(tex, cguard)
                     if rt is not None:
                         self.compiled = rt
                         return rt
 
                 # If no texture was found, return None.
+                self.successfulAlternative = -1
                 self.compiled = None
                 return None
 
