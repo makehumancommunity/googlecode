@@ -22,15 +22,13 @@ Abstract
 TODO
 """
 
-import os
 import weakref
 
 import numpy as np
-import unique
+import unique # Bugfix for numpy.unique on older numpy versions
 
 from compat import MaterialsProxy
 import matrix
-import log
 import material
 
 class FaceGroup(object):
@@ -507,10 +505,10 @@ class Object3D(object):
         return self.fuvs[indices]
 
     def _update_faces(self):
-        map = np.argsort(self.fvert.flat)
-        vi = self.fvert.flat[map]
-        fi = np.mgrid[:self.fvert.shape[0],:self.fvert.shape[1]][0].flat[map].astype(np.uint32)
-        del map
+        map_ = np.argsort(self.fvert.flat)
+        vi = self.fvert.flat[map_]
+        fi = np.mgrid[:self.fvert.shape[0],:self.fvert.shape[1]][0].flat[map_].astype(np.uint32)
+        del map_
         ix, first = np.unique(vi, return_index=True)
         n = first[1:] - first[:-1]
         n = np.hstack((n, np.array([len(vi) - first[-1]])))
@@ -523,8 +521,6 @@ class Object3D(object):
         self.updateIndexBufferFaces()
 
     def updateIndexBufferVerts(self):
-        ngroup = len(self._faceGroups)
-
         packed = self.fvert.astype(np.uint64) << 32
         packed |= self.fuvs
         packed = packed.reshape(-1)
@@ -956,14 +952,6 @@ class Object3D(object):
         vert_mask[verts] = True
         return vert_mask, face_mask
 
-    def updateGroups(self, groupnames, update=True):
-        if recalcNormals or update:
-            (vertices, faces) = self.getVertexAndFaceMasksForGroups(groupnames)
-            if recalcNormals:
-                self.calcNormals(1, 1, vertices, faces)
-            if update:
-                self.update(vertices, recalcNormals)
-
     def getFaceMaskForVertices(self, verts):
         mask = np.zeros(len(self.fvert), dtype = bool)
         valid = np.arange(self.MAX_FACES)[None,:] < self.nfaces[verts][:,None]
@@ -990,17 +978,10 @@ class Object3D(object):
 
         self.cameraMode = cameraMode
 
-    def update(self, verticesToUpdate=None, updateNormals=True):
+    def update(self):
         """
         This method is used to call the update methods on each of a list of vertices or all vertices that form part of this object.
-
-        :param verticesToUpdate: The list of vertices to update.
-        :type verticesToUpdate: [:py:class:`module3d.Vert`, ..]
-        :param updateNormals: Whether to update the normals as well.
-        :type updateNormals: [:py:class:`module3d.Vert`, ..]
         """
-        # if verticesToUpdate is not None:
-        #     self.markCoords(verticesToUpdate, coor=True)
         self.sync_all()
 
     def calcNormals(self, recalcVertexNormals=1, recalcFaceNormals=1, verticesToUpdate=None, facesToUpdate=None):
