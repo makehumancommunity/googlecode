@@ -285,7 +285,7 @@ def povrayExportMesh2(path, settings):
             for (v1, v2) in zip(T.Object.rmesh.material.ambientColor.values,
                                 settings['scene'].environment.ambience)]),
         'specular': lambda T, S: str(T.Object.rmesh.material.specularIntensity),
-        'roughness': lambda T, S: str(T.Object.rmesh.material.specularHardness),
+        'roughness': lambda T, S: str(1 - T.Object.rmesh.material.shininess),
         'diffuseInt': lambda T, S: str(T.Object.rmesh.material.diffuseIntensity),
         'pigment': lambda s: 'pigment {%s}' % s,
         'lmap': lambda RM: projection.mapSceneLighting(settings['scene']),

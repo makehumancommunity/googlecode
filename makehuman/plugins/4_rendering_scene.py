@@ -40,7 +40,9 @@ class SceneLibraryTaskView(gui3d.PoseModeTaskView):
             os.makedirs(sceneDir)
         self.currentScene = os.path.join(sceneDir, "Default.mhscene")
         if os.path.exists(self.currentScene):
-            self.scene.load(self.currentScene)
+            loaded = self.scene.load(self.currentScene)
+            if loaded is False:
+                self.scene.save(self.currentScene)
         else:
             self.scene.save(self.currentScene)
         if not os.path.exists(os.path.join(sceneDir, "notfound.thumb")):

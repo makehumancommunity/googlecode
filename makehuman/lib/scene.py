@@ -25,14 +25,16 @@ Definitions of scene objects and the scene class.
 
 import events3d
 import pickle
+import log
 
 mhscene_version = 5
+mhscene_minversion = 5
 
 class SceneObject(object):
     def __init__(self, scene = None, attributes = {}):
         object.__init__(self)
-        self._attributes = attributes.keys()
-        self._attrver = []
+        self._attributes = sorted(attributes.keys())
+        self._attrver = {}
 
         for (attrname, attr) in attributes.items():
             
@@ -41,17 +43,18 @@ class SceneObject(object):
             # Usage: 'attribute': [attribute, minversion]
             # Or: 'attribute': [attribute, (minversion, maxversion)]
             # Or: 'attribute': [attribute, [(minver1, maxver1), (minver2, maxver2), ...]]
+            attribute = None
             if isinstance(attr, list):
                 attribute = attr[0]
                 if isinstance(attr[1], list):
-                    self._attrver.append(attr[1])
+                    self._attrver[attrname] = attr[1]
                 elif isinstance(attr[1], tuple):
-                    self._attrver.append([attr[1]])
+                    self._attrver[attrname] = [attr[1]]
                 else:
-                    self._attrver.append([(attr[1], mhscene_version)])
+                    self._attrver[attrname] = [(attr[1], mhscene_version)]
             else:
                 attribute = attr
-                self._attrver.append([(0, mhscene_version)])
+                self._attrver[attrname] = [(mhscene_minversion, mhscene_version)]
                 
             object.__setattr__(self, "_" + attrname, attribute)
             
@@ -88,13 +91,13 @@ class SceneObject(object):
             pickle.dump(getattr(self, "_" + attr), hfile)
 
     def load(self, hfile):
-        for (attr, ver) in zip(self._attributes, self._attrver):
+        for attr in self._attributes:
 
             # Check if attribute exists in the file by checking
             # the compatibility of their versions
             filever = self._scene.filever
             supported = False
-            for verlim in ver:
+            for verlim in self._attrver[attr]:
                 if filever >= verlim[0] and filever <= verlim[1]:
                     supported = True
                     break
@@ -145,9 +148,9 @@ class Scene(events3d.EventHandler):
     def load(self, path):   # Load scene from a .mhscene file.        
         hfile = open(path, 'rb')
         self.filever = pickle.load(hfile)
-        if (self.filever < 4):   # Minimum supported version
+        if (self.filever < mhscene_minversion):   # Minimum supported version
             hfile.close()
-            return
+            return False
         self.unsaved = False
         self.path = path
         
@@ -159,6 +162,7 @@ class Scene(events3d.EventHandler):
             light.load(hfile)
             self.lights.append(light)
         hfile.close()
+        return True
 
     def save(self, path = None):    # Save scene to a .mhscene file.
         if path is not None:
