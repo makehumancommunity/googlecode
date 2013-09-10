@@ -239,10 +239,13 @@ class Shader(object):
                 cls._glsl_version = (0,0)
                 return cls._glsl_version
 
-            import re
             glsl_version_str = OpenGL.GL.glGetString(OpenGL.GL.GL_SHADING_LANGUAGE_VERSION)
-            glsl_version = re.search('[0-9]+\.[0-9]+',glsl_version_str).group(0)
-            glsl_v_major, glsl_v_minor = glsl_version.split('.')
+            if glsl_version_str:
+                import re
+                glsl_version = re.search('[0-9]+\.[0-9]+',glsl_version_str).group(0)
+                glsl_v_major, glsl_v_minor = glsl_version.split('.')
+            else:
+                glsl_v_major, glsl_v_minor = (0, 0)
             cls._glsl_version = (int(glsl_v_major), int(glsl_v_minor))
         return cls._glsl_version
 
