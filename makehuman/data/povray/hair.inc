@@ -2,7 +2,7 @@
 
 #declare %%name%%_hairtex0 =
     texture {
-        %%diffuse%%          
+        %%pigment%%          
         finish {
             specular 0
             ambient %%ambient%%
@@ -12,7 +12,7 @@
 
 #declare %%name%%_hairtex1 =
     texture {
-        pigment {rgb 1}         
+        pigment {rgb 1}
         %%normal%%
         finish {
             specular %%specular%%
@@ -22,7 +22,7 @@
         }
     }
     texture {
-        %%diffusef1%%         
+        %%pigmentf1%%         
         %%normal%%
         finish {
             specular %%specular%%
