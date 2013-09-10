@@ -68,6 +68,9 @@ class RichMesh(object):
         obj.setUVs(texVerts)
         obj.createFaceGroup("Full Object")
         obj.setFaces(faceVerts, faceUvs)
+        obj.calcNormals(True, True)
+        obj.update()
+        obj.updateIndexBuffer()
         self.weights = weights
         self.shapes = shapes
         self.material = obj.material = material
@@ -76,6 +79,7 @@ class RichMesh(object):
 
     def fromObject(self, obj, weights, shapes):
         self.object = obj
+        
         self.weights = weights
         self.shapes = shapes
         self.material = obj.material
@@ -89,6 +93,9 @@ class RichMesh(object):
         newobj.setUVs(obj.texco)
         newobj.setFaces(obj.fvert, obj.fuvs)
         self.object = newobj
+        self.object.calcNormals(True, True)
+        self.object.update()
+        self.object.updateIndexBuffer()
 
         newshapes = []
         for name,shape in self.shapes:
