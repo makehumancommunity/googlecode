@@ -204,6 +204,10 @@ class Object3D(object):
         return self.parent.shaderConfig['vertexColors']
 
     @property
+    def isTextured(self):
+        return self.parent.shaderConfig['diffuse']
+
+    @property
     def material(self):
         return self.parent.material
 

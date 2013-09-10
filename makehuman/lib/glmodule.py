@@ -272,7 +272,7 @@ def drawMesh(obj):
     glPushMatrix()
     transformObject(obj)
 
-    if obj.texture and obj.solid:
+    if obj.isTextured and obj.texture and obj.solid:
         glEnable(GL_TEXTURE_2D)
         glEnableClientState(GL_TEXTURE_COORD_ARRAY)
         glBindTexture(GL_TEXTURE_2D, obj.texture)
@@ -386,7 +386,7 @@ def drawMesh(obj):
     if obj.shadeless:
         glEnable(GL_LIGHTING)
 
-    if obj.texture and obj.solid:
+    if obj.isTextured and obj.texture and obj.solid:
         glDisable(GL_TEXTURE_2D)
         glDisableClientState(GL_TEXTURE_COORD_ARRAY)
 
