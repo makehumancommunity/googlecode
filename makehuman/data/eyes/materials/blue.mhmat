@@ -8,7 +8,7 @@ diffuseColor  1.0 1.0 1.0
 diffuseIntensity 1
 specularColor  0.3 0.3 0.3
 specularIntensity 0.7
-shininess 1
+shininess 0.99
 opacity 1
 
 // Textures and properties
