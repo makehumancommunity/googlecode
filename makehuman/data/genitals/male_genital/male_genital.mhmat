@@ -11,6 +11,11 @@ specularIntensity 0.5
 shininess 50
 opacity 1
 
+sssEnabled true
+sssRScale 5.0
+sssGScale 2.5
+sssBScale 1.0
+
 // Textures and properties
 normalmapTexture male_genital_norm.png
 normalmapIntensity 1.0

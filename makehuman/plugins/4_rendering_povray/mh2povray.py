@@ -288,8 +288,10 @@ def povrayExportMesh2(path, settings):
         'roughness': lambda T, S: str(1.0 - T.Object.rmesh.material.shininess),
         'diffuseInt': lambda T, S: str(T.Object.rmesh.material.diffuseIntensity),
         'pigment': lambda s: 'pigment {%s}' % s,
-        'lmap': lambda RM: projection.mapSceneLighting(settings['scene']),
-        'blurlev': lambda img, mult: (mult*(float(img.width)/1024)*float(settings['SSSA'])) if img else mult,
+        'lmap': lambda RM: projection.mapSceneLighting(settings['scene'], RM.object.object),
+        'blurlev': lambda img, mult: (mult*(float(img.width)/1024)) if img else mult,
+        'GBlur': lambda RM: RM.material.sssGScale,
+        'RBlur': lambda RM: RM.material.sssRScale,
         'mapmask': lambda RM: projection.mapMask()}
     MAfuncs.update(matanalyzer.imgopfuncs)
     materials = matanalyzer.MaterialAnalysis(rmeshes,
@@ -298,15 +300,15 @@ def povrayExportMesh2(path, settings):
         'bump':                 (['mat.bump', 'mat.displacement'],                                                        'bumpdef', None),
         'alpha':                (['mat.transparency', ('getAlpha', 'diffuse')],                                           'alphadef', ('makecolor', 'colordef', ('param', (1,1,1)))),
         'lmap':                  [('getChannel', 'func.lmap', 1)],
-        'bllmap':                [('blur', 'lmap', ('blurlev', 'lmap', 2.5), 13)],
-        'bl2lmap':               [('blur', 'bllmap', ('blurlev', 'lmap', 5.0), 13)],
+        'bllmap':                [('blur', 'lmap', ('blurlev', 'lmap', 'func.GBlur'), 13)],
+        'bl2lmap':               [('blur', 'bllmap', ('blurlev', 'lmap', 'func.RBlur'), 13)],
         'sss_bluelmap':          [('compose', ('list', 'black', 'black', 'lmap'))],
         'sss_greenlmap':         [('compose', ('list', 'black', 'bllmap', 'black'))],
         'sss_redlmap':           [('compose', ('list', 'bl2lmap', 'black', 'black'))],
         'sss_alpha':             [('blur', ('shrinkMask', 'func.mapmask', 4), 4, 13)],
         'sss_bluebump':         ([('getChannel', 'bump', 1)],                                                             'bumpdef', None),
-        'sss_greenbump':        ([('blur', 'sss_bluebump', ('blurlev', 'sss_bluebump', 2.5), 15)],                        'bumpdef', None),
-        'sss_redbump':          ([('blur', 'sss_greenbump', ('blurlev', 'sss_bluebump', 5.0), 15)],                       'bumpdef', None),
+        'sss_greenbump':        ([('blur', 'sss_bluebump', ('blurlev', 'sss_bluebump', 'func.GBlur'), 15)],               'bumpdef', None),
+        'sss_redbump':          ([('blur', 'sss_greenbump', ('blurlev', 'sss_bluebump', 'func.RBlur'), 15)],              'bumpdef', None),
         'hairbump':             (['bump'],                                                                                'bumpdef', 'alpha.bumpdef'),
         'ambient':              ([None],                                                                                  ('makecolor', 'colordef', 'getAmbience')),
         'specular':             ([None],                                                                                  'specular'),
@@ -317,8 +319,7 @@ def povrayExportMesh2(path, settings):
 
     # If SSS is enabled, render the lightmaps.
     progress(0.25, 0.6, "Processing SubSurface Scattering")
-    if settings['SSS']:
-        povrayProcessSSS(rmeshes, materials, outputDirectory, settings)
+    povrayProcessSSS(rmeshes, materials, outputDirectory, settings)
 
     # Write mesh data for the object.
     progress(0.6, 0.9, "Writing Objects")
@@ -352,14 +353,14 @@ def writeMaterials(hfile, rmeshes, materials, settings):
     progress = Progress(len(rmeshes))
     for rmesh in rmeshes:
         if rmesh.type == 'Hair':
-                hinfile = open (mh.getSysDataPath("povray/hair.inc"),'r')
-        elif rmesh.type == None:    # if has sss.
-            if settings['SSS']:
+                hinfile = open (mh.getSysDataPath('povray/hair.inc'),'r')
+        elif rmesh.material.sssRScale:  # Determine it has skin.
+            if rmesh.material.sssEnabled:
                 hinfile = open(mh.getSysDataPath('povray/sss.inc'), 'r')
             else:
                 hinfile = open(mh.getSysDataPath('povray/skin.inc'), 'r')
         else:
-            hinfile = open (mh.getSysDataPath("povray/object.inc"),'r')
+            hinfile = open(mh.getSysDataPath('povray/object.inc'),'r')
         inlines = hinfile.read()
         hinfile.close()
 
@@ -373,7 +374,7 @@ def writeMaterials(hfile, rmeshes, materials, settings):
         inlines = inlines.replace('%%specular%%', materials[rmesh].specular.define())
         inlines = inlines.replace('%%roughness%%', materials[rmesh].roughness.define())
         inlines = inlines.replace('%%moist%%', str(settings['moist']))
-        if settings['SSS'] and rmesh.type == None:  # -- has sss.
+        if rmesh.material.sssEnabled:
             inlines = inlines.replace(
                 '%%bluenormal%%', materials[rmesh].bump.define())
             inlines = inlines.replace(
@@ -437,26 +438,25 @@ def povrayWriteMesh2(hfile, rmeshes):
         progress.step()
 
 def povrayProcessSSS(rmeshes, materials, outDir, settings):
-    progress = Progress()
+    progress = Progress(len(rmeshes))
 
-    #for rmesh in rmeshes:
-    #    if rmesh.#sssisenabled#:
+    for rmesh in rmeshes:
+        if rmesh.material.sssEnabled:
 
-    rmesh = rmeshes[0] ##
-    # Export blurred channels
-    materials[rmesh].sss_bluelmap.save(outDir)
-    progress(0.25)
-    materials[rmesh].sss_greenlmap.save(outDir)
-    progress(0.45)
-    materials[rmesh].sss_redlmap.save(outDir)
-    progress(0.6)
-    materials[rmesh].sss_alpha.save(outDir)
-    progress(0.7)
-    # Export blurred bump maps
-    materials[rmesh].sss_greenbump.save(outDir)
-    progress(0.85)
-    materials[rmesh].sss_redbump.save(outDir)
-    progress(1.0)
+            # Export blurred channels
+            materials[rmesh].sss_bluelmap.save(outDir)
+            progress.substep(0.25)
+            materials[rmesh].sss_greenlmap.save(outDir)
+            progress.substep(0.45)
+            materials[rmesh].sss_redlmap.save(outDir)
+            progress.substep(0.6)
+            materials[rmesh].sss_alpha.save(outDir)
+            progress.substep(0.7)
+            # Export blurred bump maps
+            materials[rmesh].sss_greenbump.save(outDir)
+            progress.substep(0.85)
+            materials[rmesh].sss_redbump.save(outDir)
+            progress.step()
 
 def getHumanName():
     sav = str(gui3d.app.getCategory('Files').getTaskByName('Save').fileentry.edit.text())

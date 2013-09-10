@@ -13,6 +13,11 @@ emissiveColor 0.0 0.0 0.0
 opacity 1.0
 translucency 0.0
 
+sssEnabled true
+sssRScale 5.0
+sssGScale 2.5
+sssBScale 1.0
+
 // Set LitSphere shader programme
 shader data/shaders/glsl/litsphere
 

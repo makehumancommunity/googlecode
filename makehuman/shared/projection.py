@@ -395,11 +395,11 @@ def mapSceneLighting(scn, object = None):
 
     if (scn.lights):    # Add up all the lightmaps.
         progress = Progress(len(scn.lights), G.app.progress)
-        lmap = mapLighting(calcLightPos(scn.lights[0])).data
+        lmap = mapLighting(calcLightPos(scn.lights[0]), object.mesh).data
         i = 1.0        
         for light in scn.lights[1:]:
             lmap = image_operations.mixData(
-                lmap, mapLighting(calcLightPos(light)).data,1,1)       
+                lmap, mapLighting(calcLightPos(light), object.mesh).data,1,1)       
             i += 1.0
 
         return mh.Image(data = image_operations.normalizeData(lmap))

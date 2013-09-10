@@ -67,10 +67,6 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
                 self.path.setText(path)
         #------------------------------------------------------------------------------------
         filter = []
-        # Options box
-        optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
-        self.useSSS = optionsBox.addWidget(gui.CheckBox('Use S.S. Scattering', True))
-        self.SSSA = optionsBox.addWidget(gui.Slider(value=0.5, label="SSS Amount"))
 
         settingsBox = self.addLeftWidget(gui.GroupBox('Settings'))
         settingsBox.addWidget(gui.TextView("Resolution"))
@@ -81,7 +77,7 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
         materialsBox = self.addRightWidget(gui.GroupBox('Materials'))
         self.moist = materialsBox.addWidget(gui.Slider(value=0.7, label="Moisturization"))
 
-        self.renderButton = optionsBox.addWidget(gui.Button('Render'))
+        self.renderButton = settingsBox.addWidget(gui.Button('Render'))
 
         @self.resBox.mhEvent
         def onChange(value):
@@ -118,8 +114,6 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
                                     'subdivide': gui3d.app.actions.smooth.isChecked(),
                                     'AA': 0.5-0.49*self.AAbox.getValue(),
                                     'bintype': binary,
-                                    'SSS': True if self.useSSS.selected else False,
-                                    'SSSA': self.SSSA.getValue() + 0.01, # blur strength. Prevent zero
                                     'moist': self.moist.getValue()})
 
     @property
