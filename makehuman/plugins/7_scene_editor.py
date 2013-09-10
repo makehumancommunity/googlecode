@@ -111,7 +111,11 @@ class LightSceneItem(SceneItem):
         self.widget.addWidget(gui.TextView("Color"))
         self.colbox = self.widget.addWidget(gui.TextEdit(
             ", ".join([str(x) for x in self.light.color])))
-        
+
+        self.widget.addWidget(gui.TextView("Specular"))
+        self.specbox = self.widget.addWidget(gui.TextEdit(
+            ", ".join([str(x) for x in self.light.specular])))        
+
         self.widget.addWidget(gui.TextView("Spot angle"))
         self.fov = self.widget.addWidget(gui.TextEdit(str(self.light.fov)))
 
@@ -149,6 +153,14 @@ class LightSceneItem(SceneItem):
             try:
                 value = value.replace(" ", "")
                 self.light.color = tuple([float(x) for x in value.split(",")])
+            except:
+                pass
+
+        @self.specbox.mhEvent
+        def onChange(value):
+            try:
+                value = value.replace(" ", "")
+                self.light.specular = tuple([float(x) for x in value.split(",")])
             except:
                 pass
 

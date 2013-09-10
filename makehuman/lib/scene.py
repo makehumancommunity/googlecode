@@ -26,15 +26,37 @@ Definitions of scene objects and the scene class.
 import events3d
 import pickle
 
-mhscene_version = 4
+mhscene_version = 5
 
 class SceneObject(object):
     def __init__(self, scene = None, attributes = {}):
         object.__init__(self)
         self._attributes = attributes.keys()
-        for attr in attributes.keys():
-            object.__setattr__(self, "_" + attr, attributes[attr])
+        self._attrver = []
+
+        for (attrname, attr) in attributes.items():
+            
+            # Version control system for backwards compatibility
+            # with older mhscene files.
+            # Usage: 'attribute': [attribute, minversion]
+            # Or: 'attribute': [attribute, (minversion, maxversion)]
+            # Or: 'attribute': [attribute, [(minver1, maxver1), (minver2, maxver2), ...]]
+            if isinstance(attr, list):
+                attribute = attr[0]
+                if isinstance(attr[1], list):
+                    self._attrver.append(attr[1])
+                elif isinstance(attr[1], tuple):
+                    self._attrver.append([attr[1]])
+                else:
+                    self._attrver.append([(attr[1], mhscene_version)])
+            else:
+                attribute = attr
+                self._attrver.append([(0, mhscene_version)])
+                
+            object.__setattr__(self, "_" + attrname, attribute)
+            
         self._scene = scene
+        
 
     def __getattr__(self, attr):
         if attr in object.__getattribute__(self, "_attributes"):
@@ -66,8 +88,19 @@ class SceneObject(object):
             pickle.dump(getattr(self, "_" + attr), hfile)
 
     def load(self, hfile):
-        for attr in self._attributes:
-            setattr(self, "_" + attr, pickle.load(hfile))
+        for (attr, ver) in zip(self._attributes, self._attrver):
+
+            # Check if attribute exists in the file by checking
+            # the compatibility of their versions
+            filever = self._scene.filever
+            supported = False
+            for verlim in ver:
+                if filever >= verlim[0] and filever <= verlim[1]:
+                    supported = True
+                    break
+
+            if supported:
+                setattr(self, "_" + attr, pickle.load(hfile))
 
     
 class Light(SceneObject):
@@ -78,6 +111,7 @@ class Light(SceneObject):
             {'position': (-10.99, 20.0, 20.0),
              'focus': (0.0, 0.0, 0.0),
              'color': (1.0, 1.0, 1.0),
+             'specular': [(1.0, 1.0, 1.0), 5],
              'fov': 180.0,
              'attenuation': 0.0,
              'areaLights': 1,
@@ -110,8 +144,8 @@ class Scene(events3d.EventHandler):
 
     def load(self, path):   # Load scene from a .mhscene file.        
         hfile = open(path, 'rb')
-        filever = pickle.load(hfile)
-        if (filever < 4):   # Minimum supported version
+        self.filever = pickle.load(hfile)
+        if (self.filever < 4):   # Minimum supported version
             hfile.close()
             return
         self.unsaved = False
@@ -120,7 +154,7 @@ class Scene(events3d.EventHandler):
         self.environment.load(hfile)
         nlig = pickle.load(hfile)
         self.lights = []
-        for i in range(nlig):
+        for i in xrange(nlig):
             light = Light(self)
             light.load(hfile)
             self.lights.append(light)
