@@ -316,8 +316,8 @@ def drawMesh(obj):
     if obj.useVertexColors:
         # Vertex colors affect materials (lighting is enabled)
         glEnable(GL_COLOR_MATERIAL)
-        # Vertex colors affect ambient and diffuse of material
-        glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
+        # Vertex colors affect diffuse of material
+        glColorMaterial(GL_FRONT, GL_DIFFUSE)
     else:
         glDisable(GL_COLOR_MATERIAL)
 
