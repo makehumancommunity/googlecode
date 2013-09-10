@@ -114,6 +114,12 @@ class Material(object):
         self._transparencyMapTexture = None
         self._transparencyMapIntensity = 1.0
 
+        # Sub-surface scattering parameters
+        self._sssEnabled = False
+        self._sssRScale = 0.0
+        self._sssGScale = 0.0
+        self._sssBScale = 0.0
+
         self._shader = None
         self._shaderConfig = {
             'diffuse'      : True,
@@ -160,6 +166,11 @@ class Material(object):
         self._specularMapIntensity = material.specularMapIntensity
         self._transparencyMapTexture = material.transparencyMapTexture
         self._transparencyMapIntensity = material.transparencyMapIntensity
+
+        self._sssEnabled = material.sssEnabled
+        self._sssRScale = material.sssRScale
+        self._sssGScale = material.sssGScale
+        self._sssBScale = material.sssBScale
 
         self._shader = material.shader
         self._shaderConfig = dict(material._shaderConfig)
@@ -242,6 +253,14 @@ class Material(object):
                 self._transparencyMapTexture = getFilePath(words[1], self.filepath)
             if words[0] == "transparencymapIntensity":
                 self._transparencyMapIntensity = max(0.0, min(1.0, float(words[1])))
+            if words[0] == "sssEnabled":
+                self._sssEnabled = False
+            if words[0] == "sssRScale":
+                self._sssRScale = max(0.0, float(words[1]))
+            if words[0] == "sssGScale":
+                self._sssGScale = max(0.0, float(words[1]))
+            if words[0] == "sssBScale":
+                self._sssBScale = max(0.0, float(words[1]))
             if words[0] == "shader":
                 self._shader = getFilePath(words[1], self.filepath)
             if words[0] == "uvMap":
@@ -341,6 +360,13 @@ class Material(object):
             f.write("transparencymapIntensity %s\n" % self.transparencyMapIntensity)
             hasTexture = True
         if hasTexture: f.write('\n')
+
+        if self.sssEnabled:
+            f.write("# Sub-surface scattering parameters\n" )
+            f.write("sssEnabled %s\n" % self.sssEnabled )
+            f.write("sssRScale %s\n" % material.sssRScale )
+            f.write("sssGScale %s\n" % material.sssGScale )
+            f.write("sssBScale %s\n\n" % material.sssBScale )
 
         if self.uvMap:
             f.write("uvMap %s\n\n" % self._texPath(self.uvMap, filedir) )
@@ -491,6 +517,39 @@ class Material(object):
         self._translucency = min(1.0, max(0.0, translucency))
 
     translucency = property(getTranslucency, setTranslucency)
+
+
+    def getSSSEnabled(self):
+        return self._sssEnabled
+
+    def setSSSEnabled(self, sssEnabled):
+        self._sssEnabled = sssEnabled
+
+    sssEnabled = property(getSSSEnabled, setSSSEnabled)
+
+    def getSSSRScale(self):
+        return self._sssRScale
+
+    def setSSSRScale(self, sssRScale):
+        self._sssRScale = sssRScale
+
+    sssRScale = property(getSSSRScale, setSSSRScale)
+
+    def getSSSGScale(self):
+        return self._sssGScale
+
+    def setSSSGScale(self, sssGScale):
+        self._sssGScale = sssGScale
+
+    sssGScale = property(getSSSGScale, setSSSGScale)
+
+    def getSSSBScale(self):
+        return self._sssBScale
+
+    def setSSSBScale(self, sssBScale):
+        self._sssBScale = sssBScale
+
+    sssBScale = property(getSSSBScale, setSSSBScale)
 
 
     def supportsDiffuse(self):
