@@ -27,6 +27,14 @@
 varying vec3 normal, lightDir, halfVector;
 varying vec4 ambient_color, diffuse_color, specular_color;
 
+struct gl_MaterialParameters {
+		vec4 emission;   
+		vec4 ambient;    
+		vec4 diffuse;    
+		vec4 specular;   
+		float shininess; 
+};
+
 void main()
 {	
 	normal = gl_NormalMatrix * gl_Normal;
@@ -39,7 +47,7 @@ void main()
 	ambient_color = (gl_FrontLightModelProduct.sceneColor * gl_FrontMaterial.ambient) + 
     (gl_LightSource[0].ambient * gl_FrontMaterial.ambient);
 		
-	diffuse_color = gl_LightSource[0].diffuse * gl_Color;//gl_FrontMaterial.diffuse;
+	diffuse_color = gl_LightSource[0].diffuse * gl_FrontMaterial.diffuse;
 	
 	specular_color = gl_LightSource[0].specular * gl_FrontMaterial.specular;
 
