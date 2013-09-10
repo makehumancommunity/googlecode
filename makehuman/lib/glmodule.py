@@ -201,6 +201,9 @@ def OnInit():
     global have_multisample
     have_multisample = glInitMultisampleARB()
 
+    # Set global scene ambient
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, A(0.0, 0.0, 0.0, 1.0))
+
     # Lights and materials
     lightPos = A( -10.99, 20.0, 20.0, 1.0)  # Light - Position
     ambientLight =  A(0.0, 0.0, 0.0, 1.0)   # Light - Ambient Values
