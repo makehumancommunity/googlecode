@@ -213,82 +213,82 @@ class Material(object):
 
             if words[0] == "name":
                 self.name = words[1]
-            if words[0] == "ambientColor":
+            elif words[0] == "ambientColor":
                 self._ambientColor.copyFrom([float(w) for w in words[1:4]])
-            if words[0] == "diffuseColor":
+            elif words[0] == "diffuseColor":
                 self._diffuseColor.copyFrom([float(w) for w in words[1:4]])
-            if words[0] == "diffuseIntensity":
+            elif words[0] == "diffuseIntensity":
                 self._diffuseIntensity = max(0.0, min(1.0, float(words[1])))
-            if words[0] == "specularColor":
+            elif words[0] == "specularColor":
                 self._specularColor.copyFrom([float(w) for w in words[1:4]])
-            if words[0] == "specularIntensity":
+            elif words[0] == "specularIntensity":
                 self._specularIntensity = max(0.0, min(1.0, float(words[1])))
-            if words[0] == "specularHardness":
+            elif words[0] == "specularHardness":
                 self._specularHardness = max(0.0, min(1.0, float(words[1])))
-            if words[0] == "emissiveColor":
+            elif words[0] == "emissiveColor":
                 self._emissiveColor.copyFrom([float(w) for w in words[1:4]])
-            if words[0] == "opacity":
+            elif words[0] == "opacity":
                 self._opacity = max(0.0, min(1.0, float(words[1])))
-            if words[0] == "translucency":
+            elif words[0] == "translucency":
                 self._translucency = max(0.0, min(1.0, float(words[1])))
-            if words[0] == "diffuseTexture":
+            elif words[0] == "diffuseTexture":
                 self._diffuseTexture = getFilePath(words[1], self.filepath)
-            if words[0] == "bumpmapTexture":
+            elif words[0] == "bumpmapTexture":
                 self._bumpMapTexture = getFilePath(words[1], self.filepath)
-            if words[0] == "bumpmapIntensity":
+            elif words[0] == "bumpmapIntensity":
                 self._bumpMapIntensity = max(0.0, min(1.0, float(words[1])))
-            if words[0] == "normalmapTexture":
+            elif words[0] == "normalmapTexture":
                 self._normalMapTexture = getFilePath(words[1], self.filepath)
-            if words[0] == "normalmapIntensity":
+            elif words[0] == "normalmapIntensity":
                 self._normalMapIntensity = max(0.0, min(1.0, float(words[1])))
-            if words[0] == "displacementmapTexture":
+            elif words[0] == "displacementmapTexture":
                 self._displacementMapTexture = getFilePath(words[1], self.filepath)
-            if words[0] == "displacementmapIntensity":
+            elif words[0] == "displacementmapIntensity":
                 self._displacementMapIntensity = max(0.0, min(1.0, float(words[1])))
-            if words[0] == "specularmapTexture":
+            elif words[0] == "specularmapTexture":
                 self._specularMapTexture = getFilePath(words[1], self.filepath)
-            if words[0] == "specularmapIntensity":
+            elif words[0] == "specularmapIntensity":
                 self._specularMapIntensity = max(0.0, min(1.0, float(words[1])))
-            if words[0] == "transparencymapTexture":
+            elif words[0] == "transparencymapTexture":
                 self._transparencyMapTexture = getFilePath(words[1], self.filepath)
-            if words[0] == "transparencymapIntensity":
+            elif words[0] == "transparencymapIntensity":
                 self._transparencyMapIntensity = max(0.0, min(1.0, float(words[1])))
-            if words[0] == "sssEnabled":
+            elif words[0] == "sssEnabled":
                 self._sssEnabled = words[2].lower() in ["yes", "enabled", "true"]
-            if words[0] == "sssRScale":
+            elif words[0] == "sssRScale":
                 self._sssRScale = max(0.0, float(words[1]))
-            if words[0] == "sssGScale":
+            elif words[0] == "sssGScale":
                 self._sssGScale = max(0.0, float(words[1]))
-            if words[0] == "sssBScale":
+            elif words[0] == "sssBScale":
                 self._sssBScale = max(0.0, float(words[1]))
-            if words[0] == "shader":
+            elif words[0] == "shader":
                 self._shader = getFilePath(words[1], self.filepath)
-            if words[0] == "uvMap":
+            elif words[0] == "uvMap":
                 self._uvMap = getFilePath(words[1], self.filepath)
                 from getpath import getSysDataPath
                 if self._uvMap and \
                    os.path.realpath(self._uvMap) == os.path.realpath(getSysDataPath('uvs/default.obj')):
                     # uvs/default.obj is a meta-file that refers to the default uv set
                     self._uvMap = None
-            if words[0] == "shaderParam":
+            elif words[0] == "shaderParam":
                 if len(words) > 3:
                     self.setShaderParameter(words[1], words[2:])
                 else:
                     self.setShaderParameter(words[1], words[2])
-            if words[0] == "shaderDefine":
+            elif words[0] == "shaderDefine":
                 self.addShaderDefine(words[1])
-            if words[0] == "shaderConfig":
+            elif words[0] == "shaderConfig":
                 if words[1] == "diffuse":
                     shaderConfig_diffuse = words[2].lower() in ["yes", "enabled", "true"]
-                if words[1] == "bump":
+                elif words[1] == "bump":
                     shaderConfig_bump = words[2].lower() in ["yes", "enabled", "true"]
-                if words[1] == "normal":
+                elif words[1] == "normal":
                     shaderConfig_normal = words[2].lower() in ["yes", "enabled", "true"]
-                if words[1] == "displacement":
+                elif words[1] == "displacement":
                     shaderConfig_displacement = words[2].lower() in ["yes", "enabled", "true"]
-                if words[1] == "spec":
+                elif words[1] == "spec":
                     shaderConfig_spec = words[2].lower() in ["yes", "enabled", "true"]
-                if words[1] == "vertexColors":
+                elif words[1] == "vertexColors":
                     shaderConfig_vertexColors = words[2].lower() in ["yes", "enabled", "true"]
 
         f.close()
