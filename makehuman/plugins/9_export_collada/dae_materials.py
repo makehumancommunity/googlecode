@@ -104,7 +104,7 @@ def writeEffects(fp, rmesh):
     writeTexture(fp, 'diffuse', mat.diffuseTexture, mat.diffuseColor, mat.diffuseIntensity)
     writeTexture(fp, 'transparency', mat.diffuseTexture, None, mat.transparencyIntensity)
     writeTexture(fp, 'specular', mat.specularMapTexture, mat.specularColor, 0.1*mat.specularIntensity)
-    writeIntensity(fp, 'shininess', mat.specularHardness)
+    writeIntensity(fp, 'shininess', mat.shininess)
     writeTexture(fp, 'normal', mat.normalMapTexture, None, mat.normalMapIntensity)
     writeTexture(fp, 'bump', mat.bumpMapTexture, None, mat.bumpMapIntensity)
     writeTexture(fp, 'displacement', mat.displacementMapTexture, None, mat.displacementMapIntensity)

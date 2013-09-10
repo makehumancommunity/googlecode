@@ -303,7 +303,7 @@ def drawMesh(obj):
     MatDif = A(c[0], c[1], c[2], o)         # Material - Diffuse Values
     c = mat.specularColor.values
     MatSpc = A(c[0], c[1], c[2], 1.0)       # Material - Specular Values
-    MatShn = A(128 * mat.specularHardness)  # Material - Shininess
+    MatShn = A(128 * mat.shininess)         # Material - Shininess
     c= mat.emissiveColor.values
     MatEms = A(c[0], c[1], c[2], 1.0)       # Material - Emission Values
 

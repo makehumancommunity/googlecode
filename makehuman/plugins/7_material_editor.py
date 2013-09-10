@@ -135,10 +135,10 @@ class ShaderTaskView(gui3d.TaskView):
         def onActivate(event):
             mat.specularIntensity = w6.value
 
-        w7 = self.materialBox.addWidget(ScalarValue("Specular hardness", mat.specularHardness))
+        w7 = self.materialBox.addWidget(ScalarValue("Specular shininess", mat.shininess))
         @w7.mhEvent
         def onActivate(event):
-            mat.specularHardness = w7.value
+            mat.shininess = w7.value
 
         w8 = self.materialBox.addWidget(ColorValue("Emissive", mat.emissiveColor))
         @w8.mhEvent
