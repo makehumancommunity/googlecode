@@ -4,7 +4,7 @@ name DefaultSkin
 
 // Color shading attributes
 ambientColor 0.11 0.11 0.11
-diffuseColor 1 1 1
+diffuseColor 0.917 0.572 0.435
 diffuseIntensity 1.0
 specularColor 0.2 0.2 0.2
 specularIntensity 0.2
@@ -12,9 +12,6 @@ shininess 0.08
 emissiveColor 0.1 0.05 0
 opacity 1.0
 translucency 0.0
-
-// Texture for those without shader support
-diffuseTexture data/litspheres/adaptive_skin_tone.png
 
 // Set LitSphere shader programme
 shader data/shaders/glsl/litsphere
