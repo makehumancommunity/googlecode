@@ -3,12 +3,12 @@
 name Green
 
 // Color shading attributes
-ambientColor 1.0 1.0 1.0
+ambientColor 0.11 0.11 0.11
 diffuseColor  1.0 1.0 1.0
 diffuseIntensity 1
-specularColor  1 1 1
+specularColor  0.3 0.3 0.3
 specularIntensity 0.7
-specularHardness 0.008
+specularHardness 1
 opacity 1
 
 // Textures and properties

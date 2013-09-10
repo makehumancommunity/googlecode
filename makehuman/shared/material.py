@@ -96,7 +96,7 @@ class Material(object):
         self._specularColor = Color(1.0, 1.0, 1.0)
         self._specularIntensity = 0.5   # TODO is this useful?
         self._transparencyIntensity = 0.0
-        self._specularHardness = 0.2
+        self._shininess = 0.2
         self._emissiveColor = Color()
 
         self._opacity = 1.0
@@ -149,7 +149,7 @@ class Material(object):
         self._diffuseIntensity = material.diffuseIntensity
         self._specularColor.copyFrom(material.specularColor)
         self._specularIntensity = material.specularIntensity
-        self._specularHardness = material.specularHardness
+        self._shininess = material.shininess
         self._emissiveColor.copyFrom(material.emissiveColor)
 
         self._opacity = material.opacity
@@ -223,8 +223,8 @@ class Material(object):
                 self._specularColor.copyFrom([float(w) for w in words[1:4]])
             elif words[0] == "specularIntensity":
                 self._specularIntensity = max(0.0, min(1.0, float(words[1])))
-            elif words[0] == "specularHardness":
-                self._specularHardness = max(0.0, min(1.0, float(words[1])))
+            elif words[0] == "shininess":
+                self._shininess = max(0.0, min(1.0, float(words[1])))
             elif words[0] == "emissiveColor":
                 self._emissiveColor.copyFrom([float(w) for w in words[1:4]])
             elif words[0] == "opacity":
@@ -329,7 +329,7 @@ class Material(object):
         f.write("diffuseIntensity %s\n" % self.diffuseIntensity)
         f.write("specularColor %s\n" % self.specularColor.asStr())
         f.write("specularIntensity %s\n" % self.specularIntensity)
-        f.write("specularHardness %s\n" % self.specularHardness)
+        f.write("shininess %s\n" % self.shininess)
         f.write("emissiveColor %s\n" % self.emissiveColor.asStr())
         f.write("opacity %s\n" % self.opacity)
         f.write("translucency %s\n\n" % self.translucency)
@@ -467,19 +467,19 @@ class Material(object):
     specularIntensity = property(getSpecularIntensity, setSpecularIntensity)
 
 
-    def getSpecularHardness(self):
+    def getShininess(self):
         """
-        The specular hardness or shinyness.
+        The specular shininess (the inverse of roughness or specular hardness).
         """
-        return self._specularHardness
+        return self._shininess
 
-    def setSpecularHardness(self, hardness):
+    def setShininess(self, hardness):
         """
-        Sets the specular hardness or shinyness.
+        Sets the specular hardness or shinyness. Between 0 and 1.
         """
-        self._specularHardness = max(0.0, hardness)
+        self._shininess = min(1.0, max(0.0, hardness))
 
-    specularHardness = property(getSpecularHardness, setSpecularHardness)
+    shininess = property(getShininess, setShininess)
 
 
     def getTransparencyIntensity(self):
@@ -607,7 +607,7 @@ class Material(object):
 
         self._shaderParameters['ambient']  = self.ambientColor.values
         self._shaderParameters['diffuse'] = list(np.asarray(self.diffuseColor.values, dtype=np.float32) * self.diffuseIntensity) + [self.opacity]
-        self._shaderParameters['specular'] = list(np.asarray(self.specularColor.values, dtype=np.float32) * self.specularIntensity) + [self.specularHardness]
+        self._shaderParameters['specular'] = list(np.asarray(self.specularColor.values, dtype=np.float32) * self.specularIntensity) + [self.shininess]
         self._shaderParameters['emissive'] = self.emissiveColor
 
         # Remove (non-custom) shader config defines (those set by shader config)

@@ -31,7 +31,14 @@ import log
 from core import G
 
 class Object3D(object):
+    """
+    Represents an object renderable by OpenGL (glmodule)
+    """
     def __init__(self, parent):
+        """
+        Initialize an OpenGL object for the specified parent mesh.
+        Parent should be an object of type module3d.Object3D.
+        """
         self.parent = parent
         self._texturePath = None
         self._textureTex = None
@@ -191,6 +198,14 @@ class Object3D(object):
     @property
     def priority(self):
         return self.parent.priority
+
+    @property
+    def useVertexColors(self):
+        return self.parent.shaderConfig['vertexColors']
+
+    @property
+    def material(self):
+        return self.parent.material
 
     @property
     def cull(self):

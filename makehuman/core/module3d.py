@@ -796,6 +796,10 @@ class Object3D(object):
         return self.material.shaderParameters
 
     @property
+    def shaderConfig(self):
+        return self.material.shaderConfig
+
+    @property
     def shaderDefines(self):
         return self.material.shaderDefines
 

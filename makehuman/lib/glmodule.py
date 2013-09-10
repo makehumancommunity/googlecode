@@ -180,10 +180,10 @@ def drawEnd():
 
 have_multisample = None
 
-def OnInit():
-    def A(*args):
-        return np.array(list(args), dtype=np.float32)
+def A(*args):
+    return np.array(list(args), dtype=np.float32)
 
+def OnInit():
     try:
         # Start with writing relevant info to the debug dump in case stuff goes
         # wrong at a later time
@@ -219,12 +219,12 @@ def OnInit():
     # glAlphaFunc(GL_GREATER, 0.0)
     glDisable(GL_DITHER)
     glEnable(GL_LIGHTING)                                    # Enable lighting
+    # TODO set light properties based on selected scene
     glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight)
     glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight)
     glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight)
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos)
     glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR) #  If we enable this, we have stronger specular highlights
-    # TODO use mesh.material properties in drawMesh()
     glMaterialfv(GL_FRONT, GL_AMBIENT, MatAmb)               # Set Material Ambience
     glMaterialfv(GL_FRONT, GL_DIFFUSE, MatDif)               # Set Material Diffuse
     glMaterialfv(GL_FRONT, GL_SPECULAR, MatSpc)              # Set Material Specular
@@ -293,6 +293,33 @@ def drawMesh(obj):
     if obj.cull:
         glEnable(GL_CULL_FACE)
         glCullFace(GL_BACK if obj.cull > 0 else GL_FRONT)
+
+    # Set material properties
+    mat = obj.material
+    c = mat.ambientColor.values
+    MatAmb = A(c[0], c[1], c[2], 1.0)       # Material - Ambient Values
+    c = mat.diffuseColor.values
+    o = mat.opacity
+    MatDif = A(c[0], c[1], c[2], o)         # Material - Diffuse Values
+    c = mat.specularColor.values
+    MatSpc = A(c[0], c[1], c[2], 1.0)       # Material - Specular Values
+    MatShn = A(128 * mat.specularHardness)  # Material - Shininess
+    c= mat.emissiveColor.values
+    MatEms = A(c[0], c[1], c[2], 1.0)       # Material - Emission Values
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT, MatAmb)          # Set Material Ambience
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, MatDif)          # Set Material Diffuse
+    glMaterialfv(GL_FRONT, GL_SPECULAR, MatSpc)         # Set Material Specular
+    glMaterialfv(GL_FRONT, GL_SHININESS, MatShn)        # Set Material Shininess
+    glMaterialfv(GL_FRONT, GL_EMISSION, MatEms)         # Set Material Emission
+
+    if obj.useVertexColors:
+        # Vertex colors affect materials (lighting is enabled)
+        glEnable(GL_COLOR_MATERIAL)
+        # Vertex colors affect ambient and diffuse of material
+        glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)
+    else:
+        glDisable(GL_COLOR_MATERIAL)
 
     # Enable the shader if the driver supports it and there is a shader assigned
     if obj.shader and obj.solid and Shader.supported() and not obj.shadeless:
