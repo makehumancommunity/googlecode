@@ -254,7 +254,7 @@ class Material(object):
             if words[0] == "transparencymapIntensity":
                 self._transparencyMapIntensity = max(0.0, min(1.0, float(words[1])))
             if words[0] == "sssEnabled":
-                self._sssEnabled = False
+                self._sssEnabled = words[2].lower() in ["yes", "enabled", "true"]
             if words[0] == "sssRScale":
                 self._sssRScale = max(0.0, float(words[1]))
             if words[0] == "sssGScale":
