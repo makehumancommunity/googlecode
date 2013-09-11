@@ -94,15 +94,11 @@ class Object3D(object):
         self.visibility = True
         self.pickable = True
         self.calculateTangents = True   # TODO disable when not needed by shader
-        self.shadeless = False
-        self.depthless = False
-        self.solid = True
-        self.transparentPrimitives = 0
+        self._transparentPrimitives = 0
         self.object3d = None
         self.vmap = None
         self.tmap = None
         self._priority = 0
-        self.cull = 0
         self.MAX_FACES = 8
 
         self.__object = None
@@ -818,13 +814,17 @@ class Object3D(object):
         This is used for certain GUI controls to give them a more 2D type
         appearance (predominantly the top bar of GUI controls).
 
-        NOTE that this option only has effect when no shader is set on this
-        object.
+        NOTE enabling this option disables the use of the shader configured in the material.
 
         :param shadeless: Whether or not the object is unaffected by lights.
         :type shadeless: Boolean
         """
-        self.shadeless = shadeless
+        self.material.shadeless = shadeless
+
+    def getShadeless(self):
+        return self.material.shadeless
+
+    shadeless = property(getShadeless, setShadeless)
 
     def setCull(self, cull):
         """
@@ -833,7 +833,21 @@ class Object3D(object):
         :param cull: Whether and how to cull
         :type cull: 0 => no culling, >0 => draw front faces, <0 => draw back faces
         """
-        self.cull = cull
+
+        # Because we don't really need frontface culling, we simplify to only backface culling
+        if (isinstance(cull, bool) and cull) or cull > 0:
+            self.material.backfaceCull = True
+        else:
+            self.material.backfaceCull = False
+
+    def getCull(self):
+        # Because we don't really need frontface culling, we simplify to only backface culling
+        if self.material.backfaceCull:
+            return 1
+        else:
+            return 0
+
+    cull = property(getCull, setCull)
 
     def getPriority(self):
         """
@@ -883,8 +897,12 @@ class Object3D(object):
         :param depthless: Whether or not the object is occluded or occludes.
         :type depthless: Boolean
         """
+        self.material.depthless = depthless
 
-        self.depthless = depthless
+    def getDepthless(self):
+        return self.material.depthless
+
+    depthless = property(getDepthless, setDepthless)
 
     def setSolid(self, solid):
         """
@@ -893,18 +911,33 @@ class Object3D(object):
         :param solid: Whether or not the object is drawn solid or wireframe.
         :type solid: Boolean
         """
-        
-        self.solid = solid
+        self.material.wireframe = not solid
+
+    def getSolid(self):
+        return not self.material.wireframe
+
+    solid = property(getSolid, setSolid)
             
     def setTransparentPrimitives(self, transparentPrimitives):
         """
         This method is used to specify the amount of transparent faces.
+        This property is overridden if self.material.transparent is set to True.
 
         :param transparentPrimitives: The amount of transparent faces.
         :type transparentPrimitives: int
         """
-        
-        self.transparentPrimitives = transparentPrimitives
+        self._transparentPrimitives = transparentPrimitives
+
+    def getTransparentPrimitives(self):
+        # Object allows transparency rendering of only a subset (starting from 
+        # the first face) of faces of the mesh, but material property transparent
+        # set to True overrides this and makes all faces render with transparency technique
+        if self.material.transparent:
+            return len(self.fvert)
+        else:
+            return self._transparentPrimitives
+
+    transparentPrimitives = property(getTransparentPrimitives, setTransparentPrimitives)
 
     def getFaceGroup(self, name):
         """

@@ -102,6 +102,12 @@ class Material(object):
         self._opacity = 1.0
         self._translucency = 0.0
 
+        self._shadeless = False   # Set to True to disable shading. Configured shader will have no effect
+        self._wireframe = False   # Set to True to do wireframe render
+        self._transparent = False # Set to True to enable transparency rendering (usually needed when opacity is < 1)
+        self._backfaceCull = True # Set to False to disable backface culling (render back of polygons)
+        self._depthless = False   # Set to True for depthless rendering (object is not occluded and does not occlude other objects)
+
         self._diffuseTexture = None
         self._bumpMapTexture = None
         self._bumpMapIntensity = 1.0
@@ -154,6 +160,12 @@ class Material(object):
 
         self._opacity = material.opacity
         self._translucency = material.translucency
+
+        self._shadeless = material.shadeless
+        self._wireframe = material.wireframe
+        self._transparent = material.transparent
+        self._backfaceCull = material.backfaceCull
+        self._depthless = material.depthless
 
         self._diffuseTexture = material.diffuseTexture
         self._bumpMapTexture = material.bumpMapTexture
@@ -231,6 +243,16 @@ class Material(object):
                 self._opacity = max(0.0, min(1.0, float(words[1])))
             elif words[0] == "translucency":
                 self._translucency = max(0.0, min(1.0, float(words[1])))
+            elif words[0] == "shadeless":
+                self._shadeless = words[1].lower() in ["yes", "enabled", "true"]
+            elif words[0] == "wireframe":
+                self._wireframe = words[1].lower() in ["yes", "enabled", "true"]
+            elif words[0] == "transparent":
+                self._transparent = words[1].lower() in ["yes", "enabled", "true"]
+            elif words[0] == "backfaceCull":
+                self._backfaceCull = words[1].lower() in ["yes", "enabled", "true"]
+            elif words[0] == "depthless":
+                self._depthless = words[1].lower() in ["yes", "enabled", "true"]
             elif words[0] == "diffuseTexture":
                 self._diffuseTexture = getFilePath(words[1], self.filepath)
             elif words[0] == "bumpmapTexture":
@@ -333,6 +355,12 @@ class Material(object):
         f.write("emissiveColor %s\n" % self.emissiveColor.asStr())
         f.write("opacity %s\n" % self.opacity)
         f.write("translucency %s\n\n" % self.translucency)
+
+        f.write("shadeless %s\n" % self.shadeless)
+        f.write("wireframe %s\n" % self.wireframe)
+        f.write("transparent %s\n" % self.transparent)
+        f.write("backfaceCull %s\n" % self.backfaceCull)
+        f.write("depthless %s\n\n" % self.depthless)
 
         hasTexture = False
         filedir = os.path.dirname(filename)
@@ -517,6 +545,47 @@ class Material(object):
         self._translucency = min(1.0, max(0.0, translucency))
 
     translucency = property(getTranslucency, setTranslucency)
+
+
+    def getShadeless(self):
+        return self._shadeless
+
+    def setShadeless(self, shadeless):
+        self._shadeless = shadeless
+
+    shadeless = property(getShadeless, setShadeless)
+
+    def getWireframe(self):
+        return self._wireframe
+
+    def setWireframe(self, wireframe):
+        self._wireframe = wireframe
+
+    wireframe = property(getWireframe, setWireframe)
+
+    def getTransparent(self):
+        return self._transparent
+
+    def setTransparent(self, transparent):
+        self._transparent = transparent
+
+    transparent = property(getTransparent, setTransparent)
+
+    def getBackfaceCull(self):
+        return self._backfaceCull
+
+    def setBackfaceCull(self, backfaceCull):
+        self._backfaceCull = backfaceCull
+
+    backfaceCull = property(getBackfaceCull, setBackfaceCull)
+
+    def getDepthless(self):
+        return self._depthless
+
+    def setDepthless(self, depthless):
+        self._depthless = depthless
+
+    depthless = property(getDepthless, setDepthless)
 
 
     def getSSSEnabled(self):
