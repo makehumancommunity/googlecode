@@ -21,6 +21,7 @@
  * --------
  *
  * Standard per-pixel lighting shader.
+ * Supports one light only.
 **/
 
 
