@@ -505,7 +505,7 @@ class Human(guicommon.Object):
         return self.asianVal
 
     def _updateDiffuseColor(self):
-        if self.material.supportsDiffuse():
+        if self.material.supportsDiffuse() and self.material.shaderConfig['diffuse']:
             # If human is diffuse textured, set diffuse factor to 100%
             self.material.diffuseColor = [1, 1, 1]
             if self.genitalsObj:
