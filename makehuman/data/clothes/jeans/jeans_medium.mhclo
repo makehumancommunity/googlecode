@@ -12,9 +12,6 @@ obj_file jeans_medium.obj
 material jeans.mhmat
 z_depth 40
 
-backface_culling no
-transparent no
-
 mask_uv_layer 1
 
 use_projection 0

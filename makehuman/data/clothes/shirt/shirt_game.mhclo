@@ -12,8 +12,6 @@ x_scale 3464 10305 2.7856
 z_scale 6930 7245 2.1161
 y_scale 14022 14040 4.9531
 z_depth 40
-backface_culling yes
-transparent no
 shapekey Breathe
 objfile_layer 0
 mask_uv_layer 1

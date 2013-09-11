@@ -7,7 +7,6 @@ name curly2
 
 subsurf 1 1
 
-transparent yes
 obj_file curly2.obj
 material curly2.mhmat
 x_scale 4302 8697 1.4986

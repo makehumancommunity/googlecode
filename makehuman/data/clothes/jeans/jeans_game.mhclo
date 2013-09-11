@@ -17,9 +17,6 @@ z_scale 3840 3957 1.6373
 y_scale 14165 14175 8.8847
 use_projection 0
 
-backface_culling no
-transparent no
-
 mask_uv_layer 1
 
 verts 0

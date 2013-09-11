@@ -11,6 +11,8 @@ specularIntensity 0.7
 shininess 0.99
 opacity 1
 
+transparent true
+
 // Textures and properties
 diffuseTexture blue_eye.png
 

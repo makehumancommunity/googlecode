@@ -11,6 +11,8 @@ specularIntensity 0.5
 shininess 50
 opacity 1
 
+transparent true
+
 sssEnabled true
 sssRScale 5.0
 sssGScale 2.5

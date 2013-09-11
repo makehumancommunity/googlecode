@@ -7,8 +7,6 @@ name superafro
 
 subsurf 1 1
 
-transparent yes
-
 obj_file superafro.obj
 material superafro.mhmat
 x_scale 4302 8697 1.4986

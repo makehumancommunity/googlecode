@@ -13,7 +13,6 @@ x_scale 4302 8697 1.2768
 z_scale 8208 8220 1.8527
 y_scale 8223 6827 1.8024
 z_depth 100
-backface_culling yes
 use_projection 0
 
 verts 0
