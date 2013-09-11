@@ -106,7 +106,6 @@ class ShaderTaskView(gui3d.TaskView):
         w1 = self.materialBox.addWidget(ColorValue("Diffuse", mat.diffuseColor))
         @w1.mhEvent
         def onActivate(event):
-            print "setting diffuse color to %s" % w1.value
             mat.diffuseColor = w1.value
 
         w2 = self.materialBox.addWidget(ScalarValue("Diffuse intensity", mat.diffuseIntensity))
