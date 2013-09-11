@@ -103,33 +103,6 @@ class SkeletonDebugLibrary(gui3d.TaskView):
             mainLib.updateSkeleton()
             mainLib.descrLbl.setText("No description available")
 
-        #
-        #   Language. Different languages and target apps.
-        #
-        '''
-        self.languageBox = self.addLeftWidget(gui.GroupBox('Language'))
-
-        self.languages = OrderedDict()
-        self.languages["English"] = None
-        folder = mh.getSysDataPath("rigs/languages")
-        for filename in os.listdir(folder):
-            if filename[0] == ".":
-                continue
-            name,ext = os.path.splitext(filename)
-            filepath = os.path.join(folder, filename)
-            self.languages[name.capitalize()] = filepath
-
-        for language,filepath in self.languages.items():
-            button = self.languageBox.addWidget(gui.Button(language))
-            @button.mhEvent
-            def onClicked(event):
-                print "Language", language
-                locale = armature.options.Locale(filepath=filepath)
-                mainLib.amtOptions.locale = locale
-                locale.load()
-                mainLib.updateSkeleton()
-        '''
-
 
     def reloadBoneExplorer(self):
         # Remove old radio buttons

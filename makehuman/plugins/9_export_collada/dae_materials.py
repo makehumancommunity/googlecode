@@ -61,7 +61,6 @@ def writeImage(fp, filepath, config):
     if not filepath:
         return
     newpath = config.copyTextureToNewLocation(filepath)
-    print "Collada Image", filepath, newpath
     texname = getTextureName(filepath)
     fp.write(
         '    <image id="%s" name="%s">\n' % (texname, texname) +
@@ -84,7 +83,7 @@ def writeLibraryEffects(fp, rmeshes, config):
 
 def writeEffects(fp, rmesh):
     progress = Progress()
-    
+
     mat = rmesh.material
     fp.write(
        '    <effect id="%s-effect">\n' % mat.name.replace(" ", "_") +
@@ -109,7 +108,7 @@ def writeEffects(fp, rmesh):
     writeTexture(fp, 'bump', mat.bumpMapTexture, None, mat.bumpMapIntensity)
     writeTexture(fp, 'displacement', mat.displacementMapTexture, None, mat.displacementMapIntensity)
     progress(0.67)
-    
+
     fp.write(
         '          </phong>\n' +
         '          <extra/>\n' +

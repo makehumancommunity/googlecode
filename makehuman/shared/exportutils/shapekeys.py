@@ -150,7 +150,6 @@ def targetFileName(typ, name, gender, age):
 
 
 def readShape(filename):
-    #print ("Try", filename)
     try:
         fp = open(filename, "rU")
     except:

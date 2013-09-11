@@ -62,7 +62,6 @@ def getId(key):
         raise NameError("Did not find id for key %s while linking" % key)
     _Id += 1
     _IdDict[key] = _Id
-    #print("New id: %d %s" % (_Id, key))
     return _Id,key
 
 #--------------------------------------------------------------------

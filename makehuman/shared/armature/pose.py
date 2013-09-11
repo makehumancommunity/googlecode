@@ -228,7 +228,6 @@ class Pose:
         nVerts = len(obj.coord)
         amt = self.armature
         coords = np.zeros((nVerts,4), float)
-        print("UO", amt.vertexWeights.keys())
         for pb in self.deforms:
             try:
                 verts,weights = amt.vertexWeights[pb.name]
@@ -604,11 +603,7 @@ class PoseBone:
             self.matrixGlobal = np.dot(self.parent.matrixGlobal, np.dot(self.bone.matrixRelative, self.matrixPose))
         else:
             self.matrixGlobal = np.dot(self.bone.matrixRelative, self.matrixPose)
-        """
-        pquat = tm.quaternion_from_matrix(self.matrixPose)
-        gquat = tm.quaternion_from_matrix(self.matrixGlobal)
-        print("%s (%.4f %.4f %.4f %.4f) (%.4f %.4f %.4f %.4f)" % (self.name, pquat[0], pquat[1], pquat[2], pquat[3], gquat[0], gquat[1], gquat[2], gquat[3]))
-        """
+
 
     def updateConstraints(self):
         for cns in self.constraints:

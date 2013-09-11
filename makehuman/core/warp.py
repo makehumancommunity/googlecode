@@ -174,8 +174,6 @@ class CWarp1:
                     dist2 = math.sqrt(np.dot(vec, vec))
                     if dist2 < mindist2:
                         mindist2 = dist2
-                        if mindist2 < 1e-6:
-                            print("  ", mindist2, i, j)
             self.s2[i] = mindist2
 
         self.H = np.identity(n, float)
@@ -246,16 +244,6 @@ class CWarp1:
             yloc = self.warpLoc(xloc)
             ymorph[n] = yloc - target[n]
 
-        '''
-            print n
-            print "  X0", source[n]
-            print "  Y0", target[n].co
-            print "  X ", xloc
-            print "  Y ", yloc
-            print "  DX", morph[n]
-            print "  DY", ymorph[n]
-        halt
-        '''
         return ymorph
 
 

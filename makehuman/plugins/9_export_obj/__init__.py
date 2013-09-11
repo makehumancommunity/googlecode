@@ -49,13 +49,12 @@ class ExporterOBJ(Exporter):
     def export(self, human, filename):
         from progress import Progress
         from . import mh2obj
-        print filename
 
         progress = Progress()
         progress(0, 1)
-        
+
         mh2obj.exportObj(human, filename("obj"), ObjConfig(self))
-        
+
 def load(app):
     app.addExporter(ExporterOBJ())
 

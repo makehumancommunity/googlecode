@@ -138,7 +138,6 @@ class Config:
 
     def getSubFolder(self, path, name):
         folder = os.path.join(path, name)
-        print "Using folder", folder
         if not os.path.exists(folder):
             log.message("Creating folder %s", folder)
             try:
@@ -153,14 +152,8 @@ class Config:
         srcDir = os.path.abspath(os.path.expanduser(os.path.dirname(filepath)))
         filename = os.path.basename(filepath)
 
-        print "CopyTex", srcDir
-        print "  ", filename
-        print "  ", self.useTexFolder, self.texFolder,
-        print "  ", self.outFolder
-
         if self.useTexFolder:
             newpath = os.path.abspath( os.path.join(self.texFolder, filename) )
-            print "New", newpath
             try:
                 self._copiedFiles[filepath]
                 done = True
@@ -179,7 +172,6 @@ class Config:
             return newpath
         else:
             relpath = os.path.relpath(newpath, self.outFolder)
-            print "  Rel", relpath
             return str(os.path.normpath(relpath))
 
 
