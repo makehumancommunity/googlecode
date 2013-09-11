@@ -147,11 +147,19 @@ class WarpModifier (humanmodifier.SimpleModifier):
         log.message("COMPWARP %s", self)
         landmarks = _warpGlobals.getLandMarks(self.bodypart)
         srcTargetCoord, srcCharCoord, trgCharCoord = self.getReferences(human)
+        #human.traceStacks()
+        #self.traceReference()
         if srcTargetCoord:
             shape = warp.warp_target(srcTargetCoord, srcCharCoord, trgCharCoord, landmarks)
         else:
             shape = {}
         return shape
+
+
+    def traceReference(self):
+        log.debug("self.refCharacters:")
+        for key,value in self.refCharacters.items():
+            log.debug("  %s: %s" % (key, value))
 
 
     def getReferences(self, human):
@@ -171,9 +179,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         if abs(sumtargets-1) > 1e-3 and abs(sumtargets-2) > 1e-3:
             log.debug("Inconsistent target sum %s." % sumtargets)
             human.traceStacks()
-            log.debug("self.refCharacters:")
-            for key,value in self.refCharacters.items():
-                log.debug("  %s: %s" % (key, value))
+            self.traceReference()
             raise NameError("Warping problem")
 
         for charpath,value in human.targetsDetailStack.items():

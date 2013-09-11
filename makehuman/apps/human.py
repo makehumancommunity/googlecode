@@ -580,7 +580,7 @@ class Human(guicommon.Object):
         if progressCallback:
             progressCallback(1.0)
 
-        self.traceStacks(all=False, vertsToList=10)
+        self.traceStacks(all=True, vertsToList=0)
 
         self.callEvent('onChanged', events3d.HumanEvent(self, 'targets'))
 
