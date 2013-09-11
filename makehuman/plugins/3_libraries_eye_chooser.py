@@ -108,16 +108,6 @@ class EyesTaskView(gui3d.TaskView):
         human.eyesObj.setRotation(human.getRotation())
         human.eyesObj.mesh.setCameraProjection(0)
         human.eyesObj.mesh.setSolid(human.mesh.solid)
-        if human.eyesProxy.cull:
-            human.eyesObj.mesh.setCull(1)
-        else:
-            human.eyesObj.mesh.setCull(None)
-        # Enabling this causes render-que order issues so that eyes render over hair
-        # Disabling it renders hi-poly eyes wrong
-        if human.eyesProxy.transparent:
-            human.eyesObj.mesh.setTransparentPrimitives(len(human.eyesObj.mesh.fvert))
-        else:
-            human.eyesObj.mesh.setTransparentPrimitives(0)
         human.eyesObj.mesh.priority = 5
 
         #eyesName = human.eyesObj.mesh.name.split('.')[0]

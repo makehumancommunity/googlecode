@@ -111,16 +111,6 @@ class GenitalsTaskView(gui3d.TaskView):
         human.genitalsObj.setRotation(human.getRotation())
         human.genitalsObj.mesh.setCameraProjection(0)
         human.genitalsObj.mesh.setSolid(human.mesh.solid)
-        if human.genitalsProxy.cull:
-            human.genitalsObj.mesh.setCull(1)
-        else:
-            human.genitalsObj.mesh.setCull(None)
-        # Enabling this causes render-que order issues so that genitals render over hair
-        # Disabling it renders hi-poly genitals wrong
-        if human.genitalsProxy.transparent:
-            human.genitalsObj.mesh.setTransparentPrimitives(len(human.genitalsObj.mesh.fvert))
-        else:
-            human.genitalsObj.mesh.setTransparentPrimitives(0)
         human.genitalsObj.mesh.priority = 5
 
         genitalsName = human.genitalsObj.mesh.name.split('.')[0]

@@ -133,7 +133,6 @@ class CProxy:
         self.zScaleData = None
         self.z_depth = 50
         self.cull = False
-        self.transparent = False
         self.layer = layer
 
         self.uvLayers = {}
@@ -452,12 +451,15 @@ def readProxyFile(obj, filepath, type="Clothes", layer=4):
             #readMaterial(line, material, proxy, False)
             pass
         elif key == 'useBaseMaterials':
+            # TODO deprecated?
             proxy.useBaseMaterials = True
 
         elif key == 'backface_culling':
-            proxy.cull = words[1].lower() in ["1", "yes", "true", "enable", "enabled"]
+            # TODO remove in future
+            log.warning('Deprecated parameter "backface_culling" used in proxy file. Set property backfaceCull in material instead.')
         elif key == 'transparent':
-            proxy.transparent = words[1].lower() in ["1", "yes", "true", "enable", "enabled"]
+            # TODO remove in future
+            log.warning('Deprecated parameter "transparent" used in proxy file. Set property in material file instead.')
 
         elif key == 'uvLayer':
             if len(words) > 2:
@@ -481,8 +483,10 @@ def readProxyFile(obj, filepath, type="Clothes", layer=4):
             proxy.zScaleData = getScaleData(words)
             scales[2] = proxy.getScale(proxy.zScaleData, obj, 2)
         elif key == 'use_projection':
+            # TODO still used?
             proxy.useProjection = int(words[1])
         elif key == 'ignoreOffset':
+            # TODO still used?
             proxy.ignoreOffset = int(words[1])
         elif key == 'delete':
             proxy.deleteGroups.append(words[1])

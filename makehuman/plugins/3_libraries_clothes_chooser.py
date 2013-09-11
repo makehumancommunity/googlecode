@@ -251,14 +251,6 @@ class ClothesTaskView(gui3d.TaskView):
         clo.setRotation(human.getRotation())
         clo.mesh.setCameraProjection(0)
         clo.mesh.setSolid(human.mesh.solid)
-        if proxy.cull:
-            clo.mesh.setCull(1)
-        else:
-            clo.mesh.setCull(None)
-        if proxy.transparent:
-            clo.mesh.setTransparentPrimitives(len(clo.mesh.fvert))
-        else:
-            clo.mesh.setTransparentPrimitives(0)
         clo.mesh.priority = 10
         human.clothesObjs[uuid] = clo
         human.clothesProxies[uuid] = proxy
