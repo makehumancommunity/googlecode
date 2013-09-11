@@ -342,19 +342,20 @@ def drawMesh(obj):
         glEnable(GL_CULL_FACE)
         glCullFace(GL_BACK if obj.cull > 0 else GL_FRONT)
 
-    # Set material properties
-    mat = obj.material
-    MatAmb = A(mat.ambientColor.values, 1.0)         # Material - Ambient
-    MatDif = A(mat.diffuseColor.values, mat.opacity) # Material - Diffuse
-    MatSpc = A(mat.specularColor.values, 1.0)        # Material - Specular
-    MatShn = A(128 * mat.shininess)                  # Material - Shininess
-    MatEms = A(mat.emissiveColor.values, 1.0)        # Material - Emission
+    if obj.solid:
+        # Set material properties
+        mat = obj.material
+        MatAmb = A(mat.ambientColor.values, 1.0)         # Material - Ambient
+        MatDif = A(mat.diffuseColor.values, mat.opacity) # Material - Diffuse
+        MatSpc = A(mat.specularColor.values, 1.0)        # Material - Specular
+        MatShn = A(128 * mat.shininess)                  # Material - Shininess
+        MatEms = A(mat.emissiveColor.values, 1.0)        # Material - Emission
 
-    glMaterialfv(GL_FRONT, GL_AMBIENT, MatAmb)          # Set Material Ambience
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, MatDif)          # Set Material Diffuse
-    glMaterialfv(GL_FRONT, GL_SPECULAR, MatSpc)         # Set Material Specular
-    glMaterialfv(GL_FRONT, GL_SHININESS, MatShn)        # Set Material Shininess
-    glMaterialfv(GL_FRONT, GL_EMISSION, MatEms)         # Set Material Emission
+        glMaterialfv(GL_FRONT, GL_AMBIENT, MatAmb)          # Set Material Ambience
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, MatDif)          # Set Material Diffuse
+        glMaterialfv(GL_FRONT, GL_SPECULAR, MatSpc)         # Set Material Specular
+        glMaterialfv(GL_FRONT, GL_SHININESS, MatShn)        # Set Material Shininess
+        glMaterialfv(GL_FRONT, GL_EMISSION, MatEms)         # Set Material Emission
 
     if obj.useVertexColors:
         # Vertex colors affect materials (lighting is enabled)
@@ -381,16 +382,28 @@ def drawMesh(obj):
 
     # draw the mesh
     if not obj.solid:
+        # Set some default material properties
+        MatAmb = A(0.11, 0.11, 0.11, 1.0)       # Material - Ambient Values
+        MatDif = A(1.0, 1.0, 1.0, 1.0)          # Material - Diffuse Values
+        MatSpc = A(0.2, 0.2, 0.2, 1.0)          # Material - Specular Values
+        MatShn = A(10.0,)                       # Material - Shininess
+        MatEms = A(0.1, 0.05, 0.0, 1.0)         # Material - Emission Values
+
         glDisableClientState(GL_COLOR_ARRAY)
         glColor3f(0.0, 0.0, 0.0)
+        glDisable(GL_LIGHTING)
+        glEnable(GL_COLOR_MATERIAL)
+        glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)   # Vertex colors affect ambient and diffuse of material
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
         glDrawElements(g_primitiveMap[obj.vertsPerPrimitive-1], obj.primitives.size, GL_UNSIGNED_INT, obj.primitives)
+        glEnable(GL_LIGHTING)
         glEnableClientState(GL_COLOR_ARRAY)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         glEnable(GL_POLYGON_OFFSET_FILL)
         glPolygonOffset(1.0, 1.0)
         glDrawElements(g_primitiveMap[obj.vertsPerPrimitive-1], obj.primitives.size, GL_UNSIGNED_INT, obj.primitives)
         glDisable(GL_POLYGON_OFFSET_FILL)
+        glDisable(GL_COLOR_MATERIAL)
     elif obj.nTransparentPrimitives:
         glDepthMask(GL_FALSE)
         glEnable(GL_ALPHA_TEST)
@@ -425,7 +438,7 @@ def drawMesh(obj):
 
     glDisable(GL_CULL_FACE)
 
-    # Enable lighting if the object was shadeless
+    # Re-enable lighting if the object was shadeless
     if obj.shadeless:
         glEnable(GL_LIGHTING)
 
