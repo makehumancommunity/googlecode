@@ -725,6 +725,7 @@ class Human(guicommon.Object):
     def setMaterial(self, mat):
         self.callEvent('onChanging', events3d.HumanEvent(self, 'material'))
         super(Human, self).setMaterial(mat)
+        self._updateDiffuseColor()
         self.callEvent('onChanged', events3d.HumanEvent(self, 'material'))
 
     material = property(getMaterial, setMaterial)
