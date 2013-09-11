@@ -512,9 +512,9 @@ class Human(guicommon.Object):
                 self.genitalsObj.material.diffuseColor = [1, 1, 1]
         else:
             # Set diffuse color to ethnic mix
-            asianColor     = np.asarray([0.909, 0.694, 0.321], dtype=np.float32)
-            africanColor   = np.asarray([0.560, 0.184, 0.070], dtype=np.float32)
-            caucasianColor = np.asarray([0.917, 0.572, 0.435], dtype=np.float32)
+            asianColor     = np.asarray([0.721, 0.568, 0.431], dtype=np.float32)
+            africanColor   = np.asarray([0.207, 0.113, 0.066], dtype=np.float32)
+            caucasianColor = np.asarray([0.843, 0.639, 0.517], dtype=np.float32)
 
             diffuse = self.getAsian()     * asianColor + \
                       self.getAfrican()   * africanColor + \
