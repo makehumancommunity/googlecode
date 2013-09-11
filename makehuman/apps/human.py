@@ -460,6 +460,7 @@ class Human(guicommon.Object):
         else:
             self.asianVal *= new / old
             self.africanVal *= new / old
+        self._updateDiffuseColor()
         self.callEvent('onChanging', events3d.HumanEvent(self, 'caucasian'))
 
     def getCaucasian(self):
@@ -478,6 +479,7 @@ class Human(guicommon.Object):
         else:
             self.caucasianVal *= new / old
             self.asianVal *= new / old
+        self._updateDiffuseColor()
         self.callEvent('onChanging', events3d.HumanEvent(self, 'african'))
 
     def getAfrican(self):
@@ -496,10 +498,26 @@ class Human(guicommon.Object):
         else:
             self.caucasianVal *= new / old
             self.africanVal *= new / old
+        self._updateDiffuseColor()
         self.callEvent('onChanging', events3d.HumanEvent(self, 'asian'))
 
     def getAsian(self):
         return self.asianVal
+
+    def _updateDiffuseColor(self):
+        if self.material.supportsDiffuse():
+            # If human is diffuse textured, set diffuse factor to 100%
+            self.material.diffuseColor = [1, 1, 1]
+        else:
+            # Set diffuse color to ethnic mix
+            asianColor     = np.asarray([0.909, 0.694, 0.321], dtype=np.float32)
+            africanColor   = np.asarray([0.560, 0.184, 0.070], dtype=np.float32)
+            caucasianColor = np.asarray([0.917, 0.572, 0.435], dtype=np.float32)
+
+            diffuse = self.getAsian()     * asianColor + \
+                      self.getAfrican()   * africanColor + \
+                      self.getCaucasian() * caucasianColor
+            self.material.diffuseColor = diffuse
 
     def syncRace(self):
         total = self.caucasianVal + self.asianVal + self.africanVal
