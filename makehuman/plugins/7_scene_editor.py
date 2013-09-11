@@ -34,6 +34,8 @@ import gui3d
 import os
 import scene
 
+import glmodule
+
 
 class SceneItem(object):
     def __init__(self, sceneview):
@@ -87,6 +89,7 @@ class EnvironmentSceneItem(SceneItem):
             try:
                 value = value.replace(" ", "")
                 self.sceneview.scene.environment.ambience = tuple([float(x) for x in value.split(",")])
+                self.sceneview.updateScene()
             except:
                 pass
             
@@ -137,6 +140,7 @@ class LightSceneItem(SceneItem):
             try:
                 value = value.replace(" ", "")
                 self.light.position = tuple([float(x) for x in value.split(",")])
+                self.sceneview.updateScene()
             except: # The user hasn't typed the value correctly yet.
                 pass
 
@@ -153,6 +157,7 @@ class LightSceneItem(SceneItem):
             try:
                 value = value.replace(" ", "")
                 self.light.color = tuple([float(x) for x in value.split(",")])
+                self.sceneview.updateScene()
             except:
                 pass
 
@@ -161,6 +166,7 @@ class LightSceneItem(SceneItem):
             try:
                 value = value.replace(" ", "")
                 self.light.specular = tuple([float(x) for x in value.split(",")])
+                self.sceneview.updateScene()
             except:
                 pass
 
@@ -317,6 +323,11 @@ class SceneEditorTaskView(gui3d.TaskView):
         self.itemList.setData(self.items.keys()[::-1])
         self.updateFileTitle()
 
+        self.updateScene()
+
+    def updateScene(self):
+        glmodule.setSceneLighting(self.scene)
+
     def updateFileTitle(self):
         if self.scene.path is None:
             lbltxt = '<New scene>'
@@ -326,7 +337,17 @@ class SceneEditorTaskView(gui3d.TaskView):
             lbltxt += '*'
         self.fnlbl.setText(lbltxt)
 
-        
+    def onShow(self, event):
+        # Set currently edited scene
+        self.updateScene()
+
+    def onHide(self, event):
+        # Restore selected scene
+        sceneTask = gui3d.app.getTask('Rendering', 'Scene')
+        scene = sceneTask.scene
+        glmodule.setSceneLighting(scene)
+
+
 def load(app):
     category = app.getCategory('Utilities')
     taskview = category.addTask(SceneEditorTaskView(category))

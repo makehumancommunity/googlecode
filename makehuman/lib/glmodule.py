@@ -44,6 +44,9 @@ import profiler
 
 g_primitiveMap = [GL_POINTS, GL_LINES, GL_TRIANGLES, GL_QUADS]
 
+g_lights = [GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_LIGHT3, \
+            GL_LIGHT4, GL_LIGHT5, GL_LIGHT6, GL_LIGHT7 ]
+
 def queryDepth(sx, sy):
     sz = np.zeros((1,), dtype=np.float32)
     glReadPixels(sx, G.windowHeight - sy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, sz)
@@ -181,6 +184,18 @@ def drawEnd():
 have_multisample = None
 
 def A(*args):
+    if len(args) > 0 and hasattr(args[0], '__iter__'): # Iterable as argument
+        if len(args) == 1:
+            return np.array(list(args), dtype=np.float32)
+        else:
+            # Flatten arguments into one list
+            l = list(args[0])
+            for e in args[1:]:
+                if hasattr(e, '__iter__'):
+                    l.extend(e)
+                else:
+                    l.append(e)
+            return np.array(l, dtype=np.float32)
     return np.array(list(args), dtype=np.float32)
 
 def OnInit():
@@ -255,6 +270,36 @@ def OnExit():
     glDisableClientState(GL_COLOR_ARRAY)
     log.message("Exit from event loop\n")
 
+def setSceneLighting(scene):
+    """
+    Set lighting based on a scene config.
+    """
+    # Set global scene ambient
+    glLightModelfv(GL_LIGHT_MODEL_AMBIENT, A(scene.environment.ambience, 1.0))
+
+    # TODO support skybox
+
+    # Set lights (OpenGL fixed function supports up to 8 lights)
+    for lIdx in range(8):
+        if lIdx < len(scene.lights):
+            # All lights are simple point lights (only basic parameters)
+            light = scene.lights[lIdx]
+
+            lightPos = A(light.position, 1.0)          # Light - Position
+            diffuseLight = A(light.color, 1.0)         # Light - Diffuse
+            specularLight = A(light.specular, 1.0)     # Light - Specular
+            # Always force ambient value of light off (only using global ambient)
+            ambientLight =  A(0.0, 0.0, 0.0, 1.0)      # Light - Ambient
+
+            glLightfv(g_lights[lIdx], GL_POSITION, lightPos)
+            glLightfv(g_lights[lIdx], GL_DIFFUSE, diffuseLight)
+            glLightfv(g_lights[lIdx], GL_SPECULAR, specularLight)
+            glLightfv(g_lights[lIdx], GL_AMBIENT, ambientLight)
+
+            glEnable(g_lights[lIdx])
+        else:
+            glDisable(g_lights[lIdx])
+
 def cameraPosition(camera, eye):
     proj, mv = camera.getMatrices(eye)
     glMatrixMode(GL_PROJECTION)
@@ -299,16 +344,11 @@ def drawMesh(obj):
 
     # Set material properties
     mat = obj.material
-    c = mat.ambientColor.values
-    MatAmb = A(c[0], c[1], c[2], 1.0)       # Material - Ambient Values
-    c = mat.diffuseColor.values
-    o = mat.opacity
-    MatDif = A(c[0], c[1], c[2], o)         # Material - Diffuse Values
-    c = mat.specularColor.values
-    MatSpc = A(c[0], c[1], c[2], 1.0)       # Material - Specular Values
-    MatShn = A(128 * mat.shininess)         # Material - Shininess
-    c= mat.emissiveColor.values
-    MatEms = A(c[0], c[1], c[2], 1.0)       # Material - Emission Values
+    MatAmb = A(mat.ambientColor.values, 1.0)         # Material - Ambient
+    MatDif = A(mat.diffuseColor.values, mat.opacity) # Material - Diffuse
+    MatSpc = A(mat.specularColor.values, 1.0)        # Material - Specular
+    MatShn = A(128 * mat.shininess)                  # Material - Shininess
+    MatEms = A(mat.emissiveColor.values, 1.0)        # Material - Emission
 
     glMaterialfv(GL_FRONT, GL_AMBIENT, MatAmb)          # Set Material Ambience
     glMaterialfv(GL_FRONT, GL_DIFFUSE, MatDif)          # Set Material Diffuse

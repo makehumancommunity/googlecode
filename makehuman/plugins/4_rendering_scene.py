@@ -29,6 +29,7 @@ import os
 import shutil
 import mh
 import scene
+import glmodule
 
 class SceneLibraryTaskView(gui3d.PoseModeTaskView):
     def __init__(self, category):
@@ -52,10 +53,16 @@ class SceneLibraryTaskView(gui3d.PoseModeTaskView):
         self.addLeftWidget(self.filechooser.createSortBox())
         self.filechooser.enableAutoRefresh(False)
 
+        glmodule.setSceneLighting(self.scene)
+
         @self.filechooser.mhEvent
         def onFileSelected(filename):
-            self.currentScene = filename
-            self.scene.load(filename)
+            self.loadScene(filename)
+
+    def loadScene(self, filename):
+        self.currentScene = filename
+        self.scene.load(filename)
+        glmodule.setSceneLighting(self.scene)
 
     def onShow(self, event):
         gui3d.PoseModeTaskView.onShow(self, event)
