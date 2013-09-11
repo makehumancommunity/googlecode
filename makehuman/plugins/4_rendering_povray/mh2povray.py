@@ -47,6 +47,7 @@ import gui3d
 from progress import Progress
 from exportutils import collect
 from exportutils import matanalyzer
+import numpy
 import subprocess
 
 def downloadPovRay():
@@ -284,7 +285,7 @@ def povrayExportMesh2(path, settings):
             (v1*v2*S['multiply'] if 'multiply' in S else v1*v2)
             for (v1, v2) in zip((1.0,1.0,1.0), #T.Object.rmesh.material.ambientColor.values,
                                 settings['scene'].environment.ambience)]),
-        'specular': lambda T, S: str(T.Object.rmesh.material.specularIntensity),
+        'specular': lambda T, S: str(numpy.average(T.Object.rmesh.material.specularColor.values)),
         'roughness': lambda T, S: str(1.0 - T.Object.rmesh.material.shininess),
         'diffuseInt': lambda T, S: str(T.Object.rmesh.material.diffuseIntensity),
         'pigment': lambda s: 'pigment {%s}' % s,
