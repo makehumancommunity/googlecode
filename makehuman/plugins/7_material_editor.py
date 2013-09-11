@@ -155,6 +155,31 @@ class ShaderTaskView(gui3d.TaskView):
         def onActivate(event):
             mat.translucency = w10.value
 
+        w10a = self.materialBox.addWidget(TruthValue("Shadeless", mat.shadeless))
+        @w10a.mhEvent
+        def onActivate(event):
+            mat.shadeless = w10a.value
+
+        w10b = self.materialBox.addWidget(TruthValue("Wireframe", mat.wireframe))
+        @w10b.mhEvent
+        def onActivate(event):
+            mat.wireframe = w10b.value
+
+        w10c = self.materialBox.addWidget(TruthValue("Transparent", mat.transparent))
+        @w10c.mhEvent
+        def onActivate(event):
+            mat.transparent = w10c.value
+
+        w10d = self.materialBox.addWidget(TruthValue("Backface culling", mat.backfaceCull))
+        @w10d.mhEvent
+        def onActivate(event):
+            mat.backfaceCull = w10d.value
+
+        w10e = self.materialBox.addWidget(TruthValue("Depthless", mat.depthless))
+        @w10e.mhEvent
+        def onActivate(event):
+            mat.depthless = w10e.value
+
         w11 = self.materialBox.addWidget(ImageValue("Transparency map texture", mat.transparencyMapTexture, mh.getSysDataPath('textures')))
         @w11.mhEvent
         def onActivate(event):
@@ -406,6 +431,25 @@ class ScalarValue(gui.GroupBox):
 
     value = property(getValue, setValue)
 
+
+class TruthValue(gui.GroupBox):
+    def __init__(self, name, value):
+        super(TruthValue, self).__init__(name)
+        self.name = name
+
+        self.widget = BooleanValue(self, False)
+        self.addWidget(self.widget, 0, 0)
+        self.value = value
+
+    def getValue(self):
+        return self.widget.value
+
+    def setValue(self, value):
+        self.widget.setSelected(value)
+
+    value = property(getValue, setValue)
+
+
 class ImageValue(gui.GroupBox):
     def __init__(self, name, value, defaultPath = None):
         super(ImageValue, self).__init__(name)
@@ -422,6 +466,7 @@ class ImageValue(gui.GroupBox):
         self.widget.value = value
 
     value = property(getValue, setValue)
+
 
 class FileValue(gui.GroupBox):
     def __init__(self, name, value, defaultPath = None):
