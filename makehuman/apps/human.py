@@ -508,6 +508,8 @@ class Human(guicommon.Object):
         if self.material.supportsDiffuse():
             # If human is diffuse textured, set diffuse factor to 100%
             self.material.diffuseColor = [1, 1, 1]
+            if self.genitalsObj:
+                self.genitalsObj.material.diffuseColor = [1, 1, 1]
         else:
             # Set diffuse color to ethnic mix
             asianColor     = np.asarray([0.909, 0.694, 0.321], dtype=np.float32)
@@ -518,6 +520,9 @@ class Human(guicommon.Object):
                       self.getAfrican()   * africanColor + \
                       self.getCaucasian() * caucasianColor
             self.material.diffuseColor = diffuse
+
+            if self.genitalsObj:
+                self.genitalsObj.material.diffuseColor = diffuse
 
     def syncRace(self):
         total = self.caucasianVal + self.asianVal + self.africanVal
