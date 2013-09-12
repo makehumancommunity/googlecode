@@ -4,8 +4,8 @@ name DefaultSkinTextured
 ambientColor 0.11 0.11 0.11
 diffuseColor 1 1 1
 diffuseIntensity 1.0
-specularColor 1.0 1.0 1.0
-specularIntensity 0.2
+specularColor 0.3 0.3 0.3
+specularIntensity 0.3
 shininess 0.96
 emissiveColor 0.0 0.0 0.0
 opacity 1.0
