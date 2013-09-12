@@ -31,7 +31,7 @@ from mathutils import *
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import *
 
-from . import utils, props, target, source, simplify
+from . import utils, props, source, target, simplify
 from . import mcp
 from .utils import MocapError
 
@@ -511,8 +511,8 @@ def deleteSourceRig(context, rig, prefix):
 def rescaleRig(scn, trgRig, srcRig):
     if not scn.McpAutoScale:
         return
-    upleg = target.getTrgBone('thigh.L')
-    trgScale = trgRig.data.bones[upleg].length
+    upleg = utils.getTrgBone('thigh.L', trgRig)
+    trgScale = upleg.length
     srcScale = srcRig.data.bones['thigh.L'].length
     scale = trgScale/srcScale
     print("Rescale %s with factor %f" % (scn.objects.active, scale))

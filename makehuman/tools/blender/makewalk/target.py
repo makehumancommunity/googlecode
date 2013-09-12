@@ -36,17 +36,6 @@ from .utils import MocapError
 
 Deg2Rad = math.pi/180
 
-#
-#   getTrgBone(b):
-#
-
-def getTrgBone(b):
-    try:
-        return mcp.trgBone[b]
-    except KeyError:
-        return None
-
-
 def renameBone(b):
     try:
         return mcp.renames[b]
@@ -94,12 +83,11 @@ def guessArmature(rig, bones, scn):
 
 def assocParents(rig, boneAssoc, names):
     parAssoc = {}
-    mcp.trgBone = {}
     taken = [ None ]
     for (name, mhx) in boneAssoc:
         name = getName(name, names)
-        mcp.trgBone[mhx] = name
         pb = rig.pose.bones[name]
+        pb.McpBone = mhx
         taken.append(name)
         parAssoc[name] = None
         parent = pb.parent
@@ -147,35 +135,35 @@ def findTargetKey(mhx, list):
 #    (mhx bone, text)
 
 TargetBoneNames = [
-    ('hips',        'Root bone'),
+    ('hips',         'Root bone'),
     ('spine',        'Lower spine'),
-    ('spine-1',        'Middle spine'),
+    ('spine-1',      'Middle spine'),
     ('chest',        'Upper spine'),
-    ('neck',        'Neck'),
-    ('head',        'Head'),
+    ('neck',         'Neck'),
+    ('head',         'Head'),
     None,
-    ('shoulder.L',    'L clavicle'),
+    ('shoulder.L',   'L clavicle'),
     ('deltoid.L',    'L deltoid'),
-    ('upper_arm.L',        'L upper arm'),
-    ('forearm.L',        'L forearm'),
-    ('hand.L',        'L hand'),
+    ('upper_arm.L',  'L upper arm'),
+    ('forearm.L',    'L forearm'),
+    ('hand.L',       'L hand'),
     None,
-    ('shoulder.R',    'R clavicle'),
+    ('shoulder.R',   'R clavicle'),
     ('deltoid.R',    'R deltoid'),
-    ('upper_arm.R',        'R upper arm'),
-    ('forearm.R',        'R forearm'),
-    ('hand.R',        'R hand'),
+    ('upper_arm.R',  'R upper arm'),
+    ('forearm.R',    'R forearm'),
+    ('hand.R',       'R hand'),
     None,
     ('hip.L',        'L hip'),
-    ('thigh.L',        'L thigh'),
-    ('shin.L',        'L shin'),
-    ('foot.L',        'L foot'),
+    ('thigh.L',      'L thigh'),
+    ('shin.L',       'L shin'),
+    ('foot.L',       'L foot'),
     ('toe.L',        'L toes'),
     None,
     ('hip.R',        'R hip'),
-    ('thigh.R',        'R thigh'),
-    ('shin.R',        'R shin'),
-    ('foot.R',        'R foot'),
+    ('thigh.R',      'R thigh'),
+    ('shin.R',       'R shin'),
+    ('foot.R',       'R foot'),
     ('toe.R',        'R toes'),
 ]
 

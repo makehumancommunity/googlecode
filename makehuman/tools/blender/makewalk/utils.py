@@ -135,40 +135,31 @@ def getRollMat(mat):
         roll = -2*atan(quat.y/quat.w)
     return roll
 
+
 #
-#   getBone(name, rig):
+#   getTrgBone(b):
 #
 
-def getBone(name, rig):
-    try:
-        return rig.pose.bones[rig[name]]
-    except:
-        pass
-    #print(rig["MhxRigType"])
-    try:
-        mhxRig = rig["MhxRigType"]
-    except:
-        return None
-    if mhxRig in ["MHX", "Game", "Rorkimaru"]:
-        try:
-            return rig.pose.bones[name]
-        except:
-            return None
-    elif mhxRig == "Rigify":
-        print("Not yet")
+def getTrgBone(bname, rig):
+    for pb in rig.pose.bones:
+        if pb.McpBone == bname:
+            return pb
     return None
+
 
 #
 #   ikBoneList(rig):
 #
 
 def ikBoneList(rig):
-    list = []
-    for name in ['Root', 'Wrist_L', 'Wrist_R', 'LegIK_L', 'LegIK_R']:
-        bone = getBone(name, rig)
-        if bone:
-            list.append(bone)
-    return list
+    hips = getTrgBone('hips', rig)
+    blist = [hips]
+    for bname in ['hand.ik.L', 'hand.ik.R', 'foot.ik.L', 'foot.ik.R']:
+        try:
+            blist.append(rig.pose.bones[bname])
+        except KeyError:
+            pass
+    return blist
 
 #
 #   getAction(ob):

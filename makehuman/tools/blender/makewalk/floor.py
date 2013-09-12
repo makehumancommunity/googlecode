@@ -27,7 +27,7 @@ import bpy
 from bpy.props import BoolProperty
 from mathutils import Matrix, Vector
 from .utils import MocapError
-from . import utils, target, fkik
+from . import utils, fkik
 
 
 def getRigAndPlane(scn):
@@ -67,8 +67,8 @@ def floorFoot(context):
 
 
 def getFkFeetBones(rig, suffix):
-    foot = rig.pose.bones[ target.getTrgBone("foot" + suffix) ]
-    toe = rig.pose.bones[ target.getTrgBone("toe" + suffix) ]
+    foot = utils.getTrgBone("foot" + suffix, rig)
+    toe = utils.getTrgBone("toe" + suffix, rig)
     try:
         mBall = rig.pose.bones["ball.marker" + suffix]
         mToe = rig.pose.bones["toe.marker" + suffix]
@@ -79,12 +79,12 @@ def getFkFeetBones(rig, suffix):
 
 
 def floorFkFoot(rig, plane, scn, frames):
-    hips = rig.pose.bones[ target.getTrgBone("hips") ]
+    hips = utils.getTrgBone("hips", rig)
     lFoot,lToe,lmBall,lmToe,lmHeel = getFkFeetBones(rig, ".L")
     rFoot,rToe,rmBall,rmToe,rmHeel = getFkFeetBones(rig, ".R")
     ez,origin,rot = getPlaneInfo(plane)
 
-    for frame in frames:
+    for n,frame in enumerate(frames):
         scn.frame_set(frame)
         fkik.updateScene()
         offset = 0
@@ -94,7 +94,8 @@ def floorFkFoot(rig, plane, scn, frames):
             rOffset = getFkOffset(rig, ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
             if rOffset > offset:
                 offset = rOffset
-        print(frame, offset)
+        if n%10 == 0:
+            print(frame, offset)
         if offset > 0:
             addOffset(hips, offset, ez)
 
@@ -130,7 +131,7 @@ def floorIkFoot(rig, plane, scn, frames):
     rleg = rig.pose.bones["foot.ik.R"]
     ez,origin,rot = getPlaneInfo(plane)
 
-    for frame in frames:
+    for n,frame in enumerate(frames):
         scn.frame_set(frame)
         fkik.updateScene()
         offset = 0
@@ -140,7 +141,8 @@ def floorIkFoot(rig, plane, scn, frames):
             rOffset = getIkOffset(rig, ez, origin, rleg)
             if rOffset > offset:
                 offset = rOffset
-        print(frame, offset)
+        if n%10 == 0:
+            print(frame, offset)
         if offset > 0:
             if scn.McpFloorLeft:
                 addOffset(lleg, offset, ez)
@@ -217,11 +219,12 @@ class VIEW3D_OT_McpFloorFootButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        target.getTargetArmature(context.object, context.scene)
+        from .target import getTargetArmature
+        getTargetArmature(context.object, context.scene)
         try:
             floorFoot(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        print("FK Foot raise above plane")
+        print("Feet raised above floor")
         return{'FINISHED'}
 

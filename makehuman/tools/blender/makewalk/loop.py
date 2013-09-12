@@ -84,7 +84,6 @@ def loopFCurves(context):
                 offs = (head1-head0)/(maxTime-minTime)
                 if not scn.McpLoopZInPlace:
                     offs[2] = 0
-                print("Loc", pb.name, offs)
 
                 restMat = pb.bone.matrix_local.to_3x3()
                 restInv = restMat.inverted()
@@ -92,9 +91,14 @@ def loopFCurves(context):
                 #    parRest = pb.parent.bone.matrix_local.to_3x3()
                 #    restInv = restInv * parRest
 
+                heads = {}
                 for frame in frames:
                     scn.frame_set(frame)
-                    head = pb.head.copy() - (frame-minTime)*offs
+                    heads[frame] = pb.head.copy()
+
+                for frame in frames:
+                    scn.frame_set(frame)
+                    head = heads[frame] - (frame-minTime)*offs
                     diff = head - pb.bone.head_local
                     #if pb.parent:
                     #    parMat = pb.parent.matrix.to_3x3()
@@ -102,6 +106,7 @@ def loopFCurves(context):
                     pb.location = restInv * diff
                     pb.keyframe_insert("location", group=pb.name)
                 # pb.matrix_basis = pb.bone.matrix_local.inverted() * par.bone.matrix_local * par.matrix.inverted() * pb.matrix
+
 
         for fcu in fcurves:
             (name, mode) = utils.fCurveIdentity(fcu)
@@ -149,7 +154,6 @@ def loopFCurve(fcu, t0, tn, scn):
             v1 += diff
         ptm = (tm, eps*v1 + (1-eps)*vm)
 
-        #print("  ", pt1,ptm)
         newpoints.extend([pt1,ptm])
 
     newpoints.sort()
@@ -230,7 +234,6 @@ def stitchActions(context):
         rig.animation_data.action = None
 
     actionTarget = scn.McpActionTarget
-    print("Acttar", actionTarget)
     if actionTarget == "Stitch new":
         act2 = utils.copyAction(act2, scn.McpOutputActionName)
     elif actionTarget == "Prepend second":

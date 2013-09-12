@@ -30,7 +30,7 @@ from bpy.props import *
 import os
 import math
 from mathutils import Quaternion, Matrix
-from . import mcp
+from . import mcp, utils
 from .utils import MocapError
 from .io_json import *
 
@@ -352,9 +352,9 @@ def initRig(context):
 
 
 def getBoneName(rig, name):
-    from . import target
     if rig.McpIsSourceRig:
         return name
     else:
-        return target.getTrgBone(name)
+        pb = utils.getTrgBone(name, rig)
+        return pb.name
 

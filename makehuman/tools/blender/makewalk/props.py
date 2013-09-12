@@ -324,10 +324,12 @@ def initInterface(context):
         name = "Guess source rig",
         default = True)
 
-
     bpy.types.Scene.McpGuessTargetRig = BoolProperty(
         name = "Guess target rig",
         default = True)
+
+    bpy.types.PoseBone.McpBone = StringProperty(
+        default = "")
 
     # Manage actions
 
