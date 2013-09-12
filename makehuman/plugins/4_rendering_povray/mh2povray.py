@@ -279,8 +279,7 @@ def povrayExportMesh2(path, settings):
             'f': ',' + str(S['filter']) if 'filter' in S else "",
             't': ',' + str(S['transmit']) if 'transmit' in S else ""},
         'makecolor': lambda s, ct = (1,1,1): s.replace('#color#', '%s,%s,%s' % ct),
-        # For some reason colors are brighter when rendered. I halve the gamma by squaring.
-        'getDiffuseColor': lambda T, S: tuple([v*v for v in T.Object.rmesh.material.diffuseColor.values]),
+        'getDiffuseColor': lambda T, S: T.Object.rmesh.material.diffuseColor.asTuple(),
         'getAmbience': lambda T, S: tuple([
             (v1*v2*S['multiply'] if 'multiply' in S else v1*v2)
             for (v1, v2) in zip((1.0,1.0,1.0), #T.Object.rmesh.material.ambientColor.values,
