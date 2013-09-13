@@ -195,17 +195,19 @@ class Writer(mhx_writer.Writer):
         for fg in obj.faceGroups:
             fmask = obj.getFaceMaskForGroups([fg.name])
             if deleteGroup(fg.name, deleteGroups):
-                fmats[fmask] = 4
-            elif fg.name == "helper-tights":
                 fmats[fmask] = 3
-            elif fg.name in ["helper-hair", "joint-ground"]:
-                fmats[fmask] = 6
-            elif fg.name == "helper-skirt":
-                fmats[fmask] = 5
-            elif fg.name[0:6] == "joint-":
+            elif fg.name == "helper-tights":
                 fmats[fmask] = 2
-            elif fg.name[0:7] == "helper-":
+            elif fg.name == "helper-tongue":
+                fmats[fmask] = 0
+            elif fg.name in ["helper-hair", "joint-ground"]:
+                fmats[fmask] = 5
+            elif fg.name == "helper-skirt":
                 fmats[fmask] = 4
+            elif fg.name[0:6] == "joint-":
+                fmats[fmask] = 1
+            elif fg.name[0:7] == "helper-":
+                fmats[fmask] = 3
 
         if deleteVerts != None:
             for fn,fverts in enumerate(obj.fvert):

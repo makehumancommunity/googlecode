@@ -82,16 +82,16 @@ class Writer(mhx_writer.Writer):
             fp.write(
                 "  MTex %d %s UV COLOR\n" % (slot, diffuse) +
                 "    texture Refer Texture %s ;" % diffuse +
-    """
-        use_map_color_diffuse True ;
-        use_map_translucency True ;
-        use_map_alpha True ;
-        alpha_factor 1 ;
-        diffuse_color_factor 1.0 ;
-        translucency_factor 1.0 ;
-      end MTex
+"""
+    use_map_color_diffuse True ;
+    use_map_translucency True ;
+    use_map_alpha True ;
+    alpha_factor 1 ;
+    diffuse_color_factor 1.0 ;
+    translucency_factor 1.0 ;
+  end MTex
 
-    """)
+""")
             slot += 1
 
         if spec:
@@ -99,14 +99,14 @@ class Writer(mhx_writer.Writer):
                 "  MTex %d %s UV SPECULAR_COLOR\n" % (slot, spec) +
                 "    texture Refer Texture %s ;\n" % spec +
                 "    specular_factor %.4g ;" % (0.1*mat.specularIntensity) +
-    """
-        use_map_color_diffuse False ;
-        use_map_specular True ;
-        use_map_reflect True ;
-        reflection_factor 1 ;
-      end MTex
+"""
+    use_map_color_diffuse False ;
+    use_map_specular True ;
+    use_map_reflect True ;
+    reflection_factor 1 ;
+  end MTex
 
-    """)
+""")
             slot += 1
 
         if bump:
@@ -114,12 +114,12 @@ class Writer(mhx_writer.Writer):
                 "  MTex %d %s UV NORMAL\n" % (slot, bump) +
                 "    texture Refer Texture %s ;\n" % bump +
                 "    normal_factor %.4g*theScale ;" % (0.1*scale*mat.bumpMapIntensity) +
-    """
-        use_map_color_diffuse False ;
-        use_map_normal True ;
-        use_rgb_to_intensity True ;
-        end MTex
-    """)
+"""
+    use_map_color_diffuse False ;
+    use_map_normal True ;
+    use_rgb_to_intensity True ;
+  end MTex
+""")
             slot += 1
 
         if normal:
@@ -127,12 +127,12 @@ class Writer(mhx_writer.Writer):
                 "  MTex %d %s UV NORMAL\n" % (slot, normal) +
                 "    texture Refer Texture %s ;\n" % normal +
                 "    normal_factor %.4g*theScale ;" % (0.1*scale*mat.normalMapIntensity) +
-    """
-        use_map_color_diffuse False ;
-        use_map_normal True ;
-        use_rgb_to_intensity True ;
-        end MTex
-    """)
+"""
+    use_map_color_diffuse False ;
+    use_map_normal True ;
+    use_rgb_to_intensity True ;
+  end MTex
+""")
             slot += 1
 
         if disp:
@@ -140,12 +140,12 @@ class Writer(mhx_writer.Writer):
                 "  MTex %d %s UV DISPLACEMENT\n" % (slot, disp) +
                 "    texture Refer Texture %s ;\n" % disp +
                 "    displacement_factor %.4g*theScale ;" % (0.1*scale*mat.displacementMapIntensity) +
-    """
-        use_map_color_diffuse False ;
-        use_map_normal True ;
-        use_rgb_to_intensity True ;
-        end MTex
-    """)
+"""
+    use_map_color_diffuse False ;
+    use_map_normal True ;
+    use_rgb_to_intensity True ;
+  end MTex
+""")
             slot += 1
 
 
@@ -158,7 +158,7 @@ class Writer(mhx_writer.Writer):
             "  specular_color Array %.4g %.4g %.4g ;\n" % mat.specularColor.asTuple() +
             "  specular_shader 'PHONG' ;\n" +
             "  specular_intensity %.4g ;\n" % (0.1*mat.specularIntensity) +
-            "  specular_hardness %.4g ;\n" % mat.shininess)
+            "  specular_hardness %.4g ;\n" % (512*(1-mat.shininess)))
 
         if alpha < 0.99:
             fp.write(
@@ -168,15 +168,15 @@ class Writer(mhx_writer.Writer):
                 "  specular_alpha %.3f ;\n" % alpha)
 
         fp.write(
-    """
-      use_cast_approximate True ;
-      use_cast_buffer_shadows True ;
-      use_cast_shadows_only False ;
-      use_ray_shadow_bias True ;
-      use_shadows True ;
-      use_transparent_shadows True ;
-      use_raytrace True ;
-    """)
+"""
+  use_cast_approximate True ;
+  use_cast_buffer_shadows True ;
+  use_cast_shadows_only False ;
+  use_ray_shadow_bias True ;
+  use_shadows True ;
+  use_transparent_shadows True ;
+  use_raytrace True ;
+""")
 
 
     def writeMaterials(self, fp):
@@ -187,11 +187,11 @@ class Writer(mhx_writer.Writer):
         texnames = self.writeTextures(fp, mat, self.name)
 
         fp.write(
-    """
-    Texture solid IMAGE
-    end Texture
+"""
+Texture solid IMAGE
+end Texture
 
-    """)
+""")
         if config.useMasks:
             prxList = list(self.proxies.values())
             for prx in prxList:
@@ -204,58 +204,33 @@ class Writer(mhx_writer.Writer):
 
         nMasks = self.writeMaskMTexs(fp)
         self.writeMTexes(fp, texnames, mat, nMasks)
-        self.writeMaterialSettings(fp, mat, 0)
+        if mat.diffuseTexture:
+            alpha = 0
+        else:
+            alpha = 1
+
+        self.writeMaterialSettings(fp, mat, alpha)
 
         fp.write(
-    """
-      SSS
-        use True ;
-        back 2 ;
-        color Array 0.782026708126 0.717113316059 0.717113316059  ;
-        color_factor 0.750324 ;
-        error_threshold 0.15 ;
-        front 1 ;
-        ior 1.3 ;
-        radius Array 4.82147502899 1.69369900227 1.08997094631  ;
-    """ +
+"""
+  SSS
+    use True ;
+    back 2 ;
+    color Array 0.782026708126 0.717113316059 0.717113316059  ;
+    color_factor 0.750324 ;
+    error_threshold 0.15 ;
+    front 1 ;
+    ior 1.3 ;
+    radius Array 4.82147502899 1.69369900227 1.08997094631  ;
+""" +
     "    scale %.4g*theScale ;" % (0.01*config.scale) +
-    """
-        texture_factor 0 ;
-      end SSS
-      Property MhxDriven True ;
-    """)
+"""
+    texture_factor 0 ;
+  end SSS
+  Property MhxDriven True ;
+""")
 
         self.writeMaterialAnimationData(fp, nMasks, 2)
-        fp.write("end Material\n\n")
-
-        fp.write("Material %sShiny\n" % self.name)
-        nMasks = self.writeMaskMTexs(fp)
-        shinyTexnames = texnames[0],None,None,None,None
-        self.writeMTexes(fp, shinyTexnames, mat, nMasks)
-
-        fp.write(
-    """
-      diffuse_color Array 1.0 1.0 1.0  ;
-      diffuse_shader 'LAMBERT' ;
-      diffuse_intensity 1.0 ;
-      specular_color Array 1.0 1.0 1.0  ;
-      specular_shader 'PHONG' ;
-      specular_intensity 1.0 ;
-      alpha 0 ;
-      specular_alpha 0 ;
-      specular_hardness 369 ;
-      specular_ior 4 ;
-      specular_slope 0.1 ;
-      transparency_method 'Z_TRANSPARENCY' ;
-      use_cast_buffer_shadows False ;
-      use_cast_shadows_only False ;
-      use_raytrace True ;
-      use_shadows True ;
-      use_transparency True ;
-      use_transparent_shadows True ;
-    """)
-
-        self.writeMaterialAnimationData(fp, nMasks, 1)
         fp.write("end Material\n\n")
 
         self.writeSimpleMaterial(fp, "Invisio", (1,1,1))
@@ -275,17 +250,17 @@ class Writer(mhx_writer.Writer):
             "  diffuse_color Array %s %s %s  ;" % (color[0], color[1], color[2]))
 
         fp.write(
-    """
-      use_shadeless True ;
-      use_shadows False ;
-      use_cast_buffer_shadows False ;
-      use_raytrace False ;
-      use_transparency True ;
-      transparency_method 'Z_TRANSPARENCY' ;
-      alpha 0 ;
-      specular_alpha 0 ;
-    end Material
-    """)
+"""
+  use_shadeless True ;
+  use_shadows False ;
+  use_cast_buffer_shadows False ;
+  use_raytrace False ;
+  use_transparency True ;
+  transparency_method 'Z_TRANSPARENCY' ;
+  alpha 0 ;
+  specular_alpha 0 ;
+end Material
+""")
 
     #-------------------------------------------------------------------------------
     #
