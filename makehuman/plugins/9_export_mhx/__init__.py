@@ -67,7 +67,7 @@ class MhxConfig(Config):
             self.rigOptions = exporter.getRigOptions()
             if not self.rigOptions:
                 self.rigOptions = ArmatureOptions()
-                self.rigOptions.loadPreset("advanced", None, folder="plugins/9_export_mhx")
+                self.rigOptions.loadPreset("advanced", None, folder="data/mhx")
 
         self.rigOptions.setExportOptions(
             useCustomShapes = True,

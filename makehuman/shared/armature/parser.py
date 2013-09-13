@@ -242,7 +242,7 @@ class Parser:
                 boneInfo[bone.name] = bone
 
         if options.useCustomShapes:
-            struct = io_json.loadJson("shared/armature/gizmos.json")
+            struct = io_json.loadJson("data/mhx/gizmos.json")
             for name,gizmo in self.customShapes.items():
                 if gizmo:
                     self.gizmos[gizmo] = struct[gizmo]
