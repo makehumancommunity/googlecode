@@ -630,7 +630,7 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
 
         self.value = value
 
-        if value:
+        if value and isinstance(value, basestring):
             self.browseBtn._path = value
         elif defaultPath:
             self.browseBtn._path = defaultPath
@@ -650,7 +650,8 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
         self._path = value
         if value:
             self.imageView.setImage(value)
-            self.browseBtn._path = value
+            if isinstance(value, basestring):
+                self.browseBtn._path = value
         else:
             self.imageView.setImage(mh.getSysDataPath('notfound.thumb'))
 
