@@ -243,11 +243,10 @@ class Parser:
 
         if options.useCustomShapes:
             struct = io_json.loadJson("data/mhx/gizmos.json")
-            for name,gizmo in self.customShapes.items():
-                if gizmo:
-                    self.gizmos[gizmo] = struct[gizmo]
+            addDict(struct, self.gizmos)
 
-        vgroups = self.getVertexGroups(boneInfo)
+        vgroups = self.readVertexGroupFiles(self.vertexGroupFiles)
+        addDict(vgroups, amt.vertexWeights)
 
         if options.merge:
             self.mergeBones(options.merge, boneInfo)
@@ -744,15 +743,6 @@ class Parser:
             defname = self.deformPrefix + bname
             self.constraints[defname] = self.constraints[bname]
             del self.constraints[bname]
-
-
-
-    def getVertexGroups(self, boneInfo):
-        amt = self.armature
-        vgroups = self.readVertexGroupFiles(self.vertexGroupFiles)
-        for bname,vgroup in vgroups.items():
-            amt.vertexWeights[bname] = vgroup
-        return vgroups
 
 
     def addDeformVertexGroups(self, vgroups, custom):

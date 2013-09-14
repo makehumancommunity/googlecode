@@ -156,6 +156,8 @@ class Human(guicommon.Object):
         for path,value in self.targetsDetailStack.items():
             if all or path[0:4] != "data":
                 log.debug("  %s: %s" % (path, value))
+        return
+
         log.debug("algos3d.targetBuffer:")
         for path,target in algos3d.targetBuffer.items():
             if isinstance(target, warpmodifier.WarpTarget):
