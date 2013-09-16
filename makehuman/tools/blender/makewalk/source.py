@@ -68,9 +68,8 @@ def guessSrcArmature(rig, scn):
             best = amt
             bestMisses = nMisses
 
-    if bestMisses == 0:
-        scn.McpSourceRig = best.name
-    else:
+    scn.McpSourceRig = best.name
+    if bestMisses > 0:
         print("Number of misses:")
         for (name, n) in misses.items():
             print("  %14s: %2d" % (name, n))
@@ -84,8 +83,8 @@ def guessSrcArmature(rig, scn):
                 string = " *** "
                 bname = "?"
             print("%s %14s => %s" % (string, bone.name, bname))
-        raise MocapError('Did not find matching armature. nMisses = %d' % bestMisses)
-    return best
+        print('*** Warning ***\nDid not find matching armature. nMisses = %d' % bestMisses)
+    return best,bestMisses
 
 #
 #   findSrcArmature(context, rig):
@@ -94,11 +93,14 @@ def guessSrcArmature(rig, scn):
 def findSrcArmature(context, rig):
     scn = context.scene
     if scn.McpGuessSourceRig:
-        mcp.srcArmature = guessSrcArmature(rig, scn)
+        mcp.srcArmature,nMisses = guessSrcArmature(rig, scn)
     else:
         mcp.srcArmature = mcp.sourceArmatures[scn.McpSourceRig]
     rig.McpArmature = mcp.srcArmature.name
-    print("Using matching armature %s." % rig.McpArmature)
+    if nMisses == 0:
+        print("Using matching armature %s." % rig.McpArmature)
+    else:
+        print("Using best match %s." % rig.McpArmature)
 
 #
 #    setArmature(rig, scn)

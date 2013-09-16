@@ -389,7 +389,11 @@ def renameBones(srcRig, scn):
         action = adata.action
     for srcBone in srcBones:
         srcName = srcBone.name
-        (trgName, twist) = getTargetFromSource(srcName)
+        lname = source.canonicalSrcName(srcName)
+        try:
+            (trgName, twist) = mcp.srcArmature.armature[lname]
+        except KeyError:
+            trgName = None
         eb = ebones[srcName]
         if trgName:
             if action:
