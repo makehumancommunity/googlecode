@@ -73,7 +73,7 @@ class SettingsTaskView(gui3d.TaskView):
         self.realtimeFitting = sliderBox.addWidget(gui.CheckBox("Fit objects real-time",
             gui3d.app.settings.get('realtimeFitting', False)))
         self.cameraAutoZoom = sliderBox.addWidget(gui.CheckBox("Auto-zoom camera",
-            gui3d.app.settings.get('cameraAutoZoom', True)))
+            gui3d.app.settings.get('cameraAutoZoom', False)))
         self.sliderImages = sliderBox.addWidget(gui.CheckBox("Slider images",
             gui3d.app.settings.get('sliderImages', True)))
             
