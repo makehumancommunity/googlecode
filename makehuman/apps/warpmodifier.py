@@ -80,16 +80,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         global _warpGlobals
         _warpGlobals.modifiers.append(self)
 
-        string = template.replace('$','').replace('{','').replace('}','')
-        warppath = os.path.join(getPath(""), "warp", string)
-        '''
-        if not os.path.exists(os.path.dirname(warppath)):
-            os.makedirs(os.path.dirname(warppath))
-        if not os.path.exists(warppath):
-            fp = open(warppath, "w")
-            fp.close()
-        '''
-
+        warppath = template.replace('$','').replace('{','').replace('}','')
         humanmodifier.SimpleModifier.__init__(self, warppath)
         self.eventType = 'warp'
         self.warppath = warppath
@@ -97,9 +88,9 @@ class WarpModifier (humanmodifier.SimpleModifier):
         self.bodypart = bodypart
         self.slider = None
 
-        for (tlabel, tname, tvar) in self.modifierTypes:
-            self.fallback = humanmodifier.MacroModifier(tlabel, tname, tvar)
-            break
+        #for (tlabel, tname, tvar) in self.modifierTypes:
+        #    self.fallback = humanmodifier.MacroModifier(tlabel, tname, tvar)
+        #    break
 
         self.setupReferences()
         self.refTargetVerts = {}
@@ -186,7 +177,9 @@ class WarpModifier (humanmodifier.SimpleModifier):
             try:
                 trgChar = algos3d.targetBuffer[charpath]
             except KeyError:
-                continue    # Warp target - ignore
+                continue    # Warp target? - ignore
+            if isinstance(trgChar, WarpTarget):
+                continue
 
             srcVerts = np.s_[...]
             dstVerts = trgChar.verts[srcVerts]
@@ -195,15 +188,19 @@ class WarpModifier (humanmodifier.SimpleModifier):
             try:
                 refchar = self.refCharacters[charpath]
             except KeyError:
-                continue
-            reftrg = self.refTargets[charpath]
+                refchar = None
+            if refchar:
+                srcChar = readTarget(refchar)
+                dstVerts = srcChar.verts[srcVerts]
+                srcCharCoord[dstVerts] +=  value * srcChar.data[srcVerts]
 
-            srcChar = readTarget(refchar)
-            dstVerts = srcChar.verts[srcVerts]
-            srcCharCoord[dstVerts] +=  value * srcChar.data[srcVerts]
-
-            srcTrg = readTarget(reftrg)
-            addVerts(srcTargetCoord, value, srcTrg)
+            try:
+                reftrg = self.refTargets[charpath]
+            except KeyError:
+                reftrg = None
+            if reftrg:
+                srcTrg = readTarget(reftrg)
+                addVerts(srcTargetCoord, value, srcTrg)
 
         return srcTargetCoord, srcCharCoord, trgCharCoord
 
@@ -211,54 +208,41 @@ class WarpModifier (humanmodifier.SimpleModifier):
 #   Specialized warp modifiers
 #----------------------------------------------------------
 
-class GenderAgeWarpModifier (WarpModifier):
+class EthnicGenderAgeWarpModifier (WarpModifier):
 
-    modifierTypes = [
-            ("macrodetails", None, "Gender"),
-            ("macrodetails", None, "Age"),
-        ]
-
-
-class EthnicWarpModifier (WarpModifier):
-
-    modifierTypes = [
-            ("macrodetails", None, "African"),
-            ("macrodetails", None, "Asian"),
-        ]
+    def getRefChar(self, ethnic, gender, age):
+        return "data/targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age)
 
     def setupReferences(self):
         self.refTargets = {}
         self.refCharacters = {}
 
         for ethnic in ["caucasian", "african", "asian"]:
-            reftrg = self.template.replace("${ethnic}", ethnic)
-            refchar = getSysDataPath("targets/macrodetails/%s-female-young.target" % (ethnic))
             for gender in ["female", "male"]:
                 for age in ["baby", "child", "young", "old"]:
+                    reftrg = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
+                    refchar = self.getRefChar(ethnic, gender, age)
                     base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
                     self.refCharacters[base] = refchar
                     self.refTargets[base] = reftrg
 
 
-class GenderAgeEthnicWarpModifier (WarpModifier):
+class GenderAgeWarpModifier (EthnicGenderAgeWarpModifier):
 
-    modifierTypes = [
-            ("macrodetails", None, "Gender"),
-            ("macrodetails", None, "Age"),
-            ("macrodetails", None, "African"),
-            ("macrodetails", None, "Asian"),
-        ]
+    def getRefChar(self, ethnic, gender, age):
+        return "data/targets/macrodetails/caucasian-%s-%s.target" % (gender, age)
 
 
-class GenderAgeToneWeightWarpModifier (WarpModifier):
+class EthnicWarpModifier (EthnicGenderAgeWarpModifier):
 
-    modifierTypes = [
-            ("macrodetails", None, "Gender"),
-            ("macrodetails", None, "Age"),
-            ("macrodetails", "universal", "Muscle"),
-            ("macrodetails", "universal", "Weight"),
-            #("macrodetails", "universal-stature", "Height"),
-        ]
+    def getRefChar(self, ethnic, gender, age):
+        return "data/targets/macrodetails/%s-female-young.target" % (ethnic)
+
+
+class EthnicGenderAgeToneWeightWarpModifier (WarpModifier):
+
+    def getRefChar(self, ethnic, gender, age):
+        return "data/targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age)
 
     def setupReferences(self):
         self.refTargets = {}
@@ -267,18 +251,21 @@ class GenderAgeToneWeightWarpModifier (WarpModifier):
         for ethnic in ["caucasian", "african", "asian"]:
             for gender in ["female", "male"]:
                 for age in ["baby", "child", "young", "old"]:
+                    refchar = self.getRefChar(ethnic, gender, age)
+                    base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
+                    self.refCharacters[base] = refchar
                     path = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
-                    #reftrg = path.replace("-${tone}", "averagemuscle").replace("-${weight}", "averageweight")
-                    #refchar = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
-                    #base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
-                    #self.refCharacters[base] = refchar
-                    #self.refTargets[base] = reftrg
-
                     for tone in ["minmuscle", "averagemuscle", "maxmuscle"]:
                         for weight in ["minweight", "averageweight", "maxweight"]:
                             univ = getSysDataPath("targets/macrodetails/universal-%s-%s-%s-%s.target") % (gender, age, tone, weight)
                             self.refCharacters[univ] = univ
                             self.refTargets[univ] = path.replace("${tone}", tone).replace("${weight}", weight)
+
+
+class GenderAgeToneWeightWarpModifier (EthnicGenderAgeToneWeightWarpModifier):
+
+    def getRefChar(self, ethnic, gender, age):
+        return "data/targets/macrodetails/caucasian-%s-%s.target" % (gender, age)
 
 
 #----------------------------------------------------------
