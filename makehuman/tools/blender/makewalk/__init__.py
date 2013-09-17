@@ -319,14 +319,14 @@ class MhxSourceBonesPanel(bpy.types.Panel):
         layout.prop(scn, "McpSourceRig")
 
         if scn.McpSourceRig:
-            bones = mcp.sourceArmatures[scn.McpSourceRig].armature
+            bones = mcp.sourceArmatures[scn.McpSourceRig].boneNames
             box = layout.box()
             for boneText in target.TargetBoneNames:
                 if not boneText:
                     box.separator()
                     continue
                 (mhx, text) = boneText
-                (bone, twist) = source.findSourceKey(mhx, bones)
+                (bone, roll) = source.findSourceKey(mhx, bones)
                 if bone:
                     row = box.row()
                     split = row.split(percentage=0.4)
@@ -334,7 +334,7 @@ class MhxSourceBonesPanel(bpy.types.Panel):
                     split = split.split(percentage=0.7)
                     split.label(bone)
                     #split.alignment = 'RIGHT'
-                    split.label(str(twist))
+                    split.label(str(roll))
 
 
 ########################################################################

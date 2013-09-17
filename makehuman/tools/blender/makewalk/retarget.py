@@ -34,10 +34,7 @@ from bpy.props import *
 from . import utils, props, source, target, load, simplify
 #from .target_rigs import rig_mhx
 from . import mcp
-from .utils import MocapError
-
-Deg2Rad = math.pi/180
-D = 180/math.pi
+from .utils import *
 
 #
 #   class CBoneData:
@@ -143,7 +140,7 @@ def retargetFkBone(boneData, frame):
 
         if parent.rollMat:
             #roll = utils.getRollMat(parent.rollMat)
-            #print("ParRoll", name, parent.name, roll*D)
+            #print("ParRoll", name, parent.name, roll*Rad2Deg)
             bakeRot = parent.rollInv * bakeMat
             setRotation(bakeMat, bakeRot)
         elif parent.rotOffsInv:
@@ -170,7 +167,7 @@ def retargetFkBone(boneData, frame):
 
     if boneData.rollMat:
         #roll = utils.getRollMat(boneData.rollMat)
-        #print("SelfRoll", name, roll*D)
+        #print("SelfRoll", name, roll*Rad2Deg)
         trgRot = trgMat * boneData.rollMat
         setRotation(trgMat, trgRot)
         #utils.printMat4(" Trg2", trgMat, "  ")

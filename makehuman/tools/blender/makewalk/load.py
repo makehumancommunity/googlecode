@@ -33,7 +33,7 @@ from bpy.props import *
 
 from . import utils, props, source, target, simplify
 from . import mcp
-from .utils import MocapError
+from .utils import *
 
 ###################################################################################
 #    BVH importer.
@@ -114,7 +114,6 @@ Hierarchy = 1
 Motion = 2
 Frames = 3
 
-Deg2Rad = math.pi/180
 Epsilon = 1e-5
 
 def readBvhFile(context, filepath, scn, scan):
@@ -391,7 +390,7 @@ def renameBones(srcRig, scn):
         srcName = srcBone.name
         lname = source.canonicalSrcName(srcName)
         try:
-            (trgName, twist) = mcp.srcArmature.armature[lname]
+            (trgName, _twist) = mcp.srcArmature.boneNames[lname]
         except KeyError:
             trgName = None
         eb = ebones[srcName]
@@ -415,7 +414,7 @@ def renameBones(srcRig, scn):
 def getTargetFromSource(srcName):
     lname = source.canonicalSrcName(srcName)
     try:
-        return mcp.srcArmature.armature[lname]
+        return mcp.srcArmature.boneNames[lname]
     except KeyError:
         pass
     raise MocapError("No target bone corresponding to source bone %s (%s)" % (srcName, lname))

@@ -32,9 +32,8 @@ import os
 
 from . import utils
 from . import mcp
-from .utils import MocapError
+from .utils import *
 
-Deg2Rad = math.pi/180
 
 def renameBone(b):
     try:
