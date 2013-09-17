@@ -329,6 +329,9 @@ class MacroModifier(GenericModifier):
         self.getter = 'get' + self.variable
 
         self.targets = self.findTargets(self.name)
+        if self.name == 'macrodetails':
+            # Update weight/muscle modifiers when macro modifiers are updated
+            self.targets.extend(self.findTargets('macrodetails-universal'))
         # log.debug('macro modifier %s.%s(%s): %s', base, name, variable, self.targets)
 
     def getValue(self, human):
@@ -345,6 +348,9 @@ class MacroModifier(GenericModifier):
     def getFactors(self, human, value):
         factors = super(MacroModifier, self).getFactors(human, value)
         factors[self.name] = 1.0
+        if self.name == 'macrodetails':
+            # Update weight/muscle modifiers when macro modifiers are updated
+            factors['macrodetails-universal'] = 1.0
         return factors
 
     def buildLists(self):
