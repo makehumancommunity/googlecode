@@ -557,7 +557,6 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
     #(srcRig, srcBones, action) =  renameBvhRig(rig, filepath)
     target.getTargetArmature(trgRig, scn)
     source.findSrcArmature(context, srcRig)
-    print("RARB", srcRig, scn)
     t_pose.addTPoseAtFrame0(srcRig, scn)
     renameBones(srcRig, scn)
     utils.setInterpolation(srcRig)

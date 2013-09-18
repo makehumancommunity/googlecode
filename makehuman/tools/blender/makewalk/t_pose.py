@@ -144,7 +144,9 @@ def setStoredPose(rig):
 
 def addTPoseAtFrame0(rig, scn):
     scn.frame_current = 0
-    if mcp.srcArmature.tposeFile:
+    if rig.McpTPoseLoaded:
+        setTPose(rig)
+    elif mcp.srcArmature.tposeFile:
         rig.McpTPoseFile = os.path.join("source_rigs", mcp.srcArmature.tposeFile)
         setTPose(rig)
     else:
@@ -255,6 +257,7 @@ def loadTPose(rig):
             quat = Quaternion(value)
         except:
             quat = Quaternion()
+        pb.matrix_basis = quat.to_matrix().to_4x4()
         setBoneTPose(pb, quat)
 
     rig.McpTPoseLoaded = True
@@ -263,7 +266,6 @@ def loadTPose(rig):
 
 
 def setBoneTPose(pb, quat):
-    pb.matrix_basis = quat.to_matrix().to_4x4()
     pb.McpQuatW = quat.w
     pb.McpQuatX = quat.x
     pb.McpQuatY = quat.y

@@ -38,21 +38,22 @@ from . import mcp
 from .utils import *
 
 
-EX = Vector((1,0,0))
-EY = Vector((0,1,0))
-EZ = Vector((0,0,1))
+EX1 = Matrix.Rotation(math.pi/2, 4, 'Z')
+EX2 = Matrix.Rotation(-math.pi/2, 4, 'Z')
+EZ1 = Matrix.Rotation(math.pi/2, 4, 'X')
+EZ2 = Matrix.Rotation(-math.pi/2, 4, 'X')
 Zero = Vector((0,0,0))
 
 TPose = {
-    "upper_arm.L" : EX,
-    "upper_arm.R" : -EX,
-    "forearm.L" :   EX,
-    "forearm.R" :   -EX,
+    "upper_arm.L" : EX2,
+    "upper_arm.R" : EX1,
+    "forearm.L" :   EX2,
+    "forearm.R" :   EX1,
 
-    "thigh.L" :     -EZ,
-    "thigh.R" :     -EZ,
-    "shin.L" :      -EZ,
-    "shin.R" :      -EZ,
+    "thigh.L" :     EZ2,
+    "thigh.R" :     EZ2,
+    "shin.L" :      EZ2,
+    "shin.R" :      EZ2,
 }
 
 
@@ -70,37 +71,44 @@ class MocapSourceArmature:
             print("  %14s %14s" % (bname, value[0]))
 
 
-    def correctTPose(self, rig):
+    def correctTPose(self, rig, scn):
         from .t_pose import setBoneTPose
 
-        setRestPose(rig)
+        scn.objects.active = rig
+        bpy.ops.pose.select_all(action='SELECT')
+        bpy.ops.pose.rot_clear()
+        bpy.ops.pose.loc_clear()
+
         return
+
         fixBones = []
         for pb in rig.pose.bones:
             print("  ", pb.name, pb.McpBone)
             try:
-                fixBones.append( (pb, TPose[pb.McpBone], pb.bone.matrix_local.col[1].copy()) )
+                fixBones.append( (pb, TPose[pb.McpBone]) )
             except KeyError:
                 pass
 
-        print("FIXBONES")
-        for pb,ey, uy in fixBones:
-            print()
-            print(pb.name, uy)
-            print(pb.bone.matrix_local)
-            b = pb.bone
-            vec = Vector(b.matrix_local.col[1][:3])
-            dot = ey.dot(vec)
-            print("  ", vec, dot)
-            if dot < 0.98:
-                angle = math.acos(dot)
-                axis = ey.cross(vec)
-                print(" aa", angle, axis)
-                rot = Matrix.Rotation(angle, 4, axis)
-                print(" bml1", b.matrix_local)
-                b.matrix_local = rot * b.matrix_local
-                print(" bml2", b.matrix_local)
-        halt
+        for pb,ey in fixBones:
+            mat = ey.copy()
+            mat.col[3] = pb.matrix.col[3]
+            loc = pb.bone.matrix_local
+            if pb.parent:
+                mat = pb.parent.matrix.inverted() * mat
+                loc = pb.parent.bone.matrix_local.inverted() * loc
+            mat =  loc.inverted() * mat
+            euler = mat.to_euler()
+            euler.y = 0
+            pb.matrix_basis = euler.to_matrix().to_4x4()
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.object.mode_set(mode='POSE')
+
+            quat = pb.matrix_basis.to_quaternion()
+            setBoneTPose(pb, quat)
+
+        rig.McpTPoseLoaded = True
+        rig.McpRestTPose = False
+
 
     def findArmature(self, rig):
         for pb in rig.pose.bones:
@@ -267,7 +275,7 @@ def guessSrcArmature(rig, scn):
     else:
         amt = mcp.srcArmature = MocapSourceArmature()
         amt.findArmature(rig)
-        amt.correctTPose(rig)
+        amt.correctTPose(rig, scn)
         mcp.sourceArmatures["Automatic"] = amt
         amt.display()
         return amt
