@@ -37,7 +37,6 @@ files_to_chmod_executable = [
     "usr/share/makehuman/compile_targets.py",
     "usr/share/makehuman/compressTargetsASCII.py",
     "usr/share/makehuman/makehuman.py",
-    "usr/share/makehuman/tools/standalone/maketarget/compilePyinstaller.sh"
     ]
 
 package_name = "makehumansvn"
@@ -52,6 +51,7 @@ import os
 import string
 import re
 import subprocess
+import shutil
 
 dest = os.getenv('makehuman_dest',0)
 
@@ -161,6 +161,7 @@ os.system(rsyncbin)
 
 svnrevfile = os.path.join(docdir,"SVNREV.txt")
 os.system("svn info " + scriptdir + " | grep Revision | cut -f 2 --delimiter=' ' > " + svnrevfile)
+shutil.copy(svnrevfile, os.path.join(programdir, 'core', 'VERSION'))
 
 rsynccontrol = rsync + " " + rsync_common_args
 rsynccontrol = rsynccontrol + " " + srccontrol + "/ " + controldir + "/"
@@ -207,11 +208,6 @@ os.system("mv " + copysrc + " " + copydest)
 tmp = os.path.join(programdir,"license.txt")
 tmp2 = os.path.join(docdir,"LICENSE.txt")
 os.system("mv " + tmp + " " + tmp2)
-
-maketargetlicense = "usr/share/makehuman/utils/maketarget/license.txt"
-if os.path.exists(maketargetlicense):
-  mtl = os.path.join(docdir,"LICENSE.maketarget.txt")
-  os.system("mv " + maketargetlicense + " " + mtl)
 
 os.system("chown -R 0:0 " + target)
 os.system("chmod -R 644 " + target)
