@@ -35,9 +35,9 @@ def toggleConstraints(rig, types, mute):
         for cns in pb.constraints:
             if cns.type in types:
                 cns.mute = mute
-    bpy.ops.object.mode_set(mode='OBJECT')                
-    bpy.ops.object.mode_set(mode='POSE')                
-    return                
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.mode_set(mode='POSE')
+    return
 
 
 class VIEW3D_OT_McpToggleLimitButton(bpy.types.Operator):
@@ -48,11 +48,11 @@ class VIEW3D_OT_McpToggleLimitButton(bpy.types.Operator):
 
     def execute(self, context):
         ob = context.object
-        toggleConstraints(ob, 
+        toggleConstraints(ob,
             ['LIMIT_LOCATION', 'LIMIT_ROTATION', 'LIMIT_DISTANCE', 'LIMIT_SCALE'],
             self.mute)
         ob.McpLimitsOn = not self.mute
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 class VIEW3D_OT_McpToggleChildofButton(bpy.types.Operator):
     bl_idname = "mcp.toggle_childofs"
@@ -64,4 +64,4 @@ class VIEW3D_OT_McpToggleChildofButton(bpy.types.Operator):
         ob = context.object
         toggleConstraints(ob, ['CHILD_OF'], self.mute)
         ob.McpChildOfsOn = not self.mute
-        return{'FINISHED'}    
+        return{'FINISHED'}

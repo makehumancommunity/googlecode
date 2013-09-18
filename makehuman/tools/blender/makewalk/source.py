@@ -25,25 +25,216 @@
 
 
 
-import bpy, os
-#from math import sin, cos
+import bpy
+import os
+from collections import OrderedDict
+import math
 from mathutils import *
 from bpy.props import *
 from bpy_extras.io_utils import ImportHelper
 
 from . import target
 from . import mcp
-from . import utils
-from .utils import MocapError
+from .utils import *
+
+
+EX = Vector((1,0,0))
+EY = Vector((0,1,0))
+EZ = Vector((0,0,1))
+Zero = Vector((0,0,0))
+
+TPose = {
+    "upper_arm.L" : EX,
+    "upper_arm.R" : -EX,
+    "forearm.L" :   EX,
+    "forearm.R" :   -EX,
+
+    "thigh.L" :     -EZ,
+    "thigh.R" :     -EZ,
+    "shin.L" :      -EZ,
+    "shin.R" :      -EZ,
+}
 
 
 class MocapSourceArmature:
-    def __init__(self):
-        self.name = None
-        self.armature = {}
-        self.tposeFile = None
-        self.tpose = {}
 
+    def __init__(self):
+        self.name = "Automatic"
+        self.boneNames = OrderedDict()
+        self.tposeFile = None
+
+
+    def display(self):
+        print("Source Armature", self.name)
+        for bname,value in self.boneNames.items():
+            print("  %14s %14s" % (bname, value[0]))
+
+
+    def correctTPose(self, rig):
+        from .t_pose import setBoneTPose
+
+        setRestPose(rig)
+        return
+        fixBones = []
+        for pb in rig.pose.bones:
+            print("  ", pb.name, pb.McpBone)
+            try:
+                fixBones.append( (pb, TPose[pb.McpBone], pb.bone.matrix_local.col[1].copy()) )
+            except KeyError:
+                pass
+
+        print("FIXBONES")
+        for pb,ey, uy in fixBones:
+            print()
+            print(pb.name, uy)
+            print(pb.bone.matrix_local)
+            b = pb.bone
+            vec = Vector(b.matrix_local.col[1][:3])
+            dot = ey.dot(vec)
+            print("  ", vec, dot)
+            if dot < 0.98:
+                angle = math.acos(dot)
+                axis = ey.cross(vec)
+                print(" aa", angle, axis)
+                rot = Matrix.Rotation(angle, 4, axis)
+                print(" bml1", b.matrix_local)
+                b.matrix_local = rot * b.matrix_local
+                print(" bml2", b.matrix_local)
+        halt
+
+    def findArmature(self, rig):
+        for pb in rig.pose.bones:
+            if pb.parent is None:
+                hips = pb
+                break
+
+        while (len(hips.children) == 1):
+            hips = hips.children[0]
+
+        if len(hips.children) < 3:
+            raise MocapError("Hips has %d children" % len(hips.children))
+
+        hips.McpBone = "hips"
+        self.setBone("hips", hips)
+        hiphead,hiptail,_ = getHeadTailDir(hips)
+
+        spine = None
+        spineTail = Zero
+        leftLeg = None
+        leftLegTail = Zero
+        rightLeg = None
+        rightLegTail = Zero
+
+        for pb in hips.children:
+            _,terminal = chainEnd(pb)
+            head,tail,vec = getHeadTailDir(terminal)
+            if tail[2] > spineTail[2]:
+                spine = pb
+                spineTail = tail
+            elif tail[2] < leftLegTail[2] and tail[0] > 0:
+                leftLeg = pb
+                leftLegTail = tail
+            elif tail[2] < rightLegTail[2] and tail[0] < 0:
+                rightLeg = pb
+                rightLegTail = tail
+
+        if (spine is None) or (leftLeg is None) or (rightLeg is None):
+            raise MocapError("Did not find all limbs:\nspine = %s\nleftLeg = %s\nrightLeg = %s" %
+                (spine, leftLeg, rightLeg))
+
+        self.findSpine(spine)
+        self.findLeg(leftLeg, ".L")
+        self.findLeg(rightLeg, ".R")
+
+
+    def setBone(self, bname, pb):
+        pb.McpBone = bname
+        try:
+            tpose = TPose[bname]
+        except:
+            tpose = None
+        if tpose is None:
+            roll = 0
+        else:
+            _,_,vec = getHeadTailDir(pb)
+            #roll = math.acos(vec.dot(tpose))
+            roll = 0
+        self.boneNames[canonicalSrcName(pb.name)] = (bname, roll*Rad2Deg)
+
+
+    def findTerminal(self, pb, bnames):
+        self.setBone(bnames[0], pb)
+        bnames = bnames[1:]
+        if bnames and len(pb.children) == 1:
+            return self.findTerminal(pb.children[0], bnames)
+        else:
+            while len(pb.children) == 1:
+                pb = pb.children[0]
+            return pb
+
+
+    def findLeg(self, thigh, suffix):
+        bnames = ["thigh"+suffix, "shin"+suffix, "foot"+suffix, "toe"+suffix]
+        shin = thigh.children[0]
+        foot = shin.children[0]
+        if thigh.bone.length < foot.bone.length:
+            self.findTerminal(shin, bnames)
+        else:
+            self.findTerminal(thigh, bnames)
+
+
+    def findArm(self, shoulder, suffix):
+        bnames = ["clavicle"+suffix, "upper_arm"+suffix, "forearm"+suffix, "hand"+suffix]
+        upperarm = shoulder.children[0]
+        forearm = upperarm.children[0]
+
+        self.findTerminal(shoulder, bnames)
+
+
+    def findHead(self, neck):
+        bnames = ["neck", "head"]
+        self.findTerminal(neck, bnames)
+
+
+    def findSpine(self, spine1):
+        n,spine2 = chainEnd(spine1)
+        if n == 1:
+            bnames = ["spine"]
+        elif n == 2:
+            bnames = ["spine", "chest"]
+        elif n == 3:
+            bnames = ["spine", "spine-1", "chest"]
+        else:
+            bnames = ["spine", "spine-1", "chest", "chest-1"]
+
+        self.findTerminal(spine1, bnames)
+        if len(spine2.children) == 3:
+            _,stail,_ = getHeadTailDir(spine2)
+            for pb in spine2.children:
+                _,terminal = chainEnd(pb)
+                _,tail,vec = getHeadTailDir(terminal)
+                if vec[2] > 0 and abs(vec[0]) < 0.1:
+                    self.findHead(pb)
+                elif tail[0] > stail[0]:
+                    self.findArm(pb, ".L")
+                elif tail[0] < stail[0]:
+                    self.findArm(pb, ".R")
+
+
+def chainEnd(pb):
+    n = 1
+    while pb and (len(pb.children) == 1):
+        n += 1
+        pb = pb.children[0]
+    return n,pb
+
+
+def getHeadTailDir(pb):
+    mat = pb.bone.matrix_local
+    head = Vector(mat.col[3][:3])
+    vec = Vector(mat.col[1][:3])
+    tail = head + pb.bone.length * vec
+    return head, tail, vec
 
 #
 #    guessSrcArmature(rig, scn):
@@ -56,11 +247,13 @@ def guessSrcArmature(rig, scn):
     bones = rig.data.bones
 
     for name in mcp.sourceArmatures.keys():
+        if name == "Automatic":
+            continue
         amt = mcp.sourceArmatures[name]
         nMisses = 0
         for bone in bones:
             try:
-                amt.armature[canonicalSrcName(bone.name)]
+                amt.boneNames[canonicalSrcName(bone.name)]
             except KeyError:
                 nMisses += 1
         misses[name] = nMisses
@@ -68,8 +261,17 @@ def guessSrcArmature(rig, scn):
             best = amt
             bestMisses = nMisses
 
-    scn.McpSourceRig = best.name
-    if bestMisses > 0:
+    if bestMisses == 0:
+        scn.McpSourceRig = best.name
+        return best
+    else:
+        amt = mcp.srcArmature = MocapSourceArmature()
+        amt.findArmature(rig)
+        amt.correctTPose(rig)
+        mcp.sourceArmatures["Automatic"] = amt
+        amt.display()
+        return amt
+
         print("Number of misses:")
         for (name, n) in misses.items():
             print("  %14s: %2d" % (name, n))
@@ -77,14 +279,14 @@ def guessSrcArmature(rig, scn):
         amt = mcp.sourceArmatures[best.name]
         for bone in bones:
             try:
-                bname,_ = amt.armature[canonicalSrcName(bone.name)]
+                bname,_ = amt.boneNames[canonicalSrcName(bone.name)]
                 string = "     "
             except KeyError:
                 string = " *** "
                 bname = "?"
             print("%s %14s => %s" % (string, bone.name, bname))
-        print('*** Warning ***\nDid not find matching armature. nMisses = %d' % bestMisses)
-    return best,bestMisses
+        raise MocapError('Did not find matching armature. nMisses = %d' % bestMisses)
+    return best
 
 #
 #   findSrcArmature(context, rig):
@@ -93,14 +295,11 @@ def guessSrcArmature(rig, scn):
 def findSrcArmature(context, rig):
     scn = context.scene
     if scn.McpGuessSourceRig:
-        mcp.srcArmature,nMisses = guessSrcArmature(rig, scn)
+        mcp.srcArmature = guessSrcArmature(rig, scn)
     else:
         mcp.srcArmature = mcp.sourceArmatures[scn.McpSourceRig]
     rig.McpArmature = mcp.srcArmature.name
-    if nMisses == 0:
-        print("Using matching armature %s." % rig.McpArmature)
-    else:
-        print("Using best match %s." % rig.McpArmature)
+    print("Using matching armature %s." % rig.McpArmature)
 
 #
 #    setArmature(rig, scn)
@@ -127,9 +326,9 @@ def setArmature(rig, scn):
 
 def findSourceKey(bname, struct):
     for bone in struct.keys():
-        (bname1, twist) = struct[bone]
+        (bname1, roll) = struct[bone]
         if bname == bname1:
-            return (bone, twist)
+            return (bone, roll)
     return (None, 0)
 
 
@@ -137,7 +336,7 @@ def getSourceRoll(bname, scn):
     if scn.McpAutoCorrectTPose:
         return 0
     else:
-        _,roll = findSourceKey(bname, mcp.srcArmature.armature)
+        _,roll = findSourceKey(bname, mcp.srcArmature.boneNames)
         return roll
 
 
@@ -170,7 +369,7 @@ def initSources(scn):
             armature = readSrcArmature(file, name)
             print("ISS", armature)
             mcp.sourceArmatures[armature.name] = armature
-    mcp.srcArmatureEnums = []
+    mcp.srcArmatureEnums = [("Automatic", "Automatic", "Automatic")]
     keys = list(mcp.sourceArmatures.keys())
     keys.sort()
     for key in keys:
@@ -179,8 +378,8 @@ def initSources(scn):
     bpy.types.Scene.McpSourceRig = EnumProperty(
         items = mcp.srcArmatureEnums,
         name = "Source rig",
-        default = 'MB')
-    scn.McpSourceRig = 'MB'
+        default = 'ACCAD')
+    scn.McpSourceRig = 'ACCAD'
     print("Defined McpSourceRig")
 
 
@@ -199,7 +398,7 @@ def readSrcArmature(file, name):
                 name = armature.name = words[1]
             elif key == "armature:":
                 status = 1
-                amt = armature.armature
+                amt = armature.boneNames
             elif key == "t-pose:":
                 status = 0
                 armature.tposeFile = words[1]
@@ -209,7 +408,7 @@ def readSrcArmature(file, name):
             elif status == 1:
                 for n in range(1,len(words)-2):
                     key += "_" + words[n]
-                amt[canonicalSrcName(key)] = (utils.nameOrNone(words[-2]), float(words[-1]))
+                amt[canonicalSrcName(key)] = (nameOrNone(words[-2]), float(words[-1]))
     fp.close()
     return armature
 
@@ -217,7 +416,6 @@ def readSrcArmature(file, name):
 def ensureSourceInited(scn):
     if not isSourceInited(scn):
         initSources(scn)
-
 
 class VIEW3D_OT_McpInitSourcesButton(bpy.types.Operator):
     bl_idname = "mcp.init_sources"

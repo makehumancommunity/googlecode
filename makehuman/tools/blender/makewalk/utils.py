@@ -31,6 +31,9 @@ from mathutils import *
 
 from . import mcp
 
+Deg2Rad = pi/180
+Rad2Deg = 180/pi
+
 #
 #   printMat3(string, mat)
 #
@@ -301,6 +304,15 @@ def setRotation(pb, rot, frame, group):
             euler = rot
         pb.rotation_euler = euler
         pb.keyframe_insert('rotation_euler', frame=frame, group=group)
+
+#
+#   setRestPose(rig):
+#
+
+def setRestPose(rig):
+    unit = Matrix()
+    for pb in rig.pose.bones:
+        pb.matrix_basis = unit
 
 #
 #    setInterpolation(rig):

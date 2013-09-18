@@ -31,7 +31,7 @@ import os
 import math
 from mathutils import Quaternion, Matrix
 from . import mcp, utils
-from .utils import MocapError
+from .utils import *
 from .io_json import *
 
 
@@ -131,12 +131,6 @@ def clearTPose(rig):
     else:
         setRestPose(rig)
     print("Cleared T-pose")
-
-
-def setRestPose(rig):
-    unit = Matrix()
-    for pb in rig.pose.bones:
-        pb.matrix_basis = unit
 
 
 def setStoredPose(rig):
@@ -261,15 +255,19 @@ def loadTPose(rig):
             quat = Quaternion(value)
         except:
             quat = Quaternion()
-        pb.matrix_basis = quat.to_matrix().to_4x4()
-        pb.McpQuatW = quat.w
-        pb.McpQuatX = quat.x
-        pb.McpQuatY = quat.y
-        pb.McpQuatZ = quat.z
+        setBoneTPose(pb, quat)
 
     rig.McpTPoseLoaded = True
     rig.McpRestTPose = False
     print("TPoseLoaded")
+
+
+def setBoneTPose(pb, quat):
+    pb.matrix_basis = quat.to_matrix().to_4x4()
+    pb.McpQuatW = quat.w
+    pb.McpQuatX = quat.x
+    pb.McpQuatY = quat.y
+    pb.McpQuatZ = quat.z
 
 
 class VIEW3D_OT_McpLoadTPoseButton(bpy.types.Operator, ImportHelper):

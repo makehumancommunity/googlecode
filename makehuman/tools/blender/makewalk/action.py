@@ -51,28 +51,28 @@ def listAllActions(context):
             flen = len(filter)
     except:
         doFilter = False
-        
-    mcp.actions = []     
+
+    mcp.actions = []
     for act in bpy.data.actions:
         name = act.name
         if (not doFilter) or (name[0:flen] == filter):
             mcp.actions.append((name, name, name))
     bpy.types.Scene.McpActions = EnumProperty(
         items = mcp.actions,
-        name = "Actions")  
+        name = "Actions")
     bpy.types.Scene.McpFirstAction = EnumProperty(
         items = mcp.actions,
-        name = "First action")  
+        name = "First action")
     bpy.types.Scene.McpSecondAction = EnumProperty(
         items = mcp.actions,
-        name = "Second action")  
+        name = "Second action")
     print("Actions declared")
     return
 
 
 def findActionNumber(name):
     for n,enum in enumerate(mcp.actions):
-        (name1, name2, name3) = enum        
+        (name1, name2, name3) = enum
         if name == name1:
             return n
     raise MocapError("Unrecognized action %s" % name)
@@ -89,7 +89,7 @@ class VIEW3D_OT_McpUpdateActionListButton(bpy.types.Operator):
 
     def execute(self, context):
         listAllActions(context)
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #   deleteAction(context):
@@ -103,9 +103,9 @@ def deleteAction(context):
         act = bpy.data.actions[scn.McpActions]
     except KeyError:
         act = None
-    if not act:     
+    if not act:
         raise MocapError("Did not find action %s" % scn.McpActions)
-    print('Delete action', act)    
+    print('Delete action', act)
     act.use_fake_user = False
     if act.users == 0:
         print("Deleting", act)
@@ -142,7 +142,7 @@ class VIEW3D_OT_McpDeleteButton(bpy.types.Operator):
                 bpy.ops.mcp.error('INVOKE_DEFAULT')
         else:
             mcp.utilityConfirm = ""
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #   deleteHash():
@@ -153,9 +153,9 @@ def deleteHash():
     for act in bpy.data.actions:
         if act.name[0] == '#':
             utils.deleteAction(act)
-    return 
+    return
 
-    
+
 class VIEW3D_OT_McpDeleteHashButton(bpy.types.Operator):
     bl_idname = "mcp.delete_hash"
     bl_label = "Delete Hash Actions"
@@ -166,7 +166,7 @@ class VIEW3D_OT_McpDeleteHashButton(bpy.types.Operator):
             deleteHash()
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
 #
 #   setCurrentAction(context, prop):
@@ -188,8 +188,8 @@ def getAction(name):
     except KeyError:
         pass
     raise MocapError("Did not find action %s" % name)
-        
-    
+
+
 class VIEW3D_OT_McpSetCurrentActionButton(bpy.types.Operator):
     bl_idname = "mcp.set_current_action"
     bl_label = "Set Current Action"
@@ -201,5 +201,5 @@ class VIEW3D_OT_McpSetCurrentActionButton(bpy.types.Operator):
             setCurrentAction(context, self.prop)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}    
+        return{'FINISHED'}
 
