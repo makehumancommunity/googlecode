@@ -180,7 +180,7 @@ class Object3D(object):
             else:
                 try:
                     self._shaderObj = shader.getShader(self._shaderPath, self.parent.shaderDefines)
-                except Exception, e:
+                except (Exception, RuntimeError), e:
                     self._shaderObj = False
                     log.error(e, exc_info=True)
                     log.warning("Failed to initialize shader (%s), falling back to fixed function shading.", self._shaderPath)
