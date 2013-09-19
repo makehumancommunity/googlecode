@@ -276,6 +276,8 @@ class FaceTaskView(ModifierTaskView):
             ('nose-volume', 'potato', 'point', {'cam' : 'rightView'}),            
             ('nose-nostrils-angle', 'up', 'down', {'cam' : 'rightView'}),
             ('nose-point', 'up', 'down', {'cam' : 'rightView'}),
+            ('nose-septumangle', 'decr', 'incr', {'cam' : 'rightView'}),
+            ('nose-flaring', 'decr', 'incr', {'cam' : 'rightView'}),
             ]),        
         ('mouth size', 'mouth', [
             ('mouth-scale-horiz', 'incr', 'decr', {'cam' : 'frontView'}),
@@ -290,6 +292,7 @@ class FaceTaskView(ModifierTaskView):
             ('mouth-lowerlip-width', 'min', 'max', {'cam' : 'frontView'}),
             ('mouth-upperlip-height', 'min', 'max', {'cam' : 'frontView'}),
             ('mouth-upperlip-width', 'min', 'max', {'cam' : 'frontView'}),
+            ('mouth-cupidsbow-width', 'min', 'max', {'cam' : 'frontView'}),
             ]),
         ('mouth features', 'mouth', [
             ('mouth-lowerlip-ext', 'up', 'down', {'cam' : 'frontView'}),
@@ -300,6 +303,7 @@ class FaceTaskView(ModifierTaskView):
             ('mouth-upperlip-volume', 'deflate', 'inflate', {'cam' : 'rightView'}),
             ('mouth-upperlip-ext', 'up', 'down', {'cam' : 'frontView'}),
             ('mouth-upperlip-middle', 'up', 'down', {'cam' : 'frontView'}),
+            ('mouth-cupidsbow', 'decr', 'incr', {'cam' : 'frontView'}),
             ]),
         ('right ear', 'ears', [
             ('r-ear-trans-depth', 'backward', 'forward', {'cam' : 'rightView'}),
