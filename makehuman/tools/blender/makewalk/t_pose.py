@@ -113,6 +113,64 @@ def setShapeKey(ob, name, value):
     skey.value = value
 
 
+TPose = {
+    "upper_arm.L" : (0, 0, -pi/2, 'XYZ'),
+    "forearm.L" :   (0, 0, -pi/2, 'XYZ'),
+    "hand.L" :      (0, 0, -pi/2, 'XYZ'),
+
+    "upper_arm.R" : (0, 0, pi/2, 'XYZ'),
+    "forearm.R" :   (0, 0, pi/2, 'XYZ'),
+    "hand.R" :      (0, 0, pi/2, 'XYZ'),
+
+    "thigh.L" :     (-pi/2, 0, 0, 'XYZ'),
+    "shin.L" :      (-pi/2, 0, 0, 'XYZ'),
+    "foot.L" :      (None, 0, 0, 'XYZ'),
+    "toe.L" :       (pi, 0, 0, 'XYZ'),
+
+    "thigh.R" :     (-pi/2, 0, 0, 'XYZ'),
+    "shin.R" :      (-pi/2, 0, 0, 'XYZ'),
+    "foot.R" :      (None, 0, 0, 'XYZ'),
+    "toe.R" :       (pi, 0, 0, 'XYZ'),
+}
+
+def autoTPose(rig, scn):
+    selectAndSetRestPose(rig, scn)
+    for pb in rig.pose.bones:
+        try:
+            ex,ey,ez,order = TPose[pb.McpBone]
+        except KeyError:
+            continue
+        print("  ", pb.name, pb.McpBone)
+
+        euler = pb.matrix.to_euler(order)
+        if ex is None:
+            ex = euler.x
+        if ey is None:
+            ey = euler.y
+        if ez is None:
+            ez = euler.z
+        euler = Euler((ex,ey,ez), order)
+        mat = euler.to_matrix().to_4x4()
+        mat.col[3] = pb.matrix.col[3]
+
+        loc = pb.bone.matrix_local
+        if pb.parent:
+            mat = pb.parent.matrix.inverted() * mat
+            loc = pb.parent.bone.matrix_local.inverted() * loc
+        mat =  loc.inverted() * mat
+        euler = mat.to_euler('YZX')
+        euler.y = 0
+        pb.matrix_basis = euler.to_matrix().to_4x4()
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.object.mode_set(mode='POSE')
+
+        quat = pb.matrix_basis.to_quaternion()
+        setBoneTPose(pb, quat)
+
+        rig.McpTPoseLoaded = True
+        rig.McpRestTPose = False
+
+
 def setTPose(rig):
     if not rig.McpTPoseLoaded:
         loadTPose(rig)

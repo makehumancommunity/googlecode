@@ -314,6 +314,12 @@ def setRestPose(rig):
     for pb in rig.pose.bones:
         pb.matrix_basis = unit
 
+def selectAndSetRestPose(rig, scn):
+    scn.objects.active = rig
+    bpy.ops.pose.select_all(action='SELECT')
+    bpy.ops.pose.rot_clear()
+    bpy.ops.pose.loc_clear()
+
 #
 #    setInterpolation(rig):
 #

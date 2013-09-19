@@ -28,7 +28,7 @@
 import bpy
 import os
 from collections import OrderedDict
-import math
+from math import pi
 from mathutils import *
 from bpy.props import *
 from bpy_extras.io_utils import ImportHelper
@@ -38,24 +38,7 @@ from . import mcp
 from .utils import *
 
 
-EX1 = Matrix.Rotation(math.pi/2, 4, 'Z')
-EX2 = Matrix.Rotation(-math.pi/2, 4, 'Z')
-EZ1 = Matrix.Rotation(math.pi/2, 4, 'X')
-EZ2 = Matrix.Rotation(-math.pi/2, 4, 'X')
 Zero = Vector((0,0,0))
-
-TPose = {
-    "upper_arm.L" : EX2,
-    "upper_arm.R" : EX1,
-    "forearm.L" :   EX2,
-    "forearm.R" :   EX1,
-
-    "thigh.L" :     EZ2,
-    "thigh.R" :     EZ2,
-    "shin.L" :      EZ2,
-    "shin.R" :      EZ2,
-}
-
 
 class MocapSourceArmature:
 
@@ -69,45 +52,6 @@ class MocapSourceArmature:
         print("Source Armature", self.name)
         for bname,value in self.boneNames.items():
             print("  %14s %14s" % (bname, value[0]))
-
-
-    def correctTPose(self, rig, scn):
-        from .t_pose import setBoneTPose
-
-        scn.objects.active = rig
-        bpy.ops.pose.select_all(action='SELECT')
-        bpy.ops.pose.rot_clear()
-        bpy.ops.pose.loc_clear()
-
-        return
-
-        fixBones = []
-        for pb in rig.pose.bones:
-            print("  ", pb.name, pb.McpBone)
-            try:
-                fixBones.append( (pb, TPose[pb.McpBone]) )
-            except KeyError:
-                pass
-
-        for pb,ey in fixBones:
-            mat = ey.copy()
-            mat.col[3] = pb.matrix.col[3]
-            loc = pb.bone.matrix_local
-            if pb.parent:
-                mat = pb.parent.matrix.inverted() * mat
-                loc = pb.parent.bone.matrix_local.inverted() * loc
-            mat =  loc.inverted() * mat
-            euler = mat.to_euler()
-            euler.y = 0
-            pb.matrix_basis = euler.to_matrix().to_4x4()
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.object.mode_set(mode='POSE')
-
-            quat = pb.matrix_basis.to_quaternion()
-            setBoneTPose(pb, quat)
-
-        rig.McpTPoseLoaded = True
-        rig.McpRestTPose = False
 
 
     def findArmature(self, rig):
@@ -139,20 +83,33 @@ class MocapSourceArmature:
             if tail[2] > spineTail[2]:
                 spine = pb
                 spineTail = tail
-            elif tail[2] < leftLegTail[2] and tail[0] > 0:
+            elif tail[2] < leftLegTail[2] and tail[0] > hiptail[0]:
                 leftLeg = pb
                 leftLegTail = tail
-            elif tail[2] < rightLegTail[2] and tail[0] < 0:
+            elif tail[2] < rightLegTail[2] and tail[0] < hiptail[0]:
                 rightLeg = pb
                 rightLegTail = tail
+            elif len(hips.children) == 3:
+                print("Terminal", terminal)
+                print("  ", tail)
 
         if (spine is None) or (leftLeg is None) or (rightLeg is None):
-            raise MocapError("Did not find all limbs:\nspine = %s\nleftLeg = %s\nrightLeg = %s" %
-                (spine, leftLeg, rightLeg))
+            string = "Did not find all limbs emanating from hips:\n"
+            string += self.errLimb("spine", spine, spineTail)
+            string += self.errLimb("left leg", leftLeg, leftLegTail)
+            string += self.errLimb("right leg", rightLeg, rightLegTail)
+            raise MocapError(string)
 
         self.findSpine(spine)
         self.findLeg(leftLeg, ".L")
         self.findLeg(rightLeg, ".R")
+
+
+    def errLimb(self, name, pb, tail):
+        if pb is None:
+            return ("  No %s\n" % name)
+        else:
+            return ("  %s = %s, tail = %s\n" (name, pb.name, tuple(tail)))
 
 
     def setBone(self, bname, pb):
@@ -249,33 +206,36 @@ def getHeadTailDir(pb):
 #
 
 def guessSrcArmature(rig, scn):
+    from .t_pose import autoTPose
+
     ensureSourceInited(scn)
     bestMisses = 1000
-    misses = {}
-    bones = rig.data.bones
 
-    for name in mcp.sourceArmatures.keys():
-        if name == "Automatic":
-            continue
-        amt = mcp.sourceArmatures[name]
-        nMisses = 0
-        for bone in bones:
-            try:
-                amt.boneNames[canonicalSrcName(bone.name)]
-            except KeyError:
-                nMisses += 1
-        misses[name] = nMisses
-        if nMisses < bestMisses:
-            best = amt
-            bestMisses = nMisses
+    if not scn.McpAutoDetectSourceRig:
+        misses = {}
+        for name in mcp.sourceArmatures.keys():
+            if name == "Automatic":
+                continue
+            amt = mcp.sourceArmatures[name]
+            nMisses = 0
+            for bone in rig.data.bones:
+                try:
+                    amt.boneNames[canonicalSrcName(bone.name)]
+                except KeyError:
+                    nMisses += 1
+            misses[name] = nMisses
+            if nMisses < bestMisses:
+                best = amt
+                bestMisses = nMisses
 
     if bestMisses == 0:
         scn.McpSourceRig = best.name
         return best
     else:
         amt = mcp.srcArmature = MocapSourceArmature()
+        selectAndSetRestPose(rig, scn)
         amt.findArmature(rig)
-        amt.correctTPose(rig, scn)
+        autoTPose(rig, scn)
         mcp.sourceArmatures["Automatic"] = amt
         amt.display()
         return amt
@@ -285,7 +245,7 @@ def guessSrcArmature(rig, scn):
             print("  %14s: %2d" % (name, n))
         print("Best bone map for armature %s:" % best.name)
         amt = mcp.sourceArmatures[best.name]
-        for bone in bones:
+        for bone in rig.data.bones:
             try:
                 bname,_ = amt.boneNames[canonicalSrcName(bone.name)]
                 string = "     "
@@ -368,7 +328,7 @@ def isSourceInited(scn):
 
 
 def initSources(scn):
-    mcp.sourceArmatures = {}
+    mcp.sourceArmatures = { "Automatic" : MocapSourceArmature() }
     path = os.path.join(os.path.dirname(__file__), "source_rigs")
     for fname in os.listdir(path):
         file = os.path.join(path, fname)
@@ -386,8 +346,8 @@ def initSources(scn):
     bpy.types.Scene.McpSourceRig = EnumProperty(
         items = mcp.srcArmatureEnums,
         name = "Source rig",
-        default = 'ACCAD')
-    scn.McpSourceRig = 'ACCAD'
+        default = 'Automatic')
+    scn.McpSourceRig = 'Automatic'
     print("Defined McpSourceRig")
 
 

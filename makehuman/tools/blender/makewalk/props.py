@@ -321,11 +321,15 @@ def initInterface(context):
     # Source and Target
 
     bpy.types.Scene.McpGuessSourceRig = BoolProperty(
-        name = "Guess source rig",
+        name = "Guess Source Rig",
+        default = True)
+
+    bpy.types.Scene.McpAutoDetectSourceRig = BoolProperty(
+        name = "Auto Detect Source Rig",
         default = True)
 
     bpy.types.Scene.McpGuessTargetRig = BoolProperty(
-        name = "Guess target rig",
+        name = "Guess Target Rig",
         default = True)
 
     bpy.types.PoseBone.McpBone = StringProperty(
