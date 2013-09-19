@@ -35,10 +35,10 @@ targetRolls = []
 targetMats = []
 actions = []
 
-#sourceArmatures = {}
-#targetArmature = {}
-#srcArmature = None
-#trgArmature = None
+sourceArmatures = { "Automatic" : None }
+targetArmatures = { "Automatic" : ([],[],[]) }
+srcArmature = None
+trgArmature = None
 
 F_Rev = 1
 F_LR = 2

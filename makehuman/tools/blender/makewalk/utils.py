@@ -199,6 +199,16 @@ def copyAction(act1, name):
     return act2
 
 #
+#   validBone(pb):
+#
+
+def validBone(pb):
+    for cns in pb.constraints:
+        if cns.type[0:5] != 'LIMIT':
+            return False
+    return True
+
+#
 #   getActiveFrames(ob):
 #
 
@@ -319,6 +329,7 @@ def selectAndSetRestPose(rig, scn):
     bpy.ops.pose.select_all(action='SELECT')
     bpy.ops.pose.rot_clear()
     bpy.ops.pose.loc_clear()
+
 
 #
 #    setInterpolation(rig):

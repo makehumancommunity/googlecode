@@ -38,9 +38,7 @@ from . import mcp
 from .utils import *
 
 
-Zero = Vector((0,0,0))
-
-class MocapSourceArmature:
+class MocapArmature:
 
     def __init__(self):
         self.name = "Automatic"
@@ -60,24 +58,36 @@ class MocapSourceArmature:
                 hips = pb
                 break
 
-        while (len(hips.children) == 1):
-            hips = hips.children[0]
+        hipsChildren = validChildren(hips)
+        while (len(hipsChildren) == 1):
+            hips = hipsChildren[0]
+            hipsChildren = validChildren(hips)
 
-        if len(hips.children) < 3:
-            raise MocapError("Hips has %d children" % len(hips.children))
-
-        hips.McpBone = "hips"
         self.setBone("hips", hips)
         hiphead,hiptail,_ = getHeadTailDir(hips)
 
-        spine = None
-        spineTail = Zero
-        leftLeg = None
-        leftLegTail = Zero
-        rightLeg = None
-        rightLegTail = Zero
+        # Reversed hip
+        if len(hipsChildren) == 2:
+            legroot = hipsChildren[1]
+            spine = hipsChildren[0]
+            _,terminal = chainEnd(legroot)
+            head,tail,vec = getHeadTailDir(terminal)
+            if tail[2] > hiptail[2]:
+                legroot = hipsChildren[0]
+                spine = hipsChildren[1]
+            hipsChildren = [spine] + validChildren(legroot)
 
-        for pb in hips.children:
+        if len(hipsChildren) < 3:
+            raise MocapError("Hips has %d children" % len(hipsChildren))
+
+        spine = None
+        spineTail = hiptail
+        leftLeg = None
+        leftLegTail = hiptail
+        rightLeg = None
+        rightLegTail = hiptail
+
+        for pb in hipsChildren:
             _,terminal = chainEnd(pb)
             head,tail,vec = getHeadTailDir(terminal)
             if tail[2] > spineTail[2]:
@@ -89,7 +99,7 @@ class MocapSourceArmature:
             elif tail[2] < rightLegTail[2] and tail[0] < hiptail[0]:
                 rightLeg = pb
                 rightLegTail = tail
-            elif len(hips.children) == 3:
+            elif len(hipsChildren) == 3:
                 print("Terminal", terminal)
                 print("  ", tail)
 
@@ -109,7 +119,7 @@ class MocapSourceArmature:
         if pb is None:
             return ("  No %s\n" % name)
         else:
-            return ("  %s = %s, tail = %s\n" (name, pb.name, tuple(tail)))
+            return ("  %s = %s, tail = %s\n" % (name, pb.name, tuple(tail)))
 
 
     def setBone(self, bname, pb):
@@ -130,18 +140,20 @@ class MocapSourceArmature:
     def findTerminal(self, pb, bnames):
         self.setBone(bnames[0], pb)
         bnames = bnames[1:]
-        if bnames and len(pb.children) == 1:
-            return self.findTerminal(pb.children[0], bnames)
+        children = validChildren(pb)
+        if bnames and len(children) == 1:
+            return self.findTerminal(children[0], bnames)
         else:
-            while len(pb.children) == 1:
-                pb = pb.children[0]
+            while len(children) == 1:
+                pb = children[0]
+                children = validChildren(pb)
             return pb
 
 
     def findLeg(self, thigh, suffix):
         bnames = ["thigh"+suffix, "shin"+suffix, "foot"+suffix, "toe"+suffix]
-        shin = thigh.children[0]
-        foot = shin.children[0]
+        shin = validChildren(thigh)[0]
+        foot = validChildren(shin)[0]
         if thigh.bone.length < foot.bone.length:
             self.findTerminal(shin, bnames)
         else:
@@ -150,9 +162,11 @@ class MocapSourceArmature:
 
     def findArm(self, shoulder, suffix):
         bnames = ["clavicle"+suffix, "upper_arm"+suffix, "forearm"+suffix, "hand"+suffix]
-        upperarm = shoulder.children[0]
-        forearm = upperarm.children[0]
-
+        upperarm = validChildren(shoulder)[0]
+        forearm = validChildren(upperarm)[0]
+        hand = validChildren(forearm)[0]
+        if upperarm.bone.length < hand.bone.length:
+            bnames = [bnames[0], "deltoid"+suffix] + bnames[1:]
         self.findTerminal(shoulder, bnames)
 
 
@@ -173,9 +187,10 @@ class MocapSourceArmature:
             bnames = ["spine", "spine-1", "chest", "chest-1"]
 
         self.findTerminal(spine1, bnames)
-        if len(spine2.children) == 3:
+        spine2Children = validChildren(spine2)
+        if len(spine2Children) == 3:
             _,stail,_ = getHeadTailDir(spine2)
-            for pb in spine2.children:
+            for pb in spine2Children:
                 _,terminal = chainEnd(pb)
                 _,tail,vec = getHeadTailDir(terminal)
                 if vec[2] > 0 and abs(vec[0]) < 0.1:
@@ -186,11 +201,19 @@ class MocapSourceArmature:
                     self.findArm(pb, ".R")
 
 
+def validChildren(pb):
+    children = []
+    for child in pb.children:
+        if validBone(child):
+            children.append(child)
+    return children
+
+
 def chainEnd(pb):
     n = 1
-    while pb and (len(pb.children) == 1):
+    while pb and (len(validChildren(pb)) == 1):
         n += 1
-        pb = pb.children[0]
+        pb = validChildren(pb)[0]
     return n,pb
 
 
@@ -202,44 +225,33 @@ def getHeadTailDir(pb):
     return head, tail, vec
 
 #
-#    guessSrcArmature(rig, scn):
+#    guessSrcArmatureFromList(rig, scn):
 #
 
-def guessSrcArmature(rig, scn):
-    from .t_pose import autoTPose
-
+def guessSrcArmatureFromList(rig, scn):
     ensureSourceInited(scn)
     bestMisses = 1000
 
-    if not scn.McpAutoDetectSourceRig:
-        misses = {}
-        for name in mcp.sourceArmatures.keys():
-            if name == "Automatic":
-                continue
-            amt = mcp.sourceArmatures[name]
-            nMisses = 0
-            for bone in rig.data.bones:
-                try:
-                    amt.boneNames[canonicalSrcName(bone.name)]
-                except KeyError:
-                    nMisses += 1
-            misses[name] = nMisses
-            if nMisses < bestMisses:
-                best = amt
-                bestMisses = nMisses
+    misses = {}
+    for name in mcp.sourceArmatures.keys():
+        if name == "Automatic":
+            continue
+        amt = mcp.sourceArmatures[name]
+        nMisses = 0
+        for bone in rig.data.bones:
+            try:
+                amt.boneNames[canonicalSrcName(bone.name)]
+            except KeyError:
+                nMisses += 1
+        misses[name] = nMisses
+        if nMisses < bestMisses:
+            best = amt
+            bestMisses = nMisses
 
     if bestMisses == 0:
         scn.McpSourceRig = best.name
         return best
     else:
-        amt = mcp.srcArmature = MocapSourceArmature()
-        selectAndSetRestPose(rig, scn)
-        amt.findArmature(rig)
-        autoTPose(rig, scn)
-        mcp.sourceArmatures["Automatic"] = amt
-        amt.display()
-        return amt
-
         print("Number of misses:")
         for (name, n) in misses.items():
             print("  %14s: %2d" % (name, n))
@@ -254,18 +266,27 @@ def guessSrcArmature(rig, scn):
                 bname = "?"
             print("%s %14s => %s" % (string, bone.name, bname))
         raise MocapError('Did not find matching armature. nMisses = %d' % bestMisses)
-    return best
 
 #
 #   findSrcArmature(context, rig):
 #
 
 def findSrcArmature(context, rig):
+    from . import t_pose
     scn = context.scene
-    if scn.McpGuessSourceRig:
-        mcp.srcArmature = guessSrcArmature(rig, scn)
-    else:
+
+    if scn.McpSourceRigMethod == 'Fixed':
         mcp.srcArmature = mcp.sourceArmatures[scn.McpSourceRig]
+    elif scn.McpSourceRigMethod == 'List':
+        mcp.srcArmature = guessSrcArmatureFromList(rig, scn)
+    elif scn.McpSourceRigMethod == 'Auto':
+        amt = mcp.srcArmature = MocapArmature()
+        selectAndSetRestPose(rig, scn)
+        amt.findArmature(rig)
+        t_pose.autoTPose(rig, scn)
+        mcp.sourceArmatures["Automatic"] = amt
+        amt.display()
+
     rig.McpArmature = mcp.srcArmature.name
     print("Using matching armature %s." % rig.McpArmature)
 
@@ -328,14 +349,13 @@ def isSourceInited(scn):
 
 
 def initSources(scn):
-    mcp.sourceArmatures = { "Automatic" : MocapSourceArmature() }
+    mcp.sourceArmatures = { "Automatic" : MocapArmature() }
     path = os.path.join(os.path.dirname(__file__), "source_rigs")
     for fname in os.listdir(path):
         file = os.path.join(path, fname)
         (name, ext) = os.path.splitext(fname)
         if ext == ".src" and os.path.isfile(file):
             armature = readSrcArmature(file, name)
-            print("ISS", armature)
             mcp.sourceArmatures[armature.name] = armature
     mcp.srcArmatureEnums = [("Automatic", "Automatic", "Automatic")]
     keys = list(mcp.sourceArmatures.keys())
@@ -355,7 +375,7 @@ def readSrcArmature(file, name):
     print("Read source file", file)
     fp = open(file, "r")
     status = 0
-    armature = MocapSourceArmature()
+    armature = MocapArmature()
     for line in fp:
         words = line.split()
         if len(words) > 0:
@@ -370,7 +390,6 @@ def readSrcArmature(file, name):
             elif key == "t-pose:":
                 status = 0
                 armature.tposeFile = words[1]
-                print("T-pose", armature.tposeFile)
             elif len(words) < 3 or key[-1] == ":":
                 print("Ignored illegal line", line)
             elif status == 1:

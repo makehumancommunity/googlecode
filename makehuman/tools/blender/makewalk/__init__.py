@@ -156,9 +156,10 @@ class OptionsPanel(bpy.types.Panel):
         layout.prop(scn, "McpBvhScale")
         layout.prop(scn, "McpStartFrame")
         layout.prop(scn, "McpEndFrame")
-        layout.prop(scn, 'McpAutoDetectSourceRig')
-        layout.prop(scn, 'McpGuessSourceRig')
-        layout.prop(scn, 'McpGuessTargetRig')
+        layout.label("Source Rig Method")
+        layout.prop(scn, 'McpSourceRigMethod', expand=True)
+        layout.label("Target Rig Method")
+        layout.prop(scn, 'McpTargetRigMethod', expand=True)
         layout.prop(scn, "McpUseSpineOffset")
         layout.prop(scn, "McpUseClavOffset")
         layout.prop(scn, "McpUseTPoseAsRestPose")
@@ -316,26 +317,28 @@ class MhxSourceBonesPanel(bpy.types.Panel):
             layout.operator("mcp.init_sources", text="Init Source Panel")
             return
         layout.operator("mcp.init_sources", text="Reinit Source Panel")
-        layout.prop(scn, 'McpGuessSourceRig')
+        layout.prop(scn, 'McpSourceRigMethod', expand=True)
         layout.prop(scn, "McpSourceRig")
 
         if scn.McpSourceRig:
-            bones = mcp.sourceArmatures[scn.McpSourceRig].boneNames
-            box = layout.box()
-            for boneText in target.TargetBoneNames:
-                if not boneText:
-                    box.separator()
-                    continue
-                (mhx, text) = boneText
-                (bone, roll) = source.findSourceKey(mhx, bones)
-                if bone:
-                    row = box.row()
-                    split = row.split(percentage=0.4)
-                    split.label(text)
-                    split = split.split(percentage=0.7)
-                    split.label(bone)
-                    #split.alignment = 'RIGHT'
-                    split.label(str(roll))
+            amt = mcp.sourceArmatures[scn.McpSourceRig]
+            if amt:
+                bones = amt.boneNames
+                box = layout.box()
+                for boneText in target.TargetBoneNames:
+                    if not boneText:
+                        box.separator()
+                        continue
+                    (mhx, text) = boneText
+                    (bone, roll) = source.findSourceKey(mhx, bones)
+                    if bone:
+                        row = box.row()
+                        split = row.split(percentage=0.4)
+                        split.label(text)
+                        split = split.split(percentage=0.7)
+                        split.label(bone)
+                        #split.alignment = 'RIGHT'
+                        split.label(str(roll))
 
 
 ########################################################################
@@ -362,7 +365,7 @@ class MhxTargetBonesPanel(bpy.types.Panel):
             layout.operator("mcp.init_targets", text="Init Target Panel")
             return
         layout.operator("mcp.init_targets", text="Reinit Target Panel")
-        layout.prop(scn, 'McpGuessTargetRig')
+        layout.prop(scn, 'McpTargetRigMethod', expand=True)
         layout.prop(scn, "McpTargetRig")
 
         if scn.McpTargetRig:

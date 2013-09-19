@@ -46,18 +46,38 @@ def renameBone(b):
 #
 
 def getTargetArmature(rig, scn):
+    from . import source, t_pose
+
+    selectAndSetRestPose(rig, scn)
     bones = rig.data.bones.keys()
-    if scn.McpGuessTargetRig:
-        name = guessArmature(rig, bones, scn)
-        scn.McpTargetRig = name
-    else:
+    if scn.McpTargetRigMethod == 'Fixed':
         try:
             name = scn.McpTargetRig
         except:
             raise MocapError("Initialize Target Panel first")
+    else:
+        name = guessTargetArmatureFromList(rig, bones, scn)
+
+    if name == "Automatic":
+        amt = mcp.srcArmature = source.MocapArmature()
+        amt.findArmature(rig)
+        t_pose.autoTPose(rig, scn)
+        mcp.targetArmatures["Automatic"] = amt
+        scn.McpTargetRig = "Automatic"
+        print("Target bones:")
+        amt.display()
+
+        boneAssoc = []
+        for pb in rig.pose.bones:
+            if pb.McpBone:
+                boneAssoc.append( (pb.name, pb.McpBone) )
+        parAssoc = assocParents(rig, boneAssoc, [])
+        return (boneAssoc, parAssoc, None)
+
+    scn.McpTargetRig = name
     mcp.target = name
     (boneAssoc, mcp.renames, mcp.ikBones) = mcp.targetInfo[name]
-    if not testTargetRig(name, bones, boneAssoc):
+    if not testTargetRig(name, rig, boneAssoc):
         print("Bones", bones)
         raise MocapError("Target armature %s does not match armature %s" % (rig.name, name))
     print("Target armature %s" % name)
@@ -65,19 +85,23 @@ def getTargetArmature(rig, scn):
     return (boneAssoc, parAssoc, None)
 
 
-def guessArmature(rig, bones, scn):
+def guessTargetArmatureFromList(rig, bones, scn):
     ensureTargetInited(scn)
-    print("Guessing")
+    print("Guessing target")
     amtList = ["MHX", "Default"]
     for key in mcp.targetInfo.keys():
         if key not in ["MHX", "Default"]:
             amtList.append(key)
     for name in amtList:
         (boneAssoc, mcp.renames, mcp.ikBones) = mcp.targetInfo[name]
-        if testTargetRig(name, bones, boneAssoc):
+        if testTargetRig(name, rig, boneAssoc):
             return name
-    print("Bones", bones)
-    raise MocapError("Did not recognize target armature %s" % rig.name)
+
+    if scn.McpTargetRigMethod == 'List':
+        print("Bones", bones)
+        raise MocapError("Did not recognize target armature %s" % rig.name)
+    else:
+        return "Automatic"
 
 
 def assocParents(rig, boneAssoc, names):
@@ -107,11 +131,15 @@ def getName(name, names):
         return name
 
 
-def testTargetRig(name, bones, rigBones):
+def testTargetRig(name, rig, rigBones):
     print("Testing %s" % name)
-    for (b, mb) in rigBones:
-        if b not in bones:
-            print("Failed to find bone %s (%s)" % (b, mb))
+    for (bname, mhxname) in rigBones:
+        try:
+            pb = rig.pose.bones[bname]
+        except KeyError:
+            pb = None
+        if pb is None or not validBone(pb):
+            print("Failed to find bone %s (%s)" % (bname, mhxname))
             return False
     return True
 
@@ -185,7 +213,10 @@ def isTargetInited(scn):
 
 
 def initTargets(scn):
-    mcp.targetInfo = {}
+    from .source import MocapArmature
+
+    mcp.targetInfo = { "Automatic" : ([], [], []) }
+    mcp.targetArmatures = { "Automatic" : MocapArmature() }
     path = os.path.join(os.path.dirname(__file__), "target_rigs")
     for fname in os.listdir(path):
         file = os.path.join(path, fname)
@@ -194,7 +225,7 @@ def initTargets(scn):
             (name, stuff) = readTrgArmature(file, name)
             mcp.targetInfo[name] = stuff
 
-    mcp.trgArmatureEnums = []
+    mcp.trgArmatureEnums =[("Automatic", "Automatic", "Automatic")]
     keys = list(mcp.targetInfo.keys())
     keys.sort()
     for key in keys:
@@ -203,7 +234,7 @@ def initTargets(scn):
     bpy.types.Scene.McpTargetRig = EnumProperty(
         items = mcp.trgArmatureEnums,
         name = "Target rig",
-        default = 'Default')
+        default = 'Automatic')
     print("Defined McpTargetRig")
     return
 

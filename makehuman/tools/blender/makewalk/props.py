@@ -320,13 +320,19 @@ def initInterface(context):
 
     # Source and Target
 
-    bpy.types.Scene.McpGuessSourceRig = BoolProperty(
-        name = "Guess Source Rig",
-        default = True)
+    bpy.types.Scene.McpSourceRigMethod = EnumProperty(
+        items = [('Fixed', 'Fixed', 'Fixed'),
+                 ('List', 'List', 'List'),
+                 ('Auto', 'Auto', 'Auto')],
+        name = "Source Rig Method",
+        default = 'Auto')
 
-    bpy.types.Scene.McpAutoDetectSourceRig = BoolProperty(
-        name = "Auto Detect Source Rig",
-        default = True)
+    bpy.types.Scene.McpTargetRigMethod = EnumProperty(
+        items = [('Fixed', 'Fixed', 'Fixed'),
+                 ('List', 'List', 'List'),
+                 ('Auto', 'Auto', 'Auto')],
+        name = "Target Rig Method",
+        default = 'Auto')
 
     bpy.types.Scene.McpGuessTargetRig = BoolProperty(
         name = "Guess Target Rig",
