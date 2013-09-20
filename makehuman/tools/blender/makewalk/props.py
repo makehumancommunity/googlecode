@@ -225,6 +225,21 @@ def initInterface(context):
         maxlen=24,
         default="")
 
+    bpy.types.Scene.McpFixX = BoolProperty(
+        name="X",
+        description="Fix Local X Location",
+        default=True)
+
+    bpy.types.Scene.McpFixY = BoolProperty(
+        name="Y",
+        description="Fix Local Y Location",
+        default=True)
+
+    bpy.types.Scene.McpFixZ = BoolProperty(
+        name="Z",
+        description="Fix Local Z Location",
+        default=True)
+
     # Edit
 
     bpy.types.Object.McpUndoAction = StringProperty(

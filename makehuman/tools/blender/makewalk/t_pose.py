@@ -116,11 +116,11 @@ def setShapeKey(ob, name, value):
 TPose = {
     "upper_arm.L" : (0, 0, -pi/2, 'XYZ'),
     "forearm.L" :   (0, 0, -pi/2, 'XYZ'),
-    "hand.L" :      (0, 0, -pi/2, 'XYZ'),
+    #"hand.L" :      (0, 0, -pi/2, 'XYZ'),
 
     "upper_arm.R" : (0, 0, pi/2, 'XYZ'),
     "forearm.R" :   (0, 0, pi/2, 'XYZ'),
-    "hand.R" :      (0, 0, pi/2, 'XYZ'),
+    #"hand.R" :      (0, 0, pi/2, 'XYZ'),
 
     "thigh.L" :     (-pi/2, 0, 0, 'XYZ'),
     "shin.L" :      (-pi/2, 0, 0, 'XYZ'),

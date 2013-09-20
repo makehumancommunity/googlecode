@@ -360,3 +360,45 @@ class VIEW3D_OT_McpShiftBoneFCurvesButton(bpy.types.Operator):
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
 
+
+def fixBoneFCurves(rig, scn):
+    act = utils.getAction(rig)
+    if not act:
+        return
+
+    frame = scn.frame_current
+    minTime,maxTime = utils.getMarkedTime(scn)
+    if minTime is None:
+        minTime = -1e6
+    if maxTime is None:
+        maxTime = 1e6
+    fixArray = [False,False,False]
+    if scn.McpFixX:
+        fixArray[0] = True
+    if scn.McpFixY:
+        fixArray[1] = True
+    if scn.McpFixZ:
+        fixArray[2] = True
+
+    for fcu in act.fcurves:
+        (bname, mode) = utils.fCurveIdentity(fcu)
+        pb = rig.pose.bones[bname]
+        if pb.bone.select and utils.isLocation(mode) and fixArray[fcu.array_index]:
+            value = fcu.evaluate(frame)
+            for kp in fcu.keyframe_points:
+                if kp.co[0] >= minTime and kp.co[0] <= maxTime:
+                    kp.co[1] = value
+
+
+class VIEW3D_OT_McpFixBoneFCurvesButton(bpy.types.Operator):
+    bl_idname = "mcp.fix_bone"
+    bl_label = "Fix Bone Location"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        try:
+            fixBoneFCurves(context.object, context.scene)
+            print("Bones fixed")
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
+        return{'FINISHED'}

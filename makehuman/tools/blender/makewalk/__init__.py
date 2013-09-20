@@ -240,6 +240,11 @@ class EditPanel(bpy.types.Panel):
         layout.separator()
         layout.label("Global Edit")
         layout.operator("mcp.shift_bone")
+        row = layout.row()
+        row.prop(scn, "McpFixX")
+        row.prop(scn, "McpFixY")
+        row.prop(scn, "McpFixZ")
+        layout.operator("mcp.fix_bone")
         layout.prop(scn, "McpRescaleFactor")
         layout.operator("mcp.rescale_fcurves")
 
