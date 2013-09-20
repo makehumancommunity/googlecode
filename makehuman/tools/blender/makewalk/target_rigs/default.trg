@@ -33,7 +33,7 @@ Bones:
 
 IkBones:
 
-Renames:
+T-pose:	default_tpose.json
 
 
 

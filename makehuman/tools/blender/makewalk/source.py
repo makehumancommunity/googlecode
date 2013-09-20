@@ -59,15 +59,21 @@ class MocapArmature:
                 break
 
         hipsChildren = validChildren(hips)
-        while (len(hipsChildren) == 1):
+        while (len(hipsChildren) < 3):
             hips = hipsChildren[0]
+            if len(hipsChildren) == 2:
+                hipname = hips.name.lower()
+                for string in ["foot", "hand", "leg", "arm"]:
+                    if string in hipname:
+                        hips = hipsChildren[1]
+                        break
             hipsChildren = validChildren(hips)
 
         self.setBone("hips", hips)
         hiphead,hiptail,_ = getHeadTailDir(hips)
 
         # Reversed hip
-        if len(hipsChildren) == 2:
+        if False and len(hipsChildren) == 2:
             legroot = hipsChildren[1]
             spine = hipsChildren[0]
             _,terminal = chainEnd(legroot)
@@ -78,7 +84,10 @@ class MocapArmature:
             hipsChildren = [spine] + validChildren(legroot)
 
         if len(hipsChildren) < 3:
-            raise MocapError("Hips has %d children" % len(hipsChildren))
+            string = "Hips %s has %d children:\n" % (hips.name, len(hipsChildren))
+            for child in hipsChildren:
+                string += "  %s\n" % child.name
+            raise MocapError(string)
 
         spine = None
         spineTail = hiptail
@@ -190,16 +199,19 @@ class MocapArmature:
         spine2Children = validChildren(spine2)
         if len(spine2Children) == 3:
             _,stail,_ = getHeadTailDir(spine2)
+            limbs = []
             for pb in spine2Children:
-                _,terminal = chainEnd(pb)
-                _,tail,vec = getHeadTailDir(terminal)
-                if vec[2] > 0 and abs(vec[0]) < 0.1:
-                    self.findHead(pb)
-                elif tail[0] > stail[0]:
-                    self.findArm(pb, ".L")
-                elif tail[0] < stail[0]:
-                    self.findArm(pb, ".R")
-
+                _,tail,_ = getHeadTailDir(pb)
+                limbs.append((tail[0],pb))
+            limbs.sort()
+            self.findArm(limbs[0][1], ".R")
+            self.findHead(limbs[1][1])
+            self.findArm(limbs[2][1], ".L")
+        else:
+            string = ("Top of spine %s has %d children:\n" % (spine2.name, len(spine2Children)))
+            for child in spine2Children:
+                string += "  %s\n" % child.name
+            raise MocapError(string)
 
 def validChildren(pb):
     children = []
@@ -389,7 +401,7 @@ def readSrcArmature(file, name):
                 amt = armature.boneNames
             elif key == "t-pose:":
                 status = 0
-                armature.tposeFile = words[1]
+                armature.tposeFile = os.path.join("source_rigs", words[1])
             elif len(words) < 3 or key[-1] == ":":
                 print("Ignored illegal line", line)
             elif status == 1:

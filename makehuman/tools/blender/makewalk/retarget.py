@@ -490,6 +490,7 @@ def loadRetargetSimplify(context, filepath):
     time1 = time.clock()
     scn = context.scene
     (srcRig, trgRig) = load.readBvhFile(context, filepath, scn, False)
+    layers = list(trgRig.data.layers)
     load.renameAndRescaleBvh(context, srcRig, trgRig)
     retargetMhxRig(context, srcRig, trgRig, True, False)
     scn = context.scene
@@ -498,6 +499,7 @@ def loadRetargetSimplify(context, filepath):
     if scn.McpRescale:
         simplify.rescaleFCurves(context, trgRig, scn.McpRescaleFactor)
     load.deleteSourceRig(context, srcRig, 'Y_')
+    trgRig.data.layers = layers
     time2 = time.clock()
     print("%s finished in %.3f s" % (filepath, time2-time1))
     return

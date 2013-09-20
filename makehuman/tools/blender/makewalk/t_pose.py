@@ -205,7 +205,7 @@ def addTPoseAtFrame0(rig, scn):
     if rig.McpTPoseLoaded:
         setTPose(rig)
     elif mcp.srcArmature.tposeFile:
-        rig.McpTPoseFile = os.path.join("source_rigs", mcp.srcArmature.tposeFile)
+        rig.McpTPoseFile = mcp.srcArmature.tposeFile
         setTPose(rig)
     else:
         setRestPose(rig)
@@ -302,14 +302,17 @@ class VIEW3D_OT_McpClearTPoseButton(bpy.types.Operator):
 
 
 def loadTPose(rig):
-    filepath = os.path.join(os.path.dirname(__file__), rig.McpTPoseFile)
-    filepath = os.path.normpath(filepath)
-    print("Loading %s" % filepath)
-    struct = loadJson(filepath)
+    if rig.McpTPoseFile:
+        filepath = os.path.join(os.path.dirname(__file__), rig.McpTPoseFile)
+        filepath = os.path.normpath(filepath)
+        print("Loading %s" % filepath)
+        struct = loadJson(filepath)
+    else:
+        struct = {}
 
     for name,value in struct:
         bname = getBoneName(rig, name)
-        print("  ", name, bname)
+        #print("  ", name, bname)
         try:
             pb = rig.pose.bones[bname]
             quat = Quaternion(value)
@@ -320,7 +323,6 @@ def loadTPose(rig):
 
     rig.McpTPoseLoaded = True
     rig.McpRestTPose = False
-    print("TPoseLoaded")
 
 
 def setBoneTPose(pb, quat):

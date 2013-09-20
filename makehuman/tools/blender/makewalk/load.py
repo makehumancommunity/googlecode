@@ -347,7 +347,7 @@ class CEditBone():
         self.tail = bone.tail.copy()
         self.roll = bone.roll
         if bone.parent:
-            self.parent = target.renameBone(bone.parent.name)
+            self.parent = bone.parent.name
         else:
             self.parent = None
         if self.parent:

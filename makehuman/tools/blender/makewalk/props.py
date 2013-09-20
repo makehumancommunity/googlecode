@@ -298,7 +298,7 @@ def initInterface(context):
         default = False)
 
     bpy.types.Object.McpTPoseFile = StringProperty(
-        default = "t_pose.json")
+        default = "")
 
     bpy.types.Object.McpArmatureName = StringProperty(
         default = "")

@@ -333,13 +333,8 @@ class MhxSourceBonesPanel(bpy.types.Panel):
                     (bone, roll) = source.findSourceKey(mhx, bones)
                     if bone:
                         row = box.row()
-                        split = row.split(percentage=0.4)
-                        split.label(text)
-                        split = split.split(percentage=0.7)
-                        split.label(bone)
-                        #split.alignment = 'RIGHT'
-                        split.label(str(roll))
-
+                        row.label(text)
+                        row.label(bone)
 
 ########################################################################
 #
@@ -369,7 +364,11 @@ class MhxTargetBonesPanel(bpy.types.Panel):
         layout.prop(scn, "McpTargetRig")
 
         if scn.McpTargetRig:
-            (bones, renames, ikBones) = mcp.targetInfo[scn.McpTargetRig]
+            (bones, ikBones, tpose) = mcp.targetInfo[scn.McpTargetRig]
+
+            layout.label("T-pose file")
+            box = layout.box()
+            box.label(tpose)
 
             layout.label("FK bones")
             box = layout.box()

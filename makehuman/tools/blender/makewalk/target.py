@@ -34,13 +34,6 @@ from . import utils
 from . import mcp
 from .utils import *
 
-
-def renameBone(b):
-    try:
-        return mcp.renames[b]
-    except:
-        return b
-
 #
 #   getTargetArmature(rig, scn):
 #
@@ -71,17 +64,17 @@ def getTargetArmature(rig, scn):
         for pb in rig.pose.bones:
             if pb.McpBone:
                 boneAssoc.append( (pb.name, pb.McpBone) )
-        parAssoc = assocParents(rig, boneAssoc, [])
+        parAssoc = assocParents(rig, boneAssoc)
         return (boneAssoc, parAssoc, None)
 
     scn.McpTargetRig = name
     mcp.target = name
-    (boneAssoc, mcp.renames, mcp.ikBones) = mcp.targetInfo[name]
+    (boneAssoc, mcp.ikBones, rig.McpTPoseFile) = mcp.targetInfo[name]
     if not testTargetRig(name, rig, boneAssoc):
         print("Bones", bones)
         raise MocapError("Target armature %s does not match armature %s" % (rig.name, name))
     print("Target armature %s" % name)
-    parAssoc = assocParents(rig, boneAssoc, mcp.renames)
+    parAssoc = assocParents(rig, boneAssoc)
     return (boneAssoc, parAssoc, None)
 
 
@@ -93,7 +86,7 @@ def guessTargetArmatureFromList(rig, bones, scn):
         if key not in ["MHX", "Default"]:
             amtList.append(key)
     for name in amtList:
-        (boneAssoc, mcp.renames, mcp.ikBones) = mcp.targetInfo[name]
+        (boneAssoc, _ikBones, _tpose) = mcp.targetInfo[name]
         if testTargetRig(name, rig, boneAssoc):
             return name
 
@@ -104,31 +97,23 @@ def guessTargetArmatureFromList(rig, bones, scn):
         return "Automatic"
 
 
-def assocParents(rig, boneAssoc, names):
+def assocParents(rig, boneAssoc):
     parAssoc = {}
     taken = [ None ]
-    for (name, mhx) in boneAssoc:
-        name = getName(name, names)
-        pb = rig.pose.bones[name]
+    for (bname, mhx) in boneAssoc:
+        pb = rig.pose.bones[bname]
         pb.McpBone = mhx
-        taken.append(name)
-        parAssoc[name] = None
+        taken.append(bname)
+        parAssoc[bname] = None
         parent = pb.parent
         while parent:
-            pname = getName(parent.name, names)
+            pname = parent.name
             if pname in taken:
-                parAssoc[name] = pname
+                parAssoc[bname] = pname
                 break
             else:
                 parent = rig.pose.bones[pname].parent
     return parAssoc
-
-
-def getName(name, names):
-    try:
-        return names[name]
-    except:
-        return name
 
 
 def testTargetRig(name, rig, rigBones):
@@ -139,7 +124,7 @@ def testTargetRig(name, rig, rigBones):
         except KeyError:
             pb = None
         if pb is None or not validBone(pb):
-            print("Failed to find bone %s (%s)" % (bname, mhxname))
+            print("  Did not find bone %s (%s)" % (bname, mhxname))
             return False
     return True
 
@@ -215,7 +200,7 @@ def isTargetInited(scn):
 def initTargets(scn):
     from .source import MocapArmature
 
-    mcp.targetInfo = { "Automatic" : ([], [], []) }
+    mcp.targetInfo = { "Automatic" : ([], [], "") }
     mcp.targetArmatures = { "Automatic" : MocapArmature() }
     path = os.path.join(os.path.dirname(__file__), "target_rigs")
     for fname in os.listdir(path):
@@ -244,7 +229,7 @@ def readTrgArmature(file, name):
     fp = open(file, "r")
     status = 0
     bones = []
-    renames = {}
+    tpose = None
     ikbones = []
     for line in fp:
         words = line.split()
@@ -258,18 +243,17 @@ def readTrgArmature(file, name):
                 status = 1
             elif key == "ikbones:":
                 status = 2
-            elif key == "renames:":
-                status = 3
+            elif key == "t-pose:":
+                status = 0
+                tpose = os.path.join("target_rigs", words[1])
             elif len(words) != 2:
                 print("Ignored illegal line", line)
             elif status == 1:
                 bones.append( (words[0], utils.nameOrNone(words[1])) )
             elif status == 2:
                 ikbones.append( (words[0], utils.nameOrNone(words[1])) )
-            elif status == 3:
-                renames[words[0]] = utils.nameOrNone(words[1])
     fp.close()
-    return (name, (bones,renames,ikbones))
+    return (name, (bones,ikbones,tpose))
 
 
 def ensureTargetInited(scn):
