@@ -140,10 +140,6 @@ def readBvhFile(context, filepath, scn, scan):
         raise MocapError("Not a bvh file: " + fileName)
     print( "Loading BVH file "+ fileName )
 
-    trgRig = context.object
-    bpy.ops.object.mode_set(mode='POSE')
-    trgPbones = trgRig.pose.bones
-
     time1 = time.clock()
     level = 0
     nErrors = 0
@@ -220,7 +216,7 @@ def readBvhFile(context, filepath, scn, scan):
                 nFrames = int(words[1])
             elif key == 'FRAME' and words[1].upper() == 'TIME:':
                 frameTime = float(words[2])
-                frameFactor = int(1.0/(25*frameTime) + 0.49)
+                frameFactor = int(1.0/(scn.render.fps*frameTime) + 0.49)
                 if defaultSS:
                     ssFactor = frameFactor
                 endFrame *= ssFactor
@@ -240,7 +236,8 @@ def readBvhFile(context, filepath, scn, scan):
         elif status == Frames:
             if (frame >= startFrame and
                 frame <= endFrame and
-                frame % ssFactor == 0):
+                frame % ssFactor == 0 and
+                frame < nFrames):
                 addFrame(words, frameno, nodes, pbones, scale, flipMatrix)
                 if frameno % 200 == 0:
                     print(frame)
@@ -257,7 +254,7 @@ def readBvhFile(context, filepath, scn, scan):
         print("Warning: No frames in range %d -- %d." % (startFrame, endFrame))
     renameBvhRig(rig, filepath)
     rig.McpIsSourceRig = True
-    return (rig, trgRig)
+    return rig
 
 #
 #    addFrame(words, frame, nodes, pbones, scale, flipMatrix):
@@ -633,7 +630,8 @@ class VIEW3D_OT_LoadAndRenameBvhButton(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         scn = context.scene
         try:
-            (srcRig, trgRig) = readBvhFile(context, self.properties.filepath, context.scene, False)
+            trgRig = context.object
+            srcRig = readBvhFile(context, self.properties.filepath, context.scene, False)
             renameAndRescaleBvh(context, srcRig, trgRig)
             if scn.McpRescale:
                 simplify.rescaleFCurves(context, srcRig, scn.McpRescaleFactor)

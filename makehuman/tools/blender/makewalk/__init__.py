@@ -38,8 +38,8 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.907",
-    "blender": (2, 6, 7),
+    "version": "0.908",
+    "blender": (2, 6, 8),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
     "warning": "",
@@ -105,31 +105,29 @@ class MainPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
 
-    @classmethod
-    def poll(cls, context):
-        if context.object and context.object.type == 'ARMATURE':
-            return True
-
     def draw(self, context):
         layout = self.layout
+        ob = context.object
         scn = context.scene
-        layout.operator("mcp.load_and_retarget")
+        if ob and ob.type == 'ARMATURE':
+            layout.operator("mcp.load_and_retarget")
+            layout.separator()
+            layout.prop(scn, "McpShowDetailSteps")
+            if scn.McpShowDetailSteps:
+                ins = inset(layout)
+                ins.operator("mcp.load_bvh")
+                ins.operator("mcp.rename_bvh")
+                ins.operator("mcp.load_and_rename_bvh")
 
-        layout.separator()
-        layout.prop(scn, "McpShowDetailSteps")
-        if scn.McpShowDetailSteps:
-            ins = inset(layout)
-            #ins.prop(scn, "McpFlipYAxis")
-            ins.operator("mcp.load_bvh")
-            ins.operator("mcp.rename_bvh")
-            ins.operator("mcp.load_and_rename_bvh")
+                ins.separator()
+                ins.operator("mcp.retarget_mhx")
 
-            ins.separator()
-            ins.operator("mcp.retarget_mhx")
+                ins.separator()
+                ins.operator("mcp.simplify_fcurves")
+                ins.operator("mcp.rescale_fcurves")
 
-            ins.separator()
-            ins.operator("mcp.simplify_fcurves")
-            ins.operator("mcp.rescale_fcurves")
+        else:
+            layout.operator("mcp.load_bvh")
 
 ########################################################################
 #

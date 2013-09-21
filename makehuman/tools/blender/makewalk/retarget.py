@@ -489,7 +489,8 @@ def loadRetargetSimplify(context, filepath):
     print("Load and retarget %s" % filepath)
     time1 = time.clock()
     scn = context.scene
-    (srcRig, trgRig) = load.readBvhFile(context, filepath, scn, False)
+    trgRig = context.object
+    srcRig = load.readBvhFile(context, filepath, scn, False)
     layers = list(trgRig.data.layers)
     load.renameAndRescaleBvh(context, srcRig, trgRig)
     retargetMhxRig(context, srcRig, trgRig, True, False)

@@ -211,9 +211,9 @@ def addTPoseAtFrame0(rig, scn):
         setRestPose(rig)
     for pb in rig.pose.bones:
         if pb.rotation_mode == 'QUATERNION':
-            pb.keyframe_insert('rotation_quaternion')
+            pb.keyframe_insert('rotation_quaternion', group=pb.name)
         else:
-            pb.keyframe_insert('rotation_euler')
+            pb.keyframe_insert('rotation_euler', group=pb.name)
 
 
 def autoCorrectFCurves(rig, scn):
