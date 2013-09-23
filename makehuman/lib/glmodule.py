@@ -320,10 +320,14 @@ def drawMesh(obj):
     glPushMatrix()
     transformObject(obj)
 
+    useShader = obj.shader and obj.solid and not obj.shadeless
+
     if obj.isTextured and obj.texture and obj.solid:
         glEnable(GL_TEXTURE_2D)
         glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-        glBindTexture(GL_TEXTURE_2D, obj.texture)
+        if not useShader:
+            # Bind texture for fixed function shading
+            glBindTexture(GL_TEXTURE_2D, obj.texture)
         glTexCoordPointer(2, GL_FLOAT, 0, obj.UVs)
 
         if obj.nTransparentPrimitives:
@@ -366,7 +370,7 @@ def drawMesh(obj):
         glDisable(GL_COLOR_MATERIAL)
 
     # Enable the shader if the driver supports it and there is a shader assigned
-    if obj.shader and obj.solid and Shader.supported() and not obj.shadeless:
+    if useShader:
         glUseProgram(obj.shader)
 
         # Set custom attributes
@@ -432,7 +436,7 @@ def drawMesh(obj):
         glEnableClientState(GL_COLOR_ARRAY)
 
     # Disable the shader if the driver supports it and there is a shader assigned
-    if obj.shader and obj.solid and Shader.supported() and not obj.shadeless:
+    if useShader:
         glUseProgram(0)
         glActiveTexture(GL_TEXTURE0)
 
