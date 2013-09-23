@@ -31,7 +31,8 @@ from mathutils import *
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import *
 
-from . import utils, props, source, target, simplify
+from . import props
+from . import simplify
 from . import mcp
 from .utils import *
 
@@ -247,7 +248,7 @@ def readBvhFile(context, filepath, scn, scan):
     fp.close()
     if not rig:
         raise MocapError("Bvh file \n%s\n is corrupt: No rig defined" % filepath)
-    utils.setInterpolation(rig)
+    setInterpolation(rig)
     time2 = time.clock()
     print("Bvh file %s loaded in %.3f s" % (filepath, time2-time1))
     if frameno == 1:
@@ -288,7 +289,7 @@ def addFrame(words, frame, nodes, pbones, scale, flipMatrix):
                         mats.append(Matrix.Rotation(angle, 3, axis))
                         m += 1
                     mat = node.inverse * flipMatrix *mats[0] * mats[1] * mats[2] * flipInv * node.matrix
-                    utils.setRotation(pb, mat, frame, name)
+                    setRotation(pb, mat, frame, name)
 
     return
 
@@ -385,7 +386,7 @@ def renameBones(srcRig, scn):
         action = adata.action
     for srcBone in srcBones:
         srcName = srcBone.name
-        lname = source.canonicalSrcName(srcName)
+        lname = canonicalName(srcName)
         try:
             (trgName, _twist) = mcp.srcArmature.boneNames[lname]
         except KeyError:
@@ -409,7 +410,7 @@ def renameBones(srcRig, scn):
 
 
 def getTargetFromSource(srcName):
-    lname = source.canonicalSrcName(srcName)
+    lname = canonicalName(srcName)
     try:
         return mcp.srcArmature.boneNames[lname]
     except KeyError:
@@ -511,7 +512,7 @@ def deleteSourceRig(context, rig, prefix):
 def rescaleRig(scn, trgRig, srcRig):
     if not scn.McpAutoScale:
         return
-    upleg = utils.getTrgBone('thigh.L', trgRig)
+    upleg = getTrgBone('thigh.L', trgRig)
     trgScale = upleg.length
     srcScale = srcRig.data.bones['thigh.L'].length
     scale = trgScale/srcScale
@@ -541,6 +542,7 @@ def rescaleRig(scn, trgRig, srcRig):
 #
 
 def renameAndRescaleBvh(context, srcRig, trgRig):
+    from . import source, target
     try:
         if srcRig["McpRenamed"]:
             raise MocapError("%s already renamed and rescaled." % srcRig.name)
@@ -556,7 +558,7 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
     source.findSrcArmature(context, srcRig)
     t_pose.addTPoseAtFrame0(srcRig, scn)
     renameBones(srcRig, scn)
-    utils.setInterpolation(srcRig)
+    setInterpolation(srcRig)
     rescaleRig(context.scene, trgRig, srcRig)
     srcRig["McpRenamed"] = True
     return

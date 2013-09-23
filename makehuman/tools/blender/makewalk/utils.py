@@ -122,6 +122,10 @@ def nameOrNone(string):
     else:
         return string
 
+
+def canonicalName(string):
+    return string.lower().replace(' ','_').replace('-','_')
+
 #
 #   getRoll(bone):
 #
@@ -208,6 +212,21 @@ def validBone(pb):
             return False
     return True
 
+
+def isRotationMatrix(mat):
+    mat = mat.to_3x3()
+    prod = mat * mat.transposed()
+    diff = prod - Matrix().to_3x3()
+    for i in range(3):
+        for j in range(3):
+            if abs(diff[i][j]) > 1e-4:
+                print("Not a rotation matrix")
+                print(mat)
+                print(prod)
+                return False
+    return True
+
+
 #
 #   getActiveFrames(ob):
 #
@@ -215,10 +234,10 @@ def validBone(pb):
 def getActiveFrames0(ob):
     active = {}
     if ob.animation_data is None:
-        return []
+        return active
     action = ob.animation_data.action
     if action is None:
-        return []
+        return active
     for fcu in action.fcurves:
         for kp in fcu.keyframe_points:
             active[kp.co[0]] = True
@@ -315,6 +334,7 @@ def setRotation(pb, rot, frame, group):
         pb.rotation_euler = euler
         pb.keyframe_insert('rotation_euler', frame=frame, group=group)
 
+
 #
 #   setRestPose(rig):
 #
@@ -326,9 +346,11 @@ def setRestPose(rig):
 
 def selectAndSetRestPose(rig, scn):
     scn.objects.active = rig
+    bpy.ops.object.mode_set(mode='POSE')
     bpy.ops.pose.select_all(action='SELECT')
     bpy.ops.pose.rot_clear()
     bpy.ops.pose.loc_clear()
+    bpy.ops.pose.scale_clear()
 
 
 #

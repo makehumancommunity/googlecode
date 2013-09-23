@@ -75,16 +75,6 @@ def initInterface(context):
         description="Simplify FCurves",
         default=True)
 
-    bpy.types.Scene.McpUseSpineOffset = BoolProperty(
-        name="Spine Offsets",
-        description="Use offset for spine bones",
-        default=True)
-
-    bpy.types.Scene.McpUseClavOffset = BoolProperty(
-        name="Clavicle Offsets",
-        description="Use offset for clavicles",
-        default=True)
-
     bpy.types.Object.McpIsTargetRig = BoolProperty(
         name="Is Target Rig",
         default=False)
@@ -248,38 +238,6 @@ def initInterface(context):
     bpy.types.Object.McpActionName = StringProperty(
         default="")
 
-    # Plant
-
-    bpy.types.Scene.McpPlantFrom = EnumProperty(
-        items = [('0', 'X', 'Plant from X location'),
-                 ('1', 'Y', 'Plant from Y location'),
-                 ('2', 'Z', 'Plant from Z location')],
-        name = "Plant From",
-        default = '2')
-
-    bpy.types.Scene.McpPlantLocX = BoolProperty(name = "Loc X", default = False)
-    bpy.types.Scene.McpPlantLocY = BoolProperty(name = "Loc Y", default = False)
-    bpy.types.Scene.McpPlantLocZ = BoolProperty(name = "Loc Z", default = True)
-
-    bpy.types.Scene.McpPlantRotX = BoolProperty(name = "Rot X", default = False)
-    bpy.types.Scene.McpPlantRotY = BoolProperty(name = "Rot Y", default = True)
-    bpy.types.Scene.McpPlantRotZ = BoolProperty(name = "Rot Z", default = False)
-
-    bpy.types.Scene.McpPlantCurrent = BoolProperty(
-        name="Use Current",
-        description="Plant at current",
-        default=True)
-
-    bpy.types.Scene.McpPlantLoc = BoolProperty(
-        name="Loc",
-        description="Plant location keys",
-        default=True)
-
-    bpy.types.Scene.McpPlantRot = BoolProperty(
-        name="Rot",
-        description="Plant rotation keys",
-        default=False)
-
     # Props
 
     bpy.types.Scene.McpDirectory = StringProperty(
@@ -295,11 +253,6 @@ def initInterface(context):
         default="")
 
     # T_Pose
-
-    bpy.types.Scene.McpUseTPoseAsRestPose = BoolProperty(
-        name = "Auto Rest T-Pose",
-        description = "Automatically change rest pose to T-pose",
-        default = False)
 
     bpy.types.Scene.McpAutoCorrectTPose = BoolProperty(
         name = "Auto Correct T-Pose",

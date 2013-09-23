@@ -32,15 +32,15 @@ import os
 
 from . import utils
 from . import mcp
+from . import t_pose
 from .utils import *
+from .armature import CArmature
 
 #
 #   getTargetArmature(rig, scn):
 #
 
 def getTargetArmature(rig, scn):
-    from . import source, t_pose
-
     selectAndSetRestPose(rig, scn)
     bones = rig.data.bones.keys()
     if scn.McpTargetRigMethod == 'Fixed':
@@ -52,20 +52,19 @@ def getTargetArmature(rig, scn):
         name = guessTargetArmatureFromList(rig, bones, scn)
 
     if name == "Automatic":
-        amt = mcp.srcArmature = source.MocapArmature()
+        amt = mcp.trgArmature = CArmature()
         amt.findArmature(rig)
         t_pose.autoTPose(rig, scn)
         mcp.targetArmatures["Automatic"] = amt
         scn.McpTargetRig = "Automatic"
-        print("Target bones:")
-        amt.display()
+        amt.display("Target")
 
         boneAssoc = []
         for pb in rig.pose.bones:
             if pb.McpBone:
                 boneAssoc.append( (pb.name, pb.McpBone) )
         parAssoc = assocParents(rig, boneAssoc)
-        return (boneAssoc, parAssoc, None)
+        return (boneAssoc, parAssoc)
 
     scn.McpTargetRig = name
     mcp.target = name
@@ -75,7 +74,7 @@ def getTargetArmature(rig, scn):
         raise MocapError("Target armature %s does not match armature %s" % (rig.name, name))
     print("Target armature %s" % name)
     parAssoc = assocParents(rig, boneAssoc)
-    return (boneAssoc, parAssoc, None)
+    return (boneAssoc, parAssoc)
 
 
 def guessTargetArmatureFromList(rig, bones, scn):
@@ -198,10 +197,8 @@ def isTargetInited(scn):
 
 
 def initTargets(scn):
-    from .source import MocapArmature
-
     mcp.targetInfo = { "Automatic" : ([], [], "") }
-    mcp.targetArmatures = { "Automatic" : MocapArmature() }
+    mcp.targetArmatures = { "Automatic" : CArmature() }
     path = os.path.join(os.path.dirname(__file__), "target_rigs")
     for fname in os.listdir(path):
         file = os.path.join(path, fname)

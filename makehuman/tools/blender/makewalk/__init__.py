@@ -26,7 +26,6 @@
 """
 Abstract
 Tool for loading bvh files onto the MHX rig in Blender 2.5x
-Version 0.8
 
 Place the script in the .blender/scripts/addons dir
 Activate the script in the "Add-Ons" tab (user preferences).
@@ -38,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.908",
+    "version": "0.909",
     "blender": (2, 6, 8),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -54,12 +53,13 @@ if "bpy" in locals():
     imp.reload(io_json)
     imp.reload(mcp)
     imp.reload(props)
-    imp.reload(load)
-    imp.reload(retarget)
     imp.reload(t_pose)
-    imp.reload(fkik)
+    imp.reload(armature)
     imp.reload(source)
     imp.reload(target)
+    imp.reload(load)
+    imp.reload(retarget)
+    imp.reload(fkik)
     imp.reload(toggle)
     imp.reload(simplify)
     imp.reload(action)
@@ -76,12 +76,13 @@ else:
     from . import io_json
     from . import mcp
     from . import props
-    from . import load
-    from . import retarget
     from . import t_pose
-    from . import fkik
+    from . import armature
     from . import source
     from . import target
+    from . import load
+    from . import retarget
+    from . import fkik
     from . import toggle
     from . import simplify
     from . import action
@@ -128,6 +129,8 @@ class MainPanel(bpy.types.Panel):
 
         else:
             layout.operator("mcp.load_bvh")
+            layout.prop(scn, "McpStartFrame")
+            layout.prop(scn, "McpEndFrame")
 
 ########################################################################
 #
@@ -158,10 +161,6 @@ class OptionsPanel(bpy.types.Panel):
         layout.prop(scn, 'McpSourceRigMethod', expand=True)
         layout.label("Target Rig Method")
         layout.prop(scn, 'McpTargetRigMethod', expand=True)
-        layout.prop(scn, "McpUseSpineOffset")
-        layout.prop(scn, "McpUseClavOffset")
-        layout.prop(scn, "McpUseTPoseAsRestPose")
-        layout.prop(scn, "McpAutoCorrectTPose")
 
         layout.separator()
         layout.label("SubSample and Rescale")

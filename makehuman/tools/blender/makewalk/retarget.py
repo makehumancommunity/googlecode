@@ -23,178 +23,185 @@
 # Script copyright (C) MakeHuman Team 2001-2013
 # Coding Standards:    See http://www.makehuman.org/node/165
 
+#
+#   M_b = global bone matrix, relative world (PoseBone.matrix)
+#   L_b = local bone matrix, relative parent and rest (PoseBone.matrix_local)
+#   R_b = bone rest matrix, relative armature (Bone.matrix_local)
+#   T_b = global T-pose marix, relative world
+#
+#   M_b = M_p R_p^-1 R_b L_b
+#   M_b = A_b M'_b
+#   T_b = A_b T'_b
+#   A_b = T_b T'^-1_b
+#   B_b = R^-1_b R_p
+#
+#   L_b = R^-1_b R_p M^-1_p A_b M'_b
+#   L_b = B_b M^-1_p A_b M'_b
+#
 
 
-import bpy, os, mathutils, math, time
-from math import sin, cos
+import bpy
+import mathutils
+import time
+from collections import OrderedDict
 from mathutils import *
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import *
 
-from . import utils, props, source, target, load, simplify
-#from .target_rigs import rig_mhx
+from . import props, source, target, load, simplify, t_pose
 from . import mcp
 from .utils import *
 
-#
-#   class CBoneData:
-#
-
-class CBoneData:
-    def __init__(self, srcBone, trgBone):
-        self.name = srcBone.name
-        self.parent = None
-        self.srcMatrices = {}
-        self.srcPoseBone = srcBone
-        self.trgPoseBone = trgBone
-        self.trgRestMat = None
-        self.trgRestInv = None
-        self.trgBakeMat = None
-        self.trgBakeInv = None
-        self.trgOffset = None
-        self.rotOffset = None
-        self.rotOffsInv = None
-        self.rollMat = None
-        self.rollInv = None
-        return
-
-#class CMatrixGroup:
-#    def __init__(self, srcMat, frame):
-#        self.frame = frame
-#        self.srcMatrix = srcMat.copy()
-#        return
-#
-#    def __repr__(self):
-#        return "<CMat %d %s>" % (self.frame, self.srcMatrix)
-
 
 class CAnimation:
-    def __init__(self, srcRig, trgRig):
+
+    def __init__(self, srcRig, trgRig, boneAssoc, parAssoc):
         self.srcRig = srcRig
         self.trgRig = trgRig
-        self.boneDatas = {}
-        self.boneDataList = []
+        self.boneAnims = OrderedDict()
+
+        for (trgName, srcName) in boneAssoc:
+            try:
+                trgBone = trgRig.pose.bones[trgName]
+                srcBone = srcRig.pose.bones[srcName]
+            except KeyError:
+                print("  -", trgName, srcName)
+                continue
+            banim = self.boneAnims[trgName] = CBoneAnim(srcBone, trgBone, self, parAssoc)
+
+
+    def printResult(self, scn, frame):
+        scn.frame_set(frame)
+        for name in ["LeftHip"]:
+            banim = self.boneAnims[name]
+            banim.printResult(frame)
+
+
+    def setTPose(self, scn):
+        selectAndSetRestPose(self.srcRig, scn)
+        t_pose.setTPose(self.srcRig)
+        selectAndSetRestPose(self.trgRig, scn)
+        t_pose.setTPose(self.trgRig)
+        for banim in self.boneAnims.values():
+            banim.insertTPoseFrame()
+        scn.frame_set(0)
+        for banim in self.boneAnims.values():
+            banim.getTPoseMatrix()
+
+
+    def retarget(self, frames, scn):
+        objects = hideObjects(scn, self.srcRig)
+        try:
+            for frame in frames:
+                scn.frame_set(frame)
+                for banim in self.boneAnims.values():
+                    banim.retarget(frame)
+        finally:
+            unhideObjects(objects)
+
+
+class CBoneAnim:
+
+    def __init__(self, srcBone, trgBone, anim, parAssoc):
+        self.name = srcBone.name
+        self.srcMatrices = {}
+        self.trgMatrices = {}
+        self.srcMatrix = None
+        self.trgMatrix = None
+        self.srcBone = srcBone
+        self.trgBone = trgBone
+        self.aMatrix = None
+        self.parent = self.getParent(trgBone, anim, parAssoc)
+        if self.parent:
+            trgParent = self.parent.trgBone
+            self.bMatrix = trgBone.bone.matrix_local.inverted() * trgParent.bone.matrix_local
+        else:
+            self.bMatrix = trgBone.bone.matrix_local.inverted()
+
+
+    def __repr__(self):
+        if self.parent:
+            parname = self.parent.name
+        else:
+            parname = None
+        return (
+            "<CBoneAnim %s\n" % self.name +
+            "  src %s\n" % self.srcBone.name +
+            "  trg %s\n" % self.trgBone.name +
+            "  par %s\n" % parname +
+            "  A %s\n" % self.aMatrix +
+            "  B %s\n" % self.bMatrix)
+
+
+    def printResult(self, frame):
+        print(
+            "Retarget %s => %s\n" % (self.srcBone.name, self.trgBone.name) +
+            "S %s\n" % self.srcBone.matrix +
+            "T %s\n" % self.trgBone.matrix +
+            "R %s\n" % (self.trgBone.matrix * self.srcBone.matrix.inverted())
+            )
+
+
+    def getParent(self, pb, anim, parAssoc):
+        while pb:
+            pname = parAssoc[pb.name]
+            if pname is None:
+                return None
+            try:
+                return anim.boneAnims[pname]
+            except KeyError:
+                pb = pb.parent
+        return None
+
+
+    def insertKeyFrame(self, mat, frame):
+        pb = self.trgBone
+        setRotation(pb, mat, frame, pb.name)
+        if not self.parent:
+            pb.location = mat.to_translation()
+            pb.keyframe_insert("location", frame=frame, group=pb.name)
+
+
+    def insertTPoseFrame(self):
+        mat = t_pose.getStoredBonePose(self.trgBone)
+        self.insertKeyFrame(mat, 0)
+
+
+    def getTPoseMatrix(self):
+        self.aMatrix =  self.srcBone.matrix.inverted() * self.trgBone.matrix
+        if not isRotationMatrix(self.trgBone.matrix):
+            halt
+        if not isRotationMatrix(self.srcBone.matrix):
+            halt
+        if not isRotationMatrix(self.aMatrix):
+            halt
+
+
+    def retarget(self, frame):
+        self.srcMatrix = self.srcBone.matrix.copy()
+        self.trgMatrix = self.srcMatrix * self.aMatrix
+        self.trgMatrix.col[3] = self.srcMatrix.col[3]
+        self.srcMatrices[frame] = self.srcMatrix
+        self.trgMatrices[frame] = self.trgMatrix
+        if self.parent:
+            mat1 = self.parent.trgMatrix.inverted() * self.trgMatrix
+        else:
+            mat1 = self.trgMatrix
+        mat2 = self.bMatrix * mat1
+        self.insertKeyFrame(mat2, frame)
         return
 
-#
-#
-#
+        if self.name == "upper_arm.L":
+            print()
+            print(self)
+            print("S ", self.srcMatrix)
+            print("T ", self.trgMatrix)
+            print(self.parent.name)
+            print("TP", self.parent.trgMatrix)
+            print("M1", mat1)
+            print("M2", mat2)
+            print("MB2", self.trgBone.matrix)
 
-KeepRotationOffset = ["hips", "pelvis", "hips", "hip.L", "hip.R"]
-ClavBones = ["shoulder.L", "shoulder.R"]
-SpineBones = ["spine", "spine-1", "chest", "chest-1", "neck", "head"]
-#FootBones = []
-#IgnoreBones = []
-FootBones = ["foot.L", "foot.R", "toe.L", "toe.R"]
-IgnoreBones = ["toe.L", "toe.R"]
-
-#
-#
-#
-
-
-def setTranslation(mat, loc):
-    for m in range(3):
-        mat[m][3] = loc[m][3]
-
-
-def setTranslationVec(mat, loc):
-    for m in range(3):
-        mat[m][3] = loc[m]
-
-
-def setRotation(mat, rot):
-    for m in range(3):
-        for n in range(3):
-            mat[m][n] = rot[m][n]
-
-
-def keepRollOnly(mat):
-    for n in range(4):
-        mat[1][n] = 0
-        mat[n][1] = 0
-        mat[3][n] = 0
-        mat[n][3] = 0
-    mat[1][1] = 1
-
-#
-#   retargetFkBone(boneData, frame):
-#
-
-def retargetFkBone(boneData, frame):
-    srcBone = boneData.srcPoseBone
-    trgBone = boneData.trgPoseBone
-    name = srcBone.name
-    srcMatrix = boneData.srcMatrices[frame]
-    srcRot = srcMatrix  #* srcData.rig.matrix_world
-    bakeMat = srcMatrix
-
-    # Set translation offset
-    parent = boneData.parent
-    if parent:
-        parMat = parent.srcMatrices[frame]
-        parInv = parMat.inverted()
-        loc = parMat * boneData.trgOffset
-        setTranslation(bakeMat, loc)
-        bakeMat = parInv * bakeMat
-
-        if parent.rollMat:
-            #roll = utils.getRollMat(parent.rollMat)
-            #print("ParRoll", name, parent.name, roll*Rad2Deg)
-            bakeRot = parent.rollInv * bakeMat
-            setRotation(bakeMat, bakeRot)
-        elif parent.rotOffsInv:
-            bakeRot = parent.rotOffsInv * bakeMat
-            setRotation(bakeMat, bakeRot)
-
-        parRest = parent.trgRestMat
-        bakeMat = parRest * bakeMat
-    else:
-        parMat = None
-        parRotInv = None
-
-    # Set rotation offset
-    if boneData.rotOffset:
-        rot = boneData.rotOffset
-        if parent and parent.rotOffsInv:
-            rot = rot * parent.rotOffsInv
-        bakeRot = bakeMat * rot
-        setRotation(bakeMat, bakeRot)
-    else:
-        rot = None
-
-    trgMat = boneData.trgRestInv * bakeMat
-
-    if boneData.rollMat:
-        #roll = utils.getRollMat(boneData.rollMat)
-        #print("SelfRoll", name, roll*Rad2Deg)
-        trgRot = trgMat * boneData.rollMat
-        setRotation(trgMat, trgRot)
-        #utils.printMat4(" Trg2", trgMat, "  ")
-        #halt
-
-    trgBone.matrix_basis = trgMat
-    if 0 and trgBone.name == "Hip_L":
-        print(name)
-        utils.printMat4(" PM", parMat, "  ")
-        utils.printMat4(" PR", parent.rotOffsInv, "  ")
-        utils.printMat4(" RO", boneData.rotOffset, "  ")
-        utils.printMat4(" BR", bakeRot, "  ")
-        utils.printMat4(" BM", bakeMat, "  ")
-        utils.printMat4(" Trg", trgMat, "  ")
-        #halt
-
-    if trgBone.name in IgnoreBones:
-        trgBone.rotation_quaternion = (1,0,0,0)
-
-    utils.insertRotationKeyFrame(trgBone, frame)
-    if not boneData.parent:
-        trgBone.keyframe_insert("location", frame=frame, group=trgBone.name)
-    return
-
-#
-#   collectSrcMats(anim, frames, scn):
-#
 
 def hideObjects(scn, rig):
     objects = []
@@ -211,193 +218,57 @@ def unhideObjects(objects):
     return
 
 
-def collectSrcMats(anim, frames, scn):
-    objects = hideObjects(scn, anim.srcRig)
-    try:
-        for frame in frames:
-            scn.frame_set(frame)
-            if frame % 100 == 0:
-                print("Collect", int(frame))
-            for boneData in anim.boneDataList:
-                boneData.srcMatrices[frame] = boneData.srcPoseBone.matrix.copy()
-    finally:
-        unhideObjects(objects)
-    return
-
-#
-#   retargetMatrices(anim, frames, first, doFK, doIK, scn):
-#
-
-def retargetMatrices(anim, frames, first, doFK, doIK, scn):
-    for frame in frames:
-        if frame % 100 == 0:
-            print("Retarget", int(frame))
-        if doFK:
-            for boneData in anim.boneDataList:
-                retargetFkBone(boneData, frame)
-        else:
-            scn.frame_set(frame)
-        if doIK:
-            retargetIkBones(anim.trgRig, frame, first)
-            first = False
-    return
-
-#
-#   setupFkBones(srcRig, trgRig, boneAssoc, parAssoc, anim, scn):
-#
-
-def getParent(parName, parAssoc, trgRig, anim):
-    if not parName:
-        return None
-    try:
-        trgParent = trgRig.pose.bones[parName]
-    except KeyError:
-        return None
-    try:
-        anim.boneDatas[trgParent.name]
-        return trgParent
-    except        :
-        pass
-    return getParent(parAssoc[trgParent.name], parAssoc, trgRig, anim)
-
-
-def setupFkBones(srcRig, trgRig, boneAssoc, parAssoc, anim, scn):
-    keepOffsets = KeepRotationOffset + FootBones
-    keepOffsInverts = []
-    if scn.McpUseSpineOffset:
-        keepOffsets += SpineBones
-        keepOffsInverts += SpineBones
-    if scn.McpUseClavOffset:
-        keepOffsets += ClavBones
-        keepOffsInverts += ClavBones
-
-    for (trgName, srcName) in boneAssoc:
-        try:
-            trgBone = trgRig.pose.bones[trgName]
-            srcBone = srcRig.pose.bones[srcName]
-        except:
-            print("  -", trgName, srcName)
-            continue
-        boneData = CBoneData(srcBone, trgBone)
-        anim.boneDatas[trgName] = boneData
-        anim.boneDataList.append(boneData)
-        boneData.trgRestMat = trgBone.bone.matrix_local
-
-        boneData.trgRestInv = trgBone.bone.matrix_local.inverted()
-        boneData.trgBakeMat = boneData.trgRestMat
-
-        trgParent = None
-        if trgBone.parent:  #trgBone.bone.use_inherit_rotation:
-            trgParent = getParent(parAssoc[trgName], parAssoc, trgRig, anim)
-            if trgParent:
-                boneData.parent = anim.boneDatas[trgParent.name]
-                parRest = boneData.parent.trgRestMat
-                parRestInv = boneData.parent.trgRestInv
-                offs = trgBone.bone.head_local - trgParent.bone.head_local
-                boneData.trgOffset = parRestInv * Matrix.Translation(offs) * parRest
-                boneData.trgBakeMat = parRestInv * boneData.trgRestMat
-
-
-        trgRoll = utils.getRoll(trgBone.bone)
-        srcRoll = source.getSourceRoll(srcName, scn) * Deg2Rad
-        diff = srcRoll - trgRoll
-
-        if srcName in keepOffsets:
-            offs = trgBone.bone.matrix_local*srcBone.bone.matrix_local.inverted()
-            boneData.rotOffset = boneData.trgRestInv * offs * boneData.trgRestMat
-            if trgName in keepOffsInverts:
-                boneData.rotOffsInv = boneData.rotOffset.inverted()
-        elif abs(diff) > 0.02:
-            boneData.rollMat = Matrix.Rotation(diff, 4, 'Y')
-            boneData.rollInv = boneData.rollMat.inverted()
-
-        boneData.trgBakeInv = boneData.trgBakeMat.inverted()
-    return
-
-
-#
-#    retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
-#
-
-def clearPose():
-    bpy.ops.object.mode_set(mode='POSE')
-    bpy.ops.pose.select_all(action='SELECT')
-    bpy.ops.pose.rot_clear()
-    bpy.ops.pose.loc_clear()
-
-
-def setupMhxAnimation(scn, srcRig, trgRig):
-    clearPose()
-
-    source.ensureSourceInited(scn)
-    source.setArmature(srcRig, scn)
-    target.ensureTargetInited(scn)
-    print("Retarget %s --> %s" % (srcRig, trgRig))
+def retargetAnimation(context, srcRig, trgRig):
+    scn = context.scene
+    setMhxIk(trgRig, True, True, False)
+    frames = getActiveFrames(srcRig)
+    scn.objects.active = trgRig
     if trgRig.animation_data:
         trgRig.animation_data.action = None
-
-    anim = CAnimation(srcRig, trgRig)
-    (boneAssoc, parAssoc, rolls) = target.getTargetArmature(trgRig, scn)
-    #(boneAssoc, ikBoneAssoc, parAssoc, rolls, mats, ikBones, ikParents) = target.makeTargetAssoc(trgRig, scn)
-    setupFkBones(srcRig, trgRig, boneAssoc, parAssoc, anim, scn)
-    return anim
-
-
-def retargetMhxRig(context, srcRig, trgRig, doFK, doIK):
-    from . import t_pose
-
-    scn = context.scene
-    utils.setMhxIk(trgRig, True, True, False)
-    if scn.McpUseTPoseAsRestPose:
-        scn.objects.active = trgRig
-        t_pose.setTPoseAsRestPose(context)
-
-    anim = setupMhxAnimation(scn, srcRig, trgRig)
-    frames = utils.getActiveFrames(srcRig)
-
-    scn.objects.active = trgRig
     scn.update()
 
     try:
         scn.frame_current = frames[0]
     except:
         raise MocapError("No frames found.")
-    oldData = changeTargetData(trgRig, anim)
-    clearPose()
+    oldData = changeTargetData(trgRig)
+
+    source.ensureSourceInited(scn)
+    source.setArmature(srcRig, scn)
+    target.ensureTargetInited(scn)
+    print("Retarget %s --> %s" % (srcRig, trgRig))
+
+    boneAssoc, parAssoc = target.getTargetArmature(trgRig, scn)
+    anim = CAnimation(srcRig, trgRig, boneAssoc, parAssoc)
+    anim.setTPose(scn)
+
     frameBlock = frames[0:100]
     index = 0
-    first = True
     try:
         while frameBlock:
-            if doFK:
-                collectSrcMats(anim, frameBlock, scn)
-            retargetMatrices(anim, frameBlock, first, doFK, doIK, scn)
+            print(frames[index])
+            anim.retarget(frameBlock, scn)
             index += 100
-            first = False
             frameBlock = frames[index:index+100]
 
         scn.frame_current = frames[0]
     finally:
         restoreTargetData(trgRig, oldData)
 
-    utils.setInterpolation(trgRig)
-    if doFK:
-        if scn.McpAutoCorrectTPose:
-            t_pose.autoCorrectFCurves(trgRig, scn)
-        act = trgRig.animation_data.action
-        act.name = trgRig.name[:4] + srcRig.name[2:]
-        act.use_fake_user = True
-        print("Retargeted %s --> %s" % (srcRig, trgRig))
-    else:
-        print("IK retargeted %s" % trgRig)
-    return
+    #anim.printResult(scn, 1)
+
+    setInterpolation(trgRig)
+    act = trgRig.animation_data.action
+    act.name = trgRig.name[:4] + srcRig.name[2:]
+    act.use_fake_user = True
+    print("Retargeted %s --> %s" % (srcRig, trgRig))
 
 #
-#   changeTargetData(rig, anim):
+#   changeTargetData(rig):
 #   restoreTargetData(rig, data):
 #
 
-def changeTargetData(rig, anim):
+def changeTargetData(rig):
     tempProps = [
         ("MhaRotationLimits", 0.0),
         ("MhaArmIk_L", 0.0),
@@ -427,8 +298,12 @@ def changeTargetData(rig, anim):
         ]
 
     for (key, value) in permProps:
-        rig[key+"_L"] = value
-        rig[key+"_R"] = value
+        try:
+            rig[key+"_L"]
+            rig[key+"_L"] = value
+            rig[key+"_R"] = value
+        except KeyError:
+            pass
 
     layers = list(rig.data.layers)
     rig.data.layers = 32*[True]
@@ -436,10 +311,10 @@ def changeTargetData(rig, anim):
     for pb in rig.pose.bones:
         constraints = []
         for cns in pb.constraints:
-            if cns.type in ['LIMIT_ROTATION', 'LIMIT_SCALE']:
-                constraints.append( (cns, cns.mute) )
+            if cns.type == 'LIMIT_DISTANCE':
                 cns.mute = True
-            elif cns.type == 'LIMIT_DISTANCE':
+            elif cns.type[0:6] == 'LIMIT':
+                constraints.append( (cns, cns.mute) )
                 cns.mute = True
         locks.append( (pb, list(pb.lock_location), list(pb.lock_rotation), list(pb.lock_scale), constraints) )
         pb.lock_location = [False, False, False]
@@ -447,19 +322,6 @@ def changeTargetData(rig, anim):
         pb.lock_scale = [False, False, False]
 
     norotBones = []
-    """
-    if mcp.target == 'MHX':
-        for (name, parent) in [("UpLegRot_L", "Hip_L"), ("UpLegRot_R", "Hip_R")]:
-            try:
-                anim.boneDatas[parent]
-                isPermanent = True
-            except:
-                isPermanent = False
-            b = rig.data.bones[name]
-            if not isPermanent:
-                norotBones.append(b)
-            b.use_inherit_rotation = False
-    """
     return (props, layers, locks, norotBones)
 
 
@@ -493,7 +355,7 @@ def loadRetargetSimplify(context, filepath):
     srcRig = load.readBvhFile(context, filepath, scn, False)
     layers = list(trgRig.data.layers)
     load.renameAndRescaleBvh(context, srcRig, trgRig)
-    retargetMhxRig(context, srcRig, trgRig, True, False)
+    retargetAnimation(context, srcRig, trgRig)
     scn = context.scene
     if scn.McpDoSimplify:
         simplify.simplifyFCurves(context, trgRig, False, False)
@@ -517,13 +379,16 @@ class VIEW3D_OT_NewRetargetMhxButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
+        print()
+        print()
         try:
             trgRig = context.object
+            rigList = list(context.selected_objects)
             scn = context.scene
             target.getTargetArmature(trgRig, scn)
-            for srcRig in context.selected_objects:
+            for srcRig in rigList:
                 if srcRig != trgRig:
-                    retargetMhxRig(context, srcRig, trgRig, True, False)
+                    retargetAnimation(context, srcRig, trgRig)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}

@@ -191,13 +191,17 @@ def clearTPose(rig):
     print("Cleared T-pose")
 
 
+def getStoredBonePose(pb):
+    try:
+        quat = Quaternion((pb.McpQuatW, pb.McpQuatX, pb.McpQuatY, pb.McpQuatZ))
+    except KeyError:
+        quat = Quaternion()
+    return quat.to_matrix().to_4x4()
+
+
 def setStoredPose(rig):
     for pb in rig.pose.bones:
-        try:
-            quat = Quaternion((pb.McpQuatW, pb.McpQuatX, pb.McpQuatY, pb.McpQuatZ))
-        except KeyError:
-            quat = Quaternion()
-        pb.matrix_basis = quat.to_matrix().to_4x4()
+        pb.matrix_basis = getStoredBonePose(pb)
 
 
 def addTPoseAtFrame0(rig, scn):
