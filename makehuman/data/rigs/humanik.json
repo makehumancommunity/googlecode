@@ -15,13 +15,13 @@
         "eye.L":        "EyeLeft",
         "eye.R":        "EyeRight",
 
-        "shoulder.L":   "LeftShoulder",
+        "clavicle.L":   "LeftShoulder",
         "deltoid.L":    "LeftShoulderExtra",
         "upper_arm.L":  "LeftArm",
         "forearm.L":    "LeftForeArm",
         "hand.L":       "LeftHand",
 
-        "shoulder.R":   "RightShoulder",
+        "clavicle.R":   "RightShoulder",
         "deltoid.R":    "RightShoulderExtra",
         "upper_arm.R":  "RightArm",
         "forearm.R":    "RightForeArm",

@@ -55,7 +55,7 @@ Only works with MHX export.
         self.useMuscles = True
         self.useSplitNames = True
         self.useDeformNames = True
-        self.mergeShoulders = False
+        self.mergeShoulders = True
 
         # Options set by MHX exporter
         self.useCustomShapes = False
@@ -68,6 +68,9 @@ Only works with MHX export.
         self.useMasks = config.useMasks
 
         renameBones = {
+            "clavicle.L" : "shoulder.L",
+            "clavicle.R" : "shoulder.R",
+
             "palm_index.L" : "palm.01.L",
             "palm_middle.L" : "palm.02.L",
             "palm_ring.L" : "palm.03.L",

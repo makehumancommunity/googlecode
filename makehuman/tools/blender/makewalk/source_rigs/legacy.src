@@ -22,7 +22,7 @@ Armature:
 	eye_r		- 		0	
 
 	__clavicle_l	- 		0
-	clavicle_l	shoulder.L	0
+	clavicle_l	clavicle.L	0
 	uparm_l		upper_arm.L	0
 	loarm_l		forearm.L	0
 	hand_l		hand.L		0
@@ -34,7 +34,7 @@ Armature:
 	toe_l		toe.L		0
 
 	__clavicle_r	- 		0
-	clavicle_r	shoulder.R	0
+	clavicle_r	clavicle.R	0
 	uparm_r		upper_arm.R	0
 	loarm_r		forearm.R	0
 	hand_r		hand.R		0

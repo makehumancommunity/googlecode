@@ -190,16 +190,16 @@ Armature = {
     'pectoralis.L' :       (173*D, 'chest-1', F_DEF, L_MSCL),
     'platysma.L' :         (-153*D, 'neck', F_DEF, L_MSCL),
     'trapezius.L' :        (176*D, 'chest-1', F_DEF|F_CON, L_MSCL),
-    'trap_goal.L' :        (0, 'shoulder.L', F_CON, L_MSCL),
+    'trap_goal.L' :        (0, 'clavicle.L', F_CON, L_MSCL),
     'lat_dorsi.L' :        (74*D, 'chest-1', F_DEF, L_MSCL),
-    'scapula.L' :          (-24*D, 'shoulder.L', F_DEF, L_MSCL),
+    'scapula.L' :          (-24*D, 'clavicle.L', F_DEF, L_MSCL),
 
     'pectoralis.R' :       (-173*D, 'chest-1', F_DEF, L_MSCL),
     'platysma.R' :         (153*D, 'neck', F_DEF, L_MSCL),
     'trapezius.R' :        (-176*D, 'chest-1', F_DEF|F_CON, L_MSCL),
-    'trap_goal.R' :        (0, 'shoulder.R', F_CON, L_MSCL),
+    'trap_goal.R' :        (0, 'clavicle.R', F_CON, L_MSCL),
     'lat_dorsi.R' :        (-74*D, 'chest-1', F_DEF, L_MSCL),
-    'scapula.R' :          (24*D, 'shoulder.R', F_DEF, L_MSCL),
+    'scapula.R' :          (24*D, 'clavicle.R', F_DEF, L_MSCL),
 
     'biceps.L' :           (91*D, 'upper_arm.L', F_DEF, L_MSCL),
     'triceps.L' :          (-101*D, 'upper_arm.L', F_DEF, L_MSCL),
@@ -263,12 +263,12 @@ Constraints = {
 
     'pectoralis.L' : [
         ('StretchTo', C_VOLXZ, 1,
-            ['Stretch_To', 'shoulder.L', 1, 1, ('l-pect-1', 'l-scapula')])
+            ['Stretch_To', 'clavicle.L', 1, 1, ('l-pect-1', 'l-scapula')])
         ],
 
     'platysma.L' : [
         ('StretchTo', C_VOLXZ, 1,
-            ['Stretch_To', 'shoulder.L', 0, 1, ('l-plat-1', 'l-clavicle')])
+            ['Stretch_To', 'clavicle.L', 0, 1, ('l-plat-1', 'l-clavicle')])
         ],
 
     'trapezius.L' : [
@@ -283,7 +283,7 @@ Constraints = {
 
     'lat_dorsi.L' : [
         ('StretchTo', C_VOLXZ, 1,
-            ['Stretch_To', 'shoulder.L', 1, 1, ('spine-3', 'l-scapula')])
+            ['Stretch_To', 'clavicle.L', 1, 1, ('spine-3', 'l-scapula')])
         ],
 
     #'deltoid.L' : [
@@ -352,12 +352,12 @@ Constraints = {
 
     'pectoralis.R' : [
         ('StretchTo', C_VOLXZ, 1,
-            ['Stretch_To', 'shoulder.R', 1, 1, ('r-pect-1', 'r-scapula')])
+            ['Stretch_To', 'clavicle.R', 1, 1, ('r-pect-1', 'r-scapula')])
         ],
 
     'platysma.R' : [
         ('StretchTo', C_VOLXZ, 1,
-            ['Stretch_To', 'shoulder.R', 0, 1, ('r-plat-1', 'r-clavicle')])
+            ['Stretch_To', 'clavicle.R', 0, 1, ('r-plat-1', 'r-clavicle')])
         ],
 
     'trapezius.R' : [
@@ -372,7 +372,7 @@ Constraints = {
 
     'lat_dorsi.R' : [
         ('StretchTo', C_VOLXZ, 1,
-            ['Stretch_To', 'shoulder.R', 1, 1, ('spine-3', 'r-scapula')])
+            ['Stretch_To', 'clavicle.R', 1, 1, ('spine-3', 'r-scapula')])
         ],
 
     #'deltoid.R' : [

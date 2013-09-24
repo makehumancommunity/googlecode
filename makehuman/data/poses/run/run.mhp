@@ -26,7 +26,7 @@ quadriceps.R	scale	0	.078	0
 spine	quat	.999	-.014	-.037	0
 spine-1	quat	.998	.057	0	0
 chest	quat	.997	.049	-.052	.001
-shoulder.L	quat	.996	.032	-.038	-.067
+clavicle.L	quat	.996	.032	-.038	-.067
 deltoid.L	quat	.999	-.002	.032	-.022
 upper_arm.L	quat	.933	.164	-.116	-.297
 forearm.L	quat	.892	.449	.013	.032

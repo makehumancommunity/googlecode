@@ -9,7 +9,7 @@ Bones:
     Neck		neck
     Head		head
 
-    LeftShoulder  	shoulder.L
+    LeftShoulder  	clavicle.L
     LeftShoulderExtra	deltoid.L
     LeftArm		upper_arm.L
     LeftForeArm   	forearm.L
@@ -40,7 +40,7 @@ Bones:
     LeftFoot		foot.L
     LeftToeBase		toe.L
 	
-    RightShoulder  	shoulder.R
+    RightShoulder  	clavicle.R
     RightShoulderExtra	deltoid.R
     RightArm		upper_arm.R
     RightForeArm   	forearm.R

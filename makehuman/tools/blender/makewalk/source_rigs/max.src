@@ -26,7 +26,7 @@ Armature:
 	neck		neck		0
 	head		head		0
 
-	leftcollar	shoulder.L	0
+	leftcollar	clavicle.L	0
 	leftshoulder	upper_arm.L		90
 	leftelbow	forearm.L		90
 	leftwrist	hand.L		90
@@ -34,7 +34,7 @@ Armature:
 	lfingers	None		0
 	lthumb		None		0
 
-	rightcollar	shoulder.R	0
+	rightcollar	clavicle.R	0
 	rightshoulder	upper_arm.R		-90
 	rightelbow	forearm.R		-90
 	rightwrist	hand.R		-90

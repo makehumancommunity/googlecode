@@ -13,12 +13,12 @@
         "eye.L":        "mEyeLeft",
         "eye.R":        "mEyeRight",
 
-        "shoulder.L":   "mCollarLeft",
+        "clavicle.L":   "mCollarLeft",
         "upper_arm.L":  "mShoulderLeft",
         "forearm.L":    "mElbowLeft",
         "hand.L":       "mWristLeft",
 
-        "shoulder.R":   "mCollarRight",
+        "clavicle.R":   "mCollarRight",
         "upper_arm.R":  "mShoulderRight",
         "forearm.R":    "mElbowRight",
         "hand.R":       "mWristRight",
@@ -42,9 +42,9 @@
             "head":         ["uplid.L", "lolid.L", "uplid.R", "lolid.R", "jaw",
                              "tongue_base", "tongue_mid", "tongue_tip"],
 
-            "shoulder.L":   ["shoulder.L", "deltoid.L"],                             
+            "clavicle.L":   ["clavicle.L", "deltoid.L"],                             
 
-            "shoulder.R":   ["shoulder.R", "deltoid.R"],                             
+            "clavicle.R":   ["clavicle.R", "deltoid.R"],                             
 
             "hand.L":       ["hand.L", "palm_index.L", "palm_middle.L", "palm_ring.L", "palm_pinky.L",
                              "thumb.01.L", "thumb.02.L", "thumb.03.L",

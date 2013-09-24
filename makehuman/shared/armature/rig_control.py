@@ -205,20 +205,20 @@ RevFootArmature = {
 }
 
 IkArmArmature = {
-    'arm_root.L' :     (0, 'shoulder.L', F_WIR, L_TWEAK),
-    'arm_root.R' :     (0, 'shoulder.R', F_WIR, L_TWEAK),
+    'arm_root.L' :     (0, 'clavicle.L', F_WIR, L_TWEAK),
+    'arm_root.R' :     (0, 'clavicle.R', F_WIR, L_TWEAK),
     'arm_socket.L' :   (0, 'hips', 0, L_HELP),
     'arm_socket.R' :   (0, 'hips', 0, L_HELP),
     'arm_hinge.L' :    (0, 'arm_socket.L', 0, L_HELP),
     'arm_hinge.R' :    (0, 'arm_socket.R', 0, L_HELP),
 
     'hand.ik.L' :      ('hand.L', None, F_WIR|F_NOLOCK, L_LARMIK),
-    'elbow.pt.ik.L' :  (0, 'shoulder.L', F_WIR|F_NOLOCK, L_LARMIK+L_LEXTRA),
+    'elbow.pt.ik.L' :  (0, 'clavicle.L', F_WIR|F_NOLOCK, L_LARMIK+L_LEXTRA),
     'elbow.pt.fk.L' :  (0, 'upper_arm.L', 0, L_HELP2),
     'elbow.link.L' :   (0, 'upper_arm.ik.L', F_RES, L_LARMIK+L_LEXTRA),
 
     'hand.ik.R' :      ('hand.R', None, F_WIR|F_NOLOCK, L_RARMIK),
-    'elbow.pt.ik.R' :  (0, 'shoulder.R', F_WIR|F_NOLOCK, L_RARMIK+L_REXTRA),
+    'elbow.pt.ik.R' :  (0, 'clavicle.R', F_WIR|F_NOLOCK, L_RARMIK+L_REXTRA),
     'elbow.pt.fk.R' :  (0, 'upper_arm.R', 0, L_HELP2),
     'elbow.link.R' :   (0, 'upper_arm.ik.R', F_RES, L_RARMIK+L_REXTRA),
 }

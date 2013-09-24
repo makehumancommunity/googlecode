@@ -17,7 +17,7 @@ soleus.R	quat	1	0	0	-.004
 quadriceps.R	quat	.997	-.002	0	-.065
 chest	quat	.991	0	-.016	.132
 chest-1	quat	.997	-.062	0	.043
-shoulder.L	quat	.997	-.054	.052	.02
+clavicle.L	quat	.997	-.054	.052	.02
 deltoid.L	quat	.998	.034	-.037	.021
 upper_arm.L	quat	.956	-.100	.135	-.236
 forearm.L	quat	.962	-.185	.170	-.094
@@ -37,7 +37,7 @@ thumb.02.L	quat	.995	.081	-.030	-.023
 thumb.03.L	quat	.993	.108	-.031	-.031
 elbow_fan.L	quat	.992	-.104	.013	-.063
 scapula.L	quat	.990	-.065	-.118	.017
-shoulder.R	quat	.997	.029	.015	-.069
+clavicle.R	quat	.997	.029	.015	-.069
 upper_arm.R	quat	.957	-.055	-.17	.226
 forearm.R	quat	.961	-.262	-.077	0
 hand.R	quat	.992	-.060	.033	.096

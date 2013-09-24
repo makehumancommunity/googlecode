@@ -272,7 +272,11 @@ class Parser:
                 self.renameDeformBones(rig_muscle.Armature, rig_muscle.CustomShapes, boneInfo)
                 if options.useConstraints:
                     self.renameConstraints(rig_muscle.Constraints, boneInfo)
-            self.addDeformVertexGroups(vgroups, rig_muscle.CustomShapes)
+            if options.useCustomShapes:
+                custom = rig_muscle.CustomShapes
+            else:
+                custom = {}
+            self.addDeformVertexGroups(vgroups, custom)
             #self.renameDeformVertexGroups(rig_muscle.Armature)
 
         if options.useSplitBones or options.useSplitNames:

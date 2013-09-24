@@ -13,7 +13,7 @@ Armature:
 	right eye	None		0
 	hair		None		0
 
-	left collar	shoulder.L	0
+	left collar	clavicle.L	0
 	left shoulder	upper_arm.L		0 
 	left forearm	forearm.L		0
 	left hand	hand.L		0
@@ -33,7 +33,7 @@ Armature:
 	left pinky 2	None		0 
 	left pinky 3	None		0 
 
-	right collar	shoulder.R	0
+	right collar	clavicle.R	0
 	right shoulder	upper_arm.R		0 
 	right forearm	forearm.R		0
 	right hand	hand.R		0

@@ -12,12 +12,12 @@ Armature:
 	neck		neck		0 
 	head		head		0 
 
-	leftcollar	shoulder.L	0
+	leftcollar	clavicle.L	0
 	leftuparm	upper_arm.L		90 
 	leftlowarm	forearm.L		90
 	lefthand	hand.L		90 
 
-	rightcollar	shoulder.R	0
+	rightcollar	clavicle.R	0
 	rightuparm	upper_arm.R		-90 
 	rightlowarm	forearm.R		-90
 	righthand	hand.R		-90

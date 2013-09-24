@@ -44,8 +44,8 @@ SpineMergers = {
 }
 
 ShoulderMergers = {
-    "shoulder.L" : ("shoulder.L", "deltoid.L"),
-    "shoulder.R" : ("shoulder.R", "deltoid.R"),
+    "clavicle.L" : ("clavicle.L", "deltoid.L"),
+    "clavicle.R" : ("clavicle.R", "deltoid.R"),
 }
 
 

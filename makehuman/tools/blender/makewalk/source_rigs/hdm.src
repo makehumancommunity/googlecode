@@ -24,7 +24,7 @@ Armature:
 	upperneck	neck		0
 	head		head		0
 	
-	lclavicle	shoulder.L	0
+	lclavicle	clavicle.L	0
 	lhumerus	upper_arm.L		0
 	lradius		forearm.L		0
 	lwrist		Hand0_L		0
@@ -32,7 +32,7 @@ Armature:
 	lfingers	None		0
 	lthumb		thumb.02.L	0
 	
-	rclavicle	shoulder.R	0
+	rclavicle	clavicle.R	0
 	rhumerus	upper_arm.R		0
 	rradius		forearm.R		0
 	rwrist		Hand0_R		0
