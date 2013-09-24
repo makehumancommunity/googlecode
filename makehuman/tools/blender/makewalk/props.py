@@ -309,6 +309,9 @@ def initInterface(context):
     bpy.types.PoseBone.McpBone = StringProperty(
         default = "")
 
+    bpy.types.PoseBone.McpParent = StringProperty(
+        default = "")
+
     # Manage actions
 
     bpy.types.Scene.McpFilterActions = BoolProperty(

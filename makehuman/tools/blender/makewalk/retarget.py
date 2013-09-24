@@ -55,7 +55,7 @@ from .utils import *
 
 class CAnimation:
 
-    def __init__(self, srcRig, trgRig, boneAssoc, parAssoc):
+    def __init__(self, srcRig, trgRig, boneAssoc):
         self.srcRig = srcRig
         self.trgRig = trgRig
         self.boneAnims = OrderedDict()
@@ -67,7 +67,7 @@ class CAnimation:
             except KeyError:
                 print("  -", trgName, srcName)
                 continue
-            banim = self.boneAnims[trgName] = CBoneAnim(srcBone, trgBone, self, parAssoc)
+            banim = self.boneAnims[trgName] = CBoneAnim(srcBone, trgBone, self)
 
 
     def printResult(self, scn, frame):
@@ -79,9 +79,9 @@ class CAnimation:
 
     def setTPose(self, scn):
         selectAndSetRestPose(self.srcRig, scn)
-        t_pose.setTPose(self.srcRig)
+        t_pose.setTPose(self.srcRig, scn)
         selectAndSetRestPose(self.trgRig, scn)
-        t_pose.setTPose(self.trgRig)
+        t_pose.setTPose(self.trgRig, scn)
         for banim in self.boneAnims.values():
             banim.insertTPoseFrame()
         scn.frame_set(0)
@@ -102,7 +102,7 @@ class CAnimation:
 
 class CBoneAnim:
 
-    def __init__(self, srcBone, trgBone, anim, parAssoc):
+    def __init__(self, srcBone, trgBone, anim):
         self.name = srcBone.name
         self.srcMatrices = {}
         self.trgMatrices = {}
@@ -111,8 +111,9 @@ class CBoneAnim:
         self.srcBone = srcBone
         self.trgBone = trgBone
         self.aMatrix = None
-        self.parent = self.getParent(trgBone, anim, parAssoc)
+        self.parent = self.getParent(trgBone, anim)
         if self.parent:
+            self.trgBone.McpParent = self.parent.trgBone.name
             trgParent = self.parent.trgBone
             self.bMatrix = trgBone.bone.matrix_local.inverted() * trgParent.bone.matrix_local
         else:
@@ -142,14 +143,24 @@ class CBoneAnim:
             )
 
 
-    def getParent(self, pb, anim, parAssoc):
+    def getParent(self, pb, anim):
+        pb = pb.parent
         while pb:
-            pname = parAssoc[pb.name]
-            if pname is None:
-                return None
-            try:
-                return anim.boneAnims[pname]
-            except KeyError:
+            if pb.McpBone:
+                try:
+                    return anim.boneAnims[pb.name]
+                except KeyError:
+                    pass
+
+            subtar = None
+            for cns in pb.constraints:
+                if (cns.type[0:4] == "COPY" and
+                    cns.influence > 0.8):
+                    subtar = cns.subtarget
+
+            if subtar:
+                pb = anim.trgRig.pose.bones[subtar]
+            else:
                 pb = pb.parent
         return None
 
@@ -235,11 +246,11 @@ def retargetAnimation(context, srcRig, trgRig):
 
     source.ensureSourceInited(scn)
     source.setArmature(srcRig, scn)
-    target.ensureTargetInited(scn)
     print("Retarget %s --> %s" % (srcRig.name, trgRig.name))
 
-    boneAssoc, parAssoc = target.getTargetArmature(trgRig, scn)
-    anim = CAnimation(srcRig, trgRig, boneAssoc, parAssoc)
+    target.ensureTargetInited(scn)
+    boneAssoc = target.getTargetArmature(trgRig, scn)
+    anim = CAnimation(srcRig, trgRig, boneAssoc)
     anim.setTPose(scn)
 
     frameBlock = frames[0:100]
@@ -262,6 +273,7 @@ def retargetAnimation(context, srcRig, trgRig):
     act.name = trgRig.name[:4] + srcRig.name[2:]
     act.use_fake_user = True
     print("Retargeted %s --> %s" % (srcRig.name, trgRig.name))
+
 
 #
 #   changeTargetData(rig):

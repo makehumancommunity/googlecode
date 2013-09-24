@@ -37,7 +37,7 @@ from .io_json import *
 
 def setTPoseAsRestPose(context):
     rig = context.object
-    setTPose(rig)
+    setTPose(rig, context.scene)
     if not rig.McpRestTPose:
         applyRestPose(context, 1.0)
         invertQuats(rig)
@@ -170,9 +170,11 @@ def autoTPose(rig, scn):
         rig.McpRestTPose = False
 
 
-def setTPose(rig):
+def setTPose(rig, scn):
     if not rig.McpTPoseLoaded:
-        loadTPose(rig)
+        hasFile = loadTPose(rig)
+        if not hasFile:
+            autoTPose(rig, scn)
     if rig.McpRestTPose:
         setRestPose(rig)
     else:
@@ -204,12 +206,12 @@ def setStoredPose(rig):
 def addTPoseAtFrame0(rig, scn):
     scn.frame_current = 0
     if rig.McpTPoseLoaded:
-        setTPose(rig)
+        setTPose(rig, scn)
     elif mcp.srcArmature.tposeFile:
         rig.McpTPoseFile = mcp.srcArmature.tposeFile
-        setTPose(rig)
+        setTPose(rig, scn)
     else:
-        setRestPose(rig)
+        setRestPose(rig, scn)
     for pb in rig.pose.bones:
         if pb.rotation_mode == 'QUATERNION':
             pb.keyframe_insert('rotation_quaternion', group=pb.name)
@@ -272,7 +274,7 @@ class VIEW3D_OT_McpSetTPoseButton(bpy.types.Operator):
     def execute(self, context):
         try:
             initRig(context)
-            setTPose(context.object)
+            setTPose(context.object, context.scene)
             print("Set T-pose")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
@@ -302,7 +304,7 @@ def loadTPose(rig):
         print("Loading %s" % filepath)
         struct = loadJson(filepath)
     else:
-        struct = {}
+        return False
 
     unit = Matrix()
     for pb in rig.pose.bones:
@@ -320,6 +322,7 @@ def loadTPose(rig):
 
     rig.McpTPoseLoaded = True
     rig.McpRestTPose = False
+    return True
 
 
 def setBoneTPose(pb, quat):
@@ -348,7 +351,7 @@ class VIEW3D_OT_McpLoadTPoseButton(bpy.types.Operator, ImportHelper):
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         print("Loaded T-pose")
-        setTPose(rig)
+        setTPose(rig, context.scene)
         return{'FINISHED'}
 
     def invoke(self, context, event):

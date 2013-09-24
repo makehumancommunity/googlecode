@@ -63,8 +63,7 @@ def getTargetArmature(rig, scn):
         for pb in rig.pose.bones:
             if pb.McpBone:
                 boneAssoc.append( (pb.name, pb.McpBone) )
-        parAssoc = assocParents(rig, boneAssoc)
-        return (boneAssoc, parAssoc)
+        return boneAssoc
 
     scn.McpTargetRig = name
     mcp.target = name
@@ -73,8 +72,14 @@ def getTargetArmature(rig, scn):
         print("Bones", bones)
         raise MocapError("Target armature %s does not match armature %s" % (rig.name, name))
     print("Target armature %s" % name)
-    parAssoc = assocParents(rig, boneAssoc)
-    return (boneAssoc, parAssoc)
+
+    for pb in rig.pose.bones:
+        pb.McpBone = pb.McpParent = ""
+    for bname,mhx in boneAssoc:
+        pb = rig.pose.bones[bname]
+        pb.McpBone = mhx
+
+    return boneAssoc
 
 
 def guessTargetArmatureFromList(rig, bones, scn):
@@ -82,9 +87,9 @@ def guessTargetArmatureFromList(rig, bones, scn):
     print("Guessing target")
 
     if scn.McpTargetRigMethod == 'Auto':
-        amtList = ["MHX"]
+        amtList = ["MHX", "Rigify"]
     else:
-        amtList = ["MHX", "Default"]
+        amtList = ["MHX", "Rigify", "Default"]
         for key in mcp.targetInfo.keys():
             if key not in ["MHX", "Default"]:
                 amtList.append(key)
@@ -99,25 +104,6 @@ def guessTargetArmatureFromList(rig, bones, scn):
     else:
         print("Bones", bones)
         raise MocapError("Did not recognize target armature %s" % rig.name)
-
-
-def assocParents(rig, boneAssoc):
-    parAssoc = {}
-    taken = [ None ]
-    for (bname, mhx) in boneAssoc:
-        pb = rig.pose.bones[bname]
-        pb.McpBone = mhx
-        taken.append(bname)
-        parAssoc[bname] = None
-        parent = pb.parent
-        while parent:
-            pname = parent.name
-            if pname in taken:
-                parAssoc[bname] = pname
-                break
-            else:
-                parent = rig.pose.bones[pname].parent
-    return parAssoc
 
 
 def testTargetRig(name, rig, rigBones):
@@ -231,7 +217,7 @@ def readTrgArmature(file, name):
     fp = open(file, "r")
     status = 0
     bones = []
-    tpose = None
+    tpose = ""
     ikbones = []
     for line in fp:
         words = line.split()
