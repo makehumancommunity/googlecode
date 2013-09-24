@@ -38,7 +38,7 @@ from core import G
 from image import Image
 import debugdump
 import log
-from texture import Texture
+from texture import Texture, getTexture
 from shader import Shader
 import profiler
 
@@ -327,7 +327,10 @@ def drawMesh(obj):
         glEnableClientState(GL_TEXTURE_COORD_ARRAY)
         if not useShader:
             # Bind texture for fixed function shading
-            glBindTexture(GL_TEXTURE_2D, obj.texture)
+            glActiveTexture(GL_TEXTURE0)
+            tex = getTexture(obj.texture)
+            if tex not in (False, None):
+                glBindTexture(GL_TEXTURE_2D, tex.textureId)
         glTexCoordPointer(2, GL_FLOAT, 0, obj.UVs)
 
         if obj.nTransparentPrimitives:
@@ -381,8 +384,7 @@ def drawMesh(obj):
         # TODO
         # This should be optimized, since we only need to do it when it's changed
         # Validation should also only be done when it is set
-        if obj.shaderParameters:
-            obj.shaderObj.setUniforms(obj.shaderParameters)
+        obj.shaderObj.setUniforms(obj.shaderParameters)
 
     # draw the mesh
     if not obj.solid:

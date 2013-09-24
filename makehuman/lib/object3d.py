@@ -253,26 +253,8 @@ class Object3D(object):
         indices[...] = indices2
 
     @property
-    def textureTex(self):
-        if self._texturePath != self.parent.texture:
-            self._textureTex = None
-        if self._textureTex is False:
-            return None
-        if self._textureTex is None:
-            self._texturePath = self.parent.texture
-            if self._texturePath is None:
-                self._textureTex = None
-            else:
-                self._textureTex = texture.getTexture(self._texturePath)
-        if self._textureTex is False:
-            return None
-        return self._textureTex
-
-    @property
     def texture(self):
-        if self.textureTex is None:
-            return 0
-        return self.textureTex.textureId
+        return self.parent.texture
 
     @classmethod
     def attach(cls, mesh):
@@ -280,6 +262,7 @@ class Object3D(object):
             log.debug('mesh is already attached')
             return
 
+        # Create an Object3D for the mesh
         mesh.object3d = cls(mesh)
         G.world.append(mesh.object3d)
 

@@ -220,7 +220,7 @@ class SamplerUniform(Uniform):
 
     @classmethod
     def reset(cls):
-        cls.currentSampler = 1
+        cls.currentSampler = 0
 
 class Shader(object):
     _supported = None
