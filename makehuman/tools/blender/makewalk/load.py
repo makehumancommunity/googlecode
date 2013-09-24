@@ -516,7 +516,7 @@ def rescaleRig(scn, trgRig, srcRig):
     trgScale = upleg.length
     srcScale = srcRig.data.bones['thigh.L'].length
     scale = trgScale/srcScale
-    print("Rescale %s with factor %f" % (scn.objects.active, scale))
+    print("Rescale %s with factor %f" % (srcRig.name, scale))
     scn.McpBvhScale = scale
 
     bpy.ops.object.mode_set(mode='EDIT')

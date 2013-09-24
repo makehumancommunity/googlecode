@@ -236,7 +236,7 @@ def retargetAnimation(context, srcRig, trgRig):
     source.ensureSourceInited(scn)
     source.setArmature(srcRig, scn)
     target.ensureTargetInited(scn)
-    print("Retarget %s --> %s" % (srcRig, trgRig))
+    print("Retarget %s --> %s" % (srcRig.name, trgRig.name))
 
     boneAssoc, parAssoc = target.getTargetArmature(trgRig, scn)
     anim = CAnimation(srcRig, trgRig, boneAssoc, parAssoc)
@@ -261,7 +261,7 @@ def retargetAnimation(context, srcRig, trgRig):
     act = trgRig.animation_data.action
     act.name = trgRig.name[:4] + srcRig.name[2:]
     act.use_fake_user = True
-    print("Retargeted %s --> %s" % (srcRig, trgRig))
+    print("Retargeted %s --> %s" % (srcRig.name, trgRig.name))
 
 #
 #   changeTargetData(rig):
@@ -348,7 +348,7 @@ def restoreTargetData(rig, data):
 #
 
 def loadRetargetSimplify(context, filepath):
-    print("Load and retarget %s" % filepath)
+    print("\nLoad and retarget %s" % filepath)
     time1 = time.clock()
     scn = context.scene
     trgRig = context.object

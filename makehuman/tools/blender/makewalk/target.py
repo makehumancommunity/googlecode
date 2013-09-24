@@ -80,20 +80,25 @@ def getTargetArmature(rig, scn):
 def guessTargetArmatureFromList(rig, bones, scn):
     ensureTargetInited(scn)
     print("Guessing target")
-    amtList = ["MHX", "Default"]
-    for key in mcp.targetInfo.keys():
-        if key not in ["MHX", "Default"]:
-            amtList.append(key)
+
+    if scn.McpTargetRigMethod == 'Auto':
+        amtList = ["MHX"]
+    else:
+        amtList = ["MHX", "Default"]
+        for key in mcp.targetInfo.keys():
+            if key not in ["MHX", "Default"]:
+                amtList.append(key)
+
     for name in amtList:
         (boneAssoc, _ikBones, _tpose) = mcp.targetInfo[name]
         if testTargetRig(name, rig, boneAssoc):
             return name
 
-    if scn.McpTargetRigMethod == 'List':
+    if scn.McpTargetRigMethod == 'Auto':
+        return "Automatic"
+    else:
         print("Bones", bones)
         raise MocapError("Did not recognize target armature %s" % rig.name)
-    else:
-        return "Automatic"
 
 
 def assocParents(rig, boneAssoc):

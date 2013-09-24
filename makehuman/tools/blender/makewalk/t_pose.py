@@ -140,7 +140,6 @@ def autoTPose(rig, scn):
             ex,ey,ez,order = TPose[pb.McpBone]
         except KeyError:
             continue
-        print("  ", pb.name, pb.McpBone)
 
         euler = pb.matrix.to_euler(order)
         if ex is None:
@@ -178,7 +177,6 @@ def setTPose(rig):
         setRestPose(rig)
     else:
         setStoredPose(rig)
-    print("Set T-pose")
 
 
 def clearTPose(rig):
@@ -188,7 +186,6 @@ def clearTPose(rig):
         setStoredPose(rig)
     else:
         setRestPose(rig)
-    print("Cleared T-pose")
 
 
 def getStoredBonePose(pb):
@@ -260,6 +257,7 @@ class VIEW3D_OT_McpRestCurrentPoseButton(bpy.types.Operator):
         try:
             initRig(context)
             applyRestPose(context, 1.0)
+            print("Set current pose to rest pose")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
@@ -275,6 +273,7 @@ class VIEW3D_OT_McpSetTPoseButton(bpy.types.Operator):
         try:
             initRig(context)
             setTPose(context.object)
+            print("Set T-pose")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
@@ -290,6 +289,7 @@ class VIEW3D_OT_McpClearTPoseButton(bpy.types.Operator):
         try:
             initRig(context)
             clearTPose(context.object)
+            print("Cleared T-pose")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
@@ -413,5 +413,8 @@ def getBoneName(rig, name):
         return name
     else:
         pb = utils.getTrgBone(name, rig)
-        return pb.name
+        if pb:
+            return pb.name
+        else:
+            return ""
 

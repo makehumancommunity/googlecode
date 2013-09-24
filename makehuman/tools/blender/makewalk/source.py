@@ -113,16 +113,13 @@ def setArmature(rig, scn):
     except:
         name = scn.McpSourceRig
 
-    print("'%s' '%s'" % (rig.McpArmature, scn.McpSourceRig))
-    #halt
     if name:
-        print("Setting armature to %s" % name)
         rig.McpArmature = name
         scn.McpSourceRig = name
     else:
         raise MocapError("No source armature set")
     mcp.srcArmature = mcp.sourceArmatures[name]
-    print("Set armature %s" % name)
+    print("Set source armature to %s" % name)
     return
 
 #
