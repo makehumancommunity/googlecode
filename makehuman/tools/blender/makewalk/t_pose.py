@@ -220,16 +220,6 @@ def addTPoseAtFrame0(rig, scn):
             pb.keyframe_insert('rotation_euler', group=pb.name)
 
 
-def autoCorrectFCurves(rig, scn):
-    from . import loop
-    scn.frame_current = 0
-    scn.objects.active = rig
-    setTPose(rig)
-    for pb in rig.pose.bones:
-        pb.bone.select = True
-    loop.shiftBoneFCurves(rig, scn)
-
-
 class VIEW3D_OT_McpRestTPoseButton(bpy.types.Operator):
     bl_idname = "mcp.rest_t_pose"
     bl_label = "T-pose => Rest Pose"
@@ -314,14 +304,17 @@ def loadTPose(rig):
     else:
         struct = {}
 
+    unit = Matrix()
+    for pb in rig.pose.bones:
+        pb.matrix_basis = unit
+
     for name,value in struct:
         bname = getBoneName(rig, name)
-        #print("  ", name, bname)
         try:
             pb = rig.pose.bones[bname]
-            quat = Quaternion(value)
-        except:
-            quat = Quaternion()
+        except KeyError:
+            continue
+        quat = Quaternion(value)
         pb.matrix_basis = quat.to_matrix().to_4x4()
         setBoneTPose(pb, quat)
 

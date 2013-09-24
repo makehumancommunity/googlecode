@@ -113,6 +113,9 @@ class MainPanel(bpy.types.Panel):
         if ob and ob.type == 'ARMATURE':
             layout.operator("mcp.load_and_retarget")
             layout.separator()
+            layout.prop(scn, "McpStartFrame")
+            layout.prop(scn, "McpEndFrame")
+            layout.separator()
             layout.prop(scn, "McpShowDetailSteps")
             if scn.McpShowDetailSteps:
                 ins = inset(layout)
@@ -129,6 +132,7 @@ class MainPanel(bpy.types.Panel):
 
         else:
             layout.operator("mcp.load_bvh")
+            layout.separator()
             layout.prop(scn, "McpStartFrame")
             layout.prop(scn, "McpEndFrame")
 
@@ -153,16 +157,6 @@ class OptionsPanel(bpy.types.Panel):
         scn = context.scene
         ob = context.object
 
-        layout.prop(scn, "McpAutoScale")
-        layout.prop(scn, "McpBvhScale")
-        layout.prop(scn, "McpStartFrame")
-        layout.prop(scn, "McpEndFrame")
-        layout.label("Source Rig Method")
-        layout.prop(scn, 'McpSourceRigMethod', expand=True)
-        layout.label("Target Rig Method")
-        layout.prop(scn, 'McpTargetRigMethod', expand=True)
-
-        layout.separator()
         layout.label("SubSample and Rescale")
         layout.prop(scn, "McpDefaultSS")
         if not scn.McpDefaultSS:
@@ -170,6 +164,14 @@ class OptionsPanel(bpy.types.Panel):
             layout.prop(scn, "McpSSFactor")
         layout.prop(scn, "McpRescale")
         layout.prop(scn, "McpRescaleFactor")
+
+        layout.separator()
+        layout.prop(scn, "McpAutoScale")
+        layout.prop(scn, "McpBvhScale")
+        layout.label("Source Rig Method")
+        layout.prop(scn, 'McpSourceRigMethod', expand=True)
+        layout.label("Target Rig Method")
+        layout.prop(scn, 'McpTargetRigMethod', expand=True)
 
         layout.separator()
         layout.label("Simplification")
