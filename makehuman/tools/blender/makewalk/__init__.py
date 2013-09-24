@@ -370,9 +370,10 @@ class MhxTargetBonesPanel(bpy.types.Panel):
         if scn.McpTargetRig:
             (bones, ikBones, tpose) = mcp.targetInfo[scn.McpTargetRig]
 
-            layout.label("T-pose file")
-            box = layout.box()
-            box.label(tpose)
+            if tpose:
+                layout.label("T-pose file")
+                box = layout.box()
+                box.label(tpose)
 
             layout.label("FK bones")
             box = layout.box()
@@ -388,14 +389,16 @@ class MhxTargetBonesPanel(bpy.types.Panel):
                     row.label(bone)
                 else:
                     row.label("-")
-            row = layout.row()
-            row.label("IK bone")
-            row.label("FK bone")
-            box = layout.box()
-            for (ikBone, fkBone) in ikBones:
-                row = box.row()
-                row.label(ikBone)
-                row.label(fkBone)
+
+            if ikBones:
+                row = layout.row()
+                row.label("IK bone")
+                row.label("FK bone")
+                box = layout.box()
+                for (ikBone, fkBone) in ikBones:
+                    row = box.row()
+                    row.label(ikBone)
+                    row.label(fkBone)
         return
 
 ########################################################################

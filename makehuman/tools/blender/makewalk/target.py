@@ -63,6 +63,10 @@ def getTargetArmature(rig, scn):
         for pb in rig.pose.bones:
             if pb.McpBone:
                 boneAssoc.append( (pb.name, pb.McpBone) )
+
+        mcp.ikBones = []
+        rig.McpTPoseFile = ""
+        mcp.targetInfo[name] = (boneAssoc, mcp.ikBones, rig.McpTPoseFile)
         return boneAssoc
 
     scn.McpTargetRig = name
