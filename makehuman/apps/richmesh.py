@@ -25,6 +25,7 @@ TODO
 """
 
 import os
+import numpy as np
 import log
 import module3d
 
@@ -74,16 +75,42 @@ class RichMesh(object):
         self.weights = weights
         self.shapes = shapes
         self.material = obj.material = material
+        self.normalizeVertexWeights()
         return self
 
 
     def fromObject(self, obj, weights, shapes):
         self.object = obj
-        
+
         self.weights = weights
         self.shapes = shapes
         self.material = obj.material
+        self.normalizeVertexWeights()
         return self
+
+
+    def normalizeVertexWeights(self):
+        if not self.weights:
+            return
+
+        nverts = len(self.object.coord)
+        sums = np.zeros(nverts, float)
+        for group in self.weights.values():
+            for vn,w in group:
+                sums[vn] += w
+
+        factors = np.zeros(nverts, float)
+        for vn in range(nverts):
+            if sums[vn] > 0.1:
+                factors[vn] = 1.0/sums[vn]
+
+        normWeights = {}
+        for gname,group in self.weights.items():
+            normGroup = normWeights[gname] = []
+            for vn,w in group:
+                normGroup.append((vn,w*factors[vn]))
+
+        self.weights = normWeights
 
 
     def rescale(self, scale):
@@ -108,6 +135,7 @@ class RichMesh(object):
 
     def __repr__(self):
         return ("<RichMesh %s w %d t %d>" % (self.object, len(self.weights), len(self.shapes)))
+
 
     def calculateSkinWeights(self, amt):
         if self.object is None:
