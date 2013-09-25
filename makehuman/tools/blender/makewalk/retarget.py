@@ -81,7 +81,11 @@ class CAnimation:
         selectAndSetRestPose(self.srcRig, scn)
         t_pose.setTPose(self.srcRig, scn)
         selectAndSetRestPose(self.trgRig, scn)
-        t_pose.setTPose(self.trgRig, scn)
+        if scn.McpMakeHumanTPose:
+            tpose = "target_rigs/makehuman_tpose.json"
+        else:
+            tpose = None
+        t_pose.setTPose(self.trgRig, scn, filename=tpose)
         for banim in self.boneAnims.values():
             banim.insertTPoseFrame()
         scn.frame_set(0)
@@ -229,6 +233,19 @@ def unhideObjects(objects):
     return
 
 
+def clearMcpProps(rig):
+    keys = list(rig.keys())
+    for key in keys:
+        if key[0:3] == "Mcp":
+            del rig[key]
+
+    for pb in rig.pose.bones:
+        keys = list(pb.keys())
+        for key in keys:
+            if key[0:3] == "Mcp":
+                del pb[key]
+
+
 def retargetAnimation(context, srcRig, trgRig):
     scn = context.scene
     setMhxIk(trgRig, True, True, False)
@@ -364,6 +381,7 @@ def loadRetargetSimplify(context, filepath):
     time1 = time.clock()
     scn = context.scene
     trgRig = context.object
+    clearMcpProps(trgRig)
     srcRig = load.readBvhFile(context, filepath, scn, False)
     layers = list(trgRig.data.layers)
     load.renameAndRescaleBvh(context, srcRig, trgRig)
@@ -375,6 +393,8 @@ def loadRetargetSimplify(context, filepath):
         simplify.rescaleFCurves(context, trgRig, scn.McpRescaleFactor)
     load.deleteSourceRig(context, srcRig, 'Y_')
     trgRig.data.layers = layers
+    if scn.McpClearMcpProps:
+        clearMcpProps(trgRig)
     time2 = time.clock()
     print("%s finished in %.3f s" % (filepath, time2-time1))
     return

@@ -72,7 +72,7 @@ def guessSrcArmatureFromList(rig, scn):
         amt = mcp.sourceArmatures[best.name]
         for bone in rig.data.bones:
             try:
-                bname,_ = amt.boneNames[canonicalName(bone.name)]
+                bname = amt.boneNames[canonicalName(bone.name)]
                 string = "     "
             except KeyError:
                 string = " *** "
@@ -88,11 +88,9 @@ def findSrcArmature(context, rig):
     from . import t_pose
     scn = context.scene
 
-    if scn.McpSourceRigMethod == 'Fixed':
+    if not scn.McpAutoSourceRig:
         mcp.srcArmature = mcp.sourceArmatures[scn.McpSourceRig]
-    elif scn.McpSourceRigMethod == 'List':
-        mcp.srcArmature = guessSrcArmatureFromList(rig, scn)
-    elif scn.McpSourceRigMethod == 'Auto':
+    else:
         amt = mcp.srcArmature = CArmature()
         selectAndSetRestPose(rig, scn)
         amt.findArmature(rig)
@@ -128,10 +126,9 @@ def setArmature(rig, scn):
 
 def findSourceKey(bname, struct):
     for bone in struct.keys():
-        (bname1, roll) = struct[bone]
-        if bname == bname1:
-            return (bone, roll)
-    return (None, 0)
+        if bname == struct[bone]:
+            return bone
+    return None
 
 
 ###############################################################################
@@ -191,12 +188,12 @@ def readSrcArmature(file, name):
             elif key == "t-pose:":
                 status = 0
                 armature.tposeFile = os.path.join("source_rigs", words[1])
-            elif len(words) < 3 or key[-1] == ":":
+            elif len(words) < 2 or key[-1] == ":":
                 print("Ignored illegal line", line)
             elif status == 1:
-                for n in range(1,len(words)-2):
+                for n in range(1,len(words)-1):
                     key += "_" + words[n]
-                amt[canonicalName(key)] = (nameOrNone(words[-2]), float(words[-1]))
+                amt[canonicalName(key)] = nameOrNone(words[-1])
     fp.close()
     return armature
 

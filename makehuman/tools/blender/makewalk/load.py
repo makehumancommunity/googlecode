@@ -388,7 +388,7 @@ def renameBones(srcRig, scn):
         srcName = srcBone.name
         lname = canonicalName(srcName)
         try:
-            (trgName, _twist) = mcp.srcArmature.boneNames[lname]
+            trgName = mcp.srcArmature.boneNames[lname]
         except KeyError:
             trgName = None
         eb = ebones[srcName]

@@ -37,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.910",
+    "version": "0.911",
     "blender": (2, 6, 8),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -168,10 +168,10 @@ class OptionsPanel(bpy.types.Panel):
         layout.separator()
         layout.prop(scn, "McpAutoScale")
         layout.prop(scn, "McpBvhScale")
-        layout.label("Source Rig Method")
-        layout.prop(scn, 'McpSourceRigMethod', expand=True)
-        layout.label("Target Rig Method")
-        layout.prop(scn, 'McpTargetRigMethod', expand=True)
+        layout.prop(scn, "McpMakeHumanTPose")
+        layout.prop(scn, "McpClearMcpProps")
+        layout.prop(scn, 'McpAutoSourceRig')
+        layout.prop(scn, 'McpAutoTargetRig')
 
         layout.separator()
         layout.label("Simplification")
@@ -321,7 +321,7 @@ class MhxSourceBonesPanel(bpy.types.Panel):
             layout.operator("mcp.init_sources", text="Init Source Panel")
             return
         layout.operator("mcp.init_sources", text="Reinit Source Panel")
-        layout.prop(scn, 'McpSourceRigMethod', expand=True)
+        layout.prop(scn, 'McpAutoSourceRig')
         layout.prop(scn, "McpSourceRig")
 
         if scn.McpSourceRig:
@@ -334,7 +334,7 @@ class MhxSourceBonesPanel(bpy.types.Panel):
                         box.separator()
                         continue
                     (mhx, text) = boneText
-                    (bone, roll) = source.findSourceKey(mhx, bones)
+                    bone = source.findSourceKey(mhx, bones)
                     if bone:
                         row = box.row()
                         row.label(text)
@@ -364,16 +364,12 @@ class MhxTargetBonesPanel(bpy.types.Panel):
             layout.operator("mcp.init_targets", text="Init Target Panel")
             return
         layout.operator("mcp.init_targets", text="Reinit Target Panel")
-        layout.prop(scn, 'McpTargetRigMethod', expand=True)
+        layout.prop(scn, 'McpAutoTargetRig')
         layout.prop(scn, "McpTargetRig")
+        layout.prop(scn, "McpMakeHumanTPose")
 
         if scn.McpTargetRig:
             (bones, ikBones, tpose) = mcp.targetInfo[scn.McpTargetRig]
-
-            if tpose:
-                layout.label("T-pose file")
-                box = layout.box()
-                box.label(tpose)
 
             layout.label("FK bones")
             box = layout.box()

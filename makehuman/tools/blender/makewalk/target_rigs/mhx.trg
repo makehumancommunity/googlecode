@@ -33,8 +33,6 @@ Bones:
 
 IkBones:
 
-T-pose:	default_tpose.json
-
-
+T-pose: makehuman_tpose.json
 
 

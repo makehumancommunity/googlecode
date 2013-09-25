@@ -288,22 +288,23 @@ def initInterface(context):
 
     # Source and Target
 
-    bpy.types.Scene.McpSourceRigMethod = EnumProperty(
-        items = [('Fixed', 'Fixed', 'Fixed'),
-                 ('List', 'List', 'List'),
-                 ('Auto', 'Auto', 'Auto')],
-        name = "Source Rig Method",
-        default = 'Auto')
+    bpy.types.Scene.McpAutoSourceRig = BoolProperty(
+        name = "Auto Source Rig",
+        description = "Detect source rig automatically",
+        default = True)
 
-    bpy.types.Scene.McpTargetRigMethod = EnumProperty(
-        items = [('Fixed', 'Fixed', 'Fixed'),
-                 ('List', 'List', 'List'),
-                 ('Auto', 'Auto', 'Auto')],
-        name = "Target Rig Method",
-        default = 'Auto')
+    bpy.types.Scene.McpAutoTargetRig = BoolProperty(
+        name = "Auto Target Rig",
+        description = "Detect target rig automatically",
+        default = True)
 
-    bpy.types.Scene.McpGuessTargetRig = BoolProperty(
-        name = "Guess Target Rig",
+    bpy.types.Scene.McpMakeHumanTPose = BoolProperty(
+        name = "MakeHuman T-pose",
+        description = "Use MakeHuman T-pose",
+        default = True)
+
+    bpy.types.Scene.McpClearMcpProps = BoolProperty(
+        name = "Clear Temporary Properties",
         default = True)
 
     bpy.types.PoseBone.McpBone = StringProperty(
@@ -311,6 +312,7 @@ def initInterface(context):
 
     bpy.types.PoseBone.McpParent = StringProperty(
         default = "")
+
 
     # Manage actions
 

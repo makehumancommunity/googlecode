@@ -47,8 +47,8 @@ class CArmature:
 
     def display(self, type):
         print("%s Armature: %s" % (type, self.name))
-        for bname,value in self.boneNames.items():
-            print("  %14s %14s" % (bname, value[0]))
+        for bname,mhx in self.boneNames.items():
+            print("  %14s %14s" % (bname, mhx))
 
 
     def findArmature(self, rig):
@@ -132,17 +132,7 @@ class CArmature:
 
     def setBone(self, bname, pb):
         pb.McpBone = bname
-        try:
-            tpose = TPose[bname]
-        except:
-            tpose = None
-        if tpose is None:
-            roll = 0
-        else:
-            _,_,vec = getHeadTailDir(pb)
-            #roll = math.acos(vec.dot(tpose))
-            roll = 0
-        self.boneNames[canonicalName(pb.name)] = (bname, roll*Rad2Deg)
+        self.boneNames[canonicalName(pb.name)] = bname
 
 
     def findTerminal(self, pb, bnames):

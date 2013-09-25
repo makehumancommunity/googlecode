@@ -7,31 +7,31 @@
 Name:	ACCAD
 
 Armature:
-	hips		hips		0
-	tospine		spine		0
-	spine		spine-1		0
-	spine1		chest		0 
-	neck		neck		0 
-	head		head		0 
+	hips		hips	
+	tospine		spine	
+	spine		spine-1	
+	spine1		chest	 
+	neck		neck	 
+	head		head	 
 
-	leftshoulder	clavicle.L	0
-	leftarm		upper_arm.L		0 
-	leftforearm	forearm.L		0
-	lefthand	hand.L		0 
+	leftshoulder	clavicle.L
+	leftarm		upper_arm.L	 
+	leftforearm	forearm.L	
+	lefthand	hand.L	 
 
-	rightshoulder	clavicle.R	0
-	rightarm	upper_arm.R		0 
-	rightforearm	forearm.R		0
-	righthand	hand.R		0
+	rightshoulder	clavicle.R
+	rightarm	upper_arm.R	 
+	rightforearm	forearm.R	
+	righthand	hand.R	
 
-	leftupleg	thigh.L		0 
-	leftleg		shin.L		0 
-	leftfoot	foot.L		0 
-	lefttoebase	toe.L		0
+	leftupleg	thigh.L	 
+	leftleg		shin.L	 
+	leftfoot	foot.L	 
+	lefttoebase	toe.L	
 
-	rightupleg	thigh.R		0
-	rightleg	shin.R		0 
-	rightfoot	foot.R		0 
-	righttoebase	toe.R		0
+	rightupleg	thigh.R	
+	rightleg	shin.R	 
+	rightfoot	foot.R	 
+	righttoebase	toe.R	
 
 

@@ -170,9 +170,11 @@ def autoTPose(rig, scn):
         rig.McpRestTPose = False
 
 
-def setTPose(rig, scn):
+def setTPose(rig, scn, filename=None):
     if not rig.McpTPoseLoaded:
-        hasFile = loadTPose(rig)
+        if filename is None:
+            filename = rig.McpTPoseFile
+        hasFile = loadTPose(rig, filename)
         if not hasFile:
             autoTPose(rig, scn)
     if rig.McpRestTPose:
@@ -183,7 +185,7 @@ def setTPose(rig, scn):
 
 def clearTPose(rig):
     if not rig.McpTPoseLoaded:
-        loadTPose(rig)
+        loadTPose(rig, rig.McpTPoseFile)
     if rig.McpRestTPose:
         setStoredPose(rig)
     else:
@@ -297,12 +299,13 @@ class VIEW3D_OT_McpClearTPoseButton(bpy.types.Operator):
         return{'FINISHED'}
 
 
-def loadTPose(rig):
-    if rig.McpTPoseFile:
-        filepath = os.path.join(os.path.dirname(__file__), rig.McpTPoseFile)
+def loadTPose(rig, filename):
+    if filename:
+        filepath = os.path.join(os.path.dirname(__file__), filename)
         filepath = os.path.normpath(filepath)
         print("Loading %s" % filepath)
         struct = loadJson(filepath)
+        rig.McpTPoseFile = filename
     else:
         return False
 
@@ -345,9 +348,9 @@ class VIEW3D_OT_McpLoadTPoseButton(bpy.types.Operator, ImportHelper):
     def execute(self, context):
         initRig(context)
         rig = context.object
-        rig.McpTPoseFile = os.path.relpath(self.filepath, os.path.dirname(__file__))
+        filename = os.path.relpath(self.filepath, os.path.dirname(__file__))
         try:
-            loadTPose(rig)
+            loadTPose(rig, filename)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         print("Loaded T-pose")
