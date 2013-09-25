@@ -324,19 +324,19 @@ def drawMesh(obj):
 
     if obj.isTextured and obj.texture and obj.solid:
         glEnable(GL_TEXTURE_2D)
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY)
         if not useShader:
             # Bind texture for fixed function shading
             glActiveTexture(GL_TEXTURE0)
             tex = getTexture(obj.texture)
             if tex not in (False, None):
                 glBindTexture(GL_TEXTURE_2D, tex.textureId)
-        glTexCoordPointer(2, GL_FLOAT, 0, obj.UVs)
 
         if obj.nTransparentPrimitives:
             obj.sortFaces()
 
     # Fill the array pointers with object mesh data
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+    glTexCoordPointer(2, GL_FLOAT, 0, obj.UVs)
     glVertexPointer(3, GL_FLOAT, 0, obj.verts)
     glNormalPointer(GL_FLOAT, 0, obj.norms)
     glColorPointer(4, GL_UNSIGNED_BYTE, 0, obj.color)
