@@ -31,7 +31,7 @@
     uniform sampler2D diffuseTexture;
 #else
     #ifdef ALPHA_MAP
-        uniform sampler2D diffuseTexture;
+        uniform sampler2D alphaTexture;
     #endif
 #endif
 
@@ -83,7 +83,7 @@ void main() {
     #else
         gl_FragColor.rgb = shading.rgb;
         #ifdef ALPHA_MAP
-            gl_FragColor.a = texture2D(diffuseTexture, gl_TexCoord[0].xy).a;
+            gl_FragColor.a = texture2D(alphaTexture, gl_TexCoord[0].xy).a;
         #else
             gl_FragColor.a = 1.0;
         #endif
