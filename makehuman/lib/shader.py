@@ -445,8 +445,11 @@ def getShader(path, defines=[], cache=None):
 def reloadShaders():
     log.message('Reloading shaders')
     for path in _shaderCache:
-        try:
-            _shaderCache[path].initShader()
-        except RuntimeError, _:
-            log.error("Error loading shader %s", path, exc_info=True)
-            _shaderCache[path] = False
+        if _shaderCache[path]:
+            try:
+                _shaderCache[path].initShader()
+            except RuntimeError, _:
+                log.error("Error loading shader %s", path, exc_info=True)
+                _shaderCache[path] = False
+        else:
+            del _shaderCache[path]
