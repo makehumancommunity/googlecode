@@ -316,6 +316,8 @@ class ShaderTaskView(gui3d.TaskView):
             return
 
         sh = shader.getShader(path, mat.shaderDefines)
+        if not sh:
+            return
         uniforms = sh.getUniforms()
         for index, uniform in enumerate(uniforms):
             if uniform.name.startswith('gl_'):
