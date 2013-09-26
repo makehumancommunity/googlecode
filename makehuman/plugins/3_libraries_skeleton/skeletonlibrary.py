@@ -242,7 +242,6 @@ class SkeletonLibrary(gui3d.TaskView):
         self.oldHumanTransp = self.human.material.transparent
         self.oldHumanShader = self.human.material.shader
         self.human.material.shader = mh.getSysDataPath('shaders/glsl/xray')
-        print 'set shader'
         self.setHumanTransparency(True)
         self.human.meshData.setPickable(False)
         mh.updatePickingBuffer()
