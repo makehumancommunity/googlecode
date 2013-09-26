@@ -86,6 +86,13 @@ def isMhxRig(rig):
         return False
 
 
+def isMakeHumanRig(rig):
+    try:
+        return rig["MhAlpha8"]
+    except KeyError:
+        return False
+
+
 def setMhxIk(rig, useArms, useLegs, turnOn):
     if isMhxRig(rig):
         ikLayers = []
@@ -125,6 +132,7 @@ def nameOrNone(string):
 
 def canonicalName(string):
     return string.lower().replace(' ','_').replace('-','_')
+
 
 #
 #   getRoll(bone):

@@ -300,17 +300,20 @@ def initInterface(context):
 
     bpy.types.Scene.McpMakeHumanTPose = BoolProperty(
         name = "MakeHuman T-pose",
-        description = "Use MakeHuman T-pose",
+        description = "Use MakeHuman T-pose for MakeHuman characters",
         default = True)
 
     bpy.types.Scene.McpClearMcpProps = BoolProperty(
         name = "Clear Temporary Properties",
+        description = "Remove properties starting with 'Mcp' after retargeting.",
         default = True)
 
     bpy.types.PoseBone.McpBone = StringProperty(
+        description = "MakeHuman bone corresponding to this bone",
         default = "")
 
     bpy.types.PoseBone.McpParent = StringProperty(
+        description = "Parent of this bone for retargeting purposes",
         default = "")
 
 

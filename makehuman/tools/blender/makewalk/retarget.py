@@ -81,7 +81,7 @@ class CAnimation:
         selectAndSetRestPose(self.srcRig, scn)
         t_pose.setTPose(self.srcRig, scn)
         selectAndSetRestPose(self.trgRig, scn)
-        if scn.McpMakeHumanTPose:
+        if isMakeHumanRig(self.trgRig) and scn.McpMakeHumanTPose:
             tpose = "target_rigs/makehuman_tpose.json"
         else:
             tpose = None
