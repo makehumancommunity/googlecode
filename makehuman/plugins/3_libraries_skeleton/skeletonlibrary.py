@@ -122,7 +122,8 @@ class SkeletonLibrary(gui3d.TaskView):
 
         self.selectedJoint = None
 
-        self.oldHumanTransp = self.human.meshData.transparentPrimitives
+        self.oldHumanTransp = self.human.material.transparent
+        self.oldHumanShader = self.human.material.shader
 
         #
         #   Display box
@@ -238,7 +239,10 @@ class SkeletonLibrary(gui3d.TaskView):
         self.oldSmoothValue = self.human.isSubdivided()
         self.human.setSubdivided(False)
 
-        self.oldHumanTransp = self.human.meshData.transparentPrimitives
+        self.oldHumanTransp = self.human.material.transparent
+        self.oldHumanShader = self.human.material.shader
+        self.human.material.shader = mh.getSysDataPath('shaders/glsl/xray')
+        print 'set shader'
         self.setHumanTransparency(True)
         self.human.meshData.setPickable(False)
         mh.updatePickingBuffer()
@@ -266,6 +270,7 @@ class SkeletonLibrary(gui3d.TaskView):
         if self.skelObj:
             self.skelObj.hide()
         self.setHumanTransparency(False)
+        self.human.material.shader = self.oldHumanShader
         self.human.meshData.setPickable(True)
         mh.updatePickingBuffer()
         try:
@@ -471,9 +476,9 @@ class SkeletonLibrary(gui3d.TaskView):
 
     def setHumanTransparency(self, enabled):
         if enabled:
-            self.human.meshData.setTransparentPrimitives(len(self.human.meshData.fvert))
+            self.human.material.transparent = enabled
         else:
-            self.human.meshData.setTransparentPrimitives(self.oldHumanTransp)
+            self.human.material.transparent = self.oldHumanTransp
 
 
     def onHumanChanged(self, event):
