@@ -669,15 +669,8 @@ class Material(object):
         global _shaderConfigDefines
         global _materialShaderParams
 
-        import numpy as np
-
         if not self.shader:
             return
-
-        self._shaderParameters['ambient']  = self.ambientColor.values
-        self._shaderParameters['diffuse'] = list(np.asarray(self.diffuseColor.values, dtype=np.float32) * self.diffuseIntensity) + [self.opacity]
-        self._shaderParameters['specular'] = list(np.asarray(self.specularColor.values, dtype=np.float32) * self.specularIntensity) + [self.shininess]
-        self._shaderParameters['emissive'] = self.emissiveColor
 
         # Remove (non-custom) shader config defines (those set by shader config)
         for shaderDefine in _shaderConfigDefines:
@@ -743,7 +736,14 @@ class Material(object):
         All shader parameters. Both those set by material properties as well as
         custom shader parameters set by setShaderParameter().
         """
-        return dict(self._shaderParameters)
+        import numpy as np
+
+        result = dict(self._shaderParameters)
+        result['ambient']  = self.ambientColor.values
+        result['diffuse'] = list(np.asarray(self.diffuseColor.values, dtype=np.float32) * self.diffuseIntensity) + [self.opacity]
+        result['specular'] = list(np.asarray(self.specularColor.values, dtype=np.float32) * self.specularIntensity) + [self.shininess]
+        result['emissive'] = self.emissiveColor
+        return result
 
     def setShaderParameter(self, name, value):
         """
