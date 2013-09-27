@@ -39,7 +39,7 @@ from bpy.props import *
 from mathutils import Vector
 from . import mc
 from .makeclothes import *
-from maketarget.error import MHError
+from .error import MHError
 
 #
 #   Global variables

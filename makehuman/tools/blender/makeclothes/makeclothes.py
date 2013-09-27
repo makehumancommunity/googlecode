@@ -31,7 +31,7 @@ from bpy.props import *
 from mathutils import Vector
 
 from maketarget.utils import getMyDocuments
-from maketarget.error import MHError
+from .error import MHError
 from . import mc
 from . import materials
 

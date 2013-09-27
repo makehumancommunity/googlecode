@@ -74,7 +74,7 @@ settings = {
 #
 
 import os
-from maketarget.error import MHError
+from .error import MHError
 
 def goodName(name):
     newName = name.replace('-','_').replace(' ','_')

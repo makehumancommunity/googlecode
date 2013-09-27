@@ -25,7 +25,7 @@ import bpy
 import os
 import shutil
 from . import mc
-from maketarget.error import MHError
+from .error import MHError
 
 '''
 def checkObjectHasDiffuseTexture(ob):
