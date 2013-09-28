@@ -103,7 +103,7 @@ def get_plugin_files():
 VERSION="%s (%s)" % (VERSION,SvnInfo())
 VERSION_FN="%s" % (SvnInfo())
 vfile = open(os.path.join("core","VERSION"),"w")
-vfile.write(VERSION)
+vfile.write(SvnInfo())
 vfile.close()
 
 ###COMPILE TARGETS
