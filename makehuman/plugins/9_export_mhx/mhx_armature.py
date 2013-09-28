@@ -65,9 +65,8 @@ class ExportArmature(Armature):
 
     def __init__(self, name, options):
         Armature.__init__(self, name, options)
-        self.visibleLayers = "00000001"
         self.scale = options.scale
-
+        self.visibleLayers = "0068056b"
         self.objectProps = [("MhxRig", '"MHX"')]
         self.armatureProps = []
         self.customProps = []
@@ -75,8 +74,6 @@ class ExportArmature(Armature):
         self.boneGroups = []
         self.poseInfo = {}
 
-        self.visibleLayers = "0068056b"
-        self.objectProps = [("MhxRig", '"MHX"')]
 
 
     def setup(self):
@@ -414,7 +411,6 @@ end Armature
   show_x_ray True ;
   draw_type 'WIRE' ;
   Property MhxScale theScale ;
-  Property MhxVisemeSet 'BodyLanguage' ;
 
   Property _RNA_UI {} ;
 """)

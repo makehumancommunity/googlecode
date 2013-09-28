@@ -334,6 +334,5 @@ ObjectProps = [
 ArmatureProps = [
     ('MhxScale', 1.000),
     ('MhxRig', '"Control"'),
-    ('MhxVisemeSet', '"BodyLanguage"'),
 ]
 
