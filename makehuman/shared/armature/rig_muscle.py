@@ -93,6 +93,9 @@ Joints = [
     ('l-gluteus',           'v', 10867),
     ('r-gluteus',           'v', 4233),
 
+    ('m-upper-leg',         'l', ((0.5, 'l-upper-leg'), (0.5, 'r-upper-leg'))),
+    ('m-gluteus',           'l', ((0.5, 'l-gluteus'), (0.5, 'r-gluteus'))),
+
     ('l-quadriceps',        'vl', ((0.75, 11135), (0.25, 11130))),
     ('r-quadriceps',        'vl', ((0.75, 4517), (0.25, 4512))),
 
@@ -160,7 +163,10 @@ HeadsTails = {
     'hip.L' :              ('pelvis', 'l-hip'),
     'hipside.R' :          ('pubis', 'r-hipside'),
     'hip.R' :              ('pelvis', 'r-hip'),
+
+    'gluteus0.L' :         ('l-upper-leg', 'l-gluteus'),
     'gluteus.L' :          ('l-upper-leg', 'l-gluteus'),
+    'gluteus0.R' :         ('r-upper-leg', 'r-gluteus'),
     'gluteus.R' :          ('r-upper-leg', 'r-gluteus'),
 
     'quadriceps.L' :       ('l-quadriceps', 'l-hipside'),
@@ -217,10 +223,12 @@ Armature = {
 
     'hipside.L' :          (0, 'hips', 0, L_HELP),
     #'hip.L' :              (0, 'pelvis', F_DEF, L_MSCL),
-    #'gluteus.L' :          (0, 'root', F_DEF, L_MSCL),
+    'gluteus0.L' :          (0, 'thigh.L', 0, L_HELP),
+    'gluteus.L' :          (0, 'hips', F_DEF, L_MSCL),
     'hipside.R' :          (0, 'hips', 0, L_HELP),
     #'hip.R' :              (0, 'pelvis', F_DEF, L_MSCL),
-    #'gluteus.R' :          (0, 'root', F_DEF, L_MSCL),
+    'gluteus0.R' :          (0, 'thigh.R', 0, L_HELP),
+    'gluteus.R' :          (0, 'hips', F_DEF, L_MSCL),
 
     'quadriceps.L' :       (-8*D, 'thigh.L', F_DEF, L_MSCL),
     'femoris.L' :          (-177*D, 'thigh.L', F_DEF, L_MSCL),
@@ -286,11 +294,6 @@ Constraints = {
             ['Stretch_To', 'clavicle.L', 1, 1, ('spine-3', 'l-scapula')])
         ],
 
-    #'deltoid.L' : [
-    #    ('StretchTo', C_VOLXZ, 1,
-    #        ['Stretch_To', 'upper_arm.L', 0, 1, ('l-scapula', 'l-shoulder')])
-    #    ],
-
     'biceps.L' : [
         ('Transform', C_LOCAL, 1,
             ['Transform', 'forearm.L',
@@ -323,6 +326,11 @@ Constraints = {
     'brachioradialis.L' : [
         ('StretchTo', C_VOLXZ, 1,
             ['Stretch_To', 'forearmhook.L', 1, 1])
+        ],
+
+    'gluteus.L' : [
+        ('CopyRot', C_LOCAL, 0.5,
+            ['Thigh', 'thigh.L', (1,0,1), (0,0,0), False])
         ],
 
     'quadriceps.L' : [
@@ -375,11 +383,6 @@ Constraints = {
             ['Stretch_To', 'clavicle.R', 1, 1, ('spine-3', 'r-scapula')])
         ],
 
-    #'deltoid.R' : [
-    #    ('StretchTo', C_VOLXZ, 1,
-    #        ['Stretch_To', 'upper_arm.R', 0, 1, ('r-scapula', 'r-shoulder')])
-    #    ],
-
     'biceps.R' : [
         ('Transform', C_LOCAL, 1,
             ['Transform', 'forearm.R',
@@ -412,6 +415,11 @@ Constraints = {
     'brachioradialis.R' : [
         ('StretchTo', C_VOLXZ, 1,
             ['Stretch_To', 'forearmhook.R', 1, 1])
+        ],
+
+    'gluteus.R' : [
+        ('CopyRot', C_LOCAL, 0.5,
+            ['Thigh', 'thigh.R', (1,0,1), (0,0,0), False])
         ],
 
     'quadriceps.R' : [

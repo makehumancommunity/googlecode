@@ -154,40 +154,54 @@ def symmetrizeWeights(context, left2right):
         fright = right
         groups = list(right.values()) + list(right01.values()) + list(right02.values())
         cleanGroups(ob.data, groups)
+        grpinfo1 = [(leftIndex, right),(left01Index, right01),(left02Index, right02)]
+        grpinfo2 = [(rightIndex, left),(right01Index, left01),(right02Index, left02),(symmIndex, symm)]
     else:
         factor = -1
         fleft = right
         fright = left
+        tmp = rverts
         rverts = lverts
+        lverts = tmp
         groups = list(left.values()) + list(left01.values()) + list(left02.values())
         cleanGroups(ob.data, groups)
+        grpinfo1 = [(rightIndex, left),(right01Index, left01),(right02Index, left02)]
+        grpinfo2 = [(leftIndex, right),(left01Index, right01),(left02Index, right02),(symmIndex, symm)]
 
     for (vn, rvn) in rverts.items():
-        v = ob.data.vertices[vn]
-        rv = ob.data.vertices[rvn]
-        #print(v.index, rv.index)
-        for rgrp in rv.groups:
-            rgrp.weight = 0
-        for grp in v.groups:
-            rgrp = None
-            for (indices, groups) in [
-                (leftIndex, right), (rightIndex, left),
-                (left01Index, right01), (right01Index, left01),
-                (left02Index, right02), (right02Index, left02),
-                (symmIndex, symm)
-                ]:
-                try:
-                    name = indices[grp.group]
-                    rgrp = groups[name]
-                except:
-                    pass
-            if rgrp:
-                #print("  ", name, grp.group, rgrp.name, rgrp.index, v.index, rv.index, grp.weight)
-                rgrp.add([rv.index], grp.weight, 'REPLACE')
-            else:
-                gn = grp.group
-                print("*** No rgrp for %s %s %s" % (grp, gn, ob.vertex_groups[gn]))
+        symmetrizeVertWeightsSide(ob, vn, rvn, grpinfo1)
+
+    for (vn, rvn) in mverts.items():
+        symmetrizeVertWeightsSide(ob, vn, rvn, grpinfo1)
+
+    for (vn, rvn) in lverts.items():
+        symmetrizeVertWeightsSide(ob, vn, rvn, grpinfo1)
+
+    for (vn, rvn) in rverts.items():
+        symmetrizeVertWeightsSide(ob, vn, rvn, grpinfo2)
+
     return len(rverts)
+
+
+def symmetrizeVertWeightsSide(ob, vn, rvn, grpinfo):
+    v = ob.data.vertices[vn]
+    v.select = True
+    rv = ob.data.vertices[rvn]
+    #print(v.index, rv.index)
+    #for rgrp in rv.groups:
+    #    rgrp.weight = 0
+    for grp in v.groups:
+        rgrp = None
+        for (indices, groups) in grpinfo:
+            try:
+                name = indices[grp.group]
+                rgrp = groups[name]
+            except:
+                pass
+        if rgrp:
+            #print("  ", name, grp.group, rgrp.name, rgrp.index, v.index, rv.index, grp.weight)
+            rgrp.add([rv.index], grp.weight, 'REPLACE')
+
 
 def printGroups(name, groups, indices, vgroups):
     print(name)
