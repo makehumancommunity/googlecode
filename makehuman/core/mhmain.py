@@ -101,7 +101,6 @@ class PluginsTaskView(gui3d.TaskView):
 
 class MHApplication(gui3d.Application, mh.Application):
     def __init__(self):
-        self.args = dict()
         if G.app is not None:
             raise RuntimeError('MHApplication is a singleton')
         G.app = self
@@ -216,6 +215,10 @@ class MHApplication(gui3d.Application, mh.Application):
     def _versionSentinel(self):
         # dummy method used for checking the shortcuts.ini version
         pass
+
+    @property
+    def args(self):
+        return G.args
 
     def loadHuman(self):
 

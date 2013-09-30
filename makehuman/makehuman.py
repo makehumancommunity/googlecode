@@ -266,6 +266,8 @@ def parse_arguments():
     # optional arguments
     parser.add_argument('-v', '--version', action='version', version=getVersionStr())
     parser.add_argument("--noshaders", action="store_true", help="disable shaders")
+    parser.add_argument("--debugopengl", action="store_true", help="enable OpenGL error checking and logging (slow)")
+    parser.add_argument("--fullloggingopengl", action="store_true", help="log all OpenGL calls (very slow)")
     if not isRelease():
         parser.add_argument("-t", "--runtests", action="store_true", help="run test suite (for developers)")
 
@@ -288,9 +290,12 @@ def main():
     init_logging()
     debug_dump()
 
+    from core import G
+    G.args = args
+
+    # Here pyQt and PyOpenGL will be imported
     from mhmain import MHApplication
     application = MHApplication()
-    application.args = args
     application.run()
 
     #import cProfile

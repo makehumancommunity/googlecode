@@ -509,6 +509,9 @@ class Application(QtGui.QApplication, events3d.EventHandler):
         # self.installEventFilter(self)
 
     def OnInit(self):
+        import debugdump
+        debugdump.dump.appendQt()
+
         self.messages = queue.Manager(self._postAsync)
         self.mainwin = Frame(self, (G.windowWidth, G.windowHeight))
         self.statusBar = self.mainwin.statusBar

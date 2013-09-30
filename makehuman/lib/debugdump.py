@@ -93,14 +93,18 @@ class DebugDump(object):
         import numpy
         self.write("NUMPY.VERSION: %s", numpy.__version__)
 
-        from qtui import getQtVersionString
-        self.write("PYQT.VERSION: %s", getQtVersionString())
         self.close()
 
     def appendGL(self):
         import OpenGL
         self.open()
         self.write("PYOPENGL.VERSION: %s", OpenGL.__version__)
+        self.close()
+
+    def appendQt(self):
+        import qtui
+        self.open()
+        self.write("PYQT.VERSION: %s", qtui.getQtVersionString())
         self.close()
 
     def appendMessage(self,message):

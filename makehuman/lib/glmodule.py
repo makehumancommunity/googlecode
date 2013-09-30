@@ -21,11 +21,14 @@ Abstract
 
 TODO
 """
+from core import G
 
 import numpy as np
 
 import OpenGL
-OpenGL.ERROR_CHECKING = False
+OpenGL.ERROR_CHECKING = G.args.get('debugopengl', False)
+OpenGL.ERROR_LOGGING = G.args.get('debugopengl', False)
+OpenGL.FULL_LOGGING = G.args.get('fullloggingopengl', False)
 OpenGL.ERROR_ON_COPY = True
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -34,7 +37,6 @@ from OpenGL.GL.ARB.transpose_matrix import *
 from OpenGL.GL.ARB.multisample import *
 from OpenGL.GL.ARB.texture_multisample import *
 
-from core import G
 from image import Image
 import debugdump
 import log
@@ -332,6 +334,7 @@ def drawMesh(obj):
                 glBindTexture(GL_TEXTURE_2D, tex.textureId)
 
         if obj.nTransparentPrimitives:
+            # TODO while sorting faces can be a good idea, it can also cause instable rendering and flickering polygons
             obj.sortFaces()
 
     # Fill the array pointers with object mesh data
