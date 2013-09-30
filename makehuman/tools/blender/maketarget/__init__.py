@@ -24,7 +24,7 @@ Abstract
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.23",
+    "version": "1.24",
     "blender": (2, 6, 4),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -37,6 +37,7 @@ if "bpy" in locals():
     import imp
 
     imp.reload(mh)
+    imp.reload(symmetry_map)
     imp.reload(utils)
     imp.reload(settings)
     imp.reload(proxy)
@@ -55,6 +56,7 @@ else:
     from bpy_extras.io_utils import ImportHelper, ExportHelper
 
     from . import mh
+    from . import symmetry_map
     from . import utils
     from . import settings
     from . import proxy

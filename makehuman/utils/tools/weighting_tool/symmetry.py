@@ -21,6 +21,7 @@ Vertex groups
 import bpy
 from bpy.props import *
 import math
+from maketarget import symmetry_map
 
 #----------------------------------------------------------
 #   setupVertexPairs(ob):
@@ -61,22 +62,54 @@ def setupVertexPairs(context):
         for data in notfound:
             print("  %d at (%.4f %.4f %.4f) mindist %.4f" % tuple(data))
     print("Left-right-mid", len(lverts.keys()), len(rverts.keys()), len(mverts.keys()))
+    exportSymmetryMap(lverts, rverts, mverts)
     return (lverts, rverts, mverts)
 
-def findVert(verts, v, x, y, z, notfound, scn):
+
+def findVert(verts, vn, x, y, z, notfound, scn):
     mindist = 1e6
-    for (z1,y1,x1,v1) in verts:
+    for (z1,y1,x1,vn1) in verts:
         dx = x-x1
         dy = y-y1
         dz = z-z1
         dist = math.sqrt(dx*dx + dy*dy + dz*dz)
         if dist < scn.MhxEpsilon:
-            return v1
+            if ((vn < 13380 and vn1 < 13380) or
+                (vn >= 13380 and vn1 >= 13380)):
+                return vn1
         if dist < mindist:
             mindist = dist
     if abs(x) > scn.MhxEpsilon:
-        notfound.append((v, x, y, z, mindist))
+        notfound.append((vn, x, y, z, mindist))
     return -1
+
+
+def exportSymmetryMap(lverts, rverts, mverts):
+    fp = open("/home/symmetry_map.py", "w")
+
+    fp.write(
+        "from collections import OrderedDict\n\n" +
+        "Left2Right = OrderedDict([\n")
+    vlist = list(rverts.items())
+    vlist.sort()
+    for left,right in vlist:
+        fp.write("    (%5d, %5d),\n" % (left,right))
+
+    fp.write("])\n\nRight2Left = OrderedDict([\n\n")
+    vlist = list(lverts.items())
+    vlist.sort()
+    for left,right in vlist:
+        fp.write("    (%5d, %5d),\n" % (left,right))
+
+    fp.write("])\n\nMid2Mid = OrderedDict([\n\n")
+    vlist = list(mverts.items())
+    vlist.sort()
+    for mid,_ in vlist:
+        fp.write("    (%5d, %5d),\n" % (mid,mid))
+
+    fp.write("])\n")
+    fp.close()
+
 
 #
 #    symmetrizeWeights(context):
@@ -85,6 +118,7 @@ def findVert(verts, v, x, y, z, notfound, scn):
 
 def symmetrizeWeights(context, left2right):
     ob = context.object
+    nverts = len(ob.data.vertices)
     bpy.ops.object.mode_set(mode='OBJECT')
     scn = context.scene
 
@@ -147,8 +181,13 @@ def symmetrizeWeights(context, left2right):
     printGroups('Right02', right02, right02Index, ob.vertex_groups)
     printGroups('Symm', symm, symmIndex, ob.vertex_groups)
 
-    (lverts, rverts, mverts) = setupVertexPairs(context)
+    #(lverts, rverts, mverts) = setupVertexPairs(context)
+    #halt
+
     if left2right:
+        rverts = symmetry_map.Left2Right
+        lverts = symmetry_map.Right2Left
+        mverts = symmetry_map.Mid2Mid
         factor = 1
         fleft = left
         fright = right
@@ -157,27 +196,35 @@ def symmetrizeWeights(context, left2right):
         grpinfo1 = [(leftIndex, right),(left01Index, right01),(left02Index, right02)]
         grpinfo2 = [(rightIndex, left),(right01Index, left01),(right02Index, left02),(symmIndex, symm)]
     else:
+        lverts = symmetry_map.Left2Right
+        rverts = symmetry_map.Right2Left
+        mverts = symmetry_map.Mid2Mid
         factor = -1
         fleft = right
         fright = left
-        tmp = rverts
-        rverts = lverts
-        lverts = tmp
         groups = list(left.values()) + list(left01.values()) + list(left02.values())
         cleanGroups(ob.data, groups)
         grpinfo1 = [(rightIndex, left),(right01Index, left01),(right02Index, left02)]
         grpinfo2 = [(leftIndex, right),(left01Index, right01),(left02Index, right02),(symmIndex, symm)]
 
     for (vn, rvn) in rverts.items():
+        if vn >= nverts:
+            break
         symmetrizeVertWeightsSide(ob, vn, rvn, grpinfo1)
 
     for (vn, rvn) in mverts.items():
+        if vn >= nverts:
+            break
         symmetrizeVertWeightsSide(ob, vn, rvn, grpinfo1)
 
     for (vn, rvn) in lverts.items():
+        if vn >= nverts:
+            break
         symmetrizeVertWeightsSide(ob, vn, rvn, grpinfo1)
 
     for (vn, rvn) in rverts.items():
+        if vn >= nverts:
+            break
         symmetrizeVertWeightsSide(ob, vn, rvn, grpinfo2)
 
     return len(rverts)
@@ -185,11 +232,9 @@ def symmetrizeWeights(context, left2right):
 
 def symmetrizeVertWeightsSide(ob, vn, rvn, grpinfo):
     v = ob.data.vertices[vn]
-    v.select = True
     rv = ob.data.vertices[rvn]
-    #print(v.index, rv.index)
-    #for rgrp in rv.groups:
-    #    rgrp.weight = 0
+    v.select = True
+
     for grp in v.groups:
         rgrp = None
         for (indices, groups) in grpinfo:
@@ -199,8 +244,9 @@ def symmetrizeVertWeightsSide(ob, vn, rvn, grpinfo):
             except:
                 pass
         if rgrp:
-            #print("  ", name, grp.group, rgrp.name, rgrp.index, v.index, rv.index, grp.weight)
             rgrp.add([rv.index], grp.weight, 'REPLACE')
+            if name == "Group":
+                print("  ", name, grp.group, rgrp.name, rgrp.index, v.index, rv.index, grp.weight)
 
 
 def printGroups(name, groups, indices, vgroups):
@@ -236,7 +282,8 @@ class VIEW3D_OT_SymmetrizeWeightsButton(bpy.types.Operator):
 def cleanRight(context, doRight):
     ob = context.object
     bpy.ops.object.mode_set(mode='OBJECT')
-    (lverts, rverts, mverts) = setupVertexPairs(context)
+    rverts = symmetry_map.Left2Right
+
     for vgrp in ob.vertex_groups:
         if doRight:
             if vgrp.name[-2:] in ['_L', '.L', '_l', '.l']:
@@ -247,6 +294,7 @@ def cleanRight(context, doRight):
                 for (vn, rvn) in rverts.items():
                     vgrp.remove([vn])
     return
+
 
 class VIEW3D_OT_CleanRightButton(bpy.types.Operator):
     bl_idname = "mhw.clean_right"
@@ -267,7 +315,12 @@ def symmetrizeShapes(context, left2right):
     ob = context.object
     bpy.ops.object.mode_set(mode='OBJECT')
     scn = context.scene
-    (lverts, rverts, mverts) = setupVertexPairs(context)
+    #(lverts, rverts, mverts) = setupVertexPairs(context)
+
+    rverts = symmetry_map.Left2Right
+    lverts = symmetry_map.Right2Left
+    mverts = symmetry_map.Mid2Mid
+
     if not left2right:
         rverts = lverts
 
@@ -306,9 +359,12 @@ def symmetrizeVerts(context, left2right):
     ob = context.object
     bpy.ops.object.mode_set(mode='OBJECT')
     scn = context.scene
-    (lverts, rverts, mverts) = setupVertexPairs(context)
-    if not left2right:
-        rverts = lverts
+    #(lverts, rverts, mverts) = setupVertexPairs(context)
+
+    if left2right:
+        rverts = symmetry_map.Left2Right
+    else:
+        rverts = symmetry_map.Right2Left
 
     for v in ob.data.vertices:
         try:
@@ -384,9 +440,10 @@ def symmetrizeSelection(context, left2right):
     ob = context.object
     bpy.ops.object.mode_set(mode='OBJECT')
     scn = context.scene
-    (lverts, rverts, mverts) = setupVertexPairs(context)
-    if not left2right:
-        rverts = lverts
+    if left2right:
+        rverts = symmetry_map.Left2Right
+    else:
+        rverts = symmetry_map.Right2Left
     for (vn, rvn) in rverts.items():
         v = ob.data.vertices[vn]
         rv = ob.data.vertices[rvn]

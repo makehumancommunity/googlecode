@@ -48,6 +48,7 @@ from . import utils
 from .utils import round, setObjectMode
 from . import import_obj
 from .proxy import CProxy
+from .symmetry_map import *
 
 Epsilon = 1e-4
 Comments = []
@@ -1037,7 +1038,7 @@ class VIEW3D_OT_DiscardAllTargetsButton(bpy.types.Operator):
 #----------------------------------------------------------
 # symmetrizeTarget(context, left2right, mirror):
 #----------------------------------------------------------
-
+'''
 class CPairing:
 
     def __init__(self):
@@ -1117,10 +1118,11 @@ class CPairing:
         if abs(x) > self.epsilon:
             self.notfound.append((n,v,x,y,z))
         return -1
-
+'''
 
 def symmetrizeTarget(context, left2right, mirror):
-    pairing = CPairing().setup(context, False)
+    #pairing = CPairing().setup(context, False)
+
     ob = context.object
     scn = context.scene
     if not utils.isTarget(ob):
@@ -1128,11 +1130,11 @@ def symmetrizeTarget(context, left2right, mirror):
     bpy.ops.object.mode_set(mode='OBJECT')
     verts = ob.active_shape_key.data
 
-    for vn in pairing.mid.keys():
+    for vn in Mid2Mid.keys():
         v = verts[vn]
         v.co[0] = 0
 
-    for (lvn,rvn) in pairing.left.items():
+    for (lvn,rvn) in Left2Right.items():
         lv = verts[lvn].co
         rv = verts[rvn].co
         if mirror:
@@ -1157,10 +1159,10 @@ def symmetrizeTarget(context, left2right, mirror):
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    for vn in pairing.mid.keys():
+    for vn in Mid2Mid.keys():
         bverts[vn].select = selected[vn]
 
-    for (lvn,rvn) in pairing.left.items():
+    for (lvn,rvn) in Left2Right.items():
         if mirror:
             bverts[lvn].select = selected[rvn]
             bverts[rvn].select = selected[lvn]
