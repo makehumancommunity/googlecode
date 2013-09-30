@@ -45,20 +45,33 @@ def isRelease():
     """
     return release
 
+def isBuild():
+    """
+    Returns True when this is a release or nightly build (eg. it is build as a
+    distributable package), returns False if it is a source checkout.
+    """
+    # TODO
+    return False
+
 def getVersion():
     """
     Comparable version as list of ints
     """
     return version
 
-def getVersionStr():
+def getVersionStr(verbose=True):
     """
     Verbose version as string, for displaying and information
     """
     if isRelease():
         return _versionStr
     else:
-        return _versionStr + " r" + os.environ['SVNREVISION'] + (" [%s]" % os.environ['SVNREVISION_SOURCE'])
+        if 'SVNREVISION' not in os.environ:
+            get_svn_revision()
+        result = _versionStr + " (r" + os.environ['SVNREVISION'] + ")"
+        if verbose:
+            result += (" [%s]" % os.environ['SVNREVISION_SOURCE'])
+        return result
 
 def getShortVersion():
     """
@@ -266,7 +279,10 @@ def main():
     get_platform_paths()
     redirect_standard_streams()
     set_sys_path()
-    get_svn_revision()
+    if isRelease():
+        os.environ['SVNREVISION'] = ""
+    else:
+        get_svn_revision()
     args = parse_arguments()
     make_user_dir()
     init_logging()
