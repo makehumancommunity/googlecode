@@ -284,7 +284,7 @@ class Material(object):
             elif words[0] == "sssBScale":
                 self._sssBScale = max(0.0, float(words[1]))
             elif words[0] == "shader":
-                self._shader = getFilePath(words[1], self.filepath)
+                self._shader = getShaderPath(words[1], self.filepath)
             elif words[0] == "uvMap":
                 self._uvMap = getFilePath(words[1], self.filepath)
                 from getpath import getSysDataPath
@@ -720,7 +720,7 @@ class Material(object):
         self.shaderChanged = True
 
     def setShader(self, shader):
-        self._shader = shader
+        self._shader = getShaderPath(shader, self.filepath)
         self._updateShaderConfig()
         self.shaderChanged = True
 
@@ -991,8 +991,27 @@ def getFilePath(filename, folder = None):
     if os.path.isfile(sysPath):
         return os.path.abspath(sysPath)
 
+    if filename.startswith('data/'):
+        # If nothing found here, try again with data/ at the beginning
+        path = getFilePath(filename[len('data/'):], folder)
+        if os.path.isfile(path):
+            return path
+
     # Nothing found
     return os.path.normpath(filename)
+
+def getShaderPath(shader, folder = None):
+    shaderSuffixes = ['_vertex_shader.txt', '_fragment_shader.txt', '_geometry_shader.txt']
+    paths = [shader+s for s in shaderSuffixes]
+    paths = [p for p in paths if os.path.isfile(getFilePath(p, folder))]
+    if len(paths) > 0:
+        path = getFilePath(paths[0], folder)
+        for s in shaderSuffixes:
+            if path.endswith(s):
+                path = path[:-len(s)]
+    else:
+        path = shader
+    return path
 
 def isNumeric(string):
     try:
