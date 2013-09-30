@@ -409,6 +409,7 @@ def getShader(path, defines=[], cache=None):
     path3 = path + '_geometry_shader.txt'
     paths = [p for p in [path1, path2, path3] if os.path.isfile(p)]
     if not paths:
+        log.error('No shader file found at path %s. Shader not loaded.', path)
         cache[path] = False
         return False
 
