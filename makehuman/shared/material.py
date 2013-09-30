@@ -973,6 +973,9 @@ def getFilePath(filename, folder = None):
     if not filename:
         return filename
 
+    # Ensure unix style path
+    filename.replace('\\', '/')
+
     # Search within current folder
     if folder:
         path = os.path.join(folder, filename)
@@ -992,7 +995,7 @@ def getFilePath(filename, folder = None):
         return os.path.abspath(sysPath)
 
     if filename.startswith('data/'):
-        # If nothing found here, try again with data/ at the beginning
+        # If still nothing found, try again without data/ at the beginning
         path = getFilePath(filename[len('data/'):], folder)
         if os.path.isfile(path):
             return path
