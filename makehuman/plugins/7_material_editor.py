@@ -92,7 +92,7 @@ class ShaderTaskView(gui3d.TaskView):
 
     def loadMaterial(self, path):
         self.getSelectedObject().material = material.fromFile(path)
-        self.listMaterialSettings(self.getSelectedObject())
+        self.reloadMaterial()
 
     def saveMaterial(self, path):
         self.getSelectedObject().material.toFile(path)
@@ -277,7 +277,6 @@ class ShaderTaskView(gui3d.TaskView):
             if shaderName and unicode(shaderName) == unicode(item.text):
                 item.setChecked(True) # TODO does not have the desired effect
                 path = unicode(item.getUserData())
-                self.listUniforms(mat)
 
     def updateShaderConfig(self, mat = None):
         if not mat:
@@ -344,6 +343,7 @@ class ShaderTaskView(gui3d.TaskView):
 
         self.listShaders(obj.material)
         self.updateShaderConfig(obj.material)
+        self.listUniforms(obj.material)
         self.listMaterialSettings(obj)
 
         if obj.material.filepath:
