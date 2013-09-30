@@ -99,6 +99,7 @@ class VectorUniform(Uniform):
     def __init__(self, index, name, type):
         dims, dtype, pytype, glfunc, glquery = self.uniformTypes[type]
         super(VectorUniform, self).__init__(index, name, pytype, dims)
+        self.type = type
         self.dtype = dtype
         self.glfunc = glfunc
         self.glquery = glquery
@@ -108,7 +109,7 @@ class VectorUniform(Uniform):
         if len(self.dims) > 1:
             self.glfunc(self.index, 1, GL_TRUE, values)
         else:
-            self.glfunc(self.index, len(values), values)
+            self.glfunc(self.index, len(values)/self.dims[0], values)
 
     def update(self, pgm):
         values = np.zeros(self.dims, dtype=self.dtype)
