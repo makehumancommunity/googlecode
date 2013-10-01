@@ -29,7 +29,6 @@ from operator import mul
 from getpath import getPath, getSysDataPath
 import os
 
-import mh
 import algos3d
 import meshstat
 import warp
@@ -237,7 +236,7 @@ def printDebugCoord(string, coord, obj=None, offset=None):
             coord[n] += dx
 
     if obj:
-        folder = os.path.join(mh.getPath(''), 'debug')
+        folder = os.path.join(getPath(''), 'debug')
         if not os.path.exists(folder):
             os.makedirs(folder)
 
