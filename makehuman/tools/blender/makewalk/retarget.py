@@ -393,8 +393,6 @@ def loadRetargetSimplify(context, filepath):
         simplify.rescaleFCurves(context, trgRig, scn.McpRescaleFactor)
     load.deleteSourceRig(context, srcRig, 'Y_')
     trgRig.data.layers = layers
-    if scn.McpClearMcpProps:
-        clearMcpProps(trgRig)
     time2 = time.clock()
     print("%s finished in %.3f s" % (filepath, time2-time1))
     return
@@ -446,3 +444,16 @@ class VIEW3D_OT_LoadAndRetargetButton(bpy.types.Operator, ImportHelper):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
+
+class VIEW3D_OT_ClearTempPropsButton(bpy.types.Operator):
+    bl_idname = "mcp.clear_temp_props"
+    bl_label = "Clear Temporary Properties"
+    bl_description = "Clear properaties used by MakeWalk. Animation editing may fail after this."
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        try:
+            clearMcpProps(context.object)
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
+        return{'FINISHED'}
