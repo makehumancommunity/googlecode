@@ -29,6 +29,7 @@ from operator import mul
 from getpath import getPath, getSysDataPath
 import os
 
+import mh
 import algos3d
 import meshstat
 import warp
@@ -140,10 +141,20 @@ class WarpModifier (humanmodifier.SimpleModifier):
         srcTargetCoord, srcCharCoord, trgCharCoord = self.getReferences(human)
         #human.traceStacks()
         #self.traceReference()
+
+        obj = human.meshData
+        #printDebugCoord("mesh", obj.orig_coord, obj)
+        printDebugCoord("src_targ", srcCharCoord, obj, srcTargetCoord)
+        printDebugCoord("src_char", srcCharCoord, obj)
+        printDebugCoord("trg_char", trgCharCoord, obj)
+
         if srcTargetCoord:
             shape = warp.warp_target(srcTargetCoord, srcCharCoord, trgCharCoord, landmarks)
         else:
             shape = {}
+
+        printDebugCoord("trg_targ", trgCharCoord, obj, shape)
+
         return shape
 
 
@@ -154,9 +165,14 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
 
     def getReferences(self, human):
-        #obj = human.meshData
-        #srcCharCoord = obj.orig_coord.copy()
-        srcCharCoord = human.getSeedMesh().coord.copy()
+        """
+        Building source and target characters from scratch.
+        The source character is the sum of reference characters.
+        The target character is the sum of all non-warp targets.
+        Cannot use human.getSeedMesh() which returns sum of all targets.
+        """
+
+        srcCharCoord = human.meshData.orig_coord.copy()
         trgCharCoord = srcCharCoord.copy()
         srcTargetCoord = {}
 
@@ -203,6 +219,35 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 addVerts(srcTargetCoord, value, srcTrg)
 
         return srcTargetCoord, srcCharCoord, trgCharCoord
+
+
+def printDebugCoord(string, coord, obj=None, offset=None):
+    return
+
+    log.debug(string)
+    for vn in [5171, 11833]:
+        try:
+            log.debug("  %d: %s" % (vn, coord[vn]))
+        except KeyError:
+            pass
+
+    if offset:
+        coord = coord.copy()
+        for n,dx in offset.items():
+            coord[n] += dx
+
+    if obj:
+        folder = os.path.join(mh.getPath(''), 'debug')
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+        unit = np.array((1,1,1,1))
+        filepath = os.path.join(folder, "%s.obj" % string)
+        fp = open(filepath, "w")
+        fp.write("".join(["v %f %f %f\n" % tuple(co) for co in coord]))
+        fp.write("".join(["f %d %d %d %d\n" % tuple(fv+unit) for fv in obj.fvert]))
+        fp.close()
+
 
 #----------------------------------------------------------
 #   Specialized warp modifiers
