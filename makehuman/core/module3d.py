@@ -110,10 +110,7 @@ class Object3D(object):
         self.visibility = True
         self.pickable = True
         self.calculateTangents = True   # TODO disable when not needed by shader
-        self._transparentPrimitives = 0
         self.object3d = None
-        self.vmap = None
-        self.tmap = None
         self._priority = 0
         self.MAX_FACES = 8
 
@@ -343,6 +340,8 @@ class Object3D(object):
         # Clear remote data
         self._faceGroups = []
 
+        self._transparentPrimitives = 0
+
         self.fvert = []
         self.fnorm = []
         self.fuvs = []
@@ -357,18 +356,18 @@ class Object3D(object):
         self.vface = []
         self.nfaces = 0
 
-        self.ucoor = []
-        self.unorm = []
-        self.utang = []
-        self.ucolr = []
-        self.utexc = []
+        self.ucoor = False
+        self.unorm = False
+        self.utang = False
+        self.ucolr = False
+        self.utexc = False
 
         self.has_uv = False
 
         if hasattr(self, 'index'): del self.index
         if hasattr(self, 'grpix'): del self.grpix
-        if hasattr(self, 'vmap'):  del self.vmap
-        if hasattr(self, 'tmap'):  del self.tmap
+        self.vmap = None
+        self.tmap = None
 
         if hasattr(self, 'r_coord'): del self.r_coord
         if hasattr(self, 'r_texco'): del self.r_texco
