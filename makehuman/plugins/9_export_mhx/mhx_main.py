@@ -129,7 +129,7 @@ class Writer(mhx_writer.Writer):
 
         gui3d.app.progress(0.25, text="Exporting main mesh")
         fp.write("#if toggle&T_Mesh\n")
-        self.meshWriter.writeMesh(fp, self.human.meshData)
+        self.meshWriter.writeMesh(fp, self.human.getSeedMesh())
         fp.write("#endif\n")
 
         self.proxyWriter.writeProxyType('Proxy', 'T_Proxy', fp, 0.35, 0.4)
