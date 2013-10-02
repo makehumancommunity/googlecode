@@ -374,6 +374,9 @@ class Shader(object):
             self.uniforms = []
             for index in xrange(parameterCount):
                 name, size, type = glGetActiveUniform(self.shaderId, index)
+                if name.startswith('gl_'):
+                    log.debug("Not listing built-in uniform %s", name)
+                    continue
                 if VectorUniform.check(type):
                     uniform = VectorUniform(index, name, type)
                 elif SamplerUniform.check(type):
