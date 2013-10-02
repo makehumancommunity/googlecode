@@ -319,8 +319,6 @@ class ShaderTaskView(gui3d.TaskView):
             return
         uniforms = sh.getUniforms()
         for index, uniform in enumerate(uniforms):
-            if uniform.name.startswith('gl_'):
-                continue
             if uniform.name in material._materialShaderParams:
                 continue
             self.paramBox.addWidget(UniformValue(uniform, mat), index)
@@ -510,6 +508,7 @@ class UniformValue(gui.GroupBox):
         self.uniform = uniform
         self.material = mat
         self.widgets = None
+        self.colorPicker = None
         self.create()
 
     def create(self):
@@ -531,6 +530,15 @@ class UniformValue(gui.GroupBox):
                 self.addWidget(child, row, col)
                 widgets.append(child)
             self.widgets.append(widgets)
+        if self.uniform.pytype == float and rows == 1 and cols in [3, 4]:
+            self.colorPicker = gui.ColorPickButton(material.Color().copyFrom(values[0,:3]))
+            @self.colorPicker.mhEvent
+            def onClicked(color):
+                print 'selected color %s' % color
+                for idx,widget in enumerate(self.widgets[0][:3]):
+                    widget.setValue(color.asTuple()[idx])
+                self.callEvent('onActivate', color)
+            self.addWidget(self.colorPicker, 1, 0)
 
     def createWidget(self, value, row):
         type = self.uniform.pytype
@@ -550,6 +558,8 @@ class UniformValue(gui.GroupBox):
         values = [[widget.value
                    for widget in widgets]
                   for widgets in self.widgets]
+        if self.colorPicker:
+            self.colorPicker.setColor(material.Color().copyFrom(values[0][:3]))
         if len(self.uniform.dims) == 1:
             values = values[0]
             if self.uniform.dims == (1,) and self.uniform.pytype == str:
@@ -574,6 +584,9 @@ class NumberValue(gui.TextEdit):
     def onChange(self, arg=None):
         self.parent.callEvent('onActivate', self.value)
 
+    def setValue(self, value):
+        self.setText(str(value))
+
 class StringValue(gui.TextEdit):
     def __init__(self, parent, value):
         super(StringValue, self).__init__(str(value))
@@ -582,6 +595,9 @@ class StringValue(gui.TextEdit):
     @property
     def value(self):
         return unicode(self.text)
+
+    def setValue(self, value):
+        self.setText(value)
 
     def onActivate(self, arg=None):
         self.parent.callEvent('onActivate', self.value)
@@ -615,6 +631,9 @@ class BooleanValue(gui.CheckBox):
     @property
     def value(self):
         return self.selected
+
+    def setValue(self, value):
+        self.setChecked(value)
 
 class TextureValue(gui.QtGui.QWidget, gui.Widget):
     def __init__(self, parent, value, defaultPath = None):
