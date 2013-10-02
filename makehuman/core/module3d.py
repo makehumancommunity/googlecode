@@ -533,8 +533,13 @@ class Object3D(object):
         n = first[1:] - first[:-1]
         n = np.hstack((n, np.array([len(vi) - first[-1]])))
         self.nfaces[ix] = n.astype(np.uint8)
-        for i in xrange(len(ix)):
-            self.vface[ix[i],:n[i]] = fi[first[i]:][:n[i]]
+        try:
+            for i in xrange(len(ix)):
+                self.vface[ix[i],:n[i]] = fi[first[i]:][:n[i]]
+        except Exception as e:
+            import log
+            log.error("Failed to index faces of mesh %s, you are probably loading a mesh with mixed nb of verts per face (do not mix tris and quads). (%s)", self.name, format(str(e)))
+            raise e
 
     def updateIndexBuffer(self):
         self.updateIndexBufferVerts()
