@@ -305,6 +305,8 @@ class SubdivisionObject(Object3D):
 
         self.markUVs()
 
+        self.has_uv = parent.has_uv
+
     def update_coords(self):
         parent = self.parent
 

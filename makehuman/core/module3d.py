@@ -77,8 +77,24 @@ class FaceGroup(object):
     def setColor(self, rgba):
         self.color = np.asarray(rgba, dtype = np.uint8)
 
+    def getObject(self):
+        if self.__object:
+            return self.__object()
+        else:
+            return None
+        
+    def setObject(self, value):
+        if value is None:
+            self.__object = None
+        else:
+            # Ensure link to gui3d.object is weak to avoid circular references (which break garbage collection)
+            self.__object = weakref.ref(value)
+    
+    object = property(getObject, setObject)
+
 class Object3D(object):
     def __init__(self, objName, vertsPerPrimitive=4):
+        self.clear()
 
         self.name = objName
         self.vertsPerPrimitive = vertsPerPrimitive
@@ -302,6 +318,7 @@ class Object3D(object):
         if value is None:
             self.__object = None
         else:
+            # Ensure link to gui3d.object is weak to avoid circular references (which break garbage collection)
             self.__object = weakref.ref(value)
     
     object = property(getObject, setObject)
@@ -326,30 +343,39 @@ class Object3D(object):
         # Clear remote data
         self._faceGroups = []
 
-        del self.fvert
-        del self.fnorm
-        del self.fuvs
-        del self.group
-        del self.face_mask
+        self.fvert = []
+        self.fnorm = []
+        self.fuvs = []
+        self.group = []
+        self.face_mask = []
 
-        del self.coord
-        del self.vnorm
-        del self.vtang
-        del self.color
-        del self.texco
-        del self.vface
-        del self.nfaces
+        self.coord = []
+        self.vnorm = []
+        self.vtang = []
+        self.color = []
+        self.texco = []
+        self.vface = []
+        self.nfaces = 0
 
-        del self.ucoor
-        del self.unorm
-        del self.utang
-        del self.ucolr
-        del self.utexc
+        self.ucoor = []
+        self.unorm = []
+        self.utang = []
+        self.ucolr = []
+        self.utexc = []
 
-        self.index = None
-        self.grpix = None
-        self.vmap = None
-        self.tmap = None
+        self.has_uv = False
+
+        if hasattr(self, 'index'): del self.index
+        if hasattr(self, 'grpix'): del self.grpix
+        if hasattr(self, 'vmap'):  del self.vmap
+        if hasattr(self, 'tmap'):  del self.tmap
+
+        if hasattr(self, 'r_coord'): del self.r_coord
+        if hasattr(self, 'r_texco'): del self.r_texco
+        if hasattr(self, 'r_vnorm'): del self.r_vnorm
+        if hasattr(self, 'r_vtang'): del self.r_vtang
+        if hasattr(self, 'r_color'): del self.r_color
+        if hasattr(self, 'r_faces'): del self.r_faces
 
     def setCoords(self, coords):
         nverts = len(coords)
