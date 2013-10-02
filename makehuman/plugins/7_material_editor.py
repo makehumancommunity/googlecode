@@ -534,7 +534,6 @@ class UniformValue(gui.GroupBox):
             self.colorPicker = gui.ColorPickButton(material.Color().copyFrom(values[0,:3]))
             @self.colorPicker.mhEvent
             def onClicked(color):
-                print 'selected color %s' % color
                 for idx,widget in enumerate(self.widgets[0][:3]):
                     widget.setValue(color.asTuple()[idx])
                 self.callEvent('onActivate', color)
