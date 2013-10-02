@@ -1477,29 +1477,29 @@ class ColorPickButton(Button):
     def __init__(self, initialColor = None):
         super(ColorPickButton, self).__init__("Pick")
         if initialColor:
-            self.current = initialColor
+            self.color = initialColor
         else:
             import material
             self.color = material.Color()
 
     def getColor(self):
-        return self.current
+        return self._color
         
     def setColor(self, color):
         if isinstance(color, tuple) or isinstance(color, list):
             import material
-            self.current = material.Color().copyFrom(color)
+            self._color = material.Color().copyFrom(color)
         else:
-            self.current = color
+            self._color = color
 
     color = property(getColor, setColor)
 
     def _clicked(self, state):
-        current = qColorFromColor(self.color)
-        color = QtGui.QColorDialog.getColor(current)
-        if color.isValid():
-            self.value = colorFromQColor(color)
-            self.callEvent('onClicked', self.value)
+        currentColor = qColorFromColor(self.color)
+        pickedColor = QtGui.QColorDialog.getColor(currentColor)
+        if pickedColor.isValid():
+            self.color = colorFromQColor(pickedColor)
+            self.callEvent('onClicked', self.color)
 
 class Action(QtGui.QAction, Widget):
     _groups = {}
