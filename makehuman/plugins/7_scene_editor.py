@@ -38,10 +38,11 @@ import glmodule
 
 
 class SceneItem(object):
-    def __init__(self, sceneview):
+    def __init__(self, sceneview, label = ""):
         # Call this last
         self.sceneview = sceneview
-        self.widget = gui.GroupBox()
+        self.label = label
+        self.widget = gui.GroupBox(label)
         self.makeProps()
 
     def makeProps(self):
@@ -61,7 +62,7 @@ class SceneItem(object):
 class SceneItemAdder(SceneItem):
     # Virtual scene item for adding scene items.
     def __init__(self, sceneview):
-        SceneItem.__init__(self, sceneview)
+        SceneItem.__init__(self, sceneview, "Add scene item")
 
     def makeProps(self):
         SceneItem.makeProps(self)
@@ -75,149 +76,93 @@ class SceneItemAdder(SceneItem):
 
 class EnvironmentSceneItem(SceneItem):
     def __init__(self, sceneview):
-        SceneItem.__init__(self, sceneview)
+        SceneItem.__init__(self, sceneview, "Environment properties")
 
     def makeProps(self):
         SceneItem.makeProps(self)
 
-        self.widget.addWidget(gui.TextView("Ambience"))
-        self.colbox = self.widget.addWidget(gui.TextEdit(
-            ", ".join([str(x) for x in self.sceneview.scene.environment.ambience])))
+        self.colbox = self.widget.addWidget(VectorInput("Ambience", self.sceneview.scene.environment.ambience))
 
         @self.colbox.mhEvent
         def onChange(value):
-            try:
-                value = value.replace(" ", "")
-                self.sceneview.scene.environment.ambience = tuple([float(x) for x in value.split(",")])
-                self.sceneview.updateScene()
-            except:
-                pass
+            self.sceneview.scene.environment.ambience = value
+            self.sceneview.updateScene()
             
      
 class LightSceneItem(SceneItem):
     def __init__(self, sceneview, light, lid):
         self.lightid = lid
         self.light = light
-        SceneItem.__init__(self, sceneview)
+        SceneItem.__init__(self, sceneview, "Light %s properties" % self.lightid)
 
     def makeProps(self):
         SceneItem.makeProps(self)
         
-        self.widget.addWidget(gui.TextView("Position"))
-        self.posbox = self.widget.addWidget(gui.TextEdit(
-            ", ".join([str(x) for x in self.light.position])))
+        self.posbox = self.widget.addWidget(VectorInput("Position", self.light.position))
+
+        self.focbox = self.widget.addWidget(VectorInput("Focus", self.light.focus))
         
-        self.widget.addWidget(gui.TextView("Focus"))
-        self.focbox = self.widget.addWidget(gui.TextEdit(
-            ", ".join([str(x) for x in self.light.focus])))
-        
-        self.widget.addWidget(gui.TextView("Color"))
-        self.colbox = self.widget.addWidget(gui.TextEdit(
-            ", ".join([str(x) for x in self.light.color])))
+        self.colbox = self.widget.addWidget(VectorInput("Color", self.light.color))
 
-        self.widget.addWidget(gui.TextView("Specular"))
-        self.specbox = self.widget.addWidget(gui.TextEdit(
-            ", ".join([str(x) for x in self.light.specular])))        
+        self.specbox = self.widget.addWidget(VectorInput("Specular", self.light.specular))
 
-        self.widget.addWidget(gui.TextView("Spot angle"))
-        self.fov = self.widget.addWidget(gui.TextEdit(str(self.light.fov)))
+        self.fov = self.widget.addWidget(VectorInput("Spot angle", [self.light.fov]))
 
-        self.widget.addWidget(gui.TextView("Attenuation"))
-        self.att = self.widget.addWidget(gui.TextEdit(str(self.light.attenuation)))
+        self.att = self.widget.addWidget(VectorInput("Attenuation", [self.light.attenuation]))
 
-        self.soft = self.widget.addWidget(gui.CheckBox("Soft light", self.light.areaLights > 1))
-        self.widget.addWidget(gui.TextView("Softness"))
-        self.size = self.widget.addWidget(gui.TextEdit(str(self.light.areaLightSize)))
+        self.soft = self.widget.addWidget(BooleanInput("Soft light", self.light.areaLights > 1))
 
-        self.widget.addWidget(gui.TextView("Samples"))
-        self.samples = self.widget.addWidget(gui.TextEdit(str(self.light.areaLights)))
+        self.size = self.widget.addWidget(VectorInput("Softness", [self.light.areaLightSize]))
+
+        self.samples = self.widget.addWidget(VectorInput("Samples", [self.light.areaLights]))
 
         self.removebtn = self.widget.addWidget(
             gui.Button('Remove light ' + str(self.lightid)))
 
         @self.posbox.mhEvent
         def onChange(value):
-            try:
-                value = value.replace(" ", "")
-                self.light.position = tuple([float(x) for x in value.split(",")])
-                self.sceneview.updateScene()
-            except: # The user hasn't typed the value correctly yet.
-                pass
+            self.light.position = tuple(value)
+            self.sceneview.updateScene()
 
         @self.focbox.mhEvent
         def onChange(value):
-            try:
-                value = value.replace(" ", "")
-                self.light.focus = tuple([float(x) for x in value.split(",")])
-            except:
-                pass
+            self.light.focus = tuple(value)
 
         @self.colbox.mhEvent
         def onChange(value):
-            try:
-                value = value.replace(" ", "")
-                self.light.color = tuple([float(x) for x in value.split(",")])
-                self.sceneview.updateScene()
-            except:
-                pass
+            self.light.color = tuple(value)
+            self.sceneview.updateScene()
 
         @self.specbox.mhEvent
         def onChange(value):
-            try:
-                value = value.replace(" ", "")
-                self.light.specular = tuple([float(x) for x in value.split(",")])
-                self.sceneview.updateScene()
-            except:
-                pass
+            self.light.specular = tuple(value)
+            self.sceneview.updateScene()
 
         @self.fov.mhEvent
         def onChange(value):
-            try:
-                value = value.replace(" ", "")
-                self.light.fov = float(value)
-            except:
-                pass
+            self.light.fov = value[0]
 
         @self.att.mhEvent
         def onChange(value):
-            try:
-                value = value.replace(" ", "")
-                self.light.attenuation = float(value)
-            except:
-                pass
+            self.light.attenuation = value[0]
 
         @self.soft.mhEvent
-        def onClicked(event):
-            try:
-                if self.soft.checkState() and self.light.areaLights <= 1:
-                    self.light.areaLights = 2
-                    self.samples.setText(str(2))
-                elif self.soft.checkState() == 0 and self.light.areaLights > 1:
-                    self.light.areaLights = 1
-                    self.samples.setText(str(1))
-            except:
-                pass
+        def onChange(value):
+            if value and self.light.areaLights <= 1:
+                self.light.areaLights = 2
+                self.samples.setValue([2])
+            elif self.light.areaLights > 1:
+                self.light.areaLights = 1
+                self.samples.setValue([1])
 
         @self.size.mhEvent
         def onChange(value):
-            try:
-                value = value.replace(" ", "")
-                self.light.attenuation = float(value)
-            except:
-                pass
+            self.light.attenuation = value[0]
 
         @self.samples.mhEvent
         def onChange(value):
-            try:
-                value = value.replace(" ", "")
-                alights = int(value)
-                self.light.areaLights = alights
-                if alights>1:
-                    self.soft.setCheckState(2)
-                else:
-                    self.soft.setCheckState(0)
-            except:
-                pass
+            self.light.areaLights = int(value[0])
+            self.soft.setValue(self.light.areaLights > 1)
             
         @self.removebtn.mhEvent
         def onClicked(event):
@@ -346,6 +291,93 @@ class SceneEditorTaskView(gui3d.TaskView):
         sceneTask = gui3d.app.getTask('Rendering', 'Scene')
         scene = sceneTask.scene
         glmodule.setSceneLighting(scene)
+
+
+class BooleanInput(gui.GroupBox):
+    def __init__(self, name, value):
+        super(BooleanInput, self).__init__(name)
+        self.name = name
+
+        self.widget = gui.CheckBox()
+        self.widget.setChecked(value)
+        self.addWidget(self.widget, 0, 0)
+
+        @self.widget.mhEvent
+        def onClicked(arg=None):
+            self.callEvent('onChange', self.getValue())
+
+    def getValue(self):
+        return self.widget.selected
+
+    def setValue(self, value):
+        self.widget.setChecked(value)
+
+class VectorInput(gui.GroupBox):
+    def __init__(self, name, value = [0.0, 0.0, 0.0]):
+        super(VectorInput, self).__init__(name)
+        self.name = name
+
+        self.widgets = []
+        for idx,v in enumerate(value):
+            w = FloatValue(self, v)
+            self.widgets.append(w)
+            self.addWidget(w, 0, idx)
+        self._value = value
+
+    def setValue(self, value):
+        for idx,w in enumerate(self.widgets):
+            w.setValue(value[idx])
+        self._value = value
+        self.callEvent('onChange', self.getValue())
+
+    def getValue(self):
+        return self._value
+
+    def onActivate(self, arg=None):
+        try:
+            self._value = [w.value for w in self.widgets]
+            self.callEvent('onChange', self.getValue())
+        except:
+            pass
+
+class NumberValue(gui.TextEdit):
+    def __init__(self, parent, value):
+        super(NumberValue, self).__init__(str(value), self._validator)
+        self.parent = parent
+
+    def sizeHint(self):
+        size = self.minimumSizeHint()
+        size.width = size.width() * 3
+        return size
+
+    def onActivate(self, arg=None):
+        try:
+            self.parent.callEvent('onActivate', self.value)
+        except:
+            pass
+
+    def onChange(self, arg=None):
+        try:
+            self.parent.callEvent('onActivate', self.value)
+        except:
+            pass
+
+    def setValue(self, value):
+        self.setText(str(value))
+
+class FloatValue(NumberValue):
+    _validator = gui.floatValidator
+
+    @property
+    def value(self):
+        return float(self.text)
+
+class IntValue(NumberValue):
+    _validator = gui.intValidator
+
+    @property
+    def value(self):
+        return int(self.text)
 
 
 def load(app):
