@@ -81,7 +81,7 @@ class EnvironmentSceneItem(SceneItem):
     def makeProps(self):
         SceneItem.makeProps(self)
 
-        self.colbox = self.widget.addWidget(VectorInput("Ambience", self.sceneview.scene.environment.ambience))
+        self.colbox = self.widget.addWidget(VectorInput("Ambience", self.sceneview.scene.environment.ambience, True))
 
         @self.colbox.mhEvent
         def onChange(value):
@@ -102,9 +102,9 @@ class LightSceneItem(SceneItem):
 
         self.focbox = self.widget.addWidget(VectorInput("Focus", self.light.focus))
         
-        self.colbox = self.widget.addWidget(VectorInput("Color", self.light.color))
+        self.colbox = self.widget.addWidget(VectorInput("Color", self.light.color, True))
 
-        self.specbox = self.widget.addWidget(VectorInput("Specular", self.light.specular))
+        self.specbox = self.widget.addWidget(VectorInput("Specular", self.light.specular, True))
 
         self.fov = self.widget.addWidget(VectorInput("Spot angle", [self.light.fov]))
 
@@ -313,7 +313,7 @@ class BooleanInput(gui.GroupBox):
         self.widget.setChecked(value)
 
 class VectorInput(gui.GroupBox):
-    def __init__(self, name, value = [0.0, 0.0, 0.0]):
+    def __init__(self, name, value = [0.0, 0.0, 0.0], isColor = False):
         super(VectorInput, self).__init__(name)
         self.name = name
 
@@ -324,10 +324,21 @@ class VectorInput(gui.GroupBox):
             self.addWidget(w, 0, idx)
         self._value = value
 
+        if isColor:
+            self.colorPicker = gui.ColorPickButton(value)
+            @self.colorPicker.mhEvent
+            def onClicked(color):
+                self.setValue(list(color.asTuple()))
+            self.addWidget(self.colorPicker, 1, 0)
+        else:
+            self.colorPicker = None
+
     def setValue(self, value):
         for idx,w in enumerate(self.widgets):
             w.setValue(value[idx])
         self._value = value
+        if self.colorPicker:
+            self.colorPicker.color = self.getValue()
         self.callEvent('onChange', self.getValue())
 
     def getValue(self):
@@ -336,6 +347,8 @@ class VectorInput(gui.GroupBox):
     def onActivate(self, arg=None):
         try:
             self._value = [w.value for w in self.widgets]
+            if self.colorPicker:
+                self.colorPicker.color = self.getValue()
             self.callEvent('onChange', self.getValue())
         except:
             pass

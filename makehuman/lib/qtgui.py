@@ -1476,7 +1476,7 @@ class ColorPickButton(Button):
 
     def __init__(self, initialColor = None):
         super(ColorPickButton, self).__init__("Pick")
-        if initialColor:
+        if initialColor is not None:
             self.color = initialColor
         else:
             import material
@@ -1486,11 +1486,13 @@ class ColorPickButton(Button):
         return self._color
         
     def setColor(self, color):
-        if isinstance(color, tuple) or isinstance(color, list):
-            import material
-            self._color = material.Color().copyFrom(color)
-        else:
+        import material
+        if isinstance(color, material.Color):
             self._color = color
+        elif isinstance(color, QtGui.QColor):
+            self._color = colorFromQColor(color)
+        else:
+            self._color = material.Color().copyFrom(color)
 
     color = property(getColor, setColor)
 
