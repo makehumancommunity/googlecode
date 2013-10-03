@@ -303,6 +303,11 @@ def initInterface(context):
         description = "Use MakeHuman T-pose for MakeHuman characters",
         default = True)
 
+    bpy.types.Object.MhReverseHip = BoolProperty(
+        name = "ReverseHip",
+        description = "The rig has a reverse hip",
+        default = False)
+
     bpy.types.PoseBone.McpBone = StringProperty(
         description = "MakeHuman bone corresponding to this bone",
         default = "")

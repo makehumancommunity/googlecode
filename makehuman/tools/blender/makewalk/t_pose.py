@@ -124,13 +124,13 @@ TPose = {
 
     "thigh.L" :     (-pi/2, 0, 0, 'XYZ'),
     "shin.L" :      (-pi/2, 0, 0, 'XYZ'),
-    "foot.L" :      (None, 0, 0, 'XYZ'),
-    "toe.L" :       (pi, 0, 0, 'XYZ'),
+    #"foot.L" :      (None, 0, 0, 'XYZ'),
+    #"toe.L" :       (pi, 0, 0, 'XYZ'),
 
     "thigh.R" :     (-pi/2, 0, 0, 'XYZ'),
     "shin.R" :      (-pi/2, 0, 0, 'XYZ'),
-    "foot.R" :      (None, 0, 0, 'XYZ'),
-    "toe.R" :       (pi, 0, 0, 'XYZ'),
+    #"foot.R" :      (None, 0, 0, 'XYZ'),
+    #"toe.R" :       (pi, 0, 0, 'XYZ'),
 }
 
 def autoTPose(rig, scn):
@@ -276,7 +276,10 @@ class VIEW3D_OT_McpSetTPoseButton(bpy.types.Operator):
     def execute(self, context):
         try:
             initRig(context)
-            setTPose(context.object, context.scene)
+            rig = context.object
+            if isRigify(rig):
+                setRigifyFKIK(rig, 0)
+            setTPose(rig, context.scene)
             print("Set T-pose")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')

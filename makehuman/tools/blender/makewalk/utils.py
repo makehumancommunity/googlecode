@@ -231,12 +231,23 @@ def copyAction(act1, name):
     return act2
 
 #
-#   validBone(pb):
+#   validBone(pb, muteIk=False):
 #
 
-def validBone(pb):
+def validBone(pb, muteIk=False):
     for cns in pb.constraints:
-        if cns.type[0:5] != 'LIMIT':
+        if cns.mute or cns.influence < 0.2:
+            pass
+        elif cns.type[0:5] == 'LIMIT':
+            cns.influence = 0
+        elif cns.type == 'IK':
+            if muteIk:
+                cns.mute = True
+            elif cns.target is None:
+                pass
+            else:
+                return False
+        else:
             return False
     return True
 

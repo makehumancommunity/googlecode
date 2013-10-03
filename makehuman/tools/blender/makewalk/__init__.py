@@ -37,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.915",
+    "version": "0.916",
     "blender": (2, 6, 8),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -364,7 +364,9 @@ class MhxTargetBonesPanel(bpy.types.Panel):
             return
         layout.operator("mcp.init_targets", text="Reinit Target Panel")
         layout.prop(scn, 'McpAutoTargetRig')
+        layout.prop(rig, "MhReverseHip")
         layout.operator("mcp.get_target_rig")
+        layout.operator("mcp.set_t_pose")
         layout.prop(scn, "McpTargetRig")
 
         if scn.McpTargetRig:
