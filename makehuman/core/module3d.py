@@ -231,6 +231,8 @@ class Object3D(object):
         self.vnorm[ix] = norms
 
     def calcVertexTangents(self, ix = None):
+        if not self.has_uv:
+            return
         self.markCoords(ix, norm=True)
         if ix is None:
             ix = np.s_[:]
@@ -624,6 +626,8 @@ class Object3D(object):
         self.unorm = False
 
     def sync_tangents(self):
+        if not self.has_uv:
+            return
         if self.utang is False:
             return
         if self.vmap is None or len(self.vmap) == 0:
@@ -646,6 +650,8 @@ class Object3D(object):
         self.ucolr = False
 
     def sync_texco(self):
+        if not self.has_uv:
+            return
         if self.utexc is False:
             return
         if self.tmap is None or len(self.tmap) == 0:

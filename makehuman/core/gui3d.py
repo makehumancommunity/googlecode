@@ -30,7 +30,6 @@ import module3d
 import mh
 import log
 import selection
-import object3d
 
 from guicommon import Object, Action
 
