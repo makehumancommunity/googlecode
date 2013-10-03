@@ -23,8 +23,6 @@ Common GUI elements extracted from gui3d to minimize coupling with gui backend.
 """
 
 import events3d
-import object3d
-import selection
 
 class Action(object):
     def __init__(self, name):
@@ -88,11 +86,14 @@ class Object(events3d.EventHandler):
 
     @staticmethod
     def attachMesh(mesh):
+        import object3d
+        import selection
         selection.selectionColorMap.assignSelectionID(mesh)
         object3d.Object3D.attach(mesh)
 
     @staticmethod
     def detachMesh(mesh):
+        import object3d
         object3d.Object3D.detach(mesh)
 
     def _meshes(self):
