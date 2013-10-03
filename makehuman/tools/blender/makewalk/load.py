@@ -395,7 +395,10 @@ def renameBones(srcRig, scn):
         if trgName:
             if action:
                 grp = action.groups[srcName]
-                grp.name = trgName
+                try:
+                    grp.name = trgName
+                except:
+                    raise MocapError("Group name %s must be a string" % trgName)
             eb.name = trgName
             trgBones[trgName] = CEditBone(eb)
             setbones.append((eb, trgName))
