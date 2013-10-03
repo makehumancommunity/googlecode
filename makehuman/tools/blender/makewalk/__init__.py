@@ -37,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.913",
+    "version": "0.914",
     "blender": (2, 6, 8),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -364,8 +364,8 @@ class MhxTargetBonesPanel(bpy.types.Panel):
             return
         layout.operator("mcp.init_targets", text="Reinit Target Panel")
         layout.prop(scn, 'McpAutoTargetRig')
+        layout.operator("mcp.get_target_rig")
         layout.prop(scn, "McpTargetRig")
-        layout.prop(scn, "McpMakeHumanTPose")
 
         if scn.McpTargetRig:
             (bones, ikBones, tpose) = mcp.targetInfo[scn.McpTargetRig]
@@ -421,8 +421,8 @@ class UtilityPanel(bpy.types.Panel):
             confirmPanel(layout, mcp.utilityConfirm, mcp.utilityString)
             return
 
-        layout.label("Initialization")
-        layout.operator("mcp.init_interface")
+        layout.label("Default Settings")
+        #layout.operator("mcp.init_interface")
         layout.operator("mcp.save_defaults")
         layout.operator("mcp.load_defaults")
 

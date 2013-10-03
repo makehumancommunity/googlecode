@@ -80,7 +80,15 @@ def quadDict():
 
 def isMhxRig(rig):
     try:
-        rig.pose.bones['thigh.ik.L']
+        rig.pose.bones['foot.rev.L']
+        return True
+    except KeyError:
+        return False
+
+
+def isRigify(rig):
+    try:
+        rig.pose.bones['MCH-spine.flex']
         return True
     except KeyError:
         return False

@@ -92,15 +92,16 @@ def guessTargetArmatureFromList(rig, bones, scn):
     ensureTargetInited(scn)
     print("Guessing target")
 
-    amtList = ["MHX", "Rigify"]
-    for key in mcp.targetInfo.keys():
-        if key not in ["MHX", "Rigify"]:
-            amtList.append(key)
-
-    for name in amtList:
-        (boneAssoc, _ikBones, _tpose) = mcp.targetInfo[name]
-        if testTargetRig(name, rig, boneAssoc):
-            return name
+    if isMhxRig(rig):
+        return "MHX"
+    elif isRigify(rig):
+        return "Rigify"
+    else:
+        for name in mcp.targetInfo.keys():
+            if name not in ["MHX", "Rigify"]:
+                (boneAssoc, _ikBones, _tpose) = mcp.targetInfo[name]
+                if testTargetRig(name, rig, boneAssoc):
+                    return name
 
     return "Automatic"
 
@@ -251,9 +252,22 @@ def ensureTargetInited(scn):
 class VIEW3D_OT_McpInitTargetsButton(bpy.types.Operator):
     bl_idname = "mcp.init_targets"
     bl_label = "Init Target Panel"
+    bl_description = "(Re)load all .trg files in the target_rigs directory."
     bl_options = {'UNDO'}
-
 
     def execute(self, context):
         initTargets(context.scene)
         return{'FINISHED'}
+
+
+class VIEW3D_OT_McpGetTargetRigButton(bpy.types.Operator):
+    bl_idname = "mcp.get_target_rig"
+    bl_label = "Get Target Rig"
+    bl_description = "Get the target rig type of the active armature."
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        getTargetArmature(context.object, context.scene)
+        return{'FINISHED'}
+
+

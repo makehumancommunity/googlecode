@@ -109,18 +109,19 @@ def getFkOffset(rig, ez, origin, foot, toe, mBall, mToe, mHeel):
         heelOffset = getHeadOffset(mHeel, ez, origin)
         if heelOffset > offset:
             offset = heelOffset
-    else:
+    elif toe:
         offset = getTailOffset(toe, ez, origin)
         ballOffset = getHeadOffset(toe, ez, origin)
         if ballOffset > offset:
             offset = ballOffset
-
         ball = toe.matrix.col[3]
         y = toe.matrix.col[1]
         heel = ball - y*foot.length
         heelOffset = getOffset(heel, ez, origin)
         if heelOffset > offset:
             offset = heelOffset
+    else:
+        offset = 0
 
     return offset
 

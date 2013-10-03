@@ -135,12 +135,23 @@ class CArmature:
         self.boneNames[canonicalName(pb.name)] = bname
 
 
-    def findTerminal(self, pb, bnames):
+    def findTerminal(self, pb, bnames, prefnames=None):
+        if prefnames is None:
+            prefnames = bnames
         self.setBone(bnames[0], pb)
         bnames = bnames[1:]
+        prefnames = prefnames[1:]
         children = validChildren(pb)
-        if bnames and len(children) == 1:
-            return self.findTerminal(children[0], bnames)
+        if bnames:
+            if len(children) >= 1:
+                child = children[0]
+                for pb in children[1:]:
+                    if prefnames[0] in pb.name.lower():
+                        child = pb
+                        break
+                return self.findTerminal(child, bnames, prefnames)
+            else:
+                return None
         else:
             while len(children) == 1:
                 pb = children[0]
@@ -150,12 +161,13 @@ class CArmature:
 
     def findLeg(self, thigh, suffix):
         bnames = ["thigh"+suffix, "shin"+suffix, "foot"+suffix, "toe"+suffix]
+        prefnames = ["X", "X", "foot", "toe"]
         shin = validChildren(thigh)[0]
         foot = validChildren(shin)[0]
-        if thigh.bone.length < foot.bone.length:
-            self.findTerminal(shin, bnames)
+        if foot and thigh.bone.length < foot.bone.length:
+            self.findTerminal(shin, bnames, prefnames)
         else:
-            self.findTerminal(thigh, bnames)
+            self.findTerminal(thigh, bnames, prefnames)
 
 
     def findArm(self, shoulder, suffix):

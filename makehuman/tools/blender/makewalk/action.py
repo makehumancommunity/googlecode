@@ -81,6 +81,7 @@ def findActionNumber(name):
 class VIEW3D_OT_McpUpdateActionListButton(bpy.types.Operator):
     bl_idname = "mcp.update_action_list"
     bl_label = "Update Action List"
+    bl_description = "Update the action list"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -122,6 +123,7 @@ def deleteAction(context):
 class VIEW3D_OT_McpDeleteButton(bpy.types.Operator):
     bl_idname = "mcp.delete"
     bl_label = "Delete Action"
+    bl_description = "Delete the action selected in the action list"
     bl_options = {'UNDO'}
     answer = StringProperty(default="")
 
@@ -158,7 +160,12 @@ def deleteHash():
 
 class VIEW3D_OT_McpDeleteHashButton(bpy.types.Operator):
     bl_idname = "mcp.delete_hash"
-    bl_label = "Delete Hash Actions"
+    bl_label = "Delete Temporary Actions"
+    bl_description = (
+        "Delete all actions whose name start with '#'. " +
+        "Such actions are created temporarily by MakeWalk. " +
+        "They should be deleted automatically but may be left over."
+    )
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -193,6 +200,7 @@ def getAction(name):
 class VIEW3D_OT_McpSetCurrentActionButton(bpy.types.Operator):
     bl_idname = "mcp.set_current_action"
     bl_label = "Set Current Action"
+    bl_description = "Set the action selected in the action list as the current action"
     bl_options = {'UNDO'}
     prop = StringProperty()
 
