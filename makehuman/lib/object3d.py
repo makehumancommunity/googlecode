@@ -22,11 +22,6 @@ Abstract
 TODO
 """
 
-import numpy as np
-import glmodule as gl
-import texture
-import shader
-import matrix
 import log
 from core import G
 
@@ -171,6 +166,7 @@ class Object3D(object):
 
     @property
     def shaderObj(self):
+        import shader
         if not shader.Shader.supported():
             return None
         if self._shaderPath != self.parent.shader:
@@ -226,12 +222,16 @@ class Object3D(object):
         return self.parent._faceGroups[idx].color
 
     def draw(self, *args, **kwargs):
-        return gl.drawMesh(self, *args, **kwargs)
+        import glmodule
+        return glmodule.drawMesh(self, *args, **kwargs)
 
     def pick(self, *args, **kwargs):
-        return gl.pickMesh(self, *args, **kwargs)
+        import glmodule
+        return glmodule.pickMesh(self, *args, **kwargs)
 
     def sortFaces(self):
+        import numpy as np
+        import matrix
         camera = G.cameras[0]
 
         indices = self.primitives[self.nPrimitives - self.nTransparentPrimitives:]
