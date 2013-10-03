@@ -74,15 +74,18 @@ def getTargetArmature(rig, scn):
         mcp.target = name
         (boneAssoc, mcp.ikBones, rig.McpTPoseFile) = mcp.targetInfo[name]
         if not testTargetRig(name, rig, boneAssoc):
-            print("Bones", bones)
-            raise MocapError("Target armature %s does not match armature %s" % (rig.name, name))
+            print("WARNING:\nTarget armature %s does not match armature %s.\nBones:" % (rig.name, name))
+            for pair in boneAssoc:
+                print("  %s : %s" % pair)
         print("Target armature %s" % name)
 
         for pb in rig.pose.bones:
             pb.McpBone = pb.McpParent = ""
         for bname,mhx in boneAssoc:
-            pb = rig.pose.bones[bname]
-            pb.McpBone = mhx
+            try:
+                rig.pose.bones[bname].McpBone = mhx
+            except KeyError:
+                pass
 
         return boneAssoc
 
@@ -256,7 +259,10 @@ class VIEW3D_OT_McpInitTargetsButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        initTargets(context.scene)
+        try:
+            initTargets(context.scene)
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
 
 
@@ -267,7 +273,10 @@ class VIEW3D_OT_McpGetTargetRigButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        getTargetArmature(context.object, context.scene)
+        try:
+            getTargetArmature(context.object, context.scene)
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
 
 

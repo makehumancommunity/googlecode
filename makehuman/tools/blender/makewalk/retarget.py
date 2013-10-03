@@ -255,6 +255,9 @@ def retargetAnimation(context, srcRig, trgRig):
         trgRig.animation_data.action = None
     scn.update()
 
+    if isRigify(trgRig):
+        setRigifyFKIK(trgRig, 0)
+
     try:
         scn.frame_current = frames[0]
     except:

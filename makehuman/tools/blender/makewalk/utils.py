@@ -94,6 +94,18 @@ def isRigify(rig):
         return False
 
 
+def setRigifyFKIK(rig, value):
+    rig.pose.bones["hand.ik.L"]["ikfk_switch"] = value
+    rig.pose.bones["hand.ik.R"]["ikfk_switch"] = value
+    rig.pose.bones["foot.ik.L"]["ikfk_switch"] = value
+    rig.pose.bones["foot.ik.R"]["ikfk_switch"] = value
+    on = (value < 0.5)
+    for n in [6, 9, 12, 15]:
+        rig.data.layers[n] = on
+    for n in [7, 10, 13, 16]:
+        rig.data.layers[n] = not on
+
+
 def isMakeHumanRig(rig):
     try:
         return rig["MhAlpha8"]
