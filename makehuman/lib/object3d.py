@@ -46,6 +46,10 @@ class Object3D(object):
         self._shaderObj = None
 
     @property
+    def name(self):
+        return self.parent.name
+
+    @property
     def verts(self):
         return self.parent.r_coord
 

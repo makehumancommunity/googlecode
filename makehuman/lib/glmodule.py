@@ -316,6 +316,9 @@ def drawMesh(obj):
     if not obj.visibility:
         return
 
+    if G.args.get('fullloggingopengl', False):
+        log.debug("Rendering mesh %s", obj.name)
+
     glDepthFunc(GL_LEQUAL)
 
     # Transform the current object
@@ -329,7 +332,7 @@ def drawMesh(obj):
         if not useShader:
             # Bind texture for fixed function shading
             glActiveTexture(GL_TEXTURE0)
-            tex = getTexture(obj.texture)
+            tex = getTexture(obj.texture)       # TODO call glActiveTexture when no texture available?
             if tex not in (False, None):
                 glBindTexture(GL_TEXTURE_2D, tex.textureId)
 
@@ -446,6 +449,10 @@ def drawMesh(obj):
         glActiveTexture(GL_TEXTURE0)
 
     glDisable(GL_CULL_FACE)
+
+    # Disable custom vertex arrays again
+    if useShader and obj.shaderObj.requiresVertexTangent():
+        glDisableVertexAttribArray(obj.shaderObj.vertexTangentAttrId)
 
     # Re-enable lighting if the object was shadeless
     if obj.shadeless:
