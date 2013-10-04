@@ -121,7 +121,7 @@ class EditingTaskView(gui3d.TaskView):
         self.buildCircle()
         self.updateRadius()
 
-        self.circle = self.addObject(gui3d.Object([0, 0, 0], self.circleMesh))
+        self.circle = self.addObject(gui3d.Object(self.circleMesh))
 
         @self.clear.mhEvent
         def onClicked(dummy):
