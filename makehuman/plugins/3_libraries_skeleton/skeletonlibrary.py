@@ -347,7 +347,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.skelMesh.priority = 100
         self.skelMesh.setPickable(True)
         mh.updatePickingBuffer()
-        self.skelObj = gui3d.app.addObject(gui3d.Object(self.human.getPosition(), self.skelMesh) )
+        self.skelObj = gui3d.app.addObject(gui3d.Object(self.skelMesh, self.human.getPosition()) )
         self.skelObj.setRotation(self.human.getRotation())
 
         # Add the skeleton mesh to the human AnimatedMesh so it animates together with the skeleton
@@ -381,7 +381,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.jointsMesh.priority = 100
         self.jointsMesh.setPickable(True)
         mh.updatePickingBuffer()
-        self.jointsObj = self.addObject( gui3d.Object(self.human.getPosition(), self.jointsMesh) )
+        self.jointsObj = self.addObject( gui3d.Object(self.jointsMesh, self.human.getPosition()) )
         self.jointsObj.setRotation(self.human.getRotation())
 
         color = np.asarray([255, 255, 0, 255], dtype=np.uint8)

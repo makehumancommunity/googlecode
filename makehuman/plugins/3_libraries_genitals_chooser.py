@@ -107,7 +107,7 @@ class GenitalsTaskView(gui3d.TaskView):
 
         mesh.material = human.genitalsProxy.material
 
-        human.genitalsObj = gui3d.app.addObject(gui3d.Object(human.getPosition(), mesh))
+        human.genitalsObj = gui3d.app.addObject(gui3d.Object(mesh, human.getPosition()))
         human.genitalsObj.setRotation(human.getRotation())
         human.genitalsObj.mesh.setCameraProjection(0)
         human.genitalsObj.mesh.setSolid(human.mesh.solid)

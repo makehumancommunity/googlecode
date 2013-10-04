@@ -247,7 +247,7 @@ class ClothesTaskView(gui3d.TaskView):
 
         mesh.material = proxy.material
 
-        clo = gui3d.app.addObject(gui3d.Object(human.getPosition(), mesh))
+        clo = gui3d.app.addObject(gui3d.Object(mesh, human.getPosition()))
         clo.setRotation(human.getRotation())
         clo.mesh.setCameraProjection(0)
         clo.mesh.setSolid(human.mesh.solid)

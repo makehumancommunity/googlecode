@@ -38,7 +38,7 @@ class Human(guicommon.Object):
 
     def __init__(self, mesh, hairObj=None, eyesObj=None, genitalsObj=None):
 
-        guicommon.Object.__init__(self, [0, 0, 0], mesh, True)
+        guicommon.Object.__init__(self, mesh)
 
         self.hasWarpTargets = False
 

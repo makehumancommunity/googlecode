@@ -47,7 +47,7 @@ class Object(events3d.EventHandler):
     :type visible: Boolean
     """
 
-    def __init__(self, position, mesh, visible=True):
+    def __init__(self, mesh, position=[0.0, 0.0, 0.0], visible=True):
 
         if mesh.object:
             raise RuntimeError('This mesh is already attached to an object')

@@ -104,7 +104,7 @@ class EyesTaskView(gui3d.TaskView):
 
         mesh.material = human.eyesProxy.material
 
-        human.eyesObj = gui3d.app.addObject(gui3d.Object(human.getPosition(), mesh))
+        human.eyesObj = gui3d.app.addObject(gui3d.Object(mesh, human.getPosition()))
         human.eyesObj.setRotation(human.getRotation())
         human.eyesObj.mesh.setCameraProjection(0)
         human.eyesObj.mesh.setSolid(human.mesh.solid)

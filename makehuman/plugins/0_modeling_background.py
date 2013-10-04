@@ -115,7 +115,7 @@ class BackgroundChooser(gui3d.TaskView):
             self.transformations[side] = [(0.0, 0.0), 1.0]
 
         mesh = geometry3d.RectangleMesh(20, 20, centered=True)
-        self.backgroundImage = gui3d.app.addObject(gui3d.Object([0, 0, 1], mesh, visible=False))
+        self.backgroundImage = gui3d.app.addObject(gui3d.Object(mesh, [0, 0, 1], visible=False))
         self.backgroundImage.mesh.setCameraProjection(0) # Set to model camera
         self.opacity = 100
         mesh.setColor([255, 255, 255, self.opacity])

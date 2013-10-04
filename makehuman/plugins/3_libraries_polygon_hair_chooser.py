@@ -102,7 +102,7 @@ class HairTaskView(gui3d.TaskView):
 
         mesh.material = human.hairProxy.material
 
-        human.hairObj = gui3d.app.addObject(gui3d.Object(human.getPosition(), mesh))
+        human.hairObj = gui3d.app.addObject(gui3d.Object(mesh, human.getPosition()))
         human.hairObj.setRotation(human.getRotation())
         human.hairObj.mesh.setCameraProjection(0)
         human.hairObj.mesh.setSolid(human.mesh.solid)
