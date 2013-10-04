@@ -314,7 +314,7 @@ class ShaderTaskView(gui3d.TaskView):
         if not path:
             return
 
-        sh = shader.getShader(path, mat.shaderDefines)
+        sh = mat.shaderObj
         if not sh:
             return
         uniforms = sh.getUniforms()

@@ -770,6 +770,14 @@ class Material(object):
 
     shader = property(getShader, setShader)
 
+    def getShaderObj(self):
+        import shader
+        return shader.getShader(self.getShader(), self.shaderDefines)
+
+    @property
+    def shaderObj(self):
+        return self.getShaderObj()
+
 
     @property
     def shaderParameters(self):

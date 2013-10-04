@@ -803,6 +803,10 @@ class Object3D(object):
     def shader(self):
         return self.material.shader
 
+    @property
+    def shaderObj(self):
+        return self.material.shaderObj
+
     def configureShading(self, diffuse=None, bump = None, normal=None, displacement=None, spec = None, vertexColors = None):
         """
         Configure shader options and set the necessary properties based on
