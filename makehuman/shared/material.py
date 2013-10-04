@@ -27,7 +27,11 @@ import os
 
 class Color(object):
     def __init__(self, r=0.00, g=0.00, b=0.00):
-        self.setValues(r,g,b)
+        if hasattr(r, '__iter__'):
+            # Copy constructor
+            self.copyFrom(r)
+        else:
+            self.setValues(r,g,b)
 
     def setValues(self, r, g, b):
         self.setR(r)
@@ -40,25 +44,42 @@ class Color(object):
     values = property(getValues, setValues)
 
     def setR(self, r):
-        self.r = max(0.0, min(1.0, float(r)))
+        self._r = max(0.0, min(1.0, float(r)))
 
     def setG(self, g):
-        self.g = max(0.0, min(1.0, float(g)))
+        self._g = max(0.0, min(1.0, float(g)))
 
     def setB(self, b):
-        self.b = max(0.0, min(1.0, float(b)))
+        self._b = max(0.0, min(1.0, float(b)))
+
+    def getR(self):
+        return self._r
+
+    def getG(self):
+        return self._g
+
+    def getB(self):
+        return self._b
+
+    r = property(getR, setR)
+    g = property(getG, setG)
+    b = property(getB, setB)
 
     def __repr__(self):
         return "Color(%s %s %s)" % (self.r,self.g,self.b)
 
+    # List interface
+    def __getitem__(self, key):
+        return self.asTuple()[key]
+
+    def __iter__(self):
+        return self.asTuple().__iter__()
+
     def copyFrom(self, color):
-        if isinstance(color, Color):
-            self.setValues(color.r, color.g, color.b)
-        else:
-            r = color[0]
-            g = color[1]
-            b = color[2]
-            self.setValues(r, g, b)
+        r = color[0]
+        g = color[1]
+        b = color[2]
+        self.setValues(r, g, b)
 
         return self
 
@@ -67,6 +88,26 @@ class Color(object):
 
     def asStr(self):
         return "%r %r %r" % self.asTuple()
+
+    # Comparison operators
+    def __lt__(self, other):
+        return self.asTuple().__lt__(other.asTuple())
+
+    def __le__(self, other):
+        return self.asTuple().__le__(other.asTuple())
+
+    def __eq__(self, other):
+        return self.asTuple().__eq__(other.asTuple())
+
+    def __ne__(self, other):
+        return self.asTuple().__ne__(other.asTuple())
+
+    def __gt__(self, other):
+        return self.asTuple().__gt__(other.asTuple())
+
+    def __ge__(self, other):
+        return self.asTuple().__ge__(other.asTuple())
+
 
 # Protected shaderDefine parameters that are set exclusively by means of shaderConfig options (configureShading())
 _shaderConfigDefines = ['DIFFUSE', 'BUMPMAP', 'NORMALMAP', 'DISPLACEMENT', 'SPECULARMAP', 'VERTEX_COLOR']
@@ -985,7 +1026,7 @@ def getFilePath(filename, folder = None):
     if os.path.isfile(filename):
         return os.path.abspath(filename)
     # Search in user data folder
-    from getpath import getPath, getSysDataPath
+    from getpath import getPath, getSysDataPath, getSysPath
     userPath = os.path.join(getPath(''), filename)
     if os.path.isfile(userPath):
         return os.path.abspath(userPath)
@@ -993,12 +1034,10 @@ def getFilePath(filename, folder = None):
     sysPath = getSysDataPath(filename)
     if os.path.isfile(sysPath):
         return os.path.abspath(sysPath)
-
-    if filename.startswith('data/'):
-        # If still nothing found, try again without data/ at the beginning
-        path = getFilePath(filename[len('data/'):], folder)
-        if os.path.isfile(path):
-            return path
+    # Search in system path
+    sysPath = getSysPath(filename)
+    if os.path.isfile(sysPath):
+        return os.path.abspath(sysPath)
 
     # Nothing found
     return os.path.normpath(filename)
