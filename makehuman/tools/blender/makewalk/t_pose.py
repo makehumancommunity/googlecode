@@ -170,8 +170,8 @@ def autoTPose(rig, scn):
         rig.McpRestTPose = False
 
 
-def setTPose(rig, scn, filename=None):
-    if not rig.McpTPoseLoaded:
+def setTPose(rig, scn, filename=None, reload=True):
+    if reload or not rig.McpTPoseLoaded:
         if filename is None:
             filename = rig.McpTPoseFile
         hasFile = loadTPose(rig, filename)
@@ -378,7 +378,8 @@ def saveTPose(context, filepath):
         q = mat.to_quaternion()
         magn = math.sqrt( (q.w-1)*(q.w-1) + q.x*q.x + q.y*q.y + q.z*q.z )
         if magn > 1e-4:
-            struct.append((pb.name, tuple(q)))
+            if pb.McpBone:
+                struct.append((pb.McpBone, tuple(q)))
     filepath = os.path.join(os.path.dirname(__file__), filepath)
     print("Saving %s" % filepath)
     saveJson(struct, filepath)

@@ -27,6 +27,7 @@
 
 import bpy
 from bpy.props import *
+from bpy_extras.io_utils import ExportHelper
 import math
 import os
 
@@ -99,14 +100,14 @@ def guessTargetArmatureFromList(rig, bones, scn):
         return "MHX"
     elif isRigify(rig):
         return "Rigify"
-    else:
+    elif False:
         for name in mcp.targetInfo.keys():
             if name not in ["MHX", "Rigify"]:
                 (boneAssoc, _ikBones, _tpose) = mcp.targetInfo[name]
                 if testTargetRig(name, rig, boneAssoc):
                     return name
-
-    return "Automatic"
+    else:
+        return "Automatic"
 
 
 def testTargetRig(name, rig, rigBones):
@@ -114,7 +115,7 @@ def testTargetRig(name, rig, rigBones):
     for (bname, mhxname) in rigBones:
         try:
             pb = rig.pose.bones[bname]
-        except KeyError:
+        except NameError:
             pb = None
         if pb is None or not validBone(pb):
             print("  Did not find bone %s (%s)" % (bname, mhxname))
@@ -280,3 +281,47 @@ class VIEW3D_OT_McpGetTargetRigButton(bpy.types.Operator):
         return{'FINISHED'}
 
 
+def saveTargetFile(filepath, context):
+    from .t_pose import saveTPose
+
+    rig = context.object
+    scn = context.scene
+    fname,ext = os.path.splitext(filepath)
+    filepath = fname + ".trg"
+    fp = open(filepath, "w")
+    name = os.path.basename(fname).capitalize().replace(" ","_")
+    fp.write("Name:\t%s\n\nBones:\n" % name)
+    for pb in rig.pose.bones:
+        if pb.McpBone:
+            fp.write("\t%s\t%s\n" % (pb.name, pb.McpBone))
+    fp.write("\nIkBones:\n\n")
+    if scn.McpSaveTargetTPose:
+        fp.write("T-pose:\t%s-tpose.json\n" % name)
+    fp.close()
+    print("Saved %s" % filepath)
+
+    if scn.McpSaveTargetTPose:
+        tposePath = fname + "-tpose.json"
+        saveTPose(context, tposePath)
+
+
+class VIEW3D_OT_McpSaveTargetFileButton(bpy.types.Operator, ExportHelper):
+    bl_idname = "mcp.save_target_file"
+    bl_label = "Save Target File"
+    bl_description = "Save a .trg file for this character"
+    bl_options = {'UNDO'}
+
+    filename_ext = ".trg"
+    filter_glob = StringProperty(default="*.trg", options={'HIDDEN'})
+    filepath = StringProperty(name="File Path", description="Filepath to target file", maxlen=1024, default="")
+
+    def execute(self, context):
+        try:
+            saveTargetFile(self.properties.filepath, context)
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
+        return{'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}

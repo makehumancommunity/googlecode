@@ -87,7 +87,7 @@ def initInterface(context):
 
     bpy.types.Scene.McpSubsample = BoolProperty(
         name="Subsample",
-        default=False)
+        default=True)
 
     bpy.types.Scene.McpSSFactor = IntProperty(
         name="Subsample Factor",
@@ -306,6 +306,11 @@ def initInterface(context):
     bpy.types.Object.MhReverseHip = BoolProperty(
         name = "ReverseHip",
         description = "The rig has a reverse hip",
+        default = False)
+
+    bpy.types.Scene.McpSaveTargetTPose = BoolProperty(
+        name = "Save T-Pose",
+        description = "Save the current pose as T-pose when saving target file",
         default = False)
 
     bpy.types.PoseBone.McpBone = StringProperty(
