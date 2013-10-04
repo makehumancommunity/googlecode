@@ -141,6 +141,12 @@ def loadBinaryMesh(obj, path):
 
     log.debug('loadBinaryMesh: unpacked materials')
 
+    obj.calcNormals()
+    log.debug('loadBinaryMesh: calculated normals')
+
+    obj.updateIndexBuffer()
+    log.debug('loadBinaryMesh: built index buffer for rendering')
+
 def loadTextMesh(obj, path):
     """
     Parse and load a Wavefront OBJ file as mesh.
@@ -204,7 +210,4 @@ def loadMesh(path, locX=0, locY=0, locZ=0, loadColors=1):
         log.error('Unable to load obj file: %s', path, exc_info=True)
         return False
 
-    obj.updateIndexBuffer()
-    obj.calcNormals()
-        
     return obj

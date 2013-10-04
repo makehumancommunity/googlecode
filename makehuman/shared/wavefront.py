@@ -125,6 +125,9 @@ def loadObjFile(path, obj = None):
     obj.setUVs(uvs)
     obj.setFaces(fverts, fuvs if has_uv else None, groups, fmtls)
 
+    obj.calcNormals()
+    obj.updateIndexBuffer()
+
     return obj
 
 
