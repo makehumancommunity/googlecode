@@ -26,6 +26,7 @@ Definitions of scene objects and the scene class.
 import events3d
 import pickle
 import log
+from material import Color
 
 mhscene_version = 5
 mhscene_minversion = 5
@@ -71,7 +72,11 @@ class SceneObject(object):
 
     def __setattr__(self, attr, value):
         if hasattr(self, "_attributes") and attr in self._attributes:
-            if (getattr(self, "_" + attr) != value):
+            attrValue = getattr(self, "_" + attr)
+            if isinstance(attrValue, Color):
+                # Ensure Color attributes are of type Color
+                value = Color(value)
+            if (attrValue != value):
                 object.__setattr__(self, "_" + attr, value)
                 self.changed()
             else:
@@ -113,8 +118,8 @@ class Light(SceneObject):
             attributes =
             {'position': (-10.99, 20.0, 20.0),
              'focus': (0.0, 0.0, 0.0),
-             'color': (1.0, 1.0, 1.0),
-             'specular': [(1.0, 1.0, 1.0), 5],
+             'color': Color(1.0, 1.0, 1.0),
+             'specular': [Color(1.0, 1.0, 1.0), 5],
              'fov': 180.0,
              'attenuation': 0.0,
              'areaLights': 1,
@@ -126,7 +131,7 @@ class Environment(SceneObject):
         SceneObject.__init__(
             self, scene,
             attributes =
-            {'ambience': (0.2, 0.2, 0.2),
+            {'ambience': Color(0.2, 0.2, 0.2),
              'skybox': None})
 
 
