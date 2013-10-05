@@ -37,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.917",
+    "version": "0.918",
     "blender": (2, 6, 8),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -283,16 +283,18 @@ class EditPanel(bpy.types.Panel):
         layout.separator()
         layout.label("Stitch Animations")
         layout.operator("mcp.update_action_list")
+        layout.separator()
         layout.prop(scn, "McpFirstAction")
-        row = layout.row()
-        row.prop(scn, "McpFirstEndFrame")
-        row.operator("mcp.set_current_action").prop = "McpFirstAction"
+        split = layout.split(0.75)
+        split.prop(scn, "McpFirstEndFrame")
+        split.operator("mcp.set_current_action").prop = "McpFirstAction"
+        layout.separator()
         layout.prop(scn, "McpSecondAction")
-        row = layout.row()
-        row.prop(scn, "McpSecondStartFrame")
-        row.operator("mcp.set_current_action").prop = "McpSecondAction"
+        split = layout.split(0.75)
+        split.prop(scn, "McpSecondStartFrame")
+        split.operator("mcp.set_current_action").prop = "McpSecondAction"
+        layout.separator()
         layout.prop(scn, "McpLoopBlendRange")
-        layout.prop(scn, "McpActionTarget")
         layout.prop(scn, "McpOutputActionName")
         layout.operator("mcp.stitch_actions")
 

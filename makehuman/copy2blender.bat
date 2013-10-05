@@ -38,12 +38,12 @@ copy .\tools\blender\makewalk\*.py %1\makewalk
 copy .\tools\blender\makewalk\*.json %1\makewalk
 
 mkdir %1\makewalk\target_rigs
-del %1\makewalk\target_rigs\*.* /q
+rem del %1\makewalk\target_rigs\*.* /q
 copy .\tools\blender\makewalk\target_rigs\*.trg %1\makewalk\target_rigs
 copy .\tools\blender\makewalk\target_rigs\*.json %1\makewalk\target_rigs
 
 mkdir %1\makewalk\source_rigs
-del %1\makewalk\source_rigs\*.* /q
+rem del %1\makewalk\source_rigs\*.* /q
 copy .\tools\blender\makewalk\source_rigs\*.src %1\makewalk\source_rigs
 copy .\tools\blender\makewalk\source_rigs\*.json %1\makewalk\source_rigs
 

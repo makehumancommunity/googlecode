@@ -28,7 +28,7 @@ from math import pi, sqrt
 from mathutils import *
 from . import utils, load, simplify, props, action
 #from .target_rigs import rig_mhx
-from .utils import MocapError
+from .utils import *
 
 #
 #   normalizeRotCurves(scn, rig, fcurves, frames)
@@ -227,56 +227,82 @@ def stitchActions(context):
     frame1 = scn.McpFirstEndFrame
     frame2 = scn.McpSecondStartFrame
     delta = scn.McpLoopBlendRange
+    factor = 1.0/delta
+    shift = frame1 - frame2 - delta
 
-    if not rig.animation_data:
-        pb = context.active_posebone
-        pb.keyframe_insert("location", group=pb.name)
+    if rig.animation_data:
         rig.animation_data.action = None
 
-    actionTarget = scn.McpActionTarget
-    if actionTarget == "Stitch new":
-        act2 = utils.copyAction(act2, scn.McpOutputActionName)
-    elif actionTarget == "Prepend second":
-        act2.name = scn.McpOutputActionName
+    first1,last1 = getActionExtent(act1)
+    first2,last2 = getActionExtent(act2)
+    frames1 = range(first1, frame1)
+    frames2 = range(frame2, last2+1)
+    frames = range(first1, last2+shift+1)
+    bmats1,_ = getBaseMatrices(act1, frames1, rig, True)
+    bmats2,useLoc = getBaseMatrices(act2, frames2, rig, True)
 
-    shift = frame1 - frame2 + 2*delta
-    translateFCurves(act2.fcurves, shift)
+    deletes = []
+    for bname in bmats2.keys():
+        try:
+            bmats1[bname]
+        except KeyError:
+            deletes.append(bname)
+    for bname in deletes:
+        del bmats2[bname]
 
-    for fcu2 in act2.fcurves:
-        fcu1 = utils.findFCurve(fcu2.data_path, fcu2.array_index, act1.fcurves)
-        for kp1 in fcu1.keyframe_points:
-            t = kp1.co[0]
-            y1 = kp1.co[1]
-            if t <= frame1 - delta:
-                y = y1
-            elif t <= frame1 + delta:
-                y2 = fcu2.evaluate(t+shift)
-                eps = (t - frame1 + delta)/(2*delta)
-                y = y1*(1-eps) + y2*eps
-            else:
-                break
-            fcu2.keyframe_points.insert(t, y, options={'FAST'})
-        for kp2 in fcu2.keyframe_points:
-            t = kp2.co[0] - shift
-            if t >= frame1 + delta:
-                fcu2.keyframe_points.insert(t, kp2.co[1], options={'FAST'})
+    for frame in frames:
+        scn.frame_set(frame)
+        if frame % 100 == 0:
+            print(frame)
 
-    rig.animation_data.action = action.getAction(scn.McpOutputActionName)
+        if frame <= frame1-delta:
+            n1 = frame - first1
+            for bname,mats in bmats1.items():
+                pb = rig.pose.bones[bname]
+                mat = mats[n1]
+                if useLoc[bname]:
+                    insertLocation(pb, mat)
+                insertRotation(pb, mat)
+
+        elif frame >= frame1:
+            n2 = frame - frame1
+            for bname,mats in bmats2.items():
+                pb = rig.pose.bones[bname]
+                mat = mats[n2]
+                if useLoc[bname]:
+                    insertLocation(pb, mat)
+                insertRotation(pb, mat)
+
+        else:
+            n1 = frame - first1
+            n2 = frame - frame1 + delta
+            eps = factor*n2
+            for bname,mats2 in bmats2.items():
+                pb = rig.pose.bones[bname]
+                mats1 = bmats1[bname]
+                mat1 = mats1[n1]
+                mat2 = mats2[n2]
+                mat = (1-eps)*mat1 + eps*mat2
+                if useLoc[bname]:
+                    insertLocation(pb, mat)
+                insertRotation(pb, mat)
+
     utils.setInterpolation(rig)
-    return
+    act = rig.animation_data.action
+    act.name = scn.McpOutputActionName
 
 
-def translateFCurves(fcurves, dt):
-    for fcu in fcurves:
-        if dt > 0:
-            kpts = list(fcu.keyframe_points)
-            kpts.reverse()
-            for kp in kpts:
-                kp.co[0] += dt
-        elif dt < 0:
-            for kp in fcu.keyframe_points:
-                kp.co[0] += dt
-    return
+def getActionExtent(act):
+    first = 10000
+    last = -10000
+    for fcu in act.fcurves:
+        t0 = int(fcu.keyframe_points[0].co[0])
+        t1 = int(fcu.keyframe_points[-1].co[0])
+        if t0 < first:
+            first = t0
+        if t1 > last:
+            last = t0
+    return first,last
 
 
 class VIEW3D_OT_McpStitchActionsButton(bpy.types.Operator):
@@ -297,54 +323,102 @@ class VIEW3D_OT_McpStitchActionsButton(bpy.types.Operator):
 #   class VIEW3D_OT_McpShiftBoneFCurvesButton(bpy.types.Operator):
 #
 
+def getBaseMatrices(act, frames, rig, useAll):
+    locFcurves = {}
+    quatFcurves = {}
+    eulerFcurves = {}
+    for fcu in act.fcurves:
+        (bname, mode) = utils.fCurveIdentity(fcu)
+        pb = rig.pose.bones[bname]
+        if useAll or pb.bone.select:
+            if mode == "location":
+                try:
+                    fcurves = locFcurves[bname]
+                except KeyError:
+                    fcurves = locFcurves[bname] = [None,None,None]
+            elif mode == "rotation_euler":
+                try:
+                    fcurves = eulerFcurves[bname]
+                except KeyError:
+                    fcurves = eulerFcurves[bname] = [None,None,None]
+            elif mode == "rotation_quaternion":
+                try:
+                    fcurves = quatFcurves[bname]
+                except KeyError:
+                    fcurves = quatFcurves[bname] = [None,None,None,None]
+            else:
+                continue
+
+            fcurves[fcu.array_index] = fcu
+
+    basemats = {}
+    useLoc = {}
+    for bname,fcurves in eulerFcurves.items():
+        useLoc[bname] = False
+        order = rig.pose.bones[bname].rotation_mode
+        fcu0,fcu1,fcu2 = fcurves
+        rmats = basemats[bname] = []
+        for frame in frames:
+            euler = Euler((fcu0.evaluate(frame), fcu1.evaluate(frame), fcu2.evaluate(frame)))
+            rmats.append(euler.to_matrix().to_4x4())
+
+    for bname,fcurves in quatFcurves.items():
+        useLoc[bname] = False
+        fcu0,fcu1,fcu2,fcu3 = fcurves
+        rmats = basemats[bname] = []
+        for frame in frames:
+            quat = Quaternion((fcu0.evaluate(frame), fcu1.evaluate(frame), fcu2.evaluate(frame), fcu3.evaluate(frame)))
+            rmats.append(quat.to_matrix().to_4x4())
+
+    for bname,fcurves in locFcurves.items():
+        useLoc[bname] = True
+        fcu0,fcu1,fcu2 = fcurves
+        tmats = []
+        for frame in frames:
+            loc = (fcu0.evaluate(frame), fcu1.evaluate(frame), fcu2.evaluate(frame))
+            tmats.append(Matrix.Translation(loc))
+        try:
+            rmats = basemats[bname]
+        except KeyError:
+            basemats[bname] = tmats
+            rmats = None
+        if rmats:
+            mats = []
+            for n,rmat in enumerate(rmats):
+                tmat = tmats[n]
+                mats.append( tmat*rmat )
+            basemats[bname] = mats
+
+    return basemats, useLoc
+
+
 def shiftBoneFCurves(rig, scn):
-    frame = scn.frame_current
+    frames = [scn.frame_current] + utils.getActiveFrames(rig)
     act = utils.getAction(rig)
     if not act:
         return
-    (origLoc, origRot, touchedLoc, touchedRot) = setupOrigAndTouched(rig, act, frame)
-    touchBones(rig, frame, touchedLoc, touchedRot)
-    for fcu in act.fcurves:
-        (name, mode) = utils.fCurveIdentity(fcu)
-        try:
-            if utils.isRotation(mode):
-                dy = fcu.evaluate(frame) - origRot[fcu.array_index][fcu.data_path]
-            elif  utils.isLocation(mode):
-                dy = fcu.evaluate(frame) - origLoc[fcu.array_index][fcu.data_path]
-        except:
-            continue
-        for kp in fcu.keyframe_points:
-            if kp.co[0] != frame:
-                kp.co[1] += dy
+    basemats, useLoc = getBaseMatrices(act, frames, rig, False)
+
+    deltaMat = {}
+    for bname,bmats in basemats.items():
+        pb = rig.pose.bones[bname]
+        bmat = bmats[0]
+        deltaMat[pb.name] = pb.matrix_basis * bmat.inverted()
+
+    for n,frame in enumerate(frames[1:]):
+        scn.frame_set(frame)
+        if n % 100 == 0:
+            print(int(frame))
+        for bname,bmats in basemats.items():
+            pb = rig.pose.bones[bname]
+            mat = deltaMat[pb.name] * bmats[n+1]
+            if useLoc[bname]:
+                insertLocation(pb, mat)
+            insertRotation(pb, mat)
 
 
-def setupOrigAndTouched(rig, act, frame):
-    origLoc = utils.quadDict()
-    origRot = utils.quadDict()
-    touchedLoc = {}
-    touchedRot = {}
-    for fcu in act.fcurves:
-        (name, mode) = utils.fCurveIdentity(fcu)
-        for pb in rig.pose.bones:
-            if pb.bone.select and pb.name == name:
-                #kp = fcu.keyframe_points[frame]
-                y = fcu.evaluate(frame)
-                if utils.isRotation(mode):
-                    origRot[fcu.array_index][fcu.data_path] = y
-                    touchedRot[pb.name] = True
-                elif utils.isLocation(mode):
-                    origLoc[fcu.array_index][fcu.data_path] = y
-                    touchedLoc[pb.name] = True
-    return (origLoc, origRot, touchedLoc, touchedRot)
-
-
-def touchBones(rig, frame, touchedLoc, touchedRot):
-    for name in touchedRot.keys():
-        pb = rig.pose.bones[name]
-        utils.insertRotationKeyFrame(pb, frame)
-    for name in touchedLoc.keys():
-        pb = rig.pose.bones[name]
-        pb.keyframe_insert("location", frame=frame, group=pb.name)
+def printmat(mat):
+    print("   (%.4f %.4f %.4f %.4f)" % tuple(mat.to_quaternion()))
 
 
 class VIEW3D_OT_McpShiftBoneFCurvesButton(bpy.types.Operator):
@@ -392,7 +466,8 @@ def fixBoneFCurves(rig, scn):
 
 class VIEW3D_OT_McpFixBoneFCurvesButton(bpy.types.Operator):
     bl_idname = "mcp.fix_bone"
-    bl_label = "Fix Bone Location"
+    bl_label = "Fixate Bone Location"
+    bl_description = "Keep bone location fixed (local coordinates)"
     bl_options = {'UNDO'}
 
     def execute(self, context):

@@ -213,7 +213,7 @@ def initInterface(context):
     bpy.types.Scene.McpOutputActionName = StringProperty(
         name="Output Action Name",
         maxlen=24,
-        default="")
+        default="Action")
 
     bpy.types.Scene.McpFixX = BoolProperty(
         name="X",

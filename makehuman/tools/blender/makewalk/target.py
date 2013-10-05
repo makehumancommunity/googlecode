@@ -111,6 +111,7 @@ def guessTargetArmatureFromList(rig, bones, scn):
 
 
 def testTargetRig(name, rig, rigBones):
+    from .armature import validBone
     print("Testing %s" % name)
     for (bname, mhxname) in rigBones:
         try:

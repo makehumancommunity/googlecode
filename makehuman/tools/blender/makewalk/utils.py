@@ -231,25 +231,22 @@ def copyAction(act1, name):
     return act2
 
 #
-#   validBone(pb, muteIk=False):
+#
 #
 
-def validBone(pb, muteIk=False):
-    for cns in pb.constraints:
-        if cns.mute or cns.influence < 0.2:
-            pass
-        elif cns.type[0:5] == 'LIMIT':
-            cns.influence = 0
-        elif cns.type == 'IK':
-            if muteIk:
-                cns.mute = True
-            elif cns.target is None:
-                pass
-            else:
-                return False
-        else:
-            return False
-    return True
+def insertLocation(pb, mat):
+    pb.location = mat.to_translation()
+    pb.keyframe_insert("location", group=pb.name)
+
+
+def insertRotation(pb, mat):
+    q = mat.to_quaternion()
+    if pb.rotation_mode == 'QUATERNION':
+        pb.rotation_quaternion = q
+        pb.keyframe_insert("rotation_quaternion", group=pb.name)
+    else:
+        pb.rotation_euler = q.to_euler(pb.rotation_mode)
+        pb.keyframe_insert("rotation_euler", group=pb.name)
 
 
 def isRotationMatrix(mat):

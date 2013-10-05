@@ -254,6 +254,25 @@ class CArmature:
                 string += "  %s\n" % child.name
             raise MocapError(string)
 
+
+def validBone(pb, muteIk=False):
+    for cns in pb.constraints:
+        if cns.mute or cns.influence < 0.2:
+            pass
+        elif cns.type[0:5] == 'LIMIT':
+            cns.influence = 0
+        elif cns.type == 'IK':
+            if muteIk:
+                cns.mute = True
+            elif cns.target is None:
+                pass
+            else:
+                return False
+        else:
+            return False
+    return True
+
+
 def validChildren(pb, muteIk=False):
     children = []
     for child in pb.children:

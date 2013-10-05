@@ -61,11 +61,6 @@ def matchPoseTranslation(pb, src):
     insertLocation(pb, pmat)
 
 
-def insertLocation(pb, mat):
-    pb.location = mat.to_translation()
-    pb.keyframe_insert("location", group=pb.name)
-
-
 def matchPoseRotation(pb, src):
     pmat = getPoseMatrix(src.matrix, pb)
     insertRotation(pb, pmat)
@@ -75,16 +70,6 @@ def printMatrix(string,mat):
     print(string)
     for i in range(4):
         print("    %.4g %.4g %.4g %.4g" % tuple(mat[i]))
-
-
-def insertRotation(pb, mat):
-    q = mat.to_quaternion()
-    if pb.rotation_mode == 'QUATERNION':
-        pb.rotation_quaternion = q
-        pb.keyframe_insert("rotation_quaternion", group=pb.name)
-    else:
-        pb.rotation_euler = q.to_euler(pb.rotation_mode)
-        pb.keyframe_insert("rotation_euler", group=pb.name)
 
 
 def matchIkLeg(legIk, toeFk, mBall, mToe, mHeel):
