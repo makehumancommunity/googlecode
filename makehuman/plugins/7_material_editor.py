@@ -588,10 +588,16 @@ class NumberValue(gui.TextEdit):
         return size
 
     def onActivate(self, arg=None):
-        self.parent.callEvent('onActivate', self.value)
+        try:
+            self.parent.callEvent('onActivate', self.value)
+        except:
+            pass
 
     def onChange(self, arg=None):
-        self.parent.callEvent('onActivate', self.value)
+        try:
+            self.parent.callEvent('onActivate', self.value)
+        except:
+            pass
 
     def setValue(self, value):
         self.setText(str(value))
@@ -609,10 +615,16 @@ class StringValue(gui.TextEdit):
         self.setText(value)
 
     def onActivate(self, arg=None):
-        self.parent.callEvent('onActivate', self.value)
+        try:
+            self.parent.callEvent('onActivate', self.value)
+        except:
+            pass
 
     def onChange(self, arg=None):
-        self.parent.callEvent('onActivate', self.value)
+        try:
+            self.parent.callEvent('onActivate', self.value)
+        except:
+            pass
 
 class IntValue(NumberValue):
     _validator = gui.intValidator
@@ -635,7 +647,10 @@ class BooleanValue(gui.CheckBox):
         self.setSelected(value)
 
     def onClicked(self, arg=None):
-        self.parent.callEvent('onActivate', self.value)
+        try:
+            self.parent.callEvent('onActivate', self.value)
+        except:
+            pass
 
     @property
     def value(self):
