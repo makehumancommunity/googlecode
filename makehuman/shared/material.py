@@ -133,10 +133,7 @@ class Material(object):
 
         self._ambientColor = Color(1.0, 1.0, 1.0)
         self._diffuseColor = Color(1.0, 1.0, 1.0)
-        self._diffuseIntensity = 0.8    # TODO is this useful?
         self._specularColor = Color(1.0, 1.0, 1.0)
-        self._specularIntensity = 0.5   # TODO is this useful?
-        self._transparencyIntensity = 0.0
         self._shininess = 0.2
         self._emissiveColor = Color()
 
@@ -157,7 +154,7 @@ class Material(object):
         self._displacementMapTexture = None
         self._displacementMapIntensity = 1.0
         self._specularMapTexture = None
-        self._specularMapIntensity = 1.0 # TODO do we need this AND specularIntensity?
+        self._specularMapIntensity = 1.0
         self._transparencyMapTexture = None
         self._transparencyMapIntensity = 1.0
 
@@ -193,9 +190,7 @@ class Material(object):
 
         self._ambientColor.copyFrom(material.ambientColor)
         self._diffuseColor.copyFrom(material.diffuseColor)
-        self._diffuseIntensity = material.diffuseIntensity
         self._specularColor.copyFrom(material.specularColor)
-        self._specularIntensity = material.specularIntensity
         self._shininess = material.shininess
         self._emissiveColor.copyFrom(material.emissiveColor)
 
@@ -271,11 +266,11 @@ class Material(object):
             elif words[0] == "diffuseColor":
                 self._diffuseColor.copyFrom([float(w) for w in words[1:4]])
             elif words[0] == "diffuseIntensity":
-                self._diffuseIntensity = max(0.0, min(1.0, float(words[1])))
+                log.warning('Deprecated parameter "diffuseIntensity" specified in material %s', self.name)
             elif words[0] == "specularColor":
                 self._specularColor.copyFrom([float(w) for w in words[1:4]])
             elif words[0] == "specularIntensity":
-                self._specularIntensity = max(0.0, min(1.0, float(words[1])))
+                log.warning('Deprecated parameter "specularIntensity" specified in material %s', self.name)
             elif words[0] == "shininess":
                 self._shininess = max(0.0, min(1.0, float(words[1])))
             elif words[0] == "emissiveColor":
@@ -389,9 +384,7 @@ class Material(object):
         f.write("name %s\n" % self.name)
         f.write("ambientColor %s\n" % self.ambientColor.asStr())
         f.write("diffuseColor %s\n" % self.diffuseColor.asStr())
-        f.write("diffuseIntensity %s\n" % self.diffuseIntensity)
         f.write("specularColor %s\n" % self.specularColor.asStr())
-        f.write("specularIntensity %s\n" % self.specularIntensity)
         f.write("shininess %s\n" % self.shininess)
         f.write("emissiveColor %s\n" % self.emissiveColor.asStr())
         f.write("opacity %s\n" % self.opacity)
@@ -488,7 +481,6 @@ class Material(object):
     uvMap = property(getUVMap, setUVMap)
 
     def getAmbientColor(self):
-        #return self._ambientColor.values
         return self._ambientColor
 
     def setAmbientColor(self, color):
@@ -498,8 +490,6 @@ class Material(object):
 
 
     def getDiffuseColor(self):
-        #return self._diffuseColor.values
-        # return self._diffuseColor * self._diffuseIntensity
         return self._diffuseColor
 
     def setDiffuseColor(self, color):
@@ -509,31 +499,26 @@ class Material(object):
 
 
     def getDiffuseIntensity(self):
-        return self._diffuseIntensity
+        """
+        Read-only property that represents the greyscale intensity of the
+        diffuse color.
+        """
+        return getIntensity(self.diffuseColor)
 
-    def setDiffuseIntensity(self, intensity):
-        self._diffuseIntensity = min(1.0, max(0.0, intensity))
+    @property
+    def diffuseIntensity(self):
+        return self.getDiffuseIntensity()
 
-    diffuseIntensity = property(getDiffuseIntensity, setDiffuseIntensity)
+    diffuseIntensity = property(getdiffuseIntensity, setDiffuseIntensity)
 
 
     def getSpecularColor(self):
-        #return self._specularColor.values
         return self._specularColor
 
     def setSpecularColor(self, color):
         self._specularColor.copyFrom(color)
 
     specularColor = property(getSpecularColor, setSpecularColor)
-
-
-    def getSpecularIntensity(self):
-        return self._specularIntensity
-
-    def setSpecularIntensity(self, intensity):
-        self._specularIntensity = min(1.0, max(0.0, intensity))
-
-    specularIntensity = property(getSpecularIntensity, setSpecularIntensity)
 
 
     def getShininess(self):
@@ -551,13 +536,18 @@ class Material(object):
     shininess = property(getShininess, setShininess)
 
 
-    def getTransparencyIntensity(self):
-        return self._transparencyIntensity
+    def getSpecularIntensity(self):
+        """
+        Read-only property that represents the greyscale intensity of the
+        specular color.
+        """
+        return getIntensity(self.specularColor)
 
-    def setTransparencyIntensity(self, intensity):
-        self._transparencyIntensity = min(1.0, max(0.0, intensity))
+    @property
+    def specularIntensity(self):
+        return self.getSpecularIntensity()
 
-    transparencyIntensity = property(getTransparencyIntensity, setTransparencyIntensity)
+    specularIntensity = property(getSpecularIntensity, setSpecularIntensity)
 
 
     def getEmissiveColor(self):
@@ -789,8 +779,8 @@ class Material(object):
 
         result = dict(self._shaderParameters)
         result['ambient']  = self.ambientColor.values
-        result['diffuse'] = list(np.asarray(self.diffuseColor.values, dtype=np.float32) * self.diffuseIntensity) + [self.opacity]
-        result['specular'] = list(np.asarray(self.specularColor.values, dtype=np.float32) * self.specularIntensity) + [self.shininess]
+        result['diffuse'] = self.diffuseColor.values + [self.opacity]
+        result['specular'] = self.specularColor.values + [self.shininess]
         result['emissive'] = self.emissiveColor
         return result
 
@@ -1069,6 +1059,11 @@ def isNumeric(string):
     except:
         # On decoding errors
         return False
+
+def getIntensity(color):
+    return 0.2126 * color[0] + \
+           0.7152 * color[1] + \
+           0.0722 * color[2]
 
 class UVMap:
     def __init__(self, name):
