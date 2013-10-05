@@ -391,14 +391,14 @@ def renameBones(srcRig, scn):
             trgName = mcp.srcArmature.boneNames[lname]
         except KeyError:
             trgName = None
+        if isinstance(trgName, tuple):
+            print("BUG. Target name is tuple:", trgName)
+            trgName = trgName[0]
         eb = ebones[srcName]
         if trgName:
             if action:
                 grp = action.groups[srcName]
-                try:
-                    grp.name = trgName
-                except:
-                    raise MocapError("Group name %s must be a string" % trgName)
+                grp.name = trgName
             eb.name = trgName
             trgBones[trgName] = CEditBone(eb)
             setbones.append((eb, trgName))
@@ -420,44 +420,6 @@ def getTargetFromSource(srcName):
         pass
     raise MocapError("No target bone corresponding to source bone %s (%s)" % (srcName, lname))
 
-#
-#    createExtraBones(ebones, trgBones):
-#
-"""
-def createExtraBones(ebones, trgBones):
-    for suffix in ['_L', '_R']:
-        try:
-            foot = ebones['Foot'+suffix]
-        except:
-            foot = None
-        try:
-            toe = ebones['Toe'+suffix]
-        except:
-            toe = None
-
-        if not toe:
-            nameSrc = 'Toe'+suffix
-            toe = ebones.new(name=nameSrc)
-            toe.head = foot.tail
-            toe.tail = toe.head - Vector((0, 0.5*foot.length, 0))
-            toe.parent = foot
-            trgBones[nameSrc] = CEditBone(toe)
-
-        nameSrc = 'Leg'+suffix
-        eb = ebones.new(name=nameSrc)
-        eb.head = 2*toe.head - toe.tail
-        eb.tail = 4*toe.head - 3*toe.tail
-        eb.parent = toe
-        trgBones[nameSrc] = CEditBone(eb)
-
-        nameSrc = 'Ankle'+suffix
-        eb = ebones.new(name=nameSrc)
-        eb.head = foot.head
-        eb.tail = 2*foot.head - foot.tail
-        eb.parent = ebones['LoLeg'+suffix]
-        trgBones[nameSrc] = CEditBone(eb)
-    return
-"""
 #
 #    renameBvhRig(srcRig, filepath):
 #
