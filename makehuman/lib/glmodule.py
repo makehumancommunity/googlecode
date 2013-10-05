@@ -47,6 +47,7 @@ import profiler
 g_primitiveMap = [GL_POINTS, GL_LINES, GL_TRIANGLES, GL_QUADS]
 
 TEX_NOT_FOUND = False
+MAX_TEXTURE_UNITS = 0
 
 def queryDepth(sx, sy):
     sz = np.zeros((1,), dtype=np.float32)
@@ -217,6 +218,10 @@ def OnInit():
     global have_multisample
     have_multisample = glInitMultisampleARB()
 
+    global MAX_TEXTURE_UNITS
+    MAX_TEXTURE_UNITS = glGetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
+    print MAX_TEXTURE_UNITS
+
     # Set global scene ambient
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, A(0.0, 0.0, 0.0, 1.0))
 
@@ -343,7 +348,7 @@ def drawMesh(obj):
                 glBindTexture(GL_TEXTURE_2D, tex.textureId)
             else:
                 glBindTexture(GL_TEXTURE_2D, TEX_NOT_FOUND.textureId)
-            for gl_tex_idx in xrange(GL_TEXTURE0 + 1, GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS):
+            for gl_tex_idx in xrange(GL_TEXTURE0 + 1, GL_TEXTURE0 + MAX_TEXTURE_UNITS):
                 glActiveTexture(gl_tex_idx)
                 glBindTexture(GL_TEXTURE_2D, 0)
                 glDisable(GL_TEXTURE_2D)
@@ -355,7 +360,7 @@ def drawMesh(obj):
             obj.sortFaces()
     elif not useShader:
         # Disable all textures (when in fixed function textureless shading mode)
-        for gl_tex_idx in xrange(GL_TEXTURE0, GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS):
+        for gl_tex_idx in xrange(GL_TEXTURE0, GL_TEXTURE0 + MAX_TEXTURE_UNITS):
             glActiveTexture(gl_tex_idx)
             glBindTexture(GL_TEXTURE_2D, 0)
             glDisable(GL_TEXTURE_2D)
@@ -470,7 +475,6 @@ def drawMesh(obj):
     else:
         glDrawElements(g_primitiveMap[obj.vertsPerPrimitive-1], obj.primitives.size, GL_UNSIGNED_INT, obj.primitives)
 
-    # TODO ??
     if obj.solid and not obj.nTransparentPrimitives:
         glDisableClientState(GL_COLOR_ARRAY)
         for i, (start, count) in enumerate(obj.groups):

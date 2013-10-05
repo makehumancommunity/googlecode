@@ -402,6 +402,7 @@ class Shader(object):
             uniform.update(self.shaderId)
 
     def setUniforms(self, params):
+        import glmodule
         SamplerUniform.reset()
 
         for uniform in self.getUniforms():
@@ -410,7 +411,7 @@ class Shader(object):
 
         # Disable other texture units
         for gl_tex_idx in xrange(GL_TEXTURE0 + SamplerUniform.currentSampler, 
-                                 GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS):
+                                 GL_TEXTURE0 + glmodule.MAX_TEXTURE_UNITS):
             glActiveTexture(gl_tex_idx)
             glBindTexture(GL_TEXTURE_2D, 0)
             glDisable(GL_TEXTURE_2D)
