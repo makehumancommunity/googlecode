@@ -105,6 +105,8 @@ class VectorUniform(Uniform):
         self.glquery = glquery
 
     def set(self, data):
+        if data is None:
+            return
         values = np.asarray(data, dtype=self.dtype).reshape(self.dims)
         if len(self.dims) > 1:
             self.glfunc(self.index, 1, GL_TRUE, values)
@@ -213,9 +215,18 @@ class SamplerUniform(Uniform):
     def set(self, data):
         cls = type(self)
         glActiveTexture(GL_TEXTURE0 + cls.currentSampler)
-        tex = texture.getTexture(data)
+        if data is not None:
+            tex = texture.getTexture(data)
+        else:
+            tex = None
         if tex not in (False, None):
             glBindTexture(self.target, tex.textureId)
+        else:
+            tex = texture.getTexture(texture.NOTFOUND_TEXTURE)
+            if tex in (None, False):
+                glBindTexture(self.target, 0)
+            else:
+                glBindTexture(self.target, tex.textureId)
         glUniform1i(self.index, cls.currentSampler)
         cls.currentSampler += 1
 
@@ -395,8 +406,16 @@ class Shader(object):
 
         for uniform in self.getUniforms():
             value = params.get(uniform.name)
-            if value is not None:
-                uniform.set(value)
+            uniform.set(value)
+
+        # Disable other texture units
+        for gl_tex_idx in xrange(GL_TEXTURE0 + SamplerUniform.currentSampler, 
+                                 GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS):
+            glActiveTexture(gl_tex_idx)
+            glBindTexture(GL_TEXTURE_2D, 0)
+            glDisable(GL_TEXTURE_2D)
+            glBindTexture(GL_TEXTURE_1D, 0)
+            glDisable(GL_TEXTURE_1D)
 
     def requiresVertexTangent(self):
         return self.vertexTangentAttrId != -1

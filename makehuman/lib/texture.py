@@ -29,6 +29,9 @@ from OpenGL.GL.ARB.texture_non_power_of_two import *
 from core import G
 from image import Image
 import log
+from getpath import getSysDataPath
+
+NOTFOUND_TEXTURE = getSysDataPath('textures/texture_notfound.png')
 
 class Texture(object):
     _npot = None
@@ -110,6 +113,8 @@ class Texture(object):
             glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
             glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT)
             glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+
+            glBindTexture(GL_TEXTURE_1D, 0)
         else:
             glBindTexture(GL_TEXTURE_2D, self.textureId)
 
@@ -132,6 +137,7 @@ class Texture(object):
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
 
+            glBindTexture(GL_TEXTURE_2D, 0)
         self.width, self.height = width, height
         log.debug('initTexture: %s, %s, %s', width, height, use_mipmaps)
 
@@ -157,9 +163,11 @@ class Texture(object):
         if image.height == 1:
             glBindTexture(GL_TEXTURE_1D, self.textureId)
             glTexSubImage1D(GL_TEXTURE_1D, 0, x, image.width, format, GL_UNSIGNED_BYTE, pixels)
+            glBindTexture(GL_TEXTURE_1D, 0)
         else:
             glBindTexture(GL_TEXTURE_2D, self.textureId)
             glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, image.width, image.height, format, GL_UNSIGNED_BYTE, pixels)
+            glBindTexture(GL_TEXTURE_2D, 0)
 
 _textureCache = {}
 
