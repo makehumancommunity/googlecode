@@ -509,8 +509,6 @@ class Material(object):
     def diffuseIntensity(self):
         return self.getDiffuseIntensity()
 
-    diffuseIntensity = property(getdiffuseIntensity, setDiffuseIntensity)
-
 
     def getSpecularColor(self):
         return self._specularColor
@@ -546,8 +544,6 @@ class Material(object):
     @property
     def specularIntensity(self):
         return self.getSpecularIntensity()
-
-    specularIntensity = property(getSpecularIntensity, setSpecularIntensity)
 
 
     def getEmissiveColor(self):
