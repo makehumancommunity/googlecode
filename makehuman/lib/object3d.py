@@ -57,6 +57,10 @@ class Object3D(object):
         return self.parent.r_color
 
     @property
+    def hasUVs(self):
+        return self.parent.hasUVs()
+
+    @property
     def UVs(self):
         return self.parent.r_texco
 

@@ -40,14 +40,13 @@ from OpenGL.GL.ARB.texture_multisample import *
 from image import Image
 import debugdump
 import log
-from texture import Texture, getTexture
+from texture import Texture, getTexture, NOTFOUND_TEXTURE
 from shader import Shader
 import profiler
 
 g_primitiveMap = [GL_POINTS, GL_LINES, GL_TRIANGLES, GL_QUADS]
 
-g_lights = [GL_LIGHT0, GL_LIGHT1, GL_LIGHT2, GL_LIGHT3, \
-            GL_LIGHT4, GL_LIGHT5, GL_LIGHT6, GL_LIGHT7 ]
+TEX_NOT_FOUND = False
 
 def queryDepth(sx, sy):
     sz = np.zeros((1,), dtype=np.float32)
@@ -231,7 +230,7 @@ def OnInit():
     MatDif = A(1.0, 1.0, 1.0, 1.0)          # Material - Diffuse Values
     MatSpc = A(0.2, 0.2, 0.2, 1.0)          # Material - Specular Values
     MatShn = A(10.0,)                       # Material - Shininess
-    MatEms = A(0.1, 0.05, 0.0, 1.0)         # Material - Emission Values
+    MatEms = A(0.0, 0.0, 0.0, 1.0)          # Material - Emission Values
 
     glEnable(GL_DEPTH_TEST)                                  # Hidden surface removal
     # glEnable(GL_CULL_FACE)                                   # Inside face removal
@@ -249,7 +248,7 @@ def OnInit():
     glMaterialfv(GL_FRONT, GL_DIFFUSE, MatDif)               # Set Material Diffuse
     glMaterialfv(GL_FRONT, GL_SPECULAR, MatSpc)              # Set Material Specular
     glMaterialfv(GL_FRONT, GL_SHININESS, MatShn)             # Set Material Shininess
-    # glMaterialfv(GL_FRONT, GL_EMISSION, MatEms)            # Set Material Emission
+    glMaterialfv(GL_FRONT, GL_EMISSION, MatEms)              # Set Material Emission
     glEnable(GL_LIGHT0)
     glEnable(GL_COLOR_MATERIAL)     # Vertex colors affect materials (lighting is enabled)
     glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)   # Vertex colors affect ambient and diffuse of material
@@ -263,6 +262,11 @@ def OnInit():
     glEnableClientState(GL_VERTEX_ARRAY)
     if have_multisample:
         glEnable(GL_MULTISAMPLE)
+
+    global TEX_NOT_FOUND
+    TEX_NOT_FOUND = getTexture(NOTFOUND_TEXTURE)
+    if TEX_NOT_FOUND in (None, False):
+        log.error('Unable to load texture %s, this might cause errors.', NOTFOUND_TEXTURE)
 
 def OnExit():
     # Deactivate the pointers to vertex and normal array
@@ -293,14 +297,14 @@ def setSceneLighting(scene):
             # Always force ambient value of light off (only using global ambient)
             ambientLight =  A(0.0, 0.0, 0.0, 1.0)      # Light - Ambient
 
-            glLightfv(g_lights[lIdx], GL_POSITION, lightPos)
-            glLightfv(g_lights[lIdx], GL_DIFFUSE, diffuseLight)
-            glLightfv(g_lights[lIdx], GL_SPECULAR, specularLight)
-            glLightfv(g_lights[lIdx], GL_AMBIENT, ambientLight)
+            glLightfv(GL_LIGHT0 + lIdx, GL_POSITION, lightPos)
+            glLightfv(GL_LIGHT0 + lIdx, GL_DIFFUSE, diffuseLight)
+            glLightfv(GL_LIGHT0 + lIdx, GL_SPECULAR, specularLight)
+            glLightfv(GL_LIGHT0 + lIdx, GL_AMBIENT, ambientLight)
 
-            glEnable(g_lights[lIdx])
+            glEnable(GL_LIGHT0 + lIdx)
         else:
-            glDisable(g_lights[lIdx])
+            glDisable(GL_LIGHT0 + lIdx)
 
 def cameraPosition(camera, eye):
     proj, mv = camera.getMatrices(eye)
@@ -325,35 +329,61 @@ def drawMesh(obj):
     glPushMatrix()
     transformObject(obj)
 
+    glColor3f(1.0, 1.0, 1.0)
+
     useShader = obj.shader and obj.solid and not obj.shadeless
 
     if obj.isTextured and obj.texture and obj.solid:
-        glEnable(GL_TEXTURE_2D)
         if not useShader:
             # Bind texture for fixed function shading
             glActiveTexture(GL_TEXTURE0)
-            tex = getTexture(obj.texture)       # TODO call glActiveTexture when no texture available?
+            glEnable(GL_TEXTURE_2D)
+            tex = getTexture(obj.texture)
             if tex not in (False, None):
                 glBindTexture(GL_TEXTURE_2D, tex.textureId)
+            else:
+                glBindTexture(GL_TEXTURE_2D, TEX_NOT_FOUND.textureId)
+            for gl_tex_idx in xrange(GL_TEXTURE0 + 1, GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS):
+                glActiveTexture(gl_tex_idx)
+                glBindTexture(GL_TEXTURE_2D, 0)
+                glDisable(GL_TEXTURE_2D)
+                glBindTexture(GL_TEXTURE_1D, 0)
+                glDisable(GL_TEXTURE_1D)
 
         if obj.nTransparentPrimitives:
             # TODO while sorting faces can be a good idea, it can also cause instable rendering and flickering polygons
             obj.sortFaces()
+    elif not useShader:
+        # Disable all textures (when in fixed function textureless shading mode)
+        for gl_tex_idx in xrange(GL_TEXTURE0, GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS):
+            glActiveTexture(gl_tex_idx)
+            glBindTexture(GL_TEXTURE_2D, 0)
+            glDisable(GL_TEXTURE_2D)
+            glBindTexture(GL_TEXTURE_1D, 0)
+            glDisable(GL_TEXTURE_1D)
 
     # Fill the array pointers with object mesh data
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY)
-    glTexCoordPointer(2, GL_FLOAT, 0, obj.UVs)
+    if obj.hasUVs:
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY)
+        glTexCoordPointer(2, GL_FLOAT, 0, obj.UVs)
+    glEnableClientState(GL_VERTEX_ARRAY)
     glVertexPointer(3, GL_FLOAT, 0, obj.verts)
+    glEnableClientState(GL_NORMAL_ARRAY)
     glNormalPointer(GL_FLOAT, 0, obj.norms)
+    glEnableClientState(GL_COLOR_ARRAY)
     glColorPointer(4, GL_UNSIGNED_BYTE, 0, obj.color)
 
     # Disable lighting if the object is shadeless
     if obj.shadeless:
         glDisable(GL_LIGHTING)
+    else:
+        glEnable(GL_LIGHTING)
 
     if obj.cull:
         glEnable(GL_CULL_FACE)
         glCullFace(GL_BACK if obj.cull > 0 else GL_FRONT)
+    else:
+        glDisable(GL_CULL_FACE)
 
     if obj.solid:
         # Set material properties
@@ -363,12 +393,20 @@ def drawMesh(obj):
         MatSpc = A(mat.specularColor.values, 1.0)        # Material - Specular
         MatShn = A(128 * mat.shininess)                  # Material - Shininess
         MatEms = A(mat.emissiveColor.values, 1.0)        # Material - Emission
+    else:
+        # Wireframe
+        # Set some default material properties
+        MatAmb = A(0.11, 0.11, 0.11, 1.0)       # Material - Ambient Values
+        MatDif = A(1.0, 1.0, 1.0, 1.0)          # Material - Diffuse Values
+        MatSpc = A(0.2, 0.2, 0.2, 1.0)          # Material - Specular Values
+        MatShn = A(10.0,)                       # Material - Shininess
+        MatEms = A(0.0, 0.0, 0.0, 1.0)          # Material - Emission Values
 
-        glMaterialfv(GL_FRONT, GL_AMBIENT, MatAmb)          # Set Material Ambience
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, MatDif)          # Set Material Diffuse
-        glMaterialfv(GL_FRONT, GL_SPECULAR, MatSpc)         # Set Material Specular
-        glMaterialfv(GL_FRONT, GL_SHININESS, MatShn)        # Set Material Shininess
-        glMaterialfv(GL_FRONT, GL_EMISSION, MatEms)         # Set Material Emission
+    glMaterialfv(GL_FRONT, GL_AMBIENT, MatAmb)          # Set Material Ambience
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, MatDif)          # Set Material Diffuse
+    glMaterialfv(GL_FRONT, GL_SPECULAR, MatSpc)         # Set Material Specular
+    glMaterialfv(GL_FRONT, GL_SHININESS, MatShn)        # Set Material Shininess
+    glMaterialfv(GL_FRONT, GL_EMISSION, MatEms)         # Set Material Emission
 
     if obj.useVertexColors:
         # Vertex colors affect materials (lighting is enabled)
@@ -391,29 +429,29 @@ def drawMesh(obj):
         # This should be optimized, since we only need to do it when it's changed
         # Validation should also only be done when it is set
         obj.shaderObj.setUniforms(obj.shaderParameters)
+    else:
+        glUseProgram(0)
 
     # draw the mesh
     if not obj.solid:
-        # Set some default material properties
-        MatAmb = A(0.11, 0.11, 0.11, 1.0)       # Material - Ambient Values
-        MatDif = A(1.0, 1.0, 1.0, 1.0)          # Material - Diffuse Values
-        MatSpc = A(0.2, 0.2, 0.2, 1.0)          # Material - Specular Values
-        MatShn = A(10.0,)                       # Material - Shininess
-        MatEms = A(0.1, 0.05, 0.0, 1.0)         # Material - Emission Values
-
+        # Wireframe drawing
+        glEnable(GL_COLOR_MATERIAL)
         glDisableClientState(GL_COLOR_ARRAY)
         glColor3f(0.0, 0.0, 0.0)
         glDisable(GL_LIGHTING)
-        glEnable(GL_COLOR_MATERIAL)
         glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE)   # Vertex colors affect ambient and diffuse of material
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+
         glDrawElements(g_primitiveMap[obj.vertsPerPrimitive-1], obj.primitives.size, GL_UNSIGNED_INT, obj.primitives)
-        glEnable(GL_LIGHTING)
+
         glEnableClientState(GL_COLOR_ARRAY)
+        glEnable(GL_LIGHTING)
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
         glEnable(GL_POLYGON_OFFSET_FILL)
         glPolygonOffset(1.0, 1.0)
+
         glDrawElements(g_primitiveMap[obj.vertsPerPrimitive-1], obj.primitives.size, GL_UNSIGNED_INT, obj.primitives)
+
         glDisable(GL_POLYGON_OFFSET_FILL)
         glDisable(GL_COLOR_MATERIAL)
     elif obj.nTransparentPrimitives:
@@ -432,6 +470,7 @@ def drawMesh(obj):
     else:
         glDrawElements(g_primitiveMap[obj.vertsPerPrimitive-1], obj.primitives.size, GL_UNSIGNED_INT, obj.primitives)
 
+    # TODO ??
     if obj.solid and not obj.nTransparentPrimitives:
         glDisableClientState(GL_COLOR_ARRAY)
         for i, (start, count) in enumerate(obj.groups):
@@ -446,20 +485,29 @@ def drawMesh(obj):
     # Disable the shader if the driver supports it and there is a shader assigned
     if useShader:
         glUseProgram(0)
-        glActiveTexture(GL_TEXTURE0)
 
+    # Restore state defaults
+    glActiveTexture(GL_TEXTURE0)
     glDisable(GL_CULL_FACE)
+    glColor3f(1.0, 1.0, 1.0)
+    glColorMaterial(GL_FRONT, GL_DIFFUSE)
+
+    if obj.useVertexColors:
+        glDisable(GL_COLOR_MATERIAL)
 
     # Disable custom vertex arrays again
     if useShader and obj.shaderObj.requiresVertexTangent():
         glDisableVertexAttribArray(obj.shaderObj.vertexTangentAttrId)
 
-    # Re-enable lighting if the object was shadeless
-    if obj.shadeless:
-        glEnable(GL_LIGHTING)
+    # Re-enable lighting if it was disabled
+    glEnable(GL_LIGHTING)
+
+    glColorMaterial(GL_FRONT, GL_DIFFUSE)
 
     if obj.isTextured and obj.texture and obj.solid:
         glDisable(GL_TEXTURE_2D)
+
+    if obj.hasUVs:
         glDisableClientState(GL_TEXTURE_COORD_ARRAY)
 
     glPopMatrix()
@@ -629,6 +677,7 @@ def renderSkin(dst, vertsPerPrimitive, verts, index = None, objectMatrix = None,
     glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0)
     glBindFramebuffer(GL_FRAMEBUFFER, 0)
     glDeleteFramebuffers(np.array([framebuffer]))
+    glBindTexture(GL_TEXTURE_2D, 0)
 
     return surface
 
