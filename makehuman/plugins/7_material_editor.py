@@ -59,13 +59,16 @@ class ShaderTaskView(gui3d.TaskView):
                     shaderConfig[str(child.text())] = child.isChecked()
                 self.getSelectedObject().material.configureShading(**shaderConfig)
 
-        if not shader.Shader.supported():
-            log.notice('Shaders not supported')
-            self.shaderList.setEnabled(False)
-
         self.paramBox = self.addRightWidget(gui.GroupBox('Shader parameters'))
 
         self.materialBox = self.addRightWidget(gui.GroupBox('Material settings'))
+
+        if not shader.Shader.supported():
+            log.notice('Shaders not supported')
+            self.shaderList.setEnabled(False)
+            self.shaderList.hide()
+            self.shaderConfBox.hide()
+            self.paramBox.hide()
 
         @self.shaderList.mhEvent
         def onClicked(item):
@@ -185,10 +188,10 @@ class ShaderTaskView(gui3d.TaskView):
             mat.transparencyMapTexture = w11.value
             self.updateShaderConfig()
 
-        w12 = self.materialBox.addWidget(ScalarValue("Transparency (map) intensity", mat.transparencyIntensity))
+        w12 = self.materialBox.addWidget(ScalarValue("Transparency (map) intensity", mat.transparencyMapIntensity))
         @w12.mhEvent
         def onActivate(event):
-            mat.transparencyIntensity = w12.value
+            mat.transparencyMapIntensity = w12.value
 
         w13 = self.materialBox.addWidget(ImageValue("Bump map texture", mat.bumpMapTexture, mh.getSysDataPath('textures')))
         @w13.mhEvent
@@ -279,6 +282,9 @@ class ShaderTaskView(gui3d.TaskView):
                 path = unicode(item.getUserData())
 
     def updateShaderConfig(self, mat = None):
+        if not shader.Shader.supported():
+            return
+
         if not mat:
             mat = self.getSelectedObject().material
 
@@ -314,7 +320,10 @@ class ShaderTaskView(gui3d.TaskView):
         if not path:
             return
 
-        sh = mat.shaderObj
+        try:
+            sh = mat.shaderObj
+        except:
+            sh = None
         if not sh:
             return
         uniforms = sh.getUniforms()
@@ -339,9 +348,10 @@ class ShaderTaskView(gui3d.TaskView):
     def reloadMaterial(self):
         obj = self.getSelectedObject()
 
-        self.listShaders(obj.material)
-        self.updateShaderConfig(obj.material)
-        self.listUniforms(obj.material)
+        if shader.Shader.supported():
+            self.listShaders(obj.material)
+            self.updateShaderConfig(obj.material)
+            self.listUniforms(obj.material)
         self.listMaterialSettings(obj)
 
         if obj.material.filepath:
@@ -676,6 +686,10 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
             self.imageView.setImage(mh.getSysDataPath('notfound.thumb'))
 
     value = property(getValue, setValue)
+
+    def onHumanChanging(self, event):
+        if event.change == 'reset':
+            self.reloadMaterial()
 
 def load(app):
     category = app.getCategory('Utilities')

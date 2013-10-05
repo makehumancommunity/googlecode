@@ -220,7 +220,6 @@ def OnInit():
 
     global MAX_TEXTURE_UNITS
     MAX_TEXTURE_UNITS = glGetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
-    print MAX_TEXTURE_UNITS
 
     # Set global scene ambient
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, A(0.0, 0.0, 0.0, 1.0))
