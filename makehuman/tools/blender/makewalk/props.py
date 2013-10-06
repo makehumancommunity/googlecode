@@ -31,12 +31,45 @@ from . import action
 
 def initInterface(context):
 
-    # Load and retarget
+    # Showing
 
     bpy.types.Scene.McpShowDetailSteps = BoolProperty(
         name="Detailed Steps",
         description="Show retarget steps",
         default=False)
+
+    bpy.types.Scene.McpShowIK = BoolProperty(
+        name="Inverse Kinematics",
+        description="Show inverse kinematics",
+        default=False)
+
+    bpy.types.Scene.McpShowGlobal = BoolProperty(
+        name="Global Edit",
+        description="Show global edit",
+        default=False)
+
+    bpy.types.Scene.McpShowDisplace = BoolProperty(
+        name="Local Edit",
+        description="Show local edit",
+        default=False)
+
+    bpy.types.Scene.McpShowFloor = BoolProperty(
+        name="Floor",
+        description="Show floor",
+        default=False)
+
+    bpy.types.Scene.McpShowLoop = BoolProperty(
+        name="Loop And Repeat",
+        description="Show loop and repeat",
+        default=False)
+
+    bpy.types.Scene.McpShowStitch = BoolProperty(
+        name="Stitching",
+        description="Show stitching",
+        default=False)
+
+
+    # Load and retarget
 
     bpy.types.Scene.McpBvhScale = FloatProperty(
         name="Scale",

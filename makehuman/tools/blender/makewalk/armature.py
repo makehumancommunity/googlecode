@@ -60,6 +60,7 @@ class CArmature:
         hipsChildren = roots
         nChildren = len(roots)
         first = True
+        hips = None
         while first or nChildren != 3:
             if not first and nChildren == 2 and rig.MhReverseHip:
                 break
@@ -79,8 +80,12 @@ class CArmature:
                 hips = counts[-1][2]
                 hipsChildren = validChildren(hips)
                 nChildren = len(hipsChildren)
-            print("  Try hips: %s, children: %d" % (hips.name, nChildren))
+            if hips is not None:
+                print("  Try hips: %s, children: %d" % (hips.name, nChildren))
             first = False
+
+        if hips is None:
+            raise MocapError("Found no candidate hip bone")
 
         print("Mapping bones automatically:")
         print("  hips:", hips.name)
@@ -249,7 +254,7 @@ class CArmature:
             self.findHead(limbs[1][1])
             self.findArm(limbs[2][1], ".L")
         else:
-            string = ("Top of spine %s has %d children:\n" % (spine2.name, len(spine2Children)))
+            string = ("Could not auto-detect armature because:\nTop of spine %s has %d children:\n" % (spine2.name, len(spine2Children)))
             for child in spine2Children:
                 string += "  %s\n" % child.name
             raise MocapError(string)

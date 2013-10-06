@@ -164,6 +164,7 @@ def loopFCurve(fcu, t0, tn, scn):
 class VIEW3D_OT_McpLoopFCurvesButton(bpy.types.Operator):
     bl_idname = "mcp.loop_fcurves"
     bl_label = "Loop F-curves"
+    bl_description = "Make the beginning and end of the selected time range connect smoothly. Use before repeating."
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -203,7 +204,8 @@ def repeatFCurves(context, nRepeats):
 
 class VIEW3D_OT_McpRepeatFCurvesButton(bpy.types.Operator):
     bl_idname = "mcp.repeat_fcurves"
-    bl_label = "Repeat F-curves"
+    bl_label = "Repeat Animation"
+    bl_description = "Repeat the part of the animation between selected markers n times"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -219,6 +221,8 @@ class VIEW3D_OT_McpRepeatFCurvesButton(bpy.types.Operator):
 #
 
 def stitchActions(context):
+    from .retarget import getLocks, correctMatrixForLocks
+
     action.listAllActions(context)
     scn = context.scene
     rig = context.object
@@ -249,6 +253,12 @@ def stitchActions(context):
             deletes.append(bname)
     for bname in deletes:
         del bmats2[bname]
+
+    orders = {}
+    locks = {}
+    for bname in bmats2.keys():
+        pb = rig.pose.bones[bname]
+        orders[bname],locks[bname] = getLocks(pb)
 
     for frame in frames:
         scn.frame_set(frame)
@@ -283,6 +293,7 @@ def stitchActions(context):
                 mat1 = mats1[n1]
                 mat2 = mats2[n2]
                 mat = (1-eps)*mat1 + eps*mat2
+                mat = correctMatrixForLocks(mat, orders[bname], locks[bname])
                 if useLoc[bname]:
                     insertLocation(pb, mat)
                 insertRotation(pb, mat)
@@ -301,13 +312,14 @@ def getActionExtent(act):
         if t0 < first:
             first = t0
         if t1 > last:
-            last = t0
+            last = t1
     return first,last
 
 
 class VIEW3D_OT_McpStitchActionsButton(bpy.types.Operator):
     bl_idname = "mcp.stitch_actions"
     bl_label = "Stitch Actions"
+    bl_description = "Stitch two action together seamlessly"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -393,6 +405,8 @@ def getBaseMatrices(act, frames, rig, useAll):
 
 
 def shiftBoneFCurves(rig, scn):
+    from .retarget import getLocks, correctMatrixForLocks
+
     frames = [scn.frame_current] + utils.getActiveFrames(rig)
     act = utils.getAction(rig)
     if not act:
@@ -400,10 +414,13 @@ def shiftBoneFCurves(rig, scn):
     basemats, useLoc = getBaseMatrices(act, frames, rig, False)
 
     deltaMat = {}
+    orders = {}
+    locks = {}
     for bname,bmats in basemats.items():
         pb = rig.pose.bones[bname]
         bmat = bmats[0]
         deltaMat[pb.name] = pb.matrix_basis * bmat.inverted()
+        orders[pb.name], locks[pb.name] = getLocks(pb)
 
     for n,frame in enumerate(frames[1:]):
         scn.frame_set(frame)
@@ -412,6 +429,7 @@ def shiftBoneFCurves(rig, scn):
         for bname,bmats in basemats.items():
             pb = rig.pose.bones[bname]
             mat = deltaMat[pb.name] * bmats[n+1]
+            mat = correctMatrixForLocks(mat, orders[bname], locks[bname])
             if useLoc[bname]:
                 insertLocation(pb, mat)
             insertRotation(pb, mat)
@@ -423,7 +441,8 @@ def printmat(mat):
 
 class VIEW3D_OT_McpShiftBoneFCurvesButton(bpy.types.Operator):
     bl_idname = "mcp.shift_bone"
-    bl_label = "Shift Bone F-curves"
+    bl_label = "Shift Animation"
+    bl_description = "Shift the animation globally for selected boens"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -435,7 +454,7 @@ class VIEW3D_OT_McpShiftBoneFCurvesButton(bpy.types.Operator):
         return{'FINISHED'}
 
 
-def fixBoneFCurves(rig, scn):
+def fixateBoneFCurves(rig, scn):
     act = utils.getAction(rig)
     if not act:
         return
@@ -464,15 +483,15 @@ def fixBoneFCurves(rig, scn):
                     kp.co[1] = value
 
 
-class VIEW3D_OT_McpFixBoneFCurvesButton(bpy.types.Operator):
-    bl_idname = "mcp.fix_bone"
+class VIEW3D_OT_McpFixateBoneFCurvesButton(bpy.types.Operator):
+    bl_idname = "mcp.fixate_bone"
     bl_label = "Fixate Bone Location"
     bl_description = "Keep bone location fixed (local coordinates)"
     bl_options = {'UNDO'}
 
     def execute(self, context):
         try:
-            fixBoneFCurves(context.object, context.scene)
+            fixateBoneFCurves(context.object, context.scene)
             print("Bones fixed")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')

@@ -37,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.919",
+    "version": "0.920",
     "blender": (2, 6, 8),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -225,78 +225,92 @@ class EditPanel(bpy.types.Panel):
             confirmPanel(layout, mcp.editConfirm, mcp.editString)
             return
 
-        layout.label("Inverse Kinematics")
-        row = layout.row()
-        row.prop(scn, "McpFkIkArms")
-        row.prop(scn, "McpFkIkLegs")
-        layout.operator("mcp.transfer_to_ik")
-        layout.operator("mcp.transfer_to_fk")
-        layout.operator("mcp.clear_animation", text="Clear IK Animation").type = "IK"
-        layout.operator("mcp.clear_animation", text="Clear FK Animation").type = "FK"
-        #layout.operator("mcp.print_hands")
+        layout.prop(scn, "McpShowIK")
+        if scn.McpShowIK:
+            ins = inset(layout)
+            row = ins.row()
+            row.prop(scn, "McpFkIkArms")
+            row.prop(scn, "McpFkIkLegs")
+            ins.operator("mcp.transfer_to_ik")
+            ins.operator("mcp.transfer_to_fk")
+            ins.operator("mcp.clear_animation", text="Clear IK Animation").type = "IK"
+            ins.operator("mcp.clear_animation", text="Clear FK Animation").type = "FK"
 
         layout.separator()
-        layout.label("Global Edit")
-        layout.operator("mcp.shift_bone")
-        row = layout.row()
-        row.prop(scn, "McpFixX")
-        row.prop(scn, "McpFixY")
-        row.prop(scn, "McpFixZ")
-        layout.operator("mcp.fix_bone")
-        layout.prop(scn, "McpRescaleFactor")
-        layout.operator("mcp.rescale_fcurves")
+        layout.prop(scn, "McpShowGlobal")
+        if scn.McpShowGlobal:
+            ins = inset(layout)
+            ins.operator("mcp.shift_bone")
+
+            ins.separator()
+            row = ins.row()
+            row.prop(scn, "McpFixX")
+            row.prop(scn, "McpFixY")
+            row.prop(scn, "McpFixZ")
+            ins.operator("mcp.fixate_bone")
+
+            ins.separator()
+            ins.prop(scn, "McpRescaleFactor")
+            ins.operator("mcp.rescale_fcurves")
 
         layout.separator()
-        layout.label("Displace Animation")
-        layout.operator("mcp.start_edit")
-        layout.operator("mcp.undo_edit").answer=""
-        row = layout.row()
-        row.operator("mcp.insert_loc")
-        row.operator("mcp.insert_rot")
-        row.operator("mcp.insert_locrot")
-        layout.operator("mcp.confirm_edit")
+        layout.prop(scn, "McpShowDisplace")
+        if scn.McpShowDisplace:
+            ins = inset(layout)
+            ins.operator("mcp.start_edit")
+            ins.operator("mcp.undo_edit").answer=""
+            row = ins.row()
+            row.operator("mcp.insert_loc")
+            row.operator("mcp.insert_rot")
+            row.operator("mcp.insert_locrot")
+            ins.operator("mcp.confirm_edit")
 
         layout.separator()
-        layout.label("Floor")
-        row = layout.row()
-        row.prop(scn, "McpFloorLeft")
-        row.prop(scn, "McpFloorRight")
-        row.prop(scn, "McpFloorHips")
-        layout.operator("mcp.floor_foot")
+        layout.prop(scn, "McpShowFloor")
+        if scn.McpShowFloor:
+            ins = inset(layout)
+            row = ins.row()
+            row.prop(scn, "McpFloorLeft")
+            row.prop(scn, "McpFloorRight")
+            row.prop(scn, "McpFloorHips")
+            ins.operator("mcp.floor_foot")
 
         layout.separator()
-        layout.label("Loop Animation")
-        layout.prop(scn, "McpLoopBlendRange")
-        row = layout.row()
-        row.prop(scn, "McpLoopLoc")
-        row.prop(scn, "McpLoopRot")
-        layout.prop(scn, "McpLoopInPlace")
-        if scn.McpLoopInPlace:
-            layout.prop(scn, "McpLoopZInPlace")
-        layout.operator("mcp.loop_fcurves")
+        layout.prop(scn, "McpShowLoop")
+        if scn.McpShowLoop:
+            ins = inset(layout)
+            ins.prop(scn, "McpLoopBlendRange")
+            row = ins.row()
+            row.prop(scn, "McpLoopLoc")
+            row.prop(scn, "McpLoopRot")
+            ins.prop(scn, "McpLoopInPlace")
+            if scn.McpLoopInPlace:
+                ins.prop(scn, "McpLoopZInPlace")
+            ins.operator("mcp.loop_fcurves")
+
+            ins.separator()
+            ins.prop(scn, "McpRepeatNumber")
+            ins.operator("mcp.repeat_fcurves")
 
         layout.separator()
-        layout.label("Repeat Animation")
-        layout.prop(scn, "McpRepeatNumber")
-        layout.operator("mcp.repeat_fcurves")
-
-        layout.separator()
-        layout.label("Stitch Animations")
-        layout.operator("mcp.update_action_list")
-        layout.separator()
-        layout.prop(scn, "McpFirstAction")
-        split = layout.split(0.75)
-        split.prop(scn, "McpFirstEndFrame")
-        split.operator("mcp.set_current_action").prop = "McpFirstAction"
-        layout.separator()
-        layout.prop(scn, "McpSecondAction")
-        split = layout.split(0.75)
-        split.prop(scn, "McpSecondStartFrame")
-        split.operator("mcp.set_current_action").prop = "McpSecondAction"
-        layout.separator()
-        layout.prop(scn, "McpLoopBlendRange")
-        layout.prop(scn, "McpOutputActionName")
-        layout.operator("mcp.stitch_actions")
+        layout.prop(scn, "McpShowStitch")
+        if scn.McpShowStitch:
+            ins = inset(layout)
+            ins.operator("mcp.update_action_list")
+            ins.separator()
+            ins.prop(scn, "McpFirstAction")
+            split = ins.split(0.75)
+            split.prop(scn, "McpFirstEndFrame")
+            split.operator("mcp.set_current_action").prop = "McpFirstAction"
+            ins.separator()
+            ins.prop(scn, "McpSecondAction")
+            split = ins.split(0.75)
+            split.prop(scn, "McpSecondStartFrame")
+            split.operator("mcp.set_current_action").prop = "McpSecondAction"
+            ins.separator()
+            ins.prop(scn, "McpLoopBlendRange")
+            ins.prop(scn, "McpOutputActionName")
+            ins.operator("mcp.stitch_actions")
 
 ########################################################################
 #

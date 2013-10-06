@@ -114,6 +114,7 @@ class CBoneAnim:
         self.trgMatrix = None
         self.srcBone = srcBone
         self.trgBone = trgBone
+        self.order,self.locks = getLocks(trgBone)
         self.aMatrix = None
         self.parent = self.getParent(trgBone, anim)
         if self.parent:
@@ -203,7 +204,8 @@ class CBoneAnim:
         else:
             mat1 = self.trgMatrix
         mat2 = self.bMatrix * mat1
-        self.insertKeyFrame(mat2, frame)
+        mat3 = correctMatrixForLocks(mat2, self.order, self.locks)
+        self.insertKeyFrame(mat3, frame)
         return
 
         if self.name == "upper_arm.L":
@@ -216,6 +218,41 @@ class CBoneAnim:
             print("M1", mat1)
             print("M2", mat2)
             print("MB2", self.trgBone.matrix)
+
+
+def getLocks(pb):
+    locks = []
+    order = None
+    if pb.lock_rotation[1]:
+        locks.append(1)
+        order = 'YZX'
+        if pb.lock_rotation[0]:
+            order = 'YXZ'
+            locks.append(0)
+        if pb.lock_rotation[2]:
+            locks.append(2)
+    elif pb.lock_rotation[2]:
+        locks.append(2)
+        order = 'ZYX'
+        if pb.lock_rotation[0]:
+            order = 'ZXY'
+            locks.append(0)
+    elif pb.lock_rotation[0]:
+        locks.append(0)
+        order = 'XYZ'
+    return order,locks
+
+
+def correctMatrixForLocks(mat, order, locks):
+    if locks:
+        euler = mat.to_3x3().to_euler(order)
+        for n in locks:
+            euler[n] = 0
+        mat1 = euler.to_matrix().to_4x4()
+        mat1.col[3] = mat.col[3]
+        return mat1
+    else:
+        return mat
 
 
 def hideObjects(scn, rig):
@@ -348,10 +385,7 @@ def changeTargetData(rig):
             elif cns.type[0:6] == 'LIMIT':
                 constraints.append( (cns, cns.mute) )
                 cns.mute = True
-        locks.append( (pb, list(pb.lock_location), list(pb.lock_rotation), list(pb.lock_scale), constraints) )
-        pb.lock_location = [False, False, False]
-        pb.lock_rotation = [False, False, False]
-        pb.lock_scale = [False, False, False]
+        locks.append( (pb, constraints) )
 
     norotBones = []
     return (props, layers, locks, norotBones)
@@ -367,10 +401,7 @@ def restoreTargetData(rig, data):
         b.use_inherit_rotation = True
 
     for lock in locks:
-        (pb, lockLoc, lockRot, lockScale, constraints) = lock
-        pb.lock_location = lockLoc
-        pb.lock_rotation = lockRot
-        pb.lock_scale = lockScale
+        (pb, constraints) = lock
         for (cns, mute) in constraints:
             cns.mute = mute
 
