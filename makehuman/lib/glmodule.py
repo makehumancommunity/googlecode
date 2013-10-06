@@ -266,6 +266,7 @@ def OnInit():
     glEnableClientState(GL_VERTEX_ARRAY)
     if have_multisample:
         glEnable(GL_MULTISAMPLE)
+        glSampleCoverage(1.0, GL_FALSE)
 
     global TEX_NOT_FOUND
     TEX_NOT_FOUND = getTexture(NOTFOUND_TEXTURE)
@@ -337,8 +338,8 @@ def drawMesh(obj):
 
     useShader = obj.shader and obj.solid and not obj.shadeless
 
-    if obj.isTextured and obj.texture and obj.solid:
-        if not useShader:
+    if not useShader:
+        if obj.isTextured and obj.texture and obj.solid:
             # Bind texture for fixed function shading
             glActiveTexture(GL_TEXTURE0)
             glEnable(GL_TEXTURE_2D)
@@ -353,18 +354,20 @@ def drawMesh(obj):
                 glDisable(GL_TEXTURE_2D)
                 glBindTexture(GL_TEXTURE_1D, 0)
                 glDisable(GL_TEXTURE_1D)
+        else:
+            # Disable all textures (when in fixed function textureless shading mode)
+            for gl_tex_idx in xrange(GL_TEXTURE0, GL_TEXTURE0 + MAX_TEXTURE_UNITS):
+                glActiveTexture(gl_tex_idx)
+                glBindTexture(GL_TEXTURE_2D, 0)
+                glDisable(GL_TEXTURE_2D)
+                glBindTexture(GL_TEXTURE_1D, 0)
+                glDisable(GL_TEXTURE_1D)
 
-        if obj.nTransparentPrimitives:
-            # TODO while sorting faces can be a good idea, it can also cause instable rendering and flickering polygons
-            obj.sortFaces()
-    elif not useShader:
-        # Disable all textures (when in fixed function textureless shading mode)
-        for gl_tex_idx in xrange(GL_TEXTURE0, GL_TEXTURE0 + MAX_TEXTURE_UNITS):
-            glActiveTexture(gl_tex_idx)
-            glBindTexture(GL_TEXTURE_2D, 0)
-            glDisable(GL_TEXTURE_2D)
-            glBindTexture(GL_TEXTURE_1D, 0)
-            glDisable(GL_TEXTURE_1D)
+    if obj.nTransparentPrimitives:
+        # TODO not needed for alpha-to-coverage rendering (it's face order independent)
+        # TODO for other pipelines/older harware better to statically sort faces of hair meshes around BBox center
+        #obj.sortFaces()
+        pass
 
     # Fill the array pointers with object mesh data
     if obj.hasUVs:
@@ -459,12 +462,21 @@ def drawMesh(obj):
         glDisable(GL_POLYGON_OFFSET_FILL)
         glDisable(GL_COLOR_MATERIAL)
     elif obj.nTransparentPrimitives:
-        glDepthMask(GL_FALSE)
+        if have_multisample:
+            # Enable alpha-to-coverage
+            glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE)
+            glDisable(GL_BLEND)
+        else:
+            glDepthMask(GL_FALSE)
         glEnable(GL_ALPHA_TEST)
         glAlphaFunc(GL_GREATER, 0.0)
         glDrawElements(g_primitiveMap[obj.vertsPerPrimitive-1], obj.primitives.size, GL_UNSIGNED_INT, obj.primitives)
         glDisable(GL_ALPHA_TEST)
-        glDepthMask(GL_TRUE)
+        if have_multisample:
+            glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE)
+            glEnable(GL_BLEND)
+        else:
+            glDepthMask(GL_TRUE)
     elif obj.depthless:
         glDepthMask(GL_FALSE)
         glDisable(GL_DEPTH_TEST)
