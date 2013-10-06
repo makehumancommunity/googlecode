@@ -111,11 +111,6 @@ class ShaderTaskView(gui3d.TaskView):
         def onActivate(event):
             mat.diffuseColor = w1.value
 
-        w2 = self.materialBox.addWidget(ScalarValue("Diffuse intensity", mat.diffuseIntensity))
-        @w2.mhEvent
-        def onActivate(event):
-            mat.diffuseIntensity = w2.value
-
         w3 = self.materialBox.addWidget(ImageValue("Diffuse texture", mat.diffuseTexture, mh.getSysDataPath('textures')))
         @w3.mhEvent
         def onActivate(event):
@@ -131,11 +126,6 @@ class ShaderTaskView(gui3d.TaskView):
         @w5.mhEvent
         def onActivate(event):
             mat.specularColor = w5.value
-
-        w6 = self.materialBox.addWidget(ScalarValue("Specular intensity", mat.specularIntensity))
-        @w6.mhEvent
-        def onActivate(event):
-            mat.specularIntensity = w6.value
 
         w7 = self.materialBox.addWidget(ScalarValue("Specular shininess", mat.shininess))
         @w7.mhEvent
