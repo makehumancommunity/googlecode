@@ -213,19 +213,17 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
 
 def writeMaterial(fp, mat, texPathConf = None):
     fp.write("\nnewmtl %s\n" % mat.name)
-    di = mat.diffuseIntensity
     diff = mat.diffuseColor
-    si = mat.specularIntensity
     spec =  mat.specularColor
     # alpha=0 is necessary for correct transparency in Blender.
     # But may lead to problems with other apps.
     if mat.diffuseTexture:
         alpha = 0
     else:
-        alpha = 1-mat.transparencyIntensity
+        alpha = mat.opacity
     fp.write(
-        "Kd %.4g %.4g %.4g\n" % (di*diff.r, di*diff.g, di*diff.b) +
-        "Ks %.4g %.4g %.4g\n" % (si*spec.r, si*spec.g, si*spec.b) +
+        "Kd %.4g %.4g %.4g\n" % (diff.r, diff.g, diff.b) +
+        "Ks %.4g %.4g %.4g\n" % (spec.r, spec.g, spec.b) +
         "d %.4g\n" % alpha
     )
 
