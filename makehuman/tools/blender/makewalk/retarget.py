@@ -240,6 +240,10 @@ def getLocks(pb):
     elif pb.lock_rotation[0]:
         locks.append(0)
         order = 'XYZ'
+
+    if order and pb.rotation_mode != 'QUATERNION':
+        order = pb.rotation_mode
+
     return order,locks
 
 
