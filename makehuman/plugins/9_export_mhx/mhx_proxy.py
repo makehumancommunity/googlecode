@@ -241,7 +241,7 @@ class Writer(mhx_writer.Writer):
             mat.diffuseTexture = proxy.getActualTexture(self.human)
             alpha = 0
         else:
-            alpha = 1 - mat.transparencyIntensity
+            alpha = 1 - mat.transparencyMapIntensity
 
         prefix = self.name+"_"+proxy.name
         texnames = self.matWriter.writeTextures(fp, mat, prefix)

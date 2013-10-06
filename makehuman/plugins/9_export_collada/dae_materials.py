@@ -100,9 +100,9 @@ def writeEffects(fp, rmesh):
         '        <technique sid="common">\n' +
         '          <phong>\n')
 
-    writeTexture(fp, 'diffuse', mat.diffuseTexture, mat.diffuseColor, mat.diffuseIntensity)
-    writeTexture(fp, 'transparency', mat.diffuseTexture, None, mat.transparencyIntensity)
-    writeTexture(fp, 'specular', mat.specularMapTexture, mat.specularColor, 0.1*mat.specularIntensity)
+    writeTexture(fp, 'diffuse', mat.diffuseTexture, mat.diffuseColor, 1.0, mat.opacity)
+    writeTexture(fp, 'transparency', mat.diffuseTexture, None, mat.transparencyMapIntensity)
+    writeTexture(fp, 'specular', mat.specularMapTexture, mat.specularColor, 0.1*mat.specularMapIntensity)
     writeIntensity(fp, 'shininess', mat.shininess)
     writeTexture(fp, 'normal', mat.normalMapTexture, None, mat.normalMapIntensity)
     writeTexture(fp, 'bump', mat.bumpMapTexture, None, mat.bumpMapIntensity)
@@ -144,13 +144,13 @@ def writeIntensity(fp, tech, intensity):
     fp.write('            <%s><float>%s</float></%s>\n' % (tech, intensity, tech))
 
 
-def writeTexture(fp, tech, filepath, color, intensity, s=1.0):
+def writeTexture(fp, tech, filepath, color, intensity, s=1.0, a=1.0):
     if not filepath:
         return
 
     fp.write('            <%s>\n' % tech)
     if color:
-        fp.write('            <color>%.4f %.4f %.4f 1</color> \n' % (s*color.r, s*color.g, s*color.b))
+        fp.write('            <color>%.4f %.4f %.4f %.4f</color> \n' % (s*color.r, s*color.g, s*color.b, a))
     if intensity:
         fp.write('            <float>%s</float>\n' % intensity)
     texname = getTextureName(filepath)

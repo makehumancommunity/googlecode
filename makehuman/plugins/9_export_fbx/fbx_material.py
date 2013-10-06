@@ -180,15 +180,15 @@ def writeMaterial(fp, rmesh, amt):
 '        MultiLayer: 0\n' +
 '        Properties70:  {\n' +
 '            P: "TransparentColor", "Color", "", "A",1,1,1\n' +
-'            P: "TransparencyFactor", "Number", "", "A",%.4f\n' % mat.transparencyIntensity +
+'            P: "TransparencyFactor", "Number", "", "A",%.4f\n' % mat.transparencyMapIntensity +
 '            P: "SpecularColor", "Color", "", "A",%.4f,%.4f,%.4f\n' % mat.specularColor.asTuple() +
 '            P: "ShininessExponent", "Number", "", "A",%.4f\n' % mat.shininess +
-#'            P: "EmissiveColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % emitColor.asTuple() +
+#'            P: "EmissiveColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % emissiveColor.asTuple() +
 #'            P: "AmbientColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % ambientColor.asTuple() +
 '            P: "DiffuseColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % mat.diffuseColor.asTuple() +
-'            P: "DiffuseFactor", "Number", "", "A",%.4f\n' % mat.diffuseIntensity +
+'            P: "DiffuseFactor", "Number", "", "A",%.4f\n' % 1.0 +
 '            P: "SpecularColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % mat.specularColor.asTuple() +
-'            P: "SpecularFactor", "Number", "", "A",%.4f\n' % mat.specularIntensity +
+'            P: "SpecularFactor", "Number", "", "A",%.4f\n' % mat.specularMapIntensity +
 '            P: "Shininess", "double", "Number", "",%.4f\n' % mat.shininess +
 '            P: "Reflectivity", "double", "Number", "",0\n' +
 '        }\n' +
