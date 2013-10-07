@@ -40,12 +40,12 @@ class SaveTaskView(gui3d.TaskView):
         self.fileentry.setDirectory(mh.getPath('models'))
         self.fileentry.setFilter('MakeHuman Models (*.mhm)')
 
-        self.selection_width = 1.2
-        self.selection_height = 1.3
+        self.selection_width = 1.2 * 4
+        self.selection_height = 1.3 * 4
         mesh = geometry3d.FrameMesh(self.selection_width, self.selection_height)
         mesh.move(-self.selection_width/2, -self.selection_height/2)
 
-        self.selection = gui3d.app.addObject(gui3d.Object(mesh, [0, 0, 9]))
+        self.selection = gui3d.app.addObject(gui3d.Object(mesh))
         mesh.setColor([0, 0, 0, 255])
         mesh.setPickable(False)
         mesh.setShadeless(True)
@@ -97,7 +97,6 @@ class SaveTaskView(gui3d.TaskView):
     def onShow(self, event):
 
         # When the task gets shown, set the focus to the file entry
-
         gui3d.TaskView.onShow(self, event)
         self.fileentry.setFocus()
         self.pan = gui3d.app.selectedHuman.getPosition()
