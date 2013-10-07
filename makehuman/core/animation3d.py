@@ -241,24 +241,41 @@ class RotateAction(Action):
         self.startAngle = self.clipRotation(startAngles)
         self.endAngle = self.clipRotation(endAngles)
 
+        self.endAngle = self.closestRotation(self.startAngle, self.endAngle)
+
     def set(self, alpha):
         value = lerpVector(self.startAngle, self.endAngle, alpha)
         self.obj.setRotation(value)
 
     @classmethod
     def clipRotation(cls, rotation):
-        rotation[0] = cls.clipRotValue(rotation[0])
-        rotation[1] = cls.clipRotValue(rotation[1])
-        rotation[2] = cls.clipRotValue(rotation[2])
+        rotation[0] = rotation[0] % 360
+        rotation[1] = rotation[1] % 360
+        rotation[2] = rotation[2] % 360
         return rotation
 
     @classmethod
-    def clipRotValue(cls, rotAngle):
-        rotAngle = rotAngle % 360
-        if rotAngle > 180.0:
-            rotAngle = -(360.0 - rotAngle)
-        return rotAngle
+    def closestRotation(cls, beginRot, endRot):
+        rotation = [0.0, 0.0, 0.0]
+        rotation[0] = cls.closestAngle(beginRot[0], endRot[0])
+        rotation[1] = cls.closestAngle(beginRot[1], endRot[1])
+        rotation[2] = cls.closestAngle(beginRot[2], endRot[2])
+        return rotation
 
+    @classmethod
+    def closestAngle(cls, beginAngle, endAngle):
+        """
+        Assumes that beginAngle and endAngle are clipped between [0, 360[
+        Calculates end angle so that linear interpolation between beginAngle
+        and the returned end angle results in a minimal rotation.
+        """
+        if endAngle < beginAngle:
+            endAngle = 360.0 + endAngle
+        angleDiff = endAngle - beginAngle
+        if abs(angleDiff) > 180:
+            return -(360.0 - endAngle)
+        else:
+            return endAngle
 
 class ScaleAction(Action):
     """
