@@ -198,18 +198,13 @@ class Object3D(object):
 
     @property
     def transform(self):
-        center = self.getCenter()
-        center[0] = 0.0
-        center[2] = 0.0
-        m = matrix.translate(self.loc - center)
+        m = matrix.translate(self.loc)
         if any(x != 0 for x in self.rot):
             m = m * matrix.rotx(self.rx)
             m = m * matrix.roty(self.ry)
             m = m * matrix.rotz(self.rz)
         if any(x != 1 for x in self.scale):
             m = m * matrix.scale(self.scale)
-        # Rotate mesh around its Y center
-        m = m * matrix.translate(center)
         return m
 
     def getCenter(self):
