@@ -32,7 +32,7 @@ import material
 import mh
 from humanobjchooser import HumanObjectSelector
 
-class ShaderTaskView(gui3d.TaskView):
+class MaterialEditorTaskView(gui3d.TaskView):
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Material Editor')
 
@@ -67,7 +67,6 @@ class ShaderTaskView(gui3d.TaskView):
             log.notice('Shaders not supported')
             self.shaderList.setEnabled(False)
             self.shaderList.hide()
-            self.shaderConfBox.hide()
             self.paramBox.hide()
 
         @self.shaderList.mhEvent
@@ -249,10 +248,10 @@ class ShaderTaskView(gui3d.TaskView):
             path = os.path.join(dir, name)
             if not os.path.isfile(path):
                 continue
-            if not name.endswith('_shader.txt'):
+            postfix = '_shader.txt'
+            if not name.endswith(postfix):
                 continue
-            # TODO clean up
-            name, type = name[:-11].rsplit('_',1)
+            name, type = name[:-len(postfix)].rsplit('_',1)
             if type not in ['vertex', 'geometry', 'fragment']:
                 continue
             shaders.add(name)
@@ -263,18 +262,24 @@ class ShaderTaskView(gui3d.TaskView):
             shaderName = os.path.basename(mat.shader)
         else:
             shaderName = None
-            firstItem.setChecked(True)
 
+        selectedShader = None
         for name in sorted(shaders):
             item = self.shaderList.addItem(name, data = os.path.join(dir, name))
             if shaderName and unicode(shaderName) == unicode(item.text):
-                item.setChecked(True) # TODO does not have the desired effect
+                selectedShader = item
                 path = unicode(item.getUserData())
 
-    def updateShaderConfig(self, mat = None):
-        if not shader.Shader.supported():
-            return
+        if mat.shader and not selectedShader:
+            # Custom shader selected (not in shader path): add it
+            item = self.shaderList.addItem(shaderName, data = mat.shader)
+            item.setChecked(True)
+        elif selectedShader:
+            selectedShader.setChecked(True)
+        else:
+            firstItem.setChecked(True)
 
+    def updateShaderConfig(self, mat = None):
         if not mat:
             mat = self.getSelectedObject().material
 
@@ -340,8 +345,8 @@ class ShaderTaskView(gui3d.TaskView):
 
         if shader.Shader.supported():
             self.listShaders(obj.material)
-            self.updateShaderConfig(obj.material)
             self.listUniforms(obj.material)
+        self.updateShaderConfig(obj.material)
         self.listMaterialSettings(obj)
 
         if obj.material.filepath:
@@ -352,7 +357,7 @@ class ShaderTaskView(gui3d.TaskView):
             self.loadMaterialBtn._path = mh.getSysDataPath('')
 
     def onShow(self, arg):
-        super(ShaderTaskView, self).onShow(arg)
+        super(MaterialEditorTaskView, self).onShow(arg)
         if not shader.Shader.supported():
             gui3d.app.statusPersist('Shaders not supported by OpenGL')
 
@@ -360,7 +365,7 @@ class ShaderTaskView(gui3d.TaskView):
 
     def onHide(self, arg):
         gui3d.app.statusPersist('')
-        super(ShaderTaskView, self).onHide(arg)
+        super(MaterialEditorTaskView, self).onHide(arg)
 
 class ColorValue(gui.GroupBox):
     def __init__(self, name, value):
@@ -698,7 +703,7 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
 
 def load(app):
     category = app.getCategory('Utilities')
-    taskview = category.addTask(ShaderTaskView(category))
+    taskview = category.addTask(MaterialEditorTaskView(category))
 
 def unload(app):
     pass

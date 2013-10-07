@@ -574,7 +574,9 @@ class ListItem(QtGui.QListWidgetItem):
 
     def setChecked(self, checked):
         if not self.hasCheckbox:
+            self.setSelected(checked)
             return
+
         if checked:
             self.setCheckState(QtCore.Qt.Checked)
         else:
