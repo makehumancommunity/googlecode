@@ -238,12 +238,26 @@ class RotateAction(Action):
     """
     def __init__(self, obj, startAngles, endAngles):
         self.obj = obj
-        self.startAngle = startAngles
-        self.endAngle = endAngles
+        self.startAngle = self.clipRotation(startAngles)
+        self.endAngle = self.clipRotation(endAngles)
 
     def set(self, alpha):
         value = lerpVector(self.startAngle, self.endAngle, alpha)
         self.obj.setRotation(value)
+
+    @classmethod
+    def clipRotation(cls, rotation):
+        rotation[0] = cls.clipRotValue(rotation[0])
+        rotation[1] = cls.clipRotValue(rotation[1])
+        rotation[2] = cls.clipRotValue(rotation[2])
+        return rotation
+
+    @classmethod
+    def clipRotValue(cls, rotAngle):
+        rotAngle = rotAngle % 360
+        if rotAngle > 180.0:
+            rotAngle = -(360.0 - rotAngle)
+        return rotAngle
 
 
 class ScaleAction(Action):
