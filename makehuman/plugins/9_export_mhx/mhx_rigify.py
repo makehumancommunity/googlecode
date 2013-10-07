@@ -35,7 +35,7 @@ class RigifyArmature(ExportArmature):
     def __init__(self, name, options):
         ExportArmature.__init__(self, name, options)
         self.visibleLayers = "08a80caa"
-        self.objectProps = [("MhxRig", '"Rigify"')]
+        self.objectProps += [("MhxRig", '"Rigify"')]
 
 
     def writeFinal(self, fp):
@@ -102,10 +102,4 @@ class RigifyParser(Parser):
             "f_ring.01" :   (2, "f_ring.02", True),
             "f_pinky.01" :  (2, "f_pinky.02", True),
         }
-
-        self.objectProps = (
-            rig_bones.ObjectProps +
-            [("MhxRig", '"Rigify"'),
-             ("MhxRigify", True)]
-        )
 

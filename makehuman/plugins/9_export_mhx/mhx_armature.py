@@ -67,13 +67,11 @@ class ExportArmature(Armature):
         Armature.__init__(self, name, options)
         self.scale = options.scale
         self.visibleLayers = "0068056b"
-        self.objectProps = [("MhxRig", '"MHX"')]
-        self.armatureProps = []
+        self.objectProps += [("MhxRig", '"MHX"')]
         self.customProps = []
         self.bbones = {}
         self.boneGroups = []
         self.poseInfo = {}
-
 
 
     def setup(self):

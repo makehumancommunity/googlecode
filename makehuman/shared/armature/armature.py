@@ -30,6 +30,7 @@ import numpy as np
 import numpy.linalg as la
 import transformations as tm
 
+import makehuman
 from .flags import *
 from .utils import *
 
@@ -64,6 +65,12 @@ class Armature:
         self.bones = OrderedDict()
         self.hierarchy = []
         self.locale = None
+
+        self.objectProps = [
+            ("MhVersion", '"%s"' % makehuman.getVersionStr().replace(" ","_")),
+            ("MhBaseMesh", '"%s"' % makehuman.getBasemeshVersion().replace(" ","_")),
+            ]
+        self.armatureProps = [('MhxScale', options.scale)]
 
         self.done = False
 

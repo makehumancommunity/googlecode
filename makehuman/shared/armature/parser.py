@@ -138,9 +138,6 @@ class Parser:
                 "forearm" :     (3, "hand", False),
             }
 
-        self.objectProps = rig_bones.ObjectProps
-        self.armatureProps = rig_bones.ArmatureProps
-
 
     def createBones(self, boneInfo):
         amt = self.armature
