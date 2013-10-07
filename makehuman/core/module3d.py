@@ -198,14 +198,28 @@ class Object3D(object):
 
     @property
     def transform(self):
-        m = matrix.translate(self.loc)
+        center = self.getCenter()
+        center[0] = 0.0
+        center[2] = 0.0
+        m = matrix.translate(self.loc - center)
         if any(x != 0 for x in self.rot):
             m = m * matrix.rotx(self.rx)
             m = m * matrix.roty(self.ry)
             m = m * matrix.rotz(self.rz)
         if any(x != 1 for x in self.scale):
             m = m * matrix.scale(self.scale)
+        # Rotate mesh around its Y center
+        m = m * matrix.translate(center)
         return m
+
+    def getCenter(self):
+        """
+        Get center position of mesh using center of its bounding box.
+        """
+        bBox = self.calcBBox()
+        bmin = np.asarray(bBox[0], dtype=np.float32)
+        bmax = np.asarray(bBox[1], dtype=np.float32)
+        return -(bmin + ((bmax - bmin)/2))
 
     def calcFaceNormals(self, ix = None):
         if ix is None:
