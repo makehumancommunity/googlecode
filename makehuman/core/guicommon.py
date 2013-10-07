@@ -139,6 +139,9 @@ class Object(events3d.EventHandler):
         return [self.mesh.rx, self.mesh.ry, self.mesh.rz]
 
     def setRotation(self, rotation):
+        rotation[0] = rotation[0] % 360
+        rotation[1] = rotation[1] % 360
+
         for mesh in self._meshes():
             mesh.setRot(rotation[0], rotation[1], rotation[2])
 
