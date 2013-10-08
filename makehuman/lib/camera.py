@@ -522,7 +522,7 @@ class OrbitalCamera(Camera):
         else:
             # Ortho mode
             height = self.getScale()
-            width = self.getScale() * aspect
+            width = height * aspect
             # Camera position around world origin
             proj = matrix.ortho(-width, width, -height, height, self.nearPlane, self.farPlane)
 
