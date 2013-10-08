@@ -197,7 +197,7 @@ class MHApplication(gui3d.Application, mh.Application):
         #self.modelCamera = mh.Camera()
         #self.modelCamera.switchToOrtho()
         self.modelCamera = mh.OrbitalCamera()
-        self.modelCamera.debug = True
+        #self.modelCamera.debug = True
 
         @self.modelCamera.mhEvent
         def onChanged(event):
