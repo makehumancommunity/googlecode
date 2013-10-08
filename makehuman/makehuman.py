@@ -126,7 +126,7 @@ def get_revision_entries(folder=None):
     if not output:
         if not folder:
             # Try going up one folder
-            return get_revision_entries(os.path.abspath(os.path.join(scriptdir, '..')))
+            return get_revision_entries(os.path.join(scriptdir, '..'))
         raise RuntimeError("revision not found in 'entries' file")
     return output
 
