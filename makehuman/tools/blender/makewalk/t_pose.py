@@ -274,15 +274,20 @@ class VIEW3D_OT_McpSetTPoseButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
+        from .retarget import changeTargetData, restoreTargetData
+        rig = context.object
+        #data = changeTargetData(rig)
         try:
             initRig(context)
-            rig = context.object
             if isRigify(rig):
                 setRigifyFKIK(rig, 0)
             setTPose(rig, context.scene)
             print("Set T-pose")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
+        finally:
+            pass
+            #restoreTargetData(rig, data)
         return{'FINISHED'}
 
 

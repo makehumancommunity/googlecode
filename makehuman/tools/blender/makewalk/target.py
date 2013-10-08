@@ -275,10 +275,15 @@ class VIEW3D_OT_McpGetTargetRigButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
+        from .retarget import changeTargetData, restoreTargetData
+        rig = context.object
+        data = changeTargetData(rig)
         try:
-            getTargetArmature(context.object, context.scene)
+            getTargetArmature(rig, context.scene)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
+        finally:
+            restoreTargetData(rig, data)
         return{'FINISHED'}
 
 

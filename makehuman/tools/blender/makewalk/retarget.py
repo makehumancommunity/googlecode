@@ -379,10 +379,10 @@ def changeTargetData(rig):
             pass
 
     layers = list(rig.data.layers)
-    if isMhxRig(rig):
-        rig.data.layers = 14*[True] + 2*[False] + 14*[True] + 2*[False]
+    if rig.MhAlpha8:
+        rig.data.layers = MhxLayers
     elif isRigify(rig):
-        rig.data.layers = 27*[True] + 5*[False]
+        rig.data.layers = RigifyLayers
 
     locks = []
     for pb in rig.pose.bones:
@@ -423,18 +423,22 @@ def loadRetargetSimplify(context, filepath):
     time1 = time.clock()
     scn = context.scene
     trgRig = context.object
-    clearMcpProps(trgRig)
-    srcRig = load.readBvhFile(context, filepath, scn, False)
-    layers = list(trgRig.data.layers)
-    load.renameAndRescaleBvh(context, srcRig, trgRig)
-    retargetAnimation(context, srcRig, trgRig)
-    scn = context.scene
-    if scn.McpDoSimplify:
-        simplify.simplifyFCurves(context, trgRig, False, False)
-    if scn.McpRescale:
-        simplify.rescaleFCurves(context, trgRig, scn.McpRescaleFactor)
-    load.deleteSourceRig(context, srcRig, 'Y_')
-    trgRig.data.layers = layers
+    data = changeTargetData(trgRig)
+    try:
+        clearMcpProps(trgRig)
+        srcRig = load.readBvhFile(context, filepath, scn, False)
+        try:
+            load.renameAndRescaleBvh(context, srcRig, trgRig)
+            retargetAnimation(context, srcRig, trgRig)
+            scn = context.scene
+            if scn.McpDoSimplify:
+                simplify.simplifyFCurves(context, trgRig, False, False)
+            if scn.McpRescale:
+                simplify.rescaleFCurves(context, trgRig, scn.McpRescaleFactor)
+        finally:
+            load.deleteSourceRig(context, srcRig, 'Y_')
+    finally:
+        restoreTargetData(trgRig, data)
     time2 = time.clock()
     print("%s finished in %.3f s" % (filepath, time2-time1))
     return
@@ -451,18 +455,19 @@ class VIEW3D_OT_NewRetargetMhxButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        print()
-        print()
+        trgRig = context.object
+        data = changeTargetData(trgRig)
+        rigList = list(context.selected_objects)
+        scn = context.scene
         try:
-            trgRig = context.object
-            rigList = list(context.selected_objects)
-            scn = context.scene
             target.getTargetArmature(trgRig, scn)
             for srcRig in rigList:
                 if srcRig != trgRig:
                     retargetAnimation(context, srcRig, trgRig)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
+        finally:
+            restoreTargetData(trgRig, data)
         return{'FINISHED'}
 
 

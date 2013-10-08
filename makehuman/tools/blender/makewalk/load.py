@@ -595,9 +595,11 @@ class VIEW3D_OT_LoadAndRenameBvhButton(bpy.types.Operator, ImportHelper):
     filepath = StringProperty(name="File Path", description="Filepath used for importing the BVH file", maxlen=1024, default="")
 
     def execute(self, context):
+        from .retarget import changeTargetData, restoreTargetData
         scn = context.scene
+        trgRig = context.object
+        data = changeTargetData(trgRig)
         try:
-            trgRig = context.object
             srcRig = readBvhFile(context, self.properties.filepath, context.scene, False)
             renameAndRescaleBvh(context, srcRig, trgRig)
             if scn.McpRescale:
@@ -605,6 +607,8 @@ class VIEW3D_OT_LoadAndRenameBvhButton(bpy.types.Operator, ImportHelper):
             print("%s loaded and renamed" % srcRig.name)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
+        finally:
+            restoreTargetData(trgRig, data)
         return{'FINISHED'}
 
     def invoke(self, context, event):

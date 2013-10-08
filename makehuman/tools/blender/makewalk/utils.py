@@ -74,6 +74,9 @@ def quadDict():
         3: {},
     }
 
+MhxLayers = 8*[True] + 8*[False] + 8*[True] + 8*[False]
+RigifyLayers = 27*[True] + 5*[False]
+
 #
 #
 #

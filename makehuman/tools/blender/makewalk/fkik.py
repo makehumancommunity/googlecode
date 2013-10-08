@@ -297,7 +297,7 @@ def transferMhxToFk(rig, scn):
 
     oldLayers = list(rig.data.layers)
     setMhxIk(rig, scn.McpFkIkArms, scn.McpFkIkLegs, True)
-    rig.data.layers = 14*[True] + 2*[False] + 14*[True] + 2*[False]
+    rig.data.layers = MhxLayers
 
     lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
     rLegIkToAnkle = rig["MhaLegIkToAnkle_R"]
@@ -339,7 +339,7 @@ def transferMhxToIk(rig, scn):
 
     oldLayers = list(rig.data.layers)
     setMhxIk(rig, scn.McpFkIkArms, scn.McpFkIkLegs, False)
-    rig.data.layers = 14*[True] + 2*[False] + 14*[True] + 2*[False]
+    rig.data.layers = MhxLayers
 
     lLegIkToAnkle = rig["MhaLegIkToAnkle_L"]
     rLegIkToAnkle = rig["MhaLegIkToAnkle_R"]
