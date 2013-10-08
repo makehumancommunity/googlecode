@@ -312,6 +312,7 @@ def setSceneLighting(scene):
             glDisable(GL_LIGHT0 + lIdx)
 
 def cameraPosition(camera, eye):
+    camera.updateCamera()
     proj, mv = camera.getMatrices(eye)
     glMatrixMode(GL_PROJECTION)
     glLoadMatrixd(np.ascontiguousarray(proj.T))
@@ -321,7 +322,6 @@ def cameraPosition(camera, eye):
 def transformObject(obj):
     camera = G.cameras[obj.cameraMode]
     human = G.app.selectedHuman
-    camera.updateCamera()
     m = camera.getModelMatrix(obj)
     glMultMatrixd(np.ascontiguousarray(m.T))
 
