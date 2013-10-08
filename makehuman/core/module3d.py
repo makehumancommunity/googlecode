@@ -1096,6 +1096,7 @@ class Object3D(object):
         """
         Calculates the axis aligned bounding box of this object in the object's coordinate system. 
         """
+        # TODO maybe cache bounding box
         if ix is None:
             ix = np.s_[:]
         coord = self.coord[ix]

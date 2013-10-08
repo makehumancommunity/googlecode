@@ -319,7 +319,11 @@ def cameraPosition(camera, eye):
     glLoadMatrixd(np.ascontiguousarray(mv.T))
 
 def transformObject(obj):
-    glMultMatrixd(np.ascontiguousarray(obj.transform.T))
+    camera = G.cameras[obj.cameraMode]
+    human = G.app.selectedHuman
+    camera.updateCamera()
+    m = camera.getModelMatrix(obj)
+    glMultMatrixd(np.ascontiguousarray(m.T))
 
 def drawMesh(obj):
     if not obj.visibility:

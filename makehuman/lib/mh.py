@@ -31,7 +31,7 @@ from glmodule import updatePickingBuffer, grabScreen, hasRenderSkin, renderSkin
 from image import Image
 from texture import Texture, getTexture, reloadTextures
 from shader import Shader
-from camera import Camera
+from camera import Camera, OrbitalCamera
 
 from qtui import Keys, Buttons, Modifiers, Application
 from qtui import callAsyncThread, setShortcut

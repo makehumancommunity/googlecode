@@ -8,7 +8,7 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Glynn Clements
+**Authors:**           Glynn Clements, Jonas Hauquier
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
@@ -31,6 +31,9 @@ import glmodule as gl
 import matrix
 
 class Camera(events3d.EventHandler):
+    """
+    Old camera. Works by moving human mesh instead of changing its own orientation.
+    """
     def __init__(self):
         super(Camera, self).__init__()
 
@@ -121,7 +124,7 @@ class Camera(events3d.EventHandler):
     eyeZ = property(getEyeZ, setEyeZ)
 
     def getEye(self):
-        return (self._eyeX, self._eyeY, self._eyeZ)
+        return (self.eyeX, self.eyeY, self.eyeZ)
 
     def setEye(self, xyz):
         (self._eyeX, self._eyeY, self._eyeZ) = xyz
@@ -157,7 +160,7 @@ class Camera(events3d.EventHandler):
     focusZ = property(getFocusZ, setFocusZ)
 
     def getFocus(self):
-        return (self._focusX, self._focusY, self._focusZ)
+        return (self.focusX, self.focusY, self.focusZ)
 
     def setFocus(self, xyz):
         (self._focusX, self._focusY, self._focusZ) = xyz
@@ -329,3 +332,241 @@ class Camera(events3d.EventHandler):
         m = self.getConvertToScreenMatrix(obj)
         x, y, z = matrix.transform3(m.I, [sx, sy, sz])
         return [x, y, z]
+
+    def getModelMatrix(self, obj):
+        return obj.transform
+
+    def updateCamera(self):
+        pass
+
+    def setRotation(self, rot):
+        human = G.app.selectedHuman
+        human.setRotation(rot)
+        self.changed()
+
+    def getRotation(self):
+        human = G.app.selectedHuman
+        return human.getRotation()
+
+    def addRotation(self, axis, amount):
+        human = G.app.selectedHuman
+        rot = human.getRotation()
+        rot[axis] += amount
+        human.setRotation(rot)
+        self.changed()
+
+    def addTranslation(self, axis, amount):
+        human = G.app.selectedHuman
+        trans = human.getPosition()
+        trans[axis] += amount
+        human.setPosition(trans)
+        self.changed()
+
+    def addZoom(self, amount):
+        self.eyeZ += amount
+        self.changed()
+
+
+class OrbitalCamera(Camera):
+    """
+    Orbital camera.
+    A camera that rotates on a sphere that completely encapsulates the human mesh
+    (its bounding box) and that has a zoom factor relative to the sphere radius.
+    Camera is rotated, instead of the meshes as is the case in the old model.
+    """
+    def __init__(self):
+        super(OrbitalCamera, self).__init__()
+        self.center = [0.0, 0.0, 0.0]
+        self.radius = 1.0
+        self._fovAngle = 90.0
+
+        # Ortho mode
+        self._projection = 0    # TODO properly test with projection mode as well
+
+        self._horizontalRotation = 0.0
+        self._verticalInclination = 0.0
+
+        self.zoomFactor = 1.0       # TODO use this param
+
+        self.debug = False
+
+    def getHorizontalRotation(self):
+        return self._horizontalRotation
+
+    def setHorizontalRotation(self, rot):
+        self._horizontalRotation = (rot % 360.0)
+
+    horizontalRotation = property(getHorizontalRotation, setHorizontalRotation)
+
+
+    def getVerticalInclination(self):
+        return self._verticalInclination
+
+    def setVerticalInclination(self, rot):
+        self._verticalInclination = (rot % 360.0)
+
+    verticalInclination = property(getVerticalInclination, setVerticalInclination)
+
+
+    def getModelMatrix(self, obj):
+        """
+        Calculate model view matrix for this orbital camera
+        Currently ignores the actual model transformation
+        Note that matrix is constructed in reverse order (using post-multiplication)
+        """
+        #m = np.matrix(np.identity(4))
+        m = obj.transform
+        # First translate to camera center, then rotate around that center
+        # Note: matrix is constructed with post-multiplication in reverse order
+        m = m * matrix.translate(self.center)   # Move mesh to original position again
+        if self.verticalInclination != 0:
+            m = m * matrix.rotx(self.verticalInclination)
+        if self.horizontalRotation != 0:
+            m = m * matrix.roty(self.horizontalRotation)
+        # Ignore scale (bounding boxes ignore scale as well, anyway)
+        #if any(x != 1 for x in self.scale):
+        #    m = m * matrix.scale(self.scale)
+        center = [-self.center[0], -self.center[1], -self.center[2]]
+        m = m * matrix.translate(center)   # Move mesh to its rotation center to apply rotation
+
+        # TODO do something with object translations?
+        return m
+
+    def updateCamera(self):
+        human = G.app.selectedHuman
+        # Set camera to human y center to compensate for varying human height
+        #self.center = human.mesh.getCenter()
+        bbox = human.mesh.calcBBox()
+        humanHeight = bbox[1][1] - bbox[0][1]
+        self.center = [0.0, bbox[0][1] + humanHeight/2.0, 0.0]
+
+        # Copy human rotation
+        # TODO make mouse handler set camera rotation directly
+        #self.horizontalRotation = human.mesh.ry
+        #self.verticalInclination = human.mesh.rx
+
+        # Determine radius of camera sphere based on human bounding box size
+        if self.center == [0.0, 0.0, 0.0]:  # TODO Y is usually not 0, check only X and Z == 0 and compensate for Y
+            # TODO currently unused
+            self.radius = 1.1 * (humanHeight / 2.0)
+        else:
+            # Get all bounding box vertices
+            verts = []
+            for x in [0, 1]:
+                for y in [0, 1]:
+                    for z in [0, 1]:
+                        verts.append( [bbox[x][0], bbox[y][1], bbox[z][2]] )
+
+            # Calculate all squared distances
+            verts = np.asarray(verts, dtype=np.float32)
+            verts[:] = verts[:] - self.center
+            distances = -np.sum(verts ** 2 , axis=-1)
+            maxDistance = math.sqrt( -distances[ np.argsort(distances)[0] ] )
+
+            # Set radius as max distance from bounding box
+            self.radius = ( 1.1 * maxDistance )
+
+            # Set fixed radius to avoid auto scaling
+            #self.radius = 12.0
+
+        if self.debug:
+            import log
+            log.debug("OrbitalCamera radius: %s", self.radius)
+
+    def addRotation(self, axis, amount):
+        if axis == 0:
+            self.verticalInclination += amount
+        elif axis == 1:
+            self.horizontalRotation += amount
+        else:
+            import log
+            log.warning('Orbital camera does not support rotating along Z axis.')
+        self.changed()
+
+    def setRotation(self, rot):
+        self.verticalInclination = rot[0]
+        self.horizontalRotation = rot[1]
+        self.changed()
+
+    def getRotation(self):
+        return [self.verticalInclination, self.horizontalRotation, 0.0]
+
+    def addTranslation(self, axis, amount):
+        self.center[axis] += amount
+        self.changed()
+
+    def addZoom(self, amount):
+        self.fovAngle += amount
+        if self.debug:
+            import log
+            log.debug("OrbitalCamera zoom: %s", self._fovAngle)
+
+    def getMatrices(self, eye=None):
+        # Ignores eye parameter
+
+        #proj, _ = super(OrbitalCamera, self).getMatrices(eye)
+        #mv = ..
+
+        def lookat(ex, ey, ez, tx, ty, tz, ux, uy, uz):
+            e = np.array([ex, ey, ez])
+            t = np.array([tx, ty, tz])
+            u = np.array([ux, uy, uz])
+            return matrix.lookat(e, t, u)
+
+        aspect = float(max(1, G.windowWidth)) / float(max(1, G.windowHeight))
+
+        if self.projection:
+            # Perspective mode
+            # TODO ignored
+            proj = matrix.perspective(self.fovAngle, aspect, self.nearPlane, self.farPlane)
+        else:
+            # Ortho mode
+            height = self.getScale()
+            width = self.getScale() * aspect
+            # Camera position around world origin
+            proj = matrix.ortho(-width, width, -height, height, self.nearPlane, self.farPlane)
+
+        """
+        mv = lookat(self.eyeX, self.eyeY, self.eyeZ,       # Eye
+                    self.focusX, self.focusY, self.focusZ, # Focus point (target)
+                    self.upX, self.upY, self.upZ)          # Up
+        """
+
+        mv = lookat(self.center[0], self.center[1], self.center[2] + self.radius,       # Eye
+                    self.center[0], self.center[1], self.center[2], # Focus point (target)
+                    self.upX, self.upY, self.upZ)          # Up
+
+        return proj, mv
+
+    def getScale(self):
+        #return self.fovAngle / 30.0     # TODO
+        fov = math.tan(self.fovAngle * 0.5 * math.pi / 180.0)
+        delta = np.array(self.getEye()) - np.array(self.focus)
+        scale = math.sqrt(np.sum(delta ** 2)) * fov
+        if self.debug:
+            import log
+            log.debug("OrbitalCamera scale: %s", scale)
+        return scale
+
+    def getEye(self):
+        return [self.center[0], self.center[1], self.center[2] + self.radius]
+
+    def getEyeX(self):
+        return self.center[0]
+
+    def getEyeY(self):
+        return self.center[1]
+
+    def getEyeZ(self):
+        return self.center[2] + self.radius
+
+    # TODO setters
+
+    def getFocusX(self):
+        return self.center[0]
+
+    def getFocusY(self):
+        return self.center[1]
+
+    def getFocusZ(self):
+        return self.center[2]

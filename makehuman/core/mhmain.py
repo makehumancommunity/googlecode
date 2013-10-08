@@ -194,8 +194,10 @@ class MHApplication(gui3d.Application, mh.Application):
 
         self.theme = None
 
-        self.modelCamera = mh.Camera()
-        self.modelCamera.switchToOrtho()
+        #self.modelCamera = mh.Camera()
+        #self.modelCamera.switchToOrtho()
+        self.modelCamera = mh.OrbitalCamera()
+        self.modelCamera.debug = True
 
         @self.modelCamera.mhEvent
         def onChanged(event):
@@ -205,10 +207,11 @@ class MHApplication(gui3d.Application, mh.Application):
 
         mh.cameras.append(self.modelCamera)
 
-        self.guiCamera = mh.Camera()
-        self.guiCamera._fovAngle = 45
-        self.guiCamera._eyeZ = 10
-        self.guiCamera._projection = 0
+        #self.guiCamera = mh.Camera()
+        #self.guiCamera._fovAngle = 45
+        #self.guiCamera._eyeZ = 10
+        #self.guiCamera._projection = 0
+        self.guiCamera = mh.OrbitalCamera()
 
         mh.cameras.append(self.guiCamera)
 
@@ -565,7 +568,6 @@ class MHApplication(gui3d.Application, mh.Application):
     def onMouseDragged(self, event):
 
         if self.selectedHuman.isVisible():
-
             # Normalize modifiers
             modifiers = mh.getKeyModifiers() & (mh.Modifiers.CTRL | mh.Modifiers.ALT | mh.Modifiers.SHIFT)
 
@@ -575,7 +577,6 @@ class MHApplication(gui3d.Application, mh.Application):
     def onMouseWheel(self, event):
 
         if self.selectedHuman.isVisible():
-
             zoomOut = event.wheelDelta > 0
             if gui3d.app.settings.get('invertMouseWheel', False):
                 zoomOut = not zoomOut
@@ -1104,17 +1105,11 @@ class MHApplication(gui3d.Application, mh.Application):
 
     # Camera navigation
     def rotateCamera(self, axis, amount):
-        human = self.selectedHuman
-        rot = human.getRotation()
-        rot[axis] += amount
-        human.setRotation(rot)
+        self.modelCamera.addRotation(axis, amount)
         self.redraw()
 
     def panCamera(self, axis, amount):
-        human = self.selectedHuman
-        trans = human.getPosition()
-        trans[axis] += amount
-        human.setPosition(trans)
+        self.modelCamera.addTranslation(axis, amount)
         self.redraw()
 
     def cameraSpeed(self):
@@ -1124,11 +1119,11 @@ class MHApplication(gui3d.Application, mh.Application):
             return gui3d.app.settings.get('lowspeed', 1)
 
     def zoomCamera(self, amount):
-        self.modelCamera.eyeZ += amount * self.cameraSpeed()
+        self.modelCamera.addZoom(amount * self.cameraSpeed())
         self.redraw()
 
     def rotateAction(self, axis):
-        return animation3d.RotateAction(self.selectedHuman, self.selectedHuman.getRotation(), axis)
+        return animation3d.RotateAction(self.modelCamera, self.modelCamera.getRotation(), axis)
 
     def axisView(self, axis):
         animation3d.animate(self, 0.20, [self.rotateAction(axis)])
@@ -1192,23 +1187,18 @@ class MHApplication(gui3d.Application, mh.Application):
 
         speed = self.cameraSpeed()
 
-        human = self.selectedHuman
-        trans = human.getPosition()
-        trans = self.modelCamera.convertToScreen(trans[0], trans[1], trans[2])
-        trans[0] += event.dx * speed
-        trans[1] += event.dy * speed
-        trans = self.modelCamera.convertToWorld3D(trans[0], trans[1], trans[2])
-        human.setPosition(trans)
+        (amountX, amountY, _) = self.modelCamera.convertToWorld3D(event.dx * speed, event.dy * speed, 0.0)
+        self.modelCamera.addTranslation(0, amountX)
+        self.modelCamera.addTranslation(1, amountY)
 
     def mouseRotate(self, event):
 
         speed = self.cameraSpeed()
 
-        human = self.selectedHuman
-        rot = human.getRotation()
-        rot[0] += 0.5 * event.dy * speed
-        rot[1] += 0.5 * event.dx * speed
-        human.setRotation(rot)
+        rotX = 0.5 * event.dy * speed
+        rotY = 0.5 * event.dx * speed
+        self.modelCamera.addRotation(0, rotX)
+        self.modelCamera.addRotation(1, rotY)
 
     def mouseZoom(self, event):
 
@@ -1217,7 +1207,7 @@ class MHApplication(gui3d.Application, mh.Application):
         if gui3d.app.settings.get('invertMouseWheel', False):
             speed *= -1
 
-        self.modelCamera.eyeZ -= 0.05 * event.dy * speed
+        self.modelCamera.addZoom( -0.05 * event.dy * speed )
 
     def promptAndExit(self):
         if self.modified:

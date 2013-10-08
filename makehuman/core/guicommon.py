@@ -142,6 +142,10 @@ class Object(events3d.EventHandler):
         rotation[0] = rotation[0] % 360
         rotation[1] = rotation[1] % 360
 
+        if rotation[2] != 0.0:
+            log.warning('Setting a non-zero rotation around Z axis is not supported!')
+            rotation[2] = 0.0
+
         for mesh in self._meshes():
             mesh.setRot(rotation[0], rotation[1], rotation[2])
 
