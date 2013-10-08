@@ -414,10 +414,10 @@ class OrbitalCamera(Camera):
         Currently ignores the actual model transformation
         Note that matrix is constructed in reverse order (using post-multiplication)
         """
-        #m = np.matrix(np.identity(4))
-        m = obj.transform
-        # First translate to camera center, then rotate around that center
         # Note: matrix is constructed with post-multiplication in reverse order
+        #m = np.matrix(np.identity(4))
+        m = obj.transform   # Apply object transform as last
+        # First translate to camera center, then rotate around that center
         m = m * matrix.translate(self.center)   # Move mesh to original position again
         if self.verticalInclination != 0:
             m = m * matrix.rotx(self.verticalInclination)
@@ -429,19 +429,18 @@ class OrbitalCamera(Camera):
         center = [-self.center[0], -self.center[1], -self.center[2]]
         m = m * matrix.translate(center)   # Move mesh to its rotation center to apply rotation
 
-        # TODO do something with object translations?
         return m
 
     def updateCamera(self):
         human = G.app.selectedHuman
         # Set camera to human y center to compensate for varying human height
         #self.center = human.mesh.getCenter()
-        bbox = human.mesh.calcBBox()
+        bbox = human.getSeedMesh().calcBBox()
         humanHeight = bbox[1][1] - bbox[0][1]
         self.center = [0.0, bbox[0][1] + humanHeight/2.0, 0.0]  # TODO allow repositioning camera center
 
         # Determine radius of camera sphere based on human bounding box size
-        if self.center[0] == 0.0 and self.center[2] == 0:
+        if self.center[0] == 0.0 and self.center[2] == 0.0:
             # Faster approach (when camera is centered on X-Z plane)
             self.radius = 1.1 * (humanHeight / 2.0)
         else:
