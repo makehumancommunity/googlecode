@@ -112,15 +112,21 @@ def get_revision_svn_info():
             return value.strip()
     raise RuntimeError("revision not found in 'svn info .' output")
 
-def get_revision_entries():
+def get_revision_entries(folder=None):
     # First fallback: try to parse the entries file manually
-    scriptdir = os.path.dirname(os.path.abspath(__file__))
+    if folder:
+        scriptdir = os.path.abspath(folder)
+    else:
+        scriptdir = os.path.dirname(os.path.abspath(__file__))
     svndir = os.path.join(scriptdir,'.svn')
     entriesfile = os.path.join(svndir,'entries')
     entries = open(entriesfile, 'r').read()
     result = re.search(r'dir\n(\d+)\n',entries)
     output = result.group(1)
     if not output:
+        if not folder:
+            # Try going up one folder
+            return get_revision_entries(os.path.abspath(os.path.join(scriptdir, '..')))
         raise RuntimeError("revision not found in 'entries' file")
     return output
 
