@@ -438,16 +438,11 @@ class OrbitalCamera(Camera):
         #self.center = human.mesh.getCenter()
         bbox = human.mesh.calcBBox()
         humanHeight = bbox[1][1] - bbox[0][1]
-        self.center = [0.0, bbox[0][1] + humanHeight/2.0, 0.0]
-
-        # Copy human rotation
-        # TODO make mouse handler set camera rotation directly
-        #self.horizontalRotation = human.mesh.ry
-        #self.verticalInclination = human.mesh.rx
+        self.center = [0.0, bbox[0][1] + humanHeight/2.0, 0.0]  # TODO allow repositioning camera center
 
         # Determine radius of camera sphere based on human bounding box size
-        if self.center == [0.0, 0.0, 0.0]:  # TODO Y is usually not 0, check only X and Z == 0 and compensate for Y
-            # TODO currently unused
+        if self.center[0] == 0.0 and self.center[2] == 0:
+            # Faster approach (when camera is centered on X-Z plane)
             self.radius = 1.1 * (humanHeight / 2.0)
         else:
             # Get all bounding box vertices
