@@ -1186,10 +1186,7 @@ class MHApplication(gui3d.Application, mh.Application):
     def mouseTranslate(self, event):
 
         speed = self.cameraSpeed()
-
-        (amountX, amountY, _) = self.modelCamera.convertToWorld3D(event.dx * speed, event.dy * speed, 0.0)
-        self.modelCamera.addTranslation(0, amountX)
-        self.modelCamera.addTranslation(1, amountY)
+        self.modelCamera.addXYTranslation(event.dx * speed, event.dy * speed)
 
     def mouseRotate(self, event):
 

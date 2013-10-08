@@ -362,6 +362,15 @@ class Camera(events3d.EventHandler):
         human.setPosition(trans)
         self.changed()
 
+    def addXYTranslation(self, deltaX, deltaY):
+        (amountX, amountY, _) = self.convertToWorld3D(deltaX, deltaY, 0.0)
+        human = G.app.selectedHuman
+        trans = human.getPosition()
+        trans[0] += amountX
+        trans[1] += amountY
+        human.setPosition(trans)
+        self.changed()
+
     def addZoom(self, amount):
         self.eyeZ += amount
         self.changed()
@@ -380,13 +389,16 @@ class OrbitalCamera(Camera):
         self.radius = 1.0
         self._fovAngle = 90.0
 
+        self.fixedRadius = False
+
         # Ortho mode
         self._projection = 0    # TODO properly test with projection mode as well
 
         self._horizontalRotation = 0.0
         self._verticalInclination = 0.0
 
-        self.zoomFactor = 1.0       # TODO use this param
+        self.zoomFactor = 1.0
+        self.translation = [0.5, 0.5, 0.0]
 
         self.debug = False
 
@@ -415,6 +427,7 @@ class OrbitalCamera(Camera):
         Note that matrix is constructed in reverse order (using post-multiplication)
         """
         # Note: matrix is constructed with post-multiplication in reverse order
+
         #m = np.matrix(np.identity(4))
         m = obj.transform   # Apply object transform as last
         # First translate to camera center, then rotate around that center
@@ -434,16 +447,26 @@ class OrbitalCamera(Camera):
     def updateCamera(self):
         human = G.app.selectedHuman
         # Set camera to human y center to compensate for varying human height
-        #self.center = human.mesh.getCenter()
         bbox = human.getSeedMesh().calcBBox()
+        # Note that BB does not take into account human translation, scale or rotation
         humanHeight = bbox[1][1] - bbox[0][1]
-        self.center = [0.0, bbox[0][1] + humanHeight/2.0, 0.0]  # TODO allow repositioning camera center
+        humanWidth = bbox[1][0] - bbox[0][0]
+        self.center = [bbox[0][0] + self.translation[0] * humanWidth, 
+                       bbox[0][1] + self.translation[1] * humanHeight, 
+                       0.0]
+
+        if self.fixedRadius:
+            # Set fixed radius to avoid auto scaling
+            self.radius = 15.0  # bounding sphere of 3m to fit all human sizes
+            return
 
         # Determine radius of camera sphere based on human bounding box size
         if self.center[0] == 0.0 and self.center[2] == 0.0:
             # Faster approach (when camera is centered on X-Z plane)
-            self.radius = 1.1 * (humanHeight / 2.0)
+            self.radius = (humanHeight / 2.0) + 1
         else:
+            # Slower approach: recalculate radius so that circle with arbitrary
+            # center completely encloses human bounding box
             # Get all bounding box vertices
             verts = []
             for x in [0, 1]:
@@ -458,10 +481,7 @@ class OrbitalCamera(Camera):
             maxDistance = math.sqrt( -distances[ np.argsort(distances)[0] ] )
 
             # Set radius as max distance from bounding box
-            self.radius = ( 1.1 * maxDistance )
-
-            # Set fixed radius to avoid auto scaling
-            #self.radius = 12.0
+            self.radius = maxDistance + 1
 
         if self.debug:
             import log
@@ -486,14 +506,27 @@ class OrbitalCamera(Camera):
         return [self.verticalInclination, self.horizontalRotation, 0.0]
 
     def addTranslation(self, axis, amount):
-        self.center[axis] += amount
+        # TODO handle movement using keys differently
+        self.translation[axis] += (amount)
+        if self.translation[axis] < 0:
+            self.translation[axis] = 0.0
+        if self.translation[axis] > 1:
+            self.translation[axis] = 1.0
         self.changed()
 
+    def addXYTranslation(self, deltaX, deltaY):
+        self.addTranslation(0, self.zoomFactor * (-deltaX/100.0))
+        self.addTranslation(1, self.zoomFactor * (deltaY/100.0))
+
     def addZoom(self, amount):
-        self.fovAngle += amount
+        self.zoomFactor += (amount/10.0)
+        if self.zoomFactor < 0.05:
+            self.zoomFactor = 0.05
+        if self.zoomFactor > 2.0:
+            self.zoomFactor = 2.0
         if self.debug:
             import log
-            log.debug("OrbitalCamera zoom: %s", self._fovAngle)
+            log.debug("OrbitalCamera zoom: %s", self.zoomFactor)
 
     def getMatrices(self, eye=None):
         # Ignores eye parameter
@@ -507,15 +540,14 @@ class OrbitalCamera(Camera):
             u = np.array([ux, uy, uz])
             return matrix.lookat(e, t, u)
 
-        aspect = float(max(1, G.windowWidth)) / float(max(1, G.windowHeight))
+        aspect = self.getAspect()
 
         if self.projection:
             # Perspective mode
-            # TODO ignored
             proj = matrix.perspective(self.fovAngle, aspect, self.nearPlane, self.farPlane)
         else:
             # Ortho mode
-            height = self.getScale()
+            height = self.getScale() * self.zoomFactor
             width = height * aspect
             # Camera position around world origin
             proj = matrix.ortho(-width, width, -height, height, self.nearPlane, self.farPlane)
@@ -531,6 +563,9 @@ class OrbitalCamera(Camera):
                     self.upX, self.upY, self.upZ)          # Up
 
         return proj, mv
+
+    def getAspect(self):
+        return float(max(1, G.windowWidth)) / float(max(1, G.windowHeight))
 
     def getScale(self):
         #return self.fovAngle / 30.0     # TODO
