@@ -37,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.921",
+    "version": "0.922",
     "blender": (2, 6, 8),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -155,7 +155,7 @@ class OptionsPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scn = context.scene
-        ob = context.object
+        rig = context.object
 
         layout.label("SubSample and Rescale")
         layout.prop(scn, "McpDefaultSS")
@@ -171,6 +171,8 @@ class OptionsPanel(bpy.types.Panel):
         layout.prop(scn, "McpMakeHumanTPose")
         layout.prop(scn, 'McpAutoSourceRig')
         layout.prop(scn, 'McpAutoTargetRig')
+        layout.prop(scn, "McpIgnoreHiddenLayers")
+        layout.prop(rig, "MhReverseHip")
 
         layout.separator()
         layout.label("Simplification")
@@ -188,13 +190,13 @@ class OptionsPanel(bpy.types.Panel):
         layout.label("Toggle constraints")
         row = layout.row()
         row.label("Limit constraints")
-        if ob.McpLimitsOn:
+        if rig.McpLimitsOn:
             row.operator("mcp.toggle_limits", text="ON").mute=True
         else:
             row.operator("mcp.toggle_limits", text="OFF").mute=False
         row = layout.row()
         row.label("Child-of constraints")
-        if ob.McpChildOfsOn:
+        if rig.McpChildOfsOn:
             row.operator("mcp.toggle_childofs", text="ON").mute=True
         else:
             row.operator("mcp.toggle_childofs", text="OFF").mute=False
@@ -219,7 +221,7 @@ class EditPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scn = context.scene
-        ob = context.object
+        rig = context.object
 
         if mcp.editConfirm:
             confirmPanel(layout, mcp.editConfirm, mcp.editString)
@@ -382,10 +384,15 @@ class MhxTargetBonesPanel(bpy.types.Panel):
         layout.separator()
         layout.prop(scn, "McpTargetRig")
         layout.prop(scn, 'McpAutoTargetRig')
-        layout.prop(rig, "MhReverseHip")
+
         layout.separator()
+        layout.prop(scn, "McpIgnoreHiddenLayers")
+        layout.prop(rig, "MhReverseHip")
         layout.operator("mcp.get_target_rig")
+
+        layout.separator()
         layout.operator("mcp.set_t_pose")
+
         layout.separator()
         layout.prop(scn, "McpSaveTargetTPose")
         layout.operator("mcp.save_target_file")
@@ -439,7 +446,7 @@ class UtilityPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scn = context.scene
-        ob = context.object
+        rig = context.object
 
         if mcp.utilityConfirm:
             confirmPanel(layout, mcp.utilityConfirm, mcp.utilityString)

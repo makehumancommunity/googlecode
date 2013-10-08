@@ -43,6 +43,7 @@ class CArmature:
         self.name = "Automatic"
         self.boneNames = OrderedDict()
         self.tposeFile = None
+        self.rig = None
 
 
     def display(self, type):
@@ -51,7 +52,12 @@ class CArmature:
             print("  %14s %14s" % (bname, mhx))
 
 
-    def findArmature(self, rig):
+    def findArmature(self, rig, ignoreHiddenLayers=True):
+        if ignoreHiddenLayers:
+            self.rig = rig
+        else:
+            self.rig = None
+
         roots = []
         for pb in rig.pose.bones:
             if pb.parent is None:
@@ -68,17 +74,17 @@ class CArmature:
                 raise MocapError("Hip bone must have children: %s" % hips.name)
             elif nChildren == 1:
                 hips = hipsChildren[0]
-                hipsChildren = validChildren(hips)
+                hipsChildren = self.validChildren(hips)
                 nChildren = len(hipsChildren)
             elif nChildren != 3:
                 counts = []
                 for n,child in enumerate(hipsChildren):
-                    counts.append((countChildren(child, 5), n, child))
+                    counts.append((self.countChildren(child, 5), n, child))
                 counts.sort()
                 #for m,n,pb in counts:
                 #    print(m,n,pb.name)
                 hips = counts[-1][2]
-                hipsChildren = validChildren(hips)
+                hipsChildren = self.validChildren(hips)
                 nChildren = len(hipsChildren)
             if hips is not None:
                 print("  Try hips: %s, children: %d" % (hips.name, nChildren))
@@ -95,12 +101,12 @@ class CArmature:
         if rig.MhReverseHip and len(hipsChildren) == 2:
             legroot = hipsChildren[1]
             spine = hipsChildren[0]
-            _,terminal = chainEnd(legroot)
+            _,terminal = self.chainEnd(legroot)
             head,tail,vec = getHeadTailDir(terminal)
             if tail[2] > hiptail[2]:
                 legroot = hipsChildren[0]
                 spine = hipsChildren[1]
-            hipsChildren = [spine] + validChildren(legroot)
+            hipsChildren = [spine] + self.validChildren(legroot)
 
         if len(hipsChildren) < 3:
             string = "Hips %s has %d children:\n" % (hips.name, len(hipsChildren))
@@ -115,10 +121,9 @@ class CArmature:
         rightLeg = None
         rightLegTail = hiptail
 
-        print("Children", hipsChildren)
         limbs = []
         for pb in hipsChildren:
-            _,terminal = chainEnd(pb)
+            _,terminal = self.chainEnd(pb)
             _,tail,_ = getHeadTailDir(terminal)
             limbs.append((tail[0], pb))
         limbs.sort()
@@ -152,7 +157,7 @@ class CArmature:
         self.setBone(bnames[0], pb)
         bnames = bnames[1:]
         prefnames = prefnames[1:]
-        children = validChildren(pb)
+        children = self.validChildren(pb)
         if bnames:
             if len(children) >= 1:
                 child = children[0]
@@ -166,7 +171,7 @@ class CArmature:
         else:
             while len(children) == 1:
                 pb = children[0]
-                children = validChildren(pb)
+                children = self.validChildren(pb)
             return pb
 
 
@@ -174,10 +179,9 @@ class CArmature:
         bnames = ["hip"+suffix, "thigh"+suffix, "shin"+suffix, "foot"+suffix, "toe"+suffix]
         prefnames = ["X", "X", "X", "foot", "toe"]
         print("  hip%s:" % suffix, hip.name)
-        thigh = validChildren(hip)[0]
-        shins = validChildren(thigh, True)
+        thigh = self.validChildren(hip)[0]
+        shins = self.validChildren(thigh, True)
         if len(shins) != 1:
-            print(thigh.children, shins)
             shin = thigh
             thigh = hip
             print("  thigh%s:" % suffix, thigh.name)
@@ -194,8 +198,7 @@ class CArmature:
                 bnames = bnames[1:]
                 prefnames = prefnames[1:]
             else:
-                feet = validChildren(shin)
-                print(shin,feet)
+                feet = self.validChildren(shin)
                 if feet:
                     foot = feet[0]
             print("  thigh%s:" % suffix, thigh.name)
@@ -209,11 +212,11 @@ class CArmature:
     def findArm(self, shoulder, suffix):
         bnames = ["deltoid"+suffix, "upper_arm"+suffix, "forearm"+suffix, "hand"+suffix]
         print("  shoulder%s:" % suffix, shoulder.name)
-        upperarm = validChildren(shoulder)[0]
+        upperarm = self.validChildren(shoulder)[0]
         print("  upper_arm%s:" % suffix, upperarm.name)
-        forearm = validChildren(upperarm, True)[0]
+        forearm = self.validChildren(upperarm, True)[0]
         print("  forearm%s:" % suffix, forearm.name)
-        hands = validChildren(forearm)
+        hands = self.validChildren(forearm)
         if hands:
             hand = hands[0]
             print("  hand%s:" % suffix, hand.name)
@@ -229,7 +232,7 @@ class CArmature:
 
 
     def findSpine(self, spine1):
-        n,spine2 = spineEnd(spine1)
+        n,spine2 = self.spineEnd(spine1)
         print("  spine:", spine1.name)
         print("  chest:", spine2.name)
         if n == 1:
@@ -242,7 +245,7 @@ class CArmature:
             bnames = ["spine", "spine-1", "chest", "chest-1"]
 
         self.findTerminal(spine1, bnames)
-        spine2Children = validChildren(spine2)
+        spine2Children = self.validChildren(spine2)
         if len(spine2Children) == 3:
             _,stail,_ = getHeadTailDir(spine2)
             limbs = []
@@ -260,7 +263,58 @@ class CArmature:
             raise MocapError(string)
 
 
-def validBone(pb, muteIk=False):
+    def validChildren(self, pb, muteIk=False):
+        children = []
+        for child in pb.children:
+            if validBone(child, self.rig, muteIk):
+                children.append(child)
+        return children
+
+
+    def countChildren(self, pb, depth):
+        if depth < 0:
+            return 0
+        n = 1
+        for child in pb.children:
+            n += self.countChildren(child, depth-1)
+        return n
+
+
+    def chainEnd(self, pb):
+        n = 1
+        while pb and (len(self.validChildren(pb)) == 1):
+            n += 1
+            pb = self.validChildren(pb)[0]
+        return n,pb
+
+
+    def spineEnd(self, pb):
+        n = 1
+        while pb:
+            children = self.validChildren(pb)
+            if len(children) == 1:
+                n += 1
+                pb = children[0]
+            elif len(children) == 0 and len(pb.children) == 1:
+                n += 1
+                pb = pb.children[0]
+            else:
+                return n,pb
+        return n,pb
+
+
+def validBone(pb, rig=None, muteIk=False):
+
+    if rig is not None:
+        hidden = True
+        for n in range(len(rig.data.layers)):
+            if rig.data.layers[n] and pb.bone.layers[n]:
+                hidden = False
+                break
+        if hidden:
+            #print("Hidden", pb.name)
+            return False
+
     for cns in pb.constraints:
         if cns.mute or cns.influence < 0.2:
             pass
@@ -276,47 +330,6 @@ def validBone(pb, muteIk=False):
         else:
             return False
     return True
-
-
-def validChildren(pb, muteIk=False):
-    children = []
-    for child in pb.children:
-        if validBone(child, muteIk):
-            children.append(child)
-    return children
-
-
-def countChildren(pb, depth):
-    if depth < 0:
-        return 0
-    n = 1
-    for child in pb.children:
-        n += countChildren(child, depth-1)
-    return n
-
-
-def chainEnd(pb):
-    n = 1
-    while pb and (len(validChildren(pb)) == 1):
-        n += 1
-        pb = validChildren(pb)[0]
-    return n,pb
-
-
-def spineEnd(pb):
-    n = 1
-    while pb:
-        print(pb.name, 1)
-        children = validChildren(pb)
-        if len(children) == 1:
-            n += 1
-            pb = children[0]
-        elif len(children) == 0 and len(pb.children) == 1:
-            n += 1
-            pb = pb.children[0]
-        else:
-            return n,pb
-    return n,pb
 
 
 def getHeadTailDir(pb):

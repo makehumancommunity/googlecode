@@ -379,7 +379,11 @@ def changeTargetData(rig):
             pass
 
     layers = list(rig.data.layers)
-    rig.data.layers = 32*[True]
+    if isMhxRig(rig):
+        rig.data.layers = 14*[True] + 2*[False] + 14*[True] + 2*[False]
+    elif isRigify(rig):
+        rig.data.layers = 27*[True] + 5*[False]
+
     locks = []
     for pb in rig.pose.bones:
         constraints = []

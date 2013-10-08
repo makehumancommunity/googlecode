@@ -55,7 +55,7 @@ def getTargetArmature(rig, scn):
 
     if name == "Automatic":
         amt = mcp.trgArmature = CArmature()
-        amt.findArmature(rig)
+        amt.findArmature(rig, ignoreHiddenLayers=scn.McpIgnoreHiddenLayers)
         mcp.targetArmatures["Automatic"] = amt
         scn.McpTargetRig = "Automatic"
         amt.display("Target")

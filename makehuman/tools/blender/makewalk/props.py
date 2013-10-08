@@ -341,6 +341,11 @@ def initInterface(context):
         description = "The rig has a reverse hip",
         default = False)
 
+    bpy.types.Scene.McpIgnoreHiddenLayers = BoolProperty(
+        name = "Ignore Hidden Layers",
+        description = "Ignore bones on hidden layers when identifying target rig",
+        default = True)
+
     bpy.types.Scene.McpSaveTargetTPose = BoolProperty(
         name = "Save T-Pose",
         description = "Save the current pose as T-pose when saving target file",
