@@ -568,10 +568,13 @@ class Human(guicommon.Object):
         **Parameters:** None.
 
         """
-        algos3d.resetObj(self.meshData)
-
         if progressCallback:
             progressCallback(0.0)
+
+        # First call progressCalback (which often processes events) before resetting mesh
+        # so that mesh is not drawn in its reset state
+        algos3d.resetObj(self.meshData)
+
         progressVal = 0.0
         progressIncr = 0.5 / (len(self.targetsDetailStack) + 1)
 
