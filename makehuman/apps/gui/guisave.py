@@ -40,8 +40,8 @@ class SaveTaskView(gui3d.TaskView):
         self.fileentry.setDirectory(mh.getPath('models'))
         self.fileentry.setFilter('MakeHuman Models (*.mhm)')
 
-        self.selection_width = 1.2 * 4
-        self.selection_height = 1.3 * 4
+        self.selection_width = 1.2 * 7
+        self.selection_height = 1.3 * 7
         mesh = geometry3d.FrameMesh(self.selection_width, self.selection_height)
         mesh.move(-self.selection_width/2, -self.selection_height/2)
 
@@ -99,29 +99,13 @@ class SaveTaskView(gui3d.TaskView):
         # When the task gets shown, set the focus to the file entry
         gui3d.TaskView.onShow(self, event)
         self.fileentry.setFocus()
-        self.pan = gui3d.app.selectedHuman.getPosition()
-        self.eyeX = gui3d.app.modelCamera.eyeX
-        self.eyeY = gui3d.app.modelCamera.eyeY
-        self.eyeZ = gui3d.app.modelCamera.eyeZ
-        self.focusX = gui3d.app.modelCamera.focusX
-        self.focusY = gui3d.app.modelCamera.focusY
-        self.focusZ = gui3d.app.modelCamera.focusZ
-        self.rotation = gui3d.app.selectedHuman.getRotation()
-        gui3d.app.selectedHuman.setPosition([0, -1, 0])
+        gui3d.app.modelCamera.zoomFactor = 0.5
+        self.oldZoom = gui3d.app.modelCamera.zoomFactor
         gui3d.app.setGlobalCamera();
-        gui3d.app.modelCamera.eyeZ = 70
-        gui3d.app.selectedHuman.setRotation([0.0, 0.0, 0.0])
         self.selection.show()
 
     def onHide(self, event):
         
         gui3d.TaskView.onHide(self, event)
-        gui3d.app.selectedHuman.setPosition(self.pan)
-        gui3d.app.modelCamera.eyeX = self.eyeX
-        gui3d.app.modelCamera.eyeY = self.eyeY
-        gui3d.app.modelCamera.eyeZ = self.eyeZ
-        gui3d.app.modelCamera.focusX = self.focusX
-        gui3d.app.modelCamera.focusY = self.focusY
-        gui3d.app.modelCamera.focusZ = self.focusZ
-        gui3d.app.selectedHuman.setRotation(self.rotation)
+        gui3d.app.modelCamera.zoomFactor = self.oldZoom
         self.selection.hide()
