@@ -400,7 +400,7 @@ class OrbitalCamera(Camera):
         self._verticalInclination = 0.0
 
         self.zoomFactor = 1.0
-        self.translation = [0.5, 0.5, 0.0]
+        self.translation = [0.0, 0.0, 0.0]
 
         self.debug = False
 
@@ -451,10 +451,13 @@ class OrbitalCamera(Camera):
         # Set camera to human y center to compensate for varying human height
         bbox = human.getSeedMesh().calcBBox()
         # Note that BB does not take into account human translation, scale or rotation
-        humanHeight = bbox[1][1] - bbox[0][1]
-        humanWidth = bbox[1][0] - bbox[0][0]
-        self.center = [bbox[0][0] + self.translation[0] * humanWidth, 
-                       bbox[0][1] + self.translation[1] * humanHeight, 
+        humanHalfHeight = (bbox[1][1] - bbox[0][1]) / 2.0
+        humanHalfWidth = (bbox[1][0] - bbox[0][0]) / 2.0
+        hCenter = bbox[0][0] + humanHalfWidth
+        vCenter = bbox[0][1] + humanHalfHeight
+        tScale = min(1.0, max(0.0, (self.zoomFactor-1)))
+        self.center = [hCenter + self.translation[0] * humanHalfWidth * tScale,
+                       vCenter + self.translation[1] * humanHalfHeight * tScale,
                        0.0]
 
         if self.fixedRadius:
@@ -462,28 +465,24 @@ class OrbitalCamera(Camera):
             self.radius = 15.0  # bounding sphere of 3m to fit all human sizes
             return
 
-        # Determine radius of camera sphere based on human bounding box size
-        if self.center[0] == 0.0 and self.center[2] == 0.0:
-            # Faster approach (when camera is centered on X-Z plane)
-            self.radius = (humanHeight / 2.0) + 1
-        else:
-            # Slower approach: recalculate radius so that circle with arbitrary
-            # center completely encloses human bounding box
-            # Get all bounding box vertices
-            verts = []
-            for x in [0, 1]:
-                for y in [0, 1]:
-                    for z in [0, 1]:
-                        verts.append( [bbox[x][0], bbox[y][1], bbox[z][2]] )
+        # Determine radius of camera sphere based on distance from center to
+        # furthest human bounding box vertex so that the sphere with arbitrary
+        # center completely encloses human bounding box.
+        # Get all bounding box vertices
+        verts = []
+        for x in [0, 1]:
+            for y in [0, 1]:
+                for z in [0, 1]:
+                    verts.append( [bbox[x][0], bbox[y][1], bbox[z][2]] )
 
-            # Calculate all squared distances
-            verts = np.asarray(verts, dtype=np.float32)
-            verts[:] = verts[:] - self.center
-            distances = -np.sum(verts ** 2 , axis=-1)
-            maxDistance = math.sqrt( -distances[ np.argsort(distances)[0] ] )
+        # Calculate all squared distances
+        verts = np.asarray(verts, dtype=np.float32)
+        verts[:] = verts[:] - self.center
+        distances = -np.sum(verts ** 2 , axis=-1)
+        maxDistance = math.sqrt( -distances[ np.argsort(distances)[0] ] )
 
-            # Set radius as max distance from bounding box
-            self.radius = maxDistance + 1
+        # Set radius as max distance from bounding box
+        self.radius = maxDistance + 1
 
         if self.debug:
             import log
@@ -510,18 +509,19 @@ class OrbitalCamera(Camera):
     def addTranslation(self, axis, amount):
         # TODO handle movement using keys differently
         self.translation[axis] += (amount)
-        if self.translation[axis] < 0:
-            self.translation[axis] = 0.0
-        if self.translation[axis] > 1:
+        if self.translation[axis] < -1.0:
+            self.translation[axis] = -1.0
+        if self.translation[axis] > 1.0:
             self.translation[axis] = 1.0
         self.changed()
 
     def addXYTranslation(self, deltaX, deltaY):
-        self.addTranslation(0, (-deltaX/100.0) / self.zoomFactor)
-        self.addTranslation(1, (deltaY/100.0) / self.zoomFactor)
+        # Translation speed is scaled with zoomFactor
+        self.addTranslation(0, (-deltaX/50.0) / self.zoomFactor)
+        self.addTranslation(1, (deltaY/50.0) / self.zoomFactor)
 
     def addZoom(self, amount):
-        self.zoomFactor += (-amount/2)
+        self.zoomFactor += (-amount/2.0)
         if self.zoomFactor < 0.5:
             self.zoomFactor = 0.5
         if self.zoomFactor > 20.0:
