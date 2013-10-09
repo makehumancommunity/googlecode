@@ -517,15 +517,15 @@ class OrbitalCamera(Camera):
         self.changed()
 
     def addXYTranslation(self, deltaX, deltaY):
-        self.addTranslation(0, self.zoomFactor * (-deltaX/100.0))
-        self.addTranslation(1, self.zoomFactor * (deltaY/100.0))
+        self.addTranslation(0, (-deltaX/100.0) / self.zoomFactor)
+        self.addTranslation(1, (deltaY/100.0) / self.zoomFactor)
 
     def addZoom(self, amount):
-        self.zoomFactor += (amount/10.0)
-        if self.zoomFactor < 0.05:
-            self.zoomFactor = 0.05
-        if self.zoomFactor > 2.0:
-            self.zoomFactor = 2.0
+        self.zoomFactor += (-amount/2)
+        if self.zoomFactor < 0.5:
+            self.zoomFactor = 0.5
+        if self.zoomFactor > 20.0:
+            self.zoomFactor = 20.0
         if self.debug:
             import log
             log.debug("OrbitalCamera zoom: %s", self.zoomFactor)
@@ -549,7 +549,7 @@ class OrbitalCamera(Camera):
             proj = matrix.perspective(self.fovAngle, aspect, self.nearPlane, self.farPlane)
         else:
             # Ortho mode
-            height = self.getScale() * self.zoomFactor
+            height = self.getScale() / self.zoomFactor
             width = height * aspect
             # Camera position around world origin
             proj = matrix.ortho(-width, width, -height, height, self.nearPlane, self.farPlane)
