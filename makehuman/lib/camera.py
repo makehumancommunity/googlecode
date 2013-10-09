@@ -392,6 +392,7 @@ class OrbitalCamera(Camera):
         self._fovAngle = 90.0
 
         self.fixedRadius = False
+        self.scaleTranslations = True  # Enable to make translations depend on zoom factor (only work when zoomed in)
 
         # Ortho mode
         self._projection = 0    # TODO properly test with projection mode as well
@@ -430,8 +431,10 @@ class OrbitalCamera(Camera):
         """
         # Note: matrix is constructed with post-multiplication in reverse order
 
-        #m = np.matrix(np.identity(4))
-        m = obj.transform   # Apply object transform as last
+        if obj:
+            m = obj.transform   # Apply object transform as last
+        else:
+            m = np.matrix(np.identity(4))
         # First translate to camera center, then rotate around that center
         m = m * matrix.translate(self.center)   # Move mesh to original position again
         if self.verticalInclination != 0:
@@ -453,12 +456,17 @@ class OrbitalCamera(Camera):
         # Note that BB does not take into account human translation, scale or rotation
         humanHalfHeight = (bbox[1][1] - bbox[0][1]) / 2.0
         humanHalfWidth = (bbox[1][0] - bbox[0][0]) / 2.0
+        humanHalfDepth = (bbox[1][2] - bbox[0][2]) / 2.0
         hCenter = bbox[0][0] + humanHalfWidth
         vCenter = bbox[0][1] + humanHalfHeight
-        tScale = min(1.0, max(0.0, (math.sqrt(self.zoomFactor)-1))) # clipped linear scale
+        zCenter = bbox[0][2] + humanHalfDepth
+        if self.scaleTranslations:
+            tScale = min(1.0, max(0.0, (math.sqrt(self.zoomFactor)-1))) # clipped linear scale
+        else:
+            tScale = 1.0
         self.center = [hCenter + self.translation[0] * humanHalfWidth * tScale,
                        vCenter + self.translation[1] * humanHalfHeight * tScale,
-                       0.0]
+                       zCenter + self.translation[2] * humanHalfDepth * tScale]
 
         if self.fixedRadius:
             # Set fixed radius to avoid auto scaling
@@ -516,9 +524,25 @@ class OrbitalCamera(Camera):
         self.changed()
 
     def addXYTranslation(self, deltaX, deltaY):
+        # Get matrix to transform camera X and Y direction into world space
+        m = np.matrix(np.identity(4))
+        if self.verticalInclination != 0:
+            m = m * matrix.rotx(self.verticalInclination)
+        if self.horizontalRotation != 0:
+            m = m * matrix.roty(self.horizontalRotation)
+        xDirection = matrix.transform3(m, [1.0, 0.0, 0.0])
+        yDirection = matrix.transform3(m, [0.0, 1.0, 0.0])
+        
         # Translation speed is scaled with zoomFactor
-        self.addTranslation(0, (-deltaX/50.0) / self.zoomFactor)
-        self.addTranslation(1, (deltaY/50.0) / self.zoomFactor)
+        deltaX = (-deltaX/50.0) / self.zoomFactor
+        deltaY = (deltaY/50.0) / self.zoomFactor
+
+        offset = (deltaX * xDirection) + (deltaY * yDirection)
+        offset[2] = -offset[2]  # Invert Z direction
+
+        self.addTranslation(0, offset[0])
+        self.addTranslation(1, offset[1])
+        self.addTranslation(2, offset[2])
 
     def addZoom(self, amount):
         self.zoomFactor += (-amount/4.0)
@@ -605,3 +629,47 @@ class OrbitalCamera(Camera):
 
     def getFocusZ(self):
         return self.center[2]
+
+def polarToCartesian(polar, radius = 1.0):
+    """
+    Convert a 2D spherical coordinate into a cartesian 3D coordinate.
+    Polar coordinates are expected to be in radians.
+    Polar coordinate can be of form (theta, phi), in which case the radius
+    parameter is used.
+    Polar coordinate can also be of form (r, theta, phi), in which case radius
+    parameter is ignored.
+    """
+    if len(polar) >= 3:
+        r = polar[0]
+        theta = polar[1]
+        phi = polar[2]
+    else:
+        r = radius
+        theta = polar[0]
+        phi = polar[1]
+
+    sin_theta = math.sin(theta)
+
+    cart = np.zeros(3, dtype=np.float32)
+    cart[0] = r * math.cos(phi) * sin_theta
+    cart[1] = r * math.sin(phi) * sin_theta
+    cart[2] = r * math.cos(theta)
+
+    return radius * cart
+
+def cartesianToPolar(vect):
+    """
+    Convert 3D cartesian coordinate into a polar coordinate of the 
+    form (r, theta, phi).
+    Assumes sphere center to be at origin.
+    """
+    import numpy.linalg as la
+
+    vect = np.asarray(vect, dtype=np.float32)
+    r = la.norm(vect)
+    unitVect = vect / r
+
+    theta = math.acos(unitVect[2])       # polar angle
+    phi = math.atan2(unit[1], unit[0])   # azimuth
+
+    return [r, theta, phi]
