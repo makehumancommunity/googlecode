@@ -455,7 +455,7 @@ class OrbitalCamera(Camera):
         humanHalfWidth = (bbox[1][0] - bbox[0][0]) / 2.0
         hCenter = bbox[0][0] + humanHalfWidth
         vCenter = bbox[0][1] + humanHalfHeight
-        tScale = min(1.0, max(0.0, (self.zoomFactor-1)))
+        tScale = min(1.0, max(0.0, (self.zoomFactor-1)/self.zoomFactor)) # clipped linear scale
         self.center = [hCenter + self.translation[0] * humanHalfWidth * tScale,
                        vCenter + self.translation[1] * humanHalfHeight * tScale,
                        0.0]
