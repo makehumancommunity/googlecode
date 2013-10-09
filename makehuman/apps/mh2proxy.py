@@ -34,13 +34,12 @@ import material
 import io_json
 
 _A7converter = None
-
+Unit = numpy.array((1.0,1.0,1.0))
 
 class CProxyRefVert:
 
-    def __init__(self, parent, scale):
+    def __init__(self, parent):
         self._parent = parent
-        self._scale = scale
 
 
     def fromSingle(self, words, vnum, proxy):
@@ -94,21 +93,21 @@ class CProxyRefVert:
     def getOffset(self):
         return self._offset
 
-    def getCoord(self):
+    def getCoord(self, scale):
         rv0,rv1,rv2 = self._verts
         v0 = self._parent.coord[rv0]
         v1 = self._parent.coord[rv1]
         v2 = self._parent.coord[rv2]
         w0,w1,w2 = self._weights
-        return (w0*v0 + w1*v1 + w2*v2 + self._scale*self._offset)
+        return (w0*v0 + w1*v1 + w2*v2 + scale*self._offset)
 
-    def getConvertedCoord(self, converter):
+    def getConvertedCoord(self, converter, scale):
         rv0,rv1,rv2 = self._verts
-        v0 = converter.refVerts[rv0].getCoord()
-        v1 = converter.refVerts[rv1].getCoord()
-        v2 = converter.refVerts[rv2].getCoord()
+        v0 = converter.refVerts[rv0].getCoord(Unit)
+        v1 = converter.refVerts[rv1].getCoord(Unit)
+        v2 = converter.refVerts[rv2].getCoord(Unit)
         w0,w1,w2 = self._weights
-        return (w0*v0 + w1*v1 + w2*v2 + self._scale*self._offset)
+        return (w0*v0 + w1*v1 + w2*v2 + scale*self._offset)
 
 
 #
@@ -128,9 +127,9 @@ class CProxy:
         self.vertWeights = {}       # (proxy-vert, weight) list for each parent vert
         self.refVerts = []
 
-        self.xScaleData = None
-        self.yScaleData = None
-        self.zScaleData = None
+        self.scaleData = [None, None, None]
+        self.scale = numpy.array((1.0,1.0,1.0), float)
+
         self.z_depth = 50
         self.cull = False
         self.layer = layer
@@ -219,11 +218,15 @@ class CProxy:
 
 
     def getCoords(self):
+        obj = G.app.selectedHuman.meshData
+        for n in range(3):
+            self.scale[n] = self.getScale(self.scaleData[n], obj, n)
+
         converter = self.getConverter()
         if converter:
-            return [refVert.getConvertedCoord(converter) for refVert in self.refVerts]
+            return [refVert.getConvertedCoord(converter, self.scale) for refVert in self.refVerts]
         else:
-            return [refVert.getCoord() for refVert in self.refVerts]
+            return [refVert.getCoord(self.scale) for refVert in self.refVerts]
 
 
     def update(self, obj):
@@ -258,8 +261,8 @@ class CProxy:
 
         converter = self.getConverter()
         if converter:
-            co1 = converter.refVerts[vn1].getCoord()
-            co2 = converter.refVerts[vn2].getCoord()
+            co1 = converter.refVerts[vn1].getCoord(Unit)
+            co2 = converter.refVerts[vn2].getCoord(Unit)
         else:
             co1 = obj.coord[vn1]
             co2 = obj.coord[vn2]
@@ -394,7 +397,6 @@ def readProxyFile(obj, filepath, type="Clothes", layer=4):
 
     proxy.useProjection = True
     proxy.ignoreOffset = False
-    scales = numpy.array((1.0,1.0,1.0), float)
     status = 0
     vnum = 0
     for line in fp:
@@ -474,14 +476,14 @@ def readProxyFile(obj, filepath, type="Clothes", layer=4):
             proxy.uvLayers[layer] = getFileName(folder, uvFile, ".mhuv")
 
         elif key == 'x_scale':
-            proxy.xScaleData = getScaleData(words)
-            scales[0] = proxy.getScale(proxy.xScaleData, obj, 0)
+            proxy.scaleData[0] = getScaleData(words)
+            proxy.scale[0] = proxy.getScale(proxy.scaleData[0], obj, 0)
         elif key == 'y_scale':
-            proxy.yScaleData = getScaleData(words)
-            scales[1] = proxy.getScale(proxy.yScaleData, obj, 1)
+            proxy.scaleData[1] = getScaleData(words)
+            proxy.scale[1] = proxy.getScale(proxy.scaleData[1], obj, 1)
         elif key == 'z_scale':
-            proxy.zScaleData = getScaleData(words)
-            scales[2] = proxy.getScale(proxy.zScaleData, obj, 2)
+            proxy.scaleData[2] = getScaleData(words)
+            proxy.scale[2] = proxy.getScale(proxy.scaleData[2], obj, 2)
         elif key == 'use_projection':
             # TODO still used?
             proxy.useProjection = int(words[1])
@@ -538,7 +540,7 @@ def readProxyFile(obj, filepath, type="Clothes", layer=4):
 
 
         elif status == doRefVerts:
-            refVert = CProxyRefVert(obj, scales)
+            refVert = CProxyRefVert(obj)
             proxy.refVerts.append(refVert)
             if len(words) == 1:
                 refVert.fromSingle(words, vnum, proxy)
