@@ -40,8 +40,8 @@ class SaveTaskView(gui3d.TaskView):
         self.fileentry.setDirectory(mh.getPath('models'))
         self.fileentry.setFilter('MakeHuman Models (*.mhm)')
 
-        self.selection_width = 1.2 * 7
-        self.selection_height = 1.3 * 7
+        self.selection_width = 1.2 * 10
+        self.selection_height = 1.3 * 10
         mesh = geometry3d.FrameMesh(self.selection_width, self.selection_height)
         mesh.move(-self.selection_width/2, -self.selection_height/2)
 
