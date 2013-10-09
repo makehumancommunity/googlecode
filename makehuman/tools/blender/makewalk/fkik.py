@@ -99,6 +99,9 @@ def matchIkLeg(legIk, toeFk, mBall, mToe, mHeel):
     y.normalize()
     x -= x.dot(y)*y
     x.normalize()
+    if abs(x[2]) < 0.7:
+        x[2] = 0
+        x.normalize()
     z = x.cross(y)
     head = tail - y * legIk.bone.length
 

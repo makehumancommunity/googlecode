@@ -138,19 +138,18 @@ def floorIkFoot(rig, plane, scn, frames):
         offset = 0
         if scn.McpFloorLeft:
             offset = getIkOffset(rig, ez, origin, lleg)
+            if offset > 0:
+                addOffset(lleg, offset, ez)
         if scn.McpFloorRight:
             rOffset = getIkOffset(rig, ez, origin, rleg)
+            if rOffset > 0:
+                addOffset(rleg, rOffset, ez)
             if rOffset > offset:
                 offset = rOffset
+        if offset > 0 and scn.McpFloorHips:
+            addOffset(root, offset, ez)
         if n%10 == 0:
             print(frame, offset)
-        if offset > 0:
-            if scn.McpFloorLeft:
-                addOffset(lleg, offset, ez)
-            if scn.McpFloorRight:
-                addOffset(rleg, offset, ez)
-            if scn.McpFloorHips:
-                addOffset(root, offset, ez)
 
 
 def getIkOffset(rig, ez, origin, leg):

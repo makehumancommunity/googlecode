@@ -220,6 +220,7 @@ def readBvhFile(context, filepath, scn, scan):
                 frameFactor = int(1.0/(scn.render.fps*frameTime) + 0.49)
                 if defaultSS:
                     ssFactor = frameFactor
+                startFrame *= ssFactor
                 endFrame *= ssFactor
                 status = Frames
                 frame = 0

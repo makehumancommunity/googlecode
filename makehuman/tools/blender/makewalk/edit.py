@@ -32,6 +32,43 @@ from . import utils, load, simplify, props, action
 from . import mcp
 from .utils import MocapError
 
+
+#----------------------------------------------------------------
+#   Markers
+#----------------------------------------------------------------
+
+_Markers = []
+
+def saveMarkers(scn):
+    global _Markers
+    _Markers = [(mrk.camera, mrk.frame, mrk.name, mrk.select) for mrk in scn.timeline_markers]
+    scn.timeline_markers.clear()
+
+
+def restoreMarkers(scn):
+    global _Markers
+    scn.timeline_markers.clear()
+    for (camera, frame, name, select) in _Markers:
+        mrk = scn.timeline_markers.new(name)
+        mrk.camera = camera
+        mrk.frame = frame
+        mrk.select = select
+
+
+def setMarker(scn, frame):
+    mrk = scn.timeline_markers.new("F_%d" % int(frame))
+    mrk.frame = frame
+
+
+def removeMarker(scn, frame):
+    marker = None
+    for mrk in scn.timeline_markers:
+        if mrk.frame == frame:
+            scn.timeline_markers.remove(mrk)
+            return
+    raise MocapError("No keys at frame %d" % int(frame))
+
+
 ########################################################################
 #
 #   startEdit(context):
@@ -44,13 +81,17 @@ def getUndoAction(rig):
     except:
         return None
 
+
 def startEdit(context):
+    global _EditLoc, _EditRot
+
     rig = context.object
+    scn = context.scene
     if getUndoAction(rig):
         raise MocapError("Action already being edited. Undo or confirm edit first")
     act = utils.getAction(rig)
     if not act:
-        return
+        raise MocapError("Object %s has no action" % rig.name)
     aname = act.name
     act.name = '#'+aname
     nact = bpy.data.actions.new(aname)
@@ -58,8 +99,9 @@ def startEdit(context):
     rig.McpUndoAction = act.name
     rig.McpActionName = aname
 
-    mcp.editLoc = utils.quadDict()
-    mcp.editRot = utils.quadDict()
+    saveMarkers(scn)
+    _EditLoc = utils.quadDict()
+    _EditRot = utils.quadDict()
 
     for fcu in act.fcurves:
         (name, mode) = utils.fCurveIdentity(fcu)
@@ -71,6 +113,7 @@ def startEdit(context):
     utils.setInterpolation(rig)
     print("Action editing started")
     return nact
+
 
 class VIEW3D_OT_McpStartEditButton(bpy.types.Operator):
     bl_idname = "mcp.start_edit"
@@ -88,6 +131,7 @@ class VIEW3D_OT_McpStartEditButton(bpy.types.Operator):
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
+
 
 def setKeyMap(context, idname, doAdd):
     km = context.window_manager.keyconfigs.active.keymaps['3D View']
@@ -107,13 +151,16 @@ def setKeyMap(context, idname, doAdd):
 #
 
 def undoEdit(context):
+    global _EditLoc, _EditRot
+
     rig = context.object
     oact = getUndoAction(rig)
     if not oact:
         raise MocapError("No action to undo")
+    restoreMarkers(context.scene)
     rig.McpUndoAction = ""
-    mcp.editLoc = None
-    mcp.editRot = None
+    _EditLoc = None
+    _EditRot = None
     rig.McpActionName = ""
     act = rig.animation_data.action
     act.name = "#Delete"
@@ -122,6 +169,7 @@ def undoEdit(context):
     utils.deleteAction(act)
     print("Action changes undone")
     return
+
 
 class VIEW3D_OT_McpUndoEditButton(bpy.types.Operator):
     bl_idname = "mcp.undo_edit"
@@ -154,17 +202,19 @@ class VIEW3D_OT_McpUndoEditButton(bpy.types.Operator):
 #
 
 def getActionPair(context):
+    global _EditLoc, _EditRot
+
     rig = context.object
     oact = getUndoAction(rig)
     if not oact:
         raise MocapError("No action is currently being edited")
         return None
     try:
-        mcp.editLoc
-        mcp.editRot
+        _EditLoc
+        _EditRot
     except:
-        mcp.editLoc = utils.quadDict()
-        mcp.editRot = utils.quadDict()
+        _EditLoc = utils.quadDict()
+        _EditRot = utils.quadDict()
     act = utils.getAction(rig)
     if act:
         return (act, oact)
@@ -177,6 +227,8 @@ def getActionPair(context):
 #
 
 def confirmEdit(context):
+    global _EditLoc, _EditRot
+
     rig = context.object
     pair = getActionPair(context)
     if not pair:
@@ -190,24 +242,26 @@ def confirmEdit(context):
         (name,mode) =  utils.fCurveIdentity(fcu)
         if utils.isRotation(mode):
             try:
-                edit = mcp.editRot[fcu.array_index][name]
+                edit = _EditRot[fcu.array_index][name]
             except:
                 continue
             displaceFCurve(fcu, ofcu, edit)
         elif  utils.isLocation(mode):
             try:
-                edit = mcp.editLoc[fcu.array_index][name]
+                edit = _EditLoc[fcu.array_index][name]
             except:
                 continue
             displaceFCurve(fcu, ofcu, edit)
 
     rig.McpUndoAction = ""
     rig.McpActionName = ""
-    mcp.editLoc = None
-    mcp.editRot = None
+    restoreMarkers(context.scene)
+    _EditLoc = None
+    _EditRot = None
     utils.deleteAction(oact)
     print("Action changed")
     return
+
 
 class VIEW3D_OT_McpConfirmEditButton(bpy.types.Operator):
     bl_idname = "mcp.confirm_edit"
@@ -237,48 +291,73 @@ class VIEW3D_OT_McpConfirmEditButton(bpy.types.Operator):
 def setEditDict(editDict, frame, name, channel, n):
     for index in range(n):
         try:
-            editDict[index][name]
+            edit = editDict[index][name]
         except:
-            editDict[index][name] = {}
-        edit = editDict[index][name]
+            edit = editDict[index][name] = {}
         edit[frame] = channel[index]
     return
 
-def insertKey(context, useLoc, useRot):
+
+def removeEditDict(editDict, frame, name, n):
+    for index in range(n):
+        try:
+            del editDict[index][name][frame]
+        except:
+            editDict[index][name] = {}
+
+
+def insertKey(context, useLoc, useRot, delete):
+    global _EditLoc, _EditRot
+
     rig = context.object
     pair = getActionPair(context)
     if not pair:
         raise MocapError("No action is currently being edited")
     (act, oact) = pair
 
-    pb = bpy.context.active_pose_bone
-    frame = context.scene.frame_current
+    scn = context.scene
+    frame = scn.frame_current
+    if delete:
+        removeMarker(scn, frame)
+    else:
+        setMarker(scn, frame)
+
     for pb in rig.pose.bones:
         if not pb.bone.select:
             continue
-        if useLoc:
-            setEditDict(mcp.editLoc, frame, pb.name, pb.location, 3)
-        if useRot:
-            if pb.rotation_mode == 'QUATERNION':
-                setEditDict(mcp.editRot, frame, pb.name, pb.rotation_quaternion, 4)
-            else:
-                setEditDict(mcp.editRot, frame, pb.name, pb.rotation_euler, 3)
+
+        if delete:
+            removeEditDict(_EditLoc, frame, pb.name, 3)
+            removeEditDict(_EditRot, frame, pb.name, 4)
+        else:
+            if useLoc:
+                setEditDict(_EditLoc, frame, pb.name, pb.location, 3)
+            if useRot:
+                if pb.rotation_mode == 'QUATERNION':
+                    setEditDict(_EditRot, frame, pb.name, pb.rotation_quaternion, 4)
+                else:
+                    setEditDict(_EditRot, frame, pb.name, pb.rotation_euler, 3)
+
         for fcu in act.fcurves:
             ofcu = utils.findFCurve(fcu.data_path, fcu.array_index, oact.fcurves)
             if not ofcu:
                 continue
-            (name,mode) =  utils.fCurveIdentity(fcu)
+            (name,mode) = utils.fCurveIdentity(fcu)
             if name == pb.name:
                 if utils.isRotation(mode) and useRot:
-                    displaceFCurve(fcu, ofcu, mcp.editRot[fcu.array_index][name])
-                if  utils.isLocation(mode) and useLoc:
-                    displaceFCurve(fcu, ofcu, mcp.editLoc[fcu.array_index][name])
-    return
+                    displaceFCurve(fcu, ofcu, _EditRot[fcu.array_index][name])
+                if utils.isLocation(mode) and useLoc:
+                    displaceFCurve(fcu, ofcu, _EditLoc[fcu.array_index][name])
 
-class VIEW3D_OT_McpInsertLocButton(bpy.types.Operator):
-    bl_idname = "mcp.insert_loc"
-    bl_label = "Loc"
+
+class VIEW3D_OT_McpInsertKeyButton(bpy.types.Operator):
+    bl_idname = "mcp.insert_key"
+    bl_label = "Key"
     bl_options = {'UNDO'}
+
+    loc = BoolProperty("Loc", default=False)
+    rot = BoolProperty("Rot", default=False)
+    delete = BoolProperty("Del", default=False)
 
     @classmethod
     def poll(self, context):
@@ -286,39 +365,7 @@ class VIEW3D_OT_McpInsertLocButton(bpy.types.Operator):
 
     def execute(self, context):
         try:
-            insertKey(context, True, False)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
-
-class VIEW3D_OT_McpInsertRotButton(bpy.types.Operator):
-    bl_idname = "mcp.insert_rot"
-    bl_label = "Rot"
-    bl_options = {'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        return (context.object.McpUndoAction != "")
-
-    def execute(self, context):
-        try:
-            insertKey(context, False, True)
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
-
-class VIEW3D_OT_McpInsertLocRotButton(bpy.types.Operator):
-    bl_idname = "mcp.insert_locrot"
-    bl_label = "LocRot"
-    bl_options = {'UNDO'}
-
-    @classmethod
-    def poll(self, context):
-        return (context.object.McpUndoAction != "")
-
-    def execute(self, context):
-        try:
-            insertKey(context, True, True)
+            insertKey(context, self.properties.loc, self.properties.rot, self.properties.delete)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
