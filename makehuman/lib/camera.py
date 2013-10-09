@@ -455,7 +455,7 @@ class OrbitalCamera(Camera):
         humanHalfWidth = (bbox[1][0] - bbox[0][0]) / 2.0
         hCenter = bbox[0][0] + humanHalfWidth
         vCenter = bbox[0][1] + humanHalfHeight
-        tScale = min(1.0, max(0.0, (self.zoomFactor-1)/self.zoomFactor)) # clipped linear scale
+        tScale = min(1.0, max(0.0, (math.sqrt(self.zoomFactor)-1))) # clipped linear scale
         self.center = [hCenter + self.translation[0] * humanHalfWidth * tScale,
                        vCenter + self.translation[1] * humanHalfHeight * tScale,
                        0.0]
@@ -521,11 +521,11 @@ class OrbitalCamera(Camera):
         self.addTranslation(1, (deltaY/50.0) / self.zoomFactor)
 
     def addZoom(self, amount):
-        self.zoomFactor += (-amount/2.0)
-        if self.zoomFactor < 0.5:
-            self.zoomFactor = 0.5
-        if self.zoomFactor > 20.0:
-            self.zoomFactor = 20.0
+        self.zoomFactor += (-amount/4.0)
+        if self.zoomFactor < 0.25:
+            self.zoomFactor = 0.25
+        if self.zoomFactor > 10.0:
+            self.zoomFactor = 10.0
         if self.debug:
             import log
             log.debug("OrbitalCamera zoom: %s", self.zoomFactor)
@@ -549,7 +549,7 @@ class OrbitalCamera(Camera):
             proj = matrix.perspective(self.fovAngle, aspect, self.nearPlane, self.farPlane)
         else:
             # Ortho mode
-            height = self.getScale() / self.zoomFactor
+            height = self.getScale() 
             width = height * aspect
             # Camera position around world origin
             proj = matrix.ortho(-width, width, -height, height, self.nearPlane, self.farPlane)
@@ -574,6 +574,10 @@ class OrbitalCamera(Camera):
         fov = math.tan(self.fovAngle * 0.5 * math.pi / 180.0)
         delta = np.array(self.getEye()) - np.array(self.focus)
         scale = math.sqrt(np.sum(delta ** 2)) * fov
+        if self.zoomFactor < 1.0:
+            scale = scale / math.sqrt(self.zoomFactor)
+        else:
+            scale = scale / ( 2*self.zoomFactor - 1)
         if self.debug:
             import log
             log.debug("OrbitalCamera scale: %s", scale)
