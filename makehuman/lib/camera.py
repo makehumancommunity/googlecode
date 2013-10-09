@@ -56,6 +56,8 @@ class Camera(events3d.EventHandler):
 
         self.eyeSeparation = 1.0
 
+        self.updated = False
+
     def changed(self):
         self.callEvent('onChanged', self)
         self.changedPending = False

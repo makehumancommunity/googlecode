@@ -312,7 +312,9 @@ def setSceneLighting(scene):
             glDisable(GL_LIGHT0 + lIdx)
 
 def cameraPosition(camera, eye):
-    camera.updateCamera()
+    if not camera.updated:
+        camera.updateCamera()
+        camera.updated = True
     proj, mv = camera.getMatrices(eye)
     glMatrixMode(GL_PROJECTION)
     glLoadMatrixd(np.ascontiguousarray(proj.T))
@@ -705,6 +707,9 @@ def drawMeshes(pickMode):
         return
 
     cameraMode = None
+    # Update only the model camera (leave the static one)
+    G.cameras[0].updated = False
+
     # Draw all objects contained by G.world
     for obj in sorted(G.world, key = (lambda obj: obj.priority)):
         camera = G.cameras[obj.cameraMode]
