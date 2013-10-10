@@ -662,8 +662,6 @@ class OrbitalCamera(Camera):
         return self.center[2]
 
     def getMousePickHuman(self, mouseX, mouseY):
-        self.pickedPos = None
-
         if G.app.getSelectedFaceGroupAndObject() is None:
             return
 
