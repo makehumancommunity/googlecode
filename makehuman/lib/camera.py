@@ -395,7 +395,7 @@ class OrbitalCamera(Camera):
         self._fovAngle = 90.0
 
         self.fixedRadius = False
-        self.scaleTranslations = False  # Enable to make translations depend on zoom factor (only work when zoomed in)
+        self.scaleTranslations = True  # Enable to make translations depend on zoom factor (only work when zoomed in)
 
         # Ortho mode
         self._projection = 0    # TODO properly test with projection mode as well
@@ -466,7 +466,7 @@ class OrbitalCamera(Camera):
         vCenter = bbox[0][1] + humanHalfHeight
         zCenter = bbox[0][2] + humanHalfDepth
         if self.scaleTranslations:
-            tScale = min(1.0, max(0.0, (math.sqrt(self.zoomFactor)-1))) # clipped linear scale
+            tScale = min(1.0, max(0.0, 3* (math.sqrt(self.zoomFactor)-1))) # clipped linear scale
         else:
             tScale = 1.0
         self.center = [hCenter + self.translation[0] * humanHalfWidth * tScale,
