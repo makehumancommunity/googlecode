@@ -466,7 +466,7 @@ class OrbitalCamera(Camera):
         vCenter = bbox[0][1] + humanHalfHeight
         zCenter = bbox[0][2] + humanHalfDepth
         if self.scaleTranslations:
-            tScale = min(1.0, max(0.0, 3* (math.sqrt(self.zoomFactor)-1))) # clipped linear scale
+            tScale = min(1.0, max(0.0, (math.sqrt(self.zoomFactor)-1))) # clipped linear scale
         else:
             tScale = 1.0
         self.center = [hCenter + self.translation[0] * humanHalfWidth * tScale,
@@ -675,20 +675,19 @@ class OrbitalCamera(Camera):
         humanHalfWidth = (bBox[1][0] - bBox[0][0]) / 2.0
         hCenter = bBox[0][0] + humanHalfWidth
         #self.translation[0] = (self.pickedPos[0] - hCenter) / humanHalfWidth
-        self.pickedPos[0] = (self.pickedPos[0] - hCenter) / humanHalfWidth
+        self.pickedPos[0] = max(-1.0, min(1.0, (self.pickedPos[0] - hCenter) / humanHalfWidth))
 
         humanHalfHeight = (bBox[1][1] - bBox[0][1]) / 2.0
         vCenter = bBox[0][1] + humanHalfHeight
         #self.translation[1] = (self.pickedPos[1] - vCenter) / humanHalfHeight
-        self.pickedPos[1] = (self.pickedPos[1] - vCenter) / humanHalfHeight
+        self.pickedPos[1] = max(-1.0, min(1.0, (self.pickedPos[1] - vCenter) / humanHalfHeight))
 
         humanHalfDepth = (bBox[1][2] - bBox[0][2]) / 2.0
         zCenter = bBox[0][2] + humanHalfDepth
         #self.translation[2] = (self.pickedPos[2] - zCenter) / humanHalfDepth
-        self.pickedPos[2] = (self.pickedPos[2] - zCenter) / humanHalfDepth
+        self.pickedPos[2] = max(-1.0, min(1.0, (self.pickedPos[2] - zCenter) / humanHalfDepth))
 
         #self.changed()
-        
 
 def polarToCartesian(polar, radius = 1.0):
     """
