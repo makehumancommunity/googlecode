@@ -395,7 +395,7 @@ class OrbitalCamera(Camera):
         self._fovAngle = 90.0
 
         self.fixedRadius = False
-        self.scaleTranslations = True  # Enable to make translations depend on zoom factor (only work when zoomed in)
+        self.scaleTranslations = False  # Enable to make translations depend on zoom factor (only work when zoomed in)
 
         # Ortho mode
         self._projection = 0    # TODO properly test with projection mode as well
@@ -560,19 +560,29 @@ class OrbitalCamera(Camera):
             log.debug("OrbitalCamera zoom: %s", self.zoomFactor)
 
         if self.pickedPos is not None:
-            #amount = abs(amount/4.0)
-            #amount = abs(amount) / self.zoomFactor
-            amount = abs(amount) / max(1.0, min(5.0, self.zoomFactor))
-            #amount = abs(amount) / max(1.0, 0.3 * self.zoomFactor)
-            for i in xrange(3):
-                if self.translation[i] < self.pickedPos[i]:
-                    self.translation[i] += amount
-                    self.translation[i] = min(self.translation[i], self.pickedPos[i])
-                elif self.translation[i] > self.pickedPos[i]:
-                    self.translation[i] -= amount
-                    self.translation[i] = max(self.translation[i], self.pickedPos[i])
-        if self.pickedPos == self.translation:
-            self.pickedPos = None
+            if not self.scaleTranslations and -amount < 0.0:
+                amount = abs(amount) / max(1.0, min(5.0, self.zoomFactor))
+                for i in xrange(3):
+                    if self.translation[i] < 0.0:
+                        self.translation[i] += amount
+                        self.translation[i] = min(self.translation[i], 0.0)
+                    elif self.translation[i] > 0.0:
+                        self.translation[i] -= amount
+                        self.translation[i] = max(self.translation[i], 0.0)
+            else:
+                #amount = abs(amount/4.0)
+                #amount = abs(amount) / self.zoomFactor
+                amount = abs(amount) / max(1.0, min(5.0, self.zoomFactor))
+                #amount = abs(amount) / max(1.0, 0.3 * self.zoomFactor)
+                for i in xrange(3):
+                    if self.translation[i] < self.pickedPos[i]:
+                        self.translation[i] += amount
+                        self.translation[i] = min(self.translation[i], self.pickedPos[i])
+                    elif self.translation[i] > self.pickedPos[i]:
+                        self.translation[i] -= amount
+                        self.translation[i] = max(self.translation[i], self.pickedPos[i])
+                if self.pickedPos == self.translation:
+                    self.pickedPos = None
         self.changed()
 
     def getMatrices(self, eye=None):
