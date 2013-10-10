@@ -406,6 +406,8 @@ class OrbitalCamera(Camera):
         self.zoomFactor = 1.0
         self.translation = [0.0, 0.0, 0.0]
 
+        self.pickedPos = None
+
         self.debug = False
 
     def getHorizontalRotation(self):
@@ -557,6 +559,22 @@ class OrbitalCamera(Camera):
             import log
             log.debug("OrbitalCamera zoom: %s", self.zoomFactor)
 
+        if self.pickedPos is not None:
+            #amount = abs(amount/4.0)
+            #amount = abs(amount) / self.zoomFactor
+            amount = abs(amount) / max(1.0, min(5.0, self.zoomFactor))
+            #amount = abs(amount) / max(1.0, 0.3 * self.zoomFactor)
+            for i in xrange(3):
+                if self.translation[i] < self.pickedPos[i]:
+                    self.translation[i] += amount
+                    self.translation[i] = min(self.translation[i], self.pickedPos[i])
+                elif self.translation[i] > self.pickedPos[i]:
+                    self.translation[i] -= amount
+                    self.translation[i] = max(self.translation[i], self.pickedPos[i])
+        if self.pickedPos == self.translation:
+            self.pickedPos = None
+        self.changed()
+
     def getMatrices(self, eye=None):
         # Ignores eye parameter
 
@@ -648,17 +666,20 @@ class OrbitalCamera(Camera):
 
         humanHalfWidth = (bBox[1][0] - bBox[0][0]) / 2.0
         hCenter = bBox[0][0] + humanHalfWidth
-        self.translation[0] = (self.pickedPos[0] - hCenter) / humanHalfWidth
+        #self.translation[0] = (self.pickedPos[0] - hCenter) / humanHalfWidth
+        self.pickedPos[0] = (self.pickedPos[0] - hCenter) / humanHalfWidth
 
         humanHalfHeight = (bBox[1][1] - bBox[0][1]) / 2.0
         vCenter = bBox[0][1] + humanHalfHeight
-        self.translation[1] = (self.pickedPos[1] - vCenter) / humanHalfHeight
+        #self.translation[1] = (self.pickedPos[1] - vCenter) / humanHalfHeight
+        self.pickedPos[1] = (self.pickedPos[1] - vCenter) / humanHalfHeight
 
         humanHalfDepth = (bBox[1][2] - bBox[0][2]) / 2.0
         zCenter = bBox[0][2] + humanHalfDepth
-        self.translation[2] = (self.pickedPos[2] - zCenter) / humanHalfDepth
+        #self.translation[2] = (self.pickedPos[2] - zCenter) / humanHalfDepth
+        self.pickedPos[2] = (self.pickedPos[2] - zCenter) / humanHalfDepth
 
-        self.changed()
+        #self.changed()
         
 
 def polarToCartesian(polar, radius = 1.0):
