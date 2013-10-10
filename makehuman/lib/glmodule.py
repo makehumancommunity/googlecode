@@ -184,6 +184,7 @@ def drawEnd():
     G.swapBuffers()
 
 have_multisample = None
+have_activeTexture = None
 
 def A(*args):
     if len(args) > 0 and hasattr(args[0], '__iter__'): # Iterable as argument
@@ -214,9 +215,14 @@ def OnInit():
 
     global have_multisample
     have_multisample = glInitMultisampleARB()
+    global have_activeTexture
+    have_activeTexture = bool(glActiveTexture)
 
     global MAX_TEXTURE_UNITS
-    MAX_TEXTURE_UNITS = glGetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
+    if have_activeTexture:
+        MAX_TEXTURE_UNITS = glGetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
+    else:
+        MAX_TEXTURE_UNITS = 1
 
     # Set global scene ambient
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, A(0.0, 0.0, 0.0, 1.0))
@@ -345,23 +351,26 @@ def drawMesh(obj):
     if not useShader:
         if obj.isTextured and obj.texture and obj.solid:
             # Bind texture for fixed function shading
-            glActiveTexture(GL_TEXTURE0)
+            if have_activeTexture:
+                glActiveTexture(GL_TEXTURE0)
             glEnable(GL_TEXTURE_2D)
             tex = getTexture(obj.texture)
             if tex not in (False, None):
                 glBindTexture(GL_TEXTURE_2D, tex.textureId)
             else:
                 glBindTexture(GL_TEXTURE_2D, TEX_NOT_FOUND.textureId)
-            for gl_tex_idx in xrange(GL_TEXTURE0 + 1, GL_TEXTURE0 + MAX_TEXTURE_UNITS):
-                glActiveTexture(gl_tex_idx)
-                glBindTexture(GL_TEXTURE_2D, 0)
-                glDisable(GL_TEXTURE_2D)
-                glBindTexture(GL_TEXTURE_1D, 0)
-                glDisable(GL_TEXTURE_1D)
+            if have_activeTexture:
+                for gl_tex_idx in xrange(GL_TEXTURE0 + 1, GL_TEXTURE0 + MAX_TEXTURE_UNITS):
+                    glActiveTexture(gl_tex_idx)
+                    glBindTexture(GL_TEXTURE_2D, 0)
+                    glDisable(GL_TEXTURE_2D)
+                    glBindTexture(GL_TEXTURE_1D, 0)
+                    glDisable(GL_TEXTURE_1D)
         else:
             # Disable all textures (when in fixed function textureless shading mode)
             for gl_tex_idx in xrange(GL_TEXTURE0, GL_TEXTURE0 + MAX_TEXTURE_UNITS):
-                glActiveTexture(gl_tex_idx)
+                if have_activeTexture:
+                    glActiveTexture(gl_tex_idx)
                 glBindTexture(GL_TEXTURE_2D, 0)
                 glDisable(GL_TEXTURE_2D)
                 glBindTexture(GL_TEXTURE_1D, 0)
@@ -506,7 +515,8 @@ def drawMesh(obj):
         glUseProgram(0)
 
     # Restore state defaults
-    glActiveTexture(GL_TEXTURE0)
+    if have_activeTexture:
+        glActiveTexture(GL_TEXTURE0)
     glDisable(GL_CULL_FACE)
     glColor3f(1.0, 1.0, 1.0)
     glColorMaterial(GL_FRONT, GL_DIFFUSE)
