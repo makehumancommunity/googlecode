@@ -318,8 +318,8 @@ def validBone(pb, rig=None, muteIk=False):
     for cns in pb.constraints:
         if cns.mute or cns.influence < 0.2:
             pass
-        elif cns.type[0:5] == 'LIMIT':
-            cns.influence = 0
+        #elif cns.type[0:5] == 'LIMIT':
+        #    cns.influence = 0
         elif cns.type == 'IK':
             if muteIk:
                 cns.mute = True

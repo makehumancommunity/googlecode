@@ -277,9 +277,10 @@ class VIEW3D_OT_McpGetTargetRigButton(bpy.types.Operator):
     def execute(self, context):
         from .retarget import changeTargetData, restoreTargetData
         rig = context.object
-        data = changeTargetData(rig)
+        scn = context.scene
+        data = changeTargetData(rig, scn)
         try:
-            getTargetArmature(rig, context.scene)
+            getTargetArmature(rig, scn)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         finally:

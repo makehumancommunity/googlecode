@@ -599,7 +599,7 @@ class VIEW3D_OT_LoadAndRenameBvhButton(bpy.types.Operator, ImportHelper):
         from .retarget import changeTargetData, restoreTargetData
         scn = context.scene
         trgRig = context.object
-        data = changeTargetData(trgRig)
+        data = changeTargetData(trgRig, scn)
         try:
             srcRig = readBvhFile(context, self.properties.filepath, context.scene, False)
             renameAndRescaleBvh(context, srcRig, trgRig)

@@ -293,7 +293,7 @@ def stitchActions(context):
                 mat1 = mats1[n1]
                 mat2 = mats2[n2]
                 mat = (1-eps)*mat1 + eps*mat2
-                mat = correctMatrixForLocks(mat, orders[bname], locks[bname])
+                mat = correctMatrixForLocks(mat, orders[bname], locks[bname], pb, scn.McpUseLimits)
                 if useLoc[bname]:
                     insertLocation(pb, mat)
                 insertRotation(pb, mat)
@@ -429,7 +429,7 @@ def shiftBoneFCurves(rig, scn):
         for bname,bmats in basemats.items():
             pb = rig.pose.bones[bname]
             mat = deltaMat[pb.name] * bmats[n+1]
-            mat = correctMatrixForLocks(mat, orders[bname], locks[bname])
+            mat = correctMatrixForLocks(mat, orders[bname], locks[bname], pb, scn.McpUseLimits)
             if useLoc[bname]:
                 insertLocation(pb, mat)
             insertRotation(pb, mat)

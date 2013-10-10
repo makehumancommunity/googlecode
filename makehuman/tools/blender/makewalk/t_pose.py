@@ -62,7 +62,6 @@ def invertQuats(rig):
 def applyRestPose(context, value):
     rig = context.object
     scn = context.scene
-
     children = []
     for ob in scn.objects:
         if ob.type != 'MESH':
@@ -221,6 +220,15 @@ def addTPoseAtFrame0(rig, scn):
             pb.keyframe_insert('rotation_euler', group=pb.name)
 
 
+def getCurrentPose(rig):
+    return [(pb, pb.matrix_basis.copy()) for pb in rig.pose.bones]
+
+
+def setCurrentPose(pose):
+    for pb,mat in pose:
+        pb.matrix_basis = mat
+
+
 class VIEW3D_OT_McpRestTPoseButton(bpy.types.Operator):
     bl_idname = "mcp.rest_t_pose"
     bl_label = "T-pose => Rest Pose"
@@ -259,7 +267,9 @@ class VIEW3D_OT_McpRestCurrentPoseButton(bpy.types.Operator):
 
     def execute(self, context):
         try:
+            pose = getCurrentPose(context.object)
             initRig(context)
+            setCurrentPose(pose)
             applyRestPose(context, 1.0)
             print("Set current pose to rest pose")
         except MocapError:
@@ -276,12 +286,13 @@ class VIEW3D_OT_McpSetTPoseButton(bpy.types.Operator):
     def execute(self, context):
         from .retarget import changeTargetData, restoreTargetData
         rig = context.object
-        #data = changeTargetData(rig)
+        scn = context.scene
+        #data = changeTargetData(rig, scn)
         try:
             initRig(context)
             if isRigify(rig):
                 setRigifyFKIK(rig, 0)
-            setTPose(rig, context.scene)
+            setTPose(rig, scn)
             print("Set T-pose")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')

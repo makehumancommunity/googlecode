@@ -60,7 +60,6 @@ if "bpy" in locals():
     imp.reload(load)
     imp.reload(retarget)
     imp.reload(fkik)
-    imp.reload(toggle)
     imp.reload(simplify)
     imp.reload(action)
     imp.reload(loop)
@@ -83,7 +82,6 @@ else:
     from . import load
     from . import retarget
     from . import fkik
-    from . import toggle
     from . import simplify
     from . import action
     from . import loop
@@ -168,6 +166,7 @@ class OptionsPanel(bpy.types.Panel):
         layout.separator()
         layout.prop(scn, "McpAutoScale")
         layout.prop(scn, "McpBvhScale")
+        layout.prop(scn, "McpUseLimits")
         layout.prop(scn, "McpMakeHumanTPose")
         layout.prop(scn, 'McpAutoSourceRig')
         layout.prop(scn, 'McpAutoTargetRig')
@@ -181,25 +180,6 @@ class OptionsPanel(bpy.types.Panel):
         layout.prop(scn, "McpErrorRot")
         layout.prop(scn, "McpSimplifyVisible")
         layout.prop(scn, "McpSimplifyMarkers")
-
-
-
-        return
-
-        layout.separator()
-        layout.label("Toggle constraints")
-        row = layout.row()
-        row.label("Limit constraints")
-        if rig.McpLimitsOn:
-            row.operator("mcp.toggle_limits", text="ON").mute=True
-        else:
-            row.operator("mcp.toggle_limits", text="OFF").mute=False
-        row = layout.row()
-        row.label("Child-of constraints")
-        if rig.McpChildOfsOn:
-            row.operator("mcp.toggle_childofs", text="ON").mute=True
-        else:
-            row.operator("mcp.toggle_childofs", text="OFF").mute=False
 
 
 ########################################################################
@@ -494,8 +474,8 @@ class UtilityPanel(bpy.types.Panel):
         layout.separator()
         layout.label("Rest Pose")
         layout.operator("mcp.rest_current_pose")
-        layout.operator("mcp.rest_t_pose")
-        layout.operator("mcp.rest_default_pose")
+        #layout.operator("mcp.rest_t_pose")
+        #layout.operator("mcp.rest_default_pose")
 
         return
         layout.operator("mcp.copy_angles_fk_ik")

@@ -55,9 +55,10 @@ from .utils import *
 
 class CAnimation:
 
-    def __init__(self, srcRig, trgRig, boneAssoc):
+    def __init__(self, srcRig, trgRig, boneAssoc, scn):
         self.srcRig = srcRig
         self.trgRig = trgRig
+        self.scene = scn
         self.boneAnims = OrderedDict()
 
         for (trgName, srcName) in boneAssoc:
@@ -123,6 +124,7 @@ class CBoneAnim:
             self.bMatrix = trgBone.bone.matrix_local.inverted() * trgParent.bone.matrix_local
         else:
             self.bMatrix = trgBone.bone.matrix_local.inverted()
+        self.useLimits = anim.scene.McpUseLimits
 
 
     def __repr__(self):
@@ -197,15 +199,22 @@ class CBoneAnim:
         self.srcMatrix = self.srcBone.matrix.copy()
         self.trgMatrix = self.srcMatrix * self.aMatrix
         self.trgMatrix.col[3] = self.srcMatrix.col[3]
-        self.srcMatrices[frame] = self.srcMatrix
-        self.trgMatrices[frame] = self.trgMatrix
         if self.parent:
             mat1 = self.parent.trgMatrix.inverted() * self.trgMatrix
         else:
             mat1 = self.trgMatrix
         mat2 = self.bMatrix * mat1
-        mat3 = correctMatrixForLocks(mat2, self.order, self.locks)
+        mat3 = correctMatrixForLocks(mat2, self.order, self.locks, self.trgBone, self.useLimits)
         self.insertKeyFrame(mat3, frame)
+
+        self.srcMatrices[frame] = self.srcMatrix
+        mat1 = self.bMatrix.inverted() * mat3
+        if self.parent:
+            self.trgMatrix = self.parent.trgMatrix * mat1
+        else:
+            self.trgMatrix = mat1
+        self.trgMatrices[frame] = self.trgMatrix
+
         return
 
         if self.name == "upper_arm.L":
@@ -222,7 +231,7 @@ class CBoneAnim:
 
 def getLocks(pb):
     locks = []
-    order = None
+    order = 'XYZ'
     if pb.lock_rotation[1]:
         locks.append(1)
         order = 'YZX'
@@ -241,22 +250,41 @@ def getLocks(pb):
         locks.append(0)
         order = 'XYZ'
 
-    if order and pb.rotation_mode != 'QUATERNION':
+    if pb.rotation_mode != 'QUATERNION':
         order = pb.rotation_mode
 
     return order,locks
 
 
-def correctMatrixForLocks(mat, order, locks):
+def correctMatrixForLocks(mat, order, locks, pb, useLimits):
+    head = Vector(mat.col[3])
+
     if locks:
         euler = mat.to_3x3().to_euler(order)
         for n in locks:
             euler[n] = 0
-        mat1 = euler.to_matrix().to_4x4()
-        mat1.col[3] = mat.col[3]
-        return mat1
-    else:
+        mat = euler.to_matrix().to_4x4()
+
+    if not useLimits:
+        mat.col[3] = head
         return mat
+
+    for cns in pb.constraints:
+        if (cns.type == 'LIMIT_ROTATION' and
+            cns.owner_space == 'LOCAL' and
+            not cns.mute and
+            cns.influence > 0.5):
+            euler = mat.to_3x3().to_euler(order)
+            if cns.use_limit_x:
+                euler.x = min(cns.max_x, max(cns.min_x, euler.x))
+            if cns.use_limit_y:
+                euler.y = min(cns.max_y, max(cns.min_y, euler.y))
+            if cns.use_limit_z:
+                euler.z = min(cns.max_z, max(cns.min_z, euler.z))
+            mat = euler.to_matrix().to_4x4()
+
+    mat.col[3] = head
+    return mat
 
 
 def hideObjects(scn, rig):
@@ -303,7 +331,7 @@ def retargetAnimation(context, srcRig, trgRig):
         scn.frame_current = frames[0]
     except:
         raise MocapError("No frames found.")
-    oldData = changeTargetData(trgRig)
+    oldData = changeTargetData(trgRig, scn)
 
     source.ensureSourceInited(scn)
     source.setArmature(srcRig, scn)
@@ -311,7 +339,7 @@ def retargetAnimation(context, srcRig, trgRig):
 
     target.ensureTargetInited(scn)
     boneAssoc = target.getTargetArmature(trgRig, scn)
-    anim = CAnimation(srcRig, trgRig, boneAssoc)
+    anim = CAnimation(srcRig, trgRig, boneAssoc, scn)
     anim.setTPose(scn)
 
     frameBlock = frames[0:100]
@@ -337,11 +365,11 @@ def retargetAnimation(context, srcRig, trgRig):
 
 
 #
-#   changeTargetData(rig):
+#   changeTargetData(rig, scn):
 #   restoreTargetData(rig, data):
 #
 
-def changeTargetData(rig):
+def changeTargetData(rig, scn):
     tempProps = [
         ("MhaRotationLimits", 0.0),
         ("MhaArmIk_L", 0.0),
@@ -387,12 +415,13 @@ def changeTargetData(rig):
     locks = []
     for pb in rig.pose.bones:
         constraints = []
-        for cns in pb.constraints:
-            if cns.type == 'LIMIT_DISTANCE':
-                cns.mute = True
-            elif cns.type[0:6] == 'LIMIT':
-                constraints.append( (cns, cns.mute) )
-                cns.mute = True
+        if not scn.McpUseLimits:
+            for cns in pb.constraints:
+                if cns.type == 'LIMIT_DISTANCE':
+                    cns.mute = True
+                elif cns.type[0:5] == 'LIMIT':
+                    constraints.append( (cns, cns.mute) )
+                    cns.mute = True
         locks.append( (pb, constraints) )
 
     norotBones = []
@@ -423,7 +452,7 @@ def loadRetargetSimplify(context, filepath):
     time1 = time.clock()
     scn = context.scene
     trgRig = context.object
-    data = changeTargetData(trgRig)
+    data = changeTargetData(trgRig, scn)
     try:
         clearMcpProps(trgRig)
         srcRig = load.readBvhFile(context, filepath, scn, False)
@@ -456,9 +485,9 @@ class VIEW3D_OT_NewRetargetMhxButton(bpy.types.Operator):
 
     def execute(self, context):
         trgRig = context.object
-        data = changeTargetData(trgRig)
-        rigList = list(context.selected_objects)
         scn = context.scene
+        data = changeTargetData(trgRig, scn)
+        rigList = list(context.selected_objects)
         try:
             target.getTargetArmature(trgRig, scn)
             for srcRig in rigList:

@@ -83,6 +83,11 @@ def initInterface(context):
         description="Rescale skeleton to match target",
         default=True)
 
+    bpy.types.Scene.McpUseLimits = BoolProperty(
+        name="Use Limits",
+        description="Restrict angles to Limit Rotation constraints",
+        default=True)
+
     bpy.types.Scene.McpStartFrame = IntProperty(
         name="Start Frame",
         description="Starting frame for the animation",
