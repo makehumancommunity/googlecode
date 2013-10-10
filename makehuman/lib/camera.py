@@ -457,7 +457,7 @@ class OrbitalCamera(Camera):
     def updateCamera(self):
         human = G.app.selectedHuman
         # Set camera to human y center to compensate for varying human height
-        bbox = human.getSeedMesh().calcBBox()
+        bbox = human.meshData.calcBBox()
         # Note that BB does not take into account human translation, scale or rotation
         humanHalfHeight = (bbox[1][1] - bbox[0][1]) / 2.0
         humanHalfWidth = (bbox[1][0] - bbox[0][0]) / 2.0
@@ -526,6 +526,7 @@ class OrbitalCamera(Camera):
             self.translation[axis] = -1.0
         if self.translation[axis] > 1.0:
             self.translation[axis] = 1.0
+        self.pickedPos = None
         self.changed()
 
     def addXYTranslation(self, deltaX, deltaY):
@@ -721,6 +722,7 @@ def cartesianToPolar(vect):
     Convert 3D cartesian coordinate into a polar coordinate of the 
     form (r, theta, phi).
     Assumes sphere center to be at origin.
+    Returned theta and phi are in radians.
     """
     import numpy.linalg as la
 
@@ -732,3 +734,16 @@ def cartesianToPolar(vect):
     phi = math.atan2(unit[1], unit[0])   # azimuth
 
     return [r, theta, phi]
+
+def getRotationForDirection(directionVect):
+    """
+    Returns x and y rotation values in degrees to position camera to make it
+    look at the center from the specified direction.
+    This looking direction is the negated radius vector from the center to the
+    camera position.
+    """
+    polar = cartesianToPolar(-np.asarray(directionVect, dtype=np.float32))
+    x = math.degrees(polar[1]) % 360.0
+    y = math.degrees(polar[2]) % 360.0
+
+    return [x, y]
