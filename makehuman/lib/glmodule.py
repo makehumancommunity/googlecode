@@ -266,7 +266,8 @@ def OnInit():
     glEnableClientState(GL_VERTEX_ARRAY)
     if have_multisample:
         glEnable(GL_MULTISAMPLE)
-        glSampleCoverage(1.0, GL_FALSE)
+        #glSampleCoverage(1.0, GL_FALSE)
+        glSampleCoverageARB(1.0, GL_FALSE)
 
     global TEX_NOT_FOUND
     TEX_NOT_FOUND = getTexture(NOTFOUND_TEXTURE)
@@ -442,7 +443,7 @@ def drawMesh(obj):
         # This should be optimized, since we only need to do it when it's changed
         # Validation should also only be done when it is set
         obj.shaderObj.setUniforms(obj.shaderParameters)
-    else:
+    elif Shader.supported():
         glUseProgram(0)
 
     # draw the mesh
