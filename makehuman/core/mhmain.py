@@ -585,11 +585,12 @@ class MHApplication(gui3d.Application, mh.Application):
                 self.mouseActions[(modifiers, event.button)](event)
 
     def onMouseWheel(self, event):
-
         if self.selectedHuman.isVisible():
             zoomOut = event.wheelDelta > 0
             if gui3d.app.settings.get('invertMouseWheel', False):
                 zoomOut = not zoomOut
+
+            self.modelCamera.getMousePickHuman(event.x, event.y)
 
             if zoomOut:
                 self.zoomOut()
@@ -889,6 +890,7 @@ class MHApplication(gui3d.Application, mh.Application):
         human = self.selectedHuman
 
         tl = animation3d.Timeline(0.20)
+        # TODO reset pan as well (and zoom)
         tl.append(animation3d.CameraAction(self.modelCamera, None, [0,0,60, 0,0,0, 0,1,0]))
         tl.append(animation3d.PathAction(human, [human.getPosition(), [0.0, 0.0, 0.0]]))
         tl.append(animation3d.RotateAction(human, human.getRotation(), [0.0, 0.0, 0.0]))
@@ -905,6 +907,7 @@ class MHApplication(gui3d.Application, mh.Application):
         self.setCameraGroupsViewDistance(groupNames, view, distance)
 
     def setFaceCamera(self):
+        # TODO zooms very slightly with orbital cam
         self.setTargetCamera(("head", "jaw"))
 
     def setLeftHandFrontCamera(self):
@@ -1187,6 +1190,7 @@ class MHApplication(gui3d.Application, mh.Application):
         self.axisView([-90.0, 0.0, 0.0])
 
     def resetView(self):
+        # TODO reset orbital cam (pan and zoom)
         cam = self.modelCamera
         animation3d.animate(self, 0.20, [
             self.rotateAction([0.0, 0.0, 0.0]),

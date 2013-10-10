@@ -69,8 +69,10 @@ class MouseWheelEvent(Event):
     :param wheelDelta: the amount and direction that the wheel was scrolled.
     :type wheelDelta: int
     """
-    def __init__(self, wheelDelta):
+    def __init__(self, wheelDelta, x, y):
         self.wheelDelta = wheelDelta
+        self.x = x
+        self.y = y
 
     def __repr__(self):
         return 'MouseWheelEvent(%d)' % self.wheelDelta

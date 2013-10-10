@@ -195,9 +195,16 @@ class Canvas(QtOpenGL.QGLWidget):
 
         gg_mouse_pos = x, y
 
+        gl.getPickedColor(x, y)
+
         b = 1 if d > 0 else -1
 
-        G.app.callEvent('onMouseWheelCallback', events3d.MouseWheelEvent(b))
+        G.app.callEvent('onMouseWheelCallback', events3d.MouseWheelEvent(b, x, y))
+
+        # Update screen
+        self.update()
+
+        gl.updatePickingBuffer()
 
     def mouseMoveEvent(self, ev):
         global gg_mouse_pos, g_mouse_pos
