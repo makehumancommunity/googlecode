@@ -315,7 +315,7 @@ class Camera(events3d.EventHandler):
         projection, modelview = self.getMatrices(0)
         m = viewport * projection * modelview
         if obj:
-            m = m * obj.transform
+            m = m * self.getModelMatrix(obj)
         return self.getFlipMatrix() * m
 
     def convertToScreen(self, x, y, z, obj = None):
@@ -376,6 +376,9 @@ class Camera(events3d.EventHandler):
     def addZoom(self, amount):
         self.eyeZ += amount
         self.changed()
+
+    def getMousePickHuman(self, mouseX, mouseY):
+        pass
 
 
 class OrbitalCamera(Camera):
@@ -629,6 +632,34 @@ class OrbitalCamera(Camera):
 
     def getFocusZ(self):
         return self.center[2]
+
+    def getMousePickHuman(self, mouseX, mouseY):
+        self.pickedPos = None
+
+        if G.app.getSelectedFaceGroupAndObject() is None:
+            return
+
+        human = G.app.selectedHuman
+
+        self.pickedPos = self.convertToWorld2D(mouseX, mouseY, human.mesh)
+        # Transfer this position to transformations relative to bounding box
+        # center
+        bBox = human.mesh.calcBBox()
+
+        humanHalfWidth = (bBox[1][0] - bBox[0][0]) / 2.0
+        hCenter = bBox[0][0] + humanHalfWidth
+        self.translation[0] = (self.pickedPos[0] - hCenter) / humanHalfWidth
+
+        humanHalfHeight = (bBox[1][1] - bBox[0][1]) / 2.0
+        vCenter = bBox[0][1] + humanHalfHeight
+        self.translation[1] = (self.pickedPos[1] - vCenter) / humanHalfHeight
+
+        humanHalfDepth = (bBox[1][2] - bBox[0][2]) / 2.0
+        zCenter = bBox[0][2] + humanHalfDepth
+        self.translation[2] = (self.pickedPos[2] - zCenter) / humanHalfDepth
+
+        self.changed()
+        
 
 def polarToCartesian(polar, radius = 1.0):
     """

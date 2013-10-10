@@ -565,6 +565,16 @@ class MHApplication(gui3d.Application, mh.Application):
 
         self.promptAndExit()
 
+    def onMouseDown(self, event):
+        if self.selectedHuman.isVisible():
+            # Normalize modifiers
+            modifiers = mh.getKeyModifiers() & (mh.Modifiers.CTRL | mh.Modifiers.ALT | mh.Modifiers.SHIFT)
+
+            if (modifiers, event.button) in self.mouseActions:
+                action = self.mouseActions[(modifiers, event.button)]
+                if action == self.mouseZoom:
+                    self.modelCamera.getMousePickHuman(event.x, event.y)
+
     def onMouseDragged(self, event):
 
         if self.selectedHuman.isVisible():
