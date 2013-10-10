@@ -236,6 +236,7 @@ class SamplerUniform(Uniform):
 
 class Shader(object):
     _supported = None
+    _glsl_version_str = None
     _glsl_version = None
 
     @classmethod
@@ -245,16 +246,22 @@ class Shader(object):
         return cls._supported
 
     @classmethod
+    def glslVersionStr(cls):
+        cls.glslVersion()
+        return cls._glsl_version_str
+
+    @classmethod
     def glslVersion(cls):
         if cls._glsl_version is None:
             if not cls.supported():
                 cls._glsl_version = (0,0)
+                cls._glsl_version_str = "NOT SUPPORTED!"
                 return cls._glsl_version
 
-            glsl_version_str = OpenGL.GL.glGetString(OpenGL.GL.GL_SHADING_LANGUAGE_VERSION)
-            if glsl_version_str:
+            cls._glsl_version_str = OpenGL.GL.glGetString(OpenGL.GL.GL_SHADING_LANGUAGE_VERSION)
+            if cls._glsl_version_str:
                 import re
-                glsl_version = re.search('[0-9]+\.[0-9]+',glsl_version_str).group(0)
+                glsl_version = re.search('[0-9]+\.[0-9]+', cls._glsl_version_str).group(0)
                 glsl_v_major, glsl_v_minor = glsl_version.split('.')
             else:
                 glsl_v_major, glsl_v_minor = (0, 0)
