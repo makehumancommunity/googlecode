@@ -37,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.924",
+    "version": "0.925",
     "blender": (2, 6, 8),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -241,6 +241,7 @@ class EditPanel(bpy.types.Panel):
             ins = inset(layout)
             ins.operator("mcp.start_edit")
             ins.operator("mcp.undo_edit").answer=""
+
             row = ins.row()
             props = row.operator("mcp.insert_key", text="Loc")
             props.loc = True
@@ -259,6 +260,21 @@ class EditPanel(bpy.types.Panel):
             props.loc = True
             props.rot = True
             props.delete = True
+
+            row = ins.row()
+            props = row.operator("mcp.move_to_marker", text="|<")
+            props.left = True
+            props.last = True
+            props = row.operator("mcp.move_to_marker", text="<")
+            props.left = True
+            props.last = False
+            props = row.operator("mcp.move_to_marker", text=">")
+            props.left = False
+            props.last = False
+            props = row.operator("mcp.move_to_marker", text=">|")
+            props.left = False
+            props.last = True
+
             ins.operator("mcp.confirm_edit")
 
         layout.separator()

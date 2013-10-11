@@ -134,6 +134,7 @@ class VIEW3D_OT_McpStartEditButton(bpy.types.Operator):
 
 
 def setKeyMap(context, idname, doAdd):
+    return
     km = context.window_manager.keyconfigs.active.keymaps['3D View']
     if doAdd:
         km.keymap_items.new(idname, 'SPACE', 'PRESS')
@@ -143,7 +144,6 @@ def setKeyMap(context, idname, doAdd):
         except KeyError:
             return
         km.keymap_items.remove(item)
-    return
 
 #
 #   undoEdit(context):
@@ -369,6 +369,51 @@ class VIEW3D_OT_McpInsertKeyButton(bpy.types.Operator):
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
+
+
+def move2marker(context, left, last):
+    scn = context.scene
+    frames = [mrk.frame for mrk in scn.timeline_markers]
+    frames.sort()
+    if frames == []:
+        return
+    if last:
+        if left:
+            scn.frame_current = frames[0]
+        else:
+            scn.frame_current = frames[-1]
+    else:
+        if left:
+            frames.reverse()
+            for frame in frames:
+                if frame < scn.frame_current:
+                    scn.frame_current = frame
+        else:
+            for frame in frames:
+                if frame > scn.frame_current:
+                    scn.frame_current = frame
+
+
+class VIEW3D_OT_McpMoveToMarkerButton(bpy.types.Operator):
+    bl_idname = "mcp.move_to_marker"
+    bl_label = "Move"
+    bl_description = "Move to time marker"
+    bl_options = {'UNDO'}
+
+    left = BoolProperty("Loc", default=False)
+    last = BoolProperty("Rot", default=False)
+
+    @classmethod
+    def poll(self, context):
+        return (context.object.McpUndoAction != "")
+
+    def execute(self, context):
+        try:
+            move2marker(context, self.properties.left, self.properties.last)
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
+        return{'FINISHED'}
+
 
 #
 #   displaceFCurve(fcu, ofcu, edits):

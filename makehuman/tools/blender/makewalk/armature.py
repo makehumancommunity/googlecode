@@ -76,16 +76,17 @@ class CArmature:
                 hips = hipsChildren[0]
                 hipsChildren = self.validChildren(hips)
                 nChildren = len(hipsChildren)
-            elif nChildren != 3:
-                counts = []
-                for n,child in enumerate(hipsChildren):
-                    counts.append((self.countChildren(child, 5), n, child))
-                counts.sort()
+            elif nChildren == 2:
+                counts = self.getChildCount(hipsChildren)
                 #for m,n,pb in counts:
                 #    print(m,n,pb.name)
                 hips = counts[-1][2]
                 hipsChildren = self.validChildren(hips)
                 nChildren = len(hipsChildren)
+            else:
+                counts = self.getChildCount(hipsChildren)
+                hipsChildren = [counts[-3][2], counts[-2][2], counts[-1][2]]
+                nChildren = 3
             if hips is not None:
                 print("  Try hips: %s, children: %d" % (hips.name, nChildren))
             first = False
@@ -271,6 +272,14 @@ class CArmature:
         return children
 
 
+    def getChildCount(self, children):
+        counts = []
+        for n,child in enumerate(children):
+            counts.append((self.countChildren(child, 5), n, child))
+        counts.sort()
+        return counts
+
+
     def countChildren(self, pb, depth):
         if depth < 0:
             return 0
@@ -304,7 +313,6 @@ class CArmature:
 
 
 def validBone(pb, rig=None, muteIk=False):
-
     if rig is not None:
         hidden = True
         for n in range(len(rig.data.layers)):
@@ -318,8 +326,9 @@ def validBone(pb, rig=None, muteIk=False):
     for cns in pb.constraints:
         if cns.mute or cns.influence < 0.2:
             pass
-        #elif cns.type[0:5] == 'LIMIT':
-        #    cns.influence = 0
+        elif cns.type[0:5] == 'LIMIT':
+            #cns.influence = 0
+            pass
         elif cns.type == 'IK':
             if muteIk:
                 cns.mute = True
