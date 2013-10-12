@@ -202,18 +202,20 @@ class Canvas(QtOpenGL.QGLWidget):
         t = time.time()
 
         if g_mousewheel_t is None or t - g_mousewheel_t > MOUSEWHEEL_PICK_TIMEOUT:
-            # Update screen
-            self.update()
-            gl.updatePickingBuffer()
-
             gg_mouse_pos = x, y
             gl.getPickedColor(x, y)
         else:
             x = y = None
-        g_mousewheel_t = t
 
         b = 1 if d > 0 else -1
         G.app.callEvent('onMouseWheelCallback', events3d.MouseWheelEvent(b, x, y))
+
+        if g_mousewheel_t is None or t - g_mousewheel_t > MOUSEWHEEL_PICK_TIMEOUT:
+            # Update screen
+            self.update()
+            gl.updatePickingBuffer()
+
+        g_mousewheel_t = t
 
     def mouseMoveEvent(self, ev):
         global gg_mouse_pos, g_mouse_pos
