@@ -590,7 +590,8 @@ class MHApplication(gui3d.Application, mh.Application):
             if gui3d.app.settings.get('invertMouseWheel', False):
                 zoomOut = not zoomOut
 
-            self.modelCamera.getMousePickHuman(event.x, event.y)
+            if event.x is not None:
+                self.modelCamera.getMousePickHuman(event.x, event.y)
 
             if zoomOut:
                 self.zoomOut()

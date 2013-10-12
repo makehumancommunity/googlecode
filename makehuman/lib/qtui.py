@@ -32,6 +32,11 @@ import glmodule as gl
 import events3d
 import qtgui
 import queue
+import time
+
+# Timeout in seconds after which moving the mousewheel will pick a new mouse pos
+# TODO make this configureable in settings?
+MOUSEWHEEL_PICK_TIMEOUT = 0.5
 
 class Modifiers:
     SHIFT = int(QtCore.Qt.ShiftModifier)
@@ -136,6 +141,7 @@ class Buttons:
 
 g_mouse_pos = None
 gg_mouse_pos = None
+g_mousewheel_t = None
 
 class Canvas(QtOpenGL.QGLWidget):
     def __init__(self, parent, app):
@@ -188,23 +194,26 @@ class Canvas(QtOpenGL.QGLWidget):
 
     def wheelEvent(self, ev):
         global gg_mouse_pos
+        global g_mousewheel_t
 
         x = ev.x()
         y = ev.y()
         d = ev.delta()
+        t = time.time()
 
-        gg_mouse_pos = x, y
+        if g_mousewheel_t is None or t - g_mousewheel_t > MOUSEWHEEL_PICK_TIMEOUT:
+            # Update screen
+            self.update()
+            gl.updatePickingBuffer()
 
-        gl.getPickedColor(x, y)
+            gg_mouse_pos = x, y
+            gl.getPickedColor(x, y)
+        else:
+            x = y = None
+        g_mousewheel_t = t
 
         b = 1 if d > 0 else -1
-
         G.app.callEvent('onMouseWheelCallback', events3d.MouseWheelEvent(b, x, y))
-
-        # Update screen
-        self.update()
-
-        gl.updatePickingBuffer()
 
     def mouseMoveEvent(self, ev):
         global gg_mouse_pos, g_mouse_pos
