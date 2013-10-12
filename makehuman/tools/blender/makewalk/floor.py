@@ -51,6 +51,95 @@ def getRigAndPlane(scn):
         raise MocapError("No plane selected")
     return rig,plane
 
+#-------------------------------------------------------------
+#   Toe below ball
+#-------------------------------------------------------------
+
+def toesBelowBall(context):
+    scn = context.scene
+    rig = context.object
+    try:
+        useIk = rig["MhaLegIk_L"] or rig["MhaLegIk_R"]
+    except KeyError:
+        useIk = False
+    if useIk:
+        raise MocapError("Toe Below Ball only for FK feet")
+
+    frames = utils.getActiveFramesBetweenMarkers(rig, scn)
+    print("Left toe")
+    toeBelowBall(scn, frames, rig, ".L")
+    print("Right toe")
+    toeBelowBall(scn, frames, rig, ".R")
+
+
+def toeBelowBall(scn, frames, rig, suffix):
+    from .retarget import getLocks
+
+    foot,toe,mBall,mToe,mHeel = getFkFeetBones(rig, suffix)
+    order,lock = getLocks(toe)
+    ez = Vector((0,0,1))
+    origin = Vector((0,0,0))
+    factor = 1.0/toe.length
+    if mBall:
+        for n,frame in enumerate(frames):
+            scn.frame_set(frame)
+            if n%10 == 0:
+                print(int(frame))
+            zToe = mToe.matrix.col[3][2]
+            zBall = mBall.matrix.col[3][2]
+            if zToe > zBall:
+                offsetToeRotation(toe, factor, order, lock, scn)
+    else:
+        for n,frame in enumerate(frames):
+            scn.frame_set(frame)
+            if n%10 == 0:
+                print(int(frame))
+            dzToe = toe.matrix.col[1][2]
+            if dzToe > 0:
+                offsetToeRotation(toe, factor, order, lock, scn)
+
+
+def offsetToeRotation(toe, factor, order, lock, scn):
+    from .retarget import correctMatrixForLocks
+
+    mat = toe.matrix.to_3x3()
+    x = mat.col[0]
+    y = mat.col[1]
+    z = mat.col[2]
+    y[2] = 0
+    y.normalize()
+    x -= x.dot(y)*y
+    x.normalize()
+    z = x.cross(y)
+    mat.col[0] = x
+    mat.col[1] = y
+    mat.col[2] = z
+    gmat = mat.to_4x4()
+    gmat.col[3] = toe.matrix.col[3]
+    pmat = fkik.getPoseMatrix(gmat, toe)
+    pmat = correctMatrixForLocks(pmat, order, lock, toe, scn.McpUseLimits)
+    fkik.insertRotation(toe, pmat)
+
+
+class VIEW3D_OT_McpOffsetToeButton(bpy.types.Operator):
+    bl_idname = "mcp.offset_toe"
+    bl_label = "Offset Toes"
+    bl_description = "Keep toes below balls"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        from .target import getTargetArmature
+        getTargetArmature(context.object, context.scene)
+        try:
+            toesBelowBall(context)
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
+        print("Toes kept below balls")
+        return{'FINISHED'}
+
+#-------------------------------------------------------------
+#   Floor
+#-------------------------------------------------------------
 
 def floorFoot(context):
     scn = context.scene

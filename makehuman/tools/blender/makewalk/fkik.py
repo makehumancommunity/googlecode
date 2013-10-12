@@ -308,7 +308,7 @@ def transferMhxToFk(rig, scn):
     frames = getActiveFramesBetweenMarkers(rig, scn)
     for n,frame in enumerate(frames):
         if n%10 == 0:
-            print(frame)
+            print(int(frame))
         scn.frame_set(frame)
         updateScene()
         if scn.McpFkIkArms:
@@ -351,7 +351,7 @@ def transferMhxToIk(rig, scn):
     #frames = range(scn.frame_start, scn.frame_end+1)
     for n,frame in enumerate(frames):
         if n%10 == 0:
-            print(frame)
+            print(int(frame))
         scn.frame_set(frame)
         updateScene()
         if scn.McpFkIkArms:
@@ -429,7 +429,7 @@ def transferRigifyToFk(rig, scn):
     frames = getActiveFramesBetweenMarkers(rig, scn)
     for n,frame in enumerate(frames):
         if n%10 == 0:
-            print(frame)
+            print(int(frame))
         scn.frame_set(frame)
         updateScene()
 
@@ -483,7 +483,7 @@ def transferRigifyToIk(rig, scn):
     frames = getActiveFramesBetweenMarkers(rig, scn)
     for n,frame in enumerate(frames):
         if n%10 == 0:
-            print(frame)
+            print(int(frame))
         scn.frame_set(frame)
         updateScene()
 

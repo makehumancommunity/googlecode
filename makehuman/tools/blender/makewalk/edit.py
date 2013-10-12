@@ -33,11 +33,13 @@ from . import mcp
 from .utils import MocapError
 
 
+_Markers = []
+_EditLoc = None
+_EditRot = None
+
 #----------------------------------------------------------------
 #   Markers
 #----------------------------------------------------------------
-
-_Markers = []
 
 def saveMarkers(scn):
     global _Markers
@@ -154,14 +156,12 @@ def undoEdit(context):
     global _EditLoc, _EditRot
 
     rig = context.object
+    restoreMarkers(context.scene)
     oact = getUndoAction(rig)
     if not oact:
+        clearUndoAction(rig)
         raise MocapError("No action to undo")
-    restoreMarkers(context.scene)
-    rig.McpUndoAction = ""
-    _EditLoc = None
-    _EditRot = None
-    rig.McpActionName = ""
+    clearUndoAction(rig)
     act = rig.animation_data.action
     act.name = "#Delete"
     oact.name = rig.McpActionName
@@ -201,19 +201,26 @@ class VIEW3D_OT_McpUndoEditButton(bpy.types.Operator):
 #   getActionPair(context):
 #
 
+def clearUndoAction(rig):
+    global _EditLoc, _EditRot
+    rig.McpUndoAction = ""
+    _EditLoc = None
+    _EditRot = None
+    rig.McpActionName = ""
+
+
 def getActionPair(context):
     global _EditLoc, _EditRot
 
     rig = context.object
     oact = getUndoAction(rig)
     if not oact:
+        clearUndoAction(rig)
         raise MocapError("No action is currently being edited")
         return None
-    try:
-        _EditLoc
-        _EditRot
-    except:
+    if not _EditLoc:
         _EditLoc = utils.quadDict()
+    if not _EditRot:
         _EditRot = utils.quadDict()
     act = utils.getAction(rig)
     if act:
@@ -388,10 +395,12 @@ def move2marker(context, left, last):
             for frame in frames:
                 if frame < scn.frame_current:
                     scn.frame_current = frame
+                    break
         else:
             for frame in frames:
                 if frame > scn.frame_current:
                     scn.frame_current = frame
+                    break
 
 
 class VIEW3D_OT_McpMoveToMarkerButton(bpy.types.Operator):

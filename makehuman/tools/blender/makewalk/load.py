@@ -242,7 +242,7 @@ def readBvhFile(context, filepath, scn, scan):
                 frame < nFrames):
                 addFrame(words, frameno, nodes, pbones, scale, flipMatrix)
                 if frameno % 200 == 0:
-                    print(frame)
+                    print(int(frame))
                 frameno += 1
             frame += 1
 

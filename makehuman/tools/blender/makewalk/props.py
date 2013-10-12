@@ -53,9 +53,9 @@ def initInterface(context):
         description="Show local edit",
         default=False)
 
-    bpy.types.Scene.McpShowFloor = BoolProperty(
-        name="Floor",
-        description="Show floor",
+    bpy.types.Scene.McpShowFeet = BoolProperty(
+        name="Feet",
+        description="Show feet",
         default=False)
 
     bpy.types.Scene.McpShowLoop = BoolProperty(
