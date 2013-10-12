@@ -24,23 +24,11 @@
 # Coding Standards:    See http://www.makehuman.org/node/165
 
 target = None
-fkBoneList = []
-ikBoneList = []
-globalBoneList = []
-ikParents = []
-srcBone = None
-trgBone = None
-parents = []
-targetRolls = []
-targetMats = []
 actions = []
 
 sourceArmatures = { "Automatic" : None }
 targetArmatures = { "Automatic" : ([],[],[]) }
 srcArmature = None
 trgArmature = None
-
-F_Rev = 1
-F_LR = 2
 
 

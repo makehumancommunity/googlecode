@@ -186,11 +186,16 @@ def getTrgBone(bname, rig):
 
 
 #
-#   ikBoneList(rig):
+#   getIkBoneList(rig):
 #
 
-def ikBoneList(rig):
+def getIkBoneList(rig):
     hips = getTrgBone('hips', rig)
+    if hips is None:
+        if isMhxRig(rig):
+            hips = rig.pose.bones["root"]
+        elif isRigify(rig):
+            hips = rig.pose.bones["hips"]
     blist = [hips]
     for bname in ['hand.ik.L', 'hand.ik.R', 'foot.ik.L', 'foot.ik.R']:
         try:
@@ -283,10 +288,18 @@ def getActiveFrames0(ob):
     return active
 
 
-def getActiveFrames(ob):
+def getActiveFrames(ob, minTime=None, maxTime=None):
     active = getActiveFrames0(ob)
     frames = list(active.keys())
     frames.sort()
+    if minTime is not None:
+        while frames[0] < minTime:
+            frames = frames[1:]
+    if maxTime is not None:
+        frames.reverse()
+        while frames[0] > maxTime:
+            frames = frames[1:]
+        frames.reverse()
     return frames
 
 
@@ -421,6 +434,18 @@ def insertRotationKeyFrame(pb, frame):
         pb.keyframe_insert("rotation_axis_angle", frame=frame, group=grp)
     else:
         pb.keyframe_insert("rotation_euler", frame=frame, group=grp)
+
+#
+#   showProgress(n, frame):
+#
+
+def showProgress(n, frame):
+    if n % 20 == 0:
+        try:
+            string = int(frame)
+        except ValueError:
+            string = frame
+        print(string)
 
 #
 #

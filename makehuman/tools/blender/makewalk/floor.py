@@ -26,9 +26,12 @@
 import bpy
 from bpy.props import BoolProperty
 from mathutils import Matrix, Vector
-from .utils import MocapError
-from . import utils, fkik
+from .utils import *
+from . import fkik
 
+#-------------------------------------------------------------
+#  Plane
+#-------------------------------------------------------------
 
 def getRigAndPlane(scn):
     rig = None
@@ -47,9 +50,53 @@ def getRigAndPlane(scn):
                     plane = ob
     if rig is None:
         raise MocapError("No rig selected")
-    if plane is None:
-        raise MocapError("No plane selected")
     return rig,plane
+
+
+def getPlaneInfo(plane):
+    if plane is None:
+        ez = Vector((0,0,1))
+        origin = Vector((0,0,0))
+        rot = Matrix()
+    else:
+        mat = plane.matrix_world.to_3x3().normalized()
+        ez = mat.col[2]
+        origin = plane.location
+        rot = mat.to_4x4()
+    return ez,origin,rot
+
+#-------------------------------------------------------------
+#   Offset and projection
+#-------------------------------------------------------------
+
+def getProjection(vec, ez):
+    return ez.dot(Vector(vec[:3]))
+
+
+def getOffset(point, ez, origin):
+    vec = Vector(point[:3]) - origin
+    offset = -ez.dot(vec)
+    return offset
+
+
+def getHeadOffset(pb, ez, origin):
+    head = pb.matrix.col[3]
+    return getOffset(head, ez, origin)
+
+
+def getTailOffset(pb, ez, origin):
+    head = pb.matrix.col[3]
+    y = pb.matrix.col[1]
+    tail = head + y*pb.length
+    return getOffset(tail, ez, origin)
+
+
+def addOffset(pb, offset, ez):
+    gmat = pb.matrix.copy()
+    x,y,z = offset*ez
+    gmat.col[3] += Vector((x,y,z,0))
+    pmat = fkik.getPoseMatrix(gmat, pb)
+    fkik.insertLocation(pb, pmat)
 
 #-------------------------------------------------------------
 #   Toe below ball
@@ -57,7 +104,7 @@ def getRigAndPlane(scn):
 
 def toesBelowBall(context):
     scn = context.scene
-    rig = context.object
+    rig,plane = getRigAndPlane(scn)
     try:
         useIk = rig["MhaLegIk_L"] or rig["MhaLegIk_R"]
     except KeyError:
@@ -65,49 +112,45 @@ def toesBelowBall(context):
     if useIk:
         raise MocapError("Toe Below Ball only for FK feet")
 
-    frames = utils.getActiveFramesBetweenMarkers(rig, scn)
+    frames = getActiveFramesBetweenMarkers(rig, scn)
     print("Left toe")
-    toeBelowBall(scn, frames, rig, ".L")
+    toeBelowBall(scn, frames, rig, plane, ".L")
     print("Right toe")
-    toeBelowBall(scn, frames, rig, ".R")
+    toeBelowBall(scn, frames, rig, plane, ".R")
 
 
-def toeBelowBall(scn, frames, rig, suffix):
+def toeBelowBall(scn, frames, rig, plane, suffix):
     from .retarget import getLocks
 
     foot,toe,mBall,mToe,mHeel = getFkFeetBones(rig, suffix)
+    ez,origin,rot = getPlaneInfo(plane)
     order,lock = getLocks(toe)
-    ez = Vector((0,0,1))
-    origin = Vector((0,0,0))
     factor = 1.0/toe.length
     if mBall:
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
-            if n%10 == 0:
-                print(int(frame))
-            zToe = mToe.matrix.col[3][2]
-            zBall = mBall.matrix.col[3][2]
+            showProgress(n, frame)
+            zToe = getProjection(mToe.matrix.col[3], ez)
+            zBall = getProjection(mBall.matrix.col[3], ez)
             if zToe > zBall:
-                offsetToeRotation(toe, factor, order, lock, scn)
+                offsetToeRotation(toe, ez, factor, order, lock, scn)
     else:
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
-            if n%10 == 0:
-                print(int(frame))
-            dzToe = toe.matrix.col[1][2]
+            showProgress(n, frame)
+            dzToe = getProjection(toe.matrix.col[1], ez)
             if dzToe > 0:
-                offsetToeRotation(toe, factor, order, lock, scn)
+                offsetToeRotation(toe, ez, factor, order, lock, scn)
 
 
-def offsetToeRotation(toe, factor, order, lock, scn):
+def offsetToeRotation(toe, ez, factor, order, lock, scn):
     from .retarget import correctMatrixForLocks
 
     mat = toe.matrix.to_3x3()
-    x = mat.col[0]
     y = mat.col[1]
-    z = mat.col[2]
-    y[2] = 0
+    y -= ez.dot(y)*ez
     y.normalize()
+    x = mat.col[0]
     x -= x.dot(y)*y
     x.normalize()
     z = x.cross(y)
@@ -148,7 +191,7 @@ def floorFoot(context):
         useIk = rig["MhaLegIk_L"] or rig["MhaLegIk_R"]
     except KeyError:
         useIk = False
-    frames = utils.getActiveFramesBetweenMarkers(rig, scn)
+    frames = getActiveFramesBetweenMarkers(rig, scn)
     if useIk:
         floorIkFoot(rig, plane, scn, frames)
     else:
@@ -156,8 +199,8 @@ def floorFoot(context):
 
 
 def getFkFeetBones(rig, suffix):
-    foot = utils.getTrgBone("foot" + suffix, rig)
-    toe = utils.getTrgBone("toe" + suffix, rig)
+    foot = getTrgBone("foot" + suffix, rig)
+    toe = getTrgBone("toe" + suffix, rig)
     try:
         mBall = rig.pose.bones["ball.marker" + suffix]
         mToe = rig.pose.bones["toe.marker" + suffix]
@@ -168,7 +211,7 @@ def getFkFeetBones(rig, suffix):
 
 
 def floorFkFoot(rig, plane, scn, frames):
-    hips = utils.getTrgBone("hips", rig)
+    hips = getTrgBone("hips", rig)
     lFoot,lToe,lmBall,lmToe,lmHeel = getFkFeetBones(rig, ".L")
     rFoot,rToe,rmBall,rmToe,rmHeel = getFkFeetBones(rig, ".R")
     ez,origin,rot = getPlaneInfo(plane)
@@ -183,8 +226,7 @@ def floorFkFoot(rig, plane, scn, frames):
             rOffset = getFkOffset(rig, ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
             if rOffset > offset:
                 offset = rOffset
-        if n%10 == 0:
-            print(frame, offset)
+        showProgress(n, frame)
         if offset > 0:
             addOffset(hips, offset, ez)
 
@@ -237,8 +279,7 @@ def floorIkFoot(rig, plane, scn, frames):
                 offset = rOffset
         if offset > 0 and scn.McpFloorHips:
             addOffset(root, offset, ez)
-        if n%10 == 0:
-            print(frame, offset)
+        showProgress(n, frame)
 
 
 def getIkOffset(rig, ez, origin, leg):
@@ -265,40 +306,6 @@ def getIkOffset(rig, ez, origin, leg):
         offset = heelOffset
 
     return offset
-
-
-def getPlaneInfo(plane):
-    mat = plane.matrix_world.to_3x3().normalized()
-    ez = mat.col[2]
-    origin = plane.location
-    rot = mat.to_4x4()
-    return ez,origin,rot
-
-
-def getOffset(point, ez, origin):
-    vec = Vector(point[:3]) - origin
-    offset = -ez.dot(vec)
-    return offset
-
-
-def getHeadOffset(bone, ez, origin):
-    head = bone.matrix.col[3]
-    return getOffset(head, ez, origin)
-
-
-def getTailOffset(bone, ez, origin):
-    head = bone.matrix.col[3]
-    y = bone.matrix.col[1]
-    tail = head + y*bone.length
-    return getOffset(tail, ez, origin)
-
-
-def addOffset(pb, offset, ez):
-    gmat = pb.matrix.copy()
-    x,y,z = offset*ez
-    gmat.col[3] += Vector((x,y,z,0))
-    pmat = fkik.getPoseMatrix(gmat, pb)
-    fkik.insertLocation(pb, pmat)
 
 
 class VIEW3D_OT_McpFloorFootButton(bpy.types.Operator):

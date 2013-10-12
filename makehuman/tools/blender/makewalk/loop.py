@@ -26,8 +26,7 @@
 import bpy
 from math import pi, sqrt
 from mathutils import *
-from . import utils, load, simplify, props, action
-#from .target_rigs import rig_mhx
+from . import load, simplify, props, action
 from .utils import *
 
 #
@@ -38,12 +37,13 @@ from .utils import *
 def normalizeRotCurves(scn, rig, fcurves, frames):
     hasQuat = {}
     for fcu in fcurves:
-        (name, mode) = utils.fCurveIdentity(fcu)
+        (name, mode) = fCurveIdentity(fcu)
         if mode == 'rotation_quaternion':
             hasQuat[name] = rig.pose.bones[name]
 
-    for frame in frames:
+    for n,frame in enumerate(frames):
         scn.frame_set(frame)
+        showProgress(n, frame)
         for (name, pb) in hasQuat.items():
             pb.rotation_quaternion.normalize()
             pb.keyframe_insert("rotation_quaternion", group=name)
@@ -58,25 +58,33 @@ def normalizeRotCurves(scn, rig, fcurves, frames):
 def loopFCurves(context):
     scn = context.scene
     rig = context.object
-    act = utils.getAction(rig)
+    act = getAction(rig)
     if not act:
         return
     (fcurves, minTime, maxTime) = simplify.getActionFCurves(act, False, True, scn)
     if not fcurves:
         return
 
-    frames = utils.getActiveFrames(rig)
+    frames = getActiveFrames(rig, minTime, maxTime)
     normalizeRotCurves(scn, rig, fcurves, frames)
 
     hasLocation = {}
-    for fcu in fcurves:
-        (name, mode) = utils.fCurveIdentity(fcu)
-        if utils.isRotation(mode) and scn.McpLoopRot:
+    for n,fcu in enumerate(fcurves):
+        (name, mode) = fCurveIdentity(fcu)
+        if isRotation(mode) and scn.McpLoopRot:
             loopFCurve(fcu, minTime, maxTime, scn)
 
     if scn.McpLoopLoc:
         if scn.McpLoopInPlace:
-            for pb in utils.ikBoneList(rig):
+            iknames = [pb.name for pb in getIkBoneList(rig)]
+            ikbones = {}
+            for fcu in fcurves:
+                (name, mode) = fCurveIdentity(fcu)
+                if isLocation(mode) and name in iknames:
+                    ikbones[name] = rig.pose.bones[name]
+
+            for pb in ikbones.values():
+                print("IK bone %s" % pb.name)
                 scn.frame_set(minTime)
                 head0 = pb.head.copy()
                 scn.frame_set(maxTime)
@@ -92,11 +100,13 @@ def loopFCurves(context):
                 #    restInv = restInv * parRest
 
                 heads = {}
-                for frame in frames:
+                for n,frame in enumerate(frames):
                     scn.frame_set(frame)
+                    showProgress(n, frame)
                     heads[frame] = pb.head.copy()
 
-                for frame in frames:
+                for n,frame in enumerate(frames):
+                    showProgress(n, frame)
                     scn.frame_set(frame)
                     head = heads[frame] - (frame-minTime)*offs
                     diff = head - pb.bone.head_local
@@ -109,8 +119,8 @@ def loopFCurves(context):
 
 
         for fcu in fcurves:
-            (name, mode) = utils.fCurveIdentity(fcu)
-            if utils.isLocation(mode):
+            (name, mode) = fCurveIdentity(fcu)
+            if isLocation(mode):
                 loopFCurve(fcu, minTime, maxTime, scn)
     print("F-curves looped")
     return
@@ -179,7 +189,7 @@ class VIEW3D_OT_McpLoopFCurvesButton(bpy.types.Operator):
 #
 
 def repeatFCurves(context, nRepeats):
-    act = utils.getAction(context.object)
+    act = getAction(context.object)
     if not act:
         return
     (fcurves, minTime, maxTime) = simplify.getActionFCurves(act, False, True, context.scene)
@@ -187,7 +197,7 @@ def repeatFCurves(context, nRepeats):
         return
     dt0 = maxTime-minTime
     for fcu in fcurves:
-        (name, mode) = utils.fCurveIdentity(fcu)
+        (name, mode) = fCurveIdentity(fcu)
         dy0 = fcu.evaluate(maxTime) - fcu.evaluate(minTime)
         points = []
         for kp in fcu.keyframe_points:
@@ -298,7 +308,7 @@ def stitchActions(context):
                     insertLocation(pb, mat)
                 insertRotation(pb, mat)
 
-    utils.setInterpolation(rig)
+    setInterpolation(rig)
     act = rig.animation_data.action
     act.name = scn.McpOutputActionName
 
@@ -340,7 +350,7 @@ def getBaseMatrices(act, frames, rig, useAll):
     quatFcurves = {}
     eulerFcurves = {}
     for fcu in act.fcurves:
-        (bname, mode) = utils.fCurveIdentity(fcu)
+        (bname, mode) = fCurveIdentity(fcu)
         pb = rig.pose.bones[bname]
         if useAll or pb.bone.select:
             if mode == "location":
@@ -407,8 +417,8 @@ def getBaseMatrices(act, frames, rig, useAll):
 def shiftBoneFCurves(rig, scn):
     from .retarget import getLocks, correctMatrixForLocks
 
-    frames = [scn.frame_current] + utils.getActiveFrames(rig)
-    act = utils.getAction(rig)
+    frames = [scn.frame_current] + getActiveFrames(rig)
+    act = getAction(rig)
     if not act:
         return
     basemats, useLoc = getBaseMatrices(act, frames, rig, False)
@@ -424,8 +434,7 @@ def shiftBoneFCurves(rig, scn):
 
     for n,frame in enumerate(frames[1:]):
         scn.frame_set(frame)
-        if n % 100 == 0:
-            print(int(frame))
+        showProgress(n, frame)
         for bname,bmats in basemats.items():
             pb = rig.pose.bones[bname]
             mat = deltaMat[pb.name] * bmats[n+1]
@@ -455,12 +464,12 @@ class VIEW3D_OT_McpShiftBoneFCurvesButton(bpy.types.Operator):
 
 
 def fixateBoneFCurves(rig, scn):
-    act = utils.getAction(rig)
+    act = getAction(rig)
     if not act:
         return
 
     frame = scn.frame_current
-    minTime,maxTime = utils.getMarkedTime(scn)
+    minTime,maxTime = getMarkedTime(scn)
     if minTime is None:
         minTime = -1e6
     if maxTime is None:
@@ -474,9 +483,9 @@ def fixateBoneFCurves(rig, scn):
         fixArray[2] = True
 
     for fcu in act.fcurves:
-        (bname, mode) = utils.fCurveIdentity(fcu)
+        (bname, mode) = fCurveIdentity(fcu)
         pb = rig.pose.bones[bname]
-        if pb.bone.select and utils.isLocation(mode) and fixArray[fcu.array_index]:
+        if pb.bone.select and isLocation(mode) and fixArray[fcu.array_index]:
             value = fcu.evaluate(frame)
             for kp in fcu.keyframe_points:
                 if kp.co[0] >= minTime and kp.co[0] <= maxTime:
