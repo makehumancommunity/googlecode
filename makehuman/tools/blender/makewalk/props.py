@@ -211,16 +211,6 @@ def initInterface(context):
         min=1,
         default=5)
 
-    bpy.types.Scene.McpLoopLoc = BoolProperty(
-        name="Loc",
-        description="Looping Affects Location",
-        default=True)
-
-    bpy.types.Scene.McpLoopRot = BoolProperty(
-        name="Rot",
-        description="Looping Affects Rotation",
-        default=True)
-
     bpy.types.Scene.McpLoopInPlace = BoolProperty(
         name="Loop in place",
         description="Remove Location F-curves",

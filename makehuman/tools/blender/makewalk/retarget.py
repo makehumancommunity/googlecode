@@ -316,9 +316,11 @@ def clearMcpProps(rig):
 
 
 def retargetAnimation(context, srcRig, trgRig):
+    startProgress("Retargeting")
     scn = context.scene
     setMhxIk(trgRig, True, True, False)
     frames = getActiveFrames(srcRig)
+    nFrames = len(frames)
     scn.objects.active = trgRig
     if trgRig.animation_data:
         trgRig.animation_data.action = None
@@ -346,7 +348,7 @@ def retargetAnimation(context, srcRig, trgRig):
     index = 0
     try:
         while frameBlock:
-            print(frames[index])
+            showProgress(index, frames[index], nFrames)
             anim.retarget(frameBlock, scn)
             index += 100
             frameBlock = frames[index:index+100]
@@ -361,7 +363,7 @@ def retargetAnimation(context, srcRig, trgRig):
     act = trgRig.animation_data.action
     act.name = trgRig.name[:4] + srcRig.name[2:]
     act.use_fake_user = True
-    print("Retargeted %s --> %s" % (srcRig.name, trgRig.name))
+    endProgress("Retargeted %s --> %s" % (srcRig.name, trgRig.name))
 
 
 #

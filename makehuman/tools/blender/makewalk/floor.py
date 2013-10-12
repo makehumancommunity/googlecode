@@ -112,11 +112,13 @@ def toesBelowBall(context):
     if useIk:
         raise MocapError("Toe Below Ball only for FK feet")
 
+    startProgress("Keep toes down")
     frames = getActiveFramesBetweenMarkers(rig, scn)
     print("Left toe")
     toeBelowBall(scn, frames, rig, plane, ".L")
     print("Right toe")
     toeBelowBall(scn, frames, rig, plane, ".R")
+    endProgress("Toes kept down")
 
 
 def toeBelowBall(scn, frames, rig, plane, suffix):
@@ -126,10 +128,11 @@ def toeBelowBall(scn, frames, rig, plane, suffix):
     ez,origin,rot = getPlaneInfo(plane)
     order,lock = getLocks(toe)
     factor = 1.0/toe.length
+    nFrames = len(frames)
     if mBall:
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
-            showProgress(n, frame)
+            showProgress(n, frame, nFrames)
             zToe = getProjection(mToe.matrix.col[3], ez)
             zBall = getProjection(mBall.matrix.col[3], ez)
             if zToe > zBall:
@@ -137,7 +140,7 @@ def toeBelowBall(scn, frames, rig, plane, suffix):
     else:
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
-            showProgress(n, frame)
+            showProgress(n, frame, nFrames)
             dzToe = getProjection(toe.matrix.col[1], ez)
             if dzToe > 0:
                 offsetToeRotation(toe, ez, factor, order, lock, scn)
@@ -177,7 +180,6 @@ class VIEW3D_OT_McpOffsetToeButton(bpy.types.Operator):
             toesBelowBall(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        print("Toes kept below balls")
         return{'FINISHED'}
 
 #-------------------------------------------------------------
@@ -185,6 +187,7 @@ class VIEW3D_OT_McpOffsetToeButton(bpy.types.Operator):
 #-------------------------------------------------------------
 
 def floorFoot(context):
+    startProgress("Keep feet above floor")
     scn = context.scene
     rig,plane = getRigAndPlane(scn)
     try:
@@ -196,6 +199,7 @@ def floorFoot(context):
         floorIkFoot(rig, plane, scn, frames)
     else:
         floorFkFoot(rig, plane, scn, frames)
+    endProgress("Feet kept above floor")
 
 
 def getFkFeetBones(rig, suffix):
@@ -216,6 +220,7 @@ def floorFkFoot(rig, plane, scn, frames):
     rFoot,rToe,rmBall,rmToe,rmHeel = getFkFeetBones(rig, ".R")
     ez,origin,rot = getPlaneInfo(plane)
 
+    nFrames = len(frames)
     for n,frame in enumerate(frames):
         scn.frame_set(frame)
         fkik.updateScene()
@@ -226,7 +231,7 @@ def floorFkFoot(rig, plane, scn, frames):
             rOffset = getFkOffset(rig, ez, origin, rFoot, rToe, rmBall, rmToe, rmHeel)
             if rOffset > offset:
                 offset = rOffset
-        showProgress(n, frame)
+        showProgress(n, frame, nFrames)
         if offset > 0:
             addOffset(hips, offset, ez)
 
@@ -263,6 +268,7 @@ def floorIkFoot(rig, plane, scn, frames):
     rleg = rig.pose.bones["foot.ik.R"]
     ez,origin,rot = getPlaneInfo(plane)
 
+    nFrames = len(frames)
     for n,frame in enumerate(frames):
         scn.frame_set(frame)
         fkik.updateScene()
@@ -279,7 +285,7 @@ def floorIkFoot(rig, plane, scn, frames):
                 offset = rOffset
         if offset > 0 and scn.McpFloorHips:
             addOffset(root, offset, ez)
-        showProgress(n, frame)
+        showProgress(n, frame, nFrames)
 
 
 def getIkOffset(rig, ez, origin, leg):
@@ -321,6 +327,5 @@ class VIEW3D_OT_McpFloorFootButton(bpy.types.Operator):
             floorFoot(context)
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
-        print("Feet raised above floor")
         return{'FINISHED'}
 

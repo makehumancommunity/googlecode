@@ -139,7 +139,7 @@ def readBvhFile(context, filepath, scn, scan):
     (shortName, ext) = os.path.splitext(fileName)
     if ext.lower() != ".bvh":
         raise MocapError("Not a bvh file: " + fileName)
-    print( "Loading BVH file "+ fileName )
+    startProgress( "Loading BVH file "+ fileName )
 
     time1 = time.clock()
     level = 0
@@ -241,8 +241,7 @@ def readBvhFile(context, filepath, scn, scan):
                 frame % ssFactor == 0 and
                 frame < nFrames):
                 addFrame(words, frameno, nodes, pbones, scale, flipMatrix)
-                if frameno % 200 == 0:
-                    print(int(frame))
+                showProgress(frameno, frame, nFrames, step=200)
                 frameno += 1
             frame += 1
 
@@ -251,7 +250,7 @@ def readBvhFile(context, filepath, scn, scan):
         raise MocapError("Bvh file \n%s\n is corrupt: No rig defined" % filepath)
     setInterpolation(rig)
     time2 = time.clock()
-    print("Bvh file %s loaded in %.3f s" % (filepath, time2-time1))
+    endProgress("Bvh file %s loaded in %.3f s" % (filepath, time2-time1))
     if frameno == 1:
         print("Warning: No frames in range %d -- %d." % (startFrame, endFrame))
     renameBvhRig(rig, filepath)

@@ -41,13 +41,13 @@ def normalizeRotCurves(scn, rig, fcurves, frames):
         if mode == 'rotation_quaternion':
             hasQuat[name] = rig.pose.bones[name]
 
+    nFrames = len(frames)
     for n,frame in enumerate(frames):
         scn.frame_set(frame)
-        showProgress(n, frame)
+        showProgress(n, frame, nFrames)
         for (name, pb) in hasQuat.items():
             pb.rotation_quaternion.normalize()
             pb.keyframe_insert("rotation_quaternion", group=name)
-    return
 
 #
 #   loopFCurves(context):
@@ -66,65 +66,52 @@ def loopFCurves(context):
         return
 
     frames = getActiveFrames(rig, minTime, maxTime)
+    nFrames = len(frames)
     normalizeRotCurves(scn, rig, fcurves, frames)
 
     hasLocation = {}
     for n,fcu in enumerate(fcurves):
         (name, mode) = fCurveIdentity(fcu)
-        if isRotation(mode) and scn.McpLoopRot:
+        if isRotation(mode):
             loopFCurve(fcu, minTime, maxTime, scn)
 
-    if scn.McpLoopLoc:
-        if scn.McpLoopInPlace:
-            iknames = [pb.name for pb in getIkBoneList(rig)]
-            ikbones = {}
-            for fcu in fcurves:
-                (name, mode) = fCurveIdentity(fcu)
-                if isLocation(mode) and name in iknames:
-                    ikbones[name] = rig.pose.bones[name]
-
-            for pb in ikbones.values():
-                print("IK bone %s" % pb.name)
-                scn.frame_set(minTime)
-                head0 = pb.head.copy()
-                scn.frame_set(maxTime)
-                head1 = pb.head.copy()
-                offs = (head1-head0)/(maxTime-minTime)
-                if not scn.McpLoopZInPlace:
-                    offs[2] = 0
-
-                restMat = pb.bone.matrix_local.to_3x3()
-                restInv = restMat.inverted()
-                #if pb.parent:
-                #    parRest = pb.parent.bone.matrix_local.to_3x3()
-                #    restInv = restInv * parRest
-
-                heads = {}
-                for n,frame in enumerate(frames):
-                    scn.frame_set(frame)
-                    showProgress(n, frame)
-                    heads[frame] = pb.head.copy()
-
-                for n,frame in enumerate(frames):
-                    showProgress(n, frame)
-                    scn.frame_set(frame)
-                    head = heads[frame] - (frame-minTime)*offs
-                    diff = head - pb.bone.head_local
-                    #if pb.parent:
-                    #    parMat = pb.parent.matrix.to_3x3()
-                    #    diff = parMat.inverted() * diff
-                    pb.location = restInv * diff
-                    pb.keyframe_insert("location", group=pb.name)
-                # pb.matrix_basis = pb.bone.matrix_local.inverted() * par.bone.matrix_local * par.matrix.inverted() * pb.matrix
-
-
+    if scn.McpLoopInPlace:
+        iknames = [pb.name for pb in getIkBoneList(rig)]
+        ikbones = {}
         for fcu in fcurves:
             (name, mode) = fCurveIdentity(fcu)
-            if isLocation(mode):
-                loopFCurve(fcu, minTime, maxTime, scn)
-    print("F-curves looped")
-    return
+            if isLocation(mode) and name in iknames:
+                ikbones[name] = rig.pose.bones[name]
 
+        for pb in ikbones.values():
+            print("IK bone %s" % pb.name)
+            scn.frame_set(minTime)
+            head0 = pb.head.copy()
+            scn.frame_set(maxTime)
+            head1 = pb.head.copy()
+            offs = (head1-head0)/(maxTime-minTime)
+
+            restMat = pb.bone.matrix_local.to_3x3()
+            restInv = restMat.inverted()
+
+            heads = {}
+            for n,frame in enumerate(frames):
+                scn.frame_set(frame)
+                showProgress(n, frame, nFrames)
+                heads[frame] = pb.head.copy()
+
+            for n,frame in enumerate(frames):
+                showProgress(n, frame, nFrames)
+                scn.frame_set(frame)
+                head = heads[frame] - (frame-minTime)*offs
+                diff = head - pb.bone.head_local
+                pb.location = restInv * diff
+                pb.keyframe_insert("location", group=pb.name)
+
+    for fcu in fcurves:
+        (name, mode) = fCurveIdentity(fcu)
+        if isLocation(mode):
+            loopFCurve(fcu, minTime, maxTime, scn)
 
 
 def loopFCurve(fcu, t0, tn, scn):
@@ -179,7 +166,9 @@ class VIEW3D_OT_McpLoopFCurvesButton(bpy.types.Operator):
 
     def execute(self, context):
         try:
+            startProgress("Loop F-curves")
             loopFCurves(context)
+            endProgress("F-curves looped")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
@@ -189,12 +178,14 @@ class VIEW3D_OT_McpLoopFCurvesButton(bpy.types.Operator):
 #
 
 def repeatFCurves(context, nRepeats):
+    startProgress("Repeat F-curves %d times" % nRepeats)
     act = getAction(context.object)
     if not act:
         return
     (fcurves, minTime, maxTime) = simplify.getActionFCurves(act, False, True, context.scene)
     if not fcurves:
         return
+
     dt0 = maxTime-minTime
     for fcu in fcurves:
         (name, mode) = fCurveIdentity(fcu)
@@ -209,8 +200,9 @@ def repeatFCurves(context, nRepeats):
             dy = n*dy0
             for (t,y) in points:
                 fcu.keyframe_points.insert(t+dt, y+dy, options={'FAST'})
-    print("F-curves repeated %d times" % nRepeats)
-    return
+
+    endProgress("F-curves repeated %d times" % nRepeats)
+
 
 class VIEW3D_OT_McpRepeatFCurvesButton(bpy.types.Operator):
     bl_idname = "mcp.repeat_fcurves"
@@ -270,10 +262,10 @@ def stitchActions(context):
         pb = rig.pose.bones[bname]
         orders[bname],locks[bname] = getLocks(pb)
 
-    for frame in frames:
+    nFrames = len(frames)
+    for n,frame in enumerate(frames):
         scn.frame_set(frame)
-        if frame % 100 == 0:
-            print(frame)
+        showProgress(n, frame, nFrames)
 
         if frame <= frame1-delta:
             n1 = frame - first1
@@ -334,7 +326,9 @@ class VIEW3D_OT_McpStitchActionsButton(bpy.types.Operator):
 
     def execute(self, context):
         try:
+            startProgress("Stitch actions")
             stitchActions(context)
+            endProgress("Actions stitched")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
@@ -418,6 +412,7 @@ def shiftBoneFCurves(rig, scn):
     from .retarget import getLocks, correctMatrixForLocks
 
     frames = [scn.frame_current] + getActiveFrames(rig)
+    nFrames = len(frames)
     act = getAction(rig)
     if not act:
         return
@@ -434,7 +429,7 @@ def shiftBoneFCurves(rig, scn):
 
     for n,frame in enumerate(frames[1:]):
         scn.frame_set(frame)
-        showProgress(n, frame)
+        showProgress(n, frame, nFrames)
         for bname,bmats in basemats.items():
             pb = rig.pose.bones[bname]
             mat = deltaMat[pb.name] * bmats[n+1]
@@ -456,8 +451,9 @@ class VIEW3D_OT_McpShiftBoneFCurvesButton(bpy.types.Operator):
 
     def execute(self, context):
         try:
+            startProgress("Shift animation")
             shiftBoneFCurves(context.object, context.scene)
-            print("Bones shifted")
+            endProgress("Animation shifted")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
@@ -500,8 +496,9 @@ class VIEW3D_OT_McpFixateBoneFCurvesButton(bpy.types.Operator):
 
     def execute(self, context):
         try:
+            startProgress("Fixate bone locations")
             fixateBoneFCurves(context.object, context.scene)
-            print("Bones fixed")
+            endProgress("Bone locations fixed")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}

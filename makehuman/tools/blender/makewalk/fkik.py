@@ -305,8 +305,9 @@ def transferMhxToFk(rig, scn):
     rLegIkToAnkle = rig["MhaLegIkToAnkle_R"]
 
     frames = getActiveFramesBetweenMarkers(rig, scn)
+    nFrames = len(frames)
     for n,frame in enumerate(frames):
-        showProgress(n, frame)
+        showProgress(n, frame, nFrames)
         scn.frame_set(frame)
         updateScene()
         if scn.McpFkIkArms:
@@ -347,8 +348,9 @@ def transferMhxToIk(rig, scn):
 
     frames = getActiveFramesBetweenMarkers(rig, scn)
     #frames = range(scn.frame_start, scn.frame_end+1)
+    nFrames = len(frames)
     for n,frame in enumerate(frames):
-        showProgress(n, frame)
+        showProgress(n, frame, nFrames)
         scn.frame_set(frame)
         updateScene()
         if scn.McpFkIkArms:
@@ -424,8 +426,9 @@ def transferRigifyToFk(rig, scn):
     from rig_ui import fk2ik_arm, fk2ik_leg
 
     frames = getActiveFramesBetweenMarkers(rig, scn)
+    nFrames = len(frames)
     for n,frame in enumerate(frames):
-        showProgress(n, frame)
+        showProgress(n, frame, nFrames)
         scn.frame_set(frame)
         updateScene()
 
@@ -477,8 +480,9 @@ def transferRigifyToIk(rig, scn):
     from rig_ui import ik2fk_arm, ik2fk_leg
 
     frames = getActiveFramesBetweenMarkers(rig, scn)
+    nFrames = len(frames)
     for n,frame in enumerate(frames):
-        showProgress(n, frame)
+        showProgress(n, frame, nFrames)
         scn.frame_set(frame)
         updateScene()
 
@@ -542,6 +546,7 @@ class VIEW3D_OT_TransferToFkButton(bpy.types.Operator):
         use_global_undo = context.user_preferences.edit.use_global_undo
         context.user_preferences.edit.use_global_undo = False
         try:
+            startProgress("Transfer to FK")
             rig = context.object
             scn = context.scene
             if isMhxRig(rig):
@@ -550,6 +555,7 @@ class VIEW3D_OT_TransferToFkButton(bpy.types.Operator):
                 transferRigifyToFk(rig, scn)
             else:
                 raise MocapError("Can not transfer to FK with this rig")
+            endProgress("Transfer to FK completed")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         finally:
@@ -567,6 +573,7 @@ class VIEW3D_OT_TransferToIkButton(bpy.types.Operator):
         use_global_undo = context.user_preferences.edit.use_global_undo
         context.user_preferences.edit.use_global_undo = False
         try:
+            startProgress("Transfer to IK")
             rig = context.object
             scn = context.scene
             if isMhxRig(rig):
@@ -575,6 +582,7 @@ class VIEW3D_OT_TransferToIkButton(bpy.types.Operator):
                 transferRigifyToIk(rig, scn)
             else:
                 raise MocapError("Can not transfer to IK with this rig")
+            endProgress("Transfer to IK completed")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         finally:
@@ -593,6 +601,7 @@ class VIEW3D_OT_ClearAnimationButton(bpy.types.Operator):
         use_global_undo = context.user_preferences.edit.use_global_undo
         context.user_preferences.edit.use_global_undo = False
         try:
+            startProgress("Clear animation")
             rig = context.object
             scn = context.scene
             if not rig.animation_data:
@@ -608,6 +617,7 @@ class VIEW3D_OT_ClearAnimationButton(bpy.types.Operator):
                 clearAnimation(rig, scn, act, self.type, SnapBonesRigify)
             else:
                 raise MocapError("Can not clear %s animation with this rig" % self.type)
+            endProgress("Animation cleared")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         finally:

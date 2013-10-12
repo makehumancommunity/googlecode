@@ -439,13 +439,17 @@ def insertRotationKeyFrame(pb, frame):
 #   showProgress(n, frame):
 #
 
-def showProgress(n, frame):
-    if n % 20 == 0:
-        try:
-            string = int(frame)
-        except ValueError:
-            string = frame
-        print(string)
+def startProgress(string):
+    print("%s (0 pct)" % string)
+
+
+def endProgress(string):
+    print("%s (100 pct)" % string)
+
+
+def showProgress(n, frame, nFrames, step=20):
+    if n % step == 0:
+        print("%d (%.1f pct)" % (int(frame), (100.0*n)/nFrames))
 
 #
 #
