@@ -148,9 +148,9 @@ class MHApplication(gui3d.Application, mh.Application):
         }
 
         self.mouseActions = {
-            (0, mh.Buttons.RIGHT_MASK): self.mouseTranslate,
             (0, mh.Buttons.LEFT_MASK): self.mouseRotate,
-            (0, mh.Buttons.MIDDLE_MASK): self.mouseZoom
+            (0, mh.Buttons.RIGHT_MASK): self.mouseZoom,
+            (0, mh.Buttons.MIDDLE_MASK): self.mouseTranslate
         }
 
         self.settings = {
