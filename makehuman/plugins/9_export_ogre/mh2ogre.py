@@ -41,8 +41,10 @@ feetOnGround = True
 
 def exportOgreMesh(human, filepath, config, progressCallback = None):
     progress = Progress()
+    progress.logging = True
+    progress.timing = True
 
-    progress(0, 0.05, "Parsing data")
+    progress(0, 0.05, "Setting properties")
     config.setHuman(human)
     config.feetOnGround = False    # TODO translate skeleton with feet-on-ground offset too
     # TODO account for config.scale in skeleton
@@ -81,6 +83,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
     f.write('    <submeshes>\n')
 
     for rmeshIdx, rmesh in enumerate(rmeshes):
+        progress.substep(0.0, "Writing %s mesh." % rmesh.name)
         obj = rmesh.object
         # Make sure vertex normals are calculated
         obj.calcFaceNormals()
@@ -96,6 +99,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
             # Tris
             numFaces = len(obj.r_faces)
 
+        progress.substep(0.1, "Writing faces of %s." % rmesh.name)
         f.write('        <submesh material="%s_%s_%s" usesharedvertices="false" use32bitindexes="false" operationtype="triangle_list">\n' % (formatName(name), rmeshIdx, formatName(rmesh.name) if formatName(rmesh.name) != name else "human"))
 
         # Faces
@@ -105,8 +109,8 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
             if obj.vertsPerPrimitive == 4:
                 f.write('                <face v1="%s" v2="%s" v3="%s" />\n' % (fv[2], fv[3], fv[0]))
         f.write('            </faces>\n')
-        progress.substep(0.2)
 
+        progress.substep(0.3, "Writing vertices of %s." % rmesh.name)
         # Vertices
         f.write('            <geometry vertexcount="%s">\n' % numVerts)
         f.write('                <vertexbuffer positions="true" normals="true">\n')
@@ -123,8 +127,8 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
             f.write('                        <normal x="%s" y="%s" z="%s" />\n' % (norm[0], norm[1], norm[2]))
             f.write('                    </vertex>\n')
         f.write('                </vertexbuffer>\n')
-        progress.substep(0.8 - 0.1*bool(human.getSkeleton()))
 
+        progress.substep(0.8 - 0.1*bool(human.getSkeleton()), "Writing UVs of %s." % rmesh.name)
         # UV Texture Coordinates
         f.write('                <vertexbuffer texture_coord_dimensions_0="2" texture_coords="1">\n')
         for vIdx in xrange(numVerts):
@@ -138,8 +142,11 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
             f.write('                    </vertex>\n')
         f.write('                </vertexbuffer>\n')
         f.write('            </geometry>\n')
-        progress.substep(0.99 - 0.1*bool(human.getSkeleton()))
 
+        if human.getSkeleton():
+            progress.substep(0.89, "Writing bone assignments of %s." % rmesh.name)
+        else:
+            progress.substep(0.99, "Written %s." % rmesh.name)
         # Skeleton bone assignments
         if human.getSkeleton():
             bodyWeights = human.getVertexWeights()
