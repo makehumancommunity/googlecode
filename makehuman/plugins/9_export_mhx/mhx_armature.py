@@ -254,76 +254,84 @@ end AnimationData
                 #fp.write("  DefProp Float Mhs%s 0.0 %s min=-1.0,max=2.0 ;\n" % (skey, skey))
             fp.write("#endif\n")
 
-        fp.write("""
+        if self.options.useIkArms:
+            fp.write(
+"""
   Property MhaArmIk_L 0.0 Left_arm_FK/IK ;
   PropKeys MhaArmIk_L "min":0.0,"max":1.0, ;
-
-  Property MhaArmHinge_L False Left_arm_hinge ;
-  PropKeys MhaArmHinge_L "type":'BOOLEAN',"min":0,"max":1, ;
-
-  Property MhaElbowPlant_L False Left_elbow_plant ;
-  PropKeys MhaElbowPlant_L "type":'BOOLEAN',"min":0,"max":1, ;
 
   Property MhaHandFollowsIKHand_L True Left_hand_follows_wrist ;
   PropKeys MhaHandFollowsIKHand_L "type":'BOOLEAN',"min":0,"max":1, ;
 
+  Property MhaArmIk_R 0.0 Right_arm_FK/IK ;
+  PropKeys MhaArmIk_R "min":0.0,"max":1.0, ;
+
+  Property MhaHandFollowsIKHand_R True Right_hand_follows_wrist ;
+  PropKeys MhaHandFollowsIKHand_R "type":'BOOLEAN',"min":0,"max":1, ;
+
+""")
+
+        if self.options.useSockets:
+            fp.write(
+"""
+  Property MhaArmHinge_L False Left_arm_hinge ;
+  PropKeys MhaArmHinge_L "type":'BOOLEAN',"min":0,"max":1, ;
+
+  Property MhaLegHinge_L False Left_leg_hinge ;
+  PropKeys MhaLegHinge_L "type":'BOOLEAN',"min":0,"max":1, ;
+
+  Property MhaArmHinge_R False Right_arm_hinge ;
+  PropKeys MhaArmHinge_R "type":'BOOLEAN',"min":0,"max":1, ;
+
+  Property MhaLegHinge_R False Right_leg_hinge ;
+  PropKeys MhaLegHinge_R "type":'BOOLEAN',"min":0,"max":1, ;
+""")
+
+        if self.options.useElbows:
+            fp.write(
+"""
+  Property MhaElbowPlant_L False Left_elbow_plant ;
+  PropKeys MhaElbowPlant_L "type":'BOOLEAN',"min":0,"max":1, ;
+
+  Property MhaElbowPlant_R False Right_elbow_plant ;
+  PropKeys MhaElbowPlant_R "type":'BOOLEAN',"min":0,"max":1, ;
+
+""")
+
+        if self.options.useIkLegs:
+            fp.write(
+"""
   Property MhaLegIk_L 0.0 Left_leg_FK/IK ;
   PropKeys MhaLegIk_L "min":0.0,"max":1.0, ;
 
   Property MhaLegIkToAnkle_L False Left_leg_IK_to_ankle ;
   PropKeys MhaLegIkToAnkle_L "type":'BOOLEAN',"min":0,"max":1, ;
 
-  # Property MhaKneeFollowsFoot_L True Left_knee_follows_foot ;
-  # PropKeys MhaKneeFollowsFoot_L "type":'BOOLEAN',"min":0,"max":1, ;
-
-  # Property MhaKneeFollowsHip_L False Left_knee_follows_hip ;
-  # PropKeys MhaKneeFollowsHip_L "type":'BOOLEAN',"min":0,"max":1, ;
-
-  # Property MhaElbowFollowsIKHand_L False Left_elbow_follows_wrist ;
-  # PropKeys MhaElbowFollowsIKHand_L "type":'BOOLEAN',"min":0,"max":1, ;
-
-  # Property MhaElbowFollowsShoulder_L True Left_elbow_follows_shoulder ;
-  # PropKeys MhaElbowFollowsShoulder_L "type":'BOOLEAN',"min":0,"max":1, ;
-
-  Property MhaFingerControl_L True Left_fingers_controlled ;
-  PropKeys MhaFingerControl_L "type":'BOOLEAN',"min":0,"max":1, ;
-
-  Property MhaArmIk_R 0.0 Right_arm_FK/IK ;
-  PropKeys MhaArmIk_R "min":0.0,"max":1.0, ;
-
-  Property MhaArmHinge_R False Right_arm_hinge ;
-  PropKeys MhaArmHinge_R "type":'BOOLEAN',"min":0,"max":1, ;
-
-  Property MhaElbowPlant_R False Right_elbow_plant ;
-  PropKeys MhaElbowPlant_R "type":'BOOLEAN',"min":0,"max":1, ;
-
   Property MhaLegIk_R 0.0 Right_leg_FK/IK ;
   PropKeys MhaLegIk_R "min":0.0,"max":1.0, ;
-
-  Property MhaHandFollowsIKHand_R True Right_hand_follows_wrist ;
-  PropKeys MhaHandFollowsIKHand_R "type":'BOOLEAN',"min":0,"max":1, ;
 
   Property MhaLegIkToAnkle_R False Right_leg_IK_to_ankle ;
   PropKeys MhaLegIkToAnkle_R "type":'BOOLEAN',"min":0,"max":1, ;
 
-  # Property MhaKneeFollowsFoot_R True Right_knee_follows_foot ;
-  # PropKeys MhaKneeFollowsFoot_R "type":'BOOLEAN',"min":0,"max":1, ;
+""")
 
-  # Property MhaKneeFollowsHip_R False Right_knee_follows_hip ;
-  # PropKeys MhaKneeFollowsHip_R "type":'BOOLEAN',"min":0,"max":1, ;
-
-  # Property MhaElbowFollowsIKHand_R False Right_elbow_follows_wrist ;
-  # PropKeys MhaElbowFollowsIKHand_R "type":'BOOLEAN',"min":0,"max":1, ;
-
-  # Property MhaElbowFollowsShoulder_R True Right_elbow_follows_shoulder ;
-  # PropKeys MhaElbowFollowsShoulder_R "type":'BOOLEAN',"min":0,"max":1, ;
-
-  Property MhaGazeFollowsHead 1.0 Gaze_follows_world_or_head ;
-  PropKeys MhaGazeFollowsHead "type":'BOOLEAN',"min":0.0,"max":1.0, ;
+        if self.options.useFingers:
+            fp.write(
+"""
+  Property MhaFingerControl_L True Left_fingers_controlled ;
+  PropKeys MhaFingerControl_L "type":'BOOLEAN',"min":0,"max":1, ;
 
   Property MhaFingerControl_R True Right_fingers_controlled ;
   PropKeys MhaFingerControl_R "type":'BOOLEAN',"min":0,"max":1, ;
 
+  Property MhaGazeFollowsHead 1.0 Gaze_follows_world_or_head ;
+  PropKeys MhaGazeFollowsHead "type":'BOOLEAN',"min":0.0,"max":1.0, ;
+
+""")
+
+        if self.options.useStretchyBones:
+            fp.write(
+"""
   Property MhaArmStretch_L 0.1 Left_arm_stretch_amount ;
   PropKeys MhaArmStretch_L "min":0.0,"max":1.0, ;
 
@@ -336,14 +344,12 @@ end AnimationData
   Property MhaLegStretch_R 0.1 Right_leg_stretch_amount ;
   PropKeys MhaLegStretch_R "min":0.0,"max":1.0, ;
 
+""")
+
+        fp.write(
+"""
   Property MhaRotationLimits 0.8 Influence_of_rotation_limit_constraints ;
   PropKeys MhaRotationLimits "min":0.0,"max":1.0, ;
-
-  Property MhaFreePubis 0.5 Pubis_moves_freely ;
-  PropKeys MhaFreePubis "min":0.0,"max":1.0, ;
-
-  Property MhaBreathe 0.0 Breathe ;
-  PropKeys MhaBreathe "min":-0.5,"max":2.0, ;
 """)
 
         if self.options.advancedSpine:

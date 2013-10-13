@@ -57,9 +57,12 @@ class ArmatureOptions(object):
         self.useSplitNames = False
         self.useDeformBones = False
         self.useDeformNames = False
+        self.useSockets = False
         self.useIkArms = False
         self.useIkLegs = False
         self.useFingers = False
+        self.useElbows = False
+        self.useStretchyBones = False
 
         # Options set by exporters
         self.useCustomShapes = False
@@ -117,6 +120,7 @@ class ArmatureOptions(object):
             "   useSplitNames : %s\n" % self.useSplitNames +
             "   useDeformBones : %s\n" % self.useDeformBones +
             "   useDeformNames : %s\n" % self.useDeformNames +
+            "   useSockets : %s\n" % self.useSockets +
             "   useIkArms : %s\n" % self.useIkArms +
             "   useIkLegs : %s\n" % self.useIkLegs +
             "   useFingers : %s\n" % self.useFingers +
@@ -147,6 +151,7 @@ class ArmatureOptions(object):
 
         self.useSplitBones = selector.useSplitBones.selected
         self.useSplitNames = selector.useSplitBones.selected
+        self.useSockets = selector.useSockets.selected
         self.useIkArms = selector.useIkArms.selected
         self.useIkLegs = selector.useIkLegs.selected
         self.useDeformBones = selector.useDeformBones.selected
@@ -218,6 +223,7 @@ class ArmatureSelector:
 
         self.useSplitBones = box.addWidget(gui.ToggleButton("Split forearm (MHX only)"))
         self.useDeformBones = box.addWidget(gui.ToggleButton("Deform bones (MHX only)"))
+        self.useSockets = box.addWidget(gui.ToggleButton("Sockets (MHX only)"))
         self.useIkArms = box.addWidget(gui.ToggleButton("Arm IK (MHX only)"))
         self.useIkLegs = box.addWidget(gui.ToggleButton("Leg IK (MHX only)"))
         self.useFingers = box.addWidget(gui.ToggleButton("Finger controls (MHX only)"))
@@ -239,6 +245,7 @@ class ArmatureSelector:
 
         self.useSplitBones.setSelected(options.useSplitBones)
         self.useDeformBones.setSelected(options.useDeformBones)
+        self.useSockets.setSelected(options.useSockets)
         self.useIkArms.setSelected(options.useIkArms)
         self.useIkLegs.setSelected(options.useIkLegs)
         self.useFingers.setSelected(options.useFingers)

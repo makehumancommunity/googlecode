@@ -160,9 +160,7 @@ HeadsTails = {
     'forearmhook.R' :      ('r-brac-3', 'r-pron-2'),
 
     'hipside.L' :          ('pubis', 'l-hipside'),
-    'hip.L' :              ('pelvis', 'l-hip'),
     'hipside.R' :          ('pubis', 'r-hipside'),
-    'hip.R' :              ('pelvis', 'r-hip'),
 
     'gluteus0.L' :         ('l-upper-leg', 'l-gluteus'),
     'gluteus.L' :          ('l-upper-leg', 'l-gluteus'),
@@ -188,8 +186,8 @@ HeadsTails = {
 
 
 Armature = {
-    'breast.L' :           (0, 'chest-1', F_WIR|F_DEF, L_TWEAK),
-    'breast.R' :           (0, 'chest-1', F_WIR|F_DEF, L_TWEAK),
+    'breast.L' :           (0, 'chest-1', F_WIR|F_DEF, L_TWEAK, P_ZYX),
+    'breast.R' :           (0, 'chest-1', F_WIR|F_DEF, L_TWEAK, P_ZYX),
     'pubis' :              (0, 'hips', 0, L_HELP),
     'stomach' :            (0, 'chest-1',  F_DEF, L_MSCL),
 
@@ -207,26 +205,24 @@ Armature = {
     'lat_dorsi.R' :        (-74*D, 'chest-1', F_DEF, L_MSCL),
     'scapula.R' :          (24*D, 'clavicle.R', F_DEF, L_MSCL),
 
-    'biceps.L' :           (91*D, 'upper_arm.L', F_DEF, L_MSCL),
-    'triceps.L' :          (-101*D, 'upper_arm.L', F_DEF, L_MSCL),
+    'biceps.L' :           (91*D, 'upper_arm.L', F_DEF, L_MSCL, P_YZX),
+    'triceps.L' :          (-101*D, 'upper_arm.L', F_DEF, L_MSCL, P_YZX),
     #'trg_elbow.L' :        (-105*D, 'upper_arm.L', F_DEF|F_CON, L_MSCL),
     #'pronator.L' :         (10*D, 'trg_elbow.L', F_DEF|F_CON, L_MSCL),
     #'brachioradialis.L' :  (74*D, 'forearm.L', F_DEF, L_MSCL),
     #'forearmhook.L' :      (0, 'hand.L',0, L_MSCL),
 
-    'biceps.R' :           (-91*D, 'upper_arm.R', F_DEF, L_MSCL),
-    'triceps.R' :          (101*D, 'upper_arm.R', F_DEF, L_MSCL),
+    'biceps.R' :           (-91*D, 'upper_arm.R', F_DEF, L_MSCL, P_YZX),
+    'triceps.R' :          (101*D, 'upper_arm.R', F_DEF, L_MSCL, P_YZX),
     #'trg_elbow.R' :        (105*D, 'upper_arm.R', F_DEF|F_CON, L_MSCL),
     #'pronator.R' :         (-10*D, 'trg_elbow.R', F_DEF|F_CON, L_MSCL),
     #'brachioradialis.R' :  (-74*D, 'forearm.R', F_DEF, L_MSCL),
     #'forearmhook.R' :      (0, 'hand.R',0, L_MSCL),
 
     'hipside.L' :          (0, 'hips', 0, L_HELP),
-    #'hip.L' :              (0, 'pelvis', F_DEF, L_MSCL),
     'gluteus0.L' :          (0, 'thigh.L', 0, L_HELP),
     'gluteus.L' :          (0, 'hips', F_DEF, L_MSCL),
     'hipside.R' :          (0, 'hips', 0, L_HELP),
-    #'hip.R' :              (0, 'pelvis', F_DEF, L_MSCL),
     'gluteus0.R' :          (0, 'thigh.R', 0, L_HELP),
     'gluteus.R' :          (0, 'hips', F_DEF, L_MSCL),
 
@@ -242,10 +238,10 @@ Armature = {
     'soleus.R' :           (-168*D  , 'shin.R', F_DEF, L_MSCL),
     'sole.R' :             (0, 'foot.R', 0, L_MSCL),
 
-    'elbow_fan.L' :        ('forearm.L', 'upper_arm.L', F_DEF, L_MSCL),
-    'elbow_fan.R' :        ('forearm.R', 'upper_arm.R', F_DEF, L_MSCL),
-    'knee_fan.L' :         ('shin.L', 'thigh.L', F_DEF, L_MSCL),
-    'knee_fan.R' :         ('shin.R', 'thigh.R', F_DEF, L_MSCL),
+    'elbow_fan.L' :        ('forearm.L', 'upper_arm.L', F_DEF, L_MSCL, P_YZX),
+    'elbow_fan.R' :        ('forearm.R', 'upper_arm.R', F_DEF, L_MSCL, P_YZX),
+    'knee_fan.L' :         ('shin.L', 'thigh.L', F_DEF, L_MSCL, P_YZX),
+    'knee_fan.R' :         ('shin.R', 'thigh.R', F_DEF, L_MSCL, P_YZX),
 }
 
 CustomShapes = {

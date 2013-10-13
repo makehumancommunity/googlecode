@@ -112,6 +112,7 @@ class Parser:
         if options.useRotationLimits:
             addDict(rig_bones.RotationLimits, self.rotationLimits)
             addDict(rig_face.RotationLimits, self.rotationLimits)
+            addDict(rig_control.RotationLimits, self.rotationLimits)
 
         if options.useCustomShapes:
             addDict(rig_bones.CustomShapes, self.customShapes)
@@ -135,7 +136,9 @@ class Parser:
         self.splitBones = {}
         if options.useSplitBones:
             self.splitBones = {
+                "upper_arm" :   (3, "forearm", False),
                 "forearm" :     (3, "hand", False),
+                "thigh" :       (3, "shin", False),
             }
 
 
@@ -180,12 +183,16 @@ class Parser:
                 self.setConstraints(rig_control.HeadConstraints)
                 self.propDrivers += rig_control.HeadPropDrivers
 
+        if options.useSockets and options.useConstraints:
+            self.changeParents(rig_control.SocketParents, boneInfo)
+            self.addBones(rig_control.SocketArmature, boneInfo)
+            self.setConstraints(rig_control.SocketConstraints)
+            self.lrPropDrivers += rig_control.SocketPropLRDrivers
+
         if options.useIkLegs and options.useConstraints:
             self.addBones(rig_control.RevFootArmature, boneInfo)
             self.setConstraints(rig_control.RevFootConstraints)
             self.addBones(rig_control.MarkerArmature, boneInfo)
-            #addDict(rig_control.IkLegChains, self.ikChains)
-            addDict(rig_control.IkLegParents, self.parents)
             self.lrPropDrivers += rig_control.IkLegPropLRDrivers
             self.addIkChains(rig_bones.Armature, boneInfo, rig_control.IkLegChains)
             self.reparentMarkers(rig_control.LegMarkers, boneInfo)
@@ -193,8 +200,6 @@ class Parser:
         if options.useIkArms and options.useConstraints:
             self.addBones(rig_control.IkArmArmature, boneInfo)
             self.setConstraints(rig_control.IkArmConstraints)
-            #addDict(rig_control.IkArmChains, self.ikChains)
-            addDict(rig_control.IkArmParents, self.parents)
             self.lrPropDrivers += rig_control.IkArmPropLRDrivers
             self.addIkChains(rig_bones.Armature, boneInfo, rig_control.IkArmChains)
 
@@ -208,15 +213,17 @@ class Parser:
                 except KeyError:
                     continue
                 minX,maxX, minY,maxY, minZ,maxZ = limits
-                if minX != None:
-                    cns = ("LimitRot", C_LOCAL, 0.8, ["LimitRot", limits, (1,1,1)])
-                    self.addConstraint(bname, cns)
                 lockX,lockY,lockZ = bone.lockRotation
+                if minX == maxX == 0:
+                    lockX = 1
                 if minY == maxY == 0:
                     lockY = 1
                 if minZ == maxZ == 0:
                     lockZ = 1
                 bone.lockRotation = lockX,lockY,lockZ
+                if minX != None and bone.lockRotation != (1,1,1):
+                    cns = ("LimitRot", C_LOCAL, 0.8, ["LimitRot", limits, (1,1,1)])
+                    self.addConstraint(bname, cns)
 
         if options.useCorrectives:
             self.addCSysBones(rig_control.CoordinateSystems, boneInfo)
@@ -288,12 +295,8 @@ class Parser:
 
         for bname,bone in boneInfo.items():
             if bone.parent:
-                try:
-                    parent = boneInfo[bone.parent]
-                except KeyError:
-                    log.message("Missing %s from %s" % (bone.parent, bone))
-                    log.message(str(boneInfo.keys()))
-                    halt
+                bone.parent = self.getBoneParentName(bone.parent, boneInfo)
+                parent = boneInfo[bone.parent]
                 parent.children.append(bone)
             elif self.master:
                 if bone.name == self.master:
@@ -319,6 +322,29 @@ class Parser:
                 amt.bones[bname].constraints = data
             except KeyError:
                 log.message("Warning: constraint for undefined bone %s" % bname)
+
+
+    def changeParents(self, newParents, boneInfo):
+        for bname, parent in newParents.items():
+            boneInfo[bname].parent = parent
+
+
+    def getBoneParentName(self, parname, boneInfo):
+        try:
+            boneInfo[parname]
+            return parname
+        except KeyError:
+            pass
+
+        nodefParent = parname[4:]
+        log.message("Missing parent %s. Trying %s" % (parname, nodefParent))
+        try:
+            boneInfo[nodefParent]
+            return nodefParent
+        except KeyError:
+            log.message("Missing %s and %s" % (parname, nodefParent))
+            log.message(str(boneInfo.keys()))
+            halt
 
 
     def setup(self):
@@ -663,7 +689,6 @@ class Parser:
                 defName1,defName2,defName3 = splitBonesNames(base, ext, self.deformPrefix, numAfter)
                 bname = base + ext
                 head,tail = self.headsTails[bname]
-                self.addConstraint(defName1, ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)]))
                 defParent = self.getDeformParent(bname, boneInfo)
 
                 if npieces == 2:
@@ -672,7 +697,7 @@ class Parser:
 
                     defBone1 = boneInfo[defName1] = Bone(amt, defName1)
                     defBone1.fromInfo((bname, defParent, F_DEF+F_CON, L_DEF))
-                    self.addConstraint(defName1, ('CopyRot', C_LOCAL, 1, [bname, bname, (1,0,1), (0,0,0), True]))
+                    self.addConstraint(defName1, ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)]))
 
                     defBone2 = boneInfo[defName2] = Bone(amt, defName2)
                     defBone2.fromInfo((bname, defBone1, F_DEF, L_DEF))
@@ -684,16 +709,17 @@ class Parser:
                     self.headsTails[defName3] = (((0.333,head),(0.667,tail)), tail)
 
                     defBone1 = boneInfo[defName1] = Bone(amt, defName1)
-                    defBone1.fromInfo((bname, defParent, F_DEF+F_CON, L_DEF))
-                    self.addConstraint(defName1, ('CopyRot', C_LOCAL, 1, [bname, bname, (1,0,1), (0,0,0), True]))
+                    defBone1.fromInfo((bname, defParent, F_DEF+F_CON, L_DEF, P_YZX))
+                    self.addConstraint(defName1, ('CopyRot', C_LOCAL, 1, [bname, bname, (1,0,1), (0,0,0), False]))
+                    #self.addConstraint(defName1, ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)]))
 
                     defBone2 = boneInfo[defName2] = Bone(amt, defName2)
-                    defBone2.fromInfo((bname, defName1, F_DEF+F_CON, L_DEF))
-                    self.addConstraint(defName2, ('CopyRot', C_LOCAL, 0.5, [target, target+ext, (0,1,0), (0,0,0), True]))
+                    defBone2.fromInfo((bname, defName1, F_DEF+F_CON, L_DEF, P_YZX))
+                    self.addConstraint(defName2, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
 
                     defBone3 = boneInfo[defName3] = Bone(amt, defName3)
-                    defBone3.fromInfo((bname, defName2, F_DEF+F_CON, L_DEF))
-                    self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [target, target+ext, (0,1,0), (0,0,0), True]))
+                    defBone3.fromInfo((bname, defName2, F_DEF+F_CON, L_DEF, P_YZX))
+                    self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
 
 
     def renameDeformBones(self, muscles, custom, boneInfo):
