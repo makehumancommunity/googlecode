@@ -113,13 +113,19 @@ current_Progress_ = None
 
 
 class Progress(object):
-    def __init__(self, steps = 0, progressCallback = None):
+    def __init__(self, steps = 0, progressCallback = None, logging = False, timing = False):
         global current_Progress_
         
         self.progress = 0.0
         self.steps = steps
         self.stepsdone = 0
         self.description = None
+
+        self.time = None
+        self.totalTime = 0.0
+
+        self.logging = logging
+        self.timing = timing
 
         self.children = 0
         self.farstart = 0.0
@@ -185,8 +191,6 @@ class Progress(object):
     # progress bar and parent progress handler updating.
     def update(self, amount, childDescription = None):
         self.progress = amount
-        if self.progress >= 0.999999: # Not using 1.0 for precision safety.
-            self.finish()
         if self.parent != False:
             amount = self.start + (self.end - self.start)*amount
         if self.parent:
@@ -195,12 +199,30 @@ class Progress(object):
             else:
                 self.parent.update(amount, childDescription)
         elif self.parent is None and self.progressCallback != False:
-            if self.description:
-                self.progressCallback(amount, self.description)
-            elif childDescription:
-                self.progressCallback(amount, childDescription)
+            if self.timing:
+                import time
+                t = time.time()
+                if self.time:
+                    deltaT = (t - self.time)
+                    self.totalTime += deltaT
+                    if self.logging:
+                        import log
+                        log.debug("  took %s seconds", deltaT)
+                self.time = t
+
+            if childDescription:
+                desc = childDescription
+            elif self.description:
+                desc = self.description
             else:
-                self.progressCallback(amount, "")
+                desc = ""
+            self.progressCallback(amount, desc)
+            if self.logging:
+                import log
+                log.debug("Progress %s%%: %s", amount, desc)
+
+        if self.progress >= 0.999999: # Not using 1.0 for precision safety.
+            self.finish()
 
 
     # Method to be called when a subroutine has finished,
@@ -208,8 +230,11 @@ class Progress(object):
     # (automatically when progress reaches 1.0).
     def finish(self):
         global current_Progress_
-        if self.parent != False:
+        if self.parent:
             current_Progress_ = self.parent
+        elif self.logging and self.timing:
+            import log
+            log.debug("Total time taken: %s seconds.", self.totalTime)
 
 
     # Method useful for smaller tasks that take a number
@@ -240,10 +265,9 @@ class Progress(object):
     # Method useful for tasks that process data in loops,
     # where each loop is a step(), and the progress
     # inside the loop can be updated with substep().
-    def substep(self, amount):
-
+    def substep(self, amount, desc = None):
         temp = self.progress
-        self.update(temp + amount/self.steps)
+        self.update(temp + amount/self.steps, desc)
         self.progress = temp
 
 
