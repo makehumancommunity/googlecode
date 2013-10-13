@@ -212,7 +212,7 @@ def addTPoseAtFrame0(rig, scn):
         rig.McpTPoseFile = mcp.srcArmature.tposeFile
         setTPose(rig, scn)
     else:
-        setRestPose(rig, scn)
+        setRestPose(rig)
     for pb in rig.pose.bones:
         if pb.rotation_mode == 'QUATERNION':
             pb.keyframe_insert('rotation_quaternion', group=pb.name)
