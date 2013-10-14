@@ -74,6 +74,8 @@ def exportMd5(human, filepath, config):
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
 
+    humanBBox = human.meshData.calcBBox()
+
     progress(0, 0.2, "Collecting Objects")
     rmeshes,_amt = exportutils.collect.setupObjects(
         name,
@@ -101,7 +103,7 @@ def exportMd5(human, filepath, config):
         bones = human.getSkeleton().getBones()
         boneprog = Progress(len(bones))
         for bone in bones:
-            writeBone(f, bone, human, config)
+            writeBone(f, bone, humanBBox, config)
             boneprog.step()
     f.write('}\n\n')
 
@@ -258,7 +260,7 @@ def exportMd5(human, filepath, config):
                 co = co.copy() * scale
 
                 if config.feetOnGround:
-                    co[1] += (getFeetOnGroundOffset(human) * scale)
+                    co[1] += (getFeetOnGroundOffset(humanBBox) * scale)
 
                 if config.zUp:
                     co = co[[0,2,1]] * [1,-1,1]
@@ -274,12 +276,12 @@ def exportMd5(human, filepath, config):
     if human.getSkeleton() and hasattr(human, 'animations'):
         animprog = Progress(len(human.animations))
         for anim in human.animations:
-            writeAnimation(filepath, human, config, anim.getAnimationTrack())
+            writeAnimation(filepath, human, humanBBox, config, anim.getAnimationTrack())
             animprog.step()
 
     progress(1, None, "MD5 export finished. Exported file: %s" % filepath)
 
-def writeBone(f, bone, human, config):
+def writeBone(f, bone, humanBBox, config):
     """
     This function writes out information describing one joint in MD5 format.
 
@@ -298,7 +300,7 @@ def writeBone(f, bone, human, config):
     pos = bone.getRestHeadPos() * scale
 
     if config.feetOnGround:
-        pos[1] += (getFeetOnGroundOffset(human) * scale)
+        pos[1] += (getFeetOnGroundOffset(humanBBox) * scale)
 
     if config.zUp:
         #transformationMat = bone.matRestGlobal.copy()
@@ -321,7 +323,7 @@ def writeBone(f, bone, human, config):
         pos[0], pos[1], pos[2],
         qx, qy, qz))
 
-def writeAnimation(filepath, human, config, animTrack):
+def writeAnimation(filepath, human, humanBBox, config, animTrack):
     log.message("Exporting animation %s.", animTrack.name)
     numJoints = len(human.getSkeleton().getBones()) + 1
 
@@ -352,9 +354,9 @@ def writeAnimation(filepath, human, config, animTrack):
     f.write('}\n\n')
 
     f.write('bounds {\n')
-    bounds = human.meshData.calcBBox()
+    bounds = humanBBox
     if config.feetOnGround:
-        bounds[:][1] += getFeetOnGroundOffset(human)
+        bounds[:][1] += getFeetOnGroundOffset(humanBBox)
     if config.zUp:
         bounds[0] = bounds[0][[0,2,1]] * [1,-1,1]
         bounds[1] = bounds[1][[0,2,1]] * [1,-1,1]
@@ -371,7 +373,7 @@ def writeAnimation(filepath, human, config, animTrack):
     for bone in skel.getBones():
         pos = bone.getRestOffset() * scale
         if config.feetOnGround and not bone.parent:
-            pos[1] += (getFeetOnGroundOffset(human) * scale)
+            pos[1] += (getFeetOnGroundOffset(humanBBox) * scale)
 
         transformationMat = bone.matRestRelative.copy()
         if config.zUp:
@@ -432,7 +434,6 @@ def copyTexture(texture, human, config):
     return newpath
 
 
-def getFeetOnGroundOffset(human):
-    bBox = human.meshData.calcBBox()
-    dy = bBox[0][1]
+def getFeetOnGroundOffset(humanBBox):
+    dy = humanBBox[0][1]
     return -dy
