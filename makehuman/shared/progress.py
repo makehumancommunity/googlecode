@@ -230,11 +230,13 @@ class Progress(object):
     # (automatically when progress reaches 1.0).
     def finish(self):
         global current_Progress_
-        if self.parent:
-            current_Progress_ = self.parent
-        elif self.logging and self.timing:
+
+        if not self.parent and self.logging and self.timing:
             import log
             log.debug("Total time taken: %s seconds.", self.totalTime)
+
+        if self.parent != False:
+            current_Progress_ = self.parent
 
 
     # Method useful for smaller tasks that take a number
