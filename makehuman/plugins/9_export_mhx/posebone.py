@@ -95,7 +95,7 @@ def writePoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockSc
     if customShape:
         fp.write("    custom_shape Refer Object %s ; \n" % customShape)
 
-    rotMode = rotationMode(poseFlags, amt.options)
+    rotMode = getRotationMode(poseFlags, amt.options)
     fp.write("    rotation_mode '%s' ;\n" % rotMode)
 
     fp.write(
@@ -121,11 +121,10 @@ def writePoseBone(fp, amt, bone, customShape, boneGroup, locArg, lockRot, lockSc
     return
 
 
-def rotationMode(poseFlags, options):
+def getRotationMode(poseFlags, options):
     if options.useQuaternionsOnly:
         return 'QUATERNION'
     else:
         modes = ['QUATERNION', 'XYZ', 'XZY', 'YXZ', 'YZX', 'ZXY', 'ZYX']
         return modes[(poseFlags&P_ROTMODE) >> 8]
-
 

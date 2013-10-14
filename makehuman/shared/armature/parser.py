@@ -686,7 +686,6 @@ class Parser:
             and constrain them to copy the partially.
             E.g. forearm.L => DEF-forearm.01.L, DEF-forearm.02.L, DEF-forearm.03.L
         """
-
         amt = self.armature
         options = amt.options
 
@@ -697,18 +696,20 @@ class Parser:
                 bname = base + ext
                 head,tail = self.headsTails[bname]
                 defParent = self.getDeformParent(bname, boneInfo)
+                bone = boneInfo[bname]
+                rotMode = bone.poseFlags & P_ROTMODE
 
                 if npieces == 2:
                     self.headsTails[defName1] = (head, ((0.5,head),(0.5,tail)))
                     self.headsTails[defName2] = (((0.5,head),(0.5,tail)), tail)
 
                     defBone1 = boneInfo[defName1] = Bone(amt, defName1)
-                    defBone1.fromInfo((bname, defParent, F_DEF+F_CON, L_DEF))
+                    defBone1.fromInfo((bname, defParent, F_DEF+F_CON, L_DEF, rotMode))
                     self.addConstraint(defName1, ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)]))
 
                     defBone2 = boneInfo[defName2] = Bone(amt, defName2)
-                    defBone2.fromInfo((bname, defBone1, F_DEF, L_DEF))
-                    self.addConstraint(defName1, ('CopyRot', C_LOCAL, 1, [target, target+ext, (0,1,0), (0,0,0), True]))
+                    defBone2.fromInfo((bname, defBone1, F_DEF, L_DEF, rotMode))
+                    self.addConstraint(defName2, ('CopyRot', C_LOCAL, 1, [target, target+ext, (0,1,0), (0,0,0), True]))
 
                 elif npieces == 3:
                     self.headsTails[defName1] = (head, ((0.667,head),(0.333,tail)))
@@ -716,16 +717,17 @@ class Parser:
                     self.headsTails[defName3] = (((0.333,head),(0.667,tail)), tail)
 
                     defBone1 = boneInfo[defName1] = Bone(amt, defName1)
-                    defBone1.fromInfo((bname, defParent, F_DEF+F_CON, L_DEF, P_YZX))
+                    defBone1.fromInfo((bname, defParent, F_DEF+F_CON, L_DEF, rotMode))
+                    #self.addConstraint(defName1, ('CopyTrans', 0, 1, [bname, bname, 0]))
+                    self.addConstraint(defName1, ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)]))
                     self.addConstraint(defName1, ('CopyRot', C_LOCAL, 1, [bname, bname, (1,0,1), (0,0,0), False]))
-                    #self.addConstraint(defName1, ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)]))
 
                     defBone2 = boneInfo[defName2] = Bone(amt, defName2)
-                    defBone2.fromInfo((bname, defName1, F_DEF+F_CON, L_DEF, P_YZX))
+                    defBone2.fromInfo((bname, defName1, F_DEF+F_CON, L_DEF, rotMode))
                     self.addConstraint(defName2, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
 
                     defBone3 = boneInfo[defName3] = Bone(amt, defName3)
-                    defBone3.fromInfo((bname, defName2, F_DEF+F_CON, L_DEF, P_YZX))
+                    defBone3.fromInfo((bname, defName2, F_DEF+F_CON, L_DEF, rotMode))
                     self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
 
 
