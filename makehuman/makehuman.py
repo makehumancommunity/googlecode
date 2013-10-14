@@ -85,23 +85,6 @@ def getBasemeshVersion():
     """
     return meshVersion
 
-
-def find_mydocuments():
-    os.environ['MYDOCUMENTS'] = os.path.expanduser('~')
-    if sys.platform == 'win32':
-        import _winreg
-        try:
-            k = _winreg.HKEY_CURRENT_USER
-            for x in ['Software', 'Microsoft', 'Windows', 'CurrentVersion', 'Explorer', 'Shell Folders']:
-                k = _winreg.OpenKey(k, x)
-
-            name, type_ = _winreg.QueryValueEx(k, 'Personal')
-
-            if type_ == 1:
-                os.environ['MYDOCUMENTS'] = name
-        except Exception as e:
-            print >> sys.stderr,  "error: " + format(str(e))
-
 def get_revision_svn_info():
     # Try getting svn revision by calling svn info (will only work in linux
     #  and windows where sliksvn is installed)
@@ -179,11 +162,13 @@ def get_svn_revision_1():
 
 def get_svn_revision():
     #[BAL 07/13/2013] use the VERSION file if it exists. This is created and managed using pyinstaller.
-    if os.path.exists(os.path.join("core","VERSION")):
-        version_ = open(os.path.join("core","VERSION")).read().strip()
+    import getpath
+    versionFile = getpath.getSysPath("VERSION")
+    if os.path.exists(versionFile):
+        version_ = open(versionFile).read().strip()
         print >> sys.stderr,  "VERSION file detected using value from version file: %s" % version_
         os.environ['SVNREVISION'] = version_
-        os.environ['SVNREVISION_SOURCE'] = "core/VERSION static revision data"
+        os.environ['SVNREVISION_SOURCE'] = "VERSION static revision data"
     else:
         print >> sys.stderr,  "NO VERSION file detected retrieving revision info from SVN"
         # Set SVN rev in environment so it can be used elsewhere
@@ -202,6 +187,9 @@ def recursiveDirNames(root):
     return(pathlist)
 
 def set_sys_path():
+    """
+    Append local module folders to python search path.
+    """
     #[BAL 07/11/2013] make sure we're in the right directory
     if sys.platform != 'darwin':
         os.chdir(sys.path[0])
@@ -214,22 +202,16 @@ stderr_filename = None
 
 def get_platform_paths():
     global stdout_filename, stderr_filename
+    import getpath
+
+    os.environ['MYDOCUMENTS'] = getpath.getHomePath()
+    home = getpath.getPath()
 
     if sys.platform == 'win32':
-        find_mydocuments()
-        home = os.environ['MYDOCUMENTS']
-        home = os.path.join(home,'makehuman')
-        if not os.path.exists(home):
-            os.makedirs(home)
         stdout_filename = os.path.join(home, "python_out.txt")
         stderr_filename = os.path.join(home, "python_err.txt")
 
     elif sys.platform.startswith("darwin"):
-        home = os.path.join(os.path.expanduser('~'),"Documents")
-        home = os.path.join(home,"MakeHuman")
-        if not os.path.exists(home):
-            os.makedirs(home)            
-
         stdout_filename = os.path.join(home, "makehuman-output.txt")
         stderr_filename = os.path.join(home, "makehuman-error.txt")
 
@@ -244,6 +226,9 @@ def close_standard_streams():
     sys.stderr.close()
 
 def make_user_dir():
+    """
+    Make sure MakeHuman folder storing per-user files exists.
+    """
     import getpath
     userDir = getpath.getPath('')
     if not os.path.isdir(userDir):
@@ -284,18 +269,22 @@ def parse_arguments():
     return argOptions
 
 def main():
-    get_platform_paths()
-    redirect_standard_streams()
-    set_sys_path()
-    if isRelease():
-        os.environ['SVNREVISION'] = ""
-    else:
-        get_svn_revision()
-    args = parse_arguments()
-    make_user_dir()
-    init_logging()
-    debug_dump()
+    try:
+        set_sys_path()
+        make_user_dir()
+        get_platform_paths()
+        redirect_standard_streams()
+        if isRelease():
+            os.environ['SVNREVISION'] = ""
+        else:
+            get_svn_revision()
+        args = parse_arguments()
+        init_logging()
+    except Exception as e:
+        print >> sys.stderr,  "error: " + format(str(e))
+        return
 
+    debug_dump()
     from core import G
     G.args = args
 
