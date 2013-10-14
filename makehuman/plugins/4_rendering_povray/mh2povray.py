@@ -71,9 +71,13 @@ def povrayExport(settings):
     povwatchTimer = 0
     def povwatch():
         if povwatchApp.poll() is not None:
-            gui3d.app.getCategory('Rendering').getTaskByName('Viewer').setImage(povwatchPath)
-            mh.changeTask('Rendering', 'Viewer')
-            gui3d.app.statusPersist('Rendering complete')
+            if os.path.exists(povwatchPath):
+                gui3d.app.getCategory('Rendering').getTaskByName('Viewer').setImage(povwatchPath)
+                mh.changeTask('Rendering', 'Viewer')
+                gui3d.app.statusPersist('Rendering complete. Output path: %s' % povwatchPath)
+            else:
+                log.notice("POV - Ray did not produce an output file!")
+                gui3d.app.statusPersist('Rendering failed!')
             mh.removeTimer(povwatchTimer)
 
     settings['name'] = re.sub('[^0-9a-zA-Z]+', '_', getHumanName())
@@ -126,6 +130,7 @@ def povrayExport(settings):
         povwatchApp = subprocess.Popen(cmdLine, cwd = os.path.dirname(path))
         gui3d.app.statusPersist('POV - Ray is rendering.')
         povwatchPath = path.replace('.inc','.png')
+        os.remove(povwatchPath) # Clean up older render with same name.
         povwatchTimer = mh.addTimer(1000, lambda: povwatch())
 
     else:
