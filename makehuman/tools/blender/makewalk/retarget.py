@@ -398,6 +398,7 @@ def changeTargetData(rig, scn):
         ("MhaKneeFollowsHip", 0),
         ("MhaKneeFollowsFoot", 0),
         ("MhaArmHinge", 0),
+        ("MhaLegHinge", 0),
         ]
 
     for (key, value) in permProps:

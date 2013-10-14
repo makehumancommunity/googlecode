@@ -201,7 +201,7 @@ class Bone:
 
 
     def __repr__(self):
-        return "<Bone %s %s %s>" % (self.name, self.parent, self.children)
+        return "<Bone %s %s %s>" % (self.name, self.deform, self.parent, self.children)
 
 
     def fromInfo(self, info):
@@ -260,7 +260,7 @@ class Bone:
         if self.parent:
             self.parent = renameBone(amt.bones[self.parent], locale)
         for cns in self.constraints:
-            if cns.type in ["Transform", "StretchTo", "TrackTo", "IK"]:
+            if cns.type in ["Transform", "StretchTo", "TrackTo", "IK", "CopyTrans"]:
                 cns.subtar = renameBone(amt.bones[cns.subtar], locale)
         newbones[self.name] = self
 

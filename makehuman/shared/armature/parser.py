@@ -295,7 +295,7 @@ class Parser:
 
         for bname,bone in boneInfo.items():
             if bone.parent:
-                bone.parent = self.getBoneParentName(bone.parent, boneInfo)
+                bone.parent = self.getRealBoneName(bone.parent, boneInfo)
                 parent = boneInfo[bone.parent]
                 parent.children.append(bone)
             elif self.master:
@@ -312,12 +312,14 @@ class Parser:
             self.sortBones(root, amt.hierarchy)
 
         for bname,data in self.customShapes.items():
+            bname = self.getRealBoneName(bname, boneInfo)
             try:
                 amt.bones[bname].customShape = data
             except KeyError:
                 log.message("Warning: custom shape for undefined bone %s" % bname)
 
         for bname,data in self.constraints.items():
+            bname = self.getRealBoneName(bname, boneInfo)
             try:
                 amt.bones[bname].constraints = data
             except KeyError:
@@ -329,22 +331,26 @@ class Parser:
             boneInfo[bname].parent = parent
 
 
-    def getBoneParentName(self, parname, boneInfo):
+    def getRealBoneName(self, bname, boneInfo):
         try:
-            boneInfo[parname]
-            return parname
+            boneInfo[bname]
+            return bname
         except KeyError:
             pass
 
-        nodefParent = parname[4:]
-        log.message("Missing parent %s. Trying %s" % (parname, nodefParent))
-        try:
-            boneInfo[nodefParent]
-            return nodefParent
-        except KeyError:
-            log.message("Missing %s and %s" % (parname, nodefParent))
-            log.message(str(boneInfo.keys()))
-            halt
+        nodefBone = bname
+        if bname[0:4] == "DEF-":
+            nodefBone = bname[4:]
+            log.message("Missing bone %s. Trying %s" % (bname, nodefBone))
+            try:
+                boneInfo[nodefBone]
+                return nodefBone
+            except KeyError:
+                pass
+
+        #log.message("Missing %s and %s" % (bname, nodefBone))
+        #log.message(str(boneInfo.keys()))
+        #halt
 
 
     def setup(self):
@@ -643,7 +649,8 @@ class Parser:
                 continue
 
             base,ext = splitBoneName(bname)
-            if not (options.useSplitBones and base in self.splitBones.keys()):
+            if not ((options.useSplitBones and
+                     base in self.splitBones.keys())):
                 headTail = self.headsTails[bname]
                 bone.deform = False
                 defParent = self.getDeformParent(bname, boneInfo)
