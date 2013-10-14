@@ -161,7 +161,7 @@ os.system(rsyncbin)
 
 svnrevfile = os.path.join(docdir,"SVNREV.txt")
 os.system("svn info " + scriptdir + " | grep Revision | cut -f 2 --delimiter=' ' > " + svnrevfile)
-shutil.copy(svnrevfile, os.path.join(programdir, 'core', 'VERSION'))
+shutil.copy(svnrevfile, os.path.join(programdir, 'VERSION'))
 
 rsynccontrol = rsync + " " + rsync_common_args
 rsynccontrol = rsynccontrol + " " + srccontrol + "/ " + controldir + "/"

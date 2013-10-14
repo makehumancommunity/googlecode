@@ -34,8 +34,8 @@ SVNREV = SvnInfo()
 VERSION= makehuman.getVersionStr(verbose=False)
 VERSION_FN= str(SVNREV)
 
-### Write core/VERSION file
-vfile = open(os.path.join("core","VERSION"),"w")
+### Write VERSION file
+vfile = open("VERSION","w")
 vfile.write(SVNREV)
 vfile.close()
 
