@@ -367,6 +367,12 @@ class MaterialEditorTaskView(gui3d.TaskView):
         gui3d.app.statusPersist('')
         super(MaterialEditorTaskView, self).onHide(arg)
 
+    def onHumanChanged(self, event):
+        if event.change == 'reset':
+            self.reloadMaterial()
+        elif event.change == 'smooth':
+            self.reloadMaterial()
+
 class ColorValue(gui.GroupBox):
     def __init__(self, name, value):
         super(ColorValue, self).__init__(name)
@@ -697,9 +703,6 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
 
     value = property(getValue, setValue)
 
-    def onHumanChanging(self, event):
-        if event.change == 'reset':
-            self.reloadMaterial()
 
 def load(app):
     category = app.getCategory('Utilities')
