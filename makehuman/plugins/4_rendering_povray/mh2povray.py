@@ -130,7 +130,8 @@ def povrayExport(settings):
         povwatchApp = subprocess.Popen(cmdLine, cwd = os.path.dirname(path))
         gui3d.app.statusPersist('POV - Ray is rendering.')
         povwatchPath = path.replace('.inc','.png')
-        os.remove(povwatchPath) # Clean up older render with same name.
+        if os.path.exists(povwatchPath):
+            os.remove(povwatchPath)
         povwatchTimer = mh.addTimer(1000, lambda: povwatch())
 
     else:
