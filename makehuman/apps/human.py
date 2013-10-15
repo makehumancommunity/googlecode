@@ -237,6 +237,7 @@ class Human(guicommon.Object):
         for obj in self.clothesObjs.values():
             if obj:
                 obj.setSubdivided(*args, **kwargs)
+        self.callEvent('onChanged', events3d.HumanEvent(self, 'smooth'))
 
     def setGender(self, gender):
         """
