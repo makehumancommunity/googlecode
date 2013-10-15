@@ -42,13 +42,13 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
 
         self.layout = gui.QtGui.QGridLayout(self)
 
-        self.hObjectSelector = []
+        self.objectSelector = []
         self.humanBox = gui.GroupBox('Human')
         self.layout.addWidget(self.humanBox)
-        self.skinRadio = self.humanBox.addWidget(gui.RadioButton(self.hObjectSelector, "Skin", selected=True))
-        self.hairRadio = self.humanBox.addWidget(gui.RadioButton(self.hObjectSelector, "Hair", selected=False))
-        self.eyesRadio = self.humanBox.addWidget(gui.RadioButton(self.hObjectSelector, "Eyes", selected=False))
-        self.genitalsRadio = self.humanBox.addWidget(gui.RadioButton(self.hObjectSelector, "Genitals", selected=False))
+        self.skinRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Skin", selected=True))
+        self.hairRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Hair", selected=False))
+        self.eyesRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Eyes", selected=False))
+        self.genitalsRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Genitals", selected=False))
 
         @self.skinRadio.mhEvent
         def onClicked(event):
@@ -74,7 +74,7 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
                 self.selected = 'genitals'
                 self.callEvent('onActivate', self.selected)
 
-        self.objectSelector = []
+        self.humanObjectCount = len(self.objectSelector)
         self.clothesBox = gui.GroupBox('Clothes')
         self.layout.addWidget(self.clothesBox)
         self.clothesSelections = []
@@ -147,10 +147,10 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
         """
         human = self.human
         # Only keep first 3 radio btns (human body parts)
-        for radioBtn in self.objectSelector[:]:
+        for radioBtn in self.objectSelector[self.humanObjectCount:]:
             radioBtn.hide()
             radioBtn.destroy()
-        del self.objectSelector[:]
+        del self.objectSelector[self.humanObjectCount:]
 
         self.clothesSelections = []
         clothesList = human.clothesObjs.keys()
