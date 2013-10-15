@@ -60,6 +60,7 @@ class ViewerTaskView(gui3d.PoseModeTaskView):
     def setImage(self, path):
         self.path = path
         self.image.setImage(path)
+        log.message('Image "%s" loaded in image viewer.' % path)
 
 def load(app):
     category = app.getCategory('Rendering')
