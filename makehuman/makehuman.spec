@@ -34,8 +34,10 @@ SVNREV = SvnInfo()
 VERSION= makehuman.getVersionStr(verbose=False)
 VERSION_FN= str(SVNREV)
 
+VERSION_FILE_PATH = os.path.join('data', 'VERSION')
+
 ### Write VERSION file
-vfile = open("VERSION","w")
+vfile = open(VERSION_FILE_PATH,"w")
 vfile.write(SVNREV)
 vfile.close()
 
@@ -139,4 +141,4 @@ elif sys.platform == 'win32':
             fn = os.path.join(base, file)
             zip.write(fn, fn[rootlen:])                           
         
-os.remove(os.path.join("core","VERSION"))
+os.remove(VERSION_FILE_PATH)

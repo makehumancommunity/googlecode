@@ -163,12 +163,12 @@ def get_svn_revision_1():
 def get_svn_revision():
     #[BAL 07/13/2013] use the VERSION file if it exists. This is created and managed using pyinstaller.
     import getpath
-    versionFile = getpath.getSysPath("VERSION")
+    versionFile = getpath.getSysDataPath("VERSION")
     if os.path.exists(versionFile):
         version_ = open(versionFile).read().strip()
-        print >> sys.stderr,  "VERSION file detected using value from version file: %s" % version_
+        print >> sys.stderr,  "data/VERSION file detected using value from version file: %s" % version_
         os.environ['SVNREVISION'] = version_
-        os.environ['SVNREVISION_SOURCE'] = "VERSION static revision data"
+        os.environ['SVNREVISION_SOURCE'] = "data/VERSION static revision data"
     else:
         print >> sys.stderr,  "NO VERSION file detected retrieving revision info from SVN"
         # Set SVN rev in environment so it can be used elsewhere
