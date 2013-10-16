@@ -81,12 +81,9 @@ def writeMaterialFile(fp, mat, name, outdir):
         'name %sMaterial\n' % name +
         '\n' +
         '// Color shading attributes\n'
-        'ambientColor 1.0 1.0 1.0\n' +
-        'diffuseColor  %.4g %.4g %.4g\n' % tuple(mat.diffuse_color) +
-        'diffuseIntensity %.4g\n' % mat.diffuse_intensity +
-        'specularColor  %.4g %.4g %.4g\n' % tuple(mat.specular_color) +
-        'specularIntensity %.4g\n' % mat.specular_intensity +
-        'specularHardness %.4g\n' % mat.specular_hardness +
+        'diffuseColor  %.4g %.4g %.4g\n' % tuple(mat.diffuse_intensity * mat.diffuse_color) +
+        'specularColor  %.4g %.4g %.4g\n' % tuple(mat.specular_intensity * mat.specular_color) +
+        'shininess %.4g\n' % max(0, min(mat.specular_hardness/255, 1)) +
         'opacity %.4g\n' % mat.alpha +
         '\n' +
         '// Textures and properties\n')
