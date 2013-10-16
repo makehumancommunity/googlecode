@@ -61,18 +61,11 @@ def getHomePath():
         __home_path = os.path.expanduser('~')
         return __home_path
 
-def getPath(type = None):
+def getPath(subPath = ""):
     """
     Get MakeHuman folder that contains per-user files, located in the user home
     path.
     """
-    if isinstance(type, (str, unicode)):
-        typeStr = str(type)
-    elif type is None:
-        typeStr = ""
-    else:
-        raise TypeError("String expected")
-
     path = getHomePath()
 
     # Windows
@@ -88,21 +81,8 @@ def getPath(type = None):
     else:
         path = os.path.join(path, "makehuman")
 
-
-    if typeStr == "exports":
-        path = os.path.join(path, 'exports')
-    elif typeStr == "models":
-        path = os.path.join(path, 'models')
-    elif typeStr == "grab":
-        path = os.path.join(path, 'grab')
-    elif typeStr == "render":
-        path = os.path.join(path, 'render')
-    elif typeStr == "scenes":
-        path = os.path.join(path, 'scenes')
-    elif typeStr == "":
-        pass
-    else:
-        raise ValueError("Unknown value '%s' for getPath()!" % typeStr)
+    if subPath:
+        path = os.path.join(subPath)
 
     return formatPath(path)
 
