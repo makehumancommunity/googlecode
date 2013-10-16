@@ -323,9 +323,9 @@ class Material(object):
                 self._shader = getShaderPath(words[1], self.filepath)
             elif words[0] == "uvMap":
                 self._uvMap = getFilePath(words[1], self.filepath)
-                from getpath import getSysDataPath
+                from getpath import getSysDataPath, canonicalPath
                 if self._uvMap and \
-                   os.path.realpath(self._uvMap) == os.path.realpath(getSysDataPath('uvs/default.obj')):
+                   canonicalPath(self._uvMap) == canonicalPath(getSysDataPath('uvs/default.obj')):
                     # uvs/default.obj is a meta-file that refers to the default uv set
                     self._uvMap = None
             elif words[0] == "shaderParam":
@@ -472,9 +472,9 @@ class Material(object):
 
     def setUVMap(self, uvMap):
         self._uvMap = getFilePath(uvMap, self.filepath)
-        from getpath import getSysDataPath
+        from getpath import getSysDataPath, canonicalPath
         if self._uvMap and \
-           os.path.realpath(self._uvMap) == os.path.realpath(getSysDataPath('uvs/default.obj')):
+           canonicalPath(self._uvMap) == canonicalPath(getSysDataPath('uvs/default.obj')):
             # uvs/default.obj is a meta-file that refers to the default uv set
             self._uvMap = None
 

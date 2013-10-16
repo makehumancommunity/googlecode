@@ -31,6 +31,10 @@ def formatPath(path):
     return path.replace("\\", "/")
 
 def canonicalPath(path):
+    """
+    Return canonical name for location specified by path.
+    Useful for comparing paths.
+    """
     os.path.normpath(os.path.realpath(path))
 
 def getHomePath():
@@ -131,6 +135,6 @@ def isSubPath(subpath, path):
     """
     Verifies whether subpath is within path.
     """
-    subpath = os.path.normpath(os.path.realpath(subpath))
-    path = os.path.normpath(os.path.realpath(path))
+    subpath = canonicalPath(subpath)
+    path = canonicalPath(path)
     return commonprefix([subpath, path]) == path
