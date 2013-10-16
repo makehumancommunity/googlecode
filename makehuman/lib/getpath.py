@@ -27,6 +27,9 @@ import os
 
 __home_path = None
 
+def formatPath(path):
+    return path.replace("\\", "/")
+
 def getHomePath():
     """
     Find the user home path.
@@ -45,10 +48,10 @@ def getHomePath():
         k = _winreg.OpenKey(_winreg.HKEY_CURRENT_USER, keyname)
         value, type_ = _winreg.QueryValueEx(k, 'Personal')
         if type_ == _winreg.REG_EXPAND_SZ:
-            __home_path = _winreg.ExpandEnvironmentStrings(value)
+            __home_path = formatPath(_winreg.ExpandEnvironmentStrings(value))
             return __home_path
         elif type_ == _winreg.REG_SZ:
-            __home_path = value
+            __home_path = formatPath(value)
             return __home_path
         else:
             raise RuntimeError("Couldn't determine user folder")
@@ -87,28 +90,31 @@ def getPath(type = None):
 
 
     if typeStr == "exports":
-        return os.path.join(path, 'exports')
+        path = os.path.join(path, 'exports')
     elif typeStr == "models":
-        return os.path.join(path, 'models')
+        path = os.path.join(path, 'models')
     elif typeStr == "grab":
-        return os.path.join(path, 'grab')
+        path = os.path.join(path, 'grab')
     elif typeStr == "render":
-        return os.path.join(path, 'render')
+        path = os.path.join(path, 'render')
     elif typeStr == "scenes":
-        return os.path.join(path, 'scenes')
+        path = os.path.join(path, 'scenes')
     elif typeStr == "":
-        return path
+        pass
     else:
         raise ValueError("Unknown value '%s' for getPath()!" % typeStr)
+
+    return formatPath(path)
 
 def getSysDataPath(subPath = ""):
     """
     Path to the data folder that is installed with MakeHuman system-wide.
     """
     if subPath:
-        return getSysPath( os.path.join("data", subPath) )
+        path = getSysPath( os.path.join("data", subPath) )
     else:
-        return getSysPath("data/")
+        path = getSysPath("data/")
+    return formatPath(path)
 
 def getSysPath(subPath):
     """
@@ -118,9 +124,10 @@ def getSysPath(subPath):
     contains system-wide data (for all users).
     """
     if subPath:
-        return os.path.join(subPath)
+        path = os.path.join(subPath)
     else:
-        return os.path.join(".")
+        path = os.path.join(".")
+    return formatPath(path)
 
 
 def _allnamesequal(name):
