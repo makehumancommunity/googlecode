@@ -168,7 +168,7 @@ def selectVerts(verts, ob):
 #
 
 theShapeKeys = [
-    'Breathe',
+    #'Breathe',
     ]
 
 #
@@ -332,30 +332,11 @@ def findClothes(context, bob, pob, log):
         v2 = base.vertices[bVerts[2]]
 
         est = bWts[0]*v0.co + bWts[1]*v1.co + bWts[2]*v2.co
-        norm = bWts[0]*v0.normal + bWts[1]*v1.normal + bWts[2]*v2.normal
         diff = pv.co - est
-        if useProjection:
-            proj = diff.dot(norm)
-            if alwaysOutside and proj < minOffset:
-                proj = minOffset
-            bestFaces.append((pv, False, bVerts, bWts, proj))
-        else:
-            bestFaces.append((pv, False, bVerts, bWts, diff))
+        bestFaces.append((pv, False, bVerts, bWts, diff))
 
-    if badVerts:
-        print("Optimal triangles not found for the following verts")
-        n = 0
-        nmax = len(badVerts)
-        string = ""
-        for vn in badVerts:
-            string += "%6d " % vn
-            n += 1
-            if n%8 == 0:
-                print(string)
-                string = ""
-        print(string)
-        print("Done")
     return bestFaces
+
 
 #
 #    minWeight(wts)
@@ -717,28 +698,8 @@ def writeStuff(fp, pob, context, matfile):
         if getattr(scn, "MC" + skey):
             fp.write("shapekey %s\n" % skey)
 
-    me = pob.data
-    if scn.MCAllUVLayers:
-        if me.uv_textures:
-            for layer,uvtex in enumerate(me.uv_textures):
-                fp.write("uvtex_layer %d %s\n" % (layer, uvtex.name.replace(" ","_")))
-            fp.write("objfile_layer %d\n" % scn.MCTextureLayer)
-        writeTextures(fp, mc.goodName(pob.name), scn)
-    else:
-        if me.uv_textures:
-            uvtex0 = me.uv_textures[scn.MCTextureLayer]
-            fp.write("uvtex_layer 0 %s\n" % uvtex0.name.replace(" ","_"))
-            try:
-                uvtex1 = me.uv_textures[scn.MCMaskLayer]
-            except IndexError:
-                uvtex1 = uvtex0
-            if scn.MCUseMask and uvtex1 != uvtex0:
-                fp.write("uvtex_layer 1 %s\n" % uvtex1.name.replace(" ","_"))
-            fp.write("objfile_layer 0\n")
-
     if matfile:
         fp.write("material %s\n" % matfile)
-    fp.write("use_projection 0\n")
 
 
 #
@@ -775,11 +736,9 @@ def exportObjFile(context):
     fp.write("Exported from make_clothes.py\n")
 
     me = ob.data
-    for v in me.vertices:
-        fp.write("v %.4f %.4f %.4f\n" % (v.co[0], v.co[2], -v.co[1]))
 
-    for v in me.vertices:
-        fp.write("vn %.4f %.4f %.4f\n" % (v.normal[0], v.normal[2], -v.normal[1]))
+    vlist = ["v %.4f %.4f %.4f\n" % (v.co[0], v.co[2], -v.co[1]) for v in ob.data.vertices]
+    fp.write("".join(vlist))
 
     if me.uv_textures:
         (vertEdges, vertFaces, edgeFaces, faceEdges, faceNeighbors, uvFaceVertsList, texVertsList) = setupTexVerts(ob)
@@ -787,35 +746,43 @@ def exportObjFile(context):
         writeObjTextureData(fp, me, texVertsList[layer], uvFaceVertsList[layer])
     else:
         meFaces = getFaces(me)
+        flist = []
         for f in meFaces:
-            fp.write("f ")
-            for v in f.vertices:
-                fp.write("%d " % (v+1))
-            fp.write("\n")
+            string = "f "
+            for vn in f.vertices:
+                string += ("%d " % (vn+1))
+            flist.append(string + "\n")
+        fp.write("".join(flist))
 
     fp.close()
     print(objfile, "closed")
-    return
+
 
 def writeObjTextureData(fp, me, texVerts, uvFaceVerts):
     nTexVerts = len(texVerts)
+    vlist = []
     for vtn in range(nTexVerts):
         vt = texVerts[vtn]
-        fp.write("vt %.4f %.4f\n" % (vt[0], vt[1]))
+        vlist.append("vt %.4f %.4f\n" % (vt[0], vt[1]))
+    fp.write("".join(vlist))
+
     meFaces = getFaces(me)
+    flist = []
     for f in meFaces:
         uvVerts = uvFaceVerts[f.index]
-        fp.write("f ")
+        string = "f "
         for n,v in enumerate(f.vertices):
             (vt, uv) = uvVerts[n]
-            fp.write("%d/%d " % (v+1, vt+1))
-        fp.write("\n")
-    return
+            string += ("%d/%d " % (v+1, vt+1))
+        flist.append(string + "\n")
+    fp.write("".join(flist))
+
 
 def writeColor(fp, string1, string2, color, intensity):
     fp.write(
         "%s %.4f %.4f %.4f\n" % (string1, color[0], color[1], color[2]) +
         "%s %.4g\n" % (string2, intensity))
+
 
 def printScale(fp, bob, scn, name, index, vnums):
     if not scn.MCUseBoundary:
