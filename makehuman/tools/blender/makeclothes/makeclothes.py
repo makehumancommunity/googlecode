@@ -737,8 +737,8 @@ def exportObjFile(context):
 
     me = ob.data
 
-    vlist = ["v %.4f %.4f %.4f\n" % (v.co[0], v.co[2], -v.co[1]) for v in ob.data.vertices]
-    fp.write("".join(vlist))
+    vlist = ["v %.4f %.4f %.4f" % (v.co[0], v.co[2], -v.co[1]) for v in ob.data.vertices]
+    fp.write("\n".join(vlist) + "\n")
 
     if me.uv_textures:
         (vertEdges, vertFaces, edgeFaces, faceEdges, faceNeighbors, uvFaceVertsList, texVertsList) = setupTexVerts(ob)
@@ -748,11 +748,11 @@ def exportObjFile(context):
         meFaces = getFaces(me)
         flist = []
         for f in meFaces:
-            string = "f "
+            l = ["f"]
             for vn in f.vertices:
-                string += ("%d " % (vn+1))
-            flist.append(string + "\n")
-        fp.write("".join(flist))
+                l.append("%d" % (vn+1))
+            flist.append(" ".join(l))
+        fp.write("\n".join(flist))
 
     fp.close()
     print(objfile, "closed")
@@ -763,19 +763,19 @@ def writeObjTextureData(fp, me, texVerts, uvFaceVerts):
     vlist = []
     for vtn in range(nTexVerts):
         vt = texVerts[vtn]
-        vlist.append("vt %.4f %.4f\n" % (vt[0], vt[1]))
-    fp.write("".join(vlist))
+        vlist.append("vt %.4f %.4f" % (vt[0], vt[1]))
+    fp.write("\n".join(vlist) + "\n")
 
     meFaces = getFaces(me)
     flist = []
     for f in meFaces:
         uvVerts = uvFaceVerts[f.index]
-        string = "f "
+        l = ["f"]
         for n,v in enumerate(f.vertices):
             (vt, uv) = uvVerts[n]
-            string += ("%d/%d " % (v+1, vt+1))
-        flist.append(string + "\n")
-    fp.write("".join(flist))
+            l.append("%d/%d" % (v+1, vt+1))
+        flist.append(" ".join(l))
+    fp.write("\n".join(flist))
 
 
 def writeColor(fp, string1, string2, color, intensity):
