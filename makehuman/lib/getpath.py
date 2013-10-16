@@ -35,7 +35,7 @@ def canonicalPath(path):
     Return canonical name for location specified by path.
     Useful for comparing paths.
     """
-    os.path.normpath(os.path.realpath(path))
+    return os.path.normpath(os.path.realpath(path))
 
 def getHomePath():
     """
@@ -127,7 +127,7 @@ def commonprefix(paths, sep='/'):
     Source: http://rosettacode.org/wiki/Find_Common_Directory_Path#Python
     """
     from itertools import takewhile
-    
+
     bydirectorylevels = zip(*[p.split(sep) for p in paths])
     return sep.join(x[0] for x in takewhile(_allnamesequal, bydirectorylevels))
 
