@@ -30,6 +30,7 @@ from PyQt4 import QtCore, QtGui
 
 import qtgui as gui
 import mh
+import getpath
 
 class ThumbnailCache(object):
     aspect_mode = QtCore.Qt.KeepAspectRatioByExpanding
@@ -356,7 +357,7 @@ class MhmatFileLoader(FileHandler):
     def getPreview(self, filename):
         # TODO this makes filechooser loading quite slow for materials without a thumbnail, but it does provide a preview
         thumb = super(MhmatFileLoader, self).getPreview(filename)
-        if os.path.abspath(thumb) == os.path.abspath(self.fileChooser.notFoundImage):
+        if getpath.canonicalPath(thumb) == getpath.canonicalPath(self.fileChooser.notFoundImage):
             import material
             mat = material.fromFile(filename)
             if mat.diffuseTexture:
@@ -750,6 +751,6 @@ class IconListFileChooser(ListFileChooser):
 
 def abspath(path):
     if path:
-        return os.path.abspath(path)
+        return getpath.canonicalPath(path)
     else:
         return None

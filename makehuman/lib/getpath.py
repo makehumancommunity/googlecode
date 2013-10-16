@@ -30,6 +30,9 @@ __home_path = None
 def formatPath(path):
     return path.replace("\\", "/")
 
+def canonicalPath(path):
+    os.path.normpath(os.path.realpath(path))
+
 def getHomePath():
     """
     Find the user home path.
