@@ -5,7 +5,7 @@ import zipfile
 import os
 import os.path
 
-sys.path = sys.path + ['.']
+sys.path = sys.path + ['.', './lib']
 import makehuman
 
 def SvnInfo():
