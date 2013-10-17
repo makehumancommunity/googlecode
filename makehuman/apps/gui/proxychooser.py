@@ -349,10 +349,13 @@ class ProxyChooserTaskView(gui3d.TaskView):
     def onHide(self, event):
         gui3d.TaskView.onHide(self, event)
 
-    def onHumanChanging(self, event):
+    def onHumanChanged(self, event):
         if event.change == 'reset':
             self.resetSelection()
-        elif gui3d.app.settings.get('realtimeFitting', False):
+
+    def onHumanChanging(self, event):
+        if gui3d.app.settings.get('realtimeFitting', False):
+            # TODO else hide proxies?
             self.adaptAllProxies()
 
     def adaptAllProxies(self):
