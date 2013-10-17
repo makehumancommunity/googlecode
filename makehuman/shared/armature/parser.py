@@ -312,14 +312,14 @@ class Parser:
             self.sortBones(root, amt.hierarchy)
 
         for bname,data in self.customShapes.items():
-            bname = self.getRealBoneName(bname, boneInfo)
+            bname = self.getRealBoneName(bname, boneInfo, False)
             try:
                 amt.bones[bname].customShape = data
             except KeyError:
                 log.message("Warning: custom shape for undefined bone %s" % bname)
 
         for bname,data in self.constraints.items():
-            bname = self.getRealBoneName(bname, boneInfo)
+            bname = self.getRealBoneName(bname, boneInfo, False)
             try:
                 amt.bones[bname].constraints = data
             except KeyError:
@@ -331,7 +331,7 @@ class Parser:
             boneInfo[bname].parent = parent
 
 
-    def getRealBoneName(self, bname, boneInfo):
+    def getRealBoneName(self, bname, boneInfo, raiseError=True):
         try:
             boneInfo[bname]
             return bname
@@ -348,9 +348,12 @@ class Parser:
             except KeyError:
                 pass
 
-        #log.message("Missing %s and %s" % (bname, nodefBone))
-        #log.message(str(boneInfo.keys()))
-        #halt
+        if raiseError:
+            log.message("Missing %s and %s" % (bname, nodefBone))
+            log.message(str(boneInfo.keys()))
+            halt
+        else:
+            return bname
 
 
     def setup(self):
@@ -698,6 +701,7 @@ class Parser:
                 defParent = self.getDeformParent(bname, boneInfo)
                 bone = boneInfo[bname]
                 rotMode = bone.poseFlags & P_ROTMODE
+                rotMode = P_YZX
 
                 if npieces == 2:
                     self.headsTails[defName1] = (head, ((0.5,head),(0.5,tail)))
@@ -718,9 +722,8 @@ class Parser:
 
                     defBone1 = boneInfo[defName1] = Bone(amt, defName1)
                     defBone1.fromInfo((bname, defParent, F_DEF+F_CON, L_DEF, rotMode))
-                    #self.addConstraint(defName1, ('CopyTrans', 0, 1, [bname, bname, 0]))
                     self.addConstraint(defName1, ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)]))
-                    self.addConstraint(defName1, ('CopyRot', C_LOCAL, 1, [bname, bname, (1,0,1), (0,0,0), False]))
+                    #self.addConstraint(defName1, ('CopyRot', C_LOCAL, 1, [bname, bname, (1,0,1), (0,0,0), False]))
 
                     defBone2 = boneInfo[defName2] = Bone(amt, defName2)
                     defBone2.fromInfo((bname, defName1, F_DEF+F_CON, L_DEF, rotMode))
