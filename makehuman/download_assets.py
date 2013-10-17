@@ -25,6 +25,7 @@ Simple download script to fetch additional assets from http.
 import os
 import urllib2
 import sys
+import shutil
 
 sys.path = ["./lib"] + sys.path
 from getpath import getPath
@@ -79,32 +80,29 @@ def downloadFile(url, destinationFolder, fileProgress):
 if __name__ == '__main__':
     baseUrl = "http://download.tuxfamily.org/makehuman/a8/base/"
 
+    # Remove previously downloaded assets
+    print "Removing old downloaded content"
+    oldPaths = [getPath('data/hair/hairstyle01'), getPath('data/hair/hairstyle02')]
+    for oldPath in oldPaths:
+        if os.path.exists(oldPath):
+            shutil.rmtree(oldPath)
+
     # Hardcoded for now
-    TOTAL_FILES = 10
-    fileUrls = ["hairstyles/hairstyle01/brown-blonde.png", 
-                "hairstyles/hairstyle01/hairstyle01.mhclo", 
-                "hairstyles/hairstyle01/hairstyle01.mhmat", 
-                "hairstyles/hairstyle01/hairstyle01.obj", 
-                "hairstyles/hairstyle01/hairstyle01.thumb"]
+    TOTAL_FILES = 8
+    fileUrls = ["hairstyles/hairtype01/red-brown-3.png", 
+                "hairstyles/hairtype01/hairtype01.mhmat", 
+                "hairstyles/hairtype01/longhair01.mhclo", 
+                "hairstyles/hairtype01/longhair01.obj", 
+                "hairstyles/hairtype01/longhair01.thumb",
+                "hairstyles/hairtype01/mediumhair01.mhclo", 
+                "hairstyles/hairtype01/mediumhair01.obj", 
+                "hairstyles/hairtype01/mediumhair01.thumb"]
 
     fIdx = 0
     for url in fileUrls:
         url = baseUrl+url
         fileProgress = round(100 * float(fIdx)/TOTAL_FILES, 2)
-        downloadFile(url, getPath('data/hair/hairstyle01'), fileProgress)
-        fIdx += 1
-
-
-    fileUrls = ["hairstyles/hairstyle02/brown-blonde.png", 
-                "hairstyles/hairstyle02/hairstyle02.mhclo", 
-                "hairstyles/hairstyle02/hairstyle02.mhmat", 
-                "hairstyles/hairstyle02/hairstyle02.obj", 
-                "hairstyles/hairstyle02/hairstyle02.thumb"]
-
-    for url in fileUrls:
-        url = baseUrl+url
-        fileProgress = round(100 * float(fIdx)/TOTAL_FILES, 2)
-        downloadFile(url, getPath('data/hair/hairstyle02'), fileProgress)
+        downloadFile(url, getPath('data/hair/hairtype01'), fileProgress)
         fIdx += 1
 
     print "All done."
