@@ -69,7 +69,7 @@ def downloadFile(url, destination, fileProgress):
     print "[%d%% done] Downloading file %s" % (fileProgress, os.path.basename(destination))
     print "             %s ==> %s" % (url, destination)
     data = download(url, progressCallback = progress)
-    destFile = open(destination, 'w')
+    destFile = open(destination, 'wb')
     destFile.write(''.join(data))
     destFile.close()
 
