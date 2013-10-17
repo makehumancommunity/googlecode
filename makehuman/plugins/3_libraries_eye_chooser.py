@@ -19,16 +19,11 @@
 Abstract
 --------
 
-TODO
+Eye chooser library.
 """
 
-import os
 import gui3d
 import mh
-import files3d
-import mh2proxy
-import filechooser as fc
-import log
 import proxychooser
 
 class EyesTaskView(proxychooser.ProxyChooserTaskView):

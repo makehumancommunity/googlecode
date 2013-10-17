@@ -25,28 +25,12 @@ Library plugin for variations of the human mesh. Usually with reduced polygon
 count or geometry adapted to special cases.
 """
 
-import os.path
 import gui3d
 import mh
-import mh2proxy
+import proxychooser
 import filechooser as fc
-import log
-
-class ProxyAction(gui3d.Action):
-    def __init__(self, name, human, library, before, after):
-        super(ProxyAction, self).__init__(name)
-        self.human = human
-        self.library = library
-        self.before = before
-        self.after = after
-
-    def do(self):
-        self.library.setProxy(self.human, self.after)
-        return True
-
-    def undo(self):
-        self.library.setProxy(self.human, self.before)
-        return True
+import os
+import mh2proxy
 
 
 class ProxyFileSort(fc.FileSort):
@@ -89,71 +73,99 @@ class ProxyFileSort(fc.FileSort):
 
         return meta
 
-class ProxyTaskView(gui3d.TaskView):
+
+class ProxyTaskView(proxychooser.ProxyChooserTaskView):
 
     def __init__(self, category):
+        super(ProxyTaskView, self).__init__(category, 'proxymeshes', tabLabel = 'Proxies')
 
-        gui3d.TaskView.__init__(self, category, 'Proxies')
-        self.installDir = mh.getSysDataPath('proxymeshes')
-        self.userDir = os.path.join(mh.getPath(''), 'data', 'proxymeshes')
-        if not os.path.exists(self.userDir):
-            os.makedirs(self.userDir)
-        self.paths = [self.userDir , self.installDir]
-        #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'proxy', 'thumb', mh.getSysDataPath('proxymeshes/notfound.thumb'), sort=ProxyFileSort()))
-        #self.filechooser = self.addRightWidget(fc.ListFileChooser(self.paths, 'proxy', 'Proxy', sort=ProxyFileSort()))
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'proxy', 'thumb', mh.getSysDataPath('proxymeshes/notfound.thumb'), 'Proxy'))
-        self.filechooser.setIconSize(50,50)
-        self.addLeftWidget(self.filechooser.createSortBox())
+    def getObjectLayer(self):
+        return 4
 
-        @self.filechooser.mhEvent
-        def onFileSelected(filename):
-            human = gui3d.app.selectedHuman
-            if human.proxy:
-                oldFile = human.proxy.file
-            else:
-                oldFile = "clear.proxy"
-            gui3d.app.do(ProxyAction("Change proxy",
-                human,
-                self,
-                oldFile,
-                filename))
+    def getSaveName(self):
+        return "proxy"
 
-    def setProxy(self, human, filename):
-        self.filechooser.selectItem(filename)
+    def getFileExtension(self):
+        return 'proxy'
 
-        if os.path.basename(filename) == "clear.proxy":
-            human.setProxy(None)
-            return
+    def proxySelected(self, proxy, obj):
+        self.human.setProxy(proxy)
+        self.human.genitalsProxy = proxy
 
-        proxy = mh2proxy.readProxyFile(human.getSeedMesh(), filename, type="Proxy", layer=4)
-        human.setProxy(proxy)
-        human.updateProxyMesh()
+    def proxyDeselected(self, proxy, obj):
+        self.human.genitalsObj = None
+        self.human.genitalsProxy = None
 
     def onShow(self, event):
-        # When the task gets shown, set the focus to the file chooser
-        gui3d.TaskView.onShow(self, event)
-        self.filechooser.setFocus()
+        super(ProxyTaskView, self).onShow(event)
         if gui3d.app.settings.get('cameraAutoZoom', True):
             gui3d.app.setGlobalCamera()
 
-    def onHide(self, event):
-        gui3d.TaskView.onHide(self, event)
+    def selectProxy(self, mhclofile):
+        """
+        Called when a new proxy has been selected.
+        """
+        if not mhclofile:
+            self.deselectProxy(None, suppressSignal = True)
 
-    def onHumanChanging(self, event):
-        human = event.human
-        if event.change == 'reset':
-            human.setProxy(None)
-            self.filechooser.deselectAll()
+        if self.isProxySelected():
+            # Deselect previously selected proxy
+            self.deselectProxy(None, suppressSignal = True)
 
-    def onHumanChanged(self, event):
+        human = self.human
+
+        self.filechooser.selectItem(mhclofile)
+
+        if mhclofile not in self._proxyCache:
+            proxy = mh2proxy.readProxyFile(human.meshData, 
+                                           mhclofile, 
+                                           type=self.proxyName.capitalize(), 
+                                           layer=self.getObjectLayer() )
+            self._proxyCache[mhclofile] = proxy
+        else:
+            proxy = self._proxyCache[mhclofile]
+
+        self.human.setProxy(proxy)
+        self.human.updateProxyMesh()
+
+        # Add to selection
+        self.selectedProxies.append(proxy)
+
+        self.filechooser.selectItem(mhclofile)
+
+        self.signalChange()
+
+    def deselectProxy(self, mhclofile, suppressSignal = False):
+        """
+        Deselect specified proxy from library selections.
+        """
+        if not self.isProxySelected():
+            return
+
+        self.human.setProxy(None)
+        self.filechooser.deselectItem(mhclofile)
+
+        if not suppressSignal:
+            self.signalChange()
+
+    def getSelection(self):
+        if self.isProxySelected():
+            return [ self.human.proxy ]
+        else:
+            return []
+
+    def getObjects(self):
+        if self.isProxySelected():
+            return [ self.human ]
+        else:
+            return []
+
+    def isProxySelected(self):
+        return self.human.isProxied()
+
+    def adaptAllProxies(self):
         pass
 
-    def loadHandler(self, human, values):
-        self.setProxy(human, values[1])
-
-    def saveHandler(self, human, file):
-        if human.proxy:
-            file.write('proxy %s\n' % human.proxy.file)
 
 # This method is called when the plugin is loaded into makehuman
 # The app reference is passed so that a plugin can attach a new category, task, or other GUI elements
@@ -162,11 +174,10 @@ class ProxyTaskView(gui3d.TaskView):
 def load(app):
     category = app.getCategory('Geometries')
     taskview = ProxyTaskView(category)
-    taskview.sortOrder = 3
     category.addTask(taskview)
 
-    app.addLoadHandler('proxy', taskview.loadHandler)
-    app.addSaveHandler(taskview.saveHandler)
+    taskview.registerLoadSaveHandlers()
+
 
 # This method is called when the plugin is unloaded from makehuman
 # At the moment this is not used, but in the future it will remove the added GUI elements
