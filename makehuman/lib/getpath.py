@@ -111,7 +111,7 @@ def getSysPath(subPath):
     contains system-wide data (for all users).
     """
     if subPath:
-        path = os.path.join(subPath)
+        path = os.path.join('.', subPath)
     else:
         path = os.path.join(".")
     return formatPath(path)
