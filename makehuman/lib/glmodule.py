@@ -211,10 +211,18 @@ def OnInit():
         debugdump.dump.appendMessage("GL.VERSION: " + glGetString(GL_VERSION))
         debugdump.dump.appendMessage("GLSL.VERSION: " + Shader.glslVersionStr())
     except Exception as e:
-        log.error("Failed to GL debug info to debug dump: %s", format(str(e)))
+        log.error("Failed to write GL debug info to debug dump: %s", format(str(e)))
 
     global have_multisample
-    have_multisample = glInitMultisampleARB()
+    if G.args.get('nomultisampling', False):
+        have_multisample = False
+    else:
+        have_multisample = glInitMultisampleARB()
+    try:
+        debugdump.dump.appendMessage("GL.EXTENSION: GL_ARB_multisample %s" % ("enabled" if have_multisample else "not available"))
+    except Exception as e:
+        log.error("Failed to write GL debug info to debug dump: %s", format(str(e)))
+
     global have_activeTexture
     have_activeTexture = bool(glActiveTexture)
 

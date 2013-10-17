@@ -42,6 +42,11 @@ class Texture(object):
 
         if cls._npot is None:
             cls._npot = glInitTextureNonPowerOfTwoARB()
+            try:
+                import debugdump
+                debugdump.dump.appendMessage("GL.EXTENSION: GL_ARB_texture_non_power_of_two %s" % ("enabled" if cls._npot else "not available"))
+            except Exception as e:
+                log.error("Failed to write GL debug info to debug dump: %s", format(str(e)))
         if cls._powers is None:
             cls._powers = [2**i for i in xrange(20)]
 
