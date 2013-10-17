@@ -86,6 +86,7 @@ def getTargetArmature(rig, scn):
             try:
                 rig.pose.bones[bname].McpBone = mhx
             except KeyError:
+                print("  ", bname)
                 pass
 
         return boneAssoc
@@ -100,9 +101,11 @@ def guessTargetArmatureFromList(rig, bones, scn):
         return "MHX"
     elif isRigify(rig):
         return "Rigify"
+    elif isMhx7Rig(rig):
+        return "MH-alpha7"
     elif False:
         for name in mcp.targetInfo.keys():
-            if name not in ["MHX", "Rigify"]:
+            if name not in ["MHX", "Rigify", "MH-alpha7"]:
                 (boneAssoc, _ikBones, _tpose) = mcp.targetInfo[name]
                 if testTargetRig(name, rig, boneAssoc):
                     return name

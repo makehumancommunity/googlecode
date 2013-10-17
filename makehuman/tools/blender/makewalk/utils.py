@@ -89,6 +89,14 @@ def isMhxRig(rig):
         return False
 
 
+def isMhx7Rig(rig):
+    try:
+        rig.pose.bones['FootRev_L']
+        return True
+    except KeyError:
+        return False
+
+
 def isRigify(rig):
     try:
         rig.pose.bones['MCH-spine.flex']
