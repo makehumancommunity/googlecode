@@ -34,7 +34,7 @@ import proxychooser
 class HairTaskView(proxychooser.ProxyChooserTaskView):
 
     def __init__(self, category):
-        super(HairTaskView, self).__init__(category, 'hair', tabLabel = "Hair", multiProxy = False)
+        super(HairTaskView, self).__init__(category, 'hair')
 
     def getObjectLayer(self):
         #return 3
