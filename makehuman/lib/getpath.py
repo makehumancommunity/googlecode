@@ -89,7 +89,7 @@ def getPath(subPath = ""):
         path = os.path.join(path, "makehuman")
 
     if subPath:
-        path = os.path.join(subPath)
+        path = os.path.join(path, subPath)
 
     return formatPath(path)
 
