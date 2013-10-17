@@ -230,7 +230,7 @@ def make_user_dir():
     Make sure MakeHuman folder storing per-user files exists.
     """
     import getpath
-    userDir = getpath.getPath('')
+    userDir = getpath.getPath()
     if not os.path.isdir(userDir):
         os.makedirs(userDir)
 
