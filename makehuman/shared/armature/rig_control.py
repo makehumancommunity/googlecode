@@ -247,10 +247,10 @@ SocketParents = {
 
 
 RotationLimits = {
-    'arm_socket.L' :    (0,0, 0,0, 0,0),
-    'arm_socket.R' :    (0,0, 0,0, 0,0),
-    'leg_socket.L' :    (0,0, 0,0, 0,0),
-    'leg_socket.R' :    (0,0, 0,0, 0,0),
+    #'arm_socket.L' :    (0,0, 0,0, 0,0),
+    #'arm_socket.R' :    (0,0, 0,0, 0,0),
+    #'leg_socket.L' :    (0,0, 0,0, 0,0),
+    #'leg_socket.R' :    (0,0, 0,0, 0,0),
     #'foot.rev.L' :   (-20*D,60*D, 0,0, 0,0),
     #'foot.rev.R' :   (-20*D,60*D, 0,0, 0,0),
     #'toe.rev.L' :    (-10*D,45*D, 0,0, 0,0),

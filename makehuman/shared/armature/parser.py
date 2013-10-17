@@ -136,9 +136,9 @@ class Parser:
         self.splitBones = {}
         if options.useSplitBones:
             self.splitBones = {
-                "upper_arm" :   (3, "forearm", False),
+                #"upper_arm" :   (3, "forearm", False),
                 "forearm" :     (3, "hand", False),
-                "thigh" :       (3, "shin", False),
+                #"thigh" :       (3, "shin", False),
             }
 
 
