@@ -12,7 +12,7 @@
 
 
 # These scripts are run before building deb contents, in the array order
-pre_deb_scripts = ["cleanpyc.sh","cleannpz.sh","compile_targets.py","compile_models.py"]
+pre_deb_scripts = ["cleanpyc.sh","cleannpz.sh","compile_targets.py", "download_assets.py", "compile_models.py"]
 
 rsync = "/usr/bin/rsync"
 rsync_common_args = "-av --delete --exclude=.svn"

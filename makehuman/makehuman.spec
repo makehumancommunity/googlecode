@@ -48,6 +48,13 @@ except subprocess.CalledProcessError:
     print "check that compile_targets.py is working correctly"
     sys.exit(1)
 
+###DOWNLOAD ASSETS
+try:
+    subprocess.check_call(["python","download_assets.py"])
+except subprocess.CalledProcessError:
+    print "check that download_assets.py is working correctly"
+    sys.exit(1)
+
 ###COMPILE MODELS
 try:
     subprocess.check_call(["python","compile_models.py"])
