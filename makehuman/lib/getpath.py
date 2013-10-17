@@ -35,7 +35,7 @@ def canonicalPath(path):
     Return canonical name for location specified by path.
     Useful for comparing paths.
     """
-    return os.path.normpath(os.path.realpath(path))
+    return formatPath( os.path.normpath(os.path.realpath(path)) )
 
 def getHomePath():
     """
