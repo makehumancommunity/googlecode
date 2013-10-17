@@ -28,7 +28,7 @@ import sys
 import shutil
 
 sys.path = ["./lib"] + sys.path
-from getpath import getPath
+from getpath import getPath, getSysDataPath, isSubPath
 
 
 
@@ -68,6 +68,9 @@ def downloadFile(url, destinationFolder, fileProgress):
     filename = os.path.basename(url)
     filename = os.path.join(destinationFolder, filename)
 
+    if not isSubPath(filename, getSysDataPath()):
+        raise RuntimeError("ERROR: File destinations are jailed inside the sys data path (%s), destination path (%s) tries to escape!" % (getSysDataPath(), filename))
+
     #print "[%d%% done] Downloading file %s to %s" % (fileProgress, url, filename)
     print "[%d%% done] Downloading file %s" % (fileProgress, os.path.basename(filename))
     print "             %s ==> %s" % (url, filename)
@@ -82,27 +85,27 @@ if __name__ == '__main__':
 
     # Remove previously downloaded assets
     print "Removing old downloaded content"
-    oldPaths = [getPath('data/hair/hairstyle01'), getPath('data/hair/hairstyle02')]
+    oldPaths = [getSysDataPath('hair/hairstyle01'), getSysDataPath('hair/hairstyle02')]
     for oldPath in oldPaths:
         if os.path.exists(oldPath):
             shutil.rmtree(oldPath)
 
     # Hardcoded for now
     TOTAL_FILES = 8
-    fileUrls = ["hairstyles/hairtype01/red-brown-3.png", 
-                "hairstyles/hairtype01/hairtype01.mhmat", 
-                "hairstyles/hairtype01/longhair01.mhclo", 
-                "hairstyles/hairtype01/longhair01.obj", 
-                "hairstyles/hairtype01/longhair01.thumb",
-                "hairstyles/hairtype01/mediumhair01.mhclo", 
-                "hairstyles/hairtype01/mediumhair01.obj", 
-                "hairstyles/hairtype01/mediumhair01.thumb"]
+    fileUrls = ["hair/hairtype01/red-brown-3.png", 
+                "hair/hairtype01/hairtype01.mhmat", 
+                "hair/hairtype01/longhair01.mhclo", 
+                "hair/hairtype01/longhair01.obj", 
+                "hair/hairtype01/longhair01.thumb",
+                "hair/hairtype01/mediumhair01.mhclo", 
+                "hair/hairtype01/mediumhair01.obj", 
+                "hair/hairtype01/mediumhair01.thumb"]
 
     fIdx = 0
     for url in fileUrls:
         url = baseUrl+url
         fileProgress = round(100 * float(fIdx)/TOTAL_FILES, 2)
-        downloadFile(url, getPath('data/hair/hairtype01'), fileProgress)
+        downloadFile(url, getSysDataPath('hair/hairtype01'), fileProgress)
         fIdx += 1
 
     print "All done."
