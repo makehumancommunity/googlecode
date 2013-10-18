@@ -7,12 +7,12 @@ Bones:
     neck		neck
     head		head
 
-    shoulder.L  	deltoid.L
+    shoulder.L  	shoulder.L
     upper_arm.fk.L	upper_arm.L
     forearm.fk.L   	forearm.L
     hand.fk.L		hand.L
 
-    shoulder.R  	deltoid.R
+    shoulder.R  	shoulder.R
     upper_arm.fk.R	upper_arm.R
     forearm.fk.R   	forearm.R
     hand.fk.R		hand.R

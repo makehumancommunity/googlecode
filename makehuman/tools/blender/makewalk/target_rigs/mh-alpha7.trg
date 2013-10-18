@@ -8,12 +8,12 @@ Bones:
 	Neck		neck	 
 	Head		head	 
 
-	Clavicle_L	clavicle.L
+	Clavicle_L	shoulder.L
 	UpArm_L		upper_arm.L	 
 	LoArm_L		forearm.L	
 	Hand_L		hand.L	 
 
-	Clavicle_R	clavicle.R
+	Clavicle_R	shoulder.R
 	UpArm_R		upper_arm.R	 
 	LoArm_R		forearm.R	
 	Hand_R		hand.R	

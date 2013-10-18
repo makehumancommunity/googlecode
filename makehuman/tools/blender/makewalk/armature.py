@@ -211,7 +211,7 @@ class CArmature:
 
 
     def findArm(self, shoulder, suffix):
-        bnames = ["deltoid"+suffix, "upper_arm"+suffix, "forearm"+suffix, "hand"+suffix]
+        bnames = ["shoulder"+suffix, "upper_arm"+suffix, "forearm"+suffix, "hand"+suffix]
         print("  shoulder%s:" % suffix, shoulder.name)
         upperarm = self.validChildren(shoulder)[0]
         print("  upper_arm%s:" % suffix, upperarm.name)
