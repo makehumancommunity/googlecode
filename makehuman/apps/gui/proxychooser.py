@@ -110,7 +110,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
         Overwrite to do custom initialization of filechooser widget.
         """
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhclo', 'thumb', mh.getSysDataPath(proxyName+'/notfound.thumb')))
-        self.filechooser = fc.IconListFileChooser(self.paths, 'mhclo', 'thumb', self.notfoundIcon, name=self.label, multiSelect=self.multiProxy)
+        self.filechooser = fc.IconListFileChooser(self.paths, self.getFileExtension(), 'thumb', self.notfoundIcon, name=self.label, multiSelect=self.multiProxy)
         self.addRightWidget(self.filechooser)
         self.filechooser.setIconSize(50,50)
         self.filechooser.enableAutoRefresh(False)
@@ -124,6 +124,18 @@ class ProxyChooserTaskView(gui3d.TaskView):
             @self.filechooser.mhEvent
             def onFileDeselected(filename):
                 self.proxyFileDeselected(filename)
+
+    def getSaveName(self):
+        """
+        The name used by save and load handlers to store the proxy mesh.
+        """
+        return self.proxyName
+
+    def getFileExtension(self):
+        """
+        The file extension for proxy files of this type.
+        """
+        return 'mhclo'
 
     def proxyFileSelected(self, filename):
         """
@@ -373,9 +385,9 @@ class ProxyChooserTaskView(gui3d.TaskView):
 
     def saveHandler(self, human, file):
         for p in self.getSelection():
-            file.write('%s %s\n' % (self.proxyName, p.file))
+            file.write('%s %s\n' % (self.getSaveName(), p.file))
 
     def registerLoadSaveHandlers(self):
-        gui3d.app.addLoadHandler(self.proxyName, self.loadHandler)
+        gui3d.app.addLoadHandler(self.getSaveName(), self.loadHandler)
         gui3d.app.addSaveHandler(self.saveHandler)
 
