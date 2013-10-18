@@ -74,13 +74,11 @@ HeadsTails = {
     'head' :               ('head', 'head-2'),
 
     'clavicle.L' :         ('l-clavicle', 'l-scapula'),
-    'deltoid.L' :          ('l-scapula', 'l-shoulder'),
     'upper_arm.L' :        ('l-shoulder', 'l-elbow'),
     'forearm.L' :          ('l-elbow', 'l-hand'),
     'hand.L' :             ('l-hand', 'l-hand-end'),
 
     'clavicle.R' :         ('r-clavicle', 'r-scapula'),
-    'deltoid.R' :          ('r-scapula', 'r-shoulder'),
     'upper_arm.R' :        ('r-shoulder', 'r-elbow'),
     'forearm.R' :          ('r-elbow', 'r-hand'),
     'hand.R' :             ('r-hand', 'r-hand-end'),
@@ -178,14 +176,12 @@ Armature = {
     'head' :               (0, 'neck', F_DEF|F_CON, L_UPSPNFK),
 
     'clavicle.L' :         (0, 'chest-1', F_DEF, L_UPSPNFK|L_LARMFK|L_LARMIK),
-    'deltoid.L' :          (0, 'clavicle.L', F_DEF|F_CON, L_UPSPNFK|L_LARMFK|L_LARMIK),
-    'upper_arm.L' :        ("PlaneArm.L", 'deltoid.L', F_DEF|F_CON, L_LARMFK),
+    'upper_arm.L' :        ("PlaneArm.L", 'clavicle.L', F_DEF, L_LARMFK),
     'forearm.L' :          ("PlaneArm.L", 'upper_arm.L', F_DEF|F_CON, L_LARMFK, P_YZX),
     'hand.L' :             ("PlaneArm.L", 'forearm.L', F_DEF|F_CON, L_LARMFK, P_YZX),
 
     'clavicle.R' :         (0, 'chest-1', F_DEF, L_UPSPNFK|L_RARMFK|L_RARMIK),
-    'deltoid.R' :          (0, 'clavicle.R', F_DEF|F_CON, L_UPSPNFK|L_RARMFK|L_RARMIK),
-    'upper_arm.R' :        ("PlaneArm.R", 'deltoid.R', F_DEF|F_CON, L_RARMFK),
+    'upper_arm.R' :        ("PlaneArm.R", 'clavicle.R', F_DEF, L_RARMFK),
     'forearm.R' :          ("PlaneArm.R", 'upper_arm.R', F_DEF|F_CON, L_RARMFK, P_YZX),
     'hand.R' :             ("PlaneArm.R", 'forearm.R', F_DEF|F_CON, L_RARMFK, P_YZX),
 
