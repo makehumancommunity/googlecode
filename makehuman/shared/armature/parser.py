@@ -338,20 +338,22 @@ class Parser:
         except KeyError:
             pass
 
-        nodefBone = bname
+        altname = bname
         if bname[0:4] == "DEF-":
-            nodefBone = bname[4:]
-            log.message("Missing bone %s. Trying %s" % (bname, nodefBone))
-            try:
-                boneInfo[nodefBone]
-                return nodefBone
-            except KeyError:
-                pass
+            altname = bname[4:]
+        else:
+            altname = "DEF-"+bname
+
+        log.message("Missing bone %s. Trying %s" % (bname, altname))
+        try:
+            boneInfo[altname]
+            return altname
+        except KeyError:
+            pass
 
         if raiseError:
-            log.message("Missing %s and %s" % (bname, nodefBone))
             log.message(str(boneInfo.keys()))
-            halt
+            raise NameError("Missing %s and %s" % (bname, altname))
         else:
             return bname
 

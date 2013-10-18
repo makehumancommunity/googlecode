@@ -190,7 +190,7 @@ Armature = {
     'scapula.L' :          (0, 'clavicle.L', F_DEF, L_MSCL),
 
     'deltoid0.R' :         (0, 'clavicle.R', 0, L_HELP),
-    'deltoid.R' :          (0, 'deltoid0.R', F_DEF|F_SCALE, L_LARMFK|L_LARMIK),
+    'deltoid.R' :          (0, 'deltoid0.R', F_DEF|F_SCALE, L_RARMFK|L_RARMIK),
     'pectoralis.R' :       (0, 'chest-1', F_DEF, L_MSCL),
     'platysma.R' :         (0, 'neck', F_DEF, L_MSCL),
     'trapezius.R' :        (0, 'chest-1', F_DEF|F_CON, L_MSCL),
