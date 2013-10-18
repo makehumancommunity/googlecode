@@ -352,6 +352,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
     def onHumanChanged(self, event):
         if event.change == 'reset':
             self.resetSelection()
+        self.adaptAllProxies()
 
     def onHumanChanging(self, event):
         if gui3d.app.settings.get('realtimeFitting', False):
@@ -362,9 +363,6 @@ class ProxyChooserTaskView(gui3d.TaskView):
         for pIdx, proxy in enumerate(self.getSelection()):
             obj = self.getObjects()[pIdx]
             self.adaptProxyToHuman(proxy, obj)            
-
-    def onHumanChanged(self, event):
-        self.adaptAllProxies()
 
     def loadHandler(self, human, values):
         mhclo = values[1]
