@@ -57,12 +57,7 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
     def __init__(self, category):
         super(ClothesTaskView, self).__init__(category, 'clothes', multiProxy = True)
 
-        self.taggedClothes = {}
-        self.clothesList = []
-        self.highlightedPiece = None
-
-        self.cache = {}
-        self.meshCache = {}
+        #self.taggedClothes = {}
 
         # TODO self.filechooser.setFileLoadHandler(fc.MhcloFileLoader())
 
@@ -104,11 +99,8 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
             return
         '''
 
-
-        # TODO handle UUIDs in proxychooser baseclass?
         self.human.clothesObjs[uuid] = obj
         self.human.clothesProxies[uuid] = proxy
-        self.clothesList.append(uuid)
 
 
         # TODO Disabled until conflict with new filechooser is sorted out
@@ -141,11 +133,13 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
                 self.taggedClothes[tag] = newUuids
         '''
 
-        self.orderRenderQueue()
         self.updateFaceMasks(self.faceHidingTggl.selected)
 
     def proxyDeselected(self, proxy, obj, suppressSignals = False):
-        # TODO 
+        uuid = proxy.uuid
+        del self.human.clothesObjs[uuid]
+        del self.human.clothesProxies[uuid]
+
         if not suppressSignals:
             self.updateFaceMasks(self.faceHidingTggl.selected)
 
@@ -153,32 +147,14 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
         super(ClothesTaskView, self).resetSelection()
         self.updateFaceMasks(self.faceHidingTggl.selected)
 
-
-    def orderRenderQueue(self):
+    def getClothesRenderOrder(self):
         """
-        Sort clothes on proxy.z_depth parameter, both in self.clothesList and
-        in the render component.
+        Return UUIDs of clothes proxys sorted on proxy.z_depth render queue 
+        parameter (the order in which they will be rendered).
         """
-        human = gui3d.app.selectedHuman
-        decoratedClothesList = [(human.clothesProxies[uuid].z_depth, uuid) for uuid in self.clothesList]
+        decoratedClothesList = [(proxy.z_depth, proxy.uuid) for proxy in self.getSelection()]
         decoratedClothesList.sort()
-        self.clothesList = [uuid for (_, uuid) in decoratedClothesList]
-
-        '''
-        # Remove and re-add clothes in z_depth order to renderer
-        for uuid in self.clothesList:
-            try:
-                gui3d.app.removeObject(human.clothesObjs[uuid])
-            except:
-                pass
-        for uuid in self.clothesList:
-            gui3d.app.addObject(human.clothesObjs[uuid])
-        '''
-        # Use priority for this instead:
-        priority = 50
-        for uuid in self.clothesList:
-            human.clothesObjs[uuid].mesh.priority = priority
-            priority += 1
+        return [uuid for (_, uuid) in decoratedClothesList]
 
     def updateFaceMasks(self, enableFaceHiding = True):
         """
@@ -189,7 +165,7 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
         if not enableFaceHiding:
             human.meshData.changeFaceMask(self.originalHumanMask)
             human.meshData.updateIndexBufferFaces()
-            for uuid in self.clothesList:
+            for uuid in [proxy.uuid for proxy in self.getSelection()]:
                 obj = human.clothesObjs[uuid]
                 faceMask = np.ones(obj.mesh.getFaceCount(), dtype=bool)
                 obj.mesh.changeFaceMask(faceMask)
@@ -198,7 +174,7 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
 
         vertsMask = np.ones(human.meshData.getVertexCount(), dtype=bool)
         log.debug("masked verts %s", np.count_nonzero(~vertsMask))
-        for uuid in reversed(self.clothesList):
+        for uuid in reversed(self.getClothesRenderOrder()):
             proxy = human.clothesProxies[uuid]
             obj = human.clothesObjs[uuid]
 

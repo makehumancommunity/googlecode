@@ -559,7 +559,7 @@ class FileChooser(FileChooserBase):
     def addItem(self, file, label, preview, tags=[], pos = None):
         item = FileChooserRectangle(self, file, label, preview)
         item.tags = tags
-        self.children.addWidget(item, pos)
+        self.children.addWidget(item)
         super(FileChooser, self).addItem(file, label, preview, tags)
         return item
 
@@ -748,7 +748,6 @@ class IconListFileChooser(ListFileChooser):
             self._iconCache[preview] = QtGui.QIcon(pixmap)
         icon = self._iconCache[preview]
         item.setIcon(icon)
-        print 'set icon %s' % preview
         return item
 
     def setIconSize(self, width, height):

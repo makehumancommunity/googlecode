@@ -154,9 +154,21 @@ class ProxyChooserTaskView(gui3d.TaskView):
         return 'mhclo'
 
     def getNotFoundIcon(self):
+        """
+        The default icon to show when no icon is found for a proxy in this
+        library.
+        If this icon does not exist either, it will show the default icon in
+        data/notfound.thumb
+        """
         return os.path.join(self.sysProxyDir, 'notfound.thumb')
 
     def getClearIcon(self):
+        """
+        The icon to show for the "select None" entry in the filechooser of this
+        library. Only applies when this is not a multiselect library (not self.multiProxy).
+        If this icon does not exist, it will show the default icon in
+        data/clear.thumb
+        """
         return os.path.join(self.sysProxyDir, 'clear.thumb')
 
     def proxyFileSelected(self, filename):
@@ -206,7 +218,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
         should be rendered.
         Will be used as mesh rendering priority.
         """
-        # TODO or alternatively provide this as paramter to constructor
+        # TODO remove, this is bogus
         raise NotImplementedError("Implement ProxyChooserTaskView.getObjectLayer()!")
 
     def proxySelected(self, proxy, obj):
@@ -249,7 +261,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
             proxy = mh2proxy.readProxyFile(human.meshData, 
                                            mhclofile, 
                                            type=self.proxyName.capitalize(), 
-                                           layer=self.getObjectLayer() )
+                                           layer=self.getObjectLayer() )    # TODO remove this layer arg, is bogus
             self._proxyCache[mhclofile] = proxy
         else:
             proxy = self._proxyCache[mhclofile]
@@ -260,7 +272,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
             return
 
         mesh.material = proxy.material
-        mesh.priority = proxy.layer             # Set render order
+        mesh.priority = proxy.z_depth           # Set render order
         mesh.setCameraProjection(0)             # Set to model camera
         mesh.setSolid(human.mesh.solid)    # Set to wireframe if human is in wireframe
 
@@ -358,7 +370,9 @@ class ProxyChooserTaskView(gui3d.TaskView):
 
     def adaptProxyToHuman(self, proxy, obj):
         mesh = obj.getSeedMesh()
+        print 'ADAPTING'
         proxy.update(mesh)
+        print 'DONE ADAPTING'
         mesh.update()
         # Update subdivided mesh if smoothing is enabled
         if obj.isSubdivided():
@@ -369,6 +383,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
         event = events3d.HumanEvent(human, 'proxy')
         event.proxy = self.proxyName
         human.callEvent('onChanged', event)
+        print list(self.getSelection())
 
     def onShow(self, event):
         if self._proxyFileCache is None:
@@ -401,6 +416,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
             self.adaptAllProxies()
 
     def adaptAllProxies(self):
+        print list(self.getSelection())
         for pIdx, proxy in enumerate(self.getSelection()):
             obj = self.getObjects()[pIdx]
             self.adaptProxyToHuman(proxy, obj)            
@@ -431,6 +447,8 @@ class ProxyChooserTaskView(gui3d.TaskView):
         """
         Save MH cache file for the proxy files managed by this library.
         """
+        if self._proxyFileCache == None or len(self._proxyFileCache) == 0:
+            return
         saveDir = getpath.getPath('cache')
         if not os.path.isdir(saveDir):
             os.makedirs(saveDir)

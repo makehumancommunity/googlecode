@@ -617,25 +617,6 @@ def newTexVert(first, words, proxy):
 #
 #
 
-# TODO remove?
-def getExistingProxyFile(proxyFilePath, fileExt, folders, uuid):
-    if not uuid:
-        if not os.path.exists(proxyFilePath):
-            return None
-        log.message("Found %s", proxyFilePath)
-        return proxyFilePath
-    else:
-        proxyFilename = os.path.basename(proxyFilePath)
-        paths = []
-        for folder in folders:
-            paths.extend(_findProxyFiles(proxyFilename, folder, fileExt, 6))
-
-        for path in paths:
-            uuid1 = scanFileForUuid(path)
-            if uuid1 == uuid:
-                log.message("Found %s %s", path, uuid)
-                return path
-        return None
 
 def updateProxyFileCache(paths, fileExt, cache = None):
     """
@@ -651,7 +632,7 @@ def updateProxyFileCache(paths, fileExt, cache = None):
     proxyFiles = []
     entries = dict((key, True) for key in cache.keys()) # lookup dict for old entries in cache
     for folder in paths:
-        proxyFiles.extend(_findProxyFiles(None, folder, fileExt, 6))
+        proxyFiles.extend(_findProxyFiles(folder, fileExt, 6))
     for proxyFile in proxyFiles:
         proxyId = getpath.canonicalPath(proxyFile)
 
@@ -669,7 +650,7 @@ def updateProxyFileCache(paths, fileExt, cache = None):
         del cache[key]
     return cache
 
-def _findProxyFiles(filename, folder, fileExt = "mhclo", depth = 6):
+def _findProxyFiles(folder, fileExt = "mhclo", depth = 6):
     if depth < 0:
         return []
     try:
@@ -679,11 +660,11 @@ def _findProxyFiles(filename, folder, fileExt = "mhclo", depth = 6):
     result = []
     for pname in files:
         path = os.path.join(folder, pname)
-        if os.path.isfile(path) and (not filename or pname == filename):
+        if os.path.isfile(path):
             if os.path.splitext(path)[1] == "."+fileExt:
                 result.append(path)
         elif os.path.isdir(path):
-            result.extend(_findProxyFiles(filename, path, fileExt, depth-1))
+            result.extend(_findProxyFiles(path, fileExt, depth-1))
     return result
 
 def peekMetadata(proxyFilePath):
@@ -708,36 +689,3 @@ def peekMetadata(proxyFilePath):
     fp.close()
     return (uuid, tags)
 
-def scanFileForUuid(path):
-    """
-    Read the UUID from proxy file.
-    """
-    fp = open(path)
-    for line in fp:
-        words = line.split()
-        if len(words) == 0:
-            pass
-        elif words[0] == 'uuid':
-            fp.close()
-            return words[1]
-        elif words[0] == 'verts':
-            break
-    fp.close()
-    return None
-
-def scanFileForTags(path):
-    """
-    Read the tags from a proxy file.
-    """
-    tags = set()
-    fp = open(path)
-    for line in fp:
-        words = line.split()
-        if len(words) == 0:
-            continue
-        elif words[0] == 'tag':
-            tags.add(words[1])
-        else:
-            break
-    fp.close()
-    return tags
