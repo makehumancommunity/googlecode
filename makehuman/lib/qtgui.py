@@ -611,7 +611,13 @@ class ListView(QtGui.QListWidget, Widget):
     def _clicked(self, item):
         if item._clicked(self):
             return
-        self.callEvent('onClicked', item)
+        if self.allowsMultipleSelection():
+            if item.isSelected():
+                self.callEvent('onItemChecked', item)
+            else:
+                self.callEvent('onItemUnchecked', item)
+        else:
+            self.callEvent('onClicked', item)
 
     def onActivate(self, event):
         pass
@@ -697,9 +703,12 @@ class ListView(QtGui.QListWidget, Widget):
         self.item(row).setHidden(not state)
 
     def allowMultipleSelection(self, allow):
-        self.setSelectionMode(QtGui.QAbstractItemView.ContiguousSelection
+        self.setSelectionMode(QtGui.QAbstractItemView.MultiSelection
                               if allow else
                               QtGui.QAbstractItemView.SingleSelection)
+
+    def allowsMultipleSelection(self):
+        return self.selectionMode() == QtGui.QAbstractItemView.MultiSelection
 
     def getItems(self):
         return [ self.item(row) for row in xrange(self.count()) ]

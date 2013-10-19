@@ -343,7 +343,7 @@ class MhcloFileLoader(FileHandler):
             if isinstance(self.fileChooser.extension, str):
                 label = os.path.splitext(label)[0]
             if not file in self.__tagsCache:
-                tags = exportutils.config.scanFileForTags(file)
+                tags = exportutils.config.scanFileForTags(file)     # TODO change
                 self.__tagsCache[file] = tags
             else:
                 tags = self.__tagsCache[file]
@@ -581,6 +581,8 @@ class ListFileChooser(FileChooserBase):
         self.layout = QtGui.QGridLayout(self)
         self.mainBox = gui.GroupBox(name)
         self.children = gui.ListView()
+        if self.multiSelect:
+            self.children.allowMultipleSelection(True)
         self.layout.addWidget(self.mainBox)
         self.mainBox.addWidget(self.children)
 
@@ -600,10 +602,7 @@ class ListFileChooser(FileChooserBase):
 
         @self.children.mhEvent
         def onClicked(item):
-            if self.multiSelect:
-                self.callEvent('onFileHighlighted', self.loadHandler.getSelection(item))
-            else:
-                self.callEvent('onFileSelected', self.loadHandler.getSelection(item))
+            self.callEvent('onFileSelected', self.loadHandler.getSelection(item))
 
         @self.children.mhEvent
         def onItemChecked(item):
@@ -631,8 +630,6 @@ class ListFileChooser(FileChooserBase):
 
     def addItem(self, file, label, preview, tags=[]):
         item = gui.ListItem(label)
-        if self.multiSelect:
-            item.enableCheckbox()
         item.file = file
         item.preview = preview
         item.tags = tags
@@ -650,10 +647,8 @@ class ListFileChooser(FileChooserBase):
         return self.getHighlightedItem()
 
     def getSelectedItems(self):
-        if self.multiSelect:
-            return [self.loadHandler.getSelection(item) for item in self.children.getItems() if item.isChecked()]
-        else:
-            return [self.getHighlightedItem()]
+        items = self.children.selectedItems()
+        return [self.loadHandler.getSelection(item) for item in items]
 
     def selectItem(self, item):
         if self.multiSelect:
@@ -701,6 +696,7 @@ class ListFileChooser(FileChooserBase):
             self.children.setCurrentItem(None)
 
     def deselectAll(self):
+        # TODO emit event
         self.children.clearSelection()
 
     def clearList(self):
