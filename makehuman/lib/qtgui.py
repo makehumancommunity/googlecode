@@ -664,7 +664,7 @@ class ListView(QtGui.QListWidget, Widget):
             cls._brushes[color] = QtGui.QBrush(QtGui.QColor(color))
         return cls._brushes[color]
 
-    def addItem(self, text, color = None, data = None, checkbox = False):
+    def addItem(self, text, color = None, data = None, checkbox = False, pos = None):
         item = ListItem(text)
         item.setText(text)
         if color is not None:
@@ -673,13 +673,13 @@ class ListView(QtGui.QListWidget, Widget):
             item.setUserData(data)
         if checkbox:
             item.enableCheckbox()
-        super(ListView, self).addItem(item)
-        if not self._vertical_scrolling:
-            self.updateGeometry()
-        return item
+        return self.addItemObject(item, pos)
 
-    def addItemObject(self, item):
-        super(ListView, self).addItem(item)
+    def addItemObject(self, item, pos = None):
+        if pos is not None:
+            super(ListView, self).insertItem(pos, item)
+        else:
+            super(ListView, self).addItem(item)
         if not self._vertical_scrolling:
             self.updateGeometry()
         return item
