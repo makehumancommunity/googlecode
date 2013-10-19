@@ -39,7 +39,7 @@ class HairTaskView(proxychooser.ProxyChooserTaskView):
         self.human.hairObj = obj
         self.human.hairProxy = proxy
 
-    def proxyDeselected(self, proxy, obj):
+    def proxyDeselected(self, proxy, obj, suppressSignal = False):
         self.human.hairObj = None
         self.human.hairProxy = None
 
@@ -53,7 +53,11 @@ class HairTaskView(proxychooser.ProxyChooserTaskView):
 # The app reference is passed so that a plugin can attach a new category, task, or other GUI elements
 
 
+taskview = None
+
 def load(app):
+    global taskview
+
     category = app.getCategory('Geometries')
     taskview = HairTaskView(category)
     taskview.sortOrder = 1
@@ -66,5 +70,5 @@ def load(app):
 
 
 def unload(app):
-    pass
+    taskview.onUnload()
 

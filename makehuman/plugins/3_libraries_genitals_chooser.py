@@ -39,7 +39,7 @@ class GenitalsTaskView(proxychooser.ProxyChooserTaskView):
         self.human.genitalsObj = obj
         self.human.genitalsProxy = proxy
 
-    def proxyDeselected(self, proxy, obj):
+    def proxyDeselected(self, proxy, obj, suppressSignal = False):
         self.human.genitalsObj = None
         self.human.genitalsProxy = None
 
@@ -53,7 +53,11 @@ class GenitalsTaskView(proxychooser.ProxyChooserTaskView):
 # The app reference is passed so that a plugin can attach a new category, task, or other GUI elements
 
 
+taskview = None
+
 def load(app):
+    global taskview
+
     category = app.getCategory('Geometries')
     taskview = GenitalsTaskView(category)
     taskview.sortOrder = 2
@@ -67,5 +71,5 @@ def load(app):
 
 
 def unload(app):
-    pass
+    taskview.onUnload()
 

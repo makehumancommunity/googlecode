@@ -26,7 +26,7 @@ import os
 import numpy
 import guicommon
 from core import G
-from getpath import getSysDataPath
+import getpath
 import log
 from collections import OrderedDict
 
@@ -174,6 +174,7 @@ class CProxy:
         import object3d, module3d
 
         human = G.app.selectedHuman
+        # TODO use more generic way of retrieving a proxy type
         if self.type == "Clothes":
             obj = human.clothesObjs[self.getUuid()]
         elif self.type == "Proxy":
@@ -245,7 +246,7 @@ class CProxy:
         if self.basemesh in ["alpha_7", "alpha7"]:
             global _A7converter
             if _A7converter is None:
-                _A7converter = readProxyFile(G.app.selectedHuman.meshData, getSysDataPath("3dobjs/a7_converter.proxy"), type="Converter")
+                _A7converter = readProxyFile(G.app.selectedHuman.meshData, getpath.getSysDataPath("3dobjs/a7_converter.proxy"), type="Converter")
             log.debug("Converting clothes with %s", _A7converter)
             return _A7converter
         elif self.basemesh == "hm08":
@@ -284,12 +285,9 @@ class CProxy:
                     "DEF-"+name1.replace(".L", ".03.L"),
                     "DEF-"+name1.replace(".R", ".03.R"),
                     name1]:
-                    try:
-                        rawWeights[name2]
+                    if name2 in rawWeights:
                         weights[name2] = data
                         break
-                    except KeyError:
-                        pass
             return weights
 
         converter = self.getConverter()
@@ -614,3 +612,132 @@ def newTexVert(first, words, proxy):
     vt = [float(word) for word in words[first:]]
     proxy.texVerts.append(vt)
 
+
+#
+#
+#
+
+# TODO remove?
+def getExistingProxyFile(proxyFilePath, fileExt, folders, uuid):
+    if not uuid:
+        if not os.path.exists(proxyFilePath):
+            return None
+        log.message("Found %s", proxyFilePath)
+        return proxyFilePath
+    else:
+        proxyFilename = os.path.basename(proxyFilePath)
+        paths = []
+        for folder in folders:
+            paths.extend(_findProxyFiles(proxyFilename, folder, fileExt, 6))
+
+        for path in paths:
+            uuid1 = scanFileForUuid(path)
+            if uuid1 == uuid:
+                log.message("Found %s %s", path, uuid)
+                return path
+        return None
+
+def updateProxyFileCache(paths, fileExt, cache = None):
+    """
+    Update cache of proxy files in the specified paths. If no cache is given as
+    parameter, a new cache is created.
+    This cache contains per canonical filename (key) the UUID and tags of that
+    proxy file.
+    Cache entries are invalidated if their modification time has changed, or no
+    longer exist on disk.
+    """
+    if cache is None:
+        cache = dict()
+    proxyFiles = []
+    entries = dict((key, True) for key in cache.keys()) # lookup dict for old entries in cache
+    for folder in paths:
+        proxyFiles.extend(_findProxyFiles(None, folder, fileExt, 6))
+    for proxyFile in proxyFiles:
+        proxyId = getpath.canonicalPath(proxyFile)
+
+        mtime = os.path.getmtime(proxyFile)
+        if proxyId in cache:
+            del entries[proxyId]    # Mark that old cache entry is still valid
+            cached_mtime = cache[proxyId][0]
+            if not (mtime > cached_mtime):
+                continue
+
+        (uuid, tags) = peekMetadata(proxyFile)
+        cache[proxyId] = (mtime, uuid, tags)
+    # Remove entries from cache that no longer exist
+    for key in entries.keys():
+        del cache[key]
+    return cache
+
+def _findProxyFiles(filename, folder, fileExt = "mhclo", depth = 6):
+    if depth < 0:
+        return []
+    try:
+        files = os.listdir(folder)
+    except OSError:
+        return []
+    result = []
+    for pname in files:
+        path = os.path.join(folder, pname)
+        if os.path.isfile(path) and (not filename or pname == filename):
+            if os.path.splitext(path)[1] == "."+fileExt:
+                result.append(path)
+        elif os.path.isdir(path):
+            result.extend(_findProxyFiles(filename, path, fileExt, depth-1))
+    return result
+
+def peekMetadata(proxyFilePath):
+    """
+    Read UUID and tags from proxy file, and return as soon as vertex data 
+    begins. Reads only the necessary lines of the proxy file from disk, not the
+    entire proxy file is loaded in memory.
+    """
+    fp = open(proxyFilePath)
+    uuid = None
+    tags = set()
+    for line in fp:
+        words = line.split()
+        if len(words) == 0:
+            pass
+        elif words[0] == 'uuid':
+            uuid = words[1]
+        elif words[0] == 'tag':
+            tags.add(words[1])
+        elif words[0] == 'verts':
+            break
+    fp.close()
+    return (uuid, tags)
+
+def scanFileForUuid(path):
+    """
+    Read the UUID from proxy file.
+    """
+    fp = open(path)
+    for line in fp:
+        words = line.split()
+        if len(words) == 0:
+            pass
+        elif words[0] == 'uuid':
+            fp.close()
+            return words[1]
+        elif words[0] == 'verts':
+            break
+    fp.close()
+    return None
+
+def scanFileForTags(path):
+    """
+    Read the tags from a proxy file.
+    """
+    tags = set()
+    fp = open(path)
+    for line in fp:
+        words = line.split()
+        if len(words) == 0:
+            continue
+        elif words[0] == 'tag':
+            tags.add(words[1])
+        else:
+            break
+    fp.close()
+    return tags

@@ -39,7 +39,7 @@ class EyesTaskView(proxychooser.ProxyChooserTaskView):
         self.human.eyesObj = obj
         self.human.eyesProxy = proxy
 
-    def proxyDeselected(self, proxy, obj):
+    def proxyDeselected(self, proxy, obj, suppressSignal = False):
         self.human.eyesObj = None
         self.human.eyesProxy = None
 
@@ -58,8 +58,11 @@ class EyesTaskView(proxychooser.ProxyChooserTaskView):
 # This method is called when the plugin is loaded into makehuman
 # The app reference is passed so that a plugin can attach a new category, task, or other GUI elements
 
+taskview = None
 
 def load(app):
+    global taskview
+
     category = app.getCategory('Geometries')
     taskview = EyesTaskView(category)
     taskview.sortOrder = 1
@@ -75,5 +78,5 @@ def load(app):
 
 
 def unload(app):
-    pass
+    taskview.onUnload()
 

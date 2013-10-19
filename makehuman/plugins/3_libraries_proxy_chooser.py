@@ -171,7 +171,11 @@ class ProxyTaskView(proxychooser.ProxyChooserTaskView):
 # The app reference is passed so that a plugin can attach a new category, task, or other GUI elements
 
 
+taskview = None
+
 def load(app):
+    global taskview
+
     category = app.getCategory('Geometries')
     taskview = ProxyTaskView(category)
     category.addTask(taskview)
@@ -184,5 +188,5 @@ def load(app):
 
 
 def unload(app):
-    pass
+    taskview.onUnload()
 
