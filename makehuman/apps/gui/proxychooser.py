@@ -121,7 +121,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
         else:
             clearIcon = self.getClearIcon()
             if not os.path.isfile(clearIcon):
-                notfoundIcon = getpath.getSysDataPath('clear.thumb')
+                clearIcon = getpath.getSysDataPath('clear.thumb')
         self.filechooser = fc.IconListFileChooser(self.paths, self.getFileExtension(), 'thumb', notfoundIcon, clearIcon, name=self.label, multiSelect=self.multiProxy)
         self.addRightWidget(self.filechooser)
         self.filechooser.setIconSize(50,50)
