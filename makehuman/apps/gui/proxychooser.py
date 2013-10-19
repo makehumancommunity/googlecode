@@ -31,6 +31,7 @@ import mh2proxy
 import filechooser as fc
 import log
 import getpath
+import pickle
 
 
 class ProxyAction(gui3d.Action):
@@ -98,6 +99,8 @@ class ProxyChooserTaskView(gui3d.TaskView):
         self.human = gui3d.app.selectedHuman
 
         self._proxyCache = dict()
+        self._proxyFileCache = None
+        self._proxyFilePerUuid = None
 
         self.selectedProxies = []
         self.proxyObjects = []
@@ -142,7 +145,8 @@ class ProxyChooserTaskView(gui3d.TaskView):
         Called when user selects a file from the filechooser widget.
         Creates an action that invokes selectProxy().
         """
-        if os.path.basename(filename) == "clear.mhclo":
+        # TODO remove this in favor of a None entry in filechooser
+        if os.path.basename(filename) == "clear.%s" % self.getFileExtension():
             filename = None
 
         if self.multiProxy:
@@ -345,6 +349,9 @@ class ProxyChooserTaskView(gui3d.TaskView):
         human.callEvent('onChanged', event)
 
     def onShow(self, event):
+        if self._proxyFileCache is None:
+            self.loadProxyFileCache()
+
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
         self.filechooser.refresh()
@@ -377,6 +384,9 @@ class ProxyChooserTaskView(gui3d.TaskView):
             self.adaptProxyToHuman(proxy, obj)            
 
     def loadHandler(self, human, values):
+        if self._proxyFileCache is None:
+            self.loadProxyFileCache()
+
         mhclo = values[1]
         if not os.path.exists(mhclo):
             log.notice('Proxy %s (%s) does not exist. Skipping.', mhclo, self.proxyName)
@@ -386,6 +396,86 @@ class ProxyChooserTaskView(gui3d.TaskView):
     def saveHandler(self, human, file):
         for p in self.getSelection():
             file.write('%s %s\n' % (self.getSaveName(), p.file))
+
+    def onUnload(self):
+        """
+        Called when this library taskview is being unloaded (usually when MH
+        is exited).
+        Note: make sure you connect the plugin's unload() method to this one!
+        """
+        self.storeProxyFileCache()
+
+    def storeProxyFileCache(self):
+        """
+        Save MH cache file for the proxy files managed by this library.
+        """
+        saveDir = getpath.getPath('cache')
+        if not os.path.isdir(saveDir):
+            os.makedirs(saveDir)
+        pickle.dump(self._proxyFileCache, open( os.path.join(saveDir, self.proxyName + '_filecache.mhc'), "wb"))
+
+    def loadProxyFileCache(self, restoreFromFile = True):
+        """
+        Initialize or update the proxy file cache for this proxy library.
+        Will attempt to load a previous cache from file if restoreFromFile is true.
+        """
+        if restoreFromFile:
+            cacheFile = getpath.getPath(os.path.join('cache', self.proxyName + '_filecache.mhc'))
+            if os.path.isfile(cacheFile):
+                self._proxyFileCache = pickle.load( open(cacheFile, "rb") )
+        self._proxyFileCache = mh2proxy.updateProxyFileCache(self.paths, self.getFileExtension(), self._proxyFileCache)
+
+    def updateProxyFileCache(self):
+        """
+        Update proxy file cache to add newly added proxy files.
+        """
+        self.loadProxyFileCache(restoreFromFile = False)
+
+    def findProxyByUuid(self, uuid):
+        if self._proxyFileCache is None:
+            self.loadProxyFileCache()
+
+        if self._proxyFilePerUuid is None:
+            self._proxyFilePerUuid = dict([ (values[1], path) for (path, values) in self._proxyFileCache.items() ])
+
+        if uuid not in self._proxyFilePerUuid:
+            log.warning('Could not find a proxy with UUID %s. Does not exist in %s library.', uuid, self.proxyName)
+            return None
+        return self._proxyFilePerUuid[uuid]
+
+    def getTags(self, uuid = None, filename = None):
+        """
+        Get tags associated with proxies.
+        When no uuid and filename are specified, returns the all the tags found
+        in this collection (all proxy files managed by this library).
+        Specify a filename or uuid to get all tags belonging to that proxy file.
+        Always returns a set of tags (so contains no duplicates), unless no proxy
+        was found upon which None is returned.
+        An empty library (no proxies) or a library where no proxy file contains
+        tags will always return an empty set.
+        """
+        if self._proxyFileCache is None:
+            self.loadProxyFileCache()
+
+        result = set()
+
+        if uuid and filename:
+            raise RuntimeWarning("getTags: Specify either uuid or filename, not both!")
+
+        if uuid:
+            proxyFile = self.findProxyByUuid(uuid)
+            if not proxyFile:
+                log.warning('Could not get tags for proxy with UUID %s. Does not exist in %s library.', uuid, self.proxyName)
+                return result
+        elif filename:
+            proxyId = getpath.canonicalPath(filename)
+            if proxyId not in self._proxyFileCache:
+                log.warning('Could not get tags for proxy with filename %s. Does not exist in %s library.', filename, self.proxyName)
+        else:
+            for (path, values) in self._proxyFileCache.items():
+                _, uuid, tags = values
+                result.union(tags)
+        return result
 
     def registerLoadSaveHandlers(self):
         gui3d.app.addLoadHandler(self.getSaveName(), self.loadHandler)
