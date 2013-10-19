@@ -176,10 +176,6 @@ class ProxyChooserTaskView(gui3d.TaskView):
         Called when user selects a file from the filechooser widget.
         Creates an action that invokes selectProxy().
         """
-        # TODO remove this in favor of a None entry in filechooser
-        if filename and os.path.basename(filename) == "clear.%s" % self.getFileExtension():
-            filename = None
-
         if self.multiProxy:
             action = MultiProxyAction("Change %s" % self.proxyName,
                                       self,
@@ -271,6 +267,10 @@ class ProxyChooserTaskView(gui3d.TaskView):
             log.error("Failed to load %s", proxy.obj_file)
             return
 
+        if self.multiProxy and proxy.uuid in [p.uuid for p in self.getSelection()]:
+            log.warning("Proxy with UUID %s (%s) already loaded in %s library. Skipping.", proxy.uuid, proxy.file, self.proxyName)
+            return
+
         mesh.material = proxy.material
         mesh.priority = proxy.z_depth           # Set render order
         mesh.setCameraProjection(0)             # Set to model camera
@@ -318,6 +318,10 @@ class ProxyChooserTaskView(gui3d.TaskView):
 
         self.proxyDeselected(proxy, obj)
 
+        if not self.multiProxy:
+            # Select None item in file list
+            self.filechooser.selectItem(None)
+
         if not suppressSignal:
             self.signalChange()
 
@@ -364,7 +368,6 @@ class ProxyChooserTaskView(gui3d.TaskView):
         if not self.isProxySelected():
             return
 
-        # TODO Select None item in list (if not multiProxy)
         #self.filechooser.deselectAll()
         self.deselectAllProxies()
 
@@ -393,10 +396,10 @@ class ProxyChooserTaskView(gui3d.TaskView):
         if len(selectedProxies) > 1:
             self.filechooser.setSelections( [p.file for p in selectedProxies] )
         elif len(selectedProxies) > 0:
-            self.filechooser.setHighlightedItem(selectedProxies[0].file)
-        else:
-            # TODO select "None" item in list
-            pass
+            self.filechooser.selectItem(selectedProxies[0].file)
+        elif not self.multiProxy:
+            # Select "None" item in list
+            self.filechooser.selectItem(None)
         self.filechooser.setFocus()
 
     def onHide(self, event):
