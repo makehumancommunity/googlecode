@@ -370,9 +370,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
 
     def adaptProxyToHuman(self, proxy, obj):
         mesh = obj.getSeedMesh()
-        print 'ADAPTING'
         proxy.update(mesh)
-        print 'DONE ADAPTING'
         mesh.update()
         # Update subdivided mesh if smoothing is enabled
         if obj.isSubdivided():
@@ -383,7 +381,6 @@ class ProxyChooserTaskView(gui3d.TaskView):
         event = events3d.HumanEvent(human, 'proxy')
         event.proxy = self.proxyName
         human.callEvent('onChanged', event)
-        print list(self.getSelection())
 
     def onShow(self, event):
         if self._proxyFileCache is None:
@@ -416,7 +413,6 @@ class ProxyChooserTaskView(gui3d.TaskView):
             self.adaptAllProxies()
 
     def adaptAllProxies(self):
-        print list(self.getSelection())
         for pIdx, proxy in enumerate(self.getSelection()):
             obj = self.getObjects()[pIdx]
             self.adaptProxyToHuman(proxy, obj)            
