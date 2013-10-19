@@ -35,18 +35,6 @@ import filechooser as fc
 import log
 import numpy as np
 
-KnownTags = [
-    "shoes",
-    "dress",
-    "tshirt",
-    "stockings",
-    "trousers",
-    "shirt",
-    "underwearbottom",
-    "underweartop",
-    "hat"
-]
-
 
 #
 #   Clothes
@@ -78,26 +66,7 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
         return 10
 
     def proxySelected(self, proxy, obj):
-        # TODO check for and prevent double use of same UUID
         uuid = proxy.getUuid()
-
-        '''
-        # TODO
-        try:
-            clo = human.clothesObjs[uuid]
-        except KeyError:
-            clo = None
-        if clo:
-            gui3d.app.removeObject(clo)
-            del human.clothesObjs[uuid]
-            self.clothesList.remove(uuid)
-            proxy = human.clothesProxies[uuid]
-            del human.clothesProxies[uuid]
-            self.updateFaceMasks(self.faceHidingTggl.selected)
-            self.filechooser.deselectItem(proxy.file)
-            log.message("Removed clothing %s %s", proxy.name, uuid)
-            return
-        '''
 
         self.human.clothesObjs[uuid] = obj
         self.human.clothesProxies[uuid] = proxy
