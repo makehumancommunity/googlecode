@@ -745,7 +745,9 @@ class IconListFileChooser(ListFileChooser):
             size = pixmap.size()
             if size.width() > 128 or size.height() > 128:
                 pixmap = pixmap.scaled(128, 128, QtCore.Qt.KeepAspectRatio)
-            self._iconCache[preview] = QtGui.QIcon(pixmap)
+            icon = QtGui.QIcon(pixmap)
+            icon.addPixmap(pixmap, QtGui.QIcon.Selected)    # make sure that the icon does not change color when item is highlighted
+            self._iconCache[preview] = icon
         icon = self._iconCache[preview]
         item.setIcon(icon)
         return item
