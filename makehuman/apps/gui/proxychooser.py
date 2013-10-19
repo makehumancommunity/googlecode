@@ -87,14 +87,13 @@ class ProxyChooserTaskView(gui3d.TaskView):
         self.label = tabLabel
         self.multiProxy = multiProxy
 
-        homeProxyDir = getpath.getPath(os.path.join('data', proxyName))
-        sysProxyDir = mh.getSysDataPath(proxyName)
+        self.homeProxyDir = getpath.getPath(os.path.join('data', proxyName))
+        self.sysProxyDir = mh.getSysDataPath(proxyName)
 
-        if not os.path.exists(homeProxyDir):
-            os.makedirs(homeProxyDir)
+        if not os.path.exists(self.homeProxyDir):
+            os.makedirs(self.homeProxyDir)
 
-        self.paths = [homeProxyDir , sysProxyDir]
-        self.notfoundIcon = os.path.join(sysProxyDir, 'notfound.thumb')
+        self.paths = [self.homeProxyDir , self.sysProxyDir]
 
         self.human = gui3d.app.selectedHuman
 
@@ -113,7 +112,17 @@ class ProxyChooserTaskView(gui3d.TaskView):
         Overwrite to do custom initialization of filechooser widget.
         """
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhclo', 'thumb', mh.getSysDataPath(proxyName+'/notfound.thumb')))
-        self.filechooser = fc.IconListFileChooser(self.paths, self.getFileExtension(), 'thumb', self.notfoundIcon, name=self.label, multiSelect=self.multiProxy)
+        notfoundIcon = self.getNotFoundIcon()
+        if not os.path.isfile(notfoundIcon):
+            notfoundIcon = getpath.getSysDataPath('notfound.thumb')
+
+        if self.multiProxy:
+            clearIcon = None
+        else:
+            clearIcon = self.getClearIcon()
+            if not os.path.isfile(clearIcon):
+                notfoundIcon = getpath.getSysDataPath('clear.thumb')
+        self.filechooser = fc.IconListFileChooser(self.paths, self.getFileExtension(), 'thumb', notfoundIcon, clearIcon, name=self.label, multiSelect=self.multiProxy)
         self.addRightWidget(self.filechooser)
         self.filechooser.setIconSize(50,50)
         self.filechooser.enableAutoRefresh(False)
@@ -144,13 +153,19 @@ class ProxyChooserTaskView(gui3d.TaskView):
         """
         return 'mhclo'
 
+    def getNotFoundIcon(self):
+        return os.path.join(self.sysProxyDir, 'notfound.thumb')
+
+    def getClearIcon(self):
+        return os.path.join(self.sysProxyDir, 'clear.thumb')
+
     def proxyFileSelected(self, filename):
         """
         Called when user selects a file from the filechooser widget.
         Creates an action that invokes selectProxy().
         """
         # TODO remove this in favor of a None entry in filechooser
-        if os.path.basename(filename) == "clear.%s" % self.getFileExtension():
+        if filename and os.path.basename(filename) == "clear.%s" % self.getFileExtension():
             filename = None
 
         if self.multiProxy:
@@ -337,9 +352,9 @@ class ProxyChooserTaskView(gui3d.TaskView):
         if not self.isProxySelected():
             return
 
-        self.deselectAllProxies()
+        # TODO Select None item in list (if not multiProxy)
         #self.filechooser.deselectAll()
-        # TODO Select None item in list
+        self.deselectAllProxies()
 
     def adaptProxyToHuman(self, proxy, obj):
         mesh = obj.getSeedMesh()

@@ -304,20 +304,20 @@ class FileHandler(object):
         self.fileChooser = fileChooser
 
     def getPreview(self, filename):
-        preview = filename
-
         fc = self.fileChooser
+
+        if not filename:
+            return fc.notFoundImage
         
-        if fc.previewExtensions:
+        preview = filename
+        if preview and fc.previewExtensions:
             #log.debug('%s, %s', fc.extension, fc.previewExtensions)
             preview = filename.replace('.' + fc.extension, '.' + fc.previewExtensions[0])
             i = 1
             while not os.path.exists(preview) and i < len(fc.previewExtensions):
                 preview = filename.replace('.' + fc.extension, '.' + fc.previewExtensions[i])
                 i = i + 1
-        else:
-            preview = filename
-            
+
         if not os.path.exists(preview) and fc.notFoundImage:
             # preview = os.path.join(fc.path, fc.notFoundImage)
             # TL: full filepath needed, so we don't look into user dir.
@@ -338,7 +338,7 @@ class MhcloFileLoader(FileHandler):
         import exportutils.config
         for file in files:
             label = os.path.basename(file)
-            if self.fileChooser.multiSelect and label == "clear.mhclo":
+            if self.fileChooser.multiSelect and label == "clear.mhclo": # TODO
                 continue
             if isinstance(self.fileChooser.extension, str):
                 label = os.path.splitext(label)[0]
@@ -556,10 +556,10 @@ class FileChooser(FileChooserBase):
         self.layout.addWidget(self.location, 2, 0, 1, -1)
         self.layout.setRowStretch(2, 0)
 
-    def addItem(self, file, label, preview, tags=[]):
+    def addItem(self, file, label, preview, tags=[], pos = None):
         item = FileChooserRectangle(self, file, label, preview)
         item.tags = tags
-        self.children.addWidget(item)
+        self.children.addWidget(item, pos)
         super(FileChooser, self).addItem(file, label, preview, tags)
         return item
 
@@ -568,8 +568,6 @@ class FileChooser(FileChooserBase):
         locationLbl = "  |  ".join(self.paths)
         self.location.setText(abspath(locationLbl))
 
-# TODO IconListFileChooser (with FileChooserRectangles as items)
-# TODO allow setting a clear or none item at the top
 
 class ListFileChooser(FileChooserBase):
 
@@ -628,13 +626,13 @@ class ListFileChooser(FileChooserBase):
                 self.deselectAll()
         return self.sortBox
 
-    def addItem(self, file, label, preview, tags=[]):
+    def addItem(self, file, label, preview, tags=[], pos = None):
         item = gui.ListItem(label)
         item.file = file
         item.preview = preview
         item.tags = tags
         super(ListFileChooser, self).addItem(file, label, preview, tags)
-        return self.children.addItemObject(item)
+        return self.children.addItemObject(item, pos)
 
     def getHighlightedItem(self):
         items = self.children.selectedItems()
@@ -715,6 +713,15 @@ class ListFileChooser(FileChooserBase):
 
         super(ListFileChooser, self).refresh()
 
+        # Add None item
+        if not self.multiSelect:
+            if not self.clearImage:
+                ext = os.path.splitext(self.notFoundImage)[1]
+                clearIcon = os.path.join(os.path.dirname(self.notFoundImage), 'clear'+ext)
+            else:
+                clearIcon = self.clearImage
+            self.addItem(None, "None", clearIcon, pos = 0)
+
         if keepSelections:
             if self.multiSelect:
                 self.setSelections(selections)
@@ -723,15 +730,16 @@ class ListFileChooser(FileChooserBase):
                 self.setSelection(selections[0])
 
 class IconListFileChooser(ListFileChooser):
-    def __init__(self, path, extension, previewExtensions='bmp', notFoundImage=None, name="File chooser" , multiSelect=False, verticalScrolling=False, sort=FileSort()):
+    def __init__(self, path, extension, previewExtensions='bmp', notFoundImage=None, clearImage=None, name="File chooser", multiSelect=False, verticalScrolling=False, sort=FileSort()):
         super(IconListFileChooser, self).__init__(path, extension, name, multiSelect, verticalScrolling, sort)
         self.setPreviewExtensions(previewExtensions)
         self.notFoundImage = notFoundImage
+        self.clearImage = clearImage
         self._iconCache = {}
         #self.children.setIconSize(QtCore.QSize(50,50))
 
-    def addItem(self, file, label, preview, tags=[]):
-        item = super(IconListFileChooser, self).addItem(file, label, preview, tags)
+    def addItem(self, file, label, preview, tags=[], pos = None):
+        item = super(IconListFileChooser, self).addItem(file, label, preview, tags, pos)
         if preview not in self._iconCache:
             pixmap = QtGui.QPixmap(preview)
             size = pixmap.size()
@@ -740,6 +748,7 @@ class IconListFileChooser(ListFileChooser):
             self._iconCache[preview] = QtGui.QIcon(pixmap)
         icon = self._iconCache[preview]
         item.setIcon(icon)
+        print 'set icon %s' % preview
         return item
 
     def setIconSize(self, width, height):
