@@ -128,6 +128,10 @@ class ProxyChooserTaskView(gui3d.TaskView):
             def onFileDeselected(filename):
                 self.proxyFileDeselected(filename)
 
+            @self.filechooser.mhEvent
+            def onDeselectAll(value):
+                self.deselectAllProxies()
+
     def getSaveName(self):
         """
         The name used by save and load handlers to store the proxy mesh.
@@ -290,6 +294,12 @@ class ProxyChooserTaskView(gui3d.TaskView):
         if not suppressSignal:
             self.signalChange()
 
+    def deselectAllProxies(self):
+        selectionsCopy = list(self.getSelection())
+        for p in selectionsCopy:
+            self.deselectProxy(p.file, suppressSignal = True)
+        self.signalChange()
+
     def isProxySelected(self):
         return len(self.getSelection()) > 0
 
@@ -327,12 +337,9 @@ class ProxyChooserTaskView(gui3d.TaskView):
         if not self.isProxySelected():
             return
 
-        selectionsCopy = list(self.getSelection())
-        for p in selectionsCopy:
-            self.deselectProxy(p.file, suppressSignal = True)
+        self.deselectAllProxies()
         #self.filechooser.deselectAll()
         # TODO Select None item in list
-        self.signalChange()
 
     def adaptProxyToHuman(self, proxy, obj):
         mesh = obj.getSeedMesh()
