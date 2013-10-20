@@ -116,6 +116,7 @@ class CProxyRefVert:
 
 class CProxy:
     def __init__(self, file, typ, layer):
+        log.debug("Loading proxy file: %s.", file)
         name = os.path.splitext(os.path.basename(file))[0]
         self.name = name.capitalize().replace(" ","_")
         self.type = typ
@@ -231,6 +232,7 @@ class CProxy:
 
 
     def update(self, obj):
+        log.debug("Updating proxy %s.", self.name)
         coords = self.getCoords()
         obj.changeCoords(coords)
 
@@ -247,7 +249,7 @@ class CProxy:
             global _A7converter
             if _A7converter is None:
                 _A7converter = readProxyFile(G.app.selectedHuman.meshData, getpath.getSysDataPath("3dobjs/a7_converter.proxy"), type="Converter")
-            log.debug("Converting clothes with %s", _A7converter)
+            log.debug("Converting %s with %s", self.name, _A7converter)
             return _A7converter
         elif self.basemesh == "hm08":
             return None

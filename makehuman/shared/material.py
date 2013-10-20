@@ -234,6 +234,7 @@ class Material(object):
         """
         Parse .mhmat file and set as the properties of this material.
         """
+        log.debug("Loading material from file %s", filename)
         try:
             f = open(filename, "rU")
         except:

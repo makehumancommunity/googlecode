@@ -104,11 +104,12 @@ def saveBinaryMesh(obj, path):
     np.savez(path, **vars_)
 
 def loadBinaryMesh(obj, path):
-    log.debug('loadBinaryMesh: np.load()')
+    log.debug("Loading binary mesh %s.", path)
+    #log.debug('loadBinaryMesh: np.load()')
 
     npzfile = np.load(path)
 
-    log.debug('loadBinaryMesh: loading arrays')
+    #log.debug('loadBinaryMesh: loading arrays')
     coord = npzfile['coord']
     obj.setCoords(coord)
 
@@ -124,7 +125,7 @@ def loadBinaryMesh(obj, path):
     obj.vface = npzfile['vface']
     obj.nfaces = npzfile['nfaces']
 
-    log.debug('loadBinaryMesh: loaded arrays')
+    #log.debug('loadBinaryMesh: loaded arrays')
 
     fgstr = npzfile['fgstr']
     fgidx = npzfile['fgidx']
@@ -132,28 +133,29 @@ def loadBinaryMesh(obj, path):
         obj.createFaceGroup(name)
     del fgstr, fgidx
 
-    log.debug('loadBinaryMesh: unpacked facegroups')
+    #log.debug('loadBinaryMesh: unpacked facegroups')
 
     mtlstr = npzfile['mtlstr']
     mtlidx = npzfile['mtlidx']
     obj._materials = unpackStringList(mtlstr, mtlidx)
     del mtlstr, mtlidx
 
-    log.debug('loadBinaryMesh: unpacked materials')
+    #log.debug('loadBinaryMesh: unpacked materials')
 
     obj.calcNormals()
-    log.debug('loadBinaryMesh: calculated normals')
+    #log.debug('loadBinaryMesh: calculated normals')
 
     obj.updateIndexBuffer()
-    log.debug('loadBinaryMesh: built index buffer for rendering')
+    #log.debug('loadBinaryMesh: built index buffer for rendering')
 
 def loadTextMesh(obj, path):
     """
     Parse and load a Wavefront OBJ file as mesh.
     """
-    log.debug('loadTextMesh: begin')
+    log.debug("Loading ASCII mesh %s.", path)
+    #log.debug('loadTextMesh: begin')
     wavefront.loadObjFile(path, obj)
-    log.debug('loadTextMesh: end')
+    #log.debug('loadTextMesh: end')
 
 def loadMesh(path, locX=0, locY=0, locZ=0, loadColors=1):
     """

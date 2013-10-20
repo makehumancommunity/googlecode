@@ -188,11 +188,17 @@ def getTexture(path, cache=None):
                 if not (hasattr(img, 'modified') and img.modified > texture.modified):
                     return texture
         else:
-            log.warning("Image used as texture does not contain a \"sourcePath\" attribute, making it impossible to cache it. This could cause slow rendering.")
+            log.warning("Image used as texture does not contain a \"sourcePath\" attribute, making it impossible to cache it. This could cause slow rendering (always creates new texture).")
             return Texture(img)
 
         import time
-        texture = Texture(img)
+        if img.sourcePath in cache:
+            log.debug("Reloading texture for dynamic image %s.", img.sourcePath)
+            texture = cache[img.sourcePath]
+            texture.loadImage(img)
+        else:
+            log.debug("Creating new texture for dynamic image %s.", img.sourcePath)
+            texture = Texture(img)
         if hasattr(img, 'modified'):
             texture.modified = img.modified
         else:
@@ -206,7 +212,7 @@ def getTexture(path, cache=None):
             return texture
 
         if os.path.getmtime(path) > texture.modified:
-            log.message('reloading %s', path)   # TL: unicode problems unbracketed
+            log.message('Reloading texture %s.', path)   # TL: unicode problems unbracketed
 
             try:
                 img = Image(path=path)
@@ -218,6 +224,7 @@ def getTexture(path, cache=None):
                 texture.modified = os.path.getmtime(path)
     else:
         try:
+            log.debug("Creating new texture for image %s.", path)
             img = Image(path=path)
             texture = Texture(img)
         except RuntimeError, text:
