@@ -51,7 +51,7 @@ HeadsTails = {
 
 
 Armature = {
-    'jaw' :             (0, 'head', F_DEF, L_HEAD),
+    'jaw' :             (0, 'head', F_DEF|F_NOLOCK, L_HEAD),
     'tongue_base' :     (0, 'jaw', F_DEF, L_HEAD),
     'tongue_mid' :      (0, 'tongue_base', F_DEF, L_HEAD),
     'tongue_tip' :      (0, 'tongue_mid', F_DEF, L_HEAD),
@@ -76,6 +76,9 @@ RotationLimits = {
     'jaw' : (-5*D,45*D, 0,0, -20*D,20*D),
 }
 
+LocationLimits = {
+    'jaw' : (-0.2,0.2, -0.2,0.2, -0.2,0.2),
+}
 
 #
 #    DeformDrivers(fp, amt):

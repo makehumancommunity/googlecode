@@ -65,6 +65,7 @@ class Parser:
         self.customShapes = {}
         self.gizmos = {}
         self.constraints = {}
+        self.locationLimits = {}
         self.rotationLimits = {}
         self.drivers = []
         self.propDrivers = []
@@ -113,6 +114,8 @@ class Parser:
             addDict(rig_bones.RotationLimits, self.rotationLimits)
             addDict(rig_face.RotationLimits, self.rotationLimits)
             addDict(rig_control.RotationLimits, self.rotationLimits)
+
+            addDict(rig_face.LocationLimits, self.locationLimits)
 
         if options.useCustomShapes:
             addDict(rig_bones.CustomShapes, self.customShapes)
@@ -224,6 +227,16 @@ class Parser:
                 #if minX != None and bone.lockRotation != (1,1,1):
                 #    cns = ("LimitRot", C_LOCAL, 0.8, ["LimitRot", limits, (1,1,1)])
                 #    self.addConstraint(bname, cns)
+
+            for bname,limits in self.locationLimits.items():
+                try:
+                    bone = boneInfo[bname]
+                except KeyError:
+                    continue
+                minX,maxX, minY,maxY, minZ,maxZ = limits
+                cns = ("LimitLoc", C_LOCAL, 1, ["LimitLoc", limits, (1,1,1,1,1,1)])
+                self.addConstraint(bname, cns)
+
 
         if options.useCorrectives:
             self.addCSysBones(rig_control.CoordinateSystems, boneInfo)
