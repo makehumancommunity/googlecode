@@ -756,6 +756,11 @@ class IconListFileChooser(ListFileChooser):
         self.children.setIconSize(QtCore.QSize(width, height))
 
 def abspath(path):
+    """
+    Helper function to determine canonical path if a valid (not None) pathname
+    is specified.
+    Canonical pathnames are used for reliable comparison of two paths.
+    """
     if path:
         return getpath.canonicalPath(path)
     else:
