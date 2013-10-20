@@ -70,7 +70,11 @@ def exportMhx(human, filepath, config):
     fp.write(
         "# MakeHuman exported MHX\n" +
         "# www.makeinfo.human.org\n" +
-        "MHX %d %d ;\n" % (MAJOR_VERSION, MINOR_VERSION) +
+        "MHX %d %d" % (MAJOR_VERSION, MINOR_VERSION))
+    for key,value in amt.objectProps:
+        fp.write(' %s:_%s' % (key.replace(" ","_"), value.replace('"','')))
+    fp.write(
+        " ;\n"  +
         "#if Blender24\n" +
         "  error 'This file can only be read with Blender 2.5' ;\n" +
         "#endif\n")
