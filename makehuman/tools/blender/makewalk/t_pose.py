@@ -171,7 +171,9 @@ def autoTPose(rig, scn):
 
 def setTPose(rig, scn, filename=None, reload=True):
     if reload or not rig.McpTPoseLoaded:
-        if filename is None:
+        if isMakeHumanRig(rig):
+            filename = "target_rigs/makehuman_tpose.json"
+        elif filename is None:
             filename = rig.McpTPoseFile
         hasFile = loadTPose(rig, filename)
         if not hasFile:
