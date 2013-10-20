@@ -204,6 +204,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 refchar = self.refCharacters[charpath]
             except KeyError:
                 refchar = None
+
             if refchar:
                 srcChar = readTarget(refchar)
                 dstVerts = srcChar.verts[srcVerts]
@@ -255,7 +256,7 @@ def printDebugCoord(string, coord, obj=None, offset=None):
 class EthnicGenderAgeWarpModifier (WarpModifier):
 
     def getRefChar(self, ethnic, gender, age):
-        return "data/targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age)
+        return getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
 
     def setupReferences(self):
         self.refTargets = {}
@@ -266,7 +267,7 @@ class EthnicGenderAgeWarpModifier (WarpModifier):
                 for age in ["baby", "child", "young", "old"]:
                     reftrg = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
                     refchar = self.getRefChar(ethnic, gender, age)
-                    base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age)).replace("\\","/")
+                    base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
                     self.refCharacters[base] = refchar
                     self.refTargets[base] = reftrg
 
@@ -274,19 +275,19 @@ class EthnicGenderAgeWarpModifier (WarpModifier):
 class GenderAgeWarpModifier (EthnicGenderAgeWarpModifier):
 
     def getRefChar(self, ethnic, gender, age):
-        return "data/targets/macrodetails/caucasian-%s-%s.target" % (gender, age)
+        return getSysDataPath("targets/macrodetails/caucasian-%s-%s.target" % (gender, age))
 
 
 class EthnicWarpModifier (EthnicGenderAgeWarpModifier):
 
     def getRefChar(self, ethnic, gender, age):
-        return "data/targets/macrodetails/%s-female-young.target" % (ethnic)
+        return getSysDataPath("targets/macrodetails/%s-female-young.target" % (ethnic))
 
 
 class EthnicGenderAgeToneWeightWarpModifier (WarpModifier):
 
     def getRefChar(self, ethnic, gender, age):
-        return "data/targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age)
+        return getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
 
     def setupReferences(self):
         self.refTargets = {}
@@ -296,12 +297,12 @@ class EthnicGenderAgeToneWeightWarpModifier (WarpModifier):
             for gender in ["female", "male"]:
                 for age in ["baby", "child", "young", "old"]:
                     refchar = self.getRefChar(ethnic, gender, age)
-                    base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age)).replace("\\","/")
+                    base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
                     self.refCharacters[base] = refchar
                     path = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
                     for tone in ["minmuscle", "averagemuscle", "maxmuscle"]:
                         for weight in ["minweight", "averageweight", "maxweight"]:
-                            univ = getSysDataPath("targets/macrodetails/universal-%s-%s-%s-%s.target") % (gender, age, tone, weight).replace("\\","/")
+                            univ = getSysDataPath("targets/macrodetails/universal-%s-%s-%s-%s.target") % (gender, age, tone, weight)
                             self.refCharacters[univ] = univ
                             self.refTargets[univ] = path.replace("${tone}", tone).replace("${weight}", weight)
 
@@ -309,7 +310,7 @@ class EthnicGenderAgeToneWeightWarpModifier (WarpModifier):
 class GenderAgeToneWeightWarpModifier (EthnicGenderAgeToneWeightWarpModifier):
 
     def getRefChar(self, ethnic, gender, age):
-        return "data/targets/macrodetails/caucasian-%s-%s.target" % (gender, age)
+        return getSysDataPath("targets/macrodetails/caucasian-%s-%s.target" % (gender, age))
 
 
 #----------------------------------------------------------
@@ -473,7 +474,7 @@ class GlobalWarpData:
             return self._landMarks[bodypart]
 
         self._landMarks = {}
-        folder = getSysDataPath("landmarks").replace("\\","/")
+        folder = getSysDataPath("landmarks")
         for file_ in os.listdir(folder):
             (name, ext) = os.path.splitext(file_)
             if ext != ".lmk":
