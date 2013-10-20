@@ -728,8 +728,6 @@ class Human(guicommon.Object):
         self.callEvent('onChanging', events3d.HumanEvent(self, 'reset'))
         self.callEvent('onChanged', events3d.HumanEvent(self, 'reset'))
 
-        self.applyAllTargets(G.app.progress)
-
     def getMaterial(self):
         return super(Human, self).getMaterial()
 
