@@ -73,6 +73,8 @@ class Human(guicommon.Object):
         self.material = material.fromFile(getSysDataPath('skins/default.mhmat'))
         self._defaultMaterial = material.Material().copyFrom(self.material)
 
+        self.modifiers = []
+
 
     # TODO introduce better system for managing proxies, nothing done for clothes yet
     def setHairProxy(self, proxy):
@@ -127,6 +129,7 @@ class Human(guicommon.Object):
 
     def setGenitalsObj(self, obj):
         self._genitalsObj = obj
+        # TODO better to let proxy libraries emit these events instead of human
         event = events3d.HumanEvent(self, 'proxyObj')
         event.obj = 'genitals'
         self.callEvent('onChanged', event)
@@ -725,6 +728,8 @@ class Human(guicommon.Object):
         self.callEvent('onChanging', events3d.HumanEvent(self, 'reset'))
         self.callEvent('onChanged', events3d.HumanEvent(self, 'reset'))
 
+        self.applyAllTargets(G.app.progress)
+
     def getMaterial(self):
         return super(Human, self).getMaterial()
 
@@ -738,9 +743,15 @@ class Human(guicommon.Object):
 
     def load(self, filename, update=True, progressCallback=None):
 
+        log.debug("Loading human from MHM file %s.", filename)
+
         self.resetMeshValues()
 
+        # TODO perhaps create progress indicator that depends on line count of mhm file?
         f = open(filename, 'r')
+
+        for lh in G.app.loadHandlers.values():
+            lh(self, ['status', 'started'])
 
         for data in f.readlines():
             lineData = data.split()
@@ -756,6 +767,9 @@ class Human(guicommon.Object):
                 else:
                     log.message('Could not load %s', lineData)
 
+        log.debug("Finalizing MHM loading.")
+        for lh in set(G.app.loadHandlers.values()):
+            lh(self, ['status', 'finished'])
         f.close()
 
         self.syncRace()
@@ -764,6 +778,8 @@ class Human(guicommon.Object):
 
         if update:
             self.applyAllTargets(progressCallback)
+
+        log.debug("Done loading MHM file.")
 
     def save(self, filename, tags):
 
