@@ -58,6 +58,8 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
             self.updateFaceMasks(self.faceHidingTggl.selected)
         self.faceHidingTggl.setSelected(True)
 
+        self.blockFaceMasking = False
+
     def createFileChooser(self):
         self.optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
         super(ClothesTaskView, self).createFileChooser()
@@ -104,12 +106,12 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
 
         self.updateFaceMasks(self.faceHidingTggl.selected)
 
-    def proxyDeselected(self, proxy, obj, suppressSignals = False):
+    def proxyDeselected(self, proxy, obj, suppressSignal = False):
         uuid = proxy.uuid
         del self.human.clothesObjs[uuid]
         del self.human.clothesProxies[uuid]
 
-        if not suppressSignals:
+        if not suppressSignal:
             self.updateFaceMasks(self.faceHidingTggl.selected)
 
     def resetSelection(self):
@@ -130,6 +132,11 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
         Apply facemask (deleteVerts) defined on clothes to body and lower layers
         of clothing. Uses order as defined in self.clothesList.
         """
+        if self.blockFaceMasking:
+            return
+
+        log.debug("Clothes library: updating face masks (face hiding %s).", "enabled" if enableFaceHiding else "disabled")
+
         human = gui3d.app.selectedHuman
         if not enableFaceHiding:
             human.meshData.changeFaceMask(self.originalHumanMask)
@@ -187,6 +194,16 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
             gui3d.app.setGlobalCamera()
 
     def loadHandler(self, human, values):
+        if values[0] == 'status':
+            if values[1] == 'started':
+                # Don't update face masks during loading (optimization)
+                self.blockFaceMasking = True
+            elif values[1] == 'finished':
+                # When loading ends, update face masks
+                self.blockFaceMasking = False
+                self.updateFaceMasks(self.faceHidingTggl.selected)
+            return
+
         # Do this manually because we don't reuse proxychooser.loadHandler()
         if self._proxyFileCache is None:
             self.loadProxyFileCache()
@@ -194,25 +211,34 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
         if values[0] == 'clothesHideFaces':
             enabled = values[1].lower() in ['true', 'yes']
             self.faceHidingTggl.setChecked(enabled)
-            self.updateFaceMasks(enabled)
             return
 
         if len(values) >= 3:
-            mhclo = exportutils.config.getExistingProxyFile(values[1], values[2], "clothes")
+            name = values[1]
+            uuid = values[2]
+            # TODO move this to proxychooser base
+            proxyFile = self.findProxyByUuid(uuid)
+            if not proxyFile:
+                log.warning("Clothes library could not load %s clothes with UUID %s, file not found.", name, uuid)
+                return
+            self.blockFaceMasking = True    # optimization
+            self.selectProxy(proxyFile)
+            self.blockFaceMasking = False
         else:
-            mhclo = exportutils.config.getExistingProxyFile(values[1], None, "clothes")
-        if not mhclo:
-            log.notice("%s does not exist. Skipping.", values[1])
-        else:
-            self.selectProxy(mhclo)
+            filename = values[1]
+            log.error("Not loading clothing %s.Loading clothes from filename is no longer supported. Clothes need to be referenced by UUID.", filename)
+            return
+
+    def onHumanChanged(self, event):
+        super(ClothesTaskView, self).onHumanChanged(event)
+        if event.change == 'reset':
+            self.faceHidingTggl.setSelected(True)
 
     def saveHandler(self, human, file):
+        for proxy in self.getSelection():
+            # TODO move saving with uuid to proxychooser baseclass
+            file.write('clothes %s %s\n' % (proxy.name, proxy.getUuid()))
         file.write('clothesHideFaces %s\n' % self.faceHidingTggl.selected)
-        for name in self.clothesList:
-            clo = human.clothesObjs[name]
-            if clo:
-                proxy = human.clothesProxies[name]
-                file.write('clothes %s %s\n' % (os.path.basename(proxy.file), proxy.getUuid()))
 
     def registerLoadSaveHandlers(self):
         super(ClothesTaskView, self).registerLoadSaveHandlers()
