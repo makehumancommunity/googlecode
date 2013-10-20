@@ -84,6 +84,10 @@ class MhxWeightToolsPanel(bpy.types.Panel):
 
         layout.prop(scn, "MhxShowVGroups")
         if scn.MhxShowVGroups:
+            layout.operator("mhw.show_only_group")
+            layout.operator("mhw.remove_unlinked_from_group")
+
+            layout.separator()
             layout.operator("mhw.unvertex_selected")
             layout.operator("mhw.unvertex_diamonds")
             layout.operator("mhw.delete_diamonds")

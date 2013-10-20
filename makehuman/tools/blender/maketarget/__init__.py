@@ -256,6 +256,24 @@ class MakeTargetBatchPanel(bpy.types.Panel):
             layout.operator("mh.batch_render", text="Batch Render").opengl = False
             layout.operator("mh.batch_render", text="Batch OpenGL Render").opengl = True
 
+#-------------------------------#----------------------------------------------------------
+#   class McpPanel(bpy.types.Panel):
+#----------------------------------------------------------
+
+class McpPanel(bpy.types.Panel):
+    bl_label = "Export/Import MCP"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+
+    @classmethod
+    def poll(self, context):
+        return (context.object and context.object.type == 'ARMATURE')
+
+    def draw(self, context):
+        layout = self.layout
+        layout.operator("mh.saveas_mhp")
+        layout.operator("mh.load_mhp")
+
 #----------------------------------------------------------
 #   class ExportObj(bpy.types.Operator, ExportHelper):
 #----------------------------------------------------------

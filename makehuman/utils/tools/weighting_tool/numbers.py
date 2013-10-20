@@ -19,6 +19,7 @@ Vertex and face numbers
 """
 
 import bpy
+from bpy.props import *
 import os
 
 #
@@ -44,19 +45,30 @@ class VIEW3D_OT_PrintVnumsToFileButton(bpy.types.Operator):
     bl_idname = "mhw.print_vnums_to_file"
     bl_label = "Print Vnums To File"
 
+    filepath = StringProperty(name="File Path", maxlen=1024, default="")
+
     def execute(self, context):
         ob = context.object
         scn = context.scene
-        path = os.path.expanduser(scn.MhxVertexGroupFile)
-        fp = open(path, "w")
-        fp.write("  [")
-        for v in ob.data.vertices:
-            if v.select:
-                fp.write("%d, " % v.index)
-        fp.write("]\n")
-        fp.close()
-        print(path, "written")
+        fname,ext = os.path.splitext(self.properties.filepath)
+        if ext == ".json":
+            vlist = []
+            for v in ob.data.vertices:
+                if v.select:
+                    vlist.append(v.index)
+            io_json.saveJson(vlist, self.properties.filepath)
+        else:
+            fp = open(self.properties.filepath, "w")
+            for v in ob.data.vertices:
+                if v.select:
+                    fp.write("%d\n" % v.index)
+            fp.close()
+        print(self.properties.filepath, "written")
         return{'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 
 class VIEW3D_OT_ReadVNumsButton(bpy.types.Operator):
@@ -64,33 +76,35 @@ class VIEW3D_OT_ReadVNumsButton(bpy.types.Operator):
     bl_label = "Read Vnums from file"
     bl_options = {'UNDO'}
 
-    filepath = bpy.props.StringProperty(
-        name="File Path",
-        description="File path used for target file",
-        maxlen= 1024, default= "")
-
-    @classmethod
-    def poll(self, context):
-        return context.object
+    filepath = StringProperty(name="File Path", maxlen=1024, default="")
 
     def execute(self, context):
+        scn = context.scene
         ob = context.object
-        fp = open(self.filepath, "rU")
-        for line in fp:
-            try:
-                vn = int(line)
-            except:
-                vn = -1
-            if vn >= 0:
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        fname,ext = os.path.splitext(self.properties.filepath)
+        if ext == ".json":
+            vlist = io_json.loadJson(self.properties.filepath)
+            for vn in vlist:
                 ob.data.vertices[vn].select = True
-        fp.close()
-        print("Vnums loaded")
+        else:
+            fp = open(self.properties.filepath, "rU")
+            for line in fp:
+                try:
+                    vn = int(line)
+                except:
+                    vn = -1
+                if vn >= 0:
+                    ob.data.vertices[vn].select = True
+            fp.close()
         return {'FINISHED'}
 
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
-
 
 
 def printFirstVertNum(context):

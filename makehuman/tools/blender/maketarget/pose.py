@@ -42,7 +42,10 @@ from .utils import round, setObjectMode
 
 def saveMhpFile(context, filepath):
     ob = context.object
-    rig = ob.parent
+    if ob.type == 'ARMATURE':
+        rig = ob
+    else:
+        rig = ob.parent
     scn = context.scene
     if rig and rig.type == 'ARMATURE':
         roots = rigRoots(rig)
@@ -96,7 +99,10 @@ def isMuscleBone(pb):
 
 def loadMhpFile(context, filepath):
     ob = context.object
-    rig = ob.parent
+    if ob.type == 'ARMATURE':
+        rig = ob
+    else:
+        rig = ob.parent
     scn = context.scene
     if rig and rig.type == 'ARMATURE':
         (pname, ext) = os.path.splitext(filepath)

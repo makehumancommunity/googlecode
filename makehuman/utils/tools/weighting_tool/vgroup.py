@@ -274,7 +274,7 @@ def unVertexDiamonds(context):
             for vn in f.vertices:
                 me.vertices[vn].select = True
     bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.object.vertex_group_remove_from(use_all_groups=True)
+    bpy.ops.object.vertex_group_remove_from(all=True)
     bpy.ops.object.mode_set(mode='OBJECT')
     return
 
@@ -295,7 +295,7 @@ class VIEW3D_OT_UnvertexSelectedButton(bpy.types.Operator):
 
     def execute(self, context):
         bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.object.vertex_group_remove_from(use_all_groups=True)
+        bpy.ops.object.vertex_group_remove_from(all=True)
         bpy.ops.object.mode_set(mode='OBJECT')
         print("Selected unvertexed")
         return{'FINISHED'}
@@ -517,6 +517,35 @@ class VIEW3D_OT_WeightLidButton(bpy.types.Operator):
         return{'FINISHED'}
 
 
+
+class VIEW3D_OT_ShowOnlyGroupButton(bpy.types.Operator):
+    bl_idname = "mhw.show_only_group"
+    bl_label = "Show Only Group"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        bpy.ops.mesh.reveal()
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.vertex_group_select()
+        bpy.ops.mesh.hide(unselected=True)
+        bpy.ops.mesh.select_mode(use_extend=False, use_expand=False, type='FACE')
+        return{'FINISHED'}
+
+class VIEW3D_OT_RemoveUnlinkedButton(bpy.types.Operator):
+    bl_idname = "mhw.remove_unlinked_from_group"
+    bl_label = "Remove Unlinked From Group"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        bpy.ops.mesh.select_linked(limit=True)
+        bpy.ops.mesh.select_mode(use_extend=False, use_expand=False, type='VERT')
+        bpy.ops.mesh.select_all(action='INVERT')
+        bpy.ops.object.vertex_group_remove_from()
+        bpy.ops.mesh.reveal()
+        bpy.ops.object.vertex_group_remove_from()
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.vertex_group_select()
+        return{'FINISHED'}
 
 
 

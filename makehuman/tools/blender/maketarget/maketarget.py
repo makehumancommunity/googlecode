@@ -158,6 +158,8 @@ class VIEW3D_OT_ImportBaseObjButton(bpy.types.Operator):
 def makeBaseObj(context):
     mh.proxy = None
     ob = context.object
+    if ob.type != 'MESH':
+        return
     for mod in ob.modifiers:
         if mod.type == 'ARMATURE':
             mod.show_in_editmode = True

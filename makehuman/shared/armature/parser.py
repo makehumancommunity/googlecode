@@ -221,9 +221,9 @@ class Parser:
                 if minZ == maxZ == 0:
                     lockZ = 1
                 bone.lockRotation = lockX,lockY,lockZ
-                if minX != None and bone.lockRotation != (1,1,1):
-                    cns = ("LimitRot", C_LOCAL, 0.8, ["LimitRot", limits, (1,1,1)])
-                    self.addConstraint(bname, cns)
+                #if minX != None and bone.lockRotation != (1,1,1):
+                #    cns = ("LimitRot", C_LOCAL, 0.8, ["LimitRot", limits, (1,1,1)])
+                #    self.addConstraint(bname, cns)
 
         if options.useCorrectives:
             self.addCSysBones(rig_control.CoordinateSystems, boneInfo)
