@@ -222,6 +222,8 @@ class MaterialTaskView(gui3d.TaskView):
         self.skinBlender.update(event)
 
     def loadHandler(self, human, values):
+        if values[0] == 'status':
+            return
 
         if values[0] == 'skinMaterial':
             path = values[1]

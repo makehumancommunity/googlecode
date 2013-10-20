@@ -200,6 +200,9 @@ class ExpressionTaskView(gui3d.TaskView):
 
 
     def loadHandler(self, human, values):
+        if values[0] == 'status':
+            return
+
         modifier = self.modifiers.get(values[1], None)
         if modifier:
             value = float(values[2])

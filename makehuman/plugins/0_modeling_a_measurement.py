@@ -346,6 +346,8 @@ class MeasureTaskView(gui3d.TaskView):
         self.uk.setText('UK: %d%s' % (band, ukcups[cup]))
 
     def loadHandler(self, human, values):
+        if values[0] == 'status':
+            return
 
         modifier = self.modifiers.get(values[1], None)
         if modifier:

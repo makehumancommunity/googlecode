@@ -108,6 +108,7 @@ class MhAnimLoader(filechooser.FileHandler):
         self.animationChooser = animationChooser
 
     def refresh(self, files):
+        # TODO probably happens a little too often, better cache this
         self.animationChooser.clearAnimations()
 
         for filename in files:
@@ -606,6 +607,9 @@ class AnimationLibrary(gui3d.TaskView):
                 self.human.meshData.setTransparentPrimitives(self.oldHumanTransp)
 
     def loadHandler(self, human, values):
+        if values[0] == 'status':
+            return
+
         if values[0] == "animations" and len(values) >= 3:
             uuid = values[1]
             animName = values[2]

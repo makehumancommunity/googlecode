@@ -49,10 +49,10 @@ class EyesTaskView(proxychooser.ProxyChooserTaskView):
             gui3d.app.setFaceCamera()
 
     def onHumanChanged(self, event):
-        super(EyesTaskView, self).onHumanChanged(event)
         if event.change == 'reset':
-            # Set default eyes
             self.selectProxy(mh.getSysDataPath("eyes/high-poly/high-poly.mhclo"))
+            return
+        super(EyesTaskView, self).onHumanChanged(event)
 
 
 # This method is called when the plugin is loaded into makehuman

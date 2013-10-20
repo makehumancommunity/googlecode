@@ -170,6 +170,9 @@ class ModifierTaskView(gui3d.TaskView):
             self.updateMacro()
 
     def loadHandler(self, human, values):
+        if values[0] == 'status':
+            return
+
         if values[0] == self._group:
             modifier = self.modifiers.get(values[1], None)
             if modifier:

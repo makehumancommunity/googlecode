@@ -158,6 +158,8 @@ class CustomTargetsTaskView(gui3d.TaskView):
             self.syncStatus()
 
     def loadHandler(self, human, values):
+        if values[0] == 'status':
+            return
 
         modifier = self.modifiers.get(values[1], None)
         if modifier:
