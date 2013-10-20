@@ -9,3 +9,13 @@ for /r %%i in (*) do (
       del %%i
    )
 )
+
+:: Clean up .bin files as well
+
+set filetype=.bin
+
+for /r %%i in (*) do (
+   if %%~xi==%filetype% (
+      del %%i
+   )
+)
