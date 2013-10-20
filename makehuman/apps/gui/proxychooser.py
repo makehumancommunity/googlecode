@@ -223,7 +223,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
         """
         raise NotImplementedError("Implement ProxyChooserTaskView.proxySelected()!")
 
-    def proxyDeselected(self, proxy, obj):
+    def proxyDeselected(self, proxy, obj, suppressSignal = False):
         """
         Do custom work specific to this library when a proxy object was unloaded.
         """
@@ -245,13 +245,8 @@ class ProxyChooserTaskView(gui3d.TaskView):
                 self.deselectProxy(None)
                 return
 
-        if not self.multiProxy and self.isProxySelected():
-            # Deselect previously selected proxy
-            self.deselectProxy(None, suppressSignal = True)
-
+        log.debug('Selecting proxy file "%s" from %s library.', mhclofile, self.proxyName)
         human = self.human
-
-        self.filechooser.selectItem(mhclofile)
 
         if mhclofile not in self._proxyCache:
             proxy = mh2proxy.readProxyFile(human.meshData, 
@@ -262,14 +257,20 @@ class ProxyChooserTaskView(gui3d.TaskView):
         else:
             proxy = self._proxyCache[mhclofile]
 
+        if proxy.uuid in [p.uuid for p in self.getSelection()]:
+            log.debug("Proxy with UUID %s (%s) already loaded in %s library. Skipping.", proxy.uuid, proxy.file, self.proxyName)
+            return
+
+        if not self.multiProxy and self.isProxySelected():
+            # Deselect previously selected proxy
+            self.deselectProxy(None, suppressSignal = True)
+
         mesh = files3d.loadMesh(proxy.obj_file)
         if not mesh:
             log.error("Failed to load %s", proxy.obj_file)
             return
 
-        if self.multiProxy and proxy.uuid in [p.uuid for p in self.getSelection()]:
-            log.warning("Proxy with UUID %s (%s) already loaded in %s library. Skipping.", proxy.uuid, proxy.file, self.proxyName)
-            return
+        self.filechooser.selectItem(mhclofile)
 
         mesh.material = proxy.material
         mesh.priority = proxy.z_depth           # Set render order
@@ -316,7 +317,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
         del self.selectedProxies[idx]
         self.filechooser.deselectItem(mhclofile)
 
-        self.proxyDeselected(proxy, obj)
+        self.proxyDeselected(proxy, obj, suppressSignal)
 
         if not self.multiProxy:
             # Select None item in file list
@@ -350,6 +351,21 @@ class ProxyChooserTaskView(gui3d.TaskView):
         The order corresponds with that of getSelection().
         """
         return self.proxyObjects
+
+    def hideObjects(self):
+        """
+        Hide the objects created by selected proxies in this library.
+        """
+        for obj in self.getObjects():
+            obj.mesh.visibility = False
+
+    def showObjects(self):
+        """
+        Show the objects created by selected proxies in this library 
+        (make visible).
+        """
+        for obj in self.getObjects():
+            obj.mesh.visibility = True
 
     def _getProxyIndex(self, mhcloFile):
         """
@@ -408,19 +424,32 @@ class ProxyChooserTaskView(gui3d.TaskView):
     def onHumanChanged(self, event):
         if event.change == 'reset':
             self.resetSelection()
+        # Ignore some types of events
+        # TODO what is most extensible? specifying which events to react to or which to ignore?
+        if event.change in ['materials', 'proxyObj', 'proxy', 'load']:
+            return
+        self.showObjects() # Make sure objects are shown again after onHumanChanging events
+        #log.debug("Human changed, adapting all proxies (event: %s)", event)
         self.adaptAllProxies()
 
     def onHumanChanging(self, event):
         if gui3d.app.settings.get('realtimeFitting', False):
-            # TODO else hide proxies?
             self.adaptAllProxies()
+        else:
+            self.hideObjects()
 
     def adaptAllProxies(self):
+        proxyCount = len(self.getSelection())
+        if proxyCount > 0:
+            log.debug("Adapting all %s proxies (%s).", self.proxyName, proxyCount)
         for pIdx, proxy in enumerate(self.getSelection()):
             obj = self.getObjects()[pIdx]
-            self.adaptProxyToHuman(proxy, obj)            
+            self.adaptProxyToHuman(proxy, obj)
 
     def loadHandler(self, human, values):
+        if values[0] == 'status':
+            return
+
         if self._proxyFileCache is None:
             self.loadProxyFileCache()
 
@@ -471,11 +500,22 @@ class ProxyChooserTaskView(gui3d.TaskView):
         self.loadProxyFileCache(restoreFromFile = False)
 
     def findProxyByUuid(self, uuid):
+        """
+        Find proxy file in this library by UUID.
+        Proxy files can only be found if they are in the file metadata cache.
+        Returns the path of the proxy file if it is found, else returns None.
+        The returned path is a canonical path name.
+        """
         if self._proxyFileCache is None:
             self.loadProxyFileCache()
 
         if self._proxyFilePerUuid is None:
-            self._proxyFilePerUuid = dict([ (values[1], path) for (path, values) in self._proxyFileCache.items() ])
+            items = [ (values[1], path) for (path, values) in self._proxyFileCache.items() ]
+            self._proxyFilePerUuid = dict()
+            for (_uuid, path) in items:
+                if _uuid in self._proxyFilePerUuid and self._proxyFilePerUuid[_uuid] != path:
+                    log.warning("WARNING: Duplicate UUID found for different proxy files in %s library (files %s and %s share uuid %s). Make sure that all proxy files in your data folders have unique UUIDs (unless they are exactly the same file). Else this may lead to unexpected behaviour.", self.proxyName, path, self._proxyFilePerUuid[_uuid], _uuid)
+                self._proxyFilePerUuid[_uuid] = path
 
         if uuid not in self._proxyFilePerUuid:
             log.warning('Could not find a proxy with UUID %s. Does not exist in %s library.', uuid, self.proxyName)
