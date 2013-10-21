@@ -219,7 +219,9 @@ def OnInit():
     else:
         have_multisample = glInitMultisampleARB()
     try:
-        debugdump.dump.appendMessage("GL.EXTENSION: GL_ARB_multisample %s" % ("enabled" if have_multisample else "not available"))
+        # Number of samples is setup in the QGLWidget context
+        nb_samples = glGetInteger(OpenGL.GL.ARB.multisample.GL_SAMPLES_ARB)
+        debugdump.dump.appendMessage("GL.EXTENSION: GL_ARB_multisample %s (%sx samples)" % ("enabled" if have_multisample else "not available", nb_samples))
     except Exception as e:
         log.error("Failed to write GL debug info to debug dump: %s", format(str(e)))
 
@@ -484,7 +486,7 @@ def drawMesh(obj):
         glDisable(GL_COLOR_MATERIAL)
     elif obj.nTransparentPrimitives:
         if have_multisample:
-            # Enable alpha-to-coverage
+            # Enable alpha-to-coverage (also called CSAA)
             glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE)
             glDisable(GL_BLEND)
         else:
