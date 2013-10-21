@@ -737,16 +737,18 @@ class Parser:
 
                     defBone1 = boneInfo[defName1] = Bone(amt, defName1)
                     defBone1.fromInfo((bname, defParent, F_DEF+F_CON, L_DEF, rotMode))
-                    self.addConstraint(defName1, ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)]))
-                    #self.addConstraint(defName1, ('CopyRot', C_LOCAL, 1, [bname, bname, (1,0,1), (0,0,0), False]))
+                    #self.addConstraint(defName1, ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)]))
+                    self.addConstraint(defName1, ('CopyRot', C_LOCAL, 1, [bname, bname, (1,0,1), (0,0,0), False]))
 
                     defBone2 = boneInfo[defName2] = Bone(amt, defName2)
                     defBone2.fromInfo((bname, defName1, F_DEF+F_CON, L_DEF, rotMode))
-                    self.addConstraint(defName2, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
+                    #self.addConstraint(defName2, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
+                    self.addConstraint(defName2, ('CopyRot', C_LOCAL, 0.5, [target, target+ext, (0,1,0), (0,0,0), True]))
 
                     defBone3 = boneInfo[defName3] = Bone(amt, defName3)
                     defBone3.fromInfo((bname, defName2, F_DEF+F_CON, L_DEF, rotMode))
-                    self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
+                    #self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
+                    self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [target, target+ext, (0,1,0), (0,0,0), True]))
 
 
     def renameDeformBones(self, muscles, custom, boneInfo):
