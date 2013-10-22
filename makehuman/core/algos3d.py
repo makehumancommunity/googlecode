@@ -115,6 +115,9 @@ class Target:
         self.data = raw['vector']
 
     def _load_binary_archive(self, name):
+        """
+        Load target from npz archive (containing multiple targets)
+        """
         name = name.replace('\\', '/')
         bname = os.path.splitext(name)[0]
         iname = '%s.index' % bname
@@ -132,6 +135,9 @@ class Target:
         self.data = Target.npzfile[vname] * 1e-3
 
     def _load_binary_files(self, name):
+        """
+        Load target from individual .bin file
+        """
         bname = os.path.splitext(name)[0]
         iname = '%s.index.npy' % bname
         vname = '%s.vector.npy' % bname
@@ -153,15 +159,17 @@ class Target:
     def _load_binary(self, name):
         if Target.npzfile is None:
             try:
-                npzname = getSysDataPath('targets.npz')
+                npzname = getSysDataPath('targets.npz')     # TODO duplicate path literal
                 Target.npzfile = np.load(npzname)
                 Target.npztime = os.path.getmtime(npzname)
             except:
                 log.message('no compressed targets found')
                 Target.npzfile = False
         if Target.npzfile == False:
+            # Fallback to old .bin files per target     # TODO remove this
             self._load_binary_files(name)
         else:
+            # Load target from npz archive
             self._load_binary_archive(name)
 
     def _save_binary(self, name):
