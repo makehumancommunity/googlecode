@@ -280,7 +280,7 @@ def OnInit():
     if have_multisample:
         glEnable(GL_MULTISAMPLE)
         #glSampleCoverage(1.0, GL_FALSE)
-        glSampleCoverageARB(1.0, GL_FALSE)
+        glSampleCoverageARB(1.0, GL_FALSE)  # TODO flip mask each time
 
     global TEX_NOT_FOUND
     TEX_NOT_FOUND = getTexture(NOTFOUND_TEXTURE)
@@ -488,7 +488,7 @@ def drawMesh(obj):
         if have_multisample:
             # Enable alpha-to-coverage (also called CSAA)
             glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE)
-            glDisable(GL_BLEND)
+            #glDisable(GL_BLEND)    # TODO try not to disable MSAA (anti-aliasing)
         else:
             glDepthMask(GL_FALSE)
         glEnable(GL_ALPHA_TEST)
@@ -497,7 +497,7 @@ def drawMesh(obj):
         glDisable(GL_ALPHA_TEST)
         if have_multisample:
             glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE)
-            glEnable(GL_BLEND)
+            #glEnable(GL_BLEND)
         else:
             glDepthMask(GL_TRUE)
     elif obj.depthless:
