@@ -290,7 +290,7 @@ class MhmLoadTaskView(gui3d.TaskView):
         self.include = "All"
 
         self.globalMhmPath = mh.getSysDataPath(folder)
-        self.mhmPath = os.path.join(mh.getPath(''), 'data', folder)
+        self.mhmPath = mh.getPath(os.path.join('data', folder))
         self.paths = [self.globalMhmPath, self.mhmPath]
 
         if not os.path.exists(self.mhmPath):

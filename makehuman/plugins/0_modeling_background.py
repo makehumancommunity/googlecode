@@ -90,7 +90,7 @@ class BackgroundChooser(gui3d.TaskView):
 
         self.human = gui3d.app.selectedHuman
 
-        self.backgroundsFolder = os.path.join(mh.getPath(''), 'backgrounds')
+        self.backgroundsFolder = mh.getPath('backgrounds')
         if not os.path.exists(self.backgroundsFolder):
             os.makedirs(self.backgroundsFolder)
 
@@ -465,7 +465,7 @@ class TextureProjectionView(gui3d.TaskView) :
         rightBottom = (x1, y0)
 
         dstImg = projection.mapImage(self.backgroundImage, mesh, leftTop, rightBottom)
-        texPath = os.path.join(mh.getPath(''), 'data', 'skins', 'projection.png')
+        texPath = mh.getPath('data/skins/projection.png')
         if os.path.isfile(texPath):
             oldImg = mh.Image(texPath)
         else:
@@ -484,7 +484,7 @@ class TextureProjectionView(gui3d.TaskView) :
     def projectLighting(self):
         dstImg = projection.mapLighting()
         #dstImg.resize(128, 128)
-        texPath = os.path.join(mh.getPath(''), 'data', 'skins', 'lighting.png')
+        texPath = mh.getPath('data/skins/lighting.png')
         if os.path.isfile(texPath):
             oldImg = mh.Image(texPath)
         else:
@@ -503,7 +503,7 @@ class TextureProjectionView(gui3d.TaskView) :
     def projectUV(self):
         dstImg = projection.mapUV()
         #dstImg.resize(128, 128)
-        texPath = os.path.join(mh.getPath(''), 'data', 'skins', 'uvtopo.png')
+        texPath = mh.getPath('data/skins/uvtopo.png')
         if os.path.isfile(texPath):
             oldImg = mh.Image(texPath)
         else:

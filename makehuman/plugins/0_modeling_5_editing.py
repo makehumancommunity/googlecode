@@ -42,7 +42,7 @@ class EditTarget(algos3d.Target):
     @classmethod
     def getName(cls):
         if cls._path is None:
-            cls._path = os.path.join(mh.getPath(''), "edits")
+            cls._path = mh.getPath('edits')
             if not os.path.isdir(cls._path):
                 os.mkdir(cls._path)
 

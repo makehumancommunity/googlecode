@@ -139,7 +139,7 @@ class AnimationLibrary(gui3d.TaskView):
         gui3d.TaskView.__init__(self, category, 'Animations')
 
         self.systemAnims = mh.getSysDataPath('animations')
-        self.userAnims = os.path.join(mh.getPath(''), 'data', 'animations')
+        self.userAnims = mh.getPath('data/animations')
         self.animPaths = [self.userAnims, self.systemAnims]
         if not os.path.exists(self.userAnims):
             os.makedirs(self.userAnims)

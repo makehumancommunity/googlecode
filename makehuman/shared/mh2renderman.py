@@ -45,7 +45,7 @@ class ImageLight:
             dstImg = projection.mapLighting()
             #dstImg.resize(128, 128);
 
-            dstImg.save(os.path.join(getPath(''), 'data', 'skins', 'lighting.png'))
+            dstImg.save(getPath('data/skins/lighting.png'))
             #G.app.selectedHuman.setTexture(os.path.join(getPath(''), 'data', 'skins', 'lighting.tga'))
 
 
@@ -487,16 +487,16 @@ class RMRScene:
         self.renderResult = ""
 
         #resource paths
-        self.renderPath = os.path.join(getPath('render'), 'renderman_output')
+        self.renderPath = getPath('render/renderman_output')
         self.ribsPath = os.path.join(self.renderPath, 'ribFiles')
         self.usrShaderPath = os.path.join(self.ribsPath, 'shaders')
         
         #Texture paths
         self.usrTexturePath = os.path.join(self.ribsPath, 'textures')
-        self.applicationPath = getSysPath('')
+        self.applicationPath = getSysPath()
         self.appTexturePath = getSysDataPath('textures')
         self.hairTexturePath = getSysDataPath('hairstyles')
-        self.skinTexturePath = os.path.join(getPath(''), 'data', 'skins')
+        self.skinTexturePath = getPath('data/skins')
         
         #self.appObjectPath = os.path.join(self.applicationPath, 'data', '3dobjs')
         self.worldFileName = os.path.join(self.ribsPath,"world.rib").replace('\\', '/')

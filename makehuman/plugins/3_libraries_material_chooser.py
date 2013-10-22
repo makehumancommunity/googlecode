@@ -61,20 +61,20 @@ class MaterialTaskView(gui3d.TaskView):
         self.skinBlender = EthnicSkinBlender(self.human)
 
         # Paths, in order, in which relative material filepaths will be searched
-        self.searchPaths = [mh.getPath(''), mh.getSysDataPath()]
+        self.searchPaths = [mh.getPath(), mh.getSysDataPath()]
         self.searchPaths = [os.path.abspath(p) for p in self.searchPaths]
 
         self.systemSkins = mh.getSysDataPath('skins')
-        self.systemClothes = os.path.join(mh.getSysDataPath('clothes'), 'materials')
+        self.systemClothes = mh.getSysDataPath('clothes/materials')
         self.systemHair = mh.getSysDataPath('hairstyles')
         self.systemEyes = mh.getSysDataPath('eyes')
         self.systemGenitals = mh.getSysDataPath('genitals')
 
-        self.userSkins = os.path.join(mh.getPath(''), 'data', 'skins')
-        self.userClothes = os.path.join(mh.getPath(''), 'data', 'clothes', 'materials')
-        self.userHair = os.path.join(mh.getPath(''), 'data', 'hairstyles')
-        self.userEyes = os.path.join(mh.getPath(''), 'data', 'eyes')
-        self.userGenitals = os.path.join(mh.getPath(''), 'data', 'genitals')
+        self.userSkins = mh.getPath('data/skins')
+        self.userClothes = mh.getPath('data/clothes/materials')
+        self.userHair = mh.getPath('data/hairstyles')
+        self.userEyes = mh.getPath('data/eyes')
+        self.userGenitals = mh.getPath('data/genitals')
 
         for path in (self.userSkins, self.userClothes, self.userEyes):
             if not os.path.exists(path):
@@ -138,7 +138,7 @@ class MaterialTaskView(gui3d.TaskView):
         self.reloadMaterialChooser(self.humanObjSelector.selected)
 
         # Offer to download skins if none are found
-        self.numSkin = len([filename for filename in os.listdir(os.path.join(mh.getPath(''), 'data', 'skins')) if filename.lower().endswith('png')])
+        self.numSkin = len([filename for filename in os.listdir(mh.getPath('data/skins')) if filename.lower().endswith('png')])
         if self.numSkin < 1:
             gui3d.app.prompt('No skins found', 'You don\'t seem to have any skins, download them from the makehuman media repository?\nNote: this can take some time depending on your connection speed.', 'Yes', 'No', self.syncMedia)
 

@@ -237,7 +237,7 @@ def printDebugCoord(string, coord, obj=None, offset=None):
             coord[n] += dx
 
     if obj:
-        folder = os.path.join(getPath(''), 'debug')
+        folder = getPath('debug')
         if not os.path.exists(folder):
             os.makedirs(folder)
 

@@ -353,8 +353,8 @@ class MaterialEditorTaskView(gui3d.TaskView):
             self.saveMaterialBtn._path = obj.material.filepath
             self.loadMaterialBtn._path = obj.material.filepath
         else:
-            self.saveMaterialBtn._path = os.path.join(mh.getPath(''), 'data')
-            self.loadMaterialBtn._path = mh.getSysDataPath('')
+            self.saveMaterialBtn._path = mh.getPath('data')
+            self.loadMaterialBtn._path = mh.getSysDataPath()
 
     def onShow(self, arg):
         super(MaterialEditorTaskView, self).onShow(arg)

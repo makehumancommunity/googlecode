@@ -61,7 +61,7 @@ def MitsubaExport(obj, app, settings):
 
     # output directory for rendering
     # Make sure the directory exists
-    out_path = os.path.join(mh.getPath('render'), mh2mitsuba_ini.outputpath)
+    out_path = mh.getPath(os.path.join('render', mh2mitsuba_ini.outputpath))
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     #

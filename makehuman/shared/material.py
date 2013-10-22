@@ -1022,15 +1022,15 @@ def getFilePath(filename, folder = None):
         return os.path.abspath(filename)
     # Search in user data folder
     from getpath import getPath, getSysDataPath, getSysPath
-    userPath = os.path.join(getPath(''), filename)
+    userPath = getPath(filename)
     if os.path.isfile(userPath):
         return os.path.abspath(userPath)
-    # Search in system data path
-    sysPath = getSysDataPath(filename)
-    if os.path.isfile(sysPath):
-        return os.path.abspath(sysPath)
     # Search in system path
     sysPath = getSysPath(filename)
+    if os.path.isfile(sysPath):
+        return os.path.abspath(sysPath)
+    # Search in system data path
+    sysPath = getSysDataPath(filename)
     if os.path.isfile(sysPath):
         return os.path.abspath(sysPath)
 

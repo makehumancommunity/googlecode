@@ -32,7 +32,7 @@ import log
 def listCustomFiles(config):
     files = []
     if config.useCustomTargets:
-        folder = os.path.join(getPath(''), 'custom')
+        folder = getPath('custom')
         files += readCustomFolder(folder, config)
     return files
 

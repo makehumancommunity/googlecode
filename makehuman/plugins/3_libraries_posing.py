@@ -61,7 +61,7 @@ class PoseLoadTaskView(gui3d.TaskView):
     def __init__(self, category):
 
         self.systemPoses = mh.getSysDataPath('poses')
-        self.userPoses = os.path.join(mh.getPath(''), 'data', 'poses')
+        self.userPoses = mh.getPath('data/poses')
         self.paths = [self.systemPoses, self.userPoses]
 
         self.posefile = None
