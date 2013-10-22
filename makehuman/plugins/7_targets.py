@@ -43,7 +43,7 @@ class TargetsTree(gui.TreeView):
         while item is not None:
             path.append(item.text)
             item = item.parent
-        path = mh.getSysDataPath(*reversed(path))
+        path = mh.getSysDataPath(os.path.join(*reversed(path)))
         return path
 
     def populate(self, item):
