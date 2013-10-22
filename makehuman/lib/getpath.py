@@ -100,10 +100,10 @@ def getSysDataPath(subPath = ""):
     if subPath:
         path = getSysPath( os.path.join("data", subPath) )
     else:
-        path = getSysPath("data/")
+        path = getSysPath("data")
     return formatPath(path)
 
-def getSysPath(subPath):
+def getSysPath(subPath = ""):
     """
     Path to the system folder where MakeHuman is installed (it is possible that 
     data is stored in another path).
@@ -113,7 +113,7 @@ def getSysPath(subPath):
     if subPath:
         path = os.path.join('.', subPath)
     else:
-        path = os.path.join(".")
+        path = "."
     return formatPath(path)
 
 
