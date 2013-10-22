@@ -28,14 +28,14 @@ import os
 __home_path = None
 
 def formatPath(path):
-    return path.replace("\\", "/")
+    return os.path.normpath(path).replace("\\", "/")
 
 def canonicalPath(path):
     """
     Return canonical name for location specified by path.
     Useful for comparing paths.
     """
-    return formatPath( os.path.normpath(os.path.realpath(path)) )
+    return formatPath(os.path.realpath(path))
 
 def getHomePath():
     """
