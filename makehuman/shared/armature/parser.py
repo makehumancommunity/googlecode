@@ -287,6 +287,8 @@ class Parser:
 
         if options.useHair:
             self.pruneHair(amt.vertexWeights, boneInfo)
+            if options.useIkHair:
+                self.addIkHair(boneInfo)
 
         if options.merge:
             self.mergeBones(options.merge, boneInfo)
@@ -835,6 +837,8 @@ class Parser:
             elif bname in custom.keys():
                 log.debug(amt.vertexWeights[bname])
                 pass
+            elif bname[0:4] == "hair":
+                pass
             else:
                 defName = self.deformPrefix+bname
                 amt.vertexWeights[defName] = vgroup
@@ -1063,6 +1067,36 @@ class Parser:
         for bname in hweights.keys():
             bone = boneInfo[bname]
             bone.parent = deref(bone.parent, parents, boneInfo)
+
+
+    def addIkHair(self, boneInfo):
+        children = {}
+        for bone in boneInfo.values():
+            if bone.name[0:4] == "hair":
+                children[bone.name] = None
+
+        strands = {}
+        for bone in boneInfo.values():
+            if bone.name[0:4] == "hair":
+                if bone.parent == "head":
+                    strands[bone.name] = [bone]
+                else:
+                    children[bone.parent] = bone
+
+        for strand in strands.values():
+            leaf = strand[-1]
+            while leaf is not None:
+                strand.append(leaf)
+                leaf = children[leaf.name]
+            eff = strand[-1]
+            eff.parent = "head"
+            eff.lock = False
+            eff.lockLocation = (0,0,0)
+            eff.layers |= L_CLO
+            leaf = strand[-2]
+            leaf.children = []
+            cns = ('IK', 0, 1, ['IK', eff.name, len(strand)-2, None, (True, False,False)])
+            self.addConstraint(leaf.name, cns)
 
 
 def deref(pname, parents, boneInfo):
