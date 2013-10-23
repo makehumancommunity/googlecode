@@ -41,6 +41,7 @@ from . import rig_joints
 from . import rig_bones
 from . import rig_muscle
 from . import rig_face
+from . import rig_hair
 from . import rig_control
 from . import rig_merge
 
@@ -84,9 +85,19 @@ class Parser:
 
         #options.useMuscles = True
         if options.useMuscles:
-            self.vertexGroupFiles = ["head", "muscles", "hand", "joints", "tights_muscles", "skirt_muscles", "hair_muscles", "genitalia_muscles"]
+            self.vertexGroupFiles = ["head", "muscles", "hand", "joints", "tights_muscles", "skirt_muscles", "genitalia_muscles"]
         else:
-            self.vertexGroupFiles = ["head", "bones", "hand", "joints", "tights", "skirt", "hair", "genitalia"]
+            self.vertexGroupFiles = ["head", "bones", "hand", "joints", "tights", "skirt", "genitalia"]
+
+        if self.human.hairProxy is None:
+            options.useHair = False
+
+        if options.useHair:
+            self.vertexGroupFiles += ["hair_rig"]
+        elif options.useMuscles:
+            self.vertexGroupFiles += ["hair_muscles"]
+        else:
+            self.vertexGroupFiles += ["hair"]
 
         self.joints = (
             rig_joints.Joints +
@@ -94,6 +105,9 @@ class Parser:
             rig_face.Joints +
             rig_control.Joints
         )
+
+        if options.useHair:
+            self.joints += rig_hair.Joints
 
         self.planes = rig_bones.Planes
         self.planeJoints = rig_control.PlaneJoints
@@ -105,6 +119,9 @@ class Parser:
         ])
 
         addDict(rig_control.RevFootHeadsTails, self.headsTails)
+
+        if options.useHair:
+            addDict(rig_hair.HeadsTails, self.headsTails)
 
         if options.useConstraints:
             self.setConstraints(rig_bones.Constraints)
@@ -179,6 +196,9 @@ class Parser:
 
         if options.useMuscles:
             self.addBones(rig_muscle.Armature, boneInfo)
+
+        if options.useHair:
+            self.addBones(rig_hair.Armature, boneInfo)
 
         if options.useHeadControl:
             self.addBones(rig_control.HeadArmature, boneInfo)
@@ -264,6 +284,9 @@ class Parser:
 
         vgroups = self.readVertexGroupFiles(self.vertexGroupFiles)
         addDict(vgroups, amt.vertexWeights)
+
+        if options.useHair:
+            self.pruneHair(amt.vertexWeights, boneInfo)
 
         if options.merge:
             self.mergeBones(options.merge, boneInfo)
@@ -1016,3 +1039,36 @@ class Parser:
                 self.addConstraint(bname, cns)
 
 
+    def pruneHair(self, rawWeights, boneInfo):
+        proxy = self.human.hairProxy
+        if not proxy:
+            return
+
+        hweights = proxy.getWeights1(rawWeights)
+        killBones = {}
+        for bname in rawWeights.keys():
+            if bname[0:4] == 'hair':
+                killBones[bname] = True
+        for bname in hweights.keys():
+            killBones[bname] = False
+
+        parents = {}
+        for bname in killBones.keys():
+            parents[bname] = boneInfo[bname].parent
+            if killBones[bname]:
+                log.debug("Remove %s" % bname)
+                del rawWeights[bname]
+                del boneInfo[bname]
+
+        for bname in hweights.keys():
+            bone = boneInfo[bname]
+            bone.parent = deref(bone.parent, parents, boneInfo)
+
+
+def deref(pname, parents, boneInfo):
+    try:
+        boneInfo[pname]
+        return pname
+    except KeyError:
+        pass
+    return deref(parents[pname], parents, boneInfo)

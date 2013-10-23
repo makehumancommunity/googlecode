@@ -201,7 +201,7 @@ class Bone:
 
 
     def __repr__(self):
-        return "<Bone %s %s %s>" % (self.name, self.deform, self.parent, self.children)
+        return "<Bone %s %s %s>" % (self.name, self.parent, self.children)
 
 
     def fromInfo(self, info):

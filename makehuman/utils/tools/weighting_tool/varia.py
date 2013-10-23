@@ -20,7 +20,7 @@ Abstract
 
 import bpy, os
 from bpy.props import *
-
+from . import io_json
 
 
 def joinMeshes(context):
@@ -243,7 +243,7 @@ VertexNumbers["hm08"] = {
     "Penis"     : (15144, 15344),
     "Tights"    : (15344, 18018),
     "Skirt"     : (18018, 18738),
-    "Hair"      : (18738, 19166),
+    "hair"      : (18738, 19166),
 }
 
 
@@ -325,3 +325,106 @@ class VIEW3D_OT_CheckVgroupsSanityButton(bpy.types.Operator):
         checkVgroupSanity()
         return{'FINISHED'}
 
+
+#
+#
+#
+
+def createHairRig(ob):
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_mode(type='FACE', action='ENABLE')
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    hairGroups = {}
+    for vn in range(18722, 19150):
+        hairGroups[vn] = 0
+
+    bones = []
+    vgroups = {}
+    for f in ob.data.polygons:
+        if f.select:
+            terminals = []
+            vgrp = vgroups[f.index] = []
+            for vn1,vn2 in f.edge_keys:
+                if vn1 not in vgrp:
+                    vgrp.append(vn1)
+                    hairGroups[vn1] += 1
+                if vn2 not in vgrp:
+                    vgrp.append(vn2)
+                    hairGroups[vn2] += 1
+
+                v1 = ob.data.vertices[vn1]
+                v2 = ob.data.vertices[vn2]
+                vec = v1.co - v2.co
+                zrel = vec[2]/vec.length
+                if zrel < 0.5:
+                    mid = (v1.co+v2.co)/2
+                    terminals.append((mid,vn1,vn2))
+            if len(terminals) != 2:
+                halt
+            head,tail = terminals
+            if head[0][2] < tail[0][2]:
+                tail,head = terminals
+            bones.append((f.index,head,tail))
+
+    parents = {}
+    for idx,head,tail in bones:
+        parents[idx] = None
+        for idx1,head1,tail1 in bones:
+            vec = tail1[0]-head[0]
+            if vec.length < 1e-5:
+                parents[idx] = idx1
+
+    head = []
+    wlist = [ ("head", head) ]
+    for vn,ngrps in hairGroups.items():
+        if ngrps == 0:
+            head.append((vn, 1.0))
+
+    for key,vgrp in vgroups.items():
+        weights = [(vn,1.0/hairGroups[vn]) for vn in vgrp]
+        wlist.append( ("hair%d" % key, weights) )
+
+    filepath = "/home/vgrp_hair_rig.json"
+    io_json.saveJson(wlist, filepath, maxDepth=1)
+
+    string = (
+        "from .flags import *\n\n" +
+        "Joints = [\n")
+
+    for idx,head,tail in bones:
+        if not parents[idx]:
+            _,vn1,vn2 = head
+            string += ("  ('hd%d', 'vl', ((0.5, %d), (0.5, %d))),\n" % (idx, vn1, vn2))
+        _,vn1,vn2 = tail
+        string += ("  ('tl%d', 'vl', ((0.5, %d), (0.5, %d))),\n" % (idx, vn1, vn2))
+
+    string += ("]\n\nHeadsTails = {\n")
+    for idx,_head,_tail in bones:
+        if parents[idx]:
+            string += ("  'hair%d' :  ('tl%d', 'tl%d'),\n" % (idx, parents[idx], idx))
+        else:
+            string += ("  'hair%d' :  ('hd%d', 'tl%d'),\n" % (idx, idx, idx))
+
+    string += ("}\n\nArmature = {\n")
+    for idx,head,tail in bones:
+        if parents[idx]:
+            string += ("  'hair%d' :     (0, 'hair%d', F_DEF+F_CON, L_HAIR),\n" % (idx, parents[idx]))
+        else:
+            string += ("  'hair%d' :     (0, 'head', F_DEF, L_HAIR),\n" % idx)
+
+    string += ("}\n")
+
+    filepath = "/home/rig_hair.py"
+    fp = open(filepath, "w")
+    fp.write(string)
+    fp.close()
+
+
+class VIEW3D_OT_createHairRigButton(bpy.types.Operator):
+    bl_idname = "mhw.create_hair_rig"
+    bl_label = "Create Hair Rig"
+
+    def execute(self, context):
+        createHairRig(context.object)
+        return{'FINISHED'}

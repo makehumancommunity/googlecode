@@ -42,6 +42,7 @@ class ArmatureOptions(object):
         self.useHeadControl = False
         self.useReverseHip = False
         self.useMuscles = False
+        self.useHair = True
         self.useRotationLimits = False
         self.addConnectingBones = False
         self.useQuaternionsOnly = True

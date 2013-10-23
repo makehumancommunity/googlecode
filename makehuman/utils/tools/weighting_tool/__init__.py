@@ -21,7 +21,7 @@ Bone weighting utility
 bl_info = {
     "name": "Weighting Tools",
     "author": "Thomas Larsson",
-    "version": "1.01",
+    "version": "1.02",
     "blender": (2, 6, 6),
     "location": "View3D > Properties > MH Weighting Tools",
     "description": "MakeHuman Utilities",
@@ -179,7 +179,8 @@ class MhxWeightToolsPanel(bpy.types.Panel):
             layout.operator("mhw.localize_files")
             layout.operator("mhw.transfer_vgroups")
             layout.operator("mhw.check_vgroups_sanity")
-
+            layout.separator()
+            layout.operator("mhw.create_hair_rig")
             layout.separator()
             layout.operator("mhw.statistics")
 
