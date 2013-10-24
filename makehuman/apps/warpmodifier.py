@@ -119,7 +119,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
     def compileTargetIfNecessary(self, human):
         try:
-            target = algos3d.getTarget(self.warppath)
+            target = algos3d.getTarget(human.meshData, self.warppath)
         except KeyError:
             target = None
         if target:
@@ -190,7 +190,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
         for charpath,value in human.targetsDetailStack.items():
             try:
-                trgChar = algos3d.getTarget(charpath)
+                trgChar = algos3d.getTarget(human.meshData, charpath)
             except KeyError:
                 continue    # Warp target? - ignore
             if isinstance(trgChar, WarpTarget):
@@ -372,8 +372,9 @@ def readTarget(filepath):
 
     # Target already on global target stack?
     try:
-        target = algos3d.getTarget(filepath)
-        _warpGlobals.targetCache[filepath] = target
+        human = G.app.selectedHuman
+        target = algos3d.getTarget(human.meshData, filepath)
+        _warpGlobals.targetCache[filepath] = target # TODO another cache? is algos3d.targetsBuffer not enough?
         #log.debug("GLOBTAR %s" % target)
         return target
     except KeyError:

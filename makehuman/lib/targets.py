@@ -308,7 +308,6 @@ class ZippedTargetsCrawler(TargetsCrawler):
 
 class Targets(object):
     def __init__(self, dataPath):
-        # TODO root is a param, but the location of the .npz file is not. This is not consistent
         self.targets = []       # List of target files
         self.groups = {}        # Target components, ordered per group
         self.images = {}        # Images list
