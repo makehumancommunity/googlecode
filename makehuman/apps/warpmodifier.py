@@ -122,21 +122,19 @@ class WarpModifier (humanmodifier.SimpleModifier):
             target = algos3d.getTarget(human.meshData, self.warppath)
         except KeyError:
             target = None
-        if target:
-            if not isinstance(target, WarpTarget):
-                raise TypeError("%s is not a warp target" % target)
-        else:
-            shape = self.compileWarpTarget(human)
-            target = WarpTarget(shape, self, human)
-            algos3d._targetBuffer[canonicalPath(self.warppath)] = target
-            human.hasWarpTargets = True
-            #saveWarpedTarget(shape, self.warppath)
+        if target and isinstance(target, WarpTarget):
+            return
+        elif target:
+            log.debug("Warning: %s is not a warp target, path '%s'" % (target, self.warppath))
+        shape = self.compileWarpTarget(human)
+        target = WarpTarget(shape, self, human)
+        algos3d._targetBuffer[canonicalPath(self.warppath)] = target
+        human.hasWarpTargets = True
 
 
     def compileWarpTarget(self, human):
         global _warpGlobals
-        log.message("COMPWARP %s", self)
-        landmarks = _warpGlobals.getLandMarks(self.bodypart)
+        log.message("Compile %s", self)
         srcTargetCoord, srcCharCoord, trgCharCoord = self.getReferences(human)
         #human.traceStacks()
         #self.traceReference()
@@ -148,7 +146,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         printDebugCoord("trg_char", trgCharCoord, obj)
 
         if srcTargetCoord:
-            shape = warp.warp_target(srcTargetCoord, srcCharCoord, trgCharCoord, landmarks)
+            shape = warp.warp_target(srcTargetCoord, srcCharCoord, trgCharCoord, self.bodypart)
         else:
             shape = {}
 
@@ -188,6 +186,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
             self.traceReference()
             raise NameError("Warping problem")
 
+        # This block can be eliminated if
         for charpath,value in human.targetsDetailStack.items():
             try:
                 trgChar = algos3d.getTarget(human.meshData, charpath)
@@ -206,16 +205,17 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 refchar = None
 
             if refchar:
-                srcChar = readTarget(refchar)
+                srcChar = algos3d.getTarget(human.meshData, refchar)
                 dstVerts = srcChar.verts[srcVerts]
                 srcCharCoord[dstVerts] +=  value * srcChar.data[srcVerts]
 
+        for charpath,value in human.targetsDetailStack.items():
             try:
                 reftrg = self.refTargets[charpath]
             except KeyError:
                 reftrg = None
             if reftrg:
-                srcTrg = readTarget(reftrg)
+                srcTrg = readTargetCoords(reftrg)
                 addVerts(srcTargetCoord, value, srcTrg)
 
         return srcTargetCoord, srcCharCoord, trgCharCoord
@@ -361,27 +361,15 @@ def addVerts(targetVerts, value, verts):
 #   Read target
 #----------------------------------------------------------
 
-def readTarget(filepath):
+def readTargetCoords(filepath):
     global _warpGlobals
 
-    # Target cached?
+    # if cached, means that target's life cycle is handled by warpmodifier.
     try:
         return _warpGlobals.targetCache[filepath]
     except KeyError:
         pass
 
-    # Target already on global target stack?
-    try:
-        human = G.app.selectedHuman
-        target = algos3d.getTarget(human.meshData, filepath)
-        _warpGlobals.targetCache[filepath] = target # TODO another cache? is algos3d.targetsBuffer not enough?
-        #log.debug("GLOBTAR %s" % target)
-        return target
-    except KeyError:
-        pass
-
-    # If neither, read target
-    #log.debug("READTAR %s" % filepath)
     filepath = filepath.replace("\\","/")
     words = filepath.rsplit("-",3)
     if words[0] == getSysDataPath("targets/macrodetails/universal"):
@@ -411,6 +399,7 @@ def readTarget(filepath):
                 if n < meshstat.numberOfVertices:
                     target[n] = np.array([float(words[1]), float(words[2]), float(words[3])])
         fp.close()
+        # Cache will be flushed when character is changed.
         _warpGlobals.targetCache[filepath] = target
         return target
     else:

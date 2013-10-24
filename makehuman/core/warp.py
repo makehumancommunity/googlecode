@@ -247,21 +247,51 @@ class CWarp1:
         return ymorph
 
 
+
 #----------------------------------------------------------
 #   External interface
 #----------------------------------------------------------
 
-warpMethod = 0
+WarpMethod = 3
 
-def warp_target(morph, source, target, landmarks):
-    global warpMethod
-    log.debug("WARP using method = %d" % warpMethod)
-    if warpMethod == 0:
+BodySizes = {
+    "face" : [
+        (5399, 11998, 1.4800),
+        (791, 881, 2.3298),
+        (962, 5320, 1.9221),
+    ],
+    "body" : [
+        (13868, 14308, 9.6806),
+        (881, 13137, 16.6551),
+        (10854, 10981, 2.4356),
+    ],
+}
+
+def warp_target(morph, source, target, bodypart):
+    global WarpMethod, BodySizes
+    log.debug("WARP using method = %d" % WarpMethod)
+    if WarpMethod == 0:
         return morph
-    elif warpMethod == 1:
+    elif WarpMethod == 1:
+        landmarks = _warpGlobals.getLandMarks(self.bodypart)
         return CWarp1().warpTarget(morph, source, target, landmarks)
-    elif warpMethod == 2:
+    elif WarpMethod == 2:
+        landmarks = _warpGlobals.getLandMarks(self.bodypart)
         return CWarp2(source, target, landmarks).warpTarget(morph)
+    elif WarpMethod == 3:
+        scale = np.array((1.0,1.0,1.0))
+        sizes = BodySizes[bodypart]
+        for n in range(3):
+            vn1,vn2,r = sizes[n]
+            vec = target[vn1] - target[vn2]
+            scale[n] = abs(vec[n]/r)
+        log.debug("Scale %s" % scale)
+        smorph = {}
+        for vn,dr in morph.items():
+            smorph[vn] = scale*dr
+        return smorph
+
+
 
 #----------------------------------------------------------
 #   Testing
