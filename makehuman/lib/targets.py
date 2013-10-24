@@ -24,7 +24,7 @@ TODO
 
 import os
 import zipfile
-from getpath import getSysDataPath
+from getpath import getSysDataPath, canonicalPath
 import log
 
 # TODO share with algos3d
@@ -106,17 +106,13 @@ class TargetsCrawler(object):
     """
     Recursive target finder baseclass.
     """
-    def __init__(self, root, dataPath = None):
-        self.root = root
+    def __init__(self, dataPath):
         self.dataPath = dataPath
 
-        if self.dataPath:
-            if os.path.basename(os.path.normpath(self.dataPath)) != "data":
-                log.warning('Data path containing targets (%s) is not called "data", this might cause problems with wrong relative target paths when trying to load from a .npz archive (which are usually compiled against data/targets relative path).', self.dataPath)
+        #if os.path.basename(os.path.normpath(self.dataPath)) != "data":
+        #    log.warning('Data path containing targets (%s) is not called "data", this might cause problems.', self.dataPath)
 
-            self.relPath = os.path.normpath(os.path.join(dataPath, '..'))
-        else:
-            self.relPath = None
+        #self.relToPath = os.path.normpath(os.path.join(dataPath, '..'))
 
         self.rootComponent = Component()
 
@@ -133,13 +129,11 @@ class TargetsCrawler(object):
     def is_file(self, path):
         raise NotImplementedError("Implement TargetsCrawler.is_file(path)")
 
-    def findTargets(self):
-        if self.relPath:
-            rootPath = os.path.relpath(self.root, self.relPath)
-        else:
-            rootPath = self.root
+    def get_root(self):
+        raise NotImplementedError("Implement TargetsCrawler.get_root()")
 
-        self.walkTargets(rootPath, self.rootComponent)
+    def findTargets(self):
+        self.walkTargets('', self.rootComponent)
 
     def real_path(self, path):
         raise NotImplementedError("Implement TargetsCrawler.real_path(path)")
@@ -160,7 +154,17 @@ class TargetsCrawler(object):
 
                 # Split filename in parts
                 parts = name.replace('_','-').replace('.','-').split('-')
-                for part in parts:
+                for pIdx, part in enumerate(parts):
+                    if pIdx == 0 and part == "targets":
+                        # Do not add targets/ path component to group names
+                        # This is a shortcut in naming for target files inside
+                        # the targets/ folder.
+                        # For target files in other data subfolders, the containing
+                        # subfolder is prepended to the group name
+                        # eg. poses-...
+                        # To avoid clashes, placing .target files in the data
+                        # folder root is not advised.
+                        continue
                     item.update(part)   # Set Component.key or dependencies data
 
                 if self.is_dir(path):
@@ -180,8 +184,8 @@ class FilesTargetsCrawler(TargetsCrawler):
     """
     Finds targets that are separate ASCII .target files in recursive folders.
     """
-    def __init__(self, root, dataPath = None):
-        super(FilesTargetsCrawler, self).__init__(root, dataPath)
+    def __init__(self, dataPath):
+        super(FilesTargetsCrawler, self).__init__(dataPath)
 
     def is_dir(self, path):
         return os.path.isdir(path)
@@ -193,40 +197,60 @@ class FilesTargetsCrawler(TargetsCrawler):
         return os.listdir(path)
 
     def real_path(self, path):
-        if self.relPath:
-            return os.path.join(self.relPath, path)
-        else:
-            return path
+        return os.path.normpath( os.path.join(self.dataPath, path) )
+
+    def get_root(self):
+        return self.root
 
 
 class ZippedTargetsCrawler(TargetsCrawler):
     """
     Finds targets packed in a binary .npz archive.
     """
-    def __init__(self, root, dataPath = None):
-        if not os.path.isfile(TARGETS_NPZ_PATH):
-            raise StandardError('Could not load load targets from npz archive. Archive file %s not found.', TARGETS_NPZ_PATH)
-        super(ZippedTargetsCrawler, self).__init__(root, dataPath)
+    def __init__(self, dataPath, npzFile):
+        super(ZippedTargetsCrawler, self).__init__(dataPath)
+
+        self.npzPath = os.path.join(dataPath, npzFile)
+        if not os.path.isfile(self.npzPath):
+            raise StandardError('Could not load load targets from npz archive. Archive file %s not found.', self.npzPath)
         self._files = None
 
-    def is_file(self, path):
+    def lookupPath(self, realPath):
+        """
+        Returns the _files lookup path for specified real path.
+        """
+        if canonicalPath(realPath) == canonicalPath(self.dataPath):
+            return ''
+        return os.path.normpath(os.path.relpath(realPath, self.dataPath)).replace('\\', '/')
+
+    def is_file(self, realPath):
+        path = self.lookupPath(realPath)
         return self.namei(path) is None
 
-    def is_dir(self, path):
+    def is_dir(self, realPath):
+        path = self.lookupPath(realPath)
         return isinstance(self.namei(path), dict)
 
-    def list_dir(self, path):
+    def list_dir(self, realPath):
+        path = self.lookupPath(realPath)
         if self._files is None:
             self.buildTree()
         return self.namei(path).keys()
 
     def real_path(self, path):
-        # Target is always relative (within npz file)
-        return path
+        return os.path.join(self.dataPath, path).replace('\\', '/')
+
+    def get_root(self):
+        return self.root
 
     def namei(self, path):
         if isinstance(path, basestring):
-            path = list(reversed(path.split('/')))
+            if not path:
+                path = []
+            elif path == '.':
+                path = []
+            else:
+                path = list(reversed(path.split('/')))
         else:
             path = list(reversed(path))
         dir_ = self._files
@@ -236,8 +260,8 @@ class ZippedTargetsCrawler(TargetsCrawler):
 
     def buildTree(self):
         """
-        Build file list of .target and image files from targets.npz image and
-        images.list
+        Build file tree of .target files from targets.npz and image file from
+        the data file path.
         Targets in NPZ archive are referenced as regular target files relative
         to sys path (paths like data/targets/...).
         This method will throw an exception if npz is not found or faulty.
@@ -254,7 +278,7 @@ class ZippedTargetsCrawler(TargetsCrawler):
                 add_file(dir[head], tail)
 
         # Add targets in npz archive to file list
-        with zipfile.ZipFile(TARGETS_NPZ_PATH, 'r') as npzfile:
+        with zipfile.ZipFile(self.npzPath, 'r') as npzfile:
             for file_ in npzfile.infolist():
                 name = file_.filename
                 if not name.endswith('.index.npy'):
@@ -263,23 +287,32 @@ class ZippedTargetsCrawler(TargetsCrawler):
                 path = name.split('/')
                 add_file(self._files, path)
 
-        # Add images to file list
-        with open(getSysDataPath('images.list'), 'r') as imgfile:
+        # Walk file path (not .npz archive) to find images to add to file list
+        with open(os.path.join(self.dataPath, 'images.list'), 'r') as imgfile:
             for line in imgfile:
                 name = line.rstrip()
                 if not name.endswith('.png'):
                     continue
-                path = name.split('/')
+                path = os.path.normpath(os.path.relpath(name, self.dataPath)).replace('\\', '/')
+                path = path.split('/')
                 add_file(self._files, path)
+
+        def _debug_print(root, pre=''):
+                if not root:
+                    return
+                for (key, vals) in root.items():
+                    log.debug( pre+"%s" % key )
+                    _debug_print(vals, pre+'    ')
+        #_debug_print(self._files)
 
 
 class Targets(object):
-    def __init__(self, root, dataPath = None):
+    def __init__(self, dataPath):
         # TODO root is a param, but the location of the .npz file is not. This is not consistent
         self.targets = []       # List of target files
         self.groups = {}        # Target components, ordered per group
         self.images = {}        # Images list
-        self.walk(root, dataPath)
+        self.walk(dataPath)
 
     def debugKeys(self):
         """
@@ -303,17 +336,18 @@ class Targets(object):
                             if value is not None])
                 log.debug("             depends on variables: %s", dependsOn)
 
-    def walk(self, root, dataPath = None):
+    def walk(self, dataPath):
         try:
             # Load cached targets from .npz file
             log.debug("Attempting to load targets from NPZ file.")
-            targetFinder = ZippedTargetsCrawler(root, dataPath)
+            targetFinder = ZippedTargetsCrawler(dataPath, 'targets.npz')
             targetFinder.findTargets()
             log.debug("%s targets loaded from NPZ file succesfully.", len(targetFinder.targets))
         except StandardError as e:
             # Load targets from .target files
-            log.debug("Could not load targets from NPZ, loading individual files from %s (Error message: %s)", root, e.message)
-            targetFinder = FilesTargetsCrawler(root, dataPath)
+            log.debug("Could not load targets from NPZ, loading individual files from %s (Error message: %s)", dataPath, e, exc_info=False)
+
+            targetFinder = FilesTargetsCrawler(dataPath)
             targetFinder.findTargets()
             log.debug("%s targets loaded from .target files.", len(targetFinder.targets))
 
@@ -327,5 +361,5 @@ _targets = None
 def getTargets():
     global _targets
     if _targets is None:
-        _targets = Targets(getSysDataPath('targets'), getSysDataPath())
+        _targets = Targets(getSysDataPath())
     return _targets
