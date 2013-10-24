@@ -24,6 +24,7 @@ Common base class for all proxy chooser libraries.
 
 import os
 import gui3d
+import gui
 import events3d
 import mh
 import files3d
@@ -77,7 +78,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
     Common base class for all proxy chooser libraries.
     """
 
-    def __init__(self, category, proxyName, tabLabel = None, multiProxy = False):
+    def __init__(self, category, proxyName, tabLabel = None, multiProxy = False, mayUseRig = False):
         if not tabLabel:
             tabLabel = proxyName.capitalize()
         proxyName = proxyName.lower().replace(" ", "_")
@@ -86,6 +87,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
         self.proxyName = proxyName
         self.label = tabLabel
         self.multiProxy = multiProxy
+        self.mayUseRig = mayUseRig
 
         self.homeProxyDir = getpath.getPath(os.path.join('data', proxyName))
         self.sysProxyDir = mh.getSysDataPath(proxyName)
@@ -105,6 +107,15 @@ class ProxyChooserTaskView(gui3d.TaskView):
         self.proxyObjects = []
 
         self.createFileChooser()
+
+        if self.mayUseRig:
+            self.rigBox = self.addLeftWidget(gui.GroupBox('Rigging'))
+            self.useRigBtn = self.rigBox.addWidget(gui.CheckBox("Use rig", False))
+
+            @self.useRigBtn.mhEvent
+            def onClicked(event):
+                for proxy in self.selectedProxies:
+                    proxy.useRig = self.useRigBtn.selected
 
 
     def createFileChooser(self):
@@ -140,6 +151,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
             @self.filechooser.mhEvent
             def onDeselectAll(value):
                 self.deselectAllProxies()
+
 
     def getSaveName(self):
         """
@@ -232,7 +244,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
     def selectProxy(self, mhclofile):
         """
         Called when a new proxy has been selected.
-        If this library selects only a single proxy, specifying None as 
+        If this library selects only a single proxy, specifying None as
         mhclofile parameter will deselect the current proxy and set the selection
         to "none".
         If this library allows selecting multiple proxies, specifying None as
@@ -249,9 +261,9 @@ class ProxyChooserTaskView(gui3d.TaskView):
         human = self.human
 
         if mhclofile not in self._proxyCache:
-            proxy = mh2proxy.readProxyFile(human.meshData, 
-                                           mhclofile, 
-                                           type=self.proxyName.capitalize(), 
+            proxy = mh2proxy.readProxyFile(human.meshData,
+                                           mhclofile,
+                                           type=self.proxyName.capitalize(),
                                            layer=self.getObjectLayer() )    # TODO remove this layer arg, is bogus
             self._proxyCache[mhclofile] = proxy
         else:
@@ -260,6 +272,9 @@ class ProxyChooserTaskView(gui3d.TaskView):
         if proxy.uuid in [p.uuid for p in self.getSelection()]:
             log.debug("Proxy with UUID %s (%s) already loaded in %s library. Skipping.", proxy.uuid, proxy.file, self.proxyName)
             return
+
+        if self.mayUseRig:
+            proxy.useRig = self.useRigBtn.selected
 
         if not self.multiProxy and self.isProxySelected():
             # Deselect previously selected proxy
@@ -339,7 +354,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
         """
         Return the selected proxies as a list.
         If no proxy is selected, returns empty list.
-        If this is library allows selecting multiple proxies, the list can 
+        If this is library allows selecting multiple proxies, the list can
         contain multiple entries, if this is library allows selecting only a
         single proxy, the list is either of length 0 or 1.
         """
@@ -361,7 +376,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
 
     def showObjects(self):
         """
-        Show the objects created by selected proxies in this library 
+        Show the objects created by selected proxies in this library
         (make visible).
         """
         for obj in self.getObjects():

@@ -29,7 +29,7 @@ import proxychooser
 class HairTaskView(proxychooser.ProxyChooserTaskView):
 
     def __init__(self, category):
-        super(HairTaskView, self).__init__(category, 'hair')
+        super(HairTaskView, self).__init__(category, 'hair', mayUseRig = True)
 
     def getObjectLayer(self):
         #return 3

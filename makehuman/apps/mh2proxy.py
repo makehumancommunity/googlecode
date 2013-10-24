@@ -124,6 +124,7 @@ class CProxy:
         self.uuid = None
         self.basemesh = "alpha_7"
         self.tags = []
+        self.useRig = False
 
         self.vertWeights = {}       # (proxy-vert, weight) list for each parent vert
         self.refVerts = []
@@ -168,7 +169,7 @@ class CProxy:
 
 
     def __repr__(self):
-        return ("<CProxy %s %s %s %s>" % (self.name, self.type, self.file, self.uuid))
+        return ("<CProxy %s %s %s %s %s>" % (self.name, self.type, self.useRig, self.file, self.uuid))
 
 
     def getObject(self):
@@ -671,7 +672,7 @@ def _findProxyFiles(folder, fileExt = "mhclo", depth = 6):
 
 def peekMetadata(proxyFilePath):
     """
-    Read UUID and tags from proxy file, and return as soon as vertex data 
+    Read UUID and tags from proxy file, and return as soon as vertex data
     begins. Reads only the necessary lines of the proxy file from disk, not the
     entire proxy file is loaded in memory.
     """

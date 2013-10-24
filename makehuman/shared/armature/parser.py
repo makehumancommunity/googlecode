@@ -89,10 +89,12 @@ class Parser:
         else:
             self.vertexGroupFiles = ["head", "bones", "hand", "joints", "tights", "skirt", "genitalia"]
 
-        if self.human.hairProxy is None:
-            options.useHair = False
+        if self.human.hairProxy:
+            self.useHairRig = self.human.hairProxy.useRig
+        else:
+            self.useHairRig = False
 
-        if options.useHair:
+        if self.useHairRig:
             self.vertexGroupFiles += ["hair_rig"]
         elif options.useMuscles:
             self.vertexGroupFiles += ["hair_muscles"]
@@ -106,7 +108,7 @@ class Parser:
             rig_control.Joints
         )
 
-        if options.useHair:
+        if self.useHairRig:
             self.joints += rig_hair.Joints
 
         self.planes = rig_bones.Planes
@@ -120,7 +122,7 @@ class Parser:
 
         addDict(rig_control.RevFootHeadsTails, self.headsTails)
 
-        if options.useHair:
+        if self.useHairRig:
             addDict(rig_hair.HeadsTails, self.headsTails)
 
         if options.useConstraints:
@@ -197,7 +199,7 @@ class Parser:
         if options.useMuscles:
             self.addBones(rig_muscle.Armature, boneInfo)
 
-        if options.useHair:
+        if self.useHairRig:
             self.addBones(rig_hair.Armature, boneInfo)
 
         if options.useHeadControl:
@@ -285,7 +287,7 @@ class Parser:
         vgroups = self.readVertexGroupFiles(self.vertexGroupFiles)
         addDict(vgroups, amt.vertexWeights)
 
-        if options.useHair:
+        if self.useHairRig:
             self.pruneHair(amt.vertexWeights, boneInfo)
             if options.useIkHair:
                 self.addIkHair(boneInfo)
