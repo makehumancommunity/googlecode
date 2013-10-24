@@ -289,7 +289,7 @@ class EditingTaskView(gui3d.TaskView):
         human = gui3d.app.selectedHuman
         morph = EditTarget(human.meshData, self.verts,
                            human.meshData.coord[self.verts] - self.original)
-        algos3d.targetBuffer[morph.name] = morph
+        algos3d._targetBuffer[morph.name] = morph
         morph._save_binary(morph.name)
         gui3d.app.do(EditAction(human, [morph.name], 1.0))
 

@@ -187,7 +187,7 @@ class ExpressionTaskView(gui3d.TaskView):
             for target in self.targets:
                 human.setDetail(target, 0)
             try:
-                del algos3d.targetBuffer[target]
+                del algos3d._targetBuffer[target]
             except KeyError:
                 pass
             self.targets = {}
