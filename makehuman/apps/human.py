@@ -162,7 +162,7 @@ class Human(guicommon.Object):
         return
 
         log.debug("algos3d.targetBuffer:")
-        for path,target in algos3d.targetBuffer.items():
+        for path,target in algos3d._targetBuffer.items():
             if isinstance(target, warpmodifier.WarpTarget):
                 stars = " *** "
             else:

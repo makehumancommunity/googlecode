@@ -26,7 +26,7 @@ __docformat__ = 'restructuredtext'
 
 import numpy as np
 from operator import mul
-from getpath import getPath, getSysDataPath
+from getpath import getPath, getSysDataPath, canonicalPath
 import os
 
 import algos3d
@@ -119,7 +119,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
     def compileTargetIfNecessary(self, human):
         try:
-            target = algos3d.targetBuffer[self.warppath]
+            target = algos3d.getTarget(self.warppath)
         except KeyError:
             target = None
         if target:
@@ -128,7 +128,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         else:
             shape = self.compileWarpTarget(human)
             target = WarpTarget(shape, self, human)
-            algos3d.targetBuffer[self.warppath] = target
+            algos3d._targetBuffer[canonicalPath(self.warppath)] = target
             human.hasWarpTargets = True
             #saveWarpedTarget(shape, self.warppath)
 
@@ -190,7 +190,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
         for charpath,value in human.targetsDetailStack.items():
             try:
-                trgChar = algos3d.targetBuffer[charpath]
+                trgChar = algos3d.getTarget(charpath)
             except KeyError:
                 continue    # Warp target? - ignore
             if isinstance(trgChar, WarpTarget):
@@ -323,11 +323,11 @@ def resetWarpBuffer():
     human = G.app.selectedHuman
     if human.hasWarpTargets:
         log.debug("WARP RESET")
-        for path,target in algos3d.targetBuffer.items():
+        for path,target in algos3d._targetBuffer.items():
             if isinstance(target, WarpTarget):
                 log.debug("  DEL %s" % path)
                 human.setDetail(path, 0)
-                del algos3d.targetBuffer[path]
+                del algos3d._targetBuffer[path]
         human.applyAllTargets()
         human.hasWarpTargets = False
 
@@ -372,7 +372,7 @@ def readTarget(filepath):
 
     # Target already on global target stack?
     try:
-        target = algos3d.targetBuffer[filepath]
+        target = algos3d.getTarget(filepath)
         _warpGlobals.targetCache[filepath] = target
         #log.debug("GLOBTAR %s" % target)
         return target

@@ -45,9 +45,9 @@ __docformat__ = 'restructuredtext'
 import os
 import numpy as np
 import log
-from getpath import getSysDataPath
+from getpath import getSysDataPath, canonicalPath
 
-targetBuffer = {}
+_targetBuffer = {}
 
 
 class Target:
@@ -93,6 +93,7 @@ class Target:
     dtype = [('index','u4'),('vector','(3,)f4')]
     npzfile = None
     npztime = None
+    npzdir = None
 
 
     def __repr__(self):
@@ -160,6 +161,7 @@ class Target:
         if Target.npzfile is None:
             try:
                 npzname = getSysDataPath('targets.npz')     # TODO duplicate path literal
+                Target.npzdir = os.path.dirname(npzname)
                 Target.npzfile = np.load(npzname)
                 Target.npztime = os.path.getmtime(npzname)
             except:
@@ -170,6 +172,7 @@ class Target:
             self._load_binary_files(name)
         else:
             # Load target from npz archive
+            name = os.path.relpath(name, Target.npzdir)
             self._load_binary_archive(name)
 
     def _save_binary(self, name):
@@ -265,14 +268,15 @@ def getTarget(obj, targetPath):
         *string*. The file system path to the file containing the morphing targets.
         The precise format of this string will be operating system dependant.
     """
+    targetPath = canonicalPath(targetPath)
 
     try:
-        return targetBuffer[targetPath]
+        return _targetBuffer[targetPath]
     except KeyError:
         pass
 
     target = Target(obj, targetPath)
-    targetBuffer[targetPath] = target
+    _targetBuffer[targetPath] = target
     return target
 
 
