@@ -240,8 +240,14 @@ class MaterialTaskView(gui3d.TaskView):
                         return
             log.warning('Could not find material %s for skinMaterial parameter.', values[1])
         elif values[0] == 'material':
-            uuid = values[1]
-            filepath = values[2]
+            if len(values) == 3:
+                uuid = values[1]
+                filepath = values[2]
+                name = ""
+            else:
+                name = values[1]
+                uuid = values[2]
+                filepath = values[3]
 
             if human.hairProxy and human.hairProxy.getUuid() == uuid:
                 proxy = human.hairProxy
@@ -259,7 +265,7 @@ class MaterialTaskView(gui3d.TaskView):
                 human.genitalsObj.material = material.fromFile(filepath)
                 return
             elif not uuid in human.clothesProxies.keys():
-                log.error("Could not load material for object with uuid %s!" % uuid)
+                log.error("Could not load material for proxy with uuid %s (%s)! No such proxy." % (uuid, name))
                 return
 
             proxy = human.clothesProxies[uuid]
@@ -305,29 +311,28 @@ class MaterialTaskView(gui3d.TaskView):
         return relPath
 
     def saveHandler(self, human, file):
-
         file.write('skinMaterial %s\n' % self.getRelativeMaterialPath(human.material.filename))
         for name, clo in human.clothesObjs.items():
             if clo:
                 proxy = human.clothesProxies[name]
                 if clo.material.filename !=  proxy.material.filename:
                     materialPath = self.getRelativeMaterialPath(clo.material.filename, proxy.file)
-                    file.write('material %s %s\n' % (proxy.getUuid(), materialPath))
+                    file.write('material %s %s %s\n' % (proxy.name, proxy.getUuid(), materialPath))
         if human.hairObj and human.hairProxy:
             proxy = human.hairProxy
             hairObj = human.hairObj
             materialPath = self.getRelativeMaterialPath(hairObj.material.filename, proxy.file)
-            file.write('material %s %s\n' % (proxy.getUuid(), materialPath))
+            file.write('material %s %s %s\n' % (proxy.name, proxy.getUuid(), materialPath))
         if human.eyesObj and human.eyesProxy:
             proxy = human.eyesProxy
             eyesObj = human.eyesObj
             materialPath = self.getRelativeMaterialPath(eyesObj.material.filename, proxy.file)
-            file.write('material %s %s\n' % (proxy.getUuid(), materialPath))
+            file.write('material %s %s %s\n' % (proxy.name, proxy.getUuid(), materialPath))
         if human.genitalsObj and human.genitalsProxy:
             proxy = human.genitalsProxy
             genitalsObj = human.genitalsObj
             materialPath = self.getRelativeMaterialPath(genitalsObj.material.filename, proxy.file)
-            file.write('material %s %s\n' % (proxy.getUuid(), materialPath))
+            file.write('material %s %s %s\n' % (proxy.name, proxy.getUuid(), materialPath))
 
     def syncMedia(self):
 
