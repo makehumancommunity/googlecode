@@ -313,9 +313,9 @@ class Targets(object):
         self.images = {}        # Images list
         self.walk(dataPath)
 
-    def debugKeys(self):
+    def debugGroups(self):
         """
-        Debug print all keys for the targets stored in groups.
+        Debug print all group keys for the targets stored in groups.
         """
         log.debug("Targets keys:\n%s", "\n".join(["-".join(k) for k in self.groups.keys()]))
 
