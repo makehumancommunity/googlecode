@@ -204,30 +204,12 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
                 self.updateFaceMasks(self.faceHidingTggl.selected)
             return
 
-        # Do this manually because we don't reuse proxychooser.loadHandler()
-        if self._proxyFileCache is None:
-            self.loadProxyFileCache()
-
         if values[0] == 'clothesHideFaces':
             enabled = values[1].lower() in ['true', 'yes']
             self.faceHidingTggl.setChecked(enabled)
             return
 
-        if len(values) >= 3:
-            name = values[1]
-            uuid = values[2]
-            # TODO move this to proxychooser base
-            proxyFile = self.findProxyByUuid(uuid)
-            if not proxyFile:
-                log.warning("Clothes library could not load %s clothes with UUID %s, file not found.", name, uuid)
-                return
-            self.blockFaceMasking = True    # optimization
-            self.selectProxy(proxyFile)
-            self.blockFaceMasking = False
-        else:
-            filename = values[1]
-            log.error("Not loading clothing %s.Loading clothes from filename is no longer supported. Clothes need to be referenced by UUID.", filename)
-            return
+        super(ClothesTaskView, self).loadHandler(human, values)
 
     def onHumanChanged(self, event):
         super(ClothesTaskView, self).onHumanChanged(event)
@@ -235,9 +217,7 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
             self.faceHidingTggl.setSelected(True)
 
     def saveHandler(self, human, file):
-        for proxy in self.getSelection():
-            # TODO move saving with uuid to proxychooser baseclass
-            file.write('clothes %s %s\n' % (proxy.name, proxy.getUuid()))
+        super(ClothesTaskView, self).saveHandler(human, file)
         file.write('clothesHideFaces %s\n' % self.faceHidingTggl.selected)
 
     def registerLoadSaveHandlers(self):
