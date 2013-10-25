@@ -455,15 +455,22 @@ class ProxyChooserTaskView(gui3d.TaskView):
         if self._proxyFileCache is None:
             self.loadProxyFileCache()
 
-        mhclo = values[1]
-        if not os.path.exists(mhclo):
-            log.notice('Proxy %s (%s) does not exist. Skipping.', mhclo, self.proxyName)
-            return
-        self.selectProxy(mhclo)
+        if values[0] == self.getSaveName():
+            if len(values) >= 3:
+                name = values[1]
+                uuid = values[2]
+                proxyFile = self.findProxyByUuid(uuid)
+                if not proxyFile:
+                    log.warning("%s library could not load %s proxy with UUID %s, file not found.", self.proxyName, name, uuid)
+                    return
+                self.selectProxy(proxyFile)
+            else:
+                filename = values[1]
+                log.error("Not loading %s %s. Loading proxies from filename is no longer supported, they need to be referenced by UUID.", self.proxyName, filename)
 
     def saveHandler(self, human, file):
-        for p in self.getSelection():
-            file.write('%s %s\n' % (self.getSaveName(), p.file))
+        for proxy in self.getSelection():
+            file.write('%s %s %s\n' % (self.getSaveName(), proxy.name, proxy.getUuid()))
 
     def onUnload(self):
         """
@@ -490,9 +497,12 @@ class ProxyChooserTaskView(gui3d.TaskView):
         Will attempt to load a previous cache from file if restoreFromFile is true.
         """
         if restoreFromFile:
-            cacheFile = getpath.getPath(os.path.join('cache', self.proxyName + '_filecache.mhc'))
-            if os.path.isfile(cacheFile):
-                self._proxyFileCache = pickle.load( open(cacheFile, "rb") )
+            try:
+                cacheFile = getpath.getPath(os.path.join('cache', self.proxyName + '_filecache.mhc'))
+                if os.path.isfile(cacheFile):
+                    self._proxyFileCache = pickle.load( open(cacheFile, "rb") )
+            except:
+                log.debug("Failed to restore proxy list cache from file %s", cacheFile)
         self._proxyFileCache = mh2proxy.updateProxyFileCache(self.paths, self.getFileExtension(), self._proxyFileCache)
 
     def updateProxyFileCache(self):
@@ -560,5 +570,6 @@ class ProxyChooserTaskView(gui3d.TaskView):
 
     def registerLoadSaveHandlers(self):
         gui3d.app.addLoadHandler(self.getSaveName(), self.loadHandler)
-        gui3d.app.addSaveHandler(self.saveHandler)
+        priority = 2    # Make sure proxy choosers come before material library
+        gui3d.app.addSaveHandler(self.saveHandler, priority)
 

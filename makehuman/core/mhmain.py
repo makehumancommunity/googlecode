@@ -44,7 +44,7 @@ import log
 
 @contextlib.contextmanager
 def outFile(path):
-    path = os.path.join(mh.getPath(''), path)
+    path = mh.getPath(path)
     tmppath = path + '.tmp'
     try:
         with open(tmppath, 'w') as f:
@@ -60,7 +60,7 @@ def outFile(path):
 @contextlib.contextmanager
 def inFile(path):
     try:
-        path = os.path.join(mh.getPath(''), path)
+        path = mh.getPath(path)
         if not os.path.isfile(path):
             yield []
             return
@@ -686,8 +686,8 @@ class MHApplication(gui3d.Application, mh.Application):
 
     def saveSettings(self, promptOnFail=False):
         try:
-            if not os.path.exists(mh.getPath('')):
-                os.makedirs(mh.getPath(''))
+            if not os.path.exists(mh.getPath()):
+                os.makedirs(mh.getPath())
 
             with outFile("settings.ini") as f:
                 f.write(mh.formatINI(self.settings))
@@ -1012,8 +1012,16 @@ class MHApplication(gui3d.Application, mh.Application):
 
     # Save handlers
 
-    def addSaveHandler(self, handler):
-        self.saveHandlers.append(handler)
+    def addSaveHandler(self, handler, priority = None):
+        """
+        If priority is specified, should be an integer number > 0.
+        0 is highest priority.
+        """
+        if priority is None:
+            self.saveHandlers.append(handler)
+        else:
+            # TODO more robust solution for specifying priority weights
+            self.saveHandlers.insert(priority, handler)
 
     # Shortcut methods
 
