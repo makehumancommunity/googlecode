@@ -124,40 +124,6 @@ class ExpressionTaskView(gui3d.TaskView):
 
         self.groupBox.showWidget(self.groupBoxes[0])
 
-        # Debug: Select warp method
-
-        self.warpMethodBox = self.addRightWidget(gui.GroupBox('Warp Method'))
-        self.warpMethodButtons = []
-        self.nowarpBtn = self.warpMethodBox.addWidget(GroupBoxRadioButton(self, self.warpMethodButtons, "No Warping", self.warpMethodBox, selected=False))
-        self.warp3Btn = self.warpMethodBox.addWidget(GroupBoxRadioButton(self, self.warpMethodButtons, "Scale", self.warpMethodBox, selected=True))
-        self.warp1Btn = self.warpMethodBox.addWidget(GroupBoxRadioButton(self, self.warpMethodButtons, "Warp 1", self.warpMethodBox, selected=False))
-        self.warp2Btn = self.warpMethodBox.addWidget(GroupBoxRadioButton(self, self.warpMethodButtons, "Warp 2", self.warpMethodBox, selected=False))
-
-        @self.nowarpBtn.mhEvent
-        def onClicked(event):
-            import warp
-            warp.WarpMethod = 0
-            warpmodifier.resetWarpBuffer()
-
-        @self.warp1Btn.mhEvent
-        def onClicked(event):
-            import warp
-            warp.WarpMethod = 1
-            warpmodifier.resetWarpBuffer()
-
-        @self.warp2Btn.mhEvent
-        def onClicked(event):
-            import warp
-            warp.WarpMethod = 2
-            warpmodifier.resetWarpBuffer()
-
-        @self.warp3Btn.mhEvent
-        def onClicked(event):
-            import warp
-            warp.WarpMethod = 3
-            warpmodifier.resetWarpBuffer()
-
-
         # self.hideAllBoxes()
         # self.groupBoxes[0].show()
 

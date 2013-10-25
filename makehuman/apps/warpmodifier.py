@@ -31,7 +31,6 @@ import os
 
 import algos3d
 import meshstat
-import warp
 import humanmodifier
 import log
 from core import G
@@ -146,13 +145,41 @@ class WarpModifier (humanmodifier.SimpleModifier):
         printDebugCoord("trg_char", trgCharCoord, obj)
 
         if srcTargetCoord:
-            shape = warp.warp_target(srcTargetCoord, srcCharCoord, trgCharCoord, self.bodypart)
+            shape = self.scaleTarget(srcTargetCoord, srcCharCoord, trgCharCoord)
         else:
             shape = {}
 
         printDebugCoord("trg_targ", trgCharCoord, obj, shape)
 
         return shape
+
+
+    BodySizes = {
+        "face" : [
+            (5399, 11998, 1.4800),
+            (791, 881, 2.3298),
+            (962, 5320, 1.9221),
+        ],
+        "body" : [
+            (13868, 14308, 9.6806),
+            (881, 13137, 16.6551),
+            (10854, 10981, 2.4356),
+        ],
+    }
+
+    def scaleTarget(self, morph, source, target):
+        scale = np.array((1.0,1.0,1.0))
+        sizes = self.BodySizes[self.bodypart]
+        for n in range(3):
+            vn1,vn2,r = sizes[n]
+            tvec = target[vn1] - target[vn2]
+            svec = source[vn1] - source[vn2]
+            scale[n] = abs(tvec[n]/svec[n])
+        log.debug("Scale %s" % scale)
+        smorph = {}
+        for vn,dr in morph.items():
+            smorph[vn] = scale*dr
+        return smorph
 
 
     def traceReference(self):
@@ -186,7 +213,6 @@ class WarpModifier (humanmodifier.SimpleModifier):
             self.traceReference()
             raise NameError("Warping problem")
 
-        # This block can be eliminated if
         for charpath,value in human.targetsDetailStack.items():
             try:
                 trgChar = algos3d.getTarget(human.meshData, charpath)
@@ -209,7 +235,6 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 dstVerts = srcChar.verts[srcVerts]
                 srcCharCoord[dstVerts] +=  value * srcChar.data[srcVerts]
 
-        for charpath,value in human.targetsDetailStack.items():
             try:
                 reftrg = self.refTargets[charpath]
             except KeyError:
