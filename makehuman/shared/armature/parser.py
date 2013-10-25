@@ -90,7 +90,7 @@ class Parser:
             self.vertexGroupFiles = ["head", "bones", "hand", "joints", "tights", "skirt", "genitalia"]
 
         if self.human.hairProxy:
-            self.useHairRig = self.human.hairProxy.useRig
+            self.useHairRig = True
         else:
             self.useHairRig = False
 

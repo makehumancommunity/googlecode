@@ -78,7 +78,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
     Common base class for all proxy chooser libraries.
     """
 
-    def __init__(self, category, proxyName, tabLabel = None, multiProxy = False, mayUseRig = False):
+    def __init__(self, category, proxyName, tabLabel = None, multiProxy = False):
         if not tabLabel:
             tabLabel = proxyName.capitalize()
         proxyName = proxyName.lower().replace(" ", "_")
@@ -87,7 +87,6 @@ class ProxyChooserTaskView(gui3d.TaskView):
         self.proxyName = proxyName
         self.label = tabLabel
         self.multiProxy = multiProxy
-        self.mayUseRig = mayUseRig
 
         self.homeProxyDir = getpath.getPath(os.path.join('data', proxyName))
         self.sysProxyDir = mh.getSysDataPath(proxyName)
@@ -107,15 +106,6 @@ class ProxyChooserTaskView(gui3d.TaskView):
         self.proxyObjects = []
 
         self.createFileChooser()
-
-        if self.mayUseRig:
-            self.rigBox = self.addLeftWidget(gui.GroupBox('Rigging'))
-            self.useRigBtn = self.rigBox.addWidget(gui.CheckBox("Use rig", False))
-
-            @self.useRigBtn.mhEvent
-            def onClicked(event):
-                for proxy in self.selectedProxies:
-                    proxy.useRig = self.useRigBtn.selected
 
 
     def createFileChooser(self):
@@ -272,9 +262,6 @@ class ProxyChooserTaskView(gui3d.TaskView):
         if proxy.uuid in [p.uuid for p in self.getSelection()]:
             log.debug("Proxy with UUID %s (%s) already loaded in %s library. Skipping.", proxy.uuid, proxy.file, self.proxyName)
             return
-
-        if self.mayUseRig:
-            proxy.useRig = self.useRigBtn.selected
 
         if not self.multiProxy and self.isProxySelected():
             # Deselect previously selected proxy

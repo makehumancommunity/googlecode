@@ -124,7 +124,6 @@ class CProxy:
         self.uuid = None
         self.basemesh = "alpha_7"
         self.tags = []
-        self.useRig = False
 
         self.vertWeights = {}       # (proxy-vert, weight) list for each parent vert
         self.refVerts = []
@@ -169,7 +168,7 @@ class CProxy:
 
 
     def __repr__(self):
-        return ("<CProxy %s %s %s %s %s>" % (self.name, self.type, self.useRig, self.file, self.uuid))
+        return ("<CProxy %s %s %s %s>" % (self.name, self.type, self.file, self.uuid))
 
 
     def getObject(self):
