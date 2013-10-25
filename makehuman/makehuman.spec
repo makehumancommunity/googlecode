@@ -91,7 +91,7 @@ def extra_datas(mydir):
 ###########################################
 
 # append all of our necessary subdirectories
-EXTRA_DATA_PATHS = ['data', 'plugins', 'tools', 'utils', 'icons']
+EXTRA_DATA_PATHS = ['data', 'plugins', 'tools', 'icons']
 #EXTRA_DATA_PATHS += ['lib', 'core', 'shared', 'apps', 'qt_menu.nib']
 for p in EXTRA_DATA_PATHS:
     a.datas += extra_datas(p)
