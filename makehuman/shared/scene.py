@@ -108,7 +108,11 @@ class SceneObject(object):
                     break
 
             if supported:
-                setattr(self, "_" + attr, pickle.load(hfile))
+                attrV = pickle.load(hfile)
+                if isinstance( getattr(self, "_" + attr), Color ):
+                    setattr(self, "_" + attr, Color(attrV))
+                else:
+                    setattr(self, "_" + attr, attrV)
 
     
 class Light(SceneObject):
