@@ -156,7 +156,7 @@ def writeLights(scene, hfile):
     for light in scene.lights:
         liglines = ligfilebuffer
         liglines = liglines.replace('%%pos%%', '<%f,%f,%f>' % invx(light.position))
-        liglines = liglines.replace('%%color%%', '<%f,%f,%f>' % light.color)
+        liglines = liglines.replace('%%color%%', '<%f,%f,%f>' % light.color.asTuple())
         liglines = liglines.replace('%%focus%%', '<%f,%f,%f>' % invx(light.focus))
         liglines = liglines.replace('%%fov%%', str(light.fov))
         liglines = liglines.replace('%%att%%', str(light.attenuation))
