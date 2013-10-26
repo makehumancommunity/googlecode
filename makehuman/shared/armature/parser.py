@@ -41,7 +41,6 @@ from . import rig_joints
 from . import rig_bones
 from . import rig_muscle
 from . import rig_face
-from . import rig_hair
 from . import rig_control
 from . import rig_merge
 
@@ -89,14 +88,7 @@ class Parser:
         else:
             self.vertexGroupFiles = ["head", "bones", "hand", "joints", "tights", "skirt", "genitalia"]
 
-        if self.human.hairProxy:
-            self.useHairRig = True
-        else:
-            self.useHairRig = False
-
-        if self.useHairRig:
-            self.vertexGroupFiles += ["hair_rig"]
-        elif options.useMuscles:
+        if options.useMuscles:
             self.vertexGroupFiles += ["hair_muscles"]
         else:
             self.vertexGroupFiles += ["hair"]
@@ -108,9 +100,6 @@ class Parser:
             rig_control.Joints
         )
 
-        if self.useHairRig:
-            self.joints += rig_hair.Joints
-
         self.planes = rig_bones.Planes
         self.planeJoints = rig_control.PlaneJoints
 
@@ -121,9 +110,6 @@ class Parser:
         ])
 
         addDict(rig_control.RevFootHeadsTails, self.headsTails)
-
-        if self.useHairRig:
-            addDict(rig_hair.HeadsTails, self.headsTails)
 
         if options.useConstraints:
             self.setConstraints(rig_bones.Constraints)
@@ -198,9 +184,6 @@ class Parser:
 
         if options.useMuscles:
             self.addBones(rig_muscle.Armature, boneInfo)
-
-        if self.useHairRig:
-            self.addBones(rig_hair.Armature, boneInfo)
 
         if options.useHeadControl:
             self.addBones(rig_control.HeadArmature, boneInfo)
@@ -286,11 +269,6 @@ class Parser:
 
         vgroups = self.readVertexGroupFiles(self.vertexGroupFiles)
         addDict(vgroups, amt.vertexWeights)
-
-        if self.useHairRig:
-            self.pruneHair(amt.vertexWeights, boneInfo)
-            if options.useIkHair:
-                self.addIkHair(boneInfo)
 
         if options.merge:
             self.mergeBones(options.merge, boneInfo)
@@ -1044,67 +1022,3 @@ class Parser:
             for cns in clist:
                 self.addConstraint(bname, cns)
 
-
-    def pruneHair(self, rawWeights, boneInfo):
-        proxy = self.human.hairProxy
-        if not proxy:
-            return
-
-        hweights = proxy.getWeights1(rawWeights)
-        killBones = {}
-        for bname in rawWeights.keys():
-            if bname[0:4] == 'hair':
-                killBones[bname] = True
-        for bname in hweights.keys():
-            killBones[bname] = False
-
-        parents = {}
-        for bname in killBones.keys():
-            parents[bname] = boneInfo[bname].parent
-            if killBones[bname]:
-                log.debug("Remove %s" % bname)
-                del rawWeights[bname]
-                del boneInfo[bname]
-
-        for bname in hweights.keys():
-            bone = boneInfo[bname]
-            bone.parent = deref(bone.parent, parents, boneInfo)
-
-
-    def addIkHair(self, boneInfo):
-        children = {}
-        for bone in boneInfo.values():
-            if bone.name[0:4] == "hair":
-                children[bone.name] = None
-
-        strands = {}
-        for bone in boneInfo.values():
-            if bone.name[0:4] == "hair":
-                if bone.parent == "head":
-                    strands[bone.name] = [bone]
-                else:
-                    children[bone.parent] = bone
-
-        for strand in strands.values():
-            leaf = strand[-1]
-            while leaf is not None:
-                strand.append(leaf)
-                leaf = children[leaf.name]
-            eff = strand[-1]
-            eff.parent = "head"
-            eff.lock = False
-            eff.lockLocation = (0,0,0)
-            eff.layers |= L_CLO
-            leaf = strand[-2]
-            leaf.children = []
-            cns = ('IK', 0, 1, ['IK', eff.name, len(strand)-2, None, (True, False,False)])
-            self.addConstraint(leaf.name, cns)
-
-
-def deref(pname, parents, boneInfo):
-    try:
-        boneInfo[pname]
-        return pname
-    except KeyError:
-        pass
-    return deref(parents[pname], parents, boneInfo)

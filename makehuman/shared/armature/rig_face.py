@@ -150,13 +150,9 @@ if UseTranslationBones:
     for bone,marker,_ in Markers:
         HeadsTails[bone] = ((marker, posOffs), (marker, negOffs))
 else:
-    origins = {
-        'head_back' :   'head-back',
-        'head_jaw':     'mouth',
-        'jaw':          'mouth',
-    }
     for bone,marker,parent in Markers:
-        HeadsTails[bone] = (origins[parent], (marker, posOffs))
+        Joints.append( (bone, 'p', (marker, marker, 'mouth')) )
+        HeadsTails[bone] = (bone, (marker, posOffs))
 
 
 Armature = {
@@ -177,10 +173,10 @@ Armature = {
 
 if UseTranslationBones:
     for bone,marker,parent in Markers:
-        Armature[bone] = (0, parent, F_DEF|F_WIR|F_NOLOCK|F_LOCKROT, L_HEAD)
+        Armature[bone] = (0, parent, F_DEF|F_WIR|F_NOLOCK|F_LOCKROT, L_PANEL)
 else:
     for bone,marker,parent in Markers:
-        Armature[bone] = (0, parent, F_DEF|F_WIR|F_LOCKY, L_HEAD)
+        Armature[bone] = (0, parent, F_DEF|F_WIR|F_LOCKY, L_PANEL)
 
 
 Constraints = {
@@ -220,13 +216,8 @@ if UseTranslationBones:
         CustomShapes[bone] = 'GZM_Cube025'
         LocationLimits[bone] = (-0.1,0.1, -0.1,0.1, -0.1,0.1)
 else:
-    for bone,_,parent in Markers:
-        customs = {
-            'head_back' :   'GZM_FaceHead',
-            'head_jaw':     'GZM_FaceJaw',
-            'jaw':          'GZM_FaceJaw',
-        }
-        CustomShapes[bone] = customs[parent]
+    for bone,_,_ in Markers:
+        CustomShapes[bone] = 'GZM_FaceJaw'
 
 
 #
