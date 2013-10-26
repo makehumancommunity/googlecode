@@ -24,10 +24,12 @@ Face bone definitions
 
 from .flags import *
 
+UseTranslationBones = False
 LidPct = 0.5
 
 Joints = [
     ('head-end',        'l', ((2.0, 'head'), (-1.0, 'neck'))),
+    ('head-back',       'v', 955),
 
     ('l-uplid0',        'p', ('l-eye', 'l-upperlid', 'l-upperlid')),
     ('r-uplid0',        'p', ('r-eye', 'r-upperlid', 'r-upperlid')),
@@ -80,10 +82,10 @@ Joints = [
 ]
 
 eyeOffs = (0,0,0.3)
-posOffs = (0,0,0.01)
-negOffs = (0,0,-0.05)
 
 HeadsTails = {
+    'head_back' :           ('mouth', ('mouth', (0,1,0))),
+    'head_jaw' :            ('mouth', 'jaw'),
     'jaw' :                 ('mouth', 'jaw'),
     'tongue_base' :         ('tongue-1', 'tongue-2'),
     'tongue_mid' :          ('tongue-2', 'tongue-3'),
@@ -98,125 +100,91 @@ HeadsTails = {
     'eye_parent.L' :        ('l-eye', ('l-eye', eyeOffs)),
     'uplid.L' :             ('l-eye', 'l-uplid'),
     'lolid.L' :             ('l-eye', 'l-lolid'),
-
-    'lip_upper_mid' :       (('m-uplip-0', posOffs), ('m-uplip-0', negOffs)),
-    'lip_upper_1.L' :       (('l-uplip-1', posOffs), ('l-uplip-1', negOffs)),
-    'lip_upper_1.R' :       (('r-uplip-1', posOffs), ('r-uplip-1', negOffs)),
-    'lip_upper_2.L' :       (('l-uplip-2', posOffs), ('l-uplip-2', negOffs)),
-    'lip_upper_2.R' :       (('r-uplip-2', posOffs), ('r-uplip-2', negOffs)),
-
-    'lip_lower_mid' :       (('m-lolip-0', posOffs), ('m-lolip-0', negOffs)),
-    'lip_lower_1.L' :       (('l-lolip-1', posOffs), ('l-lolip-1', negOffs)),
-    'lip_lower_1.R' :       (('r-lolip-1', posOffs), ('r-lolip-1', negOffs)),
-    'lip_lower_2.L' :       (('l-lolip-2', posOffs), ('l-lolip-2', negOffs)),
-    'lip_lower_2.R' :       (('r-lolip-2', posOffs), ('r-lolip-2', negOffs)),
-
-    'lip_3.L' :             (('l-lip-3', posOffs), ('l-lip-3', negOffs)),
-    'lip_3.R' :             (('r-lip-3', posOffs), ('r-lip-3', negOffs)),
-    'lip_3_jaw.L' :         (('l-lip-3', posOffs), ('l-lip-3', negOffs)),
-    'lip_3_jaw.R' :         (('r-lip-3', posOffs), ('r-lip-3', negOffs)),
-    'lip_3_parent.L' :      (('l-lip-3', posOffs), ('l-lip-3', negOffs)),
-    'lip_3_parent.R' :      (('r-lip-3', posOffs), ('r-lip-3', negOffs)),
-
-    'mouthside_1.L' :       (('l-mouthside-1', posOffs), ('l-mouthside-1', negOffs)),
-    'mouthside_1.R' :       (('r-mouthside-1', posOffs), ('r-mouthside-1', negOffs)),
-    'mouthside_1_jaw.L' :   (('l-mouthside-1', posOffs), ('l-mouthside-1', negOffs)),
-    'mouthside_1_jaw.R' :   (('r-mouthside-1', posOffs), ('r-mouthside-1', negOffs)),
-    'mouthside_1_parent.L' :(('l-mouthside-1', posOffs), ('l-mouthside-1', negOffs)),
-    'mouthside_1_parent.R' :(('r-mouthside-1', posOffs), ('r-mouthside-1', negOffs)),
-
-    'mouthside_2.L' :       (('l-mouthside-2', posOffs), ('l-mouthside-2', negOffs)),
-    'mouthside_2.R' :       (('r-mouthside-2', posOffs), ('r-mouthside-2', negOffs)),
-    'mouthside_2_jaw.L' :   (('l-mouthside-2', posOffs), ('l-mouthside-2', negOffs)),
-    'mouthside_2_jaw.R' :   (('r-mouthside-2', posOffs), ('r-mouthside-2', negOffs)),
-    'mouthside_2_parent.L' :(('l-mouthside-2', posOffs), ('l-mouthside-2', negOffs)),
-    'mouthside_2_parent.R' :(('r-mouthside-2', posOffs), ('r-mouthside-2', negOffs)),
-
-    'noseside_1.L' :        (('l-noseside-1', posOffs), ('l-noseside-1', negOffs)),
-    'noseside_1.R' :        (('r-noseside-1', posOffs), ('r-noseside-1', negOffs)),
-    'noseside_2.L' :        (('l-noseside-2', posOffs), ('l-noseside-2', negOffs)),
-    'noseside_2.R' :        (('r-noseside-2', posOffs), ('r-noseside-2', negOffs)),
-
-    'eye_below_1.L' :       (('l-loeye-1', posOffs), ('l-loeye-1', negOffs)),
-    'eye_below_1.R' :       (('r-loeye-1', posOffs), ('r-loeye-1', negOffs)),
-    'eye_below_2.L' :       (('l-loeye-2', posOffs), ('l-loeye-2', negOffs)),
-    'eye_below_2.R' :       (('r-loeye-2', posOffs), ('r-loeye-2', negOffs)),
-    'eye_below_3.L' :       (('l-loeye-3', posOffs), ('l-loeye-3', negOffs)),
-    'eye_below_3.R' :       (('r-loeye-3', posOffs), ('r-loeye-3', negOffs)),
-
-    'brow_1.L' :       (('l-brow-1', posOffs), ('l-brow-1', negOffs)),
-    'brow_1.R' :       (('r-brow-1', posOffs), ('r-brow-1', negOffs)),
-    'brow_2.L' :       (('l-brow-2', posOffs), ('l-brow-2', negOffs)),
-    'brow_2.R' :       (('r-brow-2', posOffs), ('r-brow-2', negOffs)),
-    'brow_3.L' :       (('l-brow-3', posOffs), ('l-brow-3', negOffs)),
-    'brow_3.R' :       (('r-brow-3', posOffs), ('r-brow-3', negOffs)),
 }
 
-fflags = F_DEF|F_WIR|F_NOLOCK|F_LOCKROT
+Markers = [
+    ('lip_upper_mid',       'm-uplip-0', 'head_back'),
+    ('lip_upper_1.L',       'l-uplip-1', 'head_back'),
+    ('lip_upper_1.R',       'r-uplip-1', 'head_back'),
+    ('lip_upper_2.L',       'l-uplip-2', 'head_back'),
+    ('lip_upper_2.R',       'r-uplip-2', 'head_back'),
+
+    ('lip_lower_mid',       'm-lolip-0', 'jaw'),
+    ('lip_lower_1.L',       'l-lolip-1', 'jaw'),
+    ('lip_lower_1.R',       'r-lolip-1', 'jaw'),
+    ('lip_lower_2.L',       'l-lolip-2', 'jaw'),
+    ('lip_lower_2.R',       'r-lolip-2', 'jaw'),
+
+    ('lip_3.L',             'l-lip-3', 'head_jaw'),
+    ('lip_3.R',             'r-lip-3', 'head_jaw'),
+    ('mouthside_1.L',       'l-mouthside-1', 'head_jaw'),
+    ('mouthside_1.R',       'r-mouthside-1', 'head_jaw'),
+    ('mouthside_2.L',       'l-mouthside-2', 'head_jaw'),
+    ('mouthside_2.R',       'r-mouthside-2', 'head_jaw'),
+
+    ('noseside_1.L',        'l-noseside-1', 'head_back'),
+    ('noseside_1.R',        'r-noseside-1', 'head_back'),
+    ('noseside_2.L',        'l-noseside-2', 'head_back'),
+    ('noseside_2.R',        'r-noseside-2', 'head_back'),
+
+    ('eye_below_1.L',       'l-loeye-1', 'head_back'),
+    ('eye_below_1.R',       'r-loeye-1', 'head_back'),
+    ('eye_below_2.L',       'l-loeye-2', 'head_back'),
+    ('eye_below_2.R',       'r-loeye-2', 'head_back'),
+    ('eye_below_3.L',       'l-loeye-3', 'head_back'),
+    ('eye_below_3.R',       'r-loeye-3', 'head_back'),
+
+    ('eyebrow_1.L',         'l-brow-1', 'head_back'),
+    ('eyebrow_1.R',         'r-brow-1', 'head_back'),
+    ('eyebrow_2.L',         'l-brow-2', 'head_back'),
+    ('eyebrow_2.R',         'r-brow-2', 'head_back'),
+    ('eyebrow_3.L',         'l-brow-3', 'head_back'),
+    ('eyebrow_3.R',         'r-brow-3', 'head_back'),
+]
+
+
+posOffs = (0,0,0.01)
+negOffs = (0,0,-0.05)
+
+if UseTranslationBones:
+    for bone,marker,_ in Markers:
+        HeadsTails[bone] = ((marker, posOffs), (marker, negOffs))
+else:
+    origins = {
+        'head_back' :   'head-back',
+        'head_jaw':     'mouth',
+        'jaw':          'mouth',
+    }
+    for bone,marker,parent in Markers:
+        HeadsTails[bone] = (origins[parent], (marker, posOffs))
+
 
 Armature = {
+    'head_back' :           (0, 'head', 0, L_HELP),
+    'head_jaw' :            (0, 'head', 0, L_HELP),
+
     'jaw' :                 (0, 'head', F_DEF|F_NOLOCK, L_HEAD),
     'tongue_base' :         (0, 'jaw', F_DEF|F_SCALE, L_HEAD),
     'tongue_mid' :          (0, 'tongue_base', F_DEF|F_SCALE, L_HEAD),
     'tongue_tip' :          (0, 'tongue_mid', F_DEF|F_SCALE, L_HEAD),
     'eye.R' :               (0, 'head', F_DEF, L_HEAD),
     'eye.L' :               (0, 'head', F_DEF, L_HEAD),
-    'uplid.R' :             (0, 'head', F_DEF, L_HEAD),
-    'lolid.R' :             (0, 'head', F_DEF, L_HEAD),
-    'uplid.L' :             (0, 'head', F_DEF, L_HEAD),
-    'lolid.L' :             (0, 'head', F_DEF, L_HEAD),
+    'uplid.R' :             (0, 'head', F_DEF|F_LOCKY, L_HEAD),
+    'lolid.R' :             (0, 'head', F_DEF|F_LOCKY, L_HEAD),
+    'uplid.L' :             (0, 'head', F_DEF|F_LOCKY, L_HEAD),
+    'lolid.L' :             (0, 'head', F_DEF|F_LOCKY, L_HEAD),
+}
 
-    'lip_upper_mid' :       (0, 'head', fflags, L_HEAD),
-    'lip_upper_1.L' :       (0, 'head', fflags, L_HEAD),
-    'lip_upper_1.R' :       (0, 'head', fflags, L_HEAD),
-    'lip_upper_2.L' :       (0, 'head', fflags, L_HEAD),
-    'lip_upper_2.R' :       (0, 'head', fflags, L_HEAD),
+if UseTranslationBones:
+    for bone,marker,parent in Markers:
+        Armature[bone] = (0, parent, F_DEF|F_WIR|F_NOLOCK|F_LOCKROT, L_HEAD)
+else:
+    for bone,marker,parent in Markers:
+        Armature[bone] = (0, parent, F_DEF|F_WIR|F_LOCKY, L_HEAD)
 
-    'lip_lower_mid' :       (0, 'jaw', fflags, L_HEAD),
-    'lip_lower_1.L' :       (0, 'jaw', fflags, L_HEAD),
-    'lip_lower_1.R' :       (0, 'jaw', fflags, L_HEAD),
-    'lip_lower_2.L' :       (0, 'jaw', fflags, L_HEAD),
-    'lip_lower_2.R' :       (0, 'jaw', fflags, L_HEAD),
 
-    'lip_3_jaw.L' :         (0, 'jaw', 0, L_HELP),
-    'lip_3_jaw.R' :         (0, 'jaw', 0, L_HELP),
-    'lip_3_parent.L' :      (0, 'head', 0, L_HELP),
-    'lip_3_parent.R' :      (0, 'head', 0, L_HELP),
-    'lip_3.L' :             (0, 'lip_3_parent.L', fflags, L_HEAD),
-    'lip_3.R' :             (0, 'lip_3_parent.R', fflags, L_HEAD),
-
-    'mouthside_1_jaw.L' :   (0, 'jaw', 0, L_HELP),
-    'mouthside_1_jaw.R' :   (0, 'jaw', 0, L_HELP),
-    'mouthside_1_parent.L' :(0, 'head', 0, L_HELP),
-    'mouthside_1_parent.R' :(0, 'head', 0, L_HELP),
-    'mouthside_1.L' :       (0, 'mouthside_1_parent.L', fflags, L_HEAD),
-    'mouthside_1.R' :       (0, 'mouthside_1_parent.R', fflags, L_HEAD),
-
-    'mouthside_2_jaw.L' :   (0, 'jaw', 0, L_HELP),
-    'mouthside_2_jaw.R' :   (0, 'jaw', 0, L_HELP),
-    'mouthside_2_parent.L' :(0, 'head', 0, L_HELP),
-    'mouthside_2_parent.R' :(0, 'head', 0, L_HELP),
-    'mouthside_2.L' :       (0, 'mouthside_2_parent.L', fflags, L_HEAD),
-    'mouthside_2.R' :       (0, 'mouthside_2_parent.R', fflags, L_HEAD),
-
-    'noseside_1.L' :        (0, 'head', fflags, L_HEAD),
-    'noseside_1.R' :        (0, 'head', fflags, L_HEAD),
-    'noseside_2.L' :        (0, 'head', fflags, L_HEAD),
-    'noseside_2.R' :        (0, 'head', fflags, L_HEAD),
-
-    'eye_below_1.L' :       (0, 'head', fflags, L_HEAD),
-    'eye_below_1.R' :       (0, 'head', fflags, L_HEAD),
-    'eye_below_2.L' :       (0, 'head', fflags, L_HEAD),
-    'eye_below_2.R' :       (0, 'head', fflags, L_HEAD),
-    'eye_below_3.L' :       (0, 'head', fflags, L_HEAD),
-    'eye_below_3.R' :       (0, 'head', fflags, L_HEAD),
-
-    'brow_1.L' :            (0, 'head', fflags, L_HEAD),
-    'brow_1.R' :            (0, 'head', fflags, L_HEAD),
-    'brow_2.L' :            (0, 'head', fflags, L_HEAD),
-    'brow_2.R' :            (0, 'head', fflags, L_HEAD),
-    'brow_3.L' :            (0, 'head', fflags, L_HEAD),
-    'brow_3.R' :            (0, 'head', fflags, L_HEAD),
+Constraints = {
+     'head_jaw' : [('CopyTrans', 0, 0.5, ['Jaw', 'jaw', 0])],
 }
 
 
@@ -233,56 +201,10 @@ CustomShapes = {
     'tongue_base' :     'GZM_Tongue',
     'tongue_mid' :      'GZM_Tongue',
     'tongue_tip' :      'GZM_Tongue',
-
-    'lip_upper_mid' :   'GZM_Cube025',
-    'lip_upper_1.L' :   'GZM_Cube025',
-    'lip_upper_1.R' :   'GZM_Cube025',
-    'lip_upper_2.L' :   'GZM_Cube025',
-    'lip_upper_2.R' :   'GZM_Cube025',
-
-    'lip_lower_mid' :   'GZM_Cube025',
-    'lip_lower_1.L' :   'GZM_Cube025',
-    'lip_lower_1.R' :   'GZM_Cube025',
-    'lip_lower_2.L' :   'GZM_Cube025',
-    'lip_lower_2.R' :   'GZM_Cube025',
-
-    'lip_3.L' :         'GZM_Cube025',
-    'lip_3.R' :         'GZM_Cube025',
-
-    'mouthside_1.L' :   'GZM_Cube025',
-    'mouthside_1.R' :   'GZM_Cube025',
-    'mouthside_2.L' :   'GZM_Cube025',
-    'mouthside_2.R' :   'GZM_Cube025',
-
-    'noseside_1.L' :    'GZM_Cube025',
-    'noseside_1.R' :    'GZM_Cube025',
-    'noseside_2.L' :    'GZM_Cube025',
-    'noseside_2.R' :    'GZM_Cube025',
-
-    'eye_below_1.L' :   'GZM_Cube025',
-    'eye_below_1.R' :   'GZM_Cube025',
-    'eye_below_2.L' :   'GZM_Cube025',
-    'eye_below_2.R' :   'GZM_Cube025',
-    'eye_below_3.L' :   'GZM_Cube025',
-    'eye_below_3.R' :   'GZM_Cube025',
-
-    'brow_1.L' :       'GZM_Cube025',
-    'brow_1.R' :       'GZM_Cube025',
-    'brow_2.L' :       'GZM_Cube025',
-    'brow_2.R' :       'GZM_Cube025',
-    'brow_3.L' :       'GZM_Cube025',
-    'brow_3.R' :       'GZM_Cube025',
 }
 
-Constraints = {
-     'lip_3_parent.L' : [('CopyLoc', 0, 0.5, ['Jaw', 'lip_3_jaw.L', (1,1,1), (0,0,0), 0, False])],
-     'lip_3_parent.R' : [('CopyLoc', 0, 0.5, ['Jaw', 'lip_3_jaw.R', (1,1,1), (0,0,0), 0, False])],
-
-     'mouthside_1_parent.L' : [('CopyLoc', 0, 0.5, ['Jaw', 'mouthside_1_jaw.L', (1,1,1), (0,0,0), 0, False])],
-     'mouthside_1_parent.R' : [('CopyLoc', 0, 0.5, ['Jaw', 'mouthside_1_jaw.R', (1,1,1), (0,0,0), 0, False])],
-
-     'mouthside_2_parent.L' : [('CopyLoc', 0, 0.5, ['Jaw', 'mouthside_2_jaw.L', (1,1,1), (0,0,0), 0, False])],
-     'mouthside_2_parent.R' : [('CopyLoc', 0, 0.5, ['Jaw', 'mouthside_2_jaw.R', (1,1,1), (0,0,0), 0, False])],
+LocationLimits = {
+    'jaw' :         (-0.2,0.2, -0.2,0.2, -0.2,0.2),
 }
 
 RotationLimits = {
@@ -293,50 +215,19 @@ RotationLimits = {
     'lolid.R':  (-45*D,10*D, 0,0, 0,0),
 }
 
-MaxFaceTrans = (-0.1,0.1, -0.1,0.1, -0.1,0.1)
+if UseTranslationBones:
+    for bone,_,_ in Markers:
+        CustomShapes[bone] = 'GZM_Cube025'
+        LocationLimits[bone] = (-0.1,0.1, -0.1,0.1, -0.1,0.1)
+else:
+    for bone,_,parent in Markers:
+        customs = {
+            'head_back' :   'GZM_FaceHead',
+            'head_jaw':     'GZM_FaceJaw',
+            'jaw':          'GZM_FaceJaw',
+        }
+        CustomShapes[bone] = customs[parent]
 
-LocationLimits = {
-    'jaw' :         (-0.2,0.2, -0.2,0.2, -0.2,0.2),
-
-    'lip_upper_mid' :   MaxFaceTrans,
-    'lip_upper_1.L' :   MaxFaceTrans,
-    'lip_upper_1.R' :   MaxFaceTrans,
-    'lip_upper_2.L' :   MaxFaceTrans,
-    'lip_upper_2.R' :   MaxFaceTrans,
-
-    'lip_lower_mid' :   MaxFaceTrans,
-    'lip_lower_1.L' :   MaxFaceTrans,
-    'lip_lower_1.R' :   MaxFaceTrans,
-    'lip_lower_2.L' :   MaxFaceTrans,
-    'lip_lower_2.R' :   MaxFaceTrans,
-
-    'lip_3.L' :         MaxFaceTrans,
-    'lip_3.R' :         MaxFaceTrans,
-
-    'mouthside_1.L' :   MaxFaceTrans,
-    'mouthside_1.R' :   MaxFaceTrans,
-    'mouthside_2.L' :   MaxFaceTrans,
-    'mouthside_2.R' :   MaxFaceTrans,
-
-    'noseside_1.L' :    MaxFaceTrans,
-    'noseside_1.R' :    MaxFaceTrans,
-    'noseside_2.L' :    MaxFaceTrans,
-    'noseside_2.R' :    MaxFaceTrans,
-
-    'eye_below_1.L' :   MaxFaceTrans,
-    'eye_below_1.R' :   MaxFaceTrans,
-    'eye_below_2.L' :   MaxFaceTrans,
-    'eye_below_2.R' :   MaxFaceTrans,
-    'eye_below_3.L' :   MaxFaceTrans,
-    'eye_below_3.R' :   MaxFaceTrans,
-
-    'brow_1.L' :        MaxFaceTrans,
-    'brow_1.R' :        MaxFaceTrans,
-    'brow_2.L' :        MaxFaceTrans,
-    'brow_2.R' :        MaxFaceTrans,
-    'brow_3.L' :        MaxFaceTrans,
-    'brow_3.R' :        MaxFaceTrans,
-}
 
 #
 #    DeformDrivers(fp, amt):

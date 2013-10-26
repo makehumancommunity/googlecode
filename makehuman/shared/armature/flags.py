@@ -103,6 +103,7 @@ F_SCALE = 0x0800
 
 F_NOLOCK = 0x1000
 F_LOCKROT = 0x2000
+F_LOCKY = 0x4000
 
 if MuscleBones:
     F_DEF1 = F_DEF

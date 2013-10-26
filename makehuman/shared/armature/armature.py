@@ -212,6 +212,8 @@ class Bone:
             self.poseFlags = 0
         if self.parent and not flags & F_NOLOCK:
             self.lockLocation = (1,1,1)
+        if flags & F_LOCKY:
+            self.lockRotation = (0,1,0)
         if flags & F_LOCKROT:
             self.lockRotation = (1,1,1)
         self.setFlags(flags)
@@ -231,8 +233,6 @@ class Bone:
         self.hide = (flags & F_HID)
         self.norot = (flags & F_NOROT)
         self.scale = (flags & F_SCALE)
-        self.lockrot = (flags & F_LOCKROT)
-
 
     def setBone(self, head, tail):
         self.head = head
