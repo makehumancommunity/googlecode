@@ -109,12 +109,21 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
             # for Ubuntu.. atm
             if sys.platform == 'linux2':
                 binary = 'linux'
-            #
-            mh2povray.povrayExport({'scene': gui3d.app.getCategory('Rendering').getTaskByName('Scene').scene,
-                                    'subdivide': gui3d.app.actions.smooth.isChecked(),
-                                    'AA': 0.5-0.49*self.AAbox.getValue(),
-                                    'bintype': binary,
-                                    'moist': self.moist.getValue()})
+            
+            try:
+                mhscene = gui3d.app.getCategory('Rendering').getTaskByName('Scene').scene
+            except:
+                import scene
+                mhscene = scene.Scene()
+
+            settings = dict()
+            settings['scene'] = mhscene
+            settings['subdivide'] = gui3d.app.actions.smooth.isChecked()
+            settings['AA'] = 0.5-0.49*self.AAbox.getValue()
+            settings['bintype'] = binary
+            settings['moist'] = self.moist.getValue()
+            
+            mh2povray.povrayExport(settings)
 
     @property
     def resWidth(self):
