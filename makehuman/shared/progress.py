@@ -296,6 +296,17 @@ class Progress(object):
         self.update(progress)
 
 
+    # Class method for directly creating a master Progress object.
+    # Resets all progress to zero. Use this for starting a greater MH task.
+    @classmethod
+    def begin(cls):
+        
+        global current_Progress_
+        
+        current_Progress_ = None
+        return cls()
+
+
     ## Specialized methods follow ##
 
 
