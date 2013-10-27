@@ -288,11 +288,17 @@ class Pose:
                 if words[1] == "gquat":
                     pb = self.posebones[words[0]]
                     mat = np.dot(la.inv(pb.bone.matrixRelative), mat)
-                    log.debug(mat)
             elif words[1] == "scale":
                 scale = 1+float(words[2]), 1+float(words[3]), 1+float(words[4])
                 smat = tm.compose_matrix(scale=scale)
                 mat = np.dot(smat, mat)
+            elif words[1] == "matrix":
+                rows = []
+                n = 2
+                for i in range(4):
+                    rows.append((float(words[n]), float(words[n+1]), float(words[n+2]), float(words[n+3])))
+                    n += 4
+                mat = np.array(rows)
         self.setMatrixPose(bname, mat)
         fp.close()
         self.update()

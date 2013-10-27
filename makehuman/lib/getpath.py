@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" 
+"""
 **Project Name:**      MakeHuman
 
 **Product Home Page:** http://www.makehuman.org/
@@ -36,6 +36,17 @@ def canonicalPath(path):
     Useful for comparing paths.
     """
     return formatPath(os.path.realpath(path))
+
+def localPath(path):
+    """
+    Returns the path relative to the MH program directory,
+    i.e. the inverse of canonicalPath. Needed to get
+    human.targetsDetailStack keys from algos3d.targetBuffer keys.
+    If all buffers use the same keys, this becomes obsolete.
+    """
+    path = os.path.realpath(path)
+    root = os.path.realpath(".")
+    return formatPath(os.path.relpath(path, root))
 
 def getHomePath():
     """
@@ -105,7 +116,7 @@ def getSysDataPath(subPath = ""):
 
 def getSysPath(subPath = ""):
     """
-    Path to the system folder where MakeHuman is installed (it is possible that 
+    Path to the system folder where MakeHuman is installed (it is possible that
     data is stored in another path).
     Writing to this folder or modifying this data usually requires admin rights,
     contains system-wide data (for all users).
@@ -123,7 +134,7 @@ def _allnamesequal(name):
 def commonprefix(paths, sep='/'):
     """
     Implementation of os.path.commonprefix that works as you would expect.
-    
+
     Source: http://rosettacode.org/wiki/Find_Common_Directory_Path#Python
     """
     from itertools import takewhile

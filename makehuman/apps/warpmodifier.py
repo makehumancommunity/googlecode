@@ -26,7 +26,7 @@ __docformat__ = 'restructuredtext'
 
 import numpy as np
 from operator import mul
-from getpath import getPath, getSysDataPath, canonicalPath
+from getpath import getPath, getSysDataPath, canonicalPath, localPath
 import os
 
 import algos3d
@@ -34,6 +34,7 @@ import meshstat
 import humanmodifier
 import log
 from core import G
+
 
 #----------------------------------------------------------
 #   class WarpTarget
@@ -79,6 +80,8 @@ class WarpModifier (humanmodifier.SimpleModifier):
         global _warpGlobals
         _warpGlobals.modifiers.append(self)
 
+        template = template.replace("\\","/")
+
         warppath = template.replace('$','').replace('{','').replace('}','')
         humanmodifier.SimpleModifier.__init__(self, warppath)
         self.eventType = 'warp'
@@ -102,9 +105,6 @@ class WarpModifier (humanmodifier.SimpleModifier):
     def setValue(self, human, value):
         self.compileTargetIfNecessary(human)
         humanmodifier.SimpleModifier.setValue(self, human, value)
-        return
-        log.debug("SETVAL")
-        human.traceStacks()
 
 
     def updateValue(self, human, value, updateNormals=1):
@@ -130,12 +130,16 @@ class WarpModifier (humanmodifier.SimpleModifier):
         algos3d._targetBuffer[canonicalPath(self.warppath)] = target
         human.hasWarpTargets = True
 
+        log.debug("DONE %s" % target)
+        log.debug(self.warppath)
+        log.debug(canonicalPath(self.warppath))
+        human.traceStack()
+
 
     def compileWarpTarget(self, human):
         global _warpGlobals
         log.message("Compile %s", self)
         srcTargetCoord, srcCharCoord, trgCharCoord = self.getReferences(human)
-        #human.traceStacks()
         #self.traceReference()
 
         obj = human.meshData
@@ -209,7 +213,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 continue
         if abs(sumtargets-1) > 1e-3 and abs(sumtargets-2) > 1e-3:
             log.debug("Inconsistent target sum %s." % sumtargets)
-            human.traceStacks()
+            human.traceStack()
             self.traceReference()
             raise NameError("Warping problem")
 
@@ -351,7 +355,7 @@ def resetWarpBuffer():
         for path,target in algos3d._targetBuffer.items():
             if isinstance(target, WarpTarget):
                 log.debug("  DEL %s" % path)
-                human.setDetail(path, 0)
+                human.setDetail(localPath(path), 0)
                 del algos3d._targetBuffer[path]
         human.applyAllTargets()
         human.hasWarpTargets = False

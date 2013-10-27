@@ -28,7 +28,7 @@ import guicommon
 from core import G
 import os
 import events3d
-from getpath import getSysDataPath
+from getpath import getSysDataPath, canonicalPath
 import log
 import material
 
@@ -153,14 +153,25 @@ class Human(guicommon.Object):
         self.meshData.updateIndexBufferFaces()
 
 
-    def traceStacks(self, all=True, vertsToList=0):
+    def traceStack(self, all=True):
         import warpmodifier
         log.debug("human.targetsDetailStack:")
         for path,value in self.targetsDetailStack.items():
+            try:
+                target = algos3d._targetBuffer[canonicalPath(path)]
+            except KeyError:
+                target = None
+            if target is None:
+                stars = " ??? "
+            elif isinstance(target, warpmodifier.WarpTarget):
+                stars = " *** "
+            else:
+                stars = " "
             if all or path[0:4] != "data":
-                log.debug("  %s: %s" % (path, value))
-        return
+                log.debug("  %s%s: %s" % (stars, path, value))
 
+    def traceBuffer(self, all=True, vertsToList=0):
+        import warpmodifier
         log.debug("algos3d.targetBuffer:")
         for path,target in algos3d._targetBuffer.items():
             if isinstance(target, warpmodifier.WarpTarget):
@@ -168,7 +179,7 @@ class Human(guicommon.Object):
             else:
                 stars = " "
             if all or path[0:4] != "data":
-                log.debug("  %s:%s%s %d" % (path, stars, target, vertsToList))
+                log.debug("  %s%s:%s %d" % (stars, path, target, vertsToList))
                 for n,vn in enumerate(target.verts[0:vertsToList]):
                     log.debug("   %d : %s %s" % (vn, target.data[n], self.mesh.coord[vn]))
 
@@ -612,7 +623,8 @@ class Human(guicommon.Object):
         if progressCallback:
             progressCallback(1.0)
 
-        self.traceStacks(all=True, vertsToList=0)
+        self.traceStack(all=True)
+        #self.traceBuffer(all=True, vertsToList=0)
 
         self.callEvent('onChanged', events3d.HumanEvent(self, 'targets'))
 

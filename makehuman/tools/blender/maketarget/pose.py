@@ -64,16 +64,27 @@ def saveMhpFile(context, filepath):
 def writeMhpBones(fp, pb, log):
     b = pb.bone
     if pb.parent:
-        string = "quat"
         mat = b.matrix_local.inverted() * b.parent.matrix_local * pb.parent.matrix.inverted() * pb.matrix
     else:
-        string = "gquat"
         mat = pb.matrix.copy()
         maty = mat[1].copy()
         matz = mat[2].copy()
         mat[1] = matz
         mat[2] = -maty
 
+    diff = mat - Matrix()
+    nonzero = False
+    for i in range(4):
+        if abs(diff[i].length) > 5e-3:
+            nonzero = True
+            break
+    if nonzero:
+        fp.write("%s\tmatrix" % pb.name)
+        for i in range(4):
+            row = mat[i]
+            fp.write("\t%s\t%s\t%s\t%s" % (round(row[0]), round(row[1]), round(row[2]), round(row[3])))
+        fp.write("\n")
+    """
     t,q,s = mat.decompose()
     magn = math.sqrt(q.x*q.x + q.y*q.y + q.z*q.z)
     if magn > 1e-5:
@@ -82,7 +93,7 @@ def writeMhpBones(fp, pb, log):
     if s.length > 1e-3 and isMuscleBone(pb):
         fp.write("%s\t%s\t%s\t%s\t%s\n" % (pb.name, "scale", round(s[0]), round(s[1]), round(s[2])))
         #log.write("%s %s\n%s\n" % (pb.name, s, m))
-
+    """
     for child in pb.children:
         writeMhpBones(fp, child, log)
 
@@ -103,6 +114,11 @@ def loadMhpFile(context, filepath):
         rig = ob
     else:
         rig = ob.parent
+
+    unit = Matrix()
+    for pb in rig.pose.bones:
+        pb.matrix_basis = unit
+
     scn = context.scene
     if rig and rig.type == 'ARMATURE':
         (pname, ext) = os.path.splitext(filepath)
@@ -113,15 +129,17 @@ def loadMhpFile(context, filepath):
             words = line.split()
             if len(words) < 4:
                 continue
+            try:
+                pb = rig.pose.bones[words[0]]
+            except KeyError:
+                continue
+
+            if isMuscleBone(pb):
+                pass
             elif words[1] == "quat":
-                try:
-                    pb = rig.pose.bones[words[0]]
-                except KeyError:
-                    continue
-                if not isMuscleBone(pb):
-                    q = Quaternion((float(words[2]), float(words[3]), float(words[4]), float(words[5])))
-                    mat = q.to_matrix().to_4x4()
-                    pb.matrix_basis = mat
+                q = Quaternion((float(words[2]), float(words[3]), float(words[4]), float(words[5])))
+                mat = q.to_matrix().to_4x4()
+                pb.matrix_basis = mat
             elif words[1] == "gquat":
                 q = Quaternion((float(words[2]), float(words[3]), float(words[4]), float(words[5])))
                 mat = q.to_matrix().to_4x4()
@@ -129,8 +147,22 @@ def loadMhpFile(context, filepath):
                 matz = mat[2].copy()
                 mat[1] = -matz
                 mat[2] = maty
-                pb = rig.pose.bones[words[0]]
                 pb.matrix_basis = pb.bone.matrix_local.inverted() * mat
+            elif words[1] == "matrix":
+                rows = []
+                n = 2
+                for i in range(4):
+                    rows.append((float(words[n]), float(words[n+1]), float(words[n+2]), float(words[n+3])))
+                    n += 4
+                mat = Matrix(rows)
+                if pb.parent:
+                    pb.matrix_basis = mat
+                else:
+                    maty = mat[1].copy()
+                    matz = mat[2].copy()
+                    mat[1] = -matz
+                    mat[2] = maty
+                    pb.matrix_basis = pb.bone.matrix_local.inverted() * mat
             elif words[1] == "scale":
                 pass
             else:
