@@ -194,16 +194,17 @@ class ExpressionTaskView(gui3d.TaskView):
         human = gui3d.app.selectedHuman
         warpmodifier.resetWarpBuffer()
 
-        f = open(filename, 'r')
-        for data in f.readlines():
-            lineData = data.split()
-            if len(lineData) > 0 and not lineData[0] == '#':
-                if lineData[0] == 'expression':
-                    modifier = self.modifiers.get(lineData[1], None)
-                    if modifier:
-                        value = float(lineData[2])
-                        modifier.setValue(human, value)
-                        modifier.updateValue(human, value)  # Force recompilation
+        if filename:
+            f = open(filename, 'r')
+            for data in f.readlines():
+                lineData = data.split()
+                if len(lineData) > 0 and not lineData[0] == '#':
+                    if lineData[0] == 'expression':
+                        modifier = self.modifiers.get(lineData[1], None)
+                        if modifier:
+                            value = float(lineData[2])
+                            modifier.setValue(human, value)
+                            modifier.updateValue(human, value)  # Force recompilation
 
 
 #----------------------------------------------------------
@@ -270,7 +271,7 @@ class MhmLoadTaskView(gui3d.TaskView):
             os.makedirs(self.mhmPath)
 
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhm', 'thumb'))
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhm', 'thumb', mh.getSysDataPath('notfound.thumb'), mhmLabel))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhm', 'thumb', notFoundImage=mh.getSysDataPath('notfound.thumb'), name=mhmLabel, noneItem=True, clearImage=os.path.join(self.globalMhmPath, 'clear.thumb')))
         self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
 

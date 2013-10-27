@@ -41,13 +41,13 @@ class PoseAction(gui3d.Action):
         self.after = after
 
     def do(self):
-        clearOnly = (os.path.basename(self.after) == 'clear.mhp')
+        clearOnly = self.after is None
         self.library.pose = posemode.loadMhpFile(self.after, self.library.pose, clearOnly)
         self.library.posefile = self.after
         return True
 
     def undo(self):
-        clearOnly = (os.path.basename(self.before) == 'clear.mhp')
+        clearOnly = self.before is None
         self.library.pose = posemode.loadMhpFile(self.before, self.library.pose, clearOnly)
         self.library.posefile = self.before
         return True
@@ -71,7 +71,7 @@ class PoseLoadTaskView(gui3d.TaskView):
         if not os.path.exists(self.userPoses):
             os.makedirs(self.userPoses)
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhp', 'thumb', mh.getSysDataPath('notfound.thumb')))
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhp', 'thumb', mh.getSysDataPath('notfound.thumb'), 'Pose'))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhp', 'thumb', notFoundImage=mh.getSysDataPath('notfound.thumb'), name='Pose', noneItem=True, clearImage=os.path.join(self.systemPoses, 'clear.thumb')))
         self.filechooser.setIconSize(50,50)
         self.addLeftWidget(self.filechooser.createSortBox())
 
@@ -80,10 +80,7 @@ class PoseLoadTaskView(gui3d.TaskView):
 
         @self.filechooser.mhEvent
         def onFileSelected(filepath):
-            if self.posefile:
-                oldFile = self.posefile
-            else:
-                oldFile = "clear.mhp"
+            oldFile = self.posefile
 
             gui3d.app.do(PoseAction("Change pose",
                 self,

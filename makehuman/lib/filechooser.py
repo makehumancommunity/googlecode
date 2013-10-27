@@ -408,6 +408,9 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
     def setPaths(self, value):
         self.paths = value if isinstance(value, list) else [value]
 
+    def getPaths(self):
+        return self.paths
+
     def setPreviewExtensions(self, value):
         if not value:
             self.previewExtensions = None
@@ -529,6 +532,17 @@ class FileChooser(FileChooserBase):
         self.selection = ''
         self.childY = {}
         self.notFoundImage = notFoundImage
+        # Try to find a "not found" icon if none is specified
+        if not self.notFoundImage:
+            for path in self.getPaths():
+                imgPath = os.path.join(path, 'notfound.thumb')
+                if os.path.isfile(imgPath):
+                    self.notFoundImage = imgPath
+                    break
+        if not self.notFoundImage:
+            imgPath = getpath.getSysDataPath('notfound.thumb')
+            if os.path.isfile(imgPath):
+                self.notFoundImage = imgPath
 
         self.layout = QtGui.QGridLayout(self)
 
@@ -571,10 +585,11 @@ class FileChooser(FileChooserBase):
 
 class ListFileChooser(FileChooserBase):
 
-    def __init__(self, path, extension, name="File chooser" , multiSelect=False, verticalScrolling=False, sort=FileSort()):
+    def __init__(self, path, extension, name="File chooser" , multiSelect=False, verticalScrolling=False, sort=FileSort(), noneItem = False):
         super(ListFileChooser, self).__init__(path, extension, sort)
         self.listItems = []
         self.multiSelect = multiSelect
+        self.noneItem = noneItem
 
         self.layout = QtGui.QGridLayout(self)
         self.mainBox = gui.GroupBox(name)
@@ -714,10 +729,11 @@ class ListFileChooser(FileChooserBase):
         super(ListFileChooser, self).refresh()
 
         # Add None item
-        if not self.multiSelect:
-            if not self.clearImage:
+        if not self.multiSelect and self.noneItem:
+            if not self.clearImage or not os.path.isfile(self.clearImage):
                 ext = os.path.splitext(self.notFoundImage)[1]
                 clearIcon = os.path.join(os.path.dirname(self.notFoundImage), 'clear'+ext)
+                print '~~~~~~~~ set clear icon to %s' % clearIcon
             else:
                 clearIcon = self.clearImage
             self.addItem(None, "None", clearIcon, pos = 0)
@@ -730,8 +746,8 @@ class ListFileChooser(FileChooserBase):
                 self.setSelection(selections[0])
 
 class IconListFileChooser(ListFileChooser):
-    def __init__(self, path, extension, previewExtensions='bmp', notFoundImage=None, clearImage=None, name="File chooser", multiSelect=False, verticalScrolling=False, sort=FileSort()):
-        super(IconListFileChooser, self).__init__(path, extension, name, multiSelect, verticalScrolling, sort)
+    def __init__(self, path, extension, previewExtensions='bmp', notFoundImage=None, clearImage=None, name="File chooser", multiSelect=False, verticalScrolling=False, sort=FileSort(), noneItem = False):
+        super(IconListFileChooser, self).__init__(path, extension, name, multiSelect, verticalScrolling, sort, noneItem)
         self.setPreviewExtensions(previewExtensions)
         self.notFoundImage = notFoundImage
         self.clearImage = clearImage
