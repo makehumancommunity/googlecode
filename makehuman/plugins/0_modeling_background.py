@@ -96,7 +96,7 @@ class BackgroundChooser(gui3d.TaskView):
 
         self.backgroundsFolders = [ mh.getSysDataPath('backgrounds'),
                                     self.backgroundsFolder ]
-        self.extensions = ['bmp', 'png', 'tif', 'tiff', 'jpg', 'jpeg', 'clear']
+        self.extensions = ['bmp', 'png', 'tif', 'tiff', 'jpg', 'jpeg']
 
         self.texture = mh.Texture()
 
@@ -132,6 +132,7 @@ class BackgroundChooser(gui3d.TaskView):
         #self.addLeftWidget(self.filechooser.sortBox)
         self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.backgroundsFolders, self.extensions, None, None, 'Background'))
         self.filechooser.setIconSize(50,50)
+        self.filechooser.enableAutoRefresh(False)
         self.addLeftWidget(self.filechooser.createSortBox())
 
         self.backgroundBox = self.addLeftWidget(gui.GroupBox('Side'))
@@ -159,9 +160,6 @@ class BackgroundChooser(gui3d.TaskView):
         @self.filechooser.mhEvent
         def onFileSelected(filename):
             side = self.getSelectedSideCheckbox()
-
-            if os.path.splitext(filename)[1] == ".clear":
-                filename = None
 
             if self.filenames[side]:
                 oldBg = self.filenames[side][0]
@@ -251,14 +249,18 @@ class BackgroundChooser(gui3d.TaskView):
         self.setBackgroundEnabled(self.backgroundImageToggle.isChecked())
 
     def onShow(self, event):
-
         gui3d.TaskView.onShow(self, event)
         text = language.language.getLanguageString(u'Images which are placed in %s will show up here.') % self.backgroundsFolder
         gui3d.app.prompt('Info', text, 'OK', helpId='backgroundHelp')
         gui3d.app.statusPersist(text)
         self.opacitySlider.setValue(self.opacity)
         self.foregroundTggl.setChecked(self.isShowBgInFront())
+        self.filechooser.refresh()
         self.filechooser.setFocus()
+        currentBg = self.filenames[self.getCurrentSide()]
+        if currentBg:
+            currentBg = currentBg[0]
+        self.filechooser.selectItem(currentBg)
 
     def onHide(self, event):
 
