@@ -43,13 +43,9 @@ import numpy as np
 class ClothesTaskView(proxychooser.ProxyChooserTaskView):
 
     def __init__(self, category):
-        super(ClothesTaskView, self).__init__(category, 'clothes', multiProxy = True)
+        super(ClothesTaskView, self).__init__(category, 'clothes', multiProxy = True, tagFilter = True)
 
         #self.taggedClothes = {}
-
-        # TODO self.filechooser.setFileLoadHandler(fc.MhcloFileLoader())
-
-        self.addLeftWidget(self.filechooser.createTagFilter())
 
         self.originalHumanMask = gui3d.app.selectedHuman.meshData.getFaceMask().copy()
         self.faceHidingTggl = self.optionsBox.addWidget(gui.ToggleButton("Hide faces under clothes"))

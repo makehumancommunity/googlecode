@@ -78,7 +78,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
     Common base class for all proxy chooser libraries.
     """
 
-    def __init__(self, category, proxyName, tabLabel = None, multiProxy = False):
+    def __init__(self, category, proxyName, tabLabel = None, multiProxy = False, tagFilter = False):
         if not tabLabel:
             tabLabel = proxyName.capitalize()
         proxyName = proxyName.lower().replace(" ", "_")
@@ -87,6 +87,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
         self.proxyName = proxyName
         self.label = tabLabel
         self.multiProxy = multiProxy
+        self.tagFilter = tagFilter
 
         self.homeProxyDir = getpath.getPath(os.path.join('data', proxyName))
         self.sysProxyDir = mh.getSysDataPath(proxyName)
@@ -123,11 +124,17 @@ class ProxyChooserTaskView(gui3d.TaskView):
             clearIcon = self.getClearIcon()
             if not os.path.isfile(clearIcon):
                 clearIcon = getpath.getSysDataPath('clear.thumb')
+
         self.filechooser = fc.IconListFileChooser(self.paths, self.getFileExtension(), 'thumb', notfoundIcon, clearIcon, name=self.label, multiSelect=self.multiProxy, noneItem = not self.multiProxy)
         self.addRightWidget(self.filechooser)
+
         self.filechooser.setIconSize(50,50)
         self.filechooser.enableAutoRefresh(False)
         self.addLeftWidget(self.filechooser.createSortBox())
+
+        if self.tagFilter:
+            self.filechooser.setFileLoadHandler(fc.TaggedFileLoader(self))
+            self.addLeftWidget(self.filechooser.createTagFilter())
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
@@ -562,10 +569,13 @@ class ProxyChooserTaskView(gui3d.TaskView):
             proxyId = getpath.canonicalPath(filename)
             if proxyId not in self._proxyFileCache:
                 log.warning('Could not get tags for proxy with filename %s. Does not exist in %s library.', filename, self.proxyName)
+                return result
+            _, _, tags = self._proxyFileCache[proxyId]
+            result = result.union(tags)
         else:
             for (path, values) in self._proxyFileCache.items():
                 _, uuid, tags = values
-                result.union(tags)
+                result = result.union(tags)
         return result
 
     def registerLoadSaveHandlers(self):

@@ -325,11 +325,14 @@ class FileHandler(object):
 
         return preview
 
-class MhcloFileLoader(FileHandler):
+class TaggedFileLoader(FileHandler):
+    """
+    Load files with tags, allowing to filter them with a tag filter.
+    """
 
-    def __init__(self):
-        super(MhcloFileLoader, self).__init__()
-        self.__tagsCache = {}
+    def __init__(self, library):
+        super(TaggedFileLoader, self).__init__()
+        self.library = library
 
     def refresh(self, files):
         """
@@ -338,15 +341,9 @@ class MhcloFileLoader(FileHandler):
         import exportutils.config
         for file in files:
             label = os.path.basename(file)
-            if self.fileChooser.multiSelect and label == "clear.mhclo": # TODO
-                continue
             if isinstance(self.fileChooser.extension, str):
                 label = os.path.splitext(label)[0]
-            if not file in self.__tagsCache:
-                tags = exportutils.config.scanFileForTags(file)     # TODO change
-                self.__tagsCache[file] = tags
-            else:
-                tags = self.__tagsCache[file]
+            tags = self.library.getTags(filename = file)
             self.fileChooser.addItem(file, label, self.getPreview(file), tags)
 
 class MhmatFileLoader(FileHandler):
@@ -733,7 +730,6 @@ class ListFileChooser(FileChooserBase):
             if not self.clearImage or not os.path.isfile(self.clearImage):
                 ext = os.path.splitext(self.notFoundImage)[1]
                 clearIcon = os.path.join(os.path.dirname(self.notFoundImage), 'clear'+ext)
-                print '~~~~~~~~ set clear icon to %s' % clearIcon
             else:
                 clearIcon = self.clearImage
             self.addItem(None, "None", clearIcon, pos = 0)
