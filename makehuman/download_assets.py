@@ -19,59 +19,43 @@
 Abstract
 --------
 
-Simple download script to fetch additional assets from http.
+Simple download script to fetch additional assets from ftp.
 """
 
 import os
-import urllib2
 import sys
 import shutil
+from ftplib import FTP
 
 sys.path = ["./lib"] + sys.path
 from getpath import getSysDataPath, isSubPath, getSysPath
 
+def downloadFromFTP(ftp, filePath, destination):
+    fileSize = ftp.size(filePath)
+    downloaded = [0]    # Is a list so we can pass and change it in an inner func
+    f = open(destination, 'wb')
+    def writeChunk(data):
+        f.write(data)
+
+        downloaded[0] += len(data)
+        percentage = 100 * float(downloaded[0]) / fileSize
+        sys.stdout.write("  Downloaded %d%% of %d bytes\r" % (percentage, fileSize))
+
+        if percentage >= 100:
+            sys.stdout.write('\n')
+
+    ftp.retrbinary('RETR '+filePath, writeChunk)
+    f.close()
 
 
-def progress(percentage, totalSize):
-    sys.stdout.write("  Downloaded %d%% of %d bytes\r" % (percentage, totalSize))
-
-    if percentage >= 100:
-        sys.stdout.write('\n')
-
-def download(url, chunkSize=1024, progressCallback=None):
-    u = urllib2.urlopen(url)
-
-    totalSize = u.info().getheader('Content-Length').strip()
-    totalSize = int(totalSize)
-    bytesDownloaded = 0
-
-    result = []
-
-    while True:
-        chunk = u.read(chunkSize)
-        bytesDownloaded += len(chunk)
-
-        if not chunk:
-            return result
-        else:
-            result.append(chunk)
-
-        if progressCallback:
-            percentage = round(100* float(bytesDownloaded) / totalSize, 2)
-            progressCallback(percentage, totalSize)
-
-
-def downloadFile(url, destination, fileProgress):
+def downloadFile(ftp, filePath, destination, fileProgress):
     if os.path.dirname(destination) and not os.path.isdir(os.path.dirname(destination)):
         os.makedirs(os.path.dirname(destination))
-    
+
     #print "[%d%% done] Downloading file %s to %s" % (fileProgress, url, filename)
     print "[%d%% done] Downloading file %s" % (fileProgress, os.path.basename(destination))
-    print "             %s ==> %s" % (url, destination)
-    data = download(url, progressCallback = progress)
-    destFile = open(destination, 'wb')
-    destFile.write(''.join(data))
-    destFile.close()
+    print "             %s ==> %s" % (filePath, destination)
+    downloadFromFTP(ftp, filePath, destination)
 
 def parseContentsFile(filename):
     f = open(filename)
@@ -83,64 +67,115 @@ def parseContentsFile(filename):
         if l.startswith('#') or l.startswith('//'):
             continue
         c=l.split()
-        contents[c[0]] = float(c[1])
+        try:
+            contents[c[0]] = long(c[1])
+        except:
+            contents[c[0]] = 0
     f.close()
     return contents
 
+def writeContentsFile(filename, contents):
+    f = open(filename, 'w')
+    for fPath, mtime in contents.items():
+        f.write("%s %s\n" % (fPath, mtime))
+    f.close()
+
 def getNewFiles(oldContents, newContents, destinationFolder):
     result = []
-    for (filename, version) in newContents.items():
+    for (filename, newTime) in newContents.items():
         destFile = os.path.join(destinationFolder, filename.lstrip('/'))
         if not os.path.isfile(destFile):
             result.append(filename)
         elif filename in oldContents:
-            oldVersion = oldContents[filename]
-            if version > oldVersion:
+            oldTime = oldContents[filename]
+            if newTime > oldTime:
                 result.append(filename)
         else:
             result.append(filename)
     return result
 
+def getFTPContents(ftp):
+    def walkFTP(ftp):
+        path = ftp.pwd()    # TODO relpath to root path
+        contentsList = []
+        directories = []
+        s = ftp.retrlines('LIST', contentsList.append)
+
+        for line in contentsList:
+            if line.startswith('d'): # is a folder
+                directories.append(line.split()[8])
+
+        filesList = [f for f in ftp.nlst() if f not in directories]
+        result = []
+        for fname in filesList:
+            mtime = ftp.sendcmd('MDTM %s' % fname)
+            mtime = int(mtime[3:].strip())
+            #mtime = int(time.mktime(time.strptime(mtime[3:].strip(), '%Y%m%d%H%M%S')))
+            fpath = os.path.join(path, fname)
+            result.append( (fpath, mtime) )
+
+        for dir_ in directories:
+            ftp.cwd(dir_)
+            result.extend( walkFTP(ftp) )
+            ftp.cwd('..')
+
+        return result
+
+    rootPath = ftp.pwd()
+    contentsList = walkFTP(ftp)
+    result = {}
+    # make paths relative to rootpath
+    for (p, mtime) in contentsList:
+        result[os.path.relpath(p, rootPath)] = mtime
+
+    return result
+
+
 if __name__ == '__main__':
-    baseUrl = "http://download.tuxfamily.org/makehuman/a8/base/"
+    ftpUrl = "download.tuxfamily.org"
+    ftpPath = "/makehuman/a8/base"
 
-    # Remove previously downloaded assets
-    print "Removing old downloaded content"
-    oldPaths = [getSysDataPath('hair/hairstyle01'), getSysDataPath('hair/hairstyle02')]
-    for oldPath in oldPaths:
-        if os.path.exists(oldPath):
-            shutil.rmtree(oldPath)
-
+    ftpPath = os.path.normpath(ftpPath)
     ## Use simple sync mechanism, maybe in the future we can use rsync over http?
     # Download contents list
-    baseUrl = baseUrl.rstrip('/')
-    baseName = os.path.basename(baseUrl)
+    baseName = os.path.basename(ftpPath)
     contentsFile = getSysPath(baseName+'_contents.txt')
     if os.path.isfile(contentsFile):
         # Parse previous contents file
         oldContents = parseContentsFile(contentsFile)
+        if len(oldContents) > 0 and len(str(oldContents[oldContents.keys()[0]])) < 5:
+            # Ignore old style contents file
+            oldContents = {}
     else:
         oldContents = {}
 
-    # Get and parse new contents file
-    downloadFile(baseUrl+"/contents.txt", contentsFile, 0)
-    newContents= parseContentsFile(contentsFile)
+    # Setup FTP connection
+    ftp = FTP(ftpUrl)
+    ftp.login()
+    ftp.cwd(ftpPath)
+
+    # Get contents from FTP
+    newContents = getFTPContents(ftp)
 
     destinationFolder = getSysDataPath()
     toDownload = getNewFiles(oldContents, newContents, destinationFolder)
+
     TOTAL_FILES = len(toDownload)
 
     fIdx = 0
-    for url in toDownload:
-        filename = os.path.join(destinationFolder, url.lstrip('/'))
-
-        url = baseUrl+'/'+url.lstrip('/')
+    for filePath in toDownload:
+        filename = os.path.join(destinationFolder, filePath.lstrip('/'))
 
         if not isSubPath(filename, destinationFolder):
             raise RuntimeError("ERROR: File destinations are jailed inside the sys data path (%s), destination path (%s) tries to escape!" % (destinationFolder, filename))
 
         fileProgress = round(100 * float(fIdx)/TOTAL_FILES, 2)
-        downloadFile(url, filename, fileProgress)
+        downloadFile(ftp, filePath, filename, fileProgress)
         fIdx += 1
 
+    ftp.close()
+
+    writeContentsFile(contentsFile, newContents)
+
     print "All done."
+
