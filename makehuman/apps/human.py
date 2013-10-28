@@ -59,6 +59,8 @@ class Human(guicommon.Object):
         self._eyesProxy = None
         self._genitalsObj = genitalsObj
         self._genitalsProxy = None
+        self.eyebrowsObj = None
+        self.eyebrowsProxy = None
         self.clothesObjs = {}
         self.clothesProxies = {}
 
@@ -184,14 +186,17 @@ class Human(guicommon.Object):
                     log.debug("   %d : %s %s" % (vn, target.data[n], self.mesh.coord[vn]))
 
 
+    def getProxyObjects(self):
+        objs = [self.hairObj, self.eyesObj, self.genitalsObj, self.eyebrowsObj]
+        for obj in self.clothesObjs.values():
+            objs.append(obj)
+        return objs
+
     # Overriding hide and show to account for both human base and the hairs!
 
     def show(self):
         self.visible = True
-        for obj in [self.hairObj, self.eyesObj, self.genitalsObj]:
-            if obj:
-                obj.show()
-        for obj in self.clothesObjs.values():
+        for obj in self.getProxyObjects():
             if obj:
                 obj.show()
         self.setVisibility(True)
@@ -200,10 +205,7 @@ class Human(guicommon.Object):
     def hide(self):
 
         self.visible = False
-        for obj in [self.hairObj, self.eyesObj, self.genitalsObj]:
-            if obj:
-                obj.hide()
-        for obj in self.clothesObjs.values():
+        for obj in self.getProxyObjects():
             if obj:
                 obj.hide()
         self.setVisibility(False)
@@ -214,10 +216,7 @@ class Human(guicommon.Object):
     def setPosition(self, position):
         dv = [x-y for x, y in zip(position, self.getPosition())]
         guicommon.Object.setPosition(self, position)
-        for obj in [self.hairObj, self.eyesObj, self.genitalsObj]:
-            if obj:
-                obj.setPosition([x+y for x, y in zip(obj.getPosition(), dv)])
-        for obj in self.clothesObjs.values():
+        for obj in self.getProxyObjects():
             if obj:
                 obj.setPosition([x+y for x, y in zip(obj.getPosition(), dv)])
 
@@ -225,10 +224,7 @@ class Human(guicommon.Object):
 
     def setRotation(self, rotation):
         guicommon.Object.setRotation(self, rotation)
-        for obj in [self.hairObj, self.eyesObj, self.genitalsObj]:
-            if obj:
-                obj.setRotation(rotation)
-        for obj in self.clothesObjs.values():
+        for obj in self.getProxyObjects():
             if obj:
                 obj.setRotation(rotation)
 
@@ -236,19 +232,13 @@ class Human(guicommon.Object):
 
     def setSolid(self, *args, **kwargs):
         guicommon.Object.setSolid(self, *args, **kwargs)
-        for obj in [self.hairObj, self.eyesObj, self.genitalsObj]:
-            if obj:
-                obj.setSolid(*args, **kwargs)
-        for obj in self.clothesObjs.values():
+        for obj in self.getProxyObjects():
             if obj:
                 obj.setSolid(*args, **kwargs)
 
     def setSubdivided(self, *args, **kwargs):
         guicommon.Object.setSubdivided(self, *args, **kwargs)
-        for obj in [self.hairObj, self.eyesObj, self.genitalsObj]:
-            if obj:
-                obj.setSubdivided(*args, **kwargs)
-        for obj in self.clothesObjs.values():
+        for obj in self.getProxyObjects():
             if obj:
                 obj.setSubdivided(*args, **kwargs)
         self.callEvent('onChanged', events3d.HumanEvent(self, 'smooth'))
