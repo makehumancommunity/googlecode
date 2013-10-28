@@ -171,6 +171,11 @@ class MaterialEditorTaskView(gui3d.TaskView):
         def onActivate(event):
             mat.depthless = w10e.value
 
+        w10f = self.materialBox.addWidget(TruthValue("Auto ethnic skin", mat.autoBlendSkin))
+        @w10f.mhEvent
+        def onActivate(event):
+            mat.autoBlendSkin = w10f.value
+
         w11 = self.materialBox.addWidget(ImageValue("Transparency map texture", mat.transparencyMapTexture, mh.getSysDataPath('textures')))
         @w11.mhEvent
         def onActivate(event):
