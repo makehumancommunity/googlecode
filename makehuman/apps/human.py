@@ -550,12 +550,14 @@ class Human(guicommon.Object):
             self.africanVal *= scale
 
     def setDetail(self, name, value):
+        name = canonicalPath(name)
         if value:
             self.targetsDetailStack[name] = value
         elif name in self.targetsDetailStack:
             del self.targetsDetailStack[name]
 
     def getDetail(self, name):
+        name = canonicalPath(name)
         return self.targetsDetailStack.get(name, 0.0)
 
     def getSymmetryGroup(self, group):
