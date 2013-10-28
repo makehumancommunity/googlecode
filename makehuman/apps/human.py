@@ -475,7 +475,6 @@ class Human(guicommon.Object):
         else:
             self.asianVal *= new / old
             self.africanVal *= new / old
-        self._updateDiffuseColor()
         self.callEvent('onChanging', events3d.HumanEvent(self, 'caucasian'))
 
     def getCaucasian(self):
@@ -494,7 +493,6 @@ class Human(guicommon.Object):
         else:
             self.caucasianVal *= new / old
             self.asianVal *= new / old
-        self._updateDiffuseColor()
         self.callEvent('onChanging', events3d.HumanEvent(self, 'african'))
 
     def getAfrican(self):
@@ -513,31 +511,10 @@ class Human(guicommon.Object):
         else:
             self.caucasianVal *= new / old
             self.africanVal *= new / old
-        self._updateDiffuseColor()
         self.callEvent('onChanging', events3d.HumanEvent(self, 'asian'))
 
     def getAsian(self):
         return self.asianVal
-
-    def _updateDiffuseColor(self):
-        if self.material.supportsDiffuse() and self.material.shaderConfig['diffuse']:
-            # If human is diffuse textured, set diffuse factor to 100%
-            self.material.diffuseColor = [1, 1, 1]
-            if self.genitalsObj:
-                self.genitalsObj.material.diffuseColor = [1, 1, 1]
-        else:
-            # Set diffuse color to ethnic mix
-            asianColor     = np.asarray([0.721, 0.568, 0.431], dtype=np.float32)
-            africanColor   = np.asarray([0.207, 0.113, 0.066], dtype=np.float32)
-            caucasianColor = np.asarray([0.843, 0.639, 0.517], dtype=np.float32)
-
-            diffuse = self.getAsian()     * asianColor + \
-                      self.getAfrican()   * africanColor + \
-                      self.getCaucasian() * caucasianColor
-            self.material.diffuseColor = diffuse
-
-            if self.genitalsObj:
-                self.genitalsObj.material.diffuseColor = diffuse
 
     def syncRace(self):
         total = self.caucasianVal + self.asianVal + self.africanVal
@@ -746,7 +723,6 @@ class Human(guicommon.Object):
     def setMaterial(self, mat):
         self.callEvent('onChanging', events3d.HumanEvent(self, 'material'))
         super(Human, self).setMaterial(mat)
-        self._updateDiffuseColor()
         self.callEvent('onChanged', events3d.HumanEvent(self, 'material'))
 
     material = property(getMaterial, setMaterial)

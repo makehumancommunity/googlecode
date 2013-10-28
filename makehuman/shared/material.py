@@ -500,7 +500,7 @@ class Material(object):
 
     def getDiffuseColor(self):
         if self.autoBlendSkin:
-            self._diffuseColor = getSkinBlender().getDiffuseColor()
+            self._diffuseColor = Color(getSkinBlender().getDiffuseColor())
         return self._diffuseColor
 
     def setDiffuseColor(self, color):
