@@ -49,6 +49,8 @@ def downloadFromFTP(ftp, filePath, destination):
 
 
 def downloadFile(ftp, filePath, destination, fileProgress):
+    filePath = filePath.replace('\\', '/')
+    destination = destination.replace('\\', '/')
     if os.path.dirname(destination) and not os.path.isdir(os.path.dirname(destination)):
         os.makedirs(os.path.dirname(destination))
 
@@ -115,7 +117,7 @@ def getFTPContents(ftp):
             result.append( (fpath, mtime) )
 
         for dir_ in directories:
-            ftp.cwd(dir_)
+            ftp.cwd(dir_.replace('\\', '/'))
             result.extend( walkFTP(ftp) )
             ftp.cwd('..')
 
@@ -152,7 +154,7 @@ if __name__ == '__main__':
     # Setup FTP connection
     ftp = FTP(ftpUrl)
     ftp.login()
-    ftp.cwd(ftpPath)
+    ftp.cwd(ftpPath.replace('\\', '/'))
 
     # Get contents from FTP
     newContents = getFTPContents(ftp)
