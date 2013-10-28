@@ -192,6 +192,14 @@ class Human(guicommon.Object):
             objs.append(obj)
         return objs
 
+    def getProxies(self, includeHumanProxy = True):
+        proxies = [self.hairProxy, self.eyesProxy, self.genitalsProxy, self.eyebrowsProxy]
+        if includeHumanProxy and self.proxy:
+            proxies.append(self.proxy)
+        for pxy in self.clothesProxies.values():
+            proxies.append(pxy)
+        return proxies
+
     # Overriding hide and show to account for both human base and the hairs!
 
     def show(self):
