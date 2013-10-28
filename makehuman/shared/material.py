@@ -25,6 +25,8 @@ MakeHuman Material format with parser and serializer.
 import log
 import os
 
+_autoSkinBlender = None
+
 class Color(object):
     def __init__(self, r=0.00, g=0.00, b=0.00):
         if hasattr(r, '__iter__'):
@@ -146,6 +148,8 @@ class Material(object):
         self._backfaceCull = True # Set to False to disable backface culling (render back of polygons)
         self._depthless = False   # Set to True for depthless rendering (object is not occluded and does not occlude other objects)
 
+        self._autoBlendSkin = False # Set to True to adapt diffuse color and litsphere texture to skin tone
+
         self._diffuseTexture = None
         self._bumpMapTexture = None
         self._bumpMapIntensity = 1.0
@@ -189,7 +193,7 @@ class Material(object):
         self.filepath = material.filepath
 
         self._ambientColor.copyFrom(material.ambientColor)
-        self._diffuseColor.copyFrom(material.diffuseColor)
+        self._diffuseColor.copyFrom(material._diffuseColor)
         self._specularColor.copyFrom(material.specularColor)
         self._shininess = material.shininess
         self._emissiveColor.copyFrom(material.emissiveColor)
@@ -202,6 +206,8 @@ class Material(object):
         self._transparent = material.transparent
         self._backfaceCull = material.backfaceCull
         self._depthless = material.depthless
+
+        self._autoBlendSkin = material.autoBlendSkin
 
         self._diffuseTexture = material.diffuseTexture
         self._bumpMapTexture = material.bumpMapTexture
@@ -222,7 +228,7 @@ class Material(object):
 
         self._shader = material.shader
         self._shaderConfig = dict(material._shaderConfig)
-        self._shaderParameters = dict(material.shaderParameters)
+        self._shaderParameters = dict(material._shaderParameters)
         self._shaderDefines = list(material.shaderDefines)
         self.shaderChanged = True
 
@@ -290,6 +296,8 @@ class Material(object):
                 self._backfaceCull = words[1].lower() in ["yes", "enabled", "true"]
             elif words[0] == "depthless":
                 self._depthless = words[1].lower() in ["yes", "enabled", "true"]
+            elif words[0] == "autoBlendSkin":
+                self._autoBlendSkin = words[1].lower() in ["yes", "enabled", "true"]
             elif words[0] == "diffuseTexture":
                 self._diffuseTexture = getFilePath(words[1], self.filepath)
             elif words[0] == "bumpmapTexture":
@@ -491,6 +499,8 @@ class Material(object):
 
 
     def getDiffuseColor(self):
+        if self.autoBlendSkin:
+            self._diffuseColor = getSkinBlender().getDiffuseColor()
         return self._diffuseColor
 
     def setDiffuseColor(self, color):
@@ -615,6 +625,13 @@ class Material(object):
 
     depthless = property(getDepthless, setDepthless)
 
+    def getAutoBlendSkin(self):
+        return self._autoBlendSkin
+
+    def setAutoBlendSkin(self, autoblend):
+        self._autoBlendSkin = autoblend
+
+    autoBlendSkin = property(getAutoBlendSkin, setAutoBlendSkin)
 
     def getSSSEnabled(self):
         return self._sssEnabled
@@ -779,6 +796,9 @@ class Material(object):
         result['diffuse'] = self.diffuseColor.values + [self.opacity]
         result['specular'] = self.specularColor.values + [self.shininess]
         result['emissive'] = self.emissiveColor
+
+        if self.autoBlendSkin:
+            result["litsphereTexture"] = getSkinBlender().getLitsphereTexture()
         return result
 
     def setShaderParameter(self, name, value):
@@ -1004,6 +1024,15 @@ def fromFile(filename):
     mat = Material(performConfig=False)
     mat.fromFile(filename)
     return mat
+
+def getSkinBlender():
+    global _autoSkinBlender
+    if not _autoSkinBlender:
+        import autoskinblender
+        from core import G
+        human = G.app.selectedHuman
+        _autoSkinBlender = autoskinblender.EthnicSkinBlender(human)
+    return _autoSkinBlender
 
 def getFilePath(filename, folder = None):
     if not filename:

@@ -13,6 +13,9 @@ emissiveColor 0.0 0.0 0.0
 opacity 1.0
 translucency 0.0
 
+// Enable auto skin tone blending based on ethnicity
+autoBlendSkin true
+
 sssEnabled true
 sssRScale 5.0
 sssGScale 2.5
@@ -20,9 +23,6 @@ sssBScale 1.0
 
 // Set LitSphere shader programme
 shader data/shaders/glsl/litsphere
-
-// Define custom uniform values to pass to supporting shaders
-shaderParam litsphereTexture data/litspheres/adaptive_skin_tone.png
 
 // Configure built-in shader defines
 shaderConfig diffuse false
