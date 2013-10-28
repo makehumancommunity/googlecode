@@ -382,6 +382,7 @@ def initInterface(context):
     bpy.types.Object.McpArmature = StringProperty()
     bpy.types.Object.McpLimitsOn = BoolProperty(default=True)
     bpy.types.Object.McpChildOfsOn = BoolProperty(default=False)
+    bpy.types.Object.MhAlpha8 = BoolProperty(default=False)
 
 
 #
