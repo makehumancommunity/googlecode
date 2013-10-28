@@ -29,7 +29,6 @@ import material
 import os
 import gui3d
 import mh
-import download
 import gui
 import filechooser as fc
 from humanobjchooser import HumanObjectSelector
@@ -93,10 +92,6 @@ class MaterialTaskView(gui3d.TaskView):
         self.filechooser.setFileLoadHandler(fc.MhmatFileLoader())
         self.addLeftWidget(self.filechooser.createSortBox())
 
-        self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
-        self.mediaSync = None
-        self.mediaSync2 = None
-
         @self.filechooser.mhEvent
         def onFileSelected(filename):
             mat = material.fromFile(filename)
@@ -121,10 +116,6 @@ class MaterialTaskView(gui3d.TaskView):
                     gui3d.app.do(MaterialAction(human.clothesObjs[uuid],
                         mat))
 
-        @self.update.mhEvent
-        def onClicked(event):
-            self.syncMedia()
-
         self.humanObjSelector = self.addLeftWidget(HumanObjectSelector(self.human))
         @self.humanObjSelector.mhEvent
         def onActivate(value):
@@ -136,11 +127,6 @@ class MaterialTaskView(gui3d.TaskView):
         gui3d.TaskView.onShow(self, event)
 
         self.reloadMaterialChooser(self.humanObjSelector.selected)
-
-        # Offer to download skins if none are found
-        self.numSkin = len([filename for filename in os.listdir(mh.getPath('data/skins')) if filename.lower().endswith('png')])
-        if self.numSkin < 1:
-            gui3d.app.prompt('No skins found', 'You don\'t seem to have any skins, download them from the makehuman media repository?\nNote: this can take some time depending on your connection speed.', 'Yes', 'No', self.syncMedia)
 
 
     def applyClothesMaterial(self, uuid, filename):
@@ -334,31 +320,6 @@ class MaterialTaskView(gui3d.TaskView):
             materialPath = self.getRelativeMaterialPath(genitalsObj.material.filename, proxy.file)
             file.write('material %s %s %s\n' % (proxy.name, proxy.getUuid(), materialPath))
 
-    def syncMedia(self):
-
-        if self.mediaSync:
-            return
-        if not os.path.isdir(self.userSkins):
-            os.makedirs(self.userSkins)
-        self.mediaSync = download.MediaSync(gui3d.app, self.userSkins, 'http://download.tuxfamily.org/makehuman/skins/', self.syncMediaFinished)
-        self.mediaSync.start()
-        self.mediaSync2 = None
-
-    def syncMediaFinished(self):
-        '''
-        if not self.mediaSync2:
-            if not os.path.isdir(self.userClothes):
-                os.makedirs(self.userClothes)
-            self.mediaSync2 = download.MediaSync(gui3d.app, self.userClothes, 'http://download.tuxfamily.org/makehuman/clothes/textures/', self.syncMediaFinished)
-            self.mediaSync2.start()
-            self.mediaSync = None
-        else:
-            self.mediaSync = None
-            self.filechooser.refresh()
-        '''
-
-        self.mediaSync = None
-        self.filechooser.refresh()
 
 import image
 import image_operations
