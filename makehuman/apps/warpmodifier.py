@@ -207,7 +207,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         sumtargets = 0
         for charpath,value in human.targetsDetailStack.items():
             try:
-                self.refCharacters[charpath]
+                self.refCharacters[localPath(charpath)]
                 sumtargets += value
             except KeyError:
                 continue
@@ -230,7 +230,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
             trgCharCoord[dstVerts] += value * trgChar.data[srcVerts]
 
             try:
-                refchar = self.refCharacters[charpath]
+                refchar = self.refCharacters[localPath(charpath)]
             except KeyError:
                 refchar = None
 
