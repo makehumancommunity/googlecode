@@ -109,9 +109,9 @@ def exportMd5(human, filepath, config):
 
     progress(0.3, 0.8, "Writing Objects", len(rmeshes))
     for rmeshIdx, rmesh in enumerate(rmeshes):
-        # rmesh.type: None is human, "Proxy" is human proxy, "Clothes" for clothing and "Hair" for hair
+        # rmesh.type: None is human, "Proxymeshes" is human proxy, "Clothes" for clothing and "Hair" for hair
         objprog = Progress()
-        
+
         obj = rmesh.object
 
         obj.calcFaceNormals()

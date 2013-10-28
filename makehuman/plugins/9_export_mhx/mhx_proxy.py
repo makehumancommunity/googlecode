@@ -96,7 +96,11 @@ class Writer(mhx_writer.Writer):
     """)
 
         obj = proxy.getObject()
-        obj = obj.getObject().getSeedMesh()
+        log.debug("PROXY %s %s" % (proxy, obj))
+        if proxy.type != "ProxyMeshes":
+            obj = obj.getObject().getSeedMesh()
+        log.debug("OBJ %s" % obj)
+
 
         fp.write("".join( ["    f %d %d %d %d ;\n" % tuple(fv) for fv in obj.fvert] ))
         fp.write("    ftall 0 1 ;\n")

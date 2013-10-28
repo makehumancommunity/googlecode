@@ -178,10 +178,10 @@ class CProxy:
         # TODO use more generic way of retrieving a proxy type
         if self.type == "Clothes":
             obj = human.clothesObjs[self.getUuid()]
-        elif self.type == "Proxy":
+        elif self.type == "Proxymeshes":
             if not human.proxy:
                 return None
-            obj = human.mesh
+            obj = human.getProxyMesh()
         elif self.type == "Hair":
             obj = human.hairObj
         elif self.type == "Eyes":
@@ -216,7 +216,7 @@ class CProxy:
             obj = human
         else:
             return None
-        return obj.mesh.texture.replace('\\', '/')
+        return getpath.formatPath(obj.mesh.texture)
 
 
     def getCoords(self):
@@ -275,7 +275,7 @@ class CProxy:
 
 
     def getWeights(self, rawWeights, amt=None):
-        if self.vertexGroups is not None:
+        if amt and self.vertexGroups:
             weights = OrderedDict()
             for name,data in self.vertexGroups:
                 for bone in amt.bones.values():
@@ -339,7 +339,7 @@ class CProxy:
 
 
     def getShapes(self, rawShapes, scale):
-        if (not rawShapes) or (self.type not in ['Proxy', 'Clothes']):
+        if (not rawShapes) or (self.type not in ['Proxymeshes', 'Clothes']):
             return []
         shapes = []
         for (key, rawShape) in rawShapes:

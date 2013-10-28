@@ -58,7 +58,7 @@ class Writer(mhx_writer.Writer):
     """)
 
         self.proxyShapes('Cage', 'T_Cage', fp)
-        self.proxyShapes('Proxy', 'T_Proxy', fp)
+        self.proxyShapes('Proxymeshes', 'T_Proxy', fp)
         self.proxyShapes('Clothes', 'T_Clothes', fp)
         self.proxyShapes('Hair', 'T_Clothes', fp)
         self.proxyShapes('Eyes', 'T_Clothes', fp)
@@ -152,7 +152,7 @@ class Writer(mhx_writer.Writer):
         config = self.config
         scale = config.scale
 
-        isHuman = ((not proxy) or proxy.type == 'Proxy')
+        isHuman = ((not proxy) or proxy.type == 'Proxymeshes')
         isHair = (proxy and proxy.type in ['Hair','Eyes', 'Genitals'])
 
         if isHuman and config.expressions:
@@ -186,7 +186,7 @@ class Writer(mhx_writer.Writer):
 
 
     def writeShapeKeyDrivers(self, fp, name, proxy):
-        isHuman = ((not proxy) or proxy.type == 'Proxy')
+        isHuman = ((not proxy) or proxy.type == 'Proxymeshes')
         amt = self.armature
 
         fp.write("#if toggle&T_ShapeDrivers\n")

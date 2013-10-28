@@ -136,7 +136,7 @@ class Writer(mhx_writer.Writer):
         self.meshWriter.writeMesh(fp, self.human.getSeedMesh())
         fp.write("#endif\n")
 
-        self.proxyWriter.writeProxyType('Proxy', 'T_Proxy', fp, 0.35, 0.4)
+        self.proxyWriter.writeProxyType('Proxymeshes', 'T_Proxy', fp, 0.35, 0.4)
         self.proxyWriter.writeProxyType('Clothes', 'T_Clothes', fp, 0.4, 0.55)
         self.proxyWriter.writeProxyType('Hair', 'T_Clothes', fp, 0.55, 0.58)
         self.proxyWriter.writeProxyType('Eyes', 'T_Clothes', fp, 0.58, 0.59)
@@ -164,7 +164,7 @@ class Writer(mhx_writer.Writer):
             "#endif\n")
 
         self.groupProxy('Cage', 'T_Cage', fp)
-        self.groupProxy('Proxy', 'T_Proxy', fp)
+        self.groupProxy('Proxymeshes', 'T_Proxy', fp)
         self.groupProxy('Clothes', 'T_Clothes', fp)
         self.groupProxy('Hair', 'T_Clothes', fp)
         self.groupProxy('Eyes', 'T_Clothes', fp)

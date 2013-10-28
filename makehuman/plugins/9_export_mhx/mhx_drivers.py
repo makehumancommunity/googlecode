@@ -340,7 +340,7 @@ def writeDrivers(fp, cond, drivers):
 def useThisShape(name, proxy):
     if not proxy:
         return True
-    if proxy.type == 'Proxy':
+    if proxy.type == 'Proxymeshes':
         return True
     if name in proxy.shapekeys:
         return True

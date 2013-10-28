@@ -28,6 +28,8 @@ import os
 __home_path = None
 
 def formatPath(path):
+    if path is None:
+        return None
     return os.path.normpath(path).replace("\\", "/")
 
 def canonicalPath(path):
