@@ -205,8 +205,8 @@ class Human(guicommon.Object):
                  (self.eyesProxy, self.eyesObj),
                  (self.genitalsProxy, self.genitalsObj),
                  (self.eyebrowsProxy, self.eyebrowsObj)]
-        for name,pxy in self.clothesProxies.items():
-            pairs.append((pxy, self.clothesObjs[name]))
+        for uuid,pxy in self.clothesProxies.items():
+            pairs.append((pxy, self.clothesObjs[uuid]))
         return pairs
 
     simpleProxyTypes = ['hair', 'eyes', 'genitals', 'eyebrows']

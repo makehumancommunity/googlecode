@@ -175,18 +175,15 @@ class CProxy:
 
         human = G.app.selectedHuman
         # TODO use more generic way of retrieving a proxy type
-        if self.type == "Clothes":
-            obj = human.clothesObjs[self.getUuid()]
-        elif self.type == "Proxymeshes":
+        for proxy,obj in human.getProxiesAndObjects():
+            if self == proxy:
+                return obj.mesh
+
+        if self.type == "Proxymeshes":
             if not human.proxy:
                 return None
-            obj = human.getProxyMesh()
-        elif self.type == "Hair":
-            obj = human.hairObj
-        elif self.type == "Eyes":
-            obj = human.eyesObj
-        elif self.type == "Genitals":
-            obj = human.genitalsObj
+            return human.mesh
+            #return human.getProxyMesh()
         elif self.type == "Cage":
             return None
         elif self.type == "Converter":
@@ -203,19 +200,17 @@ class CProxy:
 
     def getActualTexture(self, human):
         uuid = self.getUuid()
-        if uuid in human.clothesObjs.keys() and human.clothesObjs[uuid]:
-            obj = human.clothesObjs[uuid]
-        elif human.hairProxy and uuid == human.hairProxy.uuid:
-            obj = human.hairObj
-        elif human.eyesProxy and uuid == human.eyesProxy.uuid:
-            obj = human.eyesObj
-        elif human.genitalsProxy and uuid == human.genitalsProxy.uuid:
-            obj = human.genitalsObj
-        elif human.proxy and uuid == human.proxy.uuid:
-            obj = human
+        mesh = None
+
+        if human.proxy and uuid == human.proxy.uuid:
+            mesh = human.mesh
         else:
-            return None
-        return getpath.formatPath(obj.mesh.texture)
+            for proxy,obj in human.getProxiesAndObjects():
+                if proxy and uuid == proxy.uuid:
+                    mesh = obj.mesh
+                    break
+
+        return getpath.formatPath(mesh.texture)
 
 
     def getCoords(self):
