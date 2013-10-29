@@ -394,6 +394,7 @@ def readProxyFile(obj, filepath, type="Clothes"):
     proxy = CProxy(filepath, type)
     proxy.deleteVerts = numpy.zeros(len(obj.coord), bool)
 
+    proxy.z_depth = -1
     proxy.useProjection = True
     proxy.ignoreOffset = False
     status = 0
@@ -569,6 +570,10 @@ def readProxyFile(obj, filepath, type="Clothes"):
 
         else:
             log.warning('Unknown keyword %s found in proxy file %s', key, filepath)
+
+    if proxy.z_depth == -1:
+        log.warning('Proxy file %s does not specify a Z depth. Using 50.', filepath)
+        proxy.z_depth = 50
 
     return proxy
 
