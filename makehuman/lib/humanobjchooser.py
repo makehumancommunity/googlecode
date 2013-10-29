@@ -93,15 +93,13 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
             return 'skin'
 
     def setSelected(self, value):
-        if self._selected in self.human.simpleProxyTypes:
-            _proxy,obj = self.human.getTypedSimpleProxiesAndObjects(self._selected)
+        if value in self.human.simpleProxyTypes:
+            _proxy,obj = self.human.getTypedSimpleProxiesAndObjects(value)
             if obj:
-                return self._selected
+                self._selected = value
             else:
-                return 'skin'
-
-        if (value in self.human.simpleProxyTypes or
-            value in self.human.clothesObjs.keys()):
+                self._selected = 'skin'
+        elif value in self.human.clothesObjs.keys():
             self._selected = value
         else:
             self._selected = 'skin'
