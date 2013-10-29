@@ -115,7 +115,7 @@ class CProxyRefVert:
 #
 
 class CProxy:
-    def __init__(self, file, typ, layer):
+    def __init__(self, file, typ):
         log.debug("Loading proxy file: %s.", file)
         name = os.path.splitext(os.path.basename(file))[0]
         self.name = name.capitalize().replace(" ","_")
@@ -133,7 +133,6 @@ class CProxy:
 
         self.z_depth = 50
         self.cull = False
-        self.layer = layer
 
         self.uvLayers = {}
 
@@ -376,14 +375,14 @@ class CProxy:
         return fixedShape
 
 #
-#    readProxyFile(obj, file, evalOnLoad=False, scale=1.0):
+#    readProxyFile(obj, filepath, type="Clothes"):
 #
 
 doRefVerts = 1
 doWeights = 2
 doDeleteVerts = 3
 
-def readProxyFile(obj, filepath, type="Clothes", layer=4):
+def readProxyFile(obj, filepath, type="Clothes"):
     folder = os.path.realpath(os.path.expanduser(os.path.dirname(filepath)))
 
     try:
@@ -392,7 +391,7 @@ def readProxyFile(obj, filepath, type="Clothes", layer=4):
         log.error("*** Cannot open %s", filepath)
         return None
 
-    proxy = CProxy(filepath, type, layer)
+    proxy = CProxy(filepath, type)
     proxy.deleteVerts = numpy.zeros(len(obj.coord), bool)
 
     proxy.useProjection = True

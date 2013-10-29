@@ -88,6 +88,7 @@ class ProxyTaskView(proxychooser.ProxyChooserTaskView):
     def getFileExtension(self):
         return 'proxy'
 
+    # ???
     def proxySelected(self, proxy, obj):
         self.human.setProxy(proxy)
         self.human.genitalsProxy = proxy
@@ -117,10 +118,9 @@ class ProxyTaskView(proxychooser.ProxyChooserTaskView):
         self.filechooser.selectItem(mhclofile)
 
         if mhclofile not in self._proxyCache:
-            proxy = mh2proxy.readProxyFile(human.meshData, 
-                                           mhclofile, 
-                                           type=self.proxyName.capitalize(), 
-                                           layer=self.getObjectLayer() )
+            proxy = mh2proxy.readProxyFile(human.meshData,
+                                           mhclofile,
+                                           type=self.proxyName.capitalize())
             self._proxyCache[mhclofile] = proxy
         else:
             proxy = self._proxyCache[mhclofile]

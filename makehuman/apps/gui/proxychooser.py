@@ -260,8 +260,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
         if mhclofile not in self._proxyCache:
             proxy = mh2proxy.readProxyFile(human.meshData,
                                            mhclofile,
-                                           type=self.proxyName.capitalize(),
-                                           layer=self.getObjectLayer() )    # TODO remove this layer arg, is bogus
+                                           type=self.proxyName.capitalize())
             self._proxyCache[mhclofile] = proxy
         else:
             proxy = self._proxyCache[mhclofile]

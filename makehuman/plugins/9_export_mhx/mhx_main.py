@@ -129,18 +129,17 @@ class Writer(mhx_writer.Writer):
         self.matWriter.writeMaterials(fp)
 
         if config.cage:
-            self.proxyWriter.writeProxyType('Cage', 'T_Cage', fp, 0.2, 0.25)
+            self.proxyWriter.writeProxyType('Cage', 'T_Cage', 4, fp, 0.2, 0.25)
 
         gui3d.app.progress(0.25, text="Exporting main mesh")
         fp.write("#if toggle&T_Mesh\n")
         self.meshWriter.writeMesh(fp, self.human.getSeedMesh())
         fp.write("#endif\n")
 
-        self.proxyWriter.writeProxyType('Proxymeshes', 'T_Proxy', fp, 0.35, 0.4)
-        self.proxyWriter.writeProxyType('Clothes', 'T_Clothes', fp, 0.4, 0.55)
-        self.proxyWriter.writeProxyType('Hair', 'T_Clothes', fp, 0.55, 0.58)
-        self.proxyWriter.writeProxyType('Eyes', 'T_Clothes', fp, 0.58, 0.59)
-        self.proxyWriter.writeProxyType('Genitals', 'T_Clothes', fp, 0.59, 0.6)
+        self.proxyWriter.writeProxyType('Proxymeshes', 'T_Proxy', 3, fp, 0.35, 0.4)
+        self.proxyWriter.writeProxyType('Clothes', 'T_Clothes', 2, fp, 0.4, 0.55)
+        for ptype in self.human.simpleProxyTypes:
+            self.proxyWriter.writeProxyType(ptype.capitalize(), 'T_Clothes', 0, fp, 0.55, 0.6)
 
         self.poseWriter.writePose(fp)
 

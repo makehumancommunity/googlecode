@@ -193,34 +193,12 @@ class Pose:
         if human.proxy:
             human.updateProxyMesh()
 
-        if human.hairObj and human.hairProxy:
-            mesh = human.hairObj.getSeedMesh()
-            human.hairProxy.update(mesh)
+        for proxy,obj in human.getProxiesAndObjects():
+            mesh = obj.getSeedMesh()
+            proxy.update(mesh)
             mesh.update()
-            if human.hairObj.isSubdivided():
-                human.hairObj.getSubdivisionMesh()
-
-        if human.eyesObj and human.eyesProxy:
-            mesh = human.eyesObj.getSeedMesh()
-            human.eyesProxy.update(mesh)
-            mesh.update()
-            if human.eyesObj.isSubdivided():
-                human.eyesObj.getSubdivisionMesh()
-
-        if human.genitalsObj and human.genitalsProxy:
-            mesh = human.genitalsObj.getSeedMesh()
-            human.genitalsProxy.update(mesh)
-            mesh.update()
-            if human.genitalsObj.isSubdivided():
-                human.genitalsObj.getSubdivisionMesh()
-
-        for (name,clo) in human.clothesObjs.items():
-            if clo:
-                mesh = clo.getSeedMesh()
-                human.clothesProxies[name].update(mesh)
-                mesh.update()
-                if clo.isSubdivided():
-                    clo.getSubdivisionMesh()
+            if obj.isSubdivided():
+                obj.getSubdivisionMesh()
 
 
     def updateObj(self):

@@ -33,6 +33,7 @@ import skeleton
 import skeleton_drawing
 import animation
 import armature
+from armature.options import ArmatureOptions
 
 import numpy as np
 import os
@@ -91,7 +92,7 @@ class SkeletonLibrary(gui3d.TaskView):
     def __init__(self, category):
         gui3d.TaskView.__init__(self, category, 'Skeleton')
         self.debugLib = None
-        self.amtOptions = armature.options.ArmatureOptions()
+        self.amtOptions = ArmatureOptions()
         self.optionsSelector = None
 
         self.systemRigs = mh.getSysDataPath('rigs')

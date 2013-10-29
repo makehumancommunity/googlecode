@@ -80,36 +80,28 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
         self.clothesSelections = []
 
     def getSelected(self):
-        if self._selected == 'eyes' and not self.human.eyesObj:
-            return 'skin'
+        if self._selected in self.human.simpleProxyTypes:
+            _proxy,obj = self.human.getTypedSimpleProxiesAndObjects(self._selected)
+            if obj:
+                return self._selected
+            else:
+                return 'skin'
 
-        if self._selected == 'genitals' and not self.human.genitalsObj:
-            return 'skin'
-
-        if self._selected == 'hair' and not self.human.hairObj:
-            return 'skin'
-
-        if self._selected in ['skin', 'hair', 'eyes', 'genitals'] or \
-           self._selected in self.human.clothesObjs.keys():
+        if self._selected in self.human.clothesObjs.keys():
             return self._selected
         else:
             return 'skin'
 
     def setSelected(self, value):
-        if self._selected == 'eyes' and not self.human.eyesObj:
-            self._selected = 'skin'
-            return
+        if self._selected in self.human.simpleProxyTypes:
+            _proxy,obj = self.human.getTypedSimpleProxiesAndObjects(self._selected)
+            if obj:
+                return self._selected
+            else:
+                return 'skin'
 
-        if self._selected == 'genitals' and not self.human.genitalsObj:
-            self._selected = 'skin'
-            return
-
-        if self._selected == 'hair' and not self.human.hairObj:
-            self._selected = 'skin'
-            return
-
-        if value in ['skin', 'hair', 'eyes', 'genitals'] or \
-           value in self.human.clothesObjs.keys():
+        if (value in self.human.simpleProxyTypes or
+            value in self.human.clothesObjs.keys()):
             self._selected = value
         else:
             self._selected = 'skin'

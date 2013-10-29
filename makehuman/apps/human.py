@@ -200,6 +200,29 @@ class Human(guicommon.Object):
             proxies.append(pxy)
         return proxies
 
+    def getProxiesAndObjects(self):
+        pairs = [(self.hairProxy, self.hairObj),
+                 (self.eyesProxy, self.eyesObj),
+                 (self.genitalsProxy, self.genitalsObj),
+                 (self.eyebrowsProxy, self.eyebrowsObj)]
+        for name,pxy in self.clothesProxies.items():
+            pairs.append((pxy, self.clothesObjs[name]))
+        return pairs
+
+    simpleProxyTypes = ['hair', 'eyes', 'genitals', 'eyebrows']
+
+    def getTypedSimpleProxiesAndObjects(self, type):
+        table = {
+            'hair' :     (self.hairProxy, self.hairObj),
+            'eyes' :     (self.eyesProxy, self.eyesObj),
+            'genitals' : (self.genitalsProxy, self.genitalsObj),
+            'eyebrows' : (self.eyebrowsProxy, self.eyebrowsObj)
+            }
+        try:
+            return table[type]
+        except KeyError:
+            return None,None
+
     # Overriding hide and show to account for both human base and the hairs!
 
     def show(self):

@@ -346,12 +346,8 @@ class AnimationLibrary(gui3d.TaskView):
         # Restore possible hidden proxies (clothes and hair)
         for (name,obj) in self.human.clothesObjs.items():
             obj.show()
-        if self.human.hairObj:
-            self.human.hairObj.show()
-        if self.human.eyesObj:
-            self.human.eyesObj.show()
-        if self.human.genitalsObj:
-            self.human.genitalsObj.show()
+        for obj in self.human.getProxyObjects():
+            obj.show()
 
         # Reset smooth setting
         self.human.setSubdivided(self.oldSmoothValue)
@@ -520,40 +516,13 @@ class AnimationLibrary(gui3d.TaskView):
 
         # Generate a vertex-to-bone mapping derived from that of the human for all proxy objects
         if self.skinProxiesTggl.selected:
-            # Clothes
-            for (name,obj) in self.human.clothesObjs.items():
-                proxy = self.human.clothesProxies[name]
+            for proxy,obj in self.human.getProxiesAndObjects():
                 weights = skeleton.getProxyWeights(proxy, bodyWeights, obj.mesh)
                 self.human.animated.addMesh(obj.mesh, weights)
                 obj.show()
-
-            # Hair
-            if self.human.hairObj and self.human.hairProxy:
-                weights = skeleton.getProxyWeights(self.human.hairProxy, bodyWeights, self.human.hairObj.mesh)
-                self.human.animated.addMesh(self.human.hairObj.mesh, weights)
-                self.human.hairObj.show()
-
-            # Eyes
-            if self.human.eyesObj and self.human.eyesProxy:
-                weights = skeleton.getProxyWeights(self.human.eyesProxy, bodyWeights, self.human.eyesObj.mesh)
-                self.human.animated.addMesh(self.human.eyesObj.mesh, weights)
-                self.human.eyesObj.show()
-
-            # Genitals
-            if self.human.genitalsObj and self.human.genitalsProxy:
-                weights = skeleton.getProxyWeights(self.human.genitalsProxy, bodyWeights, self.human.genitalsObj.mesh)
-                self.human.animated.addMesh(self.human.genitalsObj.mesh, weights)
-                self.human.genitalsObj.show()
         else:
-            # Hide not animated proxies (clothes and hair and eyes and genitals)
-            for (name,obj) in self.human.clothesObjs.items():
+            for obj in self.human.getProxyObjects():
                 obj.hide()
-            if self.human.hairObj:
-                self.human.hairObj.hide()
-            if self.human.eyesObj:
-                self.human.eyesObj.hide()
-            if self.human.genitalsObj:
-                self.human.genitalsObj.hide()
 
     def updateProxies(self):
         """
@@ -565,34 +534,12 @@ class AnimationLibrary(gui3d.TaskView):
         if self.human.proxy:
             self.human.updateProxyMesh()
 
-        if self.human.hairObj and self.human.hairProxy:
-            mesh = self.human.hairObj.getSeedMesh()
-            self.human.hairProxy.update(mesh)
+        for proxy,obj in self.human.getProxiesAndObjects():
+            mesh = obj.getSeedMesh()
+            proxy.update(mesh)
             mesh.update()
-            if self.human.hairObj.isSubdivided():
-                self.human.hairObj.getSubdivisionMesh()
-
-        if self.human.eyesObj and self.human.eyesProxy:
-            mesh = self.human.eyesObj.getSeedMesh()
-            self.human.eyesProxy.update(mesh)
-            mesh.update()
-            if self.human.eyesObj.isSubdivided():
-                self.human.eyesObj.getSubdivisionMesh()
-
-        if self.human.genitalsObj and self.human.genitalsProxy:
-            mesh = self.human.genitalsObj.getSeedMesh()
-            self.human.genitalsProxy.update(mesh)
-            mesh.update()
-            if self.human.genitalsObj.isSubdivided():
-                self.human.genitalsObj.getSubdivisionMesh()
-
-        for (name,clo) in self.human.clothesObjs.items():
-            if clo:
-                mesh = clo.getSeedMesh()
-                self.human.clothesProxies[name].update(mesh)
-                mesh.update()
-                if clo.isSubdivided():
-                    clo.getSubdivisionMesh()
+            if obj.isSubdivided():
+                obj.getSubdivisionMesh()
 
     def setHumanTransparency(self, enabled):
         if self.human.proxy and self.human.isProxied():

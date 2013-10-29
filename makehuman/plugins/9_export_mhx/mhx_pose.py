@@ -60,9 +60,8 @@ class Writer(mhx_writer.Writer):
         self.proxyShapes('Cage', 'T_Cage', fp)
         self.proxyShapes('Proxymeshes', 'T_Proxy', fp)
         self.proxyShapes('Clothes', 'T_Clothes', fp)
-        self.proxyShapes('Hair', 'T_Clothes', fp)
-        self.proxyShapes('Eyes', 'T_Clothes', fp)
-        self.proxyShapes('Genitals', 'T_Clothes', fp)
+        for ptype in self.human.simpleProxyTypes:
+            self.proxyShapes(ptype.capitalize(), 'T_Clothes', fp)
 
         fp.write("#if toggle&T_Mesh\n")
         self.writeShapeKeysAndDrivers(fp, "%sMesh" % self.name, None)
@@ -153,7 +152,6 @@ class Writer(mhx_writer.Writer):
         scale = config.scale
 
         isHuman = ((not proxy) or proxy.type == 'Proxymeshes')
-        isHair = (proxy and proxy.type in ['Hair','Eyes', 'Genitals'])
 
         if isHuman and config.expressions:
             try:

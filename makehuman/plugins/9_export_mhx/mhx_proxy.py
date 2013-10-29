@@ -43,7 +43,7 @@ class Writer(mhx_writer.Writer):
         self.meshWriter = meshWriter
 
 
-    def writeProxyType(self, type, test, fp, t0, t1):
+    def writeProxyType(self, type, test, layer, fp, t0, t1):
         n = 0
         for proxy in self.proxies.values():
             if proxy.type == type:
@@ -57,7 +57,7 @@ class Writer(mhx_writer.Writer):
             if proxy.type == type:
                 gui3d.app.progress(t, text="Exporting %s" % proxy.name)
                 fp.write("#if toggle&%s\n" % test)
-                self.writeProxy(fp, proxy)
+                self.writeProxy(fp, proxy, layer)
                 fp.write("#endif\n")
                 t += dt
 
@@ -66,7 +66,7 @@ class Writer(mhx_writer.Writer):
     #
     #-------------------------------------------------------------------------------
 
-    def writeProxy(self, fp, proxy):
+    def writeProxy(self, fp, proxy, layer):
         scale = self.config.scale
 
         fp.write("""
@@ -95,11 +95,11 @@ class Writer(mhx_writer.Writer):
       Faces
     """)
 
-        obj = proxy.getObject()
+        if proxy.type == "ProxyMeshes":
+            obj = self.human.getProxyMesh()
+        else:
+            obj = proxy.getObject()
         log.debug("PROXY %s %s" % (proxy, obj))
-        if proxy.type != "ProxyMeshes":
-            obj = obj.getObject().getSeedMesh()
-        log.debug("OBJ %s" % obj)
 
 
         fp.write("".join( ["    f %d %d %d %d ;\n" % tuple(fv) for fv in obj.fvert] ))
@@ -118,35 +118,6 @@ class Writer(mhx_writer.Writer):
         fp.write(
             "    end Data\n" +
             "  end MeshTextureFaceLayer\n")
-
-        '''
-        #Support for multiple texture layers currently disabled.
-
-        layers = list( proxy.uvtexLayerName.keys())
-        list.sort()
-        for layer in layers:
-            if layer == proxy.objFileLayer
-                continue
-            try:
-                texfaces = proxy.texFacesLayers[layer]
-                texverts = proxy.texVertsLayers[layer]
-            except KeyError:
-                continue
-            fp.write(
-                "  MeshTextureFaceLayer %s\n" % proxy.uvtexLayerName[layer] +
-                "    Data \n")
-
-            if layer == proxy.objFileLayer:
-                uvs = obj.texco
-                for fuv in obj.fuvs:
-                    fp.write("    vt" + "".join( [" %.4g %.4g" % tuple(uvs[vt]) for vt in fuv] ) + " ;\n")
-            else:
-                pass
-
-            fp.write(
-                "    end Data\n" +
-                "  end MeshTextureFaceLayer\n")
-        '''
 
         # Proxy vertex groups
 
@@ -178,7 +149,7 @@ class Writer(mhx_writer.Writer):
 
         fp.write("layers Array ")
         for n in range(20):
-            if n == proxy.layer:
+            if n == layer:
                 fp.write("1 ")
             else:
                 fp.write("0 ")

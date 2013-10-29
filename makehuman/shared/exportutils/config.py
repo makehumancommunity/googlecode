@@ -84,34 +84,13 @@ class Config:
             return {}
 
         proxies = {}
-        if self.human.hairProxy:
-            proxy = self.human.hairProxy
-            proxy.layer = 2
-            name = self.goodName(proxy.name)
-            proxies[name] = proxy
-
-        if self.human.eyesProxy:
-            proxy = self.human.eyesProxy
-            proxy.layer = 0
-            name = self.goodName(proxy.name)
-            proxies[name] = proxy
-
-        if self.human.genitalsProxy:
-            proxy = self.human.genitalsProxy
-            proxy.layer = 0
-            name = self.goodName(proxy.name)
-            proxies[name] = proxy
-
-        for (key,clo) in self.human.clothesObjs.items():
-            if clo:
-                proxy = self.human.clothesProxies[key]
-                proxy.layer = 3
-                name = self.goodName(key)
+        for proxy in self.human.getProxies():
+            if proxy:
+                name = self.goodName(proxy.name)
                 proxies[name] = proxy
 
         if self.human.proxy:
             proxy = self.human.proxy
-            proxy.layer = 4
             name = self.goodName(proxy.name)
             proxies[name] = proxy
 
@@ -119,7 +98,7 @@ class Config:
             import mh2proxy
             obj = G.app.selectedHuman
             filepath = getSysDataPath("cages/cage/cage.mhclo")
-            proxy = mh2proxy.readProxyFile(obj, filepath, type="Cage", layer=4)
+            proxy = mh2proxy.readProxyFile(obj, filepath, type="Cage")
             proxy.update(obj)
             proxies[name] = proxy
 
