@@ -46,9 +46,16 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
         self.humanBox = gui.GroupBox('Human')
         self.layout.addWidget(self.humanBox)
         self.skinRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Skin", selected=True))
+        self.skinRadio.selectionName = 'skin'
+
+        '''
         self.hairRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Hair", selected=False))
         self.eyesRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Eyes", selected=False))
         self.genitalsRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Genitals", selected=False))
+        '''
+
+        for pType in self.human.simpleProxyTypes:
+            self._addSelectorItem(pType, pType.capitalize(), self.humanBox, False)
 
         @self.skinRadio.mhEvent
         def onClicked(event):
@@ -56,28 +63,9 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
                 self.selected = 'skin'
                 self.callEvent('onActivate', self.selected)
 
-        @self.hairRadio.mhEvent
-        def onClicked(event):
-            if self.hairRadio.selected:
-                self.selected = 'hair'
-                self.callEvent('onActivate', self.selected)
-
-        @self.eyesRadio.mhEvent
-        def onClicked(event):
-            if self.eyesRadio.selected:
-                self.selected = 'eyes'
-                self.callEvent('onActivate', self.selected)
-
-        @self.genitalsRadio.mhEvent
-        def onClicked(event):
-            if self.genitalsRadio.selected:
-                self.selected = 'genitals'
-                self.callEvent('onActivate', self.selected)
-
         self.humanObjectCount = len(self.objectSelector)
         self.clothesBox = gui.GroupBox('Clothes')
         self.layout.addWidget(self.clothesBox)
-        self.clothesSelections = []
 
     def getSelected(self):
         if self._selected in self.human.simpleProxyTypes:
@@ -106,28 +94,52 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
 
     selected = property(getSelected, setSelected)
 
+    def getSelectedObject(self):
+        objType = self.selected
+        if not objType:
+            return None
+
+        if objType == 'skin':
+            return self.human
+        elif objType in self.human.simpleProxyTypes:
+            _, obj = self.human.getTypedSimpleProxiesAndObjects(objType)
+            return obj
+        else:
+            uuid = objType
+            if uuid in self.human.clothesObjs:
+                return self.human.clothesObjs[uuid]
+            else:
+                return None
+
+    def getSelectedProxy(self):
+        objType = self.selected
+        if not objType:
+            return None
+
+        if objType == 'skin':
+            if self.human.isProxied():
+                return self.human.proxy
+            else:
+                return None
+        elif objType in self.human.simpleProxyTypes:
+            pxy, _ = self.human.getTypedSimpleProxiesAndObjects(objType)
+            return pxy
+        else:
+            uuid = objType
+            if uuid in self.human.clothesProxies:
+                return self.human.clothesProxies[uuid]
+            else:
+                return None
+
     def onShow(self, event):
         selected = self.selected
 
         self.skinRadio.setChecked(selected == 'skin')
 
-        if self.human.hairObj:
-            self.hairRadio.setEnabled(True)
-        else:
-            self.hairRadio.setEnabled(False)
-        self.hairRadio.setChecked(selected == 'hair')
-
-        if self.human.eyesObj:
-            self.eyesRadio.setEnabled(True)
-        else:
-            self.eyesRadio.setEnabled(False)
-        self.eyesRadio.setChecked(selected == 'eyes')
-
-        if self.human.genitalsObj:
-            self.genitalsRadio.setEnabled(True)
-        else:
-            self.genitalsRadio.setEnabled(False)
-        self.genitalsRadio.setChecked(selected == 'genitals')
+        for radio in self.objectSelector[1:self.humanObjectCount]:
+            _, obj = self.human.getTypedSimpleProxiesAndObjects(radio.selectionName)
+            radio.setEnabled(obj is not None)
+            radio.setChecked(selected == radio.selectionName)
 
         self._populateClothesSelector()
 
@@ -142,8 +154,11 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
             radioBtn.destroy()
         del self.objectSelector[self.humanObjectCount:]
 
+        for uuid in human.clothesObjs.keys():
+            self._addSelectorItem(uuid, human.clothesProxies[uuid].name, self.clothesBox, (self.selected == uuid))
+
+        '''
         self.clothesSelections = []
-        clothesList = human.clothesObjs.keys()
         selected = self.selected
         for i, uuid in enumerate(clothesList):
             radioBtn = self.clothesBox.addWidget(gui.RadioButton(self.objectSelector, human.clothesProxies[uuid].name, selected=(selected == uuid)))
@@ -157,4 +172,19 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
                         log.debug( 'Selected clothing "%s" (%s)' % (radio.text(), uuid) )
                         self.callEvent('onActivate', self.selected)
                         return
+        '''
+
+    def _addSelectorItem(self, selectionName, label, parentWidget, isSelected = False):
+        radioBtn = parentWidget.addWidget(gui.RadioButton(self.objectSelector, label, selected=isSelected))
+        radioBtn.selectionName = selectionName
+
+        @radioBtn.mhEvent
+        def onClicked(event):
+            for radio in self.objectSelector:
+                if radio.selected:
+                    self.selected = radio.selectionName
+                    log.debug( 'Selected clothing "%s" (%s)' % (radio.text(), radio.selectionName) )
+                    self.callEvent('onActivate', self.selected)
+                    return
+
 
