@@ -61,30 +61,9 @@ class MaterialTaskView(gui3d.TaskView):
         self.searchPaths = [mh.getPath(), mh.getSysDataPath()]
         self.searchPaths = [os.path.abspath(p) for p in self.searchPaths]
 
-        self.systemSkins = mh.getSysDataPath('skins')
-        self.systemClothes = mh.getSysDataPath('clothes/materials')
-        self.systemHair = mh.getSysDataPath('hairstyles')
-        self.systemEyes = mh.getSysDataPath('eyes')
-        self.systemGenitals = mh.getSysDataPath('genitals')
+        self.materials = None
 
-        self.userSkins = mh.getPath('data/skins')
-        self.userClothes = mh.getPath('data/clothes/materials')
-        self.userHair = mh.getPath('data/hairstyles')
-        self.userEyes = mh.getPath('data/eyes')
-        self.userGenitals = mh.getPath('data/genitals')
-
-        for path in (self.userSkins, self.userClothes, self.userEyes):
-            if not os.path.exists(path):
-                os.makedirs(path)
-
-        self.defaultClothes = [self.systemClothes, self.userClothes]
-        self.defaultHair = [self.systemHair, self.userHair]
-        self.defaultEyes = [self.systemEyes, self.userEyes]
-        self.defaultGenitals = [self.systemGenitals, self.userGenitals]
-
-        self.materials = self.defaultClothes
-
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.userSkins, 'mhmat', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), 'Material'))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.materials, 'mhmat', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), 'Material'))
         self.filechooser.setIconSize(50,50)
         self.filechooser.enableAutoRefresh(False)
         self.filechooser.setFileLoadHandler(fc.MhmatFileLoader())
@@ -95,36 +74,21 @@ class MaterialTaskView(gui3d.TaskView):
             mat = material.fromFile(filename)
             human = self.human
 
-            obj = self.humanObjSelector.selected
-            if obj == 'skin':
-                gui3d.app.do(MaterialAction(human,
-                    mat))
-            elif obj == 'hair':
-                gui3d.app.do(MaterialAction(human.hairObj,
-                    mat))
-            elif obj == 'eyes':
-                gui3d.app.do(MaterialAction(human.eyesObj,
-                    mat))
-            elif obj == 'genitals':
-                gui3d.app.do(MaterialAction(human.genitalsObj,
-                    mat))
-            else: # Clothes
-                if obj:
-                    uuid = obj
-                    gui3d.app.do(MaterialAction(human.clothesObjs[uuid],
-                        mat))
+            obj = self.humanObjSelector.getSelectedObject()
+            if obj:
+                gui3d.app.do(MaterialAction(obj, mat))
 
         self.humanObjSelector = self.addLeftWidget(HumanObjectSelector(self.human))
         @self.humanObjSelector.mhEvent
         def onActivate(value):
-            self.reloadMaterialChooser(value)
+            self.reloadMaterialChooser()
 
 
     def onShow(self, event):
         # When the task gets shown, set the focus to the file chooser
         gui3d.TaskView.onShow(self, event)
 
-        self.reloadMaterialChooser(self.humanObjSelector.selected)
+        self.reloadMaterialChooser()
 
 
     def applyClothesMaterial(self, uuid, filename):
@@ -146,47 +110,34 @@ class MaterialTaskView(gui3d.TaskView):
         clo = human.clothesObjs[uuid]
         return clo.material.filename
 
-    def reloadMaterialChooser(self, obj):
+    def getMaterialPaths(self, objType):
+        objType = objType.lower()
+        if objType == 'skin':
+            subPath = 'skins'
+        elif objType not in self.human.simpleProxyTypes:
+            subPath = 'clothes/materials'
+        else:
+            subPath = objType
+        paths = [mh.getPath(os.path.join('data', subPath)), mh.getSysDataPath(subPath)]
+
+        for p in paths:
+            if isSubPath(p, mh.getPath()) and not os.path.exists(p):
+                os.makedirs(p)
+
+        return paths
+
+    def reloadMaterialChooser(self):
         human = self.human
         selectedMat = None
 
-        if obj == 'skin':
-            self.materials = [self.systemSkins, self.userSkins]
-            selectedMat = human.material.filename
-        elif obj == 'hair':
-            proxy = human.hairProxy
-            if proxy:
-                self.materials = [os.path.dirname(proxy.file)] + self.defaultHair
-            else:
-                self.materials = self.defaultHair
-            selectedMat = human.hairObj.material.filename
-        elif obj == 'eyes':
-            proxy = human.eyesProxy
-            if proxy:
-                self.materials = [os.path.dirname(proxy.file)] + self.defaultEyes
-            else:
-                self.materials = self.defaultEyes
-            selectedMat = human.eyesObj.material.filename
-        elif obj == 'genitals':
-            proxy = human.genitalsProxy
-            if proxy:
-                self.materials = [os.path.dirname(proxy.file)] + self.defaultGenitals
-            else:
-                self.materials = self.defaultGenitals
-            selectedMat = human.genitalsObj.material.filename
-        else: # Clothes
-            if obj:
-                uuid = obj
-                clo = human.clothesObjs[uuid]
-                filepath = human.clothesProxies[uuid].file
-                self.materials = [os.path.dirname(filepath)] + self.defaultClothes
-                selectedMat = clo.material.filename
-            else:
-                # TODO maybe dont show anything?
-                self.materials = self.defaultClothes
+        self.materials = self.getMaterialPaths(self.humanObjSelector.selected)
+        obj = self.humanObjSelector.getSelectedObject()
+        if obj:
+            selectedMat = obj.material.filename
 
-                filec = self.filechooser
-                log.debug("fc %s %s %s added", filec, filec.children.count(), str(filec.files))
+            pxy = self.humanObjSelector.getSelectedProxy()
+            if pxy:
+                self.materials = [os.path.dirname(pxy.file)] + self.materials
 
         # Reload filechooser
         self.filechooser.deselectAll()
@@ -210,7 +161,7 @@ class MaterialTaskView(gui3d.TaskView):
                 human.material = mat
                 return
             else:
-                for d in [self.systemSkins, self.userSkins]:
+                for d in self.getMaterialPaths('skin'):
                     absP = os.path.join(d, path)
                     if os.path.isfile(absP):
                         mat = material.fromFile(path)
@@ -256,6 +207,7 @@ class MaterialTaskView(gui3d.TaskView):
         """
         Produce a portable path for writing to file.
         """
+        # TODO move as helper func to material module
         _originalPath = filepath
         filepath = os.path.abspath(filepath)
         if objFile:
