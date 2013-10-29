@@ -206,6 +206,10 @@ def getTexture(path, cache=None):
         cache[img.sourcePath] = texture
         return texture
 
+    elif not os.path.isfile(path):
+        log.error('Cannot get texture for file path %s, no such file.', path)
+        return None
+
     if path in cache:
         texture = cache[path]
         if texture is False:
