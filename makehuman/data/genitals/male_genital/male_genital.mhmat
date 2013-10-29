@@ -13,6 +13,8 @@ opacity 1
 
 transparent false
 
+autoBlendSkin true
+
 sssEnabled true
 sssRScale 5.0
 sssGScale 2.5
@@ -27,7 +29,6 @@ diffuseTexture male_genital.png
 shader data/shaders/glsl/litsphere
 
 // Define custom uniform values to pass to supporting shaders
-shaderParam litsphereTexture data/litspheres/adaptive_skin_tone.png
 // Pass alpha channel used by ALPHA_MAP feature
 shaderParam alphaTexture male_genital.png
 
