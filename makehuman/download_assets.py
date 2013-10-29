@@ -96,6 +96,15 @@ def getNewFiles(oldContents, newContents, destinationFolder):
             result.append(filename)
     return result
 
+def getRemovedFiles(oldContents, newContents, destinationFolder):
+    toRemove = []
+    for filename in oldContents.keys():
+        if filename not in newContents:
+            destFile = os.path.join(destinationFolder, filename.lstrip('/'))
+            if os.path.isfile(destFile):
+                toRemove.append(filename)
+    return toRemove
+
 def getFTPContents(ftp):
     def walkFTP(ftp):
         path = ftp.pwd()    # TODO relpath to root path
@@ -161,6 +170,17 @@ if __name__ == '__main__':
 
     destinationFolder = getSysDataPath()
     toDownload = getNewFiles(oldContents, newContents, destinationFolder)
+    toRemove = getRemovedFiles(oldContents, newContents, destinationFolder)
+
+    # Remove files removed on FTP
+    for filePath in toRemove:
+        filename = os.path.join(destinationFolder, filePath.lstrip('/'))
+
+        if not isSubPath(filename, destinationFolder):
+            raise RuntimeError("ERROR: File destinations are jailed inside the sys data path (%s), destination path (%s) tries to escape!" % (destinationFolder, filename))
+
+        print "Removing file %s (removed from FTP)" % filename
+        os.remove(filename)
 
     TOTAL_FILES = len(toDownload)
 
