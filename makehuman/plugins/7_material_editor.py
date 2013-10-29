@@ -333,17 +333,7 @@ class MaterialEditorTaskView(gui3d.TaskView):
             self.paramBox.addWidget(UniformValue(uniform, mat), index)
 
     def getSelectedObject(self):
-        selected = self.humanObjSelector.selected
-        if selected == 'skin':
-            return self.human
-        if selected == 'hair':
-            return self.human.hairObj
-        if selected == 'eyes':
-            return self.human.eyesObj
-        if selected == 'genitals':
-            return self.human.genitalsObj
-
-        return self.human.clothesObjs[selected]
+        return self.humanObjSelector.getSelectedObject()
 
     def reloadMaterial(self):
         obj = self.getSelectedObject()
