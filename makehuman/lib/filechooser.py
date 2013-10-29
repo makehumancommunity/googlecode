@@ -536,10 +536,9 @@ class FileChooser(FileChooserBase):
                 if os.path.isfile(imgPath):
                     self.notFoundImage = imgPath
                     break
-        if not self.notFoundImage:
+        if not self.notFoundImage or not os.path.isfile(self.notFoundImage):
             imgPath = getpath.getSysDataPath('notfound.thumb')
-            if os.path.isfile(imgPath):
-                self.notFoundImage = imgPath
+            self.notFoundImage = imgPath
 
         self.layout = QtGui.QGridLayout(self)
 
@@ -728,8 +727,11 @@ class ListFileChooser(FileChooserBase):
         # Add None item
         if not self.multiSelect and self.noneItem:
             if not self.clearImage or not os.path.isfile(self.clearImage):
-                ext = os.path.splitext(self.notFoundImage)[1]
-                clearIcon = os.path.join(os.path.dirname(self.notFoundImage), 'clear'+ext)
+                if self.notFoundImage:
+                    ext = os.path.splitext(self.notFoundImage)[1]
+                    clearIcon = os.path.join(os.path.dirname(self.notFoundImage), 'clear'+ext)
+                else:
+                    clearIcon = getpath.getSysDataPath('clear.thumb')
             else:
                 clearIcon = self.clearImage
             self.addItem(None, "None", clearIcon, pos = 0)
