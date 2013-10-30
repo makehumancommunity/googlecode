@@ -111,19 +111,35 @@ class MaterialTaskView(gui3d.TaskView):
         clo = human.clothesObjs[uuid]
         return clo.material.filename
 
-    def getMaterialPaths(self, objType):
+    def getMaterialPaths(self, objType, proxy = None):
         objType = objType.lower()
         if objType == 'skin':
-            subPath = 'skins'
-        elif objType not in mh2proxy.SimpleProxyTypesLower:
-            subPath = 'clothes/materials'
+            objType = 'skins'
+        elif objType not in mh2proxy.SimpleProxyTypes:
+            objType = 'clothes'
+
+        if proxy:
+            subPath = None
         else:
             subPath = objType
-        paths = [mh.getPath(os.path.join('data', subPath)), mh.getSysDataPath(subPath)]
 
-        for p in paths:
-            if isSubPath(p, mh.getPath()) and not os.path.exists(p):
-                os.makedirs(p)
+        # General paths
+        if subPath:
+            paths = [mh.getPath(os.path.join('data', subPath)), mh.getSysDataPath(subPath)]
+            for p in paths:
+                if isSubPath(p, mh.getPath()) and not os.path.exists(p):
+                    os.makedirs(p)
+        else:
+            paths = []
+
+        # Global material paths
+        for p in [mh.getPath(os.path.join('data', objType, 'materials')), mh.getSysDataPath(os.path.join(objType, 'materials'))]:
+            if os.path.isdir(p):
+                paths.append(p)
+
+        # Path where proxy file is located
+        if proxy:
+            paths = [os.path.dirname(proxy.file)] + paths
 
         return paths
 
@@ -131,14 +147,10 @@ class MaterialTaskView(gui3d.TaskView):
         human = self.human
         selectedMat = None
 
-        self.materials = self.getMaterialPaths(self.humanObjSelector.selected)
+        self.materials = self.getMaterialPaths(self.humanObjSelector.selected, self.humanObjSelector.getSelectedProxy())
         obj = self.humanObjSelector.getSelectedObject()
         if obj:
             selectedMat = obj.material.filename
-
-            pxy = self.humanObjSelector.getSelectedProxy()
-            if pxy:
-                self.materials = [os.path.dirname(pxy.file)] + self.materials
 
         # Reload filechooser
         self.filechooser.deselectAll()
