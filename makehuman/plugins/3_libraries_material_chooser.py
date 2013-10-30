@@ -112,11 +112,11 @@ class MaterialTaskView(gui3d.TaskView):
         return clo.material.filename
 
     def getMaterialPaths(self, objType, proxy = None):
-        objType = objType.lower()
         if objType == 'skin':
             objType = 'skins'
-        elif objType not in mh2proxy.SimpleProxyTypes:
+        elif objType not in [t.lower() for t in mh2proxy.SimpleProxyTypes]:
             objType = 'clothes'
+        objType = objType.lower()
 
         if proxy:
             subPath = None
