@@ -30,6 +30,7 @@ import os
 import gui3d
 import mh
 import gui
+import mh2proxy
 import filechooser as fc
 from humanobjchooser import HumanObjectSelector
 import log
@@ -114,7 +115,7 @@ class MaterialTaskView(gui3d.TaskView):
         objType = objType.lower()
         if objType == 'skin':
             subPath = 'skins'
-        elif objType not in self.human.simpleProxyTypes:
+        elif objType not in mh2proxy.SimpleProxyTypesLower:
             subPath = 'clothes/materials'
         else:
             subPath = objType

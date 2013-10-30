@@ -24,6 +24,7 @@ Pose
 
 import log
 import mh
+import mh2proxy
 
 import exportutils
 
@@ -60,8 +61,8 @@ class Writer(mhx_writer.Writer):
         self.proxyShapes('Cage', 'T_Cage', fp)
         self.proxyShapes('Proxymeshes', 'T_Proxy', fp)
         self.proxyShapes('Clothes', 'T_Clothes', fp)
-        for ptype in self.human.simpleProxyTypes:
-            self.proxyShapes(ptype.capitalize(), 'T_Clothes', fp)
+        for ptype in mh2proxy.SimpleProxyTypes:
+            self.proxyShapes(ptype, 'T_Clothes', fp)
 
         fp.write("#if toggle&T_Mesh\n")
         self.writeShapeKeysAndDrivers(fp, "%sMesh" % self.name, None)

@@ -29,6 +29,8 @@ from PyQt4 import QtCore, QtGui
 import qtgui as gui
 import log
 
+import mh2proxy
+
 
 class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
     """
@@ -54,8 +56,8 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
         self.genitalsRadio = self.humanBox.addWidget(gui.RadioButton(self.objectSelector, "Genitals", selected=False))
         '''
 
-        for pType in self.human.simpleProxyTypes:
-            self._addSelectorItem(pType, pType.capitalize(), self.humanBox, False)
+        for pType in mh2proxy.SimpleProxyTypes:
+            self._addSelectorItem(pType.lower(), pType, self.humanBox, False)
 
         @self.skinRadio.mhEvent
         def onClicked(event):
@@ -68,7 +70,7 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
         self.layout.addWidget(self.clothesBox)
 
     def getSelected(self):
-        if self._selected in self.human.simpleProxyTypes:
+        if self._selected in mh2proxy.SimpleProxyTypesLower:
             _proxy,obj = self.human.getTypedSimpleProxiesAndObjects(self._selected)
             if obj:
                 return self._selected
@@ -81,7 +83,7 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
             return 'skin'
 
     def setSelected(self, value):
-        if value in self.human.simpleProxyTypes:
+        if value in mh2proxy.SimpleProxyTypesLower:
             _proxy,obj = self.human.getTypedSimpleProxiesAndObjects(value)
             if obj:
                 self._selected = value
@@ -101,7 +103,7 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
 
         if objType == 'skin':
             return self.human
-        elif objType in self.human.simpleProxyTypes:
+        elif objType in mh2proxy.SimpleProxyTypesLower:
             _, obj = self.human.getTypedSimpleProxiesAndObjects(objType)
             return obj
         else:
@@ -121,7 +123,7 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
                 return self.human.proxy
             else:
                 return None
-        elif objType in self.human.simpleProxyTypes:
+        elif objType in mh2proxy.SimpleProxyTypesLower:
             pxy, _ = self.human.getTypedSimpleProxiesAndObjects(objType)
             return pxy
         else:

@@ -61,6 +61,13 @@ class Human(guicommon.Object):
         self._genitalsProxy = None
         self.eyebrowsObj = None
         self.eyebrowsProxy = None
+        self.eyelashesObj = None
+        self.eyelashesProxy = None
+        self.teethObj = None
+        self.teethProxy = None
+        self.tongueObj = None
+        self.tongueProxy = None
+
         self.clothesObjs = {}
         self.clothesProxies = {}
 
@@ -201,25 +208,32 @@ class Human(guicommon.Object):
         return proxies
 
     def getProxiesAndObjects(self):
-        pairs = [(self.hairProxy, self.hairObj),
-                 (self.eyesProxy, self.eyesObj),
-                 (self.genitalsProxy, self.genitalsObj),
-                 (self.eyebrowsProxy, self.eyebrowsObj)]
+        pairs = [
+            (self.hairProxy, self.hairObj),
+            (self.eyesProxy, self.eyesObj),
+            (self.genitalsProxy, self.genitalsObj),
+            (self.eyebrowsProxy, self.eyebrowsObj),
+            (self.eyelashesProxy, self.eyelashesObj),
+            (self.teethProxy, self.teethObj),
+            (self.tongueProxy, self.tongueObj),
+            ]
         for uuid,pxy in self.clothesProxies.items():
             pairs.append((pxy, self.clothesObjs[uuid]))
         return pairs
 
-    simpleProxyTypes = ['hair', 'eyes', 'genitals', 'eyebrows']
-
-    def getTypedSimpleProxiesAndObjects(self, type):
+    def getTypedSimpleProxiesAndObjects(self, ptype):
+        ptype = ptype.capitalize()
         table = {
-            'hair' :     (self.hairProxy, self.hairObj),
-            'eyes' :     (self.eyesProxy, self.eyesObj),
-            'genitals' : (self.genitalsProxy, self.genitalsObj),
-            'eyebrows' : (self.eyebrowsProxy, self.eyebrowsObj)
+            'Hair' :     (self.hairProxy, self.hairObj),
+            'Eyes' :     (self.eyesProxy, self.eyesObj),
+            'Genitals' : (self.genitalsProxy, self.genitalsObj),
+            'Eyebrows' : (self.eyebrowsProxy, self.eyebrowsObj),
+            'Eyelashes': (self.eyelashesProxy, self.eyelashesObj),
+            'Teeth':     (self.teethProxy, self.teethObj),
+            'Tongue':    (self.tongueProxy, self.tongueObj),
             }
         try:
-            return table[type]
+            return table[ptype]
         except KeyError:
             return None,None
 

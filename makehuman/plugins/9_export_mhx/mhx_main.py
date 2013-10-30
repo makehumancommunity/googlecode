@@ -138,8 +138,8 @@ class Writer(mhx_writer.Writer):
 
         self.proxyWriter.writeProxyType('Proxymeshes', 'T_Proxy', 3, fp, 0.35, 0.4)
         self.proxyWriter.writeProxyType('Clothes', 'T_Clothes', 2, fp, 0.4, 0.55)
-        for ptype in self.human.simpleProxyTypes:
-            self.proxyWriter.writeProxyType(ptype.capitalize(), 'T_Clothes', 0, fp, 0.55, 0.6)
+        for ptype in mh2proxy.SimpleProxyTypes:
+            self.proxyWriter.writeProxyType(ptype, 'T_Clothes', 0, fp, 0.55, 0.6)
 
         self.poseWriter.writePose(fp)
 

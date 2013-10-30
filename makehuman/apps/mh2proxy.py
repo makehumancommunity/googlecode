@@ -33,8 +33,29 @@ from collections import OrderedDict
 import material
 import io_json
 
+
+#
+#   Proxy types. Loop over simple proxy types to do all proxies.
+#   Some code use lowercase proxy types instead.
+#
+
+SimpleProxyTypes = ['Hair', 'Eyes', 'Genitals', 'Eyebrows', 'Eyelashes', 'Teeth', 'Tongue']
+ProxyTypes = ['Proxymeshes', 'Clothes'] + SimpleProxyTypes
+
+SimpleProxyTypesLower = []
+for name in SimpleProxyTypes:
+    SimpleProxyTypesLower.append(name.lower())
+
+#
+#
+#
+
 _A7converter = None
 Unit = numpy.array((1.0,1.0,1.0))
+
+#
+#   class CProxyRefVert:
+#
 
 class CProxyRefVert:
 
