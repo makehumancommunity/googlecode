@@ -192,12 +192,14 @@ class Human(guicommon.Object):
                 for n,vn in enumerate(target.verts[0:vertsToList]):
                     log.debug("   %d : %s %s" % (vn, target.data[n], self.mesh.coord[vn]))
 
+    def removeElement(self, vlist, exclude):
+        return [elt for elt in vlist if elt != exclude]
 
     def getProxyObjects(self):
         objs = [self.hairObj, self.eyesObj, self.genitalsObj, self.eyebrowsObj]
         for obj in self.clothesObjs.values():
             objs.append(obj)
-        return objs
+        return self.removeElement(objs, None)
 
     def getProxies(self, includeHumanProxy = True):
         proxies = [self.hairProxy, self.eyesProxy, self.genitalsProxy, self.eyebrowsProxy]
@@ -205,7 +207,7 @@ class Human(guicommon.Object):
             proxies.append(self.proxy)
         for pxy in self.clothesProxies.values():
             proxies.append(pxy)
-        return proxies
+        return self.removeElement(proxies, None)
 
     def getProxiesAndObjects(self):
         pairs = [
@@ -219,7 +221,7 @@ class Human(guicommon.Object):
             ]
         for uuid,pxy in self.clothesProxies.items():
             pairs.append((pxy, self.clothesObjs[uuid]))
-        return pairs
+        return self.removeElement(pairs, (None,None))
 
     def getTypedSimpleProxiesAndObjects(self, ptype):
         ptype = ptype.capitalize()
