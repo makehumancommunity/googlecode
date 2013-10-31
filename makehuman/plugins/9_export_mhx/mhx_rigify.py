@@ -63,6 +63,7 @@ Only works with MHX export.
         self.useRotationLimits = False
         self.useBoneGroups = False
         self.useCorrectives = config.bodyShapes
+        self.useFaceRig = config.useFaceRig
         self.useExpressions = config.expressions
         self.feetOnGround = config.feetOnGround
         self.useMasks = config.useMasks

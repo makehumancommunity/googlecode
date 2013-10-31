@@ -10,6 +10,7 @@
         "useSplitBones" : true,
         "useDeformBones" : true,
         "useMuscles" : true,
+        "useFaceRig" : true,
         "useSockets" : true,
         "useIkArms" : true,
         "useIkLegs" : true,

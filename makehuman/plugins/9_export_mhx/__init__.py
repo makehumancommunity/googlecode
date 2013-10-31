@@ -52,13 +52,14 @@ class MhxConfig(Config):
         self.useTexFolder =         exporter.useTexFolder.selected
         self.scale,self.unit =      exporter.taskview.getScale()
         self.useRelPaths =          True
-        self.useHelpers =              True
+        self.useHelpers =           True
 
         self.feetOnGround =         exporter.feetOnGround.selected
-        self.useMasks =             True # exporter.masks.selected
+        self.useFaceRig =           exporter.useFaceRig.selected
         self.expressions =          exporter.expressions.selected
-        self.bodyShapes =           False # exporter.bodyShapes.selected
         self.useCustomTargets =     exporter.useCustomTargets.selected
+
+        self.useMasks =             False
 
         if exporter.useRigify.selected:
             self.rigOptions = RigifyOptions(self)
@@ -73,12 +74,10 @@ class MhxConfig(Config):
             useCustomShapes = True,
             useConstraints = True,
             useBoneGroups = True,
-            useCorrectives = self.bodyShapes,
+            useCorrectives = False,
+            useFaceRig = self.useFaceRig,
             useExpressions = self.expressions,
             feetOnGround = self.feetOnGround,
-            useMasks = self.useMasks,
-            useTPose = self.useTPose,
-            useIkHair = True,
             useLeftRight = False,
         )
 
@@ -94,13 +93,9 @@ class ExporterMHX(Exporter):
         self.taskview       = taskview
         self.useTexFolder   = options.addWidget(gui.CheckBox("Separate texture folder", True))
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
+        self.useFaceRig     = options.addWidget(gui.CheckBox("Face rig", True))
         self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))
-        # self.facepanel      = options.addWidget(gui.CheckBox("Face rig", False))
-        # self.bodyShapes     = options.addWidget(gui.CheckBox("Body shapes", False))
         self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
-        #self.masks          = options.addWidget(gui.CheckBox("Clothes masks", False))
-        #self.clothesRig     = options.addWidget(gui.CheckBox("Clothes rig", False))
-        #self.cage           = options.addWidget(gui.CheckBox("Cage", False))
         self.useRigify      = options.addWidget(gui.CheckBox("Export for Rigify", False))
 
 

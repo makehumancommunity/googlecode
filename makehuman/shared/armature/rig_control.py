@@ -216,11 +216,11 @@ RevFootArmature = {
     'ankle.R' :        (0, None, F_WIR, L_REXTRA),
     'ankle.ik.R' :     (0, 'foot.rev.R', F_NOLOCK, L_HELP2),
 
-    'knee.pt.ik.L' :   (0, 'foot.rev.L', F_WIR|F_NOLOCK, L_LLEGIK+L_LEXTRA),
+    'knee.pt.ik.L' :   (0, 'hips', F_WIR|F_NOLOCK, L_LLEGIK+L_LEXTRA),
     'knee.pt.fk.L' :   (0, 'thigh.L', 0, L_HELP2),
     'knee.link.L' :    (0, 'thigh.ik.L', F_RES, L_LLEGIK+L_LEXTRA),
 
-    'knee.pt.ik.R' :   (0, 'foot.rev.R', F_WIR|F_NOLOCK, L_RLEGIK+L_REXTRA),
+    'knee.pt.ik.R' :   (0, 'hips', F_WIR|F_NOLOCK, L_RLEGIK+L_REXTRA),
     'knee.pt.fk.R' :   (0, 'thigh.R', 0, L_HELP2),
     'knee.link.R' :    (0, 'thigh.ik.R', F_RES, L_RLEGIK+L_REXTRA),
 }

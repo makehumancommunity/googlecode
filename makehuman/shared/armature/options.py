@@ -42,6 +42,7 @@ class ArmatureOptions(object):
         self.useHeadControl = False
         self.useReverseHip = False
         self.useMuscles = False
+        self.useFaceRig = False
         self.useRotationLimits = False
         self.addConnectingBones = False
         self.useQuaternionsOnly = True
@@ -86,6 +87,7 @@ class ArmatureOptions(object):
             useConstraints = False,
             useBoneGroups = False,
             useCorrectives = False,
+            useFaceRig = False,
             useExpressions = False,
             feetOnGround = False,
             useMasks = False,
@@ -97,6 +99,7 @@ class ArmatureOptions(object):
         self.useConstraints = useConstraints
         self.useBoneGroups = useBoneGroups
         self.useCorrectives = useCorrectives
+        self.useFaceRig = useFaceRig
         self.useExpressions = useExpressions
         self.feetOnGround = feetOnGround
         self.useMasks = useMasks
@@ -113,6 +116,7 @@ class ArmatureOptions(object):
             "   scale : %s\n" % self.scale +
             "   boneMap : %s\n" % self.boneMap +
             "   useMuscles : %s\n" % self.useMuscles +
+            "   useFaceRig : %s\n" % self.useFaceRig +
             "   addConnectingBones : %s\n" % self.addConnectingBones +
             "   mergeSpine : %s\n" % self.mergeSpine +
             "   mergeShoulders : %s\n" % self.mergeShoulders +
@@ -141,6 +145,7 @@ class ArmatureOptions(object):
             return
 
         self.useMuscles = selector.useMuscles.selected
+        self.useFaceRig = selector.useFaceRig.selected
         self.useReverseHip = selector.useReverseHip.selected
         #self.useCorrectives = selector.useCorrectives.selected
         self.useRotationLimits = selector.useRotationLimits.selected
@@ -163,9 +168,10 @@ class ArmatureOptions(object):
         self.useMasterBone = selector.useMasterBone.selected
 
 
-    def reset(self, selector, useMuscles=False):
+    def reset(self, selector, useMuscles=False, useFaceRig=False):
         self._setDefaults()
         self.useMuscles = useMuscles
+        self.useFaceRig = useFaceRig
         if selector is not None:
             selector.fromOptions(self)
 
@@ -214,6 +220,7 @@ class ArmatureSelector:
 
         import gui
         self.useMuscles = box.addWidget(gui.ToggleButton("Muscle bones (MHX only)"))
+        self.useFaceRig = box.addWidget(gui.ToggleButton("Face rig (MHX only)"))
         self.useReverseHip = box.addWidget(gui.ToggleButton("Reverse hips"))
         self.addConnectingBones = box.addWidget(gui.ToggleButton("Connecting bones"))
         self.useRotationLimits = box.addWidget(gui.ToggleButton("Use rotation limits (MHX only)"))
@@ -236,6 +243,7 @@ class ArmatureSelector:
 
     def fromOptions(self, options):
         self.useMuscles.setSelected(options.useMuscles)
+        self.useFaceRig.setSelected(options.useFaceRig)
         self.useReverseHip.setSelected(options.useReverseHip)
         self.addConnectingBones.setSelected(options.addConnectingBones)
         self.useRotationLimits.setSelected(options.useRotationLimits)

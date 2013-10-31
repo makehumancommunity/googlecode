@@ -82,11 +82,15 @@ class Parser:
         if options.useDeformBones or options.useDeformNames:
             self.deformPrefix = "DEF-"
 
-        #options.useMuscles = True
-        if options.useMuscles:
-            self.vertexGroupFiles = ["head", "muscles", "hand", "joints", "tights_muscles", "skirt_muscles", "genitalia_muscles"]
+        if options.useFaceRig:
+            self.vertexGroupFiles = ["face"]
         else:
-            self.vertexGroupFiles = ["head", "bones", "hand", "joints", "tights", "skirt", "genitalia"]
+            self.vertexGroupFiles = ["head"]
+
+        if options.useMuscles:
+            self.vertexGroupFiles += ["muscles", "hand", "joints", "tights_muscles", "skirt_muscles", "genitalia_muscles"]
+        else:
+            self.vertexGroupFiles += ["bones", "hand", "joints", "tights", "skirt", "genitalia"]
 
         if options.useMuscles:
             self.vertexGroupFiles += ["hair_muscles"]
@@ -99,6 +103,8 @@ class Parser:
             rig_face.Joints +
             rig_control.Joints
         )
+        if options.useMuscles:
+            self.joints += rig_muscle.Joints
 
         self.planes = rig_bones.Planes
         self.planeJoints = rig_control.PlaneJoints
@@ -107,35 +113,40 @@ class Parser:
             rig_bones.HeadsTails,
             rig_face.HeadsTails,
             rig_control.HeadsTails,
+            rig_control.RevFootHeadsTails,
         ])
-
-        addDict(rig_control.RevFootHeadsTails, self.headsTails)
+        if options.useMuscles:
+            addDict(rig_muscle.HeadsTails, self.headsTails)
+        if options.useFaceRig:
+            addDict(rig_face.FaceRigHeadsTails, self.headsTails)
 
         if options.useConstraints:
             self.setConstraints(rig_bones.Constraints)
             self.setConstraints(rig_face.Constraints)
+            if options.useMuscles:
+                self.setConstraints(rig_muscle.Constraints)
+            if options.useFaceRig:
+                self.setConstraints(rig_face.FaceRigConstraints)
 
         if options.useRotationLimits:
             addDict(rig_bones.RotationLimits, self.rotationLimits)
             addDict(rig_face.RotationLimits, self.rotationLimits)
-            addDict(rig_control.RotationLimits, self.rotationLimits)
-
             addDict(rig_face.LocationLimits, self.locationLimits)
+            addDict(rig_control.RotationLimits, self.rotationLimits)
+            if options.useMuscles:
+                addDict(rig_muscle.RotationLimits, self.rotationLimits)
+            if options.useFaceRig:
+                addDict(rig_face.FaceRigLocationLimits, self.locationLimits)
+                addDict(rig_face.FaceRigRotationLimits, self.rotationLimits)
 
         if options.useCustomShapes:
             addDict(rig_bones.CustomShapes, self.customShapes)
             addDict(rig_face.CustomShapes, self.customShapes)
             addDict(rig_control.CustomShapes, self.customShapes)
-
-        if options.useMuscles:
-            self.joints += rig_muscle.Joints
-            addDict(rig_muscle.HeadsTails, self.headsTails)
-            if options.useConstraints:
-                self.setConstraints(rig_muscle.Constraints)
-            if options.useCustomShapes:
+            if options.useMuscles:
                 addDict(rig_muscle.CustomShapes, self.customShapes)
-            if options.useRotationLimits:
-                addDict(rig_muscle.RotationLimits, self.rotationLimits)
+            if options.useFaceRig:
+                addDict(rig_face.FaceRigCustomShapes, self.customShapes)
 
         if options.useFingers and options.useConstraints:
             self.setConstraints(rig_control.FingerConstraints)
@@ -144,9 +155,8 @@ class Parser:
         self.splitBones = {}
         if options.useSplitBones:
             self.splitBones = {
-                #"upper_arm" :   (3, "forearm", False),
                 "forearm" :     (3, "hand", False),
-                #"thigh" :       (3, "shin", False),
+                "shin" :        (3, "foot", False),
             }
 
 
@@ -184,6 +194,9 @@ class Parser:
 
         if options.useMuscles:
             self.addBones(rig_muscle.Armature, boneInfo)
+
+        if options.useFaceRig:
+            self.addBones(rig_face.FaceRigArmature, boneInfo)
 
         if options.useHeadControl:
             self.addBones(rig_control.HeadArmature, boneInfo)
@@ -242,7 +255,6 @@ class Parser:
                 cns = ("LimitLoc", C_LOCAL, 1, ["LimitLoc", limits, (1,1,1,1,1,1)])
                 self.addConstraint(bname, cns)
 
-
         if options.useCorrectives:
             self.addCSysBones(rig_control.CoordinateSystems, boneInfo)
 
@@ -259,7 +271,6 @@ class Parser:
                         bone.parent = connector.name
                         extras.append(connector)
                         self.headsTails[connector.name] = (ptail, head)
-
             for bone in extras:
                 boneInfo[bone.name] = bone
 
@@ -295,7 +306,10 @@ class Parser:
                 if options.useConstraints:
                     self.renameConstraints(rig_muscle.Constraints, boneInfo)
             if options.useCustomShapes:
-                custom = rig_muscle.CustomShapes
+                custom = mergeDicts([
+                    rig_muscle.CustomShapes,
+                    rig_face.FaceRigCustomShapes,
+                ])
             else:
                 custom = {}
             self.addDeformVertexGroups(vgroups, custom)
@@ -815,7 +829,6 @@ class Parser:
             if useSplit and base in self.splitBones.keys():
                 pass
             elif bname in custom.keys():
-                log.debug(amt.vertexWeights[bname])
                 pass
             elif bname[0:4] == "hair":
                 pass

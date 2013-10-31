@@ -84,8 +84,6 @@ Joints = [
 eyeOffs = (0,0,0.3)
 
 HeadsTails = {
-    'head_back' :           ('mouth', ('mouth', (0,1,0))),
-    'head_jaw' :            ('mouth', 'jaw'),
     'jaw' :                 ('mouth', 'jaw'),
     'tongue_base' :         ('tongue-1', 'tongue-2'),
     'tongue_mid' :          ('tongue-2', 'tongue-3'),
@@ -143,22 +141,24 @@ Markers = [
 ]
 
 
+FaceRigHeadsTails = {
+    'head_back' :           ('mouth', ('mouth', (0,1,0))),
+    'head_jaw' :            ('mouth', 'jaw'),
+}
+
 posOffs = (0,0,0.01)
 negOffs = (0,0,-0.05)
 
 if UseTranslationBones:
     for bone,marker,_ in Markers:
-        HeadsTails[bone] = ((marker, posOffs), (marker, negOffs))
+        FaceRigHeadsTails[bone] = ((marker, posOffs), (marker, negOffs))
 else:
     for bone,marker,parent in Markers:
         Joints.append( (bone, 'p', (marker, marker, 'mouth')) )
-        HeadsTails[bone] = (bone, (marker, posOffs))
+        FaceRigHeadsTails[bone] = (bone, (marker, posOffs))
 
 
 Armature = {
-    'head_back' :           (0, 'head', 0, L_HELP),
-    'head_jaw' :            (0, 'head', 0, L_HELP),
-
     'jaw' :                 (0, 'head', F_DEF|F_NOLOCK, L_HEAD),
     'tongue_base' :         (0, 'jaw', F_DEF|F_SCALE, L_HEAD),
     'tongue_mid' :          (0, 'tongue_base', F_DEF|F_SCALE, L_HEAD),
@@ -171,18 +171,21 @@ Armature = {
     'lolid.L' :             (0, 'head', F_DEF|F_LOCKY, L_HEAD),
 }
 
-if UseTranslationBones:
-    for bone,marker,parent in Markers:
-        Armature[bone] = (0, parent, F_DEF|F_WIR|F_NOLOCK|F_LOCKROT, L_PANEL)
-else:
-    for bone,marker,parent in Markers:
-        Armature[bone] = (0, parent, F_DEF|F_WIR|F_LOCKY, L_PANEL)
 
-
-Constraints = {
-     'head_jaw' : [('CopyTrans', 0, 0.5, ['Jaw', 'jaw', 0])],
+FaceRigArmature = {
+    'head_back' :           (0, 'head', 0, L_HELP),
+    'head_jaw' :            (0, 'head', 0, L_HELP),
 }
 
+if UseTranslationBones:
+    for bone,marker,parent in Markers:
+        FaceRigArmature[bone] = (0, parent, F_DEF|F_WIR|F_NOLOCK|F_LOCKROT, L_PANEL)
+else:
+    for bone,marker,parent in Markers:
+        FaceRigArmature[bone] = (0, parent, F_DEF|F_WIR|F_LOCKY, L_PANEL)
+
+
+Constraints = {}
 
 CustomShapes = {
     'jaw' :             'GZM_Jaw',
@@ -211,13 +214,22 @@ RotationLimits = {
     'lolid.R':  (-45*D,10*D, 0,0, 0,0),
 }
 
+
+FaceRigConstraints = {
+     'head_jaw' : [('CopyTrans', 0, 0.5, ['Jaw', 'jaw', 0])],
+}
+
+FaceRigCustomShapes = {}
+FaceRigLocationLimits = {}
+FaceRigRotationLimits = {}
+
 if UseTranslationBones:
     for bone,_,_ in Markers:
-        CustomShapes[bone] = 'GZM_Cube025'
-        LocationLimits[bone] = (-0.1,0.1, -0.1,0.1, -0.1,0.1)
+        FaceRigCustomShapes[bone] = 'GZM_Cube025'
+        FaceRigLocationLimits[bone] = (-0.1,0.1, -0.1,0.1, -0.1,0.1)
 else:
     for bone,_,_ in Markers:
-        CustomShapes[bone] = 'GZM_FaceJaw'
+        FaceRigCustomShapes[bone] = 'GZM_FaceJaw'
 
 
 #
