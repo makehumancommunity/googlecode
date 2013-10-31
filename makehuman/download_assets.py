@@ -132,6 +132,7 @@ def getFTPContents(ftp):
 
         return result
 
+    print "Getting repository contents..."
     rootPath = ftp.pwd()
     contentsList = walkFTP(ftp)
     result = {}
