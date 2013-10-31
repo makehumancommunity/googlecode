@@ -66,7 +66,6 @@ Only works with MHX export.
         self.useFaceRig = config.useFaceRig
         self.useExpressions = config.expressions
         self.feetOnGround = config.feetOnGround
-        self.useMasks = config.useMasks
 
         renameBones = {
             "clavicle.L" : "shoulder.L",

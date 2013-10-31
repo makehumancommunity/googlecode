@@ -55,11 +55,9 @@ class MhxConfig(Config):
         self.useHelpers =           True
 
         self.feetOnGround =         exporter.feetOnGround.selected
-        self.useFaceRig =           exporter.useFaceRig.selected
+        self.useFaceRig =           False # exporter.useFaceRig.selected
         self.expressions =          exporter.expressions.selected
         self.useCustomTargets =     exporter.useCustomTargets.selected
-
-        self.useMasks =             False
 
         if exporter.useRigify.selected:
             self.rigOptions = RigifyOptions(self)
@@ -93,7 +91,7 @@ class ExporterMHX(Exporter):
         self.taskview       = taskview
         self.useTexFolder   = options.addWidget(gui.CheckBox("Separate texture folder", True))
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
-        self.useFaceRig     = options.addWidget(gui.CheckBox("Face rig", True))
+        #self.useFaceRig     = options.addWidget(gui.CheckBox("Face rig", True))
         self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))
         self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
         self.useRigify      = options.addWidget(gui.CheckBox("Export for Rigify", False))

@@ -223,52 +223,13 @@ class Writer(mhx_writer.Writer):
 
         # Write materials
 
-        prxList = self.sortedMasks()
-        nMasks = self.countMasks(proxy, prxList)
-        nMasks = 0
-
         fp.write("Material %s_%s_%s \n" % (self.name, proxy.name, mat.name))
-        #addProxyMaskMTexs(fp, mat, proxy, prxList)
-        #uvlayer = proxy.uvtexLayerName[proxy.textureLayer]
         uvlayer = "Texture"
-
-        self.matWriter.writeMTexes(fp, texnames, mat, nMasks)
+        self.matWriter.writeMTexes(fp, texnames, mat)
         self.matWriter.writeMaterialSettings(fp, mat, alpha)
 
         fp.write(
             "  Property MhxDriven True ;\n" +
             "end Material\n\n")
-
-
-    def addProxyMaskMTexs(self, fp, mat, proxy, prxList):
-        if proxy.maskLayer < 0:
-            return
-        n = 0
-        m = len(prxList)
-        for (zdepth, prx) in prxList:
-            m -= 1
-            if zdepth > proxy.z_depth:
-                n = self.matWriter.addMaskMTex(fp, prx.mask, proxy, 'MULTIPLY', n)
-        if True or not tex:
-            n = self.matWriter.addMaskMTex(fp, 'solid', proxy, 'MIX', n)
-
-
-    def sortedMasks(self):
-        if not self.config.useMasks:
-            return []
-        prxList = []
-        for prx in self.proxies.values():
-            if prx.type == 'Clothes' and prx.mask:
-                prxList.append((prx.z_depth, prx))
-        prxList.sort()
-        return prxList
-
-
-    def countMasks(self, proxy, prxList):
-        n = 0
-        for (zdepth, prx) in prxList:
-            if prx.type == 'Clothes' and zdepth > proxy.z_depth:
-                n += 1
-        return n
 
 

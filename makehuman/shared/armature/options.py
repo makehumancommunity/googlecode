@@ -72,7 +72,6 @@ class ArmatureOptions(object):
         self.useCorrectives = False
         self.useExpressions = False
         self.feetOnGround = False
-        self.useMasks = False
         self.useTPose = False
         self.useIkHair = False
         self.useLeftRight = False
@@ -90,7 +89,6 @@ class ArmatureOptions(object):
             useFaceRig = False,
             useExpressions = False,
             feetOnGround = False,
-            useMasks = False,
             useTPose = False,
             useIkHair = False,
             useLeftRight = False,
@@ -102,7 +100,6 @@ class ArmatureOptions(object):
         self.useFaceRig = useFaceRig
         self.useExpressions = useExpressions
         self.feetOnGround = feetOnGround
-        self.useMasks = useMasks
         self.useTPose = useTPose
         self.useIkHair = useIkHair
         self.useLeftRight = useLeftRight
@@ -134,7 +131,6 @@ class ArmatureOptions(object):
             "   useMasterBone : %s\n" % self.useMasterBone +
             "   useCorrectives : %s\n" % self.useCorrectives +
             "   feetOnGround : %s\n" % self.feetOnGround +
-            "   useMasks : %s\n" % self.useMasks +
             "   merge : %s\n" % self.merge +
             "   locale : %s\n" % self.locale +
             ">")

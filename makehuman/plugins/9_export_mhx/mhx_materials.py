@@ -74,9 +74,10 @@ class Writer(mhx_writer.Writer):
         return diffuse,spec,bump,normal,disp
 
 
-    def writeMTexes(self, fp, texnames, mat, slot):
+    def writeMTexes(self, fp, texnames, mat):
         diffuse,spec,bump,normal,disp = texnames
         scale = self.config.scale
+        slot = 0
 
         if diffuse:
             fp.write(
@@ -192,23 +193,17 @@ Texture solid IMAGE
 end Texture
 
 """)
-        if config.useMasks:
-            prxList = list(self.proxies.values())
-            for prx in prxList:
-                if prx.mask:
-                    self.addMaskImage(fp, prx.mask)
 
         fp.write(
             "# --------------- Materials ----------------------------- #\n\n" +
             "Material %sSkin\n" % self.name)
 
-        nMasks = self.writeMaskMTexs(fp)
-        self.writeMTexes(fp, texnames, mat, nMasks)
         if mat.diffuseTexture:
             alpha = 0
         else:
             alpha = 1
 
+        self.writeMTexes(fp, texnames, mat)
         self.writeMaterialSettings(fp, mat, alpha)
 
         fp.write(
@@ -230,7 +225,7 @@ end Texture
   Property MhxDriven True ;
 """)
 
-        self.writeMaterialAnimationData(fp, nMasks, 2)
+        self.writeMaterialAnimationData(fp, 2)
         fp.write("end Material\n\n")
 
         self.writeSimpleMaterial(fp, "Invisio", (1,1,1))
@@ -266,82 +261,12 @@ end Material
     #
     #-------------------------------------------------------------------------------
 
-    def writeMaterialAnimationData(self, fp, nMasks, nTextures):
+    def writeMaterialAnimationData(self, fp, nTextures):
         fp.write("  use_textures Array")
-        for n in range(nMasks):
-            fp.write(" 1")
         for n in range(nTextures):
             fp.write(" 1")
         fp.write(" ;\n")
         fp.write("  AnimationData %sMesh True\n" % self.name)
         #mhx_drivers.writeTextureDrivers(fp, rig_panel.BodyLanguageTextureDrivers)
-        self.writeMaskDrivers(fp)
         fp.write("  end AnimationData\n")
-
-
-    def writeMaskMTexs(self, fp):
-        nMasks = 0
-        if self.config.useMasks:
-            prxList = list(self.proxies.values())
-            for prx in prxList:
-                if prx.mask:
-                    nMasks = addMaskMTex(fp, prx.mask, None, 'MULTIPLY', nMasks)
-        return nMasks
-
-
-    def writeMaskDrivers(self, fp):
-        if not self.config.useMasks:
-            return
-        fp.write("#if toggle&T_Clothes\n")
-        n = 0
-        for prx in self.proxies.values():
-            if prx.type == 'Clothes' and prx.mask:
-                (dir, file) = prx.mask
-                mhx_drivers.writePropDriver(fp, ["Mhh%s" % prx.name], "1-x1", 'use_textures', n)
-                n += 1
-        fp.write("#endif\n")
-        return
-
-    #-------------------------------------------------------------------------------
-    #   Masking
-    #-------------------------------------------------------------------------------
-
-    def addMaskImage(self, fp, filepath):
-        newpath = self.config.copyTextureToNewLocation(filepath)
-        filename = os.path.basename(filepath)
-        fp.write(
-            "Image %s\n" % filename +
-            "  Filename %s ;\n" % newpath +
-            #"  alpha_mode 'PREMUL' ;\n" +
-            "end Image\n\n" +
-            "Texture %s IMAGE\n" % filename  +
-            "  Image %s ;\n" % filename +
-            "end Texture\n\n"
-        )
-
-
-    def addMaskMTex(self, fp, filepath, proxy, blendtype, n):
-        if proxy:
-            try:
-                uvLayer = proxy.uvtexLayerName[proxy.maskLayer]
-            except KeyError:
-                return n
-
-        filename = os.path.basename(filepath)
-        fp.write(
-            "  MTex %d %s UV ALPHA\n" % (n, filename) +
-            "    texture Refer Texture %s ;\n" % filename +
-            "    use_map_alpha True ;\n" +
-            "    use_map_color_diffuse False ;\n" +
-            "    alpha_factor 1 ;\n" +
-            "    blend_type '%s' ;\n" % blendtype +
-            "    mapping 'FLAT' ;\n" +
-            "    invert True ;\n" +
-            "    use_stencil True ;\n" +
-            "    use_rgb_to_intensity True ;\n")
-        if proxy:
-            fp.write("    uv_layer '%s' ;\n" %  uvLayer)
-        fp.write("  end MTex\n")
-        return n+1
-
 
