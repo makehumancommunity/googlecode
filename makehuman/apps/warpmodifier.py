@@ -40,6 +40,9 @@ from core import G
 #   class WarpTarget
 #----------------------------------------------------------
 
+_warpTargetCache = {}
+
+
 class WarpTarget(algos3d.Target):
 
     def __init__(self, shape, modifier, human):
@@ -77,9 +80,6 @@ def saveWarpedTarget(shape, path):
 class WarpModifier (humanmodifier.SimpleModifier):
 
     def __init__(self, template, bodypart):
-        global _warpGlobals
-        _warpGlobals.modifiers.append(self)
-
         template = template.replace("\\","/")
 
         warppath = template.replace('$','').replace('{','').replace('}','')
@@ -137,26 +137,34 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
 
     def compileWarpTarget(self, human):
-        global _warpGlobals
         log.message("Compile %s", self)
-        srcTargetCoord, srcCharCoord, trgCharCoord = self.getReferences(human)
-        #self.traceReference()
-
+        srcTargetCoord, srcPoints, trgPoints = self.getReferences(human)
         obj = human.meshData
-        #printDebugCoord("mesh", obj.orig_coord, obj)
-        printDebugCoord("src_targ", srcCharCoord, obj, srcTargetCoord)
-        printDebugCoord("src_char", srcCharCoord, obj)
-        printDebugCoord("trg_char", trgCharCoord, obj)
-
         if srcTargetCoord:
             #shape = srcTargetCoord
-            shape = self.scaleTarget(srcTargetCoord, srcCharCoord, trgCharCoord)
+            shape = self.scaleTarget(srcTargetCoord, srcPoints, trgPoints)
         else:
             shape = {}
-
-        printDebugCoord("trg_targ", trgCharCoord, obj, shape)
-
         return shape
+
+
+    def scaleTarget(self, morph, srcPoints, trgPoints):
+        scale = np.array((1.0,1.0,1.0))
+        for n in range(3):
+            tvec = trgPoints[2*n] - trgPoints[2*n+1]
+            svec = srcPoints[2*n] - srcPoints[2*n+1]
+            scale[n] = abs(tvec[n]/svec[n])
+        log.debug("Scale %s" % scale)
+        smorph = {}
+        for vn,dr in morph.items():
+            smorph[vn] = scale*dr
+        return smorph
+
+
+    def traceReference(self):
+        log.debug("self.refCharacters:")
+        for key,value in self.refCharacters.items():
+            log.debug("  %s: %s" % (key, value))
 
 
     BodySizes = {
@@ -171,27 +179,6 @@ class WarpModifier (humanmodifier.SimpleModifier):
             (10854, 10981, 2.4356),
         ],
     }
-
-    def scaleTarget(self, morph, source, target):
-        scale = np.array((1.0,1.0,1.0))
-        sizes = self.BodySizes[self.bodypart]
-        for n in range(3):
-            vn1,vn2,r = sizes[n]
-            tvec = target[vn1] - target[vn2]
-            svec = source[vn1] - source[vn2]
-            scale[n] = abs(tvec[n]/svec[n])
-        log.debug("Scale %s" % scale)
-        smorph = {}
-        for vn,dr in morph.items():
-            smorph[vn] = scale*dr
-        return smorph
-
-
-    def traceReference(self):
-        log.debug("self.refCharacters:")
-        for key,value in self.refCharacters.items():
-            log.debug("  %s: %s" % (key, value))
-
 
     def getReferences(self, human):
         """
@@ -218,6 +205,12 @@ class WarpModifier (humanmodifier.SimpleModifier):
             self.traceReference()
             raise NameError("Warping problem")
 
+        keypoints = []
+        for n in range(3):
+            keypoints += self.BodySizes[self.bodypart][n][0:2]
+        trgPoints = np.zeros(6, float)
+        srcPoints = np.zeros(6, float)
+
         for charpath,value in human.targetsDetailStack.items():
             try:
                 trgChar = algos3d.getTarget(human.meshData, charpath)
@@ -225,6 +218,9 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 continue    # Warp target? - ignore
             if isinstance(trgChar, WarpTarget):
                 continue
+
+            # This is very wasteful, because we only need trgCharCoord and
+            # srcCharCoord at the six keypoints
 
             srcVerts = np.s_[...]
             dstVerts = trgChar.verts[srcVerts]
@@ -248,7 +244,9 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 srcTrg = readTargetCoords(reftrg)
                 addVerts(srcTargetCoord, value, srcTrg)
 
-        return srcTargetCoord, srcCharCoord, trgCharCoord
+        trgPoints = trgCharCoord[keypoints]
+        srcPoints = srcCharCoord[keypoints]
+        return srcTargetCoord, srcPoints, trgPoints
 
 
 def printDebugCoord(string, coord, obj=None, offset=None):
@@ -348,8 +346,6 @@ class GenderAgeToneWeightWarpModifier (EthnicGenderAgeToneWeightWarpModifier):
 #----------------------------------------------------------
 
 def resetWarpBuffer():
-    global _warpGlobals
-
     human = G.app.selectedHuman
     if human.hasWarpTargets:
         log.debug("WARP RESET")
@@ -392,11 +388,11 @@ def addVerts(targetVerts, value, verts):
 #----------------------------------------------------------
 
 def readTargetCoords(filepath):
-    global _warpGlobals
+    global _warpTargetCache
 
     # if cached, means that target's life cycle is handled by warpmodifier.
     try:
-        return _warpGlobals.targetCache[filepath]
+        return _warpTargetCache[filepath]
     except KeyError:
         pass
 
@@ -430,7 +426,7 @@ def readTargetCoords(filepath):
                     target[n] = np.array([float(words[1]), float(words[2]), float(words[3])])
         fp.close()
         # Cache will be flushed when character is changed.
-        _warpGlobals.targetCache[filepath] = target
+        _warpTargetCache[filepath] = target
         return target
     else:
         raise IOError("Can't find neither %s nor a replacement target" % filepath)
@@ -479,41 +475,8 @@ def findReplacementFile(filepath):
     return None
 
 #----------------------------------------------------------
-#   Global warp data
+#   Utilities
 #----------------------------------------------------------
-
-class GlobalWarpData:
-    def __init__(self):
-        self.modifiers = []
-        self._landMarks = None
-        self.targetCache = {}
-
-
-    def getLandMarks(self, bodypart):
-        if self._landMarks is not None:
-            return self._landMarks[bodypart]
-
-        self._landMarks = {}
-        folder = getSysDataPath("landmarks")
-        for file_ in os.listdir(folder):
-            (name, ext) = os.path.splitext(file_)
-            if ext != ".lmk":
-                continue
-            path = os.path.join(folder, file_)
-            with open(path, "r") as fp:
-                landmark = []
-                for line in fp:
-                    words = line.split()
-                    if len(words) > 0:
-                        m = int(words[0])
-                        landmark.append(m)
-            self._landMarks[name] = landmark
-
-        return self._landMarks[bodypart]
-
-
-_warpGlobals = GlobalWarpData()
-
 
 def order(dict):
     stru = list(dict.items())
