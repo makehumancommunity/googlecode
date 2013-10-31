@@ -25,7 +25,7 @@ bumpmapIntensity 1.0
 specularmapTexture ../textures/texture_ref.png
 specularmapIntensity 1.0
 
-uvMap ../uvs/a7.obj
+uvMap ../uvs/a7.mhuv
 
 shader data/shaders/glsl/litsphere
 
