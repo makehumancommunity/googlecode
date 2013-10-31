@@ -192,36 +192,60 @@ class Human(guicommon.Object):
                 for n,vn in enumerate(target.verts[0:vertsToList]):
                     log.debug("   %d : %s %s" % (vn, target.data[n], self.mesh.coord[vn]))
 
-    def removeElement(self, vlist, exclude):
-        return [elt for elt in vlist if elt != exclude]
+    # Proxy and object getters.
+    # Returns only existing proxies
 
     def getProxyObjects(self):
-        objs = [self.hairObj, self.eyesObj, self.genitalsObj, self.eyebrowsObj]
+        objs = []
+        for obj in [
+            self.hairObj,
+            self.eyesObj,
+            self.genitalsObj,
+            self.eyebrowsObj,
+            self.eyelashesObj,
+            self.teethObj,
+            self.tongueObj,
+            ]:
+            if obj != None:
+                objs.append(obj)
         for obj in self.clothesObjs.values():
             objs.append(obj)
-        return self.removeElement(objs, None)
+        return objs
 
     def getProxies(self, includeHumanProxy = True):
-        proxies = [self.hairProxy, self.eyesProxy, self.genitalsProxy, self.eyebrowsProxy]
+        proxies = []
+        for pxy in [
+            self.hairProxy,
+            self.eyesProxy,
+            self.genitalsProxy,
+            self.eyebrowsProxy,
+            self.eyelashesProxy,
+            self.teethProxy,
+            self.tongueProxy,
+            ]:
+            if pxy != None:
+                proxies.append(pxy)
         if includeHumanProxy and self.proxy:
             proxies.append(self.proxy)
         for pxy in self.clothesProxies.values():
             proxies.append(pxy)
-        return self.removeElement(proxies, None)
+        return proxies
 
     def getProxiesAndObjects(self):
-        pairs = [
+        pairs = []
+        for pxy,obj in [
             (self.hairProxy, self.hairObj),
             (self.eyesProxy, self.eyesObj),
             (self.genitalsProxy, self.genitalsObj),
             (self.eyebrowsProxy, self.eyebrowsObj),
             (self.eyelashesProxy, self.eyelashesObj),
             (self.teethProxy, self.teethObj),
-            (self.tongueProxy, self.tongueObj),
-            ]
+            (self.tongueProxy, self.tongueObj)]:
+            if pxy != None and obj != None:
+                pairs.append((pxy,obj))
         for uuid,pxy in self.clothesProxies.items():
             pairs.append((pxy, self.clothesObjs[uuid]))
-        return self.removeElement(pairs, (None,None))
+        return pairs
 
     def getTypedSimpleProxiesAndObjects(self, ptype):
         ptype = ptype.capitalize()

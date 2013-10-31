@@ -149,6 +149,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         printDebugCoord("trg_char", trgCharCoord, obj)
 
         if srcTargetCoord:
+            #shape = srcTargetCoord
             shape = self.scaleTarget(srcTargetCoord, srcCharCoord, trgCharCoord)
         else:
             shape = {}
@@ -240,7 +241,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
                 srcCharCoord[dstVerts] +=  value * srcChar.data[srcVerts]
 
             try:
-                reftrg = self.refTargets[charpath]
+                reftrg = self.refTargets[localPath(charpath)]
             except KeyError:
                 reftrg = None
             if reftrg:
