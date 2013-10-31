@@ -57,97 +57,6 @@ def setupExpressions(folder, prefix):
 
 ExpressionUnits = setupExpressions(getSysDataPath("targets/expression/units/caucasian"), "")
 
-#----------------------------------------------------------
-#   Loop
-#----------------------------------------------------------
-
-def loopGendersAges(name, human, typ):
-    epsilon = 0.05
-    shapes = {}
-    asums = {}
-    gsum = 0.0
-    genders = [
-        ('female', human.femaleVal),
-        ('male', human.maleVal)
-    ]
-
-    ages = [
-        ('child', human.childVal),
-        ('young', human.youngVal),
-        ('old', human.oldVal)
-    ]
-
-    for (gender, gval) in genders:
-        gshapes = {}
-        shapes[gender] = gshapes
-        asums[gender] = 0.0
-        if gval < epsilon:
-            continue
-        gsum += gval
-
-        for (age, aval) in ages:
-            if aval < epsilon:
-                continue
-            filename = targetFileName(typ, name, gender, age)
-            ashape = readShape(filename)
-            if ashape:
-                gshapes[age] = ashape
-                asums[gender] += aval
-
-    shape = {}
-    wsum = 0.0
-    for (gender, gval) in genders:
-        if gval < epsilon or asums[gender] < epsilon:
-            continue
-        gw = gval/gsum
-        gshapes = shapes[gender]
-        for (age, aval) in ages:
-            if aval < epsilon:
-                continue
-            aw = aval/asums[gender]
-            w = gw*aw
-            try:
-                ashape = gshapes[age]
-            except:
-                ashape = None
-            if not ashape:
-                continue
-            wsum += w
-            for v in ashape.keys():
-                try:
-                    (x,y,z) = shape[v]
-                    (dx,dy,dz) = ashape[v]
-                    shape[v] = (x+w*dx, y+w*dy, z+w*dz)
-                except:
-                    shape[v] = ashape[v]
-
-    dwarf = 0.8324
-    giant = 1.409
-    height = human.getHeight()
-    if height < 0:
-        k = 1 + (1-dwarf)*height
-    elif height > 0:
-        k = 1 + (giant-1)*height
-    else:
-        return shape
-
-    for v in shape.keys():
-        (x,y,z) = shape[v]
-        shape[v] = (k*x, k*y, k*z)
-    return shape
-
-
-def targetFileName(typ, name, gender, age):
-    #if typ == "Expressions":
-    #    return (getSysDataPath('targets/expression/%s_%s/neutral_%s_%s_%s.target') % (gender, age, gender, age, name) )
-    if typ == "ExpressionUnits":
-        return (getSysDataPath('targets/expression/units/caucasian/%s_%s/%s.target') %  (gender, age, name) )
-    elif typ == "Corrective":
-        (part, pose) = name
-        return (getSysDataPath("shared/mhx/targets/correctives/%s/caucasian/%s-%s/%s.target") % (part, gender, age, pose))
-    else:
-        raise NameError("Unknown type %s" % typ)
-
 
 def readShape(filename):
     try:
@@ -170,43 +79,6 @@ def readShape(filename):
 #
 #----------------------------------------------------------
 
-def readFaceShapes(human, drivers, t0, t1, progressCallback = None):
-    shapeList = []
-    shapes = {}
-    t,dt = initTimes(drivers.keys(), 0.0, 1.0)
-
-    for name,value in drivers.items():
-        (fname, bone, channel, sign, min, max) = value
-        if (name[-2:] in ["_L", "_R"]):
-            lr = "LR"
-            sname = name[:-2]
-            t += 2*dt
-        else:
-            lr = "Sym"
-            sname = name
-            t += dt
-
-        try:
-            shape = shapes[fname]
-            doLoad = False
-        except:
-            doLoad = True
-        if doLoad:
-            if progressCallback:
-                progressCallback(t, text="Reading face shape %s" % fname)
-
-            shape = warpmodifier.compileWarpTarget(
-                    'shared/mhx/targets/body_language/${gender}-${age}/%s.target' % fname,
-                    "GenderAge",
-                    human,
-                    "face")
-
-            shapes[fname] = shape
-            shapeList.append((sname, shape, lr, min, max))
-    shapeList.sort()
-    return shapeList
-
-
 def readExpressionUnits(human, t0, t1, progressCallback = None):
     shapeList = []
     t,dt = initTimes(ExpressionUnits, 0.0, 1.0)
@@ -224,30 +96,6 @@ def readExpressionUnits(human, t0, t1, progressCallback = None):
         shapeList.append((name, shape))
         t += dt
     return shapeList
-
-
-def readCorrectives(drivers, human, folder, landmarks, t0, t1, progressCallback = None):
-    shapeList = []
-    t,dt = initTimes(drivers, 0.0, 1.0)
-
-    for (pose, lr, expr, vars) in drivers:
-        if progressCallback:
-            progressCallback(t, text="Reading corrective %s %s" % (folder, pose))
-
-        shape = warpmodifier.compileWarpTarget(
-                'GenderAgeToneWeight',
-                "shared/mhx/targets/correctives/%s/caucasian/${gender}-${age}-${tone}-${weight}/%s.target" % (folder, pose),
-                human,
-                landmarks)
-
-        shapeList.append((shape, pose, lr))
-        t += dt
-    return shapeList
-
-def readCorrective(human, part, pose):
-    #for e in list(shape.items())[:10]:
-    #    print e
-    return shape
 
 
 def initTimes(flist, t0, t1):

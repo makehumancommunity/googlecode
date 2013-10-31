@@ -24,7 +24,6 @@ MakeHuman to MHX (MakeHuman eXchange format) exporter. MHX files can be loaded i
 
 MAJOR_VERSION = 1
 MINOR_VERSION = 16
-BODY_LANGUAGE = True
 
 import module3d
 import gui3d
