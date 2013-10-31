@@ -301,8 +301,7 @@ class MeasureTaskView(gui3d.TaskView):
 
         human = gui3d.app.selectedHuman
 
-        height = 10 * max(human.meshData.coord[8223,1] - human.meshData.coord[12361,1],
-                          human.meshData.coord[8223,1] - human.meshData.coord[13155,1])
+        height = human.getHeightCm()
         if gui3d.app.settings['units'] == 'metric':
             height = '%.2f cm' % height
         else:
