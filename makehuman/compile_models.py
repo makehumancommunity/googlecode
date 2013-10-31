@@ -54,20 +54,16 @@ def compileMesh(path):
     obj.path = path
 
     try:
-        # Do not compile UV sets
-        if not isSubPath(path, 'data/uvs'):
-            npzpath = os.path.splitext(path)[0] + '.npz'
-            #print 'Compiling mesh to binary: %s' % npzpath
-            try:
-                files3d.loadTextMesh(obj, path)
-            except:
-                print 'Could not load OBJ file %s. Perhaps it mixes tris and quads.' % path
-                #import traceback
-                #traceback.print_exc(file=sys.stdout)
-                return False
-            files3d.saveBinaryMesh(obj, npzpath)
-        else:
-            print 'Skipped mesh %s. Not compiling UV sets' % path
+        npzpath = os.path.splitext(path)[0] + '.npz'
+        #print 'Compiling mesh to binary: %s' % npzpath
+        try:
+            files3d.loadTextMesh(obj, path)
+        except:
+            print 'Could not load OBJ file %s. Perhaps it mixes tris and quads.' % path
+            #import traceback
+            #traceback.print_exc(file=sys.stdout)
+            return False
+        files3d.saveBinaryMesh(obj, npzpath)
     except:
         print 'Unable to save compiled mesh for file %s' % path
         #import traceback

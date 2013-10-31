@@ -334,8 +334,8 @@ class Material(object):
                 self._uvMap = getFilePath(words[1], self.filepath)
                 from getpath import getSysDataPath, canonicalPath
                 if self._uvMap and \
-                   canonicalPath(self._uvMap) == canonicalPath(getSysDataPath('uvs/default.obj')):
-                    # uvs/default.obj is a meta-file that refers to the default uv set
+                   canonicalPath(self._uvMap) == canonicalPath(getSysDataPath('uvs/default.mhuv')):
+                    # uvs/default.mhuv is a meta-file that refers to the default uv set
                     self._uvMap = None
             elif words[0] == "shaderParam":
                 if len(words) > 3:
@@ -483,8 +483,8 @@ class Material(object):
         self._uvMap = getFilePath(uvMap, self.filepath)
         from getpath import getSysDataPath, canonicalPath
         if self._uvMap and \
-           canonicalPath(self._uvMap) == canonicalPath(getSysDataPath('uvs/default.obj')):
-            # uvs/default.obj is a meta-file that refers to the default uv set
+           canonicalPath(self._uvMap) == canonicalPath(getSysDataPath('uvs/default.mhuv')):
+            # uvs/default.mhuv is a meta-file that refers to the default uv set
             self._uvMap = None
 
     uvMap = property(getUVMap, setUVMap)
@@ -1105,8 +1105,6 @@ class UVMap:
         import numpy as np
 
         filename,ext = os.path.splitext(filepath)
-        if ext == ".mhuv":
-            raise NameError("ERROR: .mhuv files are obsolete. Change to .obj: %s" % filepath)
 
         uvs,fuvs = loadUvObjFile(filepath)
         self.filepath = filepath
