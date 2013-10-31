@@ -31,8 +31,10 @@ Joints = [
     ('l-toe-2',             'p', ('l-foot-2', 'l-foot-1', 'l-foot-2')),
     ('r-toe-2',             'p', ('r-foot-2', 'r-foot-1', 'r-foot-2')),
 
-    ('l-kneecap',           'vo', (11223, 0,0,1)),
-    ('r-kneecap',           'vo', (4605, 0,0,1)),
+    #('l-kneecap',           'vo', (11223, 0,0,1)),
+    #('r-kneecap',           'vo', (4605, 0,0,1)),
+    ('l-kneecap',           'o', ('l-knee', (0,0,0.2))),
+    ('r-kneecap',           'o', ('r-knee', (0,0,0.2))),
 
     ('l-hand-end',          'j', 'l-finger-3-1'),
     ('r-hand-end',          'j', 'r-finger-3-1'),
@@ -147,7 +149,7 @@ HeadsTails = {
 
 Planes = {
     "PlaneArm.L" :         ('l-shoulder', 'l-elbow', 'l-hand'),
-    "PlaneLeg.L" :         ('l-upper-leg', 'l-kneecap', 'l-ankle'),
+    "PlaneLeg.L" :         ('l-upper-leg', 'l-knee', 'l-ankle'),
     "PlaneFoot.L" :        ('l-plane-foot', 'l-ankle', 'l-foot-1'),
     "PlaneToe.L" :         ('l-plane-toe', 'l-foot-1', 'l-toe-2'),
 
@@ -158,7 +160,7 @@ Planes = {
     "PlanePinky.L" :       ('l-finger-5-1', 'l-finger-5-2', 'l-finger-5-4'),
 
     "PlaneArm.R" :         ('r-shoulder', 'r-elbow', 'r-hand'),
-    "PlaneLeg.R" :         ('r-upper-leg', 'r-kneecap', 'r-ankle'),
+    "PlaneLeg.R" :         ('r-upper-leg', 'r-knee', 'r-ankle'),
     "PlaneFoot.R" :        ('r-plane-foot', 'r-ankle', 'r-foot-1'),
     "PlaneToe.R" :         ('r-plane-toe', 'r-foot-1', 'r-toe-2'),
 
