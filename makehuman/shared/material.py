@@ -435,9 +435,9 @@ class Material(object):
         if self.sssEnabled:
             f.write("# Sub-surface scattering parameters\n" )
             f.write("sssEnabled %s\n" % self.sssEnabled )
-            f.write("sssRScale %s\n" % material.sssRScale )
-            f.write("sssGScale %s\n" % material.sssGScale )
-            f.write("sssBScale %s\n\n" % material.sssBScale )
+            f.write("sssRScale %s\n" % self.sssRScale )
+            f.write("sssGScale %s\n" % self.sssGScale )
+            f.write("sssBScale %s\n\n" % self.sssBScale )
 
         if self.uvMap:
             f.write("uvMap %s\n\n" % self._texPath(self.uvMap, filedir) )
