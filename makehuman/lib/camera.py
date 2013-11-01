@@ -408,6 +408,7 @@ class OrbitalCamera(Camera):
 
         self.pickedPos = None
 
+        self._limitInclination = True    # Set to true to prevent camera inclining upside-down
         self.debug = False
 
     def getHorizontalRotation(self):
@@ -424,14 +425,25 @@ class OrbitalCamera(Camera):
 
     def setVerticalInclination(self, rot):
         self._verticalInclination = (rot % 360.0)
-        # Clip to [-90,90] range to avoid upside-down angles
-        if self._verticalInclination > 90 and self._verticalInclination < 270:
-            if self._verticalInclination > 180:
-                self._verticalInclination = 270
-            else:
-                self._verticalInclination = 90
+        if self.limitInclination:
+            # Clip to [-90,90] range to avoid upside-down angles
+            if self._verticalInclination > 90 and self._verticalInclination < 270:
+                if self._verticalInclination > 180:
+                    self._verticalInclination = 270
+                else:
+                    self._verticalInclination = 90
 
     verticalInclination = property(getVerticalInclination, setVerticalInclination)
+
+    def getLimitInclination(self):
+        return self._limitInclination
+
+    def setLimitInclination(self, limit):
+        self._limitInclination = limit
+        if limit:
+            self.setVerticalInclination(self.verticalInclination)
+
+    limitInclination = property(getLimitInclination, setLimitInclination)
 
 
     def getModelMatrix(self, obj):
@@ -704,10 +716,11 @@ class OrbitalCamera(Camera):
         distance2 = np.sum((human.meshData.coord - pickedPos[None,:]) ** 2, axis=-1)
         order = np.argsort(distance2)
         nearestVert = order[0]
-        import log
-        log.debug('picked vert %s', nearestVert)
-        norm = human.meshData.vnorm[nearestVert]
-        log.debug('norm %s', norm)
+        if self.debug:
+            import log
+            log.debug('picked vert %s', nearestVert)
+            norm = human.meshData.vnorm[nearestVert]
+            log.debug('norm %s', norm)
         self.focusOn(pickedPos, norm, 10)
 
     def _getTranslationForPosition(self, pos):
