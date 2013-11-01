@@ -1148,7 +1148,10 @@ class MHApplication(gui3d.Application, mh.Application):
         return animation3d.RotateAction(self.modelCamera, self.modelCamera.getRotation(), axis)
 
     def axisView(self, axis):
+        tmp = self.modelCamera.limitInclination
+        self.modelCamera.limitInclination = False
         animation3d.animate(self, 0.20, [self.rotateAction(axis)])
+        self.modelCamera.limitInclination = tmp
 
     def rotateDown(self):
         self.rotateCamera(0, 5.0)
