@@ -150,7 +150,8 @@ class MHApplication(gui3d.Application, mh.Application):
         self.mouseActions = {
             (0, mh.Buttons.LEFT_MASK): self.mouseRotate,
             (0, mh.Buttons.RIGHT_MASK): self.mouseZoom,
-            (0, mh.Buttons.MIDDLE_MASK): self.mouseTranslate
+            (0, mh.Buttons.MIDDLE_MASK): self.mouseTranslate,
+            (mh.Modifiers.CTRL, mh.Buttons.RIGHT_MASK): self.mouseFocus
         }
 
         self.settings = {
@@ -570,8 +571,10 @@ class MHApplication(gui3d.Application, mh.Application):
 
             if (modifiers, event.button) in self.mouseActions:
                 action = self.mouseActions[(modifiers, event.button)]
-                if action == self.mouseZoom:
-                    self.modelCamera.getMousePickHuman(event.x, event.y)
+                if action == self.mouseFocus:
+                    self.modelCamera.mousePickHumanFocus(event.x, event.y)
+                elif action == self.mouseZoom:
+                    self.modelCamera.mousePickHumanCenter(event.x, event.y)
 
     def onMouseDragged(self, event):
 
@@ -1225,6 +1228,9 @@ class MHApplication(gui3d.Application, mh.Application):
             speed *= -1
 
         self.modelCamera.addZoom( -0.05 * event.dy * speed )
+
+    def mouseFocus(self, ev):
+        pass
 
     def promptAndExit(self):
         if self.modified:
