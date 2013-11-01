@@ -66,7 +66,16 @@ class ExportArmature(Armature):
     def __init__(self, name, options):
         Armature.__init__(self, name, options)
         self.scale = options.scale
-        self.visibleLayers = "0068056b"
+
+        layers = L_MAIN|L_UPSPNFK|L_LARMFK|L_RARMFK|L_LLEGFK|L_RLEGFK|L_HEAD
+        if options.useFingers:
+            layers |= L_LHANDIK|L_RHANDIK
+        else:
+            layers |= L_LHANDFK|L_RHANDFK|L_LPALM|L_RPALM
+        if options.useFaceRig:
+            layers |= L_PANEL
+        self.visibleLayers = "%08x" % layers
+
         self.objectProps += [("MhxRig", '"%s"' % options.rigtype)]
         self.customProps = []
         self.bbones = {}
@@ -191,7 +200,7 @@ class ExportArmature(Armature):
     def writeBoneGroups(self, fp):
         if not fp:
             return
-        for (name, theme, _) in _BoneGroups:
+        for (name, theme, layer) in _BoneGroups:
             fp.write(
                 "    BoneGroup %s\n" % name +
                 "      name '%s' ;\n" % name +
