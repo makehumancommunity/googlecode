@@ -775,7 +775,10 @@ def getRotationForDirection(directionVect):
     camera position.
     """
     print 'dir', directionVect
-    polar = cartesianToPolar(-np.asarray(directionVect, dtype=np.float32))
+    direction = np.asarray(directionVect, dtype=np.float32)
+    direction = -direction
+    direction[1] = -direction[1]
+    polar = cartesianToPolar(direction)
     x = math.degrees(polar[1]) % 360.0
     y = math.degrees(polar[2]) % 180.0
 
