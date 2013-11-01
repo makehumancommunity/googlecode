@@ -377,7 +377,7 @@ class Camera(events3d.EventHandler):
         self.eyeZ += amount
         self.changed()
 
-    def getMousePickHuman(self, mouseX, mouseY):
+    def mousePickHumanCenter(self, mouseX, mouseY):
         pass
 
 
@@ -682,7 +682,7 @@ class OrbitalCamera(Camera):
     def getFocusZ(self):
         return self.center[2]
 
-    def getMousePickHuman(self, mouseX, mouseY):
+    def mousePickHumanCenter(self, mouseX, mouseY):
         if G.app.getSelectedFaceGroupAndObject() is None:
             return
 
@@ -692,6 +692,22 @@ class OrbitalCamera(Camera):
         self.pickedPos = self._getTranslationForPosition(self.pickedPos)
 
         #self.changed()
+
+    def mousePickHumanFocus(self, mouseX, mouseY):
+        if G.app.getSelectedFaceGroupAndObject() is None:
+            return
+
+        human = G.app.selectedHuman
+
+        pickedPos = np.array(self.convertToWorld2D(mouseX, mouseY, human.mesh))
+
+        distance2 = np.sum((human.meshData.coord - pickedPos[None,:]) ** 2, axis=-1)
+        order = np.argsort(distance2)
+        nearestVert = order[0]
+        log.debug('picked vert %s', nearestVert)
+        norm = human.meshData.vnorm[nearestVert]
+        log.debug('norm %s', norm)
+        self.focusOn(pickedPos, norm, 10)
 
     def _getTranslationForPosition(self, pos):
         """
@@ -767,6 +783,14 @@ def cartesianToPolar(vect):
     phi = math.asin(vect[1] / r)
     phi = phi % (2 * math.pi)
 
+    # Reverse rotation of camera is upside down
+    if phi > math.pi/2 and phi < 3*math.pi/2:
+        theta = theta + 180
+        if phi > math.pi:
+            phi = 2*math.pi - phi
+        else:
+            phi = phi - 90
+
     return [r, theta, phi]
 
 def getRotationForDirection(directionVect):
@@ -777,11 +801,10 @@ def getRotationForDirection(directionVect):
     camera position.
     """
     direction = np.asarray(directionVect, dtype=np.float32)
-    direction = -direction
-    direction[1] = -direction[1]
+    direction[0] = -direction[0]
 
     polar = cartesianToPolar(direction)
-    x = math.degrees(polar[1]) % 360.0
-    y = math.degrees(polar[2]) % 180.0
+    x = math.degrees(polar[1])
+    y = math.degrees(polar[2])
 
     return [x, y]
