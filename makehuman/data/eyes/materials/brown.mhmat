@@ -7,7 +7,6 @@ ambientColor 0.11 0.11 0.11
 diffuseColor  1.0 1.0 1.0
 diffuseIntensity 1
 specularColor  0.3 0.3 0.3
-specularIntensity 0.7
 shininess 0.99
 opacity 1
 
@@ -17,7 +16,9 @@ transparent true
 diffuseTexture brown_eye.png
 
 // Shader programme
-shader data/shaders/glsl/phong
+
+shaderParam litsphereTexture data/litspheres/skinmat_eye.png
+shader data/shaders/glsl/litsphere
 
 // Configure built-in shader defines
 shaderConfig diffuse true
