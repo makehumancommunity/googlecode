@@ -237,19 +237,23 @@ def smoothenSkirt(ob):
     from .vgroup import setupVGroups
     vgroups = setupVGroups(ob)
 
-    rows = []
     for row in SkirtFront + SkirtBack:
         verts = [ob.data.vertices[vn] for vn in row]
         orderedVerts = [(v.co[0], v) for v in verts]
         orderedVerts.sort()
         verts = [v for _,v in orderedVerts]
+        verts = verts[1:-1]
 
         v0 = verts[0]
         rowGroups = {}
         for g in v0.groups:
-            vg = vgroups[g.group]
+            try:
+                vg = vgroups[g.group]
+            except KeyError:
+                print(v0, g, g.group)
+                print(list(v0.groups))
             if vg.name[-2:] == ".R":
-                delta = g.weight/(len(row)-1)
+                delta = g.weight/(len(verts)-1)
                 rGroup = rowGroups[vg.name] = []
                 lGroup = rowGroups[vg.name[:-2] + ".L"] = []
                 for n in range(len(verts)):
@@ -260,11 +264,14 @@ def smoothenSkirt(ob):
                 for n in range(len(verts)):
                     group.append(g.weight)
 
-        for vn in row:
-            v = ob.data.vertices[vn]
+        for v in verts:
             for g in v.groups:
-                vg = vgroups[g.group]
-                vg.remove([vn])
+                try:
+                    vg = vgroups[g.group]
+                except KeyError:
+                    print(v0, g, g.group)
+                    print(list(v0.groups))
+                vg.remove([v.index])
 
         for gname,weights in rowGroups.items():
             vg = ob.vertex_groups[gname]
