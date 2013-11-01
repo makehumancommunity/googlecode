@@ -41,6 +41,7 @@ from core import G
 #----------------------------------------------------------
 
 _warpTargetCache = {}
+_refTargetCache = {}
 
 
 class WarpTarget(algos3d.Target):
@@ -162,8 +163,8 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
 
     def traceReference(self):
-        log.debug("self.refCharacters:")
-        for key,value in self.refCharacters.items():
+        log.debug("self.refCharPaths:")
+        for key,value in self.refCharPaths.items():
             log.debug("  %s: %s" % (key, value))
 
 
@@ -195,7 +196,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         sumtargets = 0
         for charpath,value in human.targetsDetailStack.items():
             try:
-                self.refCharacters[localPath(charpath)]
+                self.refCharPaths[localPath(charpath)]
                 sumtargets += value
             except KeyError:
                 continue
@@ -227,21 +228,21 @@ class WarpModifier (humanmodifier.SimpleModifier):
             trgCharCoord[dstVerts] += value * trgChar.data[srcVerts]
 
             try:
-                refchar = self.refCharacters[localPath(charpath)]
+                refCharPath = self.refCharPaths[localPath(charpath)]
             except KeyError:
-                refchar = None
+                refCharPath = None
 
-            if refchar:
-                srcChar = algos3d.getTarget(human.meshData, refchar)
+            if refCharPath:
+                srcChar = algos3d.getTarget(human.meshData, refCharPath)
                 dstVerts = srcChar.verts[srcVerts]
                 srcCharCoord[dstVerts] +=  value * srcChar.data[srcVerts]
 
             try:
-                reftrg = self.refTargets[localPath(charpath)]
+                refTrgPath = self.refTargetPaths[localPath(charpath)]
             except KeyError:
-                reftrg = None
-            if reftrg:
-                srcTrg = readTargetCoords(reftrg)
+                refTrgPath = None
+            if refTrgPath:
+                srcTrg = readTargetCoords(refTrgPath)
                 addVerts(srcTargetCoord, value, srcTrg)
 
         trgPoints = trgCharCoord[keypoints]
@@ -287,17 +288,17 @@ class EthnicGenderAgeWarpModifier (WarpModifier):
         return getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
 
     def setupReferences(self):
-        self.refTargets = {}
-        self.refCharacters = {}
+        self.refTargetPaths = {}
+        self.refCharPaths = {}
 
         for ethnic in ["caucasian", "african", "asian"]:
             for gender in ["female", "male"]:
                 for age in ["baby", "child", "young", "old"]:
-                    reftrg = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
-                    refchar = self.getRefChar(ethnic, gender, age)
+                    refTrgPath = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
+                    refCharPath = self.getRefChar(ethnic, gender, age)
                     base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
-                    self.refCharacters[base] = refchar
-                    self.refTargets[base] = reftrg
+                    self.refCharPaths[base] = refCharPath
+                    self.refTargetPaths[base] = refTrgPath
 
 
 class GenderAgeWarpModifier (EthnicGenderAgeWarpModifier):
@@ -318,21 +319,21 @@ class EthnicGenderAgeToneWeightWarpModifier (WarpModifier):
         return getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
 
     def setupReferences(self):
-        self.refTargets = {}
-        self.refCharacters = {}
+        self.refTargetPaths = {}
+        self.refCharPaths = {}
 
         for ethnic in ["caucasian", "african", "asian"]:
             for gender in ["female", "male"]:
                 for age in ["baby", "child", "young", "old"]:
-                    refchar = self.getRefChar(ethnic, gender, age)
+                    refCharPath = self.getRefChar(ethnic, gender, age)
                     base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
-                    self.refCharacters[base] = refchar
+                    self.refCharPaths[base] = refCharPath
                     path = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
                     for tone in ["minmuscle", "averagemuscle", "maxmuscle"]:
                         for weight in ["minweight", "averageweight", "maxweight"]:
                             univ = getSysDataPath("targets/macrodetails/universal-%s-%s-%s-%s.target") % (gender, age, tone, weight)
-                            self.refCharacters[univ] = univ
-                            self.refTargets[univ] = path.replace("${tone}", tone).replace("${weight}", weight)
+                            self.refCharPaths[univ] = univ
+                            self.refTargetPaths[univ] = path.replace("${tone}", tone).replace("${weight}", weight)
 
 
 class GenderAgeToneWeightWarpModifier (EthnicGenderAgeToneWeightWarpModifier):
@@ -388,11 +389,11 @@ def addVerts(targetVerts, value, verts):
 #----------------------------------------------------------
 
 def readTargetCoords(filepath):
-    global _warpTargetCache
+    global _refTargetCache
 
-    # if cached, means that target's life cycle is handled by warpmodifier.
+    # Ref targets are cached, but never appear directly in the target buffer
     try:
-        return _warpTargetCache[filepath]
+        return _refTargetCache[filepath]
     except KeyError:
         pass
 
@@ -406,7 +407,6 @@ def readTargetCoords(filepath):
                 filepath = words[0] + "-" + words[2]
         elif words[2] == "averageweight.target":
             filepath = words[0] + "-" + words[1] + ".target"
-        #log.debug("  NEW %s" % filepath)
 
     try:
         fp = open(filepath, "rU")
@@ -425,8 +425,7 @@ def readTargetCoords(filepath):
                 if n < meshstat.numberOfVertices:
                     target[n] = np.array([float(words[1]), float(words[2]), float(words[3])])
         fp.close()
-        # Cache will be flushed when character is changed.
-        _warpTargetCache[filepath] = target
+        _refTargetCache[filepath] = target
         return target
     else:
         raise IOError("Can't find neither %s nor a replacement target" % filepath)
