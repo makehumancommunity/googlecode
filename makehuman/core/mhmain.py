@@ -504,9 +504,6 @@ class MHApplication(gui3d.Application, mh.Application):
 
         log.message('Loading done')
 
-        # Make an explicit reset to avoid init glitch (issue 732)
-        # self.resetHuman()
-
         log.message('')
 
         if sys.platform.startswith("darwin"):
@@ -880,7 +877,7 @@ class MHApplication(gui3d.Application, mh.Application):
         tl.start()
 
     def setCameraGroupsViewDistance(self, groupNames, view='front', distance=10):
-
+        # TODO no longer used
         human = self.selectedHuman
         vertices = human.meshData.getCoords(human.meshData.getVerticesForGroups(groupNames))
         center = vertices.mean(axis=0)
@@ -899,14 +896,13 @@ class MHApplication(gui3d.Application, mh.Application):
         tl.append(animation3d.UpdateAction(self))
         tl.start()
 
-    def setTargetCamera(self, names, view='front', distance=10):
-        if not isinstance(names, (tuple, list)):
-            names = (names,)
+    def setTargetCamera(self, vIdx, zoomFactor = 1.0):
+        if isinstance(vIdx, (tuple, list)):
+            return
         human = self.selectedHuman
-        groupNames = [group.name
-                      for group in human.meshData.faceGroups
-                      if any(name in group.name for name in names)]
-        self.setCameraGroupsViewDistance(groupNames, view, distance)
+        coord = human.meshData.coord[vIdx]
+        direction = human.meshData.vnorm[vIdx]
+        self.modelCamera.focusOn(coord, direction, zoomFactor)
 
     def setFaceCamera(self):
         # TODO zooms very slightly with orbital cam
@@ -916,13 +912,13 @@ class MHApplication(gui3d.Application, mh.Application):
         self.setTargetCamera("l-hand")
 
     def setLeftHandTopCamera(self):
-        self.setTargetCamera("l-hand", 'top')
+        self.setTargetCamera(9833, 20)
 
     def setRightHandFrontCamera(self):
         self.setTargetCamera("r-hand")
 
     def setRightHandTopCamera(self):
-        self.setTargetCamera("r-hand", 'top')
+        self.setTargetCamera(3165, 20)
 
     def setLeftFootFrontCamera(self):
         self.setTargetCamera("l-foot")

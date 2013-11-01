@@ -424,6 +424,12 @@ class OrbitalCamera(Camera):
 
     def setVerticalInclination(self, rot):
         self._verticalInclination = (rot % 360.0)
+        # Clip to [-90,90] range to avoid upside-down angles
+        if self._verticalInclination > 90 and self._verticalInclination < 270:
+            if self._verticalInclination > 180:
+                self._verticalInclination = 270
+            else:
+                self._verticalInclination = 90
 
     verticalInclination = property(getVerticalInclination, setVerticalInclination)
 
@@ -510,6 +516,13 @@ class OrbitalCamera(Camera):
             import log
             log.warning('Orbital camera does not support rotating along Z axis.')
         self.changed()
+        print '---'
+        print self.horizontalRotation, self.verticalInclination
+        cart = polarToCartesian([math.radians(self.horizontalRotation), math.radians(self.verticalInclination)])
+        print 'cart', cart
+        pol = cartesianToPolar(cart)
+        pol = [math.degrees(p) for p in pol]
+        print 'polar', pol[1:]
 
     def setRotation(self, rot):
         self.verticalInclination = rot[0]
@@ -550,12 +563,16 @@ class OrbitalCamera(Camera):
         self.addTranslation(1, offset[1])
         self.addTranslation(2, offset[2])
 
-    def addZoom(self, amount):
-        self.zoomFactor += (-amount/4.0)
-        if self.zoomFactor < 0.25:
+    def setZoomFactor(self, zoomFactor):
+        if zoomFactor < 0.25:
             self.zoomFactor = 0.25
-        if self.zoomFactor > 10.0:
+        elif zoomFactor > 10.0:
             self.zoomFactor = 10.0
+        else:
+            self.zoomFactor = zoomFactor
+
+    def addZoom(self, amount):
+        self.setZoomFactor(self.zoomFactor - (amount/4.0))
         if self.debug:
             import log
             log.debug("OrbitalCamera zoom: %s", self.zoomFactor)
@@ -605,7 +622,7 @@ class OrbitalCamera(Camera):
             proj = matrix.perspective(self.fovAngle, aspect, self.nearPlane, self.farPlane)
         else:
             # Ortho mode
-            height = self.getScale() 
+            height = self.getScale()
             width = height * aspect
             # Camera position around world origin
             proj = matrix.ortho(-width, width, -height, height, self.nearPlane, self.farPlane)
@@ -669,26 +686,42 @@ class OrbitalCamera(Camera):
         human = G.app.selectedHuman
 
         self.pickedPos = self.convertToWorld2D(mouseX, mouseY, human.mesh)
-        # Transfer this position to transformations relative to bounding box
-        # center
+        self.pickedPos = self._getTranslationForPosition(self.pickedPos)
+
+        #self.changed()
+
+    def _getTranslationForPosition(self, pos):
+        """
+        Transfer a position within the human bounding box to a translation
+        within the bounding box, relative to center and scaled to bounding box
+        limits.
+        """
+        result = [0, 0, 0]
+        human = G.app.selectedHuman
         bBox = human.mesh.calcBBox()
 
         humanHalfWidth = (bBox[1][0] - bBox[0][0]) / 2.0
         hCenter = bBox[0][0] + humanHalfWidth
-        #self.translation[0] = (self.pickedPos[0] - hCenter) / humanHalfWidth
-        self.pickedPos[0] = max(-1.0, min(1.0, (self.pickedPos[0] - hCenter) / humanHalfWidth))
+        result[0] = max(-1.0, min(1.0, (pos[0] - hCenter) / humanHalfWidth))
 
         humanHalfHeight = (bBox[1][1] - bBox[0][1]) / 2.0
         vCenter = bBox[0][1] + humanHalfHeight
-        #self.translation[1] = (self.pickedPos[1] - vCenter) / humanHalfHeight
-        self.pickedPos[1] = max(-1.0, min(1.0, (self.pickedPos[1] - vCenter) / humanHalfHeight))
+        result[1] = max(-1.0, min(1.0, (pos[1] - vCenter) / humanHalfHeight))
 
         humanHalfDepth = (bBox[1][2] - bBox[0][2]) / 2.0
         zCenter = bBox[0][2] + humanHalfDepth
-        #self.translation[2] = (self.pickedPos[2] - zCenter) / humanHalfDepth
-        self.pickedPos[2] = max(-1.0, min(1.0, (self.pickedPos[2] - zCenter) / humanHalfDepth))
+        result[2] = max(-1.0, min(1.0, (pos[2] - zCenter) / humanHalfDepth))
 
-        #self.changed()
+        return result
+
+    def focusOn(self, pos, direction, zoomFactor):
+        self.translation = self._getTranslationForPosition(pos)
+        self.horizontalRotation, self.verticalInclination = getRotationForDirection(direction)
+        print self.verticalInclination, self.horizontalRotation
+        self.setZoomFactor(zoomFactor)
+
+    def setDir(self, normal):
+        self.horizontalRotation, self.verticalInclination  = getRotationForDirection(normal)
 
 def polarToCartesian(polar, radius = 1.0):
     """
@@ -698,6 +731,7 @@ def polarToCartesian(polar, radius = 1.0):
     parameter is used.
     Polar coordinate can also be of form (r, theta, phi), in which case radius
     parameter is ignored.
+    (phi is elevation, theta is polar)
     """
     if len(polar) >= 3:
         r = polar[0]
@@ -708,30 +742,28 @@ def polarToCartesian(polar, radius = 1.0):
         theta = polar[0]
         phi = polar[1]
 
-    sin_theta = math.sin(theta)
-
+    rcosphi = r * math.cos(phi)
     cart = np.zeros(3, dtype=np.float32)
-    cart[0] = r * math.cos(phi) * sin_theta
-    cart[1] = r * math.sin(phi) * sin_theta
-    cart[2] = r * math.cos(theta)
-
-    return radius * cart
+    cart[2] = rcosphi * math.cos(theta)
+    cart[1] = r * math.sin(phi)
+    cart[0] = rcosphi * math.sin(theta)
+    return cart
 
 def cartesianToPolar(vect):
     """
     Convert 3D cartesian coordinate into a polar coordinate of the 
     form (r, theta, phi).
     Assumes sphere center to be at origin.
-    Returned theta and phi are in radians.
+    Returned theta (polar rotation) and phi (elevation) are in radians.
     """
     import numpy.linalg as la
 
-    vect = np.asarray(vect, dtype=np.float32)
     r = la.norm(vect)
-    unitVect = vect / r
 
-    theta = math.acos(unitVect[2])       # polar angle
-    phi = math.atan2(unit[1], unit[0])   # azimuth
+    theta = math.atan2(vect[2], vect[0])
+    theta = (-(theta - (math.pi/2))) % (2 * math.pi)
+    phi = math.asin(vect[1] / r)
+    phi = phi % (2 * math.pi)
 
     return [r, theta, phi]
 
@@ -742,8 +774,11 @@ def getRotationForDirection(directionVect):
     This looking direction is the negated radius vector from the center to the
     camera position.
     """
+    print 'dir', directionVect
     polar = cartesianToPolar(-np.asarray(directionVect, dtype=np.float32))
     x = math.degrees(polar[1]) % 360.0
-    y = math.degrees(polar[2]) % 360.0
+    y = math.degrees(polar[2]) % 180.0
+
+    print 'polar', x, y
 
     return [x, y]
