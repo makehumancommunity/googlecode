@@ -516,13 +516,16 @@ class OrbitalCamera(Camera):
             import log
             log.warning('Orbital camera does not support rotating along Z axis.')
         self.changed()
-        print '---'
-        print self.horizontalRotation, self.verticalInclination
-        cart = polarToCartesian([math.radians(self.horizontalRotation), math.radians(self.verticalInclination)])
-        print 'cart', cart
-        pol = cartesianToPolar(cart)
-        pol = [math.degrees(p) for p in pol]
-        print 'polar', pol[1:]
+
+        if self.debug:
+            import log
+            log.debug('---')
+            log.debug("rot: %s  incl: %s", self.horizontalRotation, self.verticalInclination)
+            cart = polarToCartesian([math.radians(self.horizontalRotation), math.radians(self.verticalInclination)])
+            log.debug('carthesian coord: %s', cart)
+            pol = cartesianToPolar(cart)
+            pol = [math.degrees(p) for p in pol]
+            log.debug('polar coord: %s', pol[1:])
 
     def setRotation(self, rot):
         self.verticalInclination = rot[0]
@@ -717,7 +720,6 @@ class OrbitalCamera(Camera):
     def focusOn(self, pos, direction, zoomFactor):
         self.translation = self._getTranslationForPosition(pos)
         self.horizontalRotation, self.verticalInclination = getRotationForDirection(direction)
-        print self.verticalInclination, self.horizontalRotation
         self.setZoomFactor(zoomFactor)
 
     def setDir(self, normal):
@@ -774,14 +776,12 @@ def getRotationForDirection(directionVect):
     This looking direction is the negated radius vector from the center to the
     camera position.
     """
-    print 'dir', directionVect
     direction = np.asarray(directionVect, dtype=np.float32)
     direction = -direction
     direction[1] = -direction[1]
+
     polar = cartesianToPolar(direction)
     x = math.degrees(polar[1]) % 360.0
     y = math.degrees(polar[2]) % 180.0
-
-    print 'polar', x, y
 
     return [x, y]
