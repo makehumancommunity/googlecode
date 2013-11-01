@@ -592,7 +592,7 @@ class MHApplication(gui3d.Application, mh.Application):
                 zoomOut = not zoomOut
 
             if event.x is not None:
-                self.modelCamera.getMousePickHuman(event.x, event.y)
+                self.modelCamera.mousePickHumanCenter(event.x, event.y)
 
             if zoomOut:
                 self.zoomOut()
