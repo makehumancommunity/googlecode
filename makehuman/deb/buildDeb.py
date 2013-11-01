@@ -16,7 +16,7 @@ pre_deb_scripts = ["cleanpyc.sh","cleannpz.sh","compile_targets.py", "download_a
 
 rsync = "/usr/bin/rsync"
 rsync_common_args = "-av --delete --exclude=.svn"
-rsync_main_excludes = ["deb","SConstruct","*.pyc","*.nsi","*.pyd","*.c","*.h","*.target","tools","utils","compressTargetsASCII.py"]
+rsync_main_excludes = ["deb","SConstruct","*.pyc","*.nsi","*.pyd","*.c","*.h","*.target","utils","compressTargetsASCII.py"]
 
 svn = "/usr/bin/svn"
 
