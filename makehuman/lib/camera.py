@@ -716,10 +716,10 @@ class OrbitalCamera(Camera):
         distance2 = np.sum((human.meshData.coord - pickedPos[None,:]) ** 2, axis=-1)
         order = np.argsort(distance2)
         nearestVert = order[0]
+        norm = human.meshData.vnorm[nearestVert]
         if self.debug:
             import log
             log.debug('picked vert %s', nearestVert)
-            norm = human.meshData.vnorm[nearestVert]
             log.debug('norm %s', norm)
         self.focusOn(pickedPos, norm, 10)
 
