@@ -17,6 +17,7 @@ diffuseTexture brown_eye.png
 // Shader programme
 
 shaderParam litsphereTexture data/litspheres/skinmat_eye.png
+shaderParam AdditiveShading 0.5
 shader data/shaders/glsl/litsphere
 
 // Configure built-in shader defines
