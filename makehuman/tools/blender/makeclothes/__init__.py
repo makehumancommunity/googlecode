@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.920",
+    "version": "0.921",
     "blender": (2, 6, 7),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -304,6 +304,8 @@ class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
     bl_label = "Make clothes"
     bl_options = {'UNDO'}
 
+    filepath = StringProperty(default="")
+
     def execute(self, context):
         setObjectMode(context)
         try:
@@ -312,6 +314,41 @@ class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
         except MHError:
             handleMHError(context)
         return{'FINISHED'}
+
+    def invoke(self, context, event):
+        return invokeWithFileCheck(self, context, ["mhclo", "obj"])
+
+    def draw(self, context):
+        drawFileCheck(self)
+
+
+#
+#   Check overwrite
+#
+
+def invokeWithFileCheck(self, context, ftypes):
+    ob = makeclothes.getClothing(context)
+    scn = context.scene
+    exists = False
+    for ftype in ftypes:
+        (outpath, outfile) = mc.getFileName(ob, scn.MhClothesDir, ftype)
+        self.filepath = os.path.join(outpath, outfile)
+        if os.path.exists(self.filepath):
+            exists = True
+            break
+
+    if not exists:
+        return self.execute(context)
+    else:
+        width = 60 + 7*len(outpath)
+        height = 20
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=width, height=height)
+
+
+def drawFileCheck(self):
+    self.layout.label("File \"%s\"" % self.filepath)
+    self.layout.label("already exists. Press OK to overwrite.")
 
 
 class OBJECT_OT_PrintClothesButton(bpy.types.Operator):
@@ -333,6 +370,8 @@ class OBJECT_OT_ExportMaterialButton(bpy.types.Operator):
     bl_label = "Export Material Only"
     bl_options = {'UNDO'}
 
+    filepath = StringProperty(default="")
+
     def execute(self, context):
         setObjectMode(context)
         try:
@@ -341,6 +380,12 @@ class OBJECT_OT_ExportMaterialButton(bpy.types.Operator):
         except MHError:
             handleMHError(context)
         return{'FINISHED'}
+
+    def invoke(self, context, event):
+        return invokeWithFileCheck(self, context, ["mhmat"])
+
+    def draw(self, context):
+        drawFileCheck(self)
 
 #
 #   class OBJECT_OT_CopyVertLocsButton(bpy.types.Operator):
@@ -390,6 +435,8 @@ class OBJECT_OT_ExportObjFileButton(bpy.types.Operator):
     bl_label = "Export Obj file"
     bl_options = {'UNDO'}
 
+    filepath = StringProperty(default="")
+
     def execute(self, context):
         setObjectMode(context)
         try:
@@ -397,6 +444,12 @@ class OBJECT_OT_ExportObjFileButton(bpy.types.Operator):
         except MHError:
             handleMHError(context)
         return{'FINISHED'}
+
+    def invoke(self, context, event):
+        return invokeWithFileCheck(self, context, ["obj"])
+
+    def draw(self, context):
+        drawFileCheck(self)
 
 #
 #   class OBJECT_OT_ExportBaseUvsPyButton(bpy.types.Operator):

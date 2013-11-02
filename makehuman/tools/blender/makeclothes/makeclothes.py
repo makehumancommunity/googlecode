@@ -86,7 +86,7 @@ def getClothing(context):
         if ob.select and isClothing(ob):
             return ob
     for ob in context.scene.objects:
-        if ob.select and not isOkHuman(ob):
+        if ob.select and ob.type == 'MESH' and not isOkHuman(ob):
             return ob
     raise MHError("No clothing selected")
 
@@ -125,7 +125,6 @@ def selectHelpers(context):
     for n in range(n0,n1):
         ob.data.vertices[n].select = True
     bpy.ops.object.mode_set(mode='EDIT')
-
 
 #
 #   snapSelectedVerts(context):
