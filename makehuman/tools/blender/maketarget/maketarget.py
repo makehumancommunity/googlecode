@@ -1131,12 +1131,17 @@ def symmetrizeTarget(context, left2right, mirror):
         return
     bpy.ops.object.mode_set(mode='OBJECT')
     verts = ob.active_shape_key.data
+    nVerts = len(verts)
 
     for vn in Mid2Mid.keys():
+        if vn >= nVerts:
+            break
         v = verts[vn]
         v.co[0] = 0
 
     for (lvn,rvn) in Left2Right.items():
+        if lvn >= nVerts or rvn >= nVerts:
+            break
         lv = verts[lvn].co
         rv = verts[rvn].co
         if mirror:
@@ -1162,9 +1167,13 @@ def symmetrizeTarget(context, left2right, mirror):
     bpy.ops.object.mode_set(mode='OBJECT')
 
     for vn in Mid2Mid.keys():
+        if vn >= nVerts:
+            break
         bverts[vn].select = selected[vn]
 
     for (lvn,rvn) in Left2Right.items():
+        if lvn >= nVerts or rvn >= nVerts:
+            break
         if mirror:
             bverts[lvn].select = selected[rvn]
             bverts[rvn].select = selected[lvn]
