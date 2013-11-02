@@ -231,6 +231,18 @@ class PathAction(Action):
             value = lerpVector(self.positions[key], self.positions[key + 1], a)
         self.obj.setPosition(value)
 
+class ZoomAction(Action):
+    """
+    A zoom transition for a camera
+    """
+    def __init__(self, obj, startZoom, endZoom):
+        self.obj = obj
+        self.startZoom = startZoom
+        self.endZoom = endZoom
+
+    def set(self, alpha):
+        value = lerpVector([self.startZoom], [self.endZoom], alpha)
+        self.obj.setZoomFactor(value[0])
 
 class RotateAction(Action):
     """

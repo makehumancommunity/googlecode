@@ -578,6 +578,17 @@ class OrbitalCamera(Camera):
         self.addTranslation(1, offset[1])
         self.addTranslation(2, offset[2])
 
+    def setPosition(self, translation):
+        for i in xrange(3):
+            self.translation[i] = translation[i]
+            if self.translation[i] < -1.0:
+                self.translation[i] = -1.0
+            if self.translation[i] > 1.0:
+                self.translation[i] = 1.0
+
+    def getPosition(self):
+        return list(self.translation)
+
     def setZoomFactor(self, zoomFactor):
         if zoomFactor < 0.25:
             self.zoomFactor = 0.25

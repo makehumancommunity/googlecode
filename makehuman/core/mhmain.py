@@ -849,53 +849,13 @@ class MHApplication(gui3d.Application, mh.Application):
             self.dialog.helpIds.update(self.helpIds)
         self.dialog.prompt(title, text, button1Label, button2Label, button1Action, button2Action, helpId)
 
-    # Camera's
-    def setCameraCenterViewDistance(self, center, view='front', distance=10):
-
-        human = self.selectedHuman
-        tl = animation3d.Timeline(0.20)
-        if view == 'front':
-            tl.append(animation3d.CameraAction(self.modelCamera, None,
-                [center[0], center[1], distance,
-                center[0], center[1], 0,
-                0, 1, 0]))
-        elif view == 'top':
-            tl.append(animation3d.CameraAction(self.modelCamera, None,
-                [center[0], center[1] + distance, center[2],
-                center[0], center[1], center[2],
-                0, 0, -1]))
-        elif view == 'left':
-            tl.append(animation3d.CameraAction(self.modelCamera, None,
-                [center[0] - distance, center[1], center[2],
-                center[0], center[1], center[2],
-                0, 1, 0]))
-        elif view == 'right':
-            tl.append(animation3d.CameraAction(self.modelCamera, None,
-                [center[0] + distance, center[1], center[2],
-                center[0], center[1], center[2],
-                0, 1, 0]))
-        tl.append(animation3d.PathAction(human, [human.getPosition(), [0.0, 0.0, 0.0]]))
-        tl.append(animation3d.RotateAction(human, human.getRotation(), [0.0, 0.0, 0.0]))
-        tl.append(animation3d.UpdateAction(self))
-        tl.start()
-
-    def setCameraGroupsViewDistance(self, groupNames, view='front', distance=10):
-        # TODO no longer used
-        human = self.selectedHuman
-        vertices = human.meshData.getCoords(human.meshData.getVerticesForGroups(groupNames))
-        center = vertices.mean(axis=0)
-
-        self.setCameraCenterViewDistance(center, view, distance)
-
     def setGlobalCamera(self):
-
         human = self.selectedHuman
 
         tl = animation3d.Timeline(0.20)
-        # TODO reset pan as well (and zoom)
-        tl.append(animation3d.CameraAction(self.modelCamera, None, [0,0,60, 0,0,0, 0,1,0]))
-        tl.append(animation3d.PathAction(human, [human.getPosition(), [0.0, 0.0, 0.0]]))
-        tl.append(animation3d.RotateAction(human, human.getRotation(), [0.0, 0.0, 0.0]))
+        tl.append(animation3d.PathAction(self.modelCamera, [self.modelCamera.getPosition(), [0.0, 0.0, 0.0]]))
+        tl.append(animation3d.RotateAction(self.modelCamera, self.modelCamera.getRotation(), [0.0, 0.0, 0.0]))
+        tl.append(animation3d.ZoomAction(self.modelCamera, self.modelCamera.zoomFactor, 1.0))
         tl.append(animation3d.UpdateAction(self))
         tl.start()
 
@@ -908,8 +868,8 @@ class MHApplication(gui3d.Application, mh.Application):
         self.modelCamera.focusOn(coord, direction, zoomFactor)
 
     def setFaceCamera(self):
-        # TODO zooms very slightly with orbital cam
         self.setTargetCamera(132, 8.7)
+        self.redraw()
 
     def setLeftHandFrontCamera(self):
         self.setTargetCamera(9828, 10)
@@ -1202,11 +1162,11 @@ class MHApplication(gui3d.Application, mh.Application):
         self.axisView([-90.0, 0.0, 0.0])
 
     def resetView(self):
-        # TODO reset orbital cam (pan and zoom)
         cam = self.modelCamera
         animation3d.animate(self, 0.20, [
             self.rotateAction([0.0, 0.0, 0.0]),
-            animation3d.CameraAction(cam, None, [cam.eyeX, cam.eyeY, 60.0, cam.focusX, cam.focusY, cam.focusZ, 0, 1, 0])])
+            animation3d.PathAction(self.modelCamera, [self.modelCamera.getPosition(), [0.0, 0.0, 0.0]]),
+            animation3d.ZoomAction(self.modelCamera, self.modelCamera.zoomFactor, 1.0) ])
 
     # Mouse actions
     def mouseTranslate(self, event):
