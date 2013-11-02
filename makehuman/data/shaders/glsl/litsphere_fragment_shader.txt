@@ -48,6 +48,10 @@
 // Lit Sphere texture
 uniform sampler2D litsphereTexture;
 
+// Additive litsphere shading. Useful for specularity litspheres
+// Specifies the amount of litsphere shading that will be added instead of multiplied.
+uniform float AdditiveShading = 0.0;
+
 // Inputs
 varying vec3 vNormal;
 
@@ -78,7 +82,8 @@ void main() {
 
     #ifdef DIFFUSE
         vec4 diffuse = texture2D(diffuseTexture, gl_TexCoord[0].xy).rgba;
-        gl_FragColor.rgb = shading * diffuse.rgb * vec3(2.0 - (shading.r + shading.g + shading.b)/3.0);
+        gl_FragColor.rgb = (1.0 - AdditiveShading)*shading * diffuse.rgb * vec3(2.0 - (shading.r + shading.g + shading.b)/3.0);
+		gl_FragColor.rgb += AdditiveShading*(shading + diffuse.rgb);
         gl_FragColor.a = diffuse.a;
     #else
         gl_FragColor.rgb = shading.rgb;
