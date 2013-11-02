@@ -859,17 +859,18 @@ class MHApplication(gui3d.Application, mh.Application):
         tl.append(animation3d.UpdateAction(self))
         tl.start()
 
-    def setTargetCamera(self, vIdx, zoomFactor = 1.0):
+    def setTargetCamera(self, vIdx, zoomFactor = 1.0, animate = True):
         if isinstance(vIdx, (tuple, list)):
             return
         human = self.selectedHuman
         coord = human.meshData.coord[vIdx]
         direction = human.meshData.vnorm[vIdx].copy()
-        self.modelCamera.focusOn(coord, direction, zoomFactor)
+        self.modelCamera.focusOn(coord, direction, zoomFactor, animate)
+        if not animate:
+            self.redraw()
 
     def setFaceCamera(self):
         self.setTargetCamera(132, 8.7)
-        self.redraw()
 
     def setLeftHandFrontCamera(self):
         self.setTargetCamera(9828, 10)

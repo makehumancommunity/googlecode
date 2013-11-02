@@ -758,10 +758,23 @@ class OrbitalCamera(Camera):
 
         return result
 
-    def focusOn(self, pos, direction, zoomFactor):
-        self.translation = self._getTranslationForPosition(pos)
-        self.horizontalRotation, self.verticalInclination = getRotationForDirection(direction)
-        self.setZoomFactor(zoomFactor)
+    def focusOn(self, pos, direction, zoomFactor, animate = True):
+        translation = self._getTranslationForPosition(pos)
+        rot, incl = getRotationForDirection(direction)
+
+        if animate:
+            import animation3d
+            tl = animation3d.Timeline(0.20)
+            tl.append(animation3d.PathAction(self, [self.getPosition(), translation]))
+            tl.append(animation3d.RotateAction(self, self.getRotation(), [incl, rot, 0.0]))
+            tl.append(animation3d.ZoomAction(self, self.zoomFactor, zoomFactor))
+            tl.append(animation3d.UpdateAction(G.app))
+            tl.start()
+        else:
+            self.translation = translation
+            self.horizontalRotation = rot
+            self.verticalInclination = incl
+            self.setZoomFactor(zoomFactor)
 
     def setDir(self, normal):
         self.horizontalRotation, self.verticalInclination  = getRotationForDirection(normal)
