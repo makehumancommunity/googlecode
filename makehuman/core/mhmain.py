@@ -904,60 +904,60 @@ class MHApplication(gui3d.Application, mh.Application):
             return
         human = self.selectedHuman
         coord = human.meshData.coord[vIdx]
-        direction = human.meshData.vnorm[vIdx]
+        direction = human.meshData.vnorm[vIdx].copy()
         self.modelCamera.focusOn(coord, direction, zoomFactor)
 
     def setFaceCamera(self):
         # TODO zooms very slightly with orbital cam
-        self.setTargetCamera(("head", "jaw"))
+        self.setTargetCamera(132, 8.7)
 
     def setLeftHandFrontCamera(self):
-        self.setTargetCamera("l-hand")
+        self.setTargetCamera(9828, 10)
 
     def setLeftHandTopCamera(self):
-        self.setTargetCamera(9833, 20)
+        self.setTargetCamera(9833, 10)
 
     def setRightHandFrontCamera(self):
-        self.setTargetCamera("r-hand")
+        self.setTargetCamera(3160, 10)
 
     def setRightHandTopCamera(self):
-        self.setTargetCamera(3165, 20)
+        self.setTargetCamera(3165, 10)
 
     def setLeftFootFrontCamera(self):
-        self.setTargetCamera("l-foot")
+        self.setTargetCamera(12832, 7.7)
 
     def setLeftFootLeftCamera(self):
-        self.setTargetCamera("l-foot", 'left')
+        self.setTargetCamera(12823, 7)
 
     def setRightFootFrontCamera(self):
-        self.setTargetCamera("r-foot")
+        self.setTargetCamera(6235, 7.7)
 
     def setRightFootRightCamera(self):
-        self.setTargetCamera("r-foot", 'right')
+        self.setTargetCamera(6208, 7)
 
     def setLeftArmFrontCamera(self):
-        self.setTargetCamera(("l-lowerarm", "l-upperarm"), distance=30)
+        self.setTargetCamera(9981, 4.2)
 
     def setLeftArmTopCamera(self):
-        self.setTargetCamera(("l-lowerarm", "l-upperarm"), 'top', distance=30)
+        self.setTargetCamera(9996, 2.9)
 
     def setRightArmFrontCamera(self):
-        self.setTargetCamera(("r-lowerarm", "r-upperarm"), distance=30)
+        self.setTargetCamera(3330, 4.2)
 
     def setRightArmTopCamera(self):
-        self.setTargetCamera(("r-lowerarm", "r-upperarm"), 'top', distance=30)
+        self.setTargetCamera(3413, 2.9)
 
     def setLeftLegFrontCamera(self):
-        self.setTargetCamera(("l-lowerleg", "l-upperleg"), distance=30)
+        self.setTargetCamera(11325, 2.7)
 
     def setLeftLegLeftCamera(self):
-        self.setTargetCamera(("l-lowerleg", "l-upperleg"), 'left', distance=30)
+        self.setTargetCamera(11381, 2.3)
 
     def setRightLegFrontCamera(self):
-        self.setTargetCamera(("r-lowerleg", "r-upperleg"), distance=30)
+        self.setTargetCamera(4707, 2.7)
 
     def setRightLegRightCamera(self):
-        self.setTargetCamera(("r-lowerleg", "r-upperleg"), 'right', distance=30)
+        self.setTargetCamera(4744, 2.3)
 
     # Shortcuts
     def setShortcut(self, modifier, key, action):
