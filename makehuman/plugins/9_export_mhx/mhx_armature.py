@@ -71,10 +71,16 @@ class ExportArmature(Armature):
         if options.useFingers:
             layers |= L_LHANDIK|L_RHANDIK
         else:
-            layers |= L_LHANDFK|L_RHANDFK|L_LPALM|L_RPALM
+            layers |= L_LHANDFK|L_RHANDFK|L_LPALM|L_RPALM|L_TWEAK
         if options.useFaceRig:
             layers |= L_PANEL
         self.visibleLayers = "%08x" % layers
+
+        self.activeBoneLayers = layers
+        if options.useIkArms:
+            self.activeBoneLayers |= L_LARMIK|L_RARMIK
+        if options.useIkLegs:
+            self.activeBoneLayers |= L_LLEGIK|L_RLEGIK
 
         self.objectProps += [("MhxRig", '"%s"' % options.rigtype)]
         self.customProps = []
@@ -197,15 +203,34 @@ class ExportArmature(Armature):
                 "  end Bone \n")
 
 
+    BoneGroups = [
+        ('Spine', 'THEME01', L_UPSPNFK),
+        ('ArmFK.L', 'THEME02', L_LARMFK),
+        ('ArmFK.R', 'THEME03', L_RARMFK),
+        ('ArmIK.L', 'THEME04', L_LARMIK),
+        ('ArmIK.R', 'THEME05', L_RARMIK),
+        ('LegFK.L', 'THEME06', L_LLEGFK),
+        ('LegFK.R', 'THEME07', L_RLEGFK),
+        ('LegIK.L', 'THEME08', L_LLEGIK),
+        ('LegIK.R', 'THEME09', L_RLEGIK),
+    ]
+
+    def getBoneGroup(self, bone):
+        for bgroup,_,layer in self.BoneGroups:
+            if bone.layers & layer & self.activeBoneLayers:
+                return bgroup
+        return None
+
     def writeBoneGroups(self, fp):
         if not fp:
             return
-        for (name, theme, layer) in _BoneGroups:
-            fp.write(
-                "    BoneGroup %s\n" % name +
-                "      name '%s' ;\n" % name +
-                "      color_set '%s' ;\n" % theme +
-                "    end BoneGroup\n")
+        for (name, theme, layer) in self.BoneGroups:
+            if layer & self.activeBoneLayers:
+                fp.write(
+                    "    BoneGroup %s\n" % name +
+                    "      name '%s' ;\n" % name +
+                    "      color_set '%s' ;\n" % theme +
+                    "    end BoneGroup\n")
         return
 
 
@@ -213,7 +238,7 @@ class ExportArmature(Armature):
         self.writeBoneGroups(fp)
 
         for bone in self.bones.values():
-            bgroup = getBoneGroup(bone)
+            bgroup = self.getBoneGroup(bone)
             posebone.writePoseBone(
                 fp, self, bone.name,
                 bone.customShape, bgroup,
@@ -450,24 +475,3 @@ end Object
     def writeFinal(self, fp):
         return
 
-#
-#
-#
-
-_BoneGroups = [
-    ('Spine', 'THEME01', L_UPSPNFK),
-    ('ArmFK.L', 'THEME02', L_LARMFK),
-    ('ArmFK.R', 'THEME03', L_RARMFK),
-    ('ArmIK.L', 'THEME04', L_LARMIK),
-    ('ArmIK.R', 'THEME05', L_RARMIK),
-    ('LegFK.L', 'THEME06', L_LLEGFK),
-    ('LegFK.R', 'THEME07', L_RLEGFK),
-    ('LegIK.L', 'THEME08', L_LLEGIK),
-    ('LegIK.R', 'THEME09', L_RLEGIK),
-]
-
-def getBoneGroup(bone):
-    for bgroup,_,layer in _BoneGroups:
-        if bone.layers & layer:
-            return bgroup
-    return None

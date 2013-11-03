@@ -71,7 +71,6 @@ class Parser:
         self.propDrivers = []
         self.lrPropDrivers = []
         self.boneDrivers = []
-
         self.vertexGroupFiles = []
 
         self.master = None
