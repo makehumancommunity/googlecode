@@ -45,7 +45,7 @@ class ArmatureOptions(object):
         self.useFaceRig = False
         self.useRotationLimits = False
         self.addConnectingBones = False
-        self.useQuaternionsOnly = True
+        self.useQuaternionsOnly = False
 
         self.mergeSpine = False
         self.mergeShoulders = False

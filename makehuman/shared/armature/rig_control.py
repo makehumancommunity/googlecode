@@ -306,8 +306,8 @@ CustomShapes = {
 
     'arm_socket.L' :    'GZM_Ball025',
     'arm_socket.R' :    'GZM_Ball025',
-    'hand.ik.L' :       'GZM_HandIK_L',
-    'hand.ik.R' :       'GZM_HandIK_R',
+    'hand.ik.L' :       'GZM_HandIK',
+    'hand.ik.R' :       'GZM_HandIK',
     'elbow.pt.ik.L' :   'GZM_Cube025',
     'elbow.pt.ik.R' :   'GZM_Cube025',
 

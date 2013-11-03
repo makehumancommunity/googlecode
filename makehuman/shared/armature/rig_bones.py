@@ -36,8 +36,10 @@ Joints = [
     ('l-kneecap',           'o', ('l-knee', (0,0,0.2))),
     ('r-kneecap',           'o', ('r-knee', (0,0,0.2))),
 
-    ('l-hand-end',          'j', 'l-finger-3-1'),
-    ('r-hand-end',          'j', 'r-finger-3-1'),
+    ('l-wrist-top',         'v', 10548),
+    ('l-hand-end',          'v', 9944),
+    ('r-wrist-top',         'v', 3883),
+    ('r-hand-end',          'v', 3276),
 
     ('l-palm-02',           'vl', ((0.5, 9906), (0.5, 10500))),
     ('l-palm-03',           'vl', ((0.5, 9895), (0.5, 10497))),
@@ -149,6 +151,7 @@ HeadsTails = {
 
 Planes = {
     "PlaneArm.L" :         ('l-shoulder', 'l-elbow', 'l-hand'),
+    "PlaneHand.L" :        ('l-elbow', 'l-wrist-top', 'l-hand-end'),
     "PlaneLeg.L" :         ('l-upper-leg', 'l-knee', 'l-ankle'),
     "PlaneFoot.L" :        ('l-plane-foot', 'l-ankle', 'l-foot-1'),
     "PlaneToe.L" :         ('l-plane-toe', 'l-foot-1', 'l-toe-2'),
@@ -160,6 +163,7 @@ Planes = {
     "PlanePinky.L" :       ('l-finger-5-1', 'l-finger-5-2', 'l-finger-5-4'),
 
     "PlaneArm.R" :         ('r-shoulder', 'r-elbow', 'r-hand'),
+    "PlaneHand.R" :        ('r-elbow', 'r-wrist-top', 'r-hand-end'),
     "PlaneLeg.R" :         ('r-upper-leg', 'r-knee', 'r-ankle'),
     "PlaneFoot.R" :        ('r-plane-foot', 'r-ankle', 'r-foot-1'),
     "PlaneToe.R" :         ('r-plane-toe', 'r-foot-1', 'r-toe-2'),
@@ -184,13 +188,13 @@ Armature = {
     'deltoid.L' :          (0, 'clavicle.L', F_DEF, L_LARMFK|L_LARMIK),
     'upper_arm.L' :        ("PlaneArm.L", 'deltoid.L', F_DEF, L_LARMFK),
     'forearm.L' :          ("PlaneArm.L", 'upper_arm.L', F_DEF|F_CON, L_LARMFK, P_YZX),
-    'hand.L' :             ("PlaneArm.L", 'forearm.L', F_DEF|F_CON, L_LARMFK, P_YZX),
+    'hand.L' :             ("PlaneHand.L", 'forearm.L', F_DEF|F_CON, L_LARMFK, P_YZX),
 
     'clavicle.R' :         (0, 'chest-1', F_DEF, L_UPSPNFK|L_RARMFK|L_RARMIK),
     'deltoid.R' :          (0, 'clavicle.R', F_DEF, L_RARMFK|L_RARMIK),
     'upper_arm.R' :        ("PlaneArm.R", 'deltoid.R', F_DEF, L_RARMFK),
     'forearm.R' :          ("PlaneArm.R", 'upper_arm.R', F_DEF|F_CON, L_RARMFK, P_YZX),
-    'hand.R' :             ("PlaneArm.R", 'forearm.R', F_DEF|F_CON, L_RARMFK, P_YZX),
+    'hand.R' :             ("PlaneHand.R", 'forearm.R', F_DEF|F_CON, L_RARMFK, P_YZX),
 
     'thumb.01.L' :         ("PlaneThumb.L", 'hand.L', F_DEF, L_LPALM, P_YZX),
     'thumb.02.L' :         ("PlaneThumb.L", 'thumb.01.L', F_DEF|F_CON, L_LHANDFK, P_YZX),
@@ -324,8 +328,8 @@ CustomShapes = {
     'upper_arm.R' :     'GZM_Circle025',
     'forearm.L' :       'GZM_Circle025',
     'forearm.R' :       'GZM_Circle025',
-    'hand.L' :          'GZM_Hand_L',
-    'hand.R' :          'GZM_Hand_R',
+    'hand.L' :          'GZM_Hand',
+    'hand.R' :          'GZM_Hand',
 }
 
 Constraints = {}
