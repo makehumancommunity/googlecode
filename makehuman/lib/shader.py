@@ -106,6 +106,7 @@ class VectorUniform(Uniform):
 
     def set(self, data):
         if data is None:
+            self.set(self.values)
             return
         values = np.asarray(data, dtype=self.dtype).reshape(self.dims)
         if len(self.dims) > 1:
