@@ -29,6 +29,8 @@ from OpenGL.GL.ARB.texture_multisample import *
 import texture
 import log
 
+from core import G
+
 class Uniform(object):
     def __init__(self, index, name, pytype, dims):
         self.index = index
@@ -237,6 +239,9 @@ class SamplerUniform(Uniform):
 
 class Shader(object):
     _supported = None
+    if G.args.get('noshaders', False):
+        _supported = False
+
     _glsl_version_str = None
     _glsl_version = None
 

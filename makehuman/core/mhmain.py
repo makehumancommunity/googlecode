@@ -574,7 +574,6 @@ class MHApplication(gui3d.Application, mh.Application):
         if beforeLoaded:
             if self.args.get('noshaders', False):
                 log.message("Force shaders disabled")
-                mh.Shader._supported = False
 
         else: # After application is loaded
             if self.args.get('mhmFile', None):
