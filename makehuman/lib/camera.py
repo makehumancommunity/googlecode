@@ -454,10 +454,7 @@ class OrbitalCamera(Camera):
         """
         # Note: matrix is constructed with post-multiplication in reverse order
 
-        if obj:
-            m = obj.transform   # Apply object transform as last
-        else:
-            m = np.matrix(np.identity(4))
+        m = np.matrix(np.identity(4))
         # First translate to camera center, then rotate around that center
         m = m * matrix.translate(self.center)   # Move mesh to original position again
         if self.verticalInclination != 0:
@@ -469,6 +466,8 @@ class OrbitalCamera(Camera):
         #    m = m * matrix.scale(self.scale)
         center = [-self.center[0], -self.center[1], -self.center[2]]
         m = m * matrix.translate(center)   # Move mesh to its rotation center to apply rotation
+        if obj:
+            m = m * obj.transform   # Apply object transform first
 
         return m
 
