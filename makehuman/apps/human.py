@@ -668,7 +668,6 @@ class Human(guicommon.Object):
 
         self.callEvent('onChanged', events3d.HumanEvent(self, 'targets'))
 
-
     def getPartNameForGroupName(self, groupName):
         for k in self.bodyZones:
             if k in groupName:
@@ -789,6 +788,18 @@ class Human(guicommon.Object):
         self.callEvent('onChanged', events3d.HumanEvent(self, 'material'))
 
     material = property(getMaterial, setMaterial)
+
+    def getJointPosition(self, jointName):
+        """
+        Get the position of a joint from the human mesh.
+        This position is determined by the center of the joint helper with the
+        specified name.
+        """
+        fg = self.meshData.getFaceGroup("joint-"+jointName)
+        if not fg:
+            raise RuntimeError("Human does not contain a joint helper with name %s" % ("joint-"+jointName))
+        verts = self.meshData.getCoords(self.meshData.getVerticesForGroups([fg.name]))
+        return verts.mean(axis=0)
 
     def load(self, filename, update=True, progressCallback=None):
 
