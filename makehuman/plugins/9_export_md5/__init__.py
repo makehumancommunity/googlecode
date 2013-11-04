@@ -34,10 +34,8 @@ class MD5Config(Config):
         Config.__init__(self)
         self.selectedOptions(exporter)
         self.useRelPaths = True
-        self.useTexFolder = exporter.useTexFolder
 
     def selectedOptions(self, exporter):
-        self.useTexFolder       = exporter.useTexFolder.selected
         self.useHelpers            = exporter.useHelpers.selected
         #self.scale,self.unit    = exporter.taskview.getScale()
         self.smooth = self.subdivide = gui3d.app.selectedHuman.isSubdivided()
@@ -54,7 +52,6 @@ class ExporterMD5(Exporter):
 
     def build(self, options, taskview):
         self.taskview       = taskview
-        self.useTexFolder   = options.addWidget(gui.CheckBox("Separate texture folder", True))
         self.useHelpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
 
     def export(self, human, filename):

@@ -49,7 +49,6 @@ class MhxConfig(Config):
         from .mhx_rigify import RigifyOptions
 
         Config.__init__(self)
-        self.useTexFolder =         exporter.useTexFolder.selected
         self.scale,self.unit =      exporter.taskview.getScale()
         self.useRelPaths =          True
         self.useHelpers =           True
@@ -89,7 +88,6 @@ class ExporterMHX(Exporter):
 
     def build(self, options, taskview):
         self.taskview       = taskview
-        self.useTexFolder   = options.addWidget(gui.CheckBox("Separate texture folder", True))
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
         #self.useFaceRig     = options.addWidget(gui.CheckBox("Face rig", True))
         self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))

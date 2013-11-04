@@ -268,7 +268,6 @@ def writeMaterialFile(human, filepath, rmeshes, config):
 
     f = codecs.open(filepath, 'w', encoding="utf-8")
     for rmeshIdx, rmesh in enumerate(rmeshes):
-        texfile = os.path.basename(rmesh.material.diffuseTexture)
         if rmeshIdx > 0:
             f.write('\n')
         f.write('material %s_%s_%s\n' % (formatName(name), rmeshIdx, formatName(rmesh.name) if formatName(rmesh.name) != name else "human"))
@@ -287,10 +286,14 @@ def writeMaterialFile(human, filepath, rmeshes, config):
             # Enable transparency rendering on human
             f.write('            depth_write on\n')
             f.write('            alpha_rejection greater 128\n\n')
-        f.write('            texture_unit\n')
-        f.write('            {\n')
-        f.write('                texture %s\n' % texfile)
-        f.write('            }\n')
+
+        if rmesh.material.diffuseTexture is not None:
+            texfile = os.path.basename(rmesh.material.diffuseTexture)
+            f.write('            texture_unit\n')
+            f.write('            {\n')
+            f.write('                texture %s\n' % texfile)
+            f.write('            }\n')
+
         # TODO add support for normal maps, material properties, ...
         f.write('        }\n')
         f.write('    }\n')

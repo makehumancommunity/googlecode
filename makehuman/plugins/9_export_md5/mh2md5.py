@@ -69,8 +69,7 @@ def exportMd5(human, filepath, config):
     config.zUp = True
     config.feetOnGround = True    # TODO this only works when exporting MHX mesh (a design error in exportutils)
     config.scale = 1
-    if config.useTexFolder:
-        config.setupTexFolder(filepath)
+    config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
 
@@ -129,11 +128,8 @@ def exportMd5(human, filepath, config):
         f.write('mesh {\n')
         mat = rmesh.material
         if mat.diffuseTexture:
-            if config.useTexFolder:
-                tex = copyTexture(mat.diffuseTexture, human, config)
-                f.write('\tshader "%s"\n' % tex)
-            else:
-                f.write('\tshader "%s"\n' % mat.diffuseTexture)
+            tex = copyTexture(mat.diffuseTexture, human, config)
+            f.write('\tshader "%s"\n' % tex)
 
         f.write('\n\tnumverts %d\n' % numVerts)
 

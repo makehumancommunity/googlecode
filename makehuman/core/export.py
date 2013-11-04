@@ -35,7 +35,6 @@ class Exporter(object):
         import gui
 
         self.taskview       = taskview
-        self.useTexFolder   = options.addWidget(gui.CheckBox("Separate texture folder", True))
         self.useHelpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
         #self.useTPose       = options.addWidget(gui.CheckBox("T-Pose", False))
         #self.hidden         = options.addWidget(gui.CheckBox("Keep hidden faces", True))

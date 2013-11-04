@@ -35,7 +35,6 @@ import shutil
 class Config:
 
     def __init__(self):
-        self.useTexFolder       = True
         self.useHelpers            = False
         self.useTPose           = False
         self.scale              = 1.0
@@ -51,7 +50,6 @@ class Config:
 
 
     def selectedOptions(self, exporter):
-        self.useTexFolder       = exporter.useTexFolder.selected
         self.useHelpers            = exporter.useHelpers.selected
         self.useTPose           = False # exporter.useTPose.selected
         self.scale,self.unit    = exporter.taskview.getScale()
@@ -110,9 +108,8 @@ class Config:
         fname = self.goodName(os.path.basename(fname))
         self.outFolder = os.path.realpath(os.path.dirname(filepath))
         self.filename = os.path.basename(filepath)
-        if self.useTexFolder:
-            self.texFolder = self.getSubFolder(self.outFolder, "textures")
-            self._copiedFiles = {}
+        self.texFolder = self.getSubFolder(self.outFolder, "textures")
+        self._copiedFiles = {}
 
 
     def getSubFolder(self, path, name):
@@ -131,21 +128,18 @@ class Config:
         srcDir = os.path.abspath(os.path.expanduser(os.path.dirname(filepath)))
         filename = os.path.basename(filepath)
 
-        if self.useTexFolder:
-            newpath = os.path.abspath( os.path.join(self.texFolder, filename) )
+        newpath = os.path.abspath( os.path.join(self.texFolder, filename) )
+        try:
+            self._copiedFiles[filepath]
+            done = True
+        except:
+            done = False
+        if not done:
             try:
-                self._copiedFiles[filepath]
-                done = True
+                shutil.copyfile(filepath, newpath)
             except:
-                done = False
-            if not done:
-                try:
-                    shutil.copyfile(filepath, newpath)
-                except:
-                    log.message("Unable to copy \"%s\" -> \"%s\"" % (filepath, newpath))
-                self._copiedFiles[filepath] = True
-        else:
-            newpath = filepath
+                log.message("Unable to copy \"%s\" -> \"%s\"" % (filepath, newpath))
+            self._copiedFiles[filepath] = True
 
         if not self.useRelPaths:
             return newpath
