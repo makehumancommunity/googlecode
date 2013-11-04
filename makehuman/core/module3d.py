@@ -1044,6 +1044,17 @@ class Object3D(object):
         verts = np.argwhere(vert_mask)[...,0]
         return verts
 
+    def getVerticesForFaceMask(self, face_mask):
+        verts = self.fvert[face_mask]
+        verts = verts.reshape(-1)
+        return verts
+
+    def getVertexMaskForFaceMask(self, face_mask):
+        verts = self.getVerticesForFaceMask(face_mask)
+        vert_mask = np.zeros(len(self.coord), dtype = bool)
+        vert_mask[verts] = True
+        return vert_mask
+
     def getVertexAndFaceMasksForGroups(self, groupNames):
         face_mask = self.getFaceMaskForGroups(groupNames)
         verts = self.fvert[face_mask]
@@ -1106,14 +1117,18 @@ class Object3D(object):
         if recalcFaceNormals or recalcVertexNormals and self.calculateTangents:
             self.calcVertexTangents(verticesToUpdate)
                 
-    def calcBBox(self, ix=None):
+    def calcBBox(self, ix=None, onlyVisible = True):
         """
         Calculates the axis aligned bounding box of this object in the object's coordinate system. 
         """
         # TODO maybe cache bounding box
         if ix is None:
             ix = np.s_[:]
-        coord = self.coord[ix]
+        if onlyVisible:
+            verts = self.getVerticesForFaceMask(self.getFaceMask())
+            coord = self.coord[verts]
+        else:
+            coord = self.coord[ix]
         if len(coord) == 0:
             return np.zeros((2,3), dtype = np.float32)
         v0 = np.amin(coord, axis=0)
