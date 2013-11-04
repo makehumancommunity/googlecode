@@ -380,6 +380,39 @@ class Camera(events3d.EventHandler):
     def mousePickHumanCenter(self, mouseX, mouseY):
         pass
 
+    def isInParallelView(self):
+        """
+        Determine whether this camera is in a 'defined view'.
+        This is a parallel view at a fixed rotation: front, back, left, right,
+        top, bottom.
+        """
+        rot = self.getRotation()
+        for axis in xrange(3):
+            if (rot[axis] % 360 ) not in [0, 90, 180, 270]:
+                return False
+        return True
+
+    def isInLeftView(self):
+        return self.getRotation() == [0, 90, 0]
+
+    def isInRightView(self):
+        return self.getRotation() == [0, 270, 0]
+
+    def isInSideView(self):
+        return self.isInLeftView() or self.isInRightView()
+
+    def isInFrontView(self):
+        return self.getRotation() == [0, 0, 0]
+
+    def isInBackView(self):
+        return self.getRotation() == [0, 180, 0]
+
+    def isInTopView(self):
+        return self.getRotation() == [90, 0, 0]
+
+    def isInBottomView(self):
+        return self.getRotation() == [270, 0, 0]
+
 
 class OrbitalCamera(Camera):
     """
@@ -457,10 +490,11 @@ class OrbitalCamera(Camera):
         m = np.matrix(np.identity(4))
         # First translate to camera center, then rotate around that center
         m = m * matrix.translate(self.center)   # Move mesh to original position again
-        if self.verticalInclination != 0:
-            m = m * matrix.rotx(self.verticalInclination)
-        if self.horizontalRotation != 0:
-            m = m * matrix.roty(self.horizontalRotation)
+        if not obj.lockRotation:
+            if self.verticalInclination != 0:
+                m = m * matrix.rotx(self.verticalInclination)
+            if self.horizontalRotation != 0:
+                m = m * matrix.roty(self.horizontalRotation)
         # Ignore scale (bounding boxes ignore scale as well, anyway)
         #if any(x != 1 for x in self.scale):
         #    m = m * matrix.scale(self.scale)
@@ -820,7 +854,7 @@ def cartesianToPolar(vect):
     phi = math.asin(vect[1] / r)
     phi = phi % (2 * math.pi)
 
-    # Reverse rotation of camera is upside down
+    # Reverse rotation of camera if upside down
     if phi > math.pi/2 and phi < 3*math.pi/2:
         theta = theta + 180
         if phi > math.pi:

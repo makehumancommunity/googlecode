@@ -244,3 +244,81 @@ class Cube(module3d.Object3D):
         v = [(x,y,z) for z in [0,depth] for y in [0,height] for x in [0,width]]
         self.changeCoords(v)
         self.update()
+
+class GridMesh(module3d.Object3D):
+    def __init__(self, rows, columns, offset=0, plane=0, static = False):
+        """
+        Plane: 0 for back plane, 1 for ground plane
+        """
+
+        typeName = "ground" if plane == 1 else "back"
+        module3d.Object3D.__init__(self, '%s_grid' % typeName, vertsPerPrimitive = 2)
+
+        # create group
+        fg = self.createFaceGroup('grid')
+
+        # Nb of lines
+        rows += 1
+        columns += 1
+        
+        # Vertices
+        v = np.zeros((2*(columns+rows), 3), dtype = np.float32)
+        f = np.zeros((columns+rows, 2), dtype = np.float32)
+        hBegin = -(rows/2)
+        hEnd = hBegin + rows
+        vBegin = -(columns/2)
+        vEnd = vBegin + columns
+        # Horizontal lines
+        for i in xrange(rows):
+            pos = hBegin + i
+            if plane == 1:
+                v[2*i]    = [pos, offset, vBegin]
+                v[2*i +1] = [pos, offset, vEnd-1]
+            else:
+                v[2*i]    = [vBegin, pos, offset]
+                v[2*i +1] = [vEnd-1, pos, offset]
+            f[i] = [2*i, 2*i +1]
+
+        # Vertical lines
+        for i in xrange(columns):
+            pos = vBegin + i
+            if plane == 1:
+                v[2* (rows+i)   ] = [hBegin, offset, pos]
+                v[2* (rows+i) +1] = [hEnd-1, offset, pos]
+            else:
+                v[2* (rows+i)   ] = [pos, hBegin, offset]
+                v[2* (rows+i) +1] = [pos, hEnd-1, offset]
+            f[rows+ i] = [2* (rows+i), 2* (rows+i) +1]
+
+        self.setCoords(v)
+        self.setFaces(f, None, fg.idx)
+        self.updateIndexBuffer()
+
+        self.setCameraProjection(1 if static else 0)
+        self.setShadeless(1)
+
+        self.restrictVisibleToCamera = False    # Set to True to only show the grid when the camera is set to a defined parallel view (front, left, top, ...)
+
+    def setMainColor(self, color):
+        """
+        Set the color of the main grid.
+        """
+        if len(color) == 3:
+            color = list(color) + [1.0]
+        col = np.asarray([255*c for c in color], dtype=np.uint8)
+        self.setColor(col)
+
+    def setSubColor(self, color):
+        # TODO
+        pass
+
+    @module3d.Object3D.visibility.getter
+    def visibility(self):
+        if self.restrictVisibleToCamera:
+            from core import G
+            camera = G.cameras[self.cameraMode]
+            #return camera.isInParallelView()
+            # Hide the grid in top and bottom view:
+            return camera.isInFrontView() or camera.isInBackView() or camera.isInSideView()
+        else:
+            return super(GridMesh, self).visibility

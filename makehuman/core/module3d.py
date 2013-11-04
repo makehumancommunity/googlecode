@@ -107,12 +107,13 @@ class Object3D(object):
         self._materials = []    # Object material groups
         self._groups_rev = {}
         self.cameraMode = 1
-        self.visibility = True
+        self._visibility = True
         self.pickable = True
         self.calculateTangents = True   # TODO disable when not needed by shader
         self.object3d = None
         self._priority = 0
         self.MAX_FACES = 8
+        self.lockRotation = False   # Set to true to make the rotation of this object independent of the camera rotation
 
         self.__object = None
 
@@ -708,7 +709,13 @@ class Object3D(object):
         :type color: [byte, byte, byte, byte]
         """
         color = np.asarray(color, dtype=np.uint8)
-        self.color[...] = color[None,:]
+        if len(color.shape) == 1:   # One color for all vertices
+            if len(color) == 3:
+                # Add alpha component to simple RGB color
+                color = list(color) + [255]
+            self.color[:] = color
+        else:
+            self.color[...] = color[None,:]
         self.markCoords(colr=True)
         self.sync_color()
 
@@ -755,15 +762,22 @@ class Object3D(object):
 
         self.scale[...] = (sx, sy, sz)
 
+    @property
+    def visibility(self):
+        return self._visibility
+
     def setVisibility(self, visible):
+        self.visibility = visible
+
+    @visibility.setter
+    def visibility(self, visible):
         """
         This method sets the visibility of the object.
 
         :param visible: Whether or not the object is visible.
         :type visible: Boolean
         """
-
-        self.visibility = visible
+        self._visibility = visible
 
     def setPickable(self, pickable):
         """

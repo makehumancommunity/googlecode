@@ -33,6 +33,7 @@ import mh
 import events3d
 import files3d
 import gui3d
+import geometry3d
 import animation3d
 import human
 import guifiles
@@ -188,10 +189,14 @@ class MHApplication(gui3d.Application, mh.Application):
         self.actions = None
 
         self.clearColor = [0.5, 0.5, 0.5]
+        self.gridColor = [1.0, 1.0, 1.0]
+        self.gridSubColor = [0.7, 0.7, 0.7]
 
         self.modules = {}
 
         self.selectedHuman = None
+        self.backplaneGrid = None
+        self.groundplaneGrid = None
 
         self.theme = None
 
@@ -432,8 +437,28 @@ class MHApplication(gui3d.Application, mh.Application):
 
         self.switchCategory("Modelling")
 
+        # Create viewport grid
+        self.loadGrid()
+
         self.progress(1.0)
         # self.progressBar.hide()
+
+    def loadGrid(self):
+        offset = self.selectedHuman.getJointPosition('ground')[1]
+
+        backGridMesh = geometry3d.GridMesh(100, 100, offset = -10, plane = 0)
+        backGridMesh.setMainColor(self.gridColor)
+        backGridMesh.lockRotation = True
+        backGridMesh.restrictVisibleToCamera = True
+        self.backplaneGrid = gui3d.Object(backGridMesh)
+        self.backplaneGrid.setPosition([0,offset,0])
+        self.addObject(self.backplaneGrid)
+
+        groundGridMesh = geometry3d.GridMesh(20, 20, offset = 0, plane = 1)
+        groundGridMesh.setMainColor(self.gridColor)
+        self.groundplaneGrid = gui3d.Object(groundGridMesh)
+        self.groundplaneGrid.setPosition([0,offset,0])
+        self.addObject(self.groundplaneGrid)
 
     def loadMacroTargets(self):
         keys = ('macrodetails', 'universal', 'stature')
@@ -718,6 +743,16 @@ class MHApplication(gui3d.Application, mh.Application):
         #if self.theme == theme:
         #    return
 
+        # Set defaults
+        self.clearColor = [0.5, 0.5, 0.5]
+        self.gridColor = [1.0, 1.0, 1.0]
+        self.gridSubColor = [0.7, 0.7, 0.7]
+        log._logLevelColors[log.DEBUG] = 'grey'
+        log._logLevelColors[log.NOTICE] = 'blue'
+        log._logLevelColors[log.WARNING] = 'darkorange'
+        log._logLevelColors[log.ERROR] = 'red'
+        log._logLevelColors[log.CRITICAL] = 'red'
+
         f = open(os.path.join(mh.getSysDataPath("themes/"), theme + ".mht"), 'r')
 
         update_log = False
@@ -730,13 +765,22 @@ class MHApplication(gui3d.Application, mh.Application):
                 elif lineData[0] == "color":
                     if lineData[1] == "clear":
                         self.clearColor[:] = [float(val) for val in lineData[2:5]]
-                        mh.setClearColor(float(lineData[2]), float(lineData[3]), float(lineData[4]), 1.0)
+                    elif lineData[1] == "grid":
+                        self.gridColor[:] = [float(val) for val in lineData[2:5]]
+                    elif lineData[1] == "subgrid":
+                        self.gridSubColor[:] = [float(val) for val in lineData[2:5]]
                 elif lineData[0] == "logwindow_color":
                     logLevel = lineData[1]
                     if hasattr(log, logLevel) and isinstance(getattr(log, logLevel), int):
                         update_log = True
                         logLevel = int(getattr(log, logLevel))
                         log._logLevelColors[logLevel] = lineData[2]
+
+        if self.groundplaneGrid:
+            self.groundplaneGrid.mesh.setMainColor(self.gridColor)
+        if self.backplaneGrid:
+            self.backplaneGrid.mesh.setMainColor(self.gridColor)
+        mh.setClearColor(self.clearColor[0], self.clearColor[1], self.clearColor[2], 1.0)
 
         if update_log:
             self.log_window.updateView()

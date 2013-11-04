@@ -133,6 +133,10 @@ class Object3D(object):
         return self.parent.transform
 
     @property
+    def lockRotation(self):
+        return self.parent.lockRotation
+
+    @property
     def x(self):
         return self.parent.x
 

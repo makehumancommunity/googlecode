@@ -307,6 +307,7 @@ class CameraAction(Action):
     """
     CameraAction action class. Animates all camera attributes.
     """
+    # TODO remove?
     def __init__(self, cam, startParams, endParams):
         
         self.cam = cam
