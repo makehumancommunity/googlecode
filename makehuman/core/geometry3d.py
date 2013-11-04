@@ -246,7 +246,7 @@ class Cube(module3d.Object3D):
         self.update()
 
 class GridMesh(module3d.Object3D):
-    def __init__(self, rows, columns, spacing=1, offset=0, plane=0, static = False):
+    def __init__(self, rows, columns, spacing=1, offset=0, plane=0, subgrids = 0, static = False):
         """
         Plane: 0 for back plane, 1 for ground plane
         """
@@ -257,13 +257,20 @@ class GridMesh(module3d.Object3D):
         # create group
         fg = self.createFaceGroup('grid')
 
+        hBoxes = rows
+        vBoxes = columns
+
         # Nb of lines
         rows += 1
         columns += 1
 
         # Vertices
-        v = np.zeros((2*(columns+rows), 3), dtype = np.float32)
-        f = np.zeros((columns+rows, 2), dtype = np.float32)
+        size = (columns+rows)
+        self.subgrids = subgrids
+        if self.subgrids > 0:
+            size = size + vBoxes * (subgrids - 1) + hBoxes * (subgrids - 1)
+        v = np.zeros((2 * size, 3), dtype = np.float32)
+        f = np.zeros((size, 2), dtype = np.float32)
         hBegin = (-(rows/2)) * spacing
         hEnd = hBegin + (rows * spacing)
         vBegin = (-(columns/2)) * spacing
@@ -290,6 +297,39 @@ class GridMesh(module3d.Object3D):
                 v[2* (rows+i) +1] = [pos, hEnd-spacing, offset]
             f[rows+ i] = [2* (rows+i), 2* (rows+i) +1]
 
+        self.mainGridEnd = 2*(columns+rows)
+
+        # Subgrid
+        if self.subgrids > 0:
+            boxspacing = spacing
+            spacing = float(spacing) / self.subgrids
+
+            # Horizontal lines
+            sub = self.mainGridEnd/2
+            for i in xrange(hBoxes*(subgrids-1)):
+                boxOffset = (spacing * (i // (subgrids-1)))
+                pos = spacing + hBegin + (i * spacing) + boxOffset
+                if plane == 1:
+                    v[2* (sub+i)]    = [pos, offset, vBegin         ]
+                    v[2* (sub+i) +1] = [pos, offset, vEnd-boxspacing]
+                else:
+                    v[2* (sub+i)]    = [vBegin,          pos, offset]
+                    v[2* (sub+i) +1] = [vEnd-boxspacing, pos, offset]
+                f[sub+ i] = [2*(sub+i), 2*(sub+i) +1]
+
+            # Vertical lines
+            sub += hBoxes*(subgrids-1)
+            for i in xrange(vBoxes*(subgrids-1)):
+                boxOffset = (spacing * (i // (subgrids-1)))
+                pos = spacing + vBegin + (i * spacing) + boxOffset
+                if plane == 1:
+                    v[2* (sub+i)   ] = [hBegin,          offset, pos]
+                    v[2* (sub+i) +1] = [hEnd-boxspacing, offset, pos]
+                else:
+                    v[2* (sub+i)   ] = [pos, hBegin,          offset]
+                    v[2* (sub+i) +1] = [pos, hEnd-boxspacing, offset]
+                f[sub+ i] = [2* (sub+i), 2* (sub+i) +1]
+
         self.setCoords(v)
         self.setFaces(f, None, fg.idx)
         self.updateIndexBuffer()
@@ -298,25 +338,64 @@ class GridMesh(module3d.Object3D):
         self.setShadeless(1)
 
         self.restrictVisibleToCamera = False    # Set to True to only show the grid when the camera is set to a defined parallel view (front, left, top, ...)
+        self.minSubgridZoom = 1.0   # Minimum zoom factor of the camera in which the subgrid will be shown
+
+        self._subgridVisible = True
+
+    def hasSubGrid(self):
+        #return self.mainGridEnd < (len(self.coord) - 2)
+        return self.subgrids > 0
 
     def setMainColor(self, color):
         """
         Set the color of the main grid.
         """
-        if len(color) == 3:
-            color = list(color) + [1.0]
-        col = np.asarray([255*c for c in color], dtype=np.uint8)
-        self.setColor(col)
+        self._setVertColors(color, 0, self.mainGridEnd)
 
     def setSubColor(self, color):
-        # TODO
-        pass
+        """
+        Set the color of the sub grid.
+        """
+        if not self.hasSubGrid():
+            return
+
+        self._setVertColors(color, self.mainGridEnd, len(self.coord))
+
+    def _setVertColors(self, color, beginIdx, endIdx):
+        color = list(color)
+        if len(color) == 3:
+            color = color + [1.0]
+
+        size = endIdx - beginIdx
+
+        color = np.asarray([255*c for c in color], dtype=np.uint8)
+        col = np.tile(color, size).reshape((size, 4))
+
+        clr = self.color.copy()
+        clr[beginIdx:endIdx] = col[:]
+        self.setColor(clr)
 
     @module3d.Object3D.visibility.getter
     def visibility(self):
+        from core import G
+        camera = G.cameras[self.cameraMode]
+
+        if self.hasSubGrid():
+            subgridVisible = (camera.zoomFactor/camera.radius*10) >= self.minSubgridZoom
+
+            if subgridVisible != self._subgridVisible:
+                # Update subgrid visibility
+                self._subgridVisible = subgridVisible
+                mask = self.face_mask
+                #mask = np.ones(self.getFaceCount(), dtype=np.bool)
+                if subgridVisible:
+                    mask[self.mainGridEnd/2:] = True
+                else:
+                    mask[self.mainGridEnd/2:] = False
+                self.changeFaceMask(mask)
+                self.updateIndexBufferFaces()
+
         if self.restrictVisibleToCamera:
-            from core import G
-            camera = G.cameras[self.cameraMode]
             #return camera.isInParallelView()
             # Hide the grid in top and bottom view:
             return camera.isInFrontView() or camera.isInBackView() or camera.isInSideView()

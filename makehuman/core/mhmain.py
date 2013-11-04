@@ -456,8 +456,9 @@ class MHApplication(gui3d.Application, mh.Application):
         gridSize = int(200/spacing)
         if gridSize % 2 != 0:
             gridSize += 1
-        backGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = -10, plane = 0)
+        backGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = -10, plane = 0, subgrids = 5)
         backGridMesh.setMainColor(self.gridColor)
+        backGridMesh.setSubColor(self.gridSubColor)
         backGridMesh.lockRotation = True
         backGridMesh.restrictVisibleToCamera = True
         self.backplaneGrid = gui3d.Object(backGridMesh)
@@ -467,8 +468,9 @@ class MHApplication(gui3d.Application, mh.Application):
         gridSize = int(20/spacing)
         if gridSize % 2 != 0:
             gridSize += 1
-        groundGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = 0, plane = 1)
+        groundGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = 0, plane = 1, subgrids = 5)
         groundGridMesh.setMainColor(self.gridColor)
+        groundGridMesh.setSubColor(self.gridSubColor)
         self.groundplaneGrid = gui3d.Object(groundGridMesh)
         self.groundplaneGrid.setPosition([0,offset,0])
         self.addObject(self.groundplaneGrid)
@@ -791,8 +793,10 @@ class MHApplication(gui3d.Application, mh.Application):
 
         if self.groundplaneGrid:
             self.groundplaneGrid.mesh.setMainColor(self.gridColor)
+            self.groundplaneGrid.mesh.setSubColor(self.gridSubColor)
         if self.backplaneGrid:
             self.backplaneGrid.mesh.setMainColor(self.gridColor)
+            self.backplaneGrid.mesh.setSubColor(self.gridSubColor)
         mh.setClearColor(self.clearColor[0], self.clearColor[1], self.clearColor[2], 1.0)
 
         if update_log:
