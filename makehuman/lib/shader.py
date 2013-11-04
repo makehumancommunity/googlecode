@@ -28,7 +28,6 @@ from OpenGL.GL import *
 from OpenGL.GL.ARB.texture_multisample import *
 import texture
 import log
-
 from core import G
 
 class Uniform(object):
