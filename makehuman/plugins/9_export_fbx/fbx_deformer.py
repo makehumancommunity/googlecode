@@ -118,13 +118,6 @@ def writeShapeGeometry(fp, name, sname, shape):
         shape = list(shape.items())
         shape.sort()
 
-        '''
-        last = nVerts - 1
-        for n,data in enumerate(shape):
-            vn,_ = data
-            fp.write("%d" % vn)
-            writeComma(fp, n, last)
-        '''
         string = "".join( ['%d,' % data[0] for data in shape] )
         fp.write(string[:-1])
 
@@ -133,17 +126,19 @@ def writeShapeGeometry(fp, name, sname, shape):
 '        Vertices: *%d   {\n' % (3*nVerts) +
 '            a: ')
 
-        '''
-        last = nVerts - 1
-        for n,data in enumerate(shape):
-            _,dr = data
-            fp.write("%.4f,%.4f,%.4f" % tuple(dr))
-            writeComma(fp, n, last)
-        '''
         string = "".join( ["%.4f,%.4f,%.4f," % tuple(data[1]) for data in shape] )
         fp.write(string[:-1])
 
-        fp.write(
+        # Must use normals for shapekeys
+        fp.write('\n' +
+'        }\n' +
+'        Normals: *%d {\n' % (3*nVerts) +
+'            a: ')
+
+        string = nVerts * "0,0,0,"
+        fp.write(string[:-1])
+
+        fp.write('\n' +
 '        }\n' +
 '    }\n')
 
@@ -152,6 +147,7 @@ def writeShapeDeformer(fp, name, sname):
     id,key = getId("Deformer::%s_%sShape" % (name, sname))
     fp.write(
 '    Deformer: %d, "%s", "BlendShape" {\n' % (id, key) +
+'        Version: 100\n' +
 '    }\n')
 
 
