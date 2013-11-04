@@ -102,7 +102,7 @@ def exportMd5(human, filepath, config):
         bones = human.getSkeleton().getBones()
         boneprog = Progress(len(bones))
         for bone in bones:
-            writeBone(f, bone, humanBBox, config)
+            writeBone(f, bone, human, config)
             boneprog.step()
     f.write('}\n\n')
 
@@ -256,7 +256,7 @@ def exportMd5(human, filepath, config):
                 co = co.copy() * scale
 
                 if config.feetOnGround:
-                    co[1] += (getFeetOnGroundOffset(humanBBox) * scale)
+                    co[1] += (getFeetOnGroundOffset(human) * scale)
 
                 if config.zUp:
                     co = co[[0,2,1]] * [1,-1,1]
@@ -277,7 +277,7 @@ def exportMd5(human, filepath, config):
 
     progress(1, None, "MD5 export finished. Exported file: %s" % filepath)
 
-def writeBone(f, bone, humanBBox, config):
+def writeBone(f, bone, human, config):
     """
     This function writes out information describing one joint in MD5 format.
 
@@ -296,7 +296,7 @@ def writeBone(f, bone, humanBBox, config):
     pos = bone.getRestHeadPos() * scale
 
     if config.feetOnGround:
-        pos[1] += (getFeetOnGroundOffset(humanBBox) * scale)
+        pos[1] += (getFeetOnGroundOffset(human) * scale)
 
     if config.zUp:
         #transformationMat = bone.matRestGlobal.copy()
@@ -352,7 +352,7 @@ def writeAnimation(filepath, human, humanBBox, config, animTrack):
     f.write('bounds {\n')
     bounds = humanBBox
     if config.feetOnGround:
-        bounds[:][1] += getFeetOnGroundOffset(humanBBox)
+        bounds[:][1] += getFeetOnGroundOffset(human)
     if config.zUp:
         bounds[0] = bounds[0][[0,2,1]] * [1,-1,1]
         bounds[1] = bounds[1][[0,2,1]] * [1,-1,1]
@@ -369,7 +369,7 @@ def writeAnimation(filepath, human, humanBBox, config, animTrack):
     for bone in skel.getBones():
         pos = bone.getRestOffset() * scale
         if config.feetOnGround and not bone.parent:
-            pos[1] += (getFeetOnGroundOffset(humanBBox) * scale)
+            pos[1] += (getFeetOnGroundOffset(human) * scale)
 
         transformationMat = bone.matRestRelative.copy()
         if config.zUp:
@@ -430,6 +430,5 @@ def copyTexture(texture, human, config):
     return newpath
 
 
-def getFeetOnGroundOffset(humanBBox):
-    dy = humanBBox[0][1]
-    return -dy
+def getFeetOnGroundOffset(human):
+    return human.getJointPosition('ground')[1]

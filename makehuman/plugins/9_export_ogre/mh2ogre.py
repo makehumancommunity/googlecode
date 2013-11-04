@@ -76,8 +76,6 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
     filename = os.path.basename(filepath)
     name = formatName(config.goodName(os.path.splitext(filename)[0]))
 
-    humanBBox = human.meshData.calcBBox()
-
     f = codecs.open(filepath, 'w', encoding="utf-8")
     f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
     f.write('<!-- Exported from MakeHuman (www.makehuman.org) -->\n')
@@ -120,7 +118,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
         for vIdx, co in enumerate(obj.r_coord):
             if feetOnGround:
                 co = co.copy()
-                co[1] += getFeetOnGroundOffset(humanBBox)
+                co[1] += getFeetOnGroundOffset(human)
 
             # Note: Ogre3d uses a y-up coordinate system (just like MH)
             norm = obj.r_vnorm[vIdx]
@@ -216,7 +214,6 @@ def writeSkeletonFile(human, filepath, config):
     filepath = os.path.join(os.path.dirname(filepath), filename)
 
     skel = human.getSkeleton()
-    humanBBox = human.meshData.calcBBox()
 
     f = codecs.open(filepath, 'w', encoding="utf-8")
     f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
@@ -227,7 +224,7 @@ def writeSkeletonFile(human, filepath, config):
     for bIdx, bone in enumerate(skel.getBones()):
         pos = bone.getRestOffset()
         if feetOnGround and not bone.parent:
-            pos[1] += getFeetOnGroundOffset(humanBBox)
+            pos[1] += getFeetOnGroundOffset(human)
         f.write('        <bone id="%s" name="%s">\n' % (bIdx, bone.name))
         f.write('            <position x="%s" y="%s" z="%s" />\n' % (pos[0], pos[1], pos[2]))
         f.write('            <rotation angle="0">\n')
@@ -337,6 +334,5 @@ def formatName(name):
         return name
 
 
-def getFeetOnGroundOffset(humanBBox):
-    dy = humanBBox[0][1]
-    return -dy
+def getFeetOnGroundOffset(human):
+    return human.getJointPosition('ground')[1]
