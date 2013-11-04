@@ -135,10 +135,12 @@ class SettingsTaskView(gui3d.TaskView):
         @metric.mhEvent
         def onClicked(event):
             gui3d.app.settings['units'] = 'metric'
+            gui3d.app.loadGrid()
             
         @imperial.mhEvent
         def onClicked(event):
             gui3d.app.settings['units'] = 'imperial'
+            gui3d.app.loadGrid()
 
         @self.preload.mhEvent
         def onClicked(event):

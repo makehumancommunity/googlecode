@@ -246,7 +246,7 @@ class Cube(module3d.Object3D):
         self.update()
 
 class GridMesh(module3d.Object3D):
-    def __init__(self, rows, columns, offset=0, plane=0, static = False):
+    def __init__(self, rows, columns, spacing=1, offset=0, plane=0, static = False):
         """
         Plane: 0 for back plane, 1 for ground plane
         """
@@ -260,34 +260,34 @@ class GridMesh(module3d.Object3D):
         # Nb of lines
         rows += 1
         columns += 1
-        
+
         # Vertices
         v = np.zeros((2*(columns+rows), 3), dtype = np.float32)
         f = np.zeros((columns+rows, 2), dtype = np.float32)
-        hBegin = -(rows/2)
-        hEnd = hBegin + rows
-        vBegin = -(columns/2)
-        vEnd = vBegin + columns
+        hBegin = (-(rows/2)) * spacing
+        hEnd = hBegin + (rows * spacing)
+        vBegin = (-(columns/2)) * spacing
+        vEnd = vBegin + (columns * spacing)
         # Horizontal lines
         for i in xrange(rows):
-            pos = hBegin + i
+            pos = hBegin + (i * spacing)
             if plane == 1:
-                v[2*i]    = [pos, offset, vBegin]
-                v[2*i +1] = [pos, offset, vEnd-1]
+                v[2*i]    = [pos, offset, vBegin      ]
+                v[2*i +1] = [pos, offset, vEnd-spacing]
             else:
-                v[2*i]    = [vBegin, pos, offset]
-                v[2*i +1] = [vEnd-1, pos, offset]
+                v[2*i]    = [vBegin,       pos, offset]
+                v[2*i +1] = [vEnd-spacing, pos, offset]
             f[i] = [2*i, 2*i +1]
 
         # Vertical lines
         for i in xrange(columns):
-            pos = vBegin + i
+            pos = vBegin + (i * spacing)
             if plane == 1:
-                v[2* (rows+i)   ] = [hBegin, offset, pos]
-                v[2* (rows+i) +1] = [hEnd-1, offset, pos]
+                v[2* (rows+i)   ] = [hBegin,       offset, pos]
+                v[2* (rows+i) +1] = [hEnd-spacing, offset, pos]
             else:
-                v[2* (rows+i)   ] = [pos, hBegin, offset]
-                v[2* (rows+i) +1] = [pos, hEnd-1, offset]
+                v[2* (rows+i)   ] = [pos, hBegin,       offset]
+                v[2* (rows+i) +1] = [pos, hEnd-spacing, offset]
             f[rows+ i] = [2* (rows+i), 2* (rows+i) +1]
 
         self.setCoords(v)

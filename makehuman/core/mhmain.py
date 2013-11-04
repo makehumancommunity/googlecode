@@ -444,9 +444,19 @@ class MHApplication(gui3d.Application, mh.Application):
         # self.progressBar.hide()
 
     def loadGrid(self):
-        offset = self.selectedHuman.getJointPosition('ground')[1]
+        if self.backplaneGrid:
+            self.removeObject(self.backplaneGrid)
 
-        backGridMesh = geometry3d.GridMesh(100, 100, offset = -10, plane = 0)
+        if self.groundplaneGrid:
+            self.removeObject(self.groundplaneGrid)
+
+        offset = self.selectedHuman.getJointPosition('ground')[1]
+        spacing = 1 if self.settings['units'] == 'metric' else 3.93700787
+
+        gridSize = int(200/spacing)
+        if gridSize % 2 != 0:
+            gridSize += 1
+        backGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = -10, plane = 0)
         backGridMesh.setMainColor(self.gridColor)
         backGridMesh.lockRotation = True
         backGridMesh.restrictVisibleToCamera = True
@@ -454,7 +464,10 @@ class MHApplication(gui3d.Application, mh.Application):
         self.backplaneGrid.setPosition([0,offset,0])
         self.addObject(self.backplaneGrid)
 
-        groundGridMesh = geometry3d.GridMesh(20, 20, offset = 0, plane = 1)
+        gridSize = int(20/spacing)
+        if gridSize % 2 != 0:
+            gridSize += 1
+        groundGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = 0, plane = 1)
         groundGridMesh.setMainColor(self.gridColor)
         self.groundplaneGrid = gui3d.Object(groundGridMesh)
         self.groundplaneGrid.setPosition([0,offset,0])
