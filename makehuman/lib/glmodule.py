@@ -235,8 +235,6 @@ def OnInit():
         MAX_TEXTURE_UNITS = 1
 
     debugdump.dump.appendMessage("GL.MAX_TEXTURE_IMAGE_UNITS: " + str(MAX_TEXTURE_UNITS))
-    if Shader.supported():
-        debugdump.dump.appendMessage("GL.MAX_COMBINED_TEXTURE_IMAGE_UNITS: " + str(glGetInteger(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_ARB)))
 
     # Set global scene ambient
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, A(0.0, 0.0, 0.0, 1.0))
