@@ -104,7 +104,7 @@ class Object3D(object):
         self._faceGroups = []
         # TODO _materials and _material should probably be merged
         self._material = material.Material(objName+"_Material")  # Render material
-        self._materials = []    # Object material groups
+        self._materials = []    # Object material groups        # TODO remove? (I believe this is MHX specific)
         self._groups_rev = {}
         self.cameraMode = 1
         self._visibility = True
@@ -112,7 +112,7 @@ class Object3D(object):
         self.calculateTangents = True   # TODO disable when not needed by shader
         self.object3d = None
         self._priority = 0
-        self.MAX_FACES = 8
+        self.MAX_FACES = 8  # TODO can possibly be lowered to 6 now that the basemesh has improved topology. Will be more efficient.
         self.lockRotation = False   # Set to true to make the rotation of this object independent of the camera rotation
 
         self.__object = None
@@ -407,6 +407,7 @@ class Object3D(object):
         self.markCoords(None, True, True, True)
 
     def getVertexCount(self):
+        #return len(self.vface)
         return len(self.coord)
 
     def getCoords(self, indices = None):
@@ -1137,7 +1138,7 @@ class Object3D(object):
 
     def __str__(self):
         x, y, z = self.loc
-        return 'object3D named: %s, nverts: %s, nfaces: %s, at |%s,%s,%s|' % (self.name, len(self.fvert), len(self.vface), x, y, z)
+        return 'object3D named: %s, nverts: %s, nfaces: %s, at |%s,%s,%s|' % (self.name, self.getVertexCount(), self.getFaceCount(), x, y, z)
 
 def dot_v3(v3_arr1, v3_arr2):
     """
