@@ -273,7 +273,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
             # Deselect previously selected proxy
             self.deselectProxy(None, suppressSignal = True)
 
-        mesh = files3d.loadMesh(proxy.obj_file)
+        mesh = files3d.loadMesh(proxy.obj_file, maxFaces = proxy.max_pole)
         if not mesh:
             log.error("Failed to load %s", proxy.obj_file)
             return

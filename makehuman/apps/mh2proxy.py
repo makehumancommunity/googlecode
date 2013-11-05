@@ -153,6 +153,7 @@ class CProxy:
         self.scale = numpy.array((1.0,1.0,1.0), float)
 
         self.z_depth = 50
+        self.max_pole = None    # Signifies the maximum number of faces per vertex on the mesh topology. Set to none for default. 
         self.cull = False
 
         self.uvLayers = {}
@@ -411,6 +412,7 @@ def readProxyFile(obj, filepath, type="Clothes"):
     proxy.deleteVerts = numpy.zeros(len(obj.coord), bool)
 
     proxy.z_depth = -1
+    proxy.max_pole = None
     proxy.useProjection = True
     proxy.ignoreOffset = False
     status = 0
@@ -437,6 +439,8 @@ def readProxyFile(obj, filepath, type="Clothes"):
             proxy.tags.append( " ".join(words[1:]) )
         elif key == 'z_depth':
             proxy.z_depth = int(words[1])
+        elif key == 'max_pole':
+            proxy.max_pole = int(words[1])
 
         elif key == 'verts':
             status = doRefVerts
