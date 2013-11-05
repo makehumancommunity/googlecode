@@ -112,7 +112,7 @@ class Object3D(object):
         self.calculateTangents = True   # TODO disable when not needed by shader
         self.object3d = None
         self._priority = 0
-        self.MAX_FACES = 8  # TODO can possibly be lowered to 6 now that the basemesh has improved topology. Will be more efficient.
+        self.MAX_FACES = 8
         self.lockRotation = False   # Set to true to make the rotation of this object independent of the camera rotation
 
         self.__object = None
@@ -551,8 +551,8 @@ class Object3D(object):
                 self.vface[ix[i],:n[i]] = fi[first[i]:][:n[i]]
         except Exception as e:
             import log
-            log.error("Failed to index faces of mesh %s, you are probably loading a mesh with mixed nb of verts per face (do not mix tris and quads). (%s)", self.name, format(str(e)))
-            raise e
+            log.error("Failed to index faces of mesh %s, you are probably loading a mesh with mixed nb of verts per face (do not mix tris and quads). Or your mesh has too many faces attached to one vertex (the maximum is %s-poles). In the second case, either increase MAX_FACES for this mesh, or improve the mesh topology. Original error message: (%s) %s", self.name, self.MAX_FACES, type(e), format(str(e)))
+            raise RuntimeError('Incompatible mesh topology.')
 
     def updateIndexBuffer(self):
         self.updateIndexBufferVerts()

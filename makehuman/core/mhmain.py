@@ -232,9 +232,10 @@ class MHApplication(gui3d.Application, mh.Application):
     def loadHuman(self):
 
         self.progress(0.1)
-        #hairObj = hair.loadHairsFile(self.scene3d, path=mh.getSysDataPath("hairs/default"), update = False)
-        #self.scene3d.clear(hairObj)
-        self.selectedHuman = self.addObject(human.Human(files3d.loadMesh(mh.getSysDataPath("3dobjs/base.obj"))))
+
+        # Set a lower than default MAX_FACES value because we know the human has a good topology (will make it a little faster)
+        # (we do not lower the global limit because that would limit the selection of meshes that MH would accept too much)
+        self.selectedHuman = self.addObject(human.Human(files3d.loadMesh(mh.getSysDataPath("3dobjs/base.obj"), maxFaces = 6)))
 
     def loadMainGui(self):
 
@@ -503,7 +504,7 @@ class MHApplication(gui3d.Application, mh.Application):
 
         #printtree(self)
 
-        mh.updatePickingBuffer();
+        mh.updatePickingBuffer()
         self.redraw()
 
     def startupSequence(self):

@@ -157,7 +157,7 @@ def loadTextMesh(obj, path):
     wavefront.loadObjFile(path, obj)
     #log.debug('loadTextMesh: end')
 
-def loadMesh(path, locX=0, locY=0, locZ=0, loadColors=1):
+def loadMesh(path, locX=0, locY=0, locZ=0, loadColors=1, maxFaces=None):
     """
     This function loads the specified mesh object into internal MakeHuman data 
     structures, and returns it. The loaded file should be in Wavefront OBJ 
@@ -179,9 +179,14 @@ def loadMesh(path, locX=0, locY=0, locZ=0, loadColors=1):
       *float* Z location of loaded obj, default = 0
 
     Note: loadColors is currently unused
+
+    maxFaces:
+      *uint* Number of faces per vertex (pole), None for default (min 4)
     """
     name = os.path.basename(path)
     obj = module3d.Object3D(name)
+    if maxFaces:
+        obj.MAX_FACES = maxFaces
 
     obj.path = path
     obj.x = locX
