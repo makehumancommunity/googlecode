@@ -8,7 +8,7 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Marc Flerackers
+**Authors:**           Marc Flerackers, Glynn Clements, Jonas Hauquier
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
