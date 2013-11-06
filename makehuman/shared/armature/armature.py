@@ -281,13 +281,6 @@ class Bone:
             self.matrixRelative = self.matrixRest
 
 
-    def getBindMatrixCollada(self):
-        self.calcRestMatrix()
-        rotX = tm.rotation_matrix(math.pi/2, XUnit)
-        mat4 = np.dot(rotX, self.matrixRest)
-        return la.inv(mat4)
-
-
     def calcBindMatrix(self):
         if self.bindMatrix is not None:
             return

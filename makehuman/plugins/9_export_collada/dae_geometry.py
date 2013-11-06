@@ -39,10 +39,18 @@ def writeLibraryGeometry(fp, rmeshes, config):
     fp.write('  </library_geometries>\n')
 
 
+def rotateCoord(coord, config):
+    if config.rotate90X:
+        coord = np.array([(x,-z,y) for (x,y,z) in coord])
+    if config.rotate90Z:
+        coord = np.array([(-y,x,z) for (x,y,z) in coord])
+    return coord
+
+
 def writeGeometry(fp, rmesh, config):
     progress = Progress()
     progress(0)
-    
+
     obj = rmesh.object
     nVerts = len(obj.coord)
     nUvVerts = len(obj.texco)
@@ -54,8 +62,9 @@ def writeGeometry(fp, rmesh, config):
         '          <float_array count="%d" id="%s-Position-array">\n' % (3*nVerts,rmesh.name) +
         '          ')
 
-    fp.write( ''.join([("%.4f %.4f %.4f " % tuple(co)) for co in obj.coord]) )
-    
+    coord = rotateCoord(obj.coord, config)
+    fp.write( ''.join([("%.4f %.4f %.4f " % tuple(co)) for co in coord]) )
+
     fp.write('\n' +
         '          </float_array>\n' +
         '          <technique_common>\n' +
@@ -79,7 +88,7 @@ def writeGeometry(fp, rmesh, config):
             '          ')
 
         fp.write( ''.join([("%.4f %.4f %.4f " % tuple(no)) for no in obj.fnorm]) )
-        
+
         fp.write('\n' +
             '          </float_array>\n' +
             '          <technique_common>\n' +
@@ -157,6 +166,7 @@ def writeShapeKey(fp, name, shape, rmesh, config):
     for n,dr in shape.items():
         target[n] += np.array(dr)
 
+    target = rotateCoord(target, config)
     fp.write( ''.join([("%.4f %.4f %.4f " % tuple(co)) for co in target]) )
 
     fp.write('\n' +

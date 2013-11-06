@@ -60,32 +60,36 @@ def writeSceneWithArmature(fp, rmeshes, amt, config):
     for root in amt.hierarchy:
         writeBone(fp, root, [0,0,0], 'layer="L1"', "  ", amt, config)
 
+    fp.write(
+        '      </node>\n')
+
     for rmesh in rmeshes:
         writeMeshArmatureNode(fp, "        ", rmesh, amt, config)
 
     fp.write(
-        '      </node>\n' +
         '    </visual_scene>\n' +
         '  </library_visual_scenes>\n')
 
 
 _Identity = np.identity(4, float)
+_RotX = tm.rotation_matrix(math.pi/2, (1,0,0))
+_RotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
 
 def globalMatrix(config):
-    if config.rotate90X:
-        mat = tm.rotation_matrix(-math.pi/2, (1,0,0))
-    else:
-        mat = _Identity
-
+    if config.rotate90X and config.rotate90Z:
+        return np.dot(_RotZ, _RotX)
+    elif config.rotate90X:
+        return _RotX
     if config.rotate90Z:
-        rotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
-        mat = np.dot(mat, rotZ)
-    return mat
+        return _RotZ
+    else:
+        return _Identity
 
 
 def writeMeshArmatureNode(fp, pad, rmesh, amt, config):
     fp.write('\n%s<node id="%sObject" name="%s">\n' % (pad, rmesh.name, rmesh.name))
     writeMatrix(fp, _Identity, "transform", pad+"  ")
+    #writeMatrix(fp, globalMatrix(config), "transform", pad+"  ")
     fp.write(
         '%s  <instance_controller url="#%s-skin">\n' % (pad, rmesh.name) +
         '%s    <skeleton>#%sSkeleton</skeleton>\n' % (pad, amt.roots[0].name))
@@ -97,7 +101,7 @@ def writeMeshArmatureNode(fp, pad, rmesh, amt, config):
 
 def writeMeshNode(fp, pad, rmesh, config):
     fp.write('\n%s<node id="%sObject" name="%s">\n' % (pad, rmesh.name, rmesh.name))
-    writeMatrix(fp, globalMatrix(config), "transform", pad+"  ")
+    writeMatrix(fp, _Identity, "transform", pad+"  ")
     fp.write(
         '%s  <instance_geometry url="#%sMesh">\n' % (pad, rmesh.name))
     writeBindMaterial(fp, pad, rmesh.material)

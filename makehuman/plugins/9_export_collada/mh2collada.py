@@ -51,7 +51,7 @@ Delta = [0,0.01,0]
 
 def exportCollada(human, filepath, config):
     progress = Progress()
-    
+
     time1 = time.clock()
     config.setHuman(human)
     config.setupTexFolder(filepath)
@@ -87,7 +87,7 @@ def exportCollada(human, filepath, config):
         '    </contributor>\n' +
         '    <created>%s</created>\n' % date +
         '    <modified>%s</modified>\n' % date +
-        '    <unit meter="0.1" name="meter"/>\n' +
+        '    <unit meter="%.4f" name="%s"/>\n' % (0.1/config.scale, config.unit) +
         '    <up_axis>Y_UP</up_axis>\n' +
         '  </asset>\n')
 
