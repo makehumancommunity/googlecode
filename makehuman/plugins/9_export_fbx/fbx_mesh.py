@@ -274,8 +274,8 @@ def writeLinks(fp, rmeshes, amt):
     for rmesh in rmeshes:
         name = getRmeshName(rmesh, amt)
         ooLink(fp, 'Model::%sMesh' % name, 'Model::RootNode')
-        if amt:
-            ooLink(fp, 'Model::%sMesh' % name, 'Model::%s' % amt.name)
+        #if amt:
+        #    ooLink(fp, 'Model::%sMesh' % name, 'Model::%s' % amt.name)
         ooLink(fp, 'Geometry::%s' % name, 'Model::%sMesh' % name)
 
 

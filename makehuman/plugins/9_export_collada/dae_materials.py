@@ -24,6 +24,7 @@ Material export
 """
 
 import os
+import log
 from progress import Progress
 
 #----------------------------------------------------------------------
@@ -100,10 +101,14 @@ def writeEffects(fp, rmesh):
         '        <technique sid="common">\n' +
         '          <phong>\n')
 
-    writeTexture(fp, 'diffuse', mat.diffuseTexture, mat.diffuseColor, 1.0, mat.opacity)
+    if mat.diffuseTexture:
+        alpha = 0.0
+    else:
+        alpha = 1.0
+    writeTexture(fp, 'diffuse', mat.diffuseTexture, mat.diffuseColor, mat.diffuseIntensity, s=1.0, a=alpha)
     writeTexture(fp, 'transparency', mat.diffuseTexture, None, mat.transparencyMapIntensity)
-    writeTexture(fp, 'specular', mat.specularMapTexture, mat.specularColor, 0.1*mat.specularMapIntensity)
-    writeIntensity(fp, 'shininess', mat.shininess)
+    writeTexture(fp, 'specular', mat.specularMapTexture, mat.specularColor, mat.specularMapIntensity, s=1.0, a=alpha)
+    writeIntensity(fp, 'shininess', 256*mat.shininess)
     writeTexture(fp, 'normal', mat.normalMapTexture, None, mat.normalMapIntensity)
     writeTexture(fp, 'bump', mat.bumpMapTexture, None, mat.bumpMapIntensity)
     writeTexture(fp, 'displacement', mat.displacementMapTexture, None, mat.displacementMapIntensity)
@@ -145,18 +150,15 @@ def writeIntensity(fp, tech, intensity):
 
 
 def writeTexture(fp, tech, filepath, color, intensity, s=1.0, a=1.0):
-    if not filepath:
-        return
-
     fp.write('            <%s>\n' % tech)
     if color:
-        fp.write('            <color>%.4f %.4f %.4f %.4f</color> \n' % (s*color.r, s*color.g, s*color.b, a))
-    if intensity:
-        fp.write('            <float>%s</float>\n' % intensity)
-    texname = getTextureName(filepath)
-    fp.write(
-        '              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % texname +
-        '            </%s>\n' % tech)
+        fp.write('              <color>%.4f %.4f %.4f %.4f</color> \n' % (s*color.r, s*color.g, s*color.b, a))
+    #if intensity:
+    #    fp.write('              <float>%s</float>\n' % intensity)
+    if filepath:
+        texname = getTextureName(filepath)
+        fp.write('              <texture texture="%s-sampler" texcoord="UVTex"/>\n' % texname)
+    fp.write('            </%s>\n' % tech)
 
 #----------------------------------------------------------------------
 #   library_materials
