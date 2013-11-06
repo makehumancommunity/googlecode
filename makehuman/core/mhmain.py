@@ -1218,7 +1218,7 @@ class MHApplication(gui3d.Application, mh.Application):
         self.axisView([0.0, 0.0, 0.0])
 
     def rightView(self):
-        self.axisView([0.0, -90.0, 0.0])
+        self.axisView([0.0, 90.0, 0.0])
 
     def topView(self):
         self.axisView([90.0, 0.0, 0.0])
@@ -1227,7 +1227,7 @@ class MHApplication(gui3d.Application, mh.Application):
         self.axisView([0.0, 180.0, 0.0])
 
     def leftView(self):
-        self.axisView([0.0, 90.0, 0.0])
+        self.axisView([0.0, -90.0, 0.0])
 
     def bottomView(self):
         self.axisView([-90.0, 0.0, 0.0])
