@@ -1152,6 +1152,9 @@ class MHApplication(gui3d.Application, mh.Application):
     # Camera navigation
     def rotateCamera(self, axis, amount):
         self.modelCamera.addRotation(axis, amount)
+        if axis == 1 and self.modelCamera.getRotation()[1] in [0, 90, 180, 270]:
+            # Make sure that while rotating the grid never appears
+            self.modelCamera.addRotation(1, 0.001)
         self.redraw()
 
     def panCamera(self, axis, amount):
