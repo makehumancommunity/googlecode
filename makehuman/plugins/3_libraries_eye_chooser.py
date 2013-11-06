@@ -51,6 +51,7 @@ class EyesTaskView(proxychooser.ProxyChooserTaskView):
     def onHumanChanged(self, event):
         if event.change == 'reset':
             self.selectProxy(mh.getSysDataPath("eyes/high-poly/high-poly.mhclo"))
+            self.getObjects()[0].mesh.material = self.getSelection()[0].material
             return
         super(EyesTaskView, self).onHumanChanged(event)
 
