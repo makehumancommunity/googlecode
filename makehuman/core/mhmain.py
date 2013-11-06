@@ -458,7 +458,7 @@ class MHApplication(gui3d.Application, mh.Application):
         if gridSize % 2 != 0:
             gridSize += 1
         if self.settings['units'] == 'metric':
-            subgrids = 5
+            subgrids = 10
         else:
             subgrids = 12
         backGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = -10, plane = 0, subgrids = subgrids)
