@@ -12,7 +12,6 @@ y_scale 791 881 2.6009
 z_depth 50
 uvtex_layer 0 UVMap
 objfile_layer 0
-material proxy741.mhmat
 use_projection 0
 verts 0
  7791  7765  7766 0.22099 0.48769 0.29132 -0.00105 0.00319 -0.00066

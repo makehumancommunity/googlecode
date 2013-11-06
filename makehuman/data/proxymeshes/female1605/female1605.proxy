@@ -12,7 +12,6 @@ y_scale 791 881 2.6009
 z_depth 50
 uvtex_layer 0 UVMap
 objfile_layer 0
-material female1605.mhmat
 use_projection 0
 verts 0
  8085  8075  8074 0.11351 0.25435 0.63214 -0.00020 -0.00132 -0.00215

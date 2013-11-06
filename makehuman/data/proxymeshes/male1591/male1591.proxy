@@ -12,7 +12,6 @@ y_scale 791 881 2.6009
 z_depth 50
 uvtex_layer 0 UVMap
 objfile_layer 0
-material male1591.mhmat
 use_projection 0
 verts 0
   603   586   585 0.27451 0.46075 0.26474 0.03979 0.03223 -0.04708
