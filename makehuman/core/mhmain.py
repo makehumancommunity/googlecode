@@ -452,7 +452,7 @@ class MHApplication(gui3d.Application, mh.Application):
             self.removeObject(self.groundplaneGrid)
 
         offset = self.selectedHuman.getJointPosition('ground')[1]
-        spacing = 1 if self.settings['units'] == 'metric' else 3.93700787
+        spacing = 1 if self.settings['units'] == 'metric' else 3.048
 
         gridSize = int(200/spacing)
         if gridSize % 2 != 0:
@@ -460,7 +460,7 @@ class MHApplication(gui3d.Application, mh.Application):
         if self.settings['units'] == 'metric':
             subgrids = 5
         else:
-            subgrids = 10
+            subgrids = 12
         backGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = -10, plane = 0, subgrids = subgrids)
         backGridMesh.setMainColor(self.gridColor)
         backGridMesh.setSubColor(self.gridSubColor)
