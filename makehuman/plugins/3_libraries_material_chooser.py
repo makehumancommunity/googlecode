@@ -174,10 +174,10 @@ class MaterialTaskView(gui3d.TaskView):
                 human.material = mat
                 return
             else:
-                for d in self.getMaterialPaths('skin'):
+                for d in [mh.getPath('data'), mh.getSysDataPath()]:
                     absP = os.path.join(d, path)
                     if os.path.isfile(absP):
-                        mat = material.fromFile(path)
+                        mat = material.fromFile(absP)
                         human.material = mat
                         return
             log.warning('Could not find material %s for skinMaterial parameter.', values[1])
