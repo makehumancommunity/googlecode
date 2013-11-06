@@ -457,7 +457,11 @@ class MHApplication(gui3d.Application, mh.Application):
         gridSize = int(200/spacing)
         if gridSize % 2 != 0:
             gridSize += 1
-        backGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = -10, plane = 0, subgrids = 5)
+        if self.settings['units'] == 'metric':
+            subgrids = 5
+        else:
+            subgrids = 4
+        backGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = -10, plane = 0, subgrids = subgrids)
         backGridMesh.setMainColor(self.gridColor)
         backGridMesh.setSubColor(self.gridSubColor)
         backGridMesh.lockRotation = True
@@ -470,7 +474,7 @@ class MHApplication(gui3d.Application, mh.Application):
         gridSize = int(20/spacing)
         if gridSize % 2 != 0:
             gridSize += 1
-        groundGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = 0, plane = 1, subgrids = 5)
+        groundGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = 0, plane = 1, subgrids = subgrids)
         groundGridMesh.setMainColor(self.gridColor)
         groundGridMesh.setSubColor(self.gridSubColor)
         groundGridMesh.minSubgridZoom = 1.0/spacing
