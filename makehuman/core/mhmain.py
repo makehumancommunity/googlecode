@@ -1349,8 +1349,6 @@ class MHApplication(gui3d.Application, mh.Application):
         self.actions.right     = action('right',     'Right view',    self.rightView)
         self.actions.top       = action('top',       'Top view',      self.topView)
         self.actions.bottom    = action('bottom',    'Bottom view',   self.bottomView)
-        self.actions.globalCam = action('global',    'Global camera', self.setGlobalCamera)
-        self.actions.faceCam   = action('face',      'Face camera',   self.setFaceCamera)
         self.actions.resetCam  = action('resetCam',  'Reset camera',  self.resetView)
 
     def createShortcuts(self):
