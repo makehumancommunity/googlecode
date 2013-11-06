@@ -460,13 +460,13 @@ class MHApplication(gui3d.Application, mh.Application):
         if self.settings['units'] == 'metric':
             subgrids = 5
         else:
-            subgrids = 4
+            subgrids = 10
         backGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = -10, plane = 0, subgrids = subgrids)
         backGridMesh.setMainColor(self.gridColor)
         backGridMesh.setSubColor(self.gridSubColor)
         backGridMesh.lockRotation = True
         backGridMesh.restrictVisibleToCamera = True
-        backGridMesh.minSubgridZoom = 1.0/spacing
+        backGridMesh.minSubgridZoom = (1.0/spacing) * float(subgrids)/5
         self.backplaneGrid = gui3d.Object(backGridMesh)
         self.backplaneGrid.setPosition([0,offset,0])
         self.addObject(self.backplaneGrid)
@@ -477,7 +477,7 @@ class MHApplication(gui3d.Application, mh.Application):
         groundGridMesh = geometry3d.GridMesh(gridSize, gridSize, spacing, offset = 0, plane = 1, subgrids = subgrids)
         groundGridMesh.setMainColor(self.gridColor)
         groundGridMesh.setSubColor(self.gridSubColor)
-        groundGridMesh.minSubgridZoom = 1.0/spacing
+        groundGridMesh.minSubgridZoom = (1.0/spacing) * float(subgrids)/5
         self.groundplaneGrid = gui3d.Object(groundGridMesh)
         self.groundplaneGrid.setPosition([0,offset,0])
         self.addObject(self.groundplaneGrid)
