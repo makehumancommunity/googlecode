@@ -283,6 +283,9 @@ def main():
         init_logging()
     except Exception as e:
         print >> sys.stderr,  "error: " + format(str(e))
+        import traceback
+        bt = traceback.format_exc()
+        print >> sys.stderr, bt
         return
 
     debug_dump()
