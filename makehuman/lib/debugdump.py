@@ -30,6 +30,7 @@ import string
 if sys.platform == 'win32':
     import _winreg
 import log
+import getpath
 
 class DebugDump(object):
 
@@ -42,16 +43,7 @@ class DebugDump(object):
     def open(self):
         if self.debugpath is None:
             self.home = os.path.expanduser('~')
-            self.debugpath = self.home
-            if sys.platform == 'win32':
-                self.debugpath = os.path.join(os.environ['MYDOCUMENTS'],'makehuman')
-
-            if sys.platform == 'linux2':
-                self.debugpath = os.path.join(self.debugpath,"makehuman")
-
-            if sys.platform.startswith("darwin"):
-                self.debugpath = os.path.join(self.debugpath,"Documents")
-                self.debugpath = os.path.join(self.debugpath,"MakeHuman")
+            self.debugpath = getpath.getPath()
 
             if not os.path.exists(self.debugpath):
                 os.makedirs(self.debugpath)

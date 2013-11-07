@@ -204,7 +204,6 @@ def get_platform_paths():
     global stdout_filename, stderr_filename
     import getpath
 
-    os.environ['MYDOCUMENTS'] = getpath.getHomePath()
     home = getpath.getPath()
 
     if sys.platform == 'win32':
