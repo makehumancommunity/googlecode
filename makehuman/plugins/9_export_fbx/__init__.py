@@ -36,7 +36,6 @@ class FbxConfig(Config):
         self.selectedOptions(exporter)
 
         self.useRelPaths     = False
-        self.feetOnGround = False
         self.expressions = exporter.expressions.selected
         self.useCustomTargets = exporter.useCustomTargets.selected
         self.useMaterials    = True # for debugging
@@ -46,7 +45,6 @@ class FbxConfig(Config):
             return
         self.rigOptions.setExportOptions(
             useExpressions = self.expressions,
-            feetOnGround = self.feetOnGround,
             useTPose = self.useTPose,
             useLeftRight = False,
         )

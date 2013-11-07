@@ -27,6 +27,7 @@ from .dae_node import goodBoneName
 from progress import Progress
 
 import math
+import log
 import numpy as np
 import numpy.linalg as la
 import transformations as tm

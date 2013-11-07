@@ -137,9 +137,15 @@ class Armature:
         self.isNormalized = True
 
 
-    def calcBindMatrices(self):
+    def calcBindMatrices(self, config=None):
         import io_json
-        self.bindMatrix = tm.rotation_matrix(math.pi/2, XUnit)
+
+        gmat = np.identity(4, float)
+        if config:
+            gmat[:3,3] = -config.offset
+
+        bmat = tm.rotation_matrix(math.pi/2, XUnit)
+        self.bindMatrix = np.dot(gmat, bmat)
         self.bindInverse = la.inv(self.bindMatrix)
 
         if self.options.useTPose:
@@ -154,7 +160,7 @@ class Armature:
                 bone.matrixTPose = None
 
         for bone in self.bones.values():
-            bone.calcBindMatrix()
+            bone.calcBindMatrix(gmat)
 
 
 class Bone:
@@ -281,7 +287,7 @@ class Bone:
             self.matrixRelative = self.matrixRest
 
 
-    def calcBindMatrix(self):
+    def calcBindMatrix(self, gmat):
         if self.bindMatrix is not None:
             return
 
@@ -296,9 +302,8 @@ class Bone:
                 self.matrixRelative = np.dot(la.inv(parbone.matrixPosedRest), self.matrixPosedRest)
             else:
                 self.matrixRelative = self.matrixRest
-            log.debug("TM %s" % self.name)
 
-        self.bindInverse = np.transpose(self.matrixRest)
+        self.bindInverse = np.transpose(np.dot(gmat, self.matrixRest))
         self.bindMatrix = la.inv(self.bindInverse)
 
 

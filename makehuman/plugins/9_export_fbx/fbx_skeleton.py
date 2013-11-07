@@ -146,12 +146,12 @@ def writeObjectDefs(fp, rmeshes, amt):
 #   Object properties
 #--------------------------------------------------------------------
 
-def writeObjectProps(fp, rmeshes, amt):
+def writeObjectProps(fp, rmeshes, amt, config):
     if amt is None:
         return
     for bone in amt.bones.values():
         writeNodeAttributeProp(fp, bone)
-    writeNodeProp(fp, amt)
+    writeNodeProp(fp, amt, config)
     for bone in amt.bones.values():
         writeBoneProp(fp, bone)
 
@@ -168,7 +168,7 @@ def writeNodeAttributeProp(fp, bone):
 '    }\n')
 
 
-def writeNodeProp(fp, amt):
+def writeNodeProp(fp, amt, config):
     id,key = getId("Model::%s" % amt.name)
     fp.write(
 '    Model: %d, "%s", "Null" {' % (id, key) +
@@ -179,6 +179,7 @@ def writeNodeProp(fp, amt):
             P: "InheritType", "enum", "", "",1
             P: "ScalingMax", "Vector3D", "Vector", "",0,0,0
 """ +
+'            P: "Lcl Translation", "Lcl Translation", "", "A",%.4f,%.4f,%.4f\n' % tuple(-config.offset) +
 '            P: "MHName", "KString", "", "", "%s"' % amt.name +
 """
         }

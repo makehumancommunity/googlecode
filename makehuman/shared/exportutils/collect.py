@@ -32,10 +32,6 @@ import mh2proxy
 import richmesh
 import log
 
-#
-#   readTargets(config):
-#
-
 from .shapekeys import readExpressionUnits
 from .custom import listCustomFiles, readCustomTarget
 
@@ -73,6 +69,8 @@ def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidd
         from .config import Config
         config = Config()
         config.setHuman(human)
+
+    config.setOffset(human)
 
     rmeshes = []
 

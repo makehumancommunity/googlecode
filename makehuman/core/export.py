@@ -36,10 +36,7 @@ class Exporter(object):
 
         self.taskview       = taskview
         self.useHelpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
-        #self.useTPose       = options.addWidget(gui.CheckBox("T-Pose", False))
-        #self.hidden         = options.addWidget(gui.CheckBox("Keep hidden faces", True))
-        #self.smooth         = options.addWidget(gui.CheckBox("Subdivide", False))
-        #self.scales         = self.addScales(options)
+        self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
 
     def export(self, human, filename):
         raise NotImplementedError()

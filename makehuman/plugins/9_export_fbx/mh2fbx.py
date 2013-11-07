@@ -62,7 +62,7 @@ def exportFbx(human, filepath, config):
         useHelpers=config.useHelpers)
 
     if amt:
-        amt.calcBindMatrices()
+        amt.calcBindMatrices(config)
 
     gui3d.app.progress(0.5, text="Exporting %s" % filepath)
 
@@ -83,7 +83,7 @@ def exportFbx(human, filepath, config):
 
     fbx_header.writeObjectProps(fp, rmeshes, amt)
     if amt:
-        fbx_skeleton.writeObjectProps(fp, rmeshes, amt)
+        fbx_skeleton.writeObjectProps(fp, rmeshes, amt, config)
     fbx_mesh.writeObjectProps(fp, rmeshes, amt, config)
     fbx_deformer.writeObjectProps(fp, rmeshes, amt)
     if config.useMaterials:

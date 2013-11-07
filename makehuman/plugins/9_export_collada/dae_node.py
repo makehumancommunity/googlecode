@@ -76,14 +76,17 @@ _RotX = tm.rotation_matrix(math.pi/2, (1,0,0))
 _RotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
 
 def globalMatrix(config):
+    mat = np.identity(4, float)
+    mat[:3,3] = -config.offset
     if config.rotate90X and config.rotate90Z:
-        return np.dot(_RotZ, _RotX)
+        rot = np.dot(_RotZ, _RotX)
     elif config.rotate90X:
-        return _RotX
-    if config.rotate90Z:
-        return _RotZ
+        rot = _RotX
+    elif config.rotate90Z:
+        rot = _RotZ
     else:
-        return _Identity
+        rot = _Identity
+    return np.dot(rot, mat)
 
 
 def writeMeshArmatureNode(fp, pad, rmesh, amt, config):

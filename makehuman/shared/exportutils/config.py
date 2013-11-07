@@ -27,6 +27,7 @@ import os
 from getpath import getPath, getSysDataPath
 import log
 import shutil
+import numpy as np
 
 #
 #   class Config
@@ -35,10 +36,12 @@ import shutil
 class Config:
 
     def __init__(self):
-        self.useHelpers            = False
+        self.useHelpers         = False
         self.useTPose           = False
+        self.feetOnGround       = False
         self.scale              = 1.0
         self.unit               = "dm"
+        self.offset             = np.array((0.0, 0.0, 0.0))
 
         self.rigOptions         = None
         self.useNormals         = False
@@ -52,8 +55,17 @@ class Config:
     def selectedOptions(self, exporter):
         self.useHelpers            = exporter.useHelpers.selected
         self.useTPose           = False # exporter.useTPose.selected
+        self.feetOnGround =         exporter.feetOnGround.selected
         self.scale,self.unit    = exporter.taskview.getScale()
         return self
+
+
+    def setOffset(self, human):
+        from armature.utils import calcJointPos
+        if self.feetOnGround:
+            self.offset = np.array(calcJointPos(human.meshData, 'ground'))
+        else:
+            self.offset = np.array((0,0,0), float)
 
 
     @property

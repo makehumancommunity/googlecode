@@ -27,6 +27,7 @@ import os
 import module3d
 import codecs
 import math
+import numpy as np
 
 def loadObjFile(path, obj = None):
     """
@@ -149,8 +150,12 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
         fp.write("mtllib %s\n" % os.path.basename(mtlfile))
 
     # Vertices
+    if config:
+        offs = config.offset
+    else:
+        offs = np.array((0,0,0))
     for obj in objects:
-        fp.write("".join( ["v %.4g %.4g %.4g\n" % tuple(co) for co in obj.coord] ))
+        fp.write("".join( ["v %.4g %.4g %.4g\n" % tuple(co-offs) for co in obj.coord] ))
 
     # Vertex normals
     if config == None or config.useNormals:

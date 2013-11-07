@@ -38,7 +38,6 @@ class DaeConfig(Config):
         self.useNormals = exporter.useNormals.selected
         self.rotate90X = exporter.rotate90X.selected
         self.rotate90Z = exporter.rotate90Z.selected
-        self.feetOnGround = False
         self.expressions     = exporter.expressions.selected
         self.useCustomTargets = exporter.useCustomTargets.selected
 
@@ -48,7 +47,6 @@ class DaeConfig(Config):
             self.rigOptions = ArmatureOptions()
         self.rigOptions.setExportOptions(
             useExpressions = self.expressions,
-            feetOnGround = self.feetOnGround,
             useTPose = self.useTPose,
         )
 

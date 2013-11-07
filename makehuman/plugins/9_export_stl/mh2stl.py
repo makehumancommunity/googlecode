@@ -35,6 +35,7 @@ __docformat__ = 'restructuredtext'
 import os
 import struct
 import exportutils
+import numpy as np
 from progress import Progress
 
 def exportStlAscii(human, filepath, config, exportJoints = False):
@@ -76,19 +77,20 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
     objprog = Progress(len(rmeshes))
     for rmesh in rmeshes:
         obj = rmesh.object
+        coord = np.array([co-config.offset for co in obj.coord])
         fp.write("".join( [(
             'facet normal %f %f %f\n' % tuple(obj.fnorm[fn]) +
             '\touter loop\n' +
-            '\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[0]]) +
-            '\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[1]]) +
-            '\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[2]]) +
+            '\t\tvertex %f %f %f\n' % tuple(coord[fv[0]]) +
+            '\t\tvertex %f %f %f\n' % tuple(coord[fv[1]]) +
+            '\t\tvertex %f %f %f\n' % tuple(coord[fv[2]]) +
             '\tendloop\n' +
             '\tendfacet\n' +
             'facet normal %f %f %f\n' % tuple(obj.fnorm[fn]) +
             '\touter loop\n' +
-            '\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[2]]) +
-            '\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[3]]) +
-            '\t\tvertex %f %f %f\n' % tuple(obj.coord[fv[0]]) +
+            '\t\tvertex %f %f %f\n' % tuple(coord[fv[2]]) +
+            '\t\tvertex %f %f %f\n' % tuple(coord[fv[3]]) +
+            '\t\tvertex %f %f %f\n' % tuple(coord[fv[0]]) +
             '\tendloop\n' +
             '\tendfacet\n'
             ) for fn,fv in enumerate(obj.fvert)] ))
@@ -110,7 +112,7 @@ def exportStlBinary(human, filepath, config, exportJoints = False):
     """
 
     progress = Progress(0, False)
-    
+
     config.setHuman(human)
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
@@ -128,14 +130,14 @@ def exportStlBinary(human, filepath, config, exportJoints = False):
     fp.write('\x00' * 80)
     fp.write(struct.pack('<I', 0))
     count = 0
-    
+
     progress(0.3, 0.99, "Writing Objects")
     objprog = Progress(len(rmeshes))
     for rmesh in rmeshes:
         obj = rmesh.object
         for fn,fv in enumerate(obj.fvert):
             fno = obj.fnorm[fn]
-            co = obj.coord[fv]
+            co = obj.coord[fv] - config.offset
 
             fp.write(struct.pack('<fff', fno[0], fno[1], fno[2]))
             fp.write(struct.pack('<fff', co[0][0], co[0][1], co[0][2]))
@@ -151,7 +153,7 @@ def exportStlBinary(human, filepath, config, exportJoints = False):
             fp.write(struct.pack('<H', 0))
             count += 1
         objprog.step()
-    
+
     fp.seek(80)
     fp.write(struct.pack('<I', count))
     progress(1, None, "STL export finished. Exported file: %s" % filepath)
