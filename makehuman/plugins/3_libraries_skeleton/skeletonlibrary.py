@@ -202,6 +202,13 @@ class SkeletonLibrary(gui3d.TaskView):
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
+        self.presetSecondLife2Btn = self.presetBox.addWidget(gui.Button("Second Life II"))
+        @self.presetSecondLife2Btn.mhEvent
+        def onClicked(event):
+            descr = self.amtOptions.loadPreset("second_life_ii", self.optionsSelector)
+            self.descrLbl.setText("Description: %s" % descr)
+            self.updateSkeleton()
+
         self.presetXonoticBtn = self.presetBox.addWidget(gui.Button("Xonotic"))
         @self.presetXonoticBtn.mhEvent
         def onClicked(event):

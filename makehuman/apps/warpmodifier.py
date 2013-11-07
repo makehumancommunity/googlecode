@@ -85,7 +85,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
 
         warppath = template.replace('$','').replace('{','').replace('}','')
         humanmodifier.SimpleModifier.__init__(self, warppath)
-        self.eventType = 'warp'
+        self.name = self.eventType = 'warp'
         self.warppath = warppath
         self.template = str(template)
         self.bodypart = bodypart
