@@ -401,8 +401,9 @@ def drawMesh(obj):
     glEnableClientState(GL_NORMAL_ARRAY)
     glNormalPointer(GL_FLOAT, 0, obj.norms)
     glEnableClientState(GL_COLOR_ARRAY)
-    if not useShader:
+    if not useShader and obj.solid:
         # Vertex colors should be multiplied with the diffuse material value, also for fixed function
+        # (with the exception of wireframe rendering)
         glColorPointer(4, GL_UNSIGNED_BYTE, 0, obj.color_diff)
     else:
         glColorPointer(4, GL_UNSIGNED_BYTE, 0, obj.color)
