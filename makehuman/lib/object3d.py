@@ -57,6 +57,10 @@ class Object3D(object):
         return self.parent.r_color
 
     @property
+    def color_diff(self):
+        return self.parent.r_color_diff
+
+    @property
     def hasUVs(self):
         return self.parent.hasUVs()
 

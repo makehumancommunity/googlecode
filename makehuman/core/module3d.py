@@ -115,6 +115,10 @@ class Object3D(object):
         self.MAX_FACES = 8
         self.lockRotation = False   # Set to true to make the rotation of this object independent of the camera rotation
 
+        # Cache used for retrieving vertex colors multiplied with material diffuse color
+        self._old_diff = None
+        self._r_color_diff = None
+
         self.__object = None
 
     def get_x(self):
@@ -659,6 +663,7 @@ class Object3D(object):
         else:
             self.r_color[self.ucolr[self.vmap]] = self.color[self.vmap][self.ucolr[self.vmap]]
         self.ucolr = False
+        self._r_color_diff = None
 
     def sync_texco(self):
         if not self.has_uv:
@@ -719,6 +724,23 @@ class Object3D(object):
             self.color[...] = color[None,:]
         self.markCoords(colr=True)
         self.sync_color()
+
+    @property
+    def r_color_diff(self):
+        """
+        Vertex colors multiplied with the diffuse material color.
+        """
+        if self._r_color_diff is None:
+            self._r_color_diff = np.zeros(self.r_color.shape, dtype = np.uint8)
+            self._old_diff = None
+
+        diff = self.material.diffuseColor.values + [self.material.opacity]
+        if diff != self._old_diff:
+            # Update diffuse * vertex colors
+            self._r_color_diff[:] = diff * self.r_color
+            self._old_diff = diff
+        return self._r_color_diff
+
 
     def setLoc(self, locx, locy, locz):
         """

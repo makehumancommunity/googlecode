@@ -401,7 +401,11 @@ def drawMesh(obj):
     glEnableClientState(GL_NORMAL_ARRAY)
     glNormalPointer(GL_FLOAT, 0, obj.norms)
     glEnableClientState(GL_COLOR_ARRAY)
-    glColorPointer(4, GL_UNSIGNED_BYTE, 0, obj.color)
+    if not useShader:
+        # Vertex colors should be multiplied with the diffuse material value, also for fixed function
+        glColorPointer(4, GL_UNSIGNED_BYTE, 0, obj.color_diff)
+    else:
+        glColorPointer(4, GL_UNSIGNED_BYTE, 0, obj.color)
 
     # Disable lighting if the object is shadeless
     if obj.shadeless:
