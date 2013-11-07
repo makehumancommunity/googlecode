@@ -106,6 +106,7 @@ class MaterialEditorTaskView(gui3d.TaskView):
         mat = obj.material
 
         w1 = self.materialBox.addWidget(ColorValue("Diffuse", mat.diffuseColor))
+        w1.setEnabled(not mat.autoBlendSkin)
         @w1.mhEvent
         def onActivate(event):
             mat.diffuseColor = w1.value
@@ -175,6 +176,8 @@ class MaterialEditorTaskView(gui3d.TaskView):
         @w10f.mhEvent
         def onActivate(event):
             mat.autoBlendSkin = w10f.value
+            w1.setEnabled(not mat.autoBlendSkin)
+            self.listUniforms(mat) # Update litsphere texture enabled state
 
         w11 = self.materialBox.addWidget(ImageValue("Transparency map texture", mat.transparencyMapTexture, mh.getSysDataPath('textures')))
         @w11.mhEvent
@@ -400,6 +403,11 @@ class ColorValue(gui.GroupBox):
 
     value = property(getValue, setValue)
 
+    def setEnabled(self, enabled):
+        for w in self.widgets:
+            w.setEnabled(enabled)
+        self.pickBtn.setEnabled(enabled)
+
 
 class TextValue(gui.GroupBox):
     def __init__(self, name, value):
@@ -554,7 +562,10 @@ class UniformValue(gui.GroupBox):
         if type == str:
             # TODO account for tex idx
             defaultPath = mh.getSysDataPath('litspheres') if self.uniform.name == 'litsphereTexture' else None
-            return TextureValue(self, value, defaultPath)
+            widget = TextureValue(self, value, defaultPath)
+            if self.uniform.name == 'litsphereTexture':
+                widget.setEnabled(not self.material.autoBlendSkin)
+            return widget
         if type == bool:
             return BooleanValue(self, value)
         return gui.TextView('???')
@@ -697,6 +708,9 @@ class TextureValue(gui.QtGui.QWidget, gui.Widget):
             self.imageView.setImage(mh.getSysDataPath('notfound.thumb'))
 
     value = property(getValue, setValue)
+
+    def setEnabled(self, enabled):
+        self.browseBtn.setEnabled(enabled)
 
 
 def load(app):
