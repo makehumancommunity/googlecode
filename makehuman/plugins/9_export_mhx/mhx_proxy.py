@@ -68,6 +68,7 @@ class Writer(mhx_writer.Writer):
 
     def writeProxy(self, fp, proxy, layer):
         scale = self.config.scale
+        ox,oy,oz = self.config.offset
 
         fp.write("""
     NoScale False ;
@@ -84,10 +85,6 @@ class Writer(mhx_writer.Writer):
             "Mesh %sMesh %sMesh \n" % (name, name) +
             "  Verts\n")
 
-        amt = self.armature
-        ox = amt.origin[0]
-        oy = amt.origin[1]
-        oz = amt.origin[2]
         fp.write("".join( ["  v %.4f %.4f %.4f ;\n" % (scale*(x-ox), scale*(-z+oz), scale*(y-oy)) for x,y,z in proxy.getCoords()] ))
 
         fp.write("""
@@ -176,7 +173,7 @@ class Writer(mhx_writer.Writer):
     end Object
     """)
 
-        self.meshWriter.writeHideAnimationData(fp, amt, self.name, proxy.name)
+        self.meshWriter.writeHideAnimationData(fp, self.armature, self.name, proxy.name)
 
     #-------------------------------------------------------------------------------
     #

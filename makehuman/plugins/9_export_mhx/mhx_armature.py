@@ -39,19 +39,20 @@ from . import mhx_drivers
 #   Setup Armature
 #-------------------------------------------------------------------------------
 
-def setupArmature(name, human, options):
+def setupArmature(name, human, config):
     from armature.parser import Parser
     from . import mhx_rigify
 
+    options = config.rigOptions
     if options is None:
         return None
     else:
         log.message("Setup MHX rig %s" % name)
         if isinstance(options, mhx_rigify.RigifyOptions):
-            amt = mhx_rigify.RigifyArmature(name, options)
+            amt = mhx_rigify.RigifyArmature(name, options, config)
             amt.parser = mhx_rigify.RigifyParser(amt, human)
         else:
-            amt = ExportArmature(name, options)
+            amt = ExportArmature(name, options, config)
             amt.parser = Parser(amt, human)
         amt.setup()
         log.message("Using rig with options %s" % options)
@@ -63,9 +64,10 @@ def setupArmature(name, human, options):
 
 class ExportArmature(Armature):
 
-    def __init__(self, name, options):
+    def __init__(self, name, options, config):
         Armature.__init__(self, name, options)
         self.scale = options.scale
+        self.config = config
 
         layers = L_MAIN|L_UPSPNFK|L_LARMFK|L_RARMFK|L_LLEGFK|L_RLEGFK|L_HEAD
         if options.useFingers:
@@ -145,13 +147,13 @@ class ExportArmature(Armature):
 
 
     def writeEditBones(self, fp):
+        scale = self.scale
+        offs = self.config.offset
         for bone in self.bones.values():
-            scale = self.scale
-
             fp.write("\n  Bone %s %s\n" % (bone.name, True))
-            (x, y, z) = scale*bone.head
+            (x, y, z) = scale*(bone.head - offs)
             fp.write("    head  %.6g %.6g %.6g  ;\n" % (x,-z,y))
-            (x, y, z) = scale*bone.tail
+            (x, y, z) = scale*(bone.tail - offs)
             fp.write("    tail %.6g %.6g %.6g  ;\n" % (x,-z,y))
 
             if bone.parent:

@@ -74,7 +74,6 @@ class MhxConfig(Config):
             useCorrectives = False,
             useFaceRig = self.useFaceRig,
             useExpressions = self.expressions,
-            feetOnGround = self.feetOnGround,
             useLeftRight = False,
         )
 

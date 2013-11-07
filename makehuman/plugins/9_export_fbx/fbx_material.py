@@ -181,8 +181,8 @@ def writeMaterial(fp, rmesh, amt):
 '        Properties70:  {\n' +
 '            P: "TransparentColor", "Color", "", "A",1,1,1\n' +
 '            P: "TransparencyFactor", "Number", "", "A",%.4f\n' % mat.transparencyMapIntensity +
-'            P: "SpecularColor", "Color", "", "A",%.4f,%.4f,%.4f\n' % mat.specularColor.asTuple() +
-'            P: "ShininessExponent", "Number", "", "A",%.4f\n' % mat.shininess +
+#'            P: "SpecularColor", "Color", "", "A",%.4f,%.4f,%.4f\n' % mat.specularColor.asTuple() +
+#'            P: "ShininessExponent", "Number", "", "A",%.4f\n' % mat.shininess +
 #'            P: "EmissiveColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % emissiveColor.asTuple() +
 #'            P: "AmbientColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % ambientColor.asTuple() +
 '            P: "DiffuseColor", "Vector3D", "Vector", "",%.4f,%.4f,%.4f\n' % mat.diffuseColor.asTuple() +

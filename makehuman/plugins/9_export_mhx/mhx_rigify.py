@@ -32,8 +32,8 @@ from armature import rig_bones
 
 class RigifyArmature(ExportArmature):
 
-    def __init__(self, name, options):
-        ExportArmature.__init__(self, name, options)
+    def __init__(self, name, options, config):
+        ExportArmature.__init__(self, name, options, config)
         self.visibleLayers = "08a80caa"
         self.objectProps += [("MhxRig", '"Rigify"')]
 

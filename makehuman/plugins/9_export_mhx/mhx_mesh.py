@@ -45,9 +45,7 @@ class Writer(mhx_writer.Writer):
 
         fp.write("\nMesh %sMesh %sMesh\n  Verts\n" % (self.name, self.name))
         amt = self.armature
-        ox = amt.origin[0]
-        oy = amt.origin[1]
-        oz = amt.origin[2]
+        ox,oy,oz = config.offset
         fp.write( "".join(["  v %.4f %.4f %.4f ;\n" % (scale*(co[0]-ox), scale*(-co[2]+oz), scale*(co[1]-oy)) for co in mesh.coord] ))
 
         fp.write(

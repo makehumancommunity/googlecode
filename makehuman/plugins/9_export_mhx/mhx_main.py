@@ -61,10 +61,11 @@ def exportMhx(human, filepath, config):
     time1 = time.clock()
     config.setHuman(human)
     config.setupTexFolder(filepath)
+    config.setOffset(human)
 
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
-    amt = setupArmature(name, human, config.rigOptions)
+    amt = setupArmature(name, human, config)
     fp = codecs.open(filepath, 'w', encoding='utf-8')
     fp.write(
         "# MakeHuman exported MHX\n" +
