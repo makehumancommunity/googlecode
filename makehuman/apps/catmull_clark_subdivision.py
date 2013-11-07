@@ -37,6 +37,7 @@ class SubdivisionObject(Object3D):
         name = object.name + '.sub'
         super(SubdivisionObject, self).__init__(name, 4)
 
+        self.MAX_FACES = object.MAX_FACES
         self.loc = object.loc.copy()
         self.rot = object.rot.copy()
         self.scale = object.scale.copy()
