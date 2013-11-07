@@ -128,6 +128,10 @@ class BaseModifier(object):
         self.eventType = 'modifier'
         self.targets = []
 
+        self.macroVariable = None
+        self.macroDependencies = []
+        G.app.selectedHuman.modifiers.append(self)
+
     def setValue(self, human, value):
         value = self.clampValue(value)
         factors = self.getFactors(human, value)
@@ -178,7 +182,11 @@ class BaseModifier(object):
         if updateNormals:
             human.meshData.calcNormals(1, 1, self.verts, self.faces)
         human.meshData.update()
-        human.callEvent('onChanging', events3d.HumanEvent(human, self.eventType))
+        event = events3d.HumanEvent(human, self.eventType)
+        #print 'onChanging %s' % event
+        event.modifier = self.name
+        #print self.name
+        human.callEvent('onChanging', event)
 
 class Modifier(BaseModifier):
 
@@ -217,6 +225,8 @@ class SimpleModifier(BaseModifier):
         self.template = template
         self.targets = self.expandTemplate([(self.template, [])])
 
+        self.macroDependencies = []
+
     def expandTemplate(self, targets):
 
         targets = [(target[0], target[1] + ['dummy']) for target in targets]
@@ -224,7 +234,7 @@ class SimpleModifier(BaseModifier):
         return targets
 
     def getFactors(self, human, value):
-
+        # TODO this is useless
         factors = {
             'dummy': 1.0
         }
@@ -237,6 +247,38 @@ class SimpleModifier(BaseModifier):
 class GenericModifier(BaseModifier):
     @staticmethod
     def findTargets(path):
+        """
+        Retrieve a list of targets grouped under the specified target path
+        (which is not directly a filesystem path but rather an abstraction
+        with a path being a hierarchic string of atoms separated by a - symbol).
+
+        The result is a list of tuples, with each tuple as: 
+            (targetpath, factordependencies)
+        With targetpath referencing the filepath of the .target file,
+        and factordependencies a list with the names of variables or factors 
+        that influence the weight with how much the target file is applied.
+        The resulting weight with which a target is applied is the 
+        multiplication of all the factor values declared in the 
+        factorDependencies list.
+
+        Some of these factordependencies come from predeclared macro parameters
+        (such as age, race, weight, gender, ...) and are already supplied by the
+        targets module which automatically extracts known parameters from the
+        target path or filename.
+        Additional factordependencies can be added at will to control the
+        weighting of a target directly (for example to apply the value of this
+        modifier to its targets).
+        The other way of setting modifier values to factors to eventually set 
+        the weight of targets (which is used by macro modifiers) is to make sure
+        the xVal variables of the human object are updated, by calling 
+        corresponding setters on the human object. getFactors() will by default
+        resolve the values of known xVal variables to known factor variable 
+        names.
+
+        factordependencies can be any name and are not restricted to tokens that
+        occur in the target path. Though for each factordependency, getFactors()
+        will have to return a matching value.
+        """
         if path is None:
             return []
         path = tuple(path.split('-'))
@@ -249,6 +291,19 @@ class GenericModifier(BaseModifier):
                     if var is not None]
             keys.append('-'.join(target.key))
             result.append((target.path, keys))
+        return result
+
+    @staticmethod
+    def findMacroDependencies(path):
+        result = set()
+        if path is None:
+            return result
+        path = tuple(path.split('-'))
+        for target in targets.getTargets().groups.get(path, []):
+            keys = [key
+                    for key, var in target.data.iteritems()
+                    if var is not None]
+            result.update(keys)
         return result
 
     def clampValue(self, value):
@@ -277,6 +332,7 @@ class GenericModifier(BaseModifier):
         else:
             return -sum([human.getDetail(target[0]) for target in self.l_targets])
 
+    # TODO is duplicate from targets.Component._cat_data
     _variables = [
         'female', 'male',
         'baby', 'child', 'young', 'old',
@@ -289,6 +345,7 @@ class GenericModifier(BaseModifier):
         ]
 
     def getFactors(self, human, value):
+        #print 'genericModifier: getFactors'
         return dict((name, getattr(human, name + 'Val'))
                     for name in self._variables)
 
@@ -304,9 +361,15 @@ class UniversalModifier(GenericModifier):
         self.r_targets = self.findTargets(right)
         self.c_targets = self.findTargets(center)
 
+        self.macroDependencies = self.findMacroDependencies(left)
+        self.macroDependencies.update(self.findMacroDependencies(right))
+        self.macroDependencies.update(self.findMacroDependencies(center))
+        self.macroDependencies = list(self.macroDependencies)
+
         self.targets = self.l_targets + self.r_targets + self.c_targets
 
     def getFactors(self, human, value):
+        #print "UniversalModifier factors:"
         factors = super(UniversalModifier, self).getFactors(human, value)
 
         if self.left is not None:
@@ -315,10 +378,14 @@ class UniversalModifier(GenericModifier):
             factors[self.center] = 1.0 - abs(value)
         factors[self.right] = max(0.0, value)
 
+        #print 'factors:'
+        #print factors
+
         return factors
 
 class MacroModifier(GenericModifier):
     def __init__(self, base, name, variable):
+        # TODO name is not used! (None is passed from modeling plugin)
         super(MacroModifier, self).__init__()
 
         self.name = '-'.join(atom
@@ -331,8 +398,29 @@ class MacroModifier(GenericModifier):
         self.targets = self.findTargets(self.name)
         if self.name == 'macrodetails':
             # Update weight/muscle modifiers when macro modifiers are updated
-            self.targets.extend(self.findTargets('macrodetails-universal'))
+            self.targets.extend(self.findTargets('macrodetails-universal')) # TODO make a more generic solution to this using dependencies (while still allowing to propagate updates to a select group of depencies during slider dragging (onChanging))
         # log.debug('macro modifier %s.%s(%s): %s', base, name, variable, self.targets)
+
+        self.macroDependencies = self.findMacroDependencies(self.name)
+        var = self.getMacroVariable()
+        if var:
+            self.macroDependencies.remove(var)
+        self.macroDependencies = list(self.macroDependencies)
+
+        self.macroVariable = var
+
+    def getMacroVariable(self):
+        """
+        The macro variable modified by this modifier.
+        """
+        if self.variable:
+            var = self.variable.lower()
+            if var in targets.Component._categories:
+                return var
+            elif var in targets.Component._value_cat:
+                # necessary for caucasian, asian, african
+                return targets.Component._value_cat[var]
+        return None
 
     def getValue(self, human):
         return getattr(human, self.getter)()
@@ -355,3 +443,26 @@ class MacroModifier(GenericModifier):
 
     def buildLists(self):
         pass
+
+def getModifierDependencies():
+    human = G.app.selectedHuman
+    varMapping = dict()
+    for m in human.modifiers:
+        if m.macroVariable:
+            if m.macroVariable in varMapping:
+                # This can happen for race (maybe we only need to map the modifier.name group, not individual modifiers)
+                log.error("Error, multiple modifiers setting var %s", m.macroVariable)
+            else:
+                varMapping[m.macroVariable] = m
+
+    for m in human.modifiers:
+        if len(m.macroDependencies) > 0:
+            for var in m.macroDependencies:
+                if var not in varMapping:
+                    log.error("Error var %s not mapped", var)
+                    continue
+                depM = varMapping[var]
+                if depM.name == m.name: # Beware, name is only available for macro modifiers
+                    log.debug("%s depends on %s but both are in same group, ignoring dependency", m.name+"/"+m.variable, depM.name+"/"+depM.variable) # variable is only available for macro modifiers
+                else:
+                    log.debug("%s depends on %s", m.name+"/"+m.variable, depM.name+"/"+depM.variable)
