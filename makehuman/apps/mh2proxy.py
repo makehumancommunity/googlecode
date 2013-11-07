@@ -54,10 +54,10 @@ _A7converter = None
 Unit = numpy.array((1.0,1.0,1.0))
 
 #
-#   class CProxyRefVert:
+#   class ProxyRefVert:
 #
 
-class CProxyRefVert:
+class ProxyRefVert:
 
     def __init__(self, parent):
         self._parent = parent
@@ -132,10 +132,10 @@ class CProxyRefVert:
 
 
 #
-#    class CProxy
+#    class Proxy
 #
 
-class CProxy:
+class Proxy:
     def __init__(self, file, typ):
         log.debug("Loading proxy file: %s.", file)
         name = os.path.splitext(os.path.basename(file))[0]
@@ -189,7 +189,7 @@ class CProxy:
 
 
     def __repr__(self):
-        return ("<CProxy %s %s %s %s>" % (self.name, self.type, self.file, self.uuid))
+        return ("<Proxy %s %s %s %s>" % (self.name, self.type, self.file, self.uuid))
 
 
     def getObject(self):
@@ -408,7 +408,7 @@ def readProxyFile(obj, filepath, type="Clothes"):
         log.error("*** Cannot open %s", filepath)
         return None
 
-    proxy = CProxy(filepath, type)
+    proxy = Proxy(filepath, type)
     proxy.deleteVerts = numpy.zeros(len(obj.coord), bool)
 
     proxy.z_depth = -1
@@ -560,7 +560,7 @@ def readProxyFile(obj, filepath, type="Clothes"):
 
 
         elif status == doRefVerts:
-            refVert = CProxyRefVert(obj)
+            refVert = ProxyRefVert(obj)
             proxy.refVerts.append(refVert)
             if len(words) == 1:
                 refVert.fromSingle(words, vnum, proxy)
