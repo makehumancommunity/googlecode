@@ -84,7 +84,7 @@ class ExportArmature(Armature):
         if options.useIkLegs:
             self.activeBoneLayers |= L_LLEGIK|L_RLEGIK
 
-        self.objectProps += [("MhxRig", '"%s"' % options.rigtype)]
+        self.objectProps += [("MhxRig", '"%s"' % options.rigtype.replace(" ","_"))]
         self.customProps = []
         self.bbones = {}
         self.boneGroups = []
