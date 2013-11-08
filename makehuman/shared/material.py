@@ -112,7 +112,7 @@ class Color(object):
 
 
 # Protected shaderDefine parameters that are set exclusively by means of shaderConfig options (configureShading())
-_shaderConfigDefines = ['DIFFUSE', 'BUMPMAP', 'NORMALMAP', 'DISPLACEMENT', 'SPECULARMAP', 'VERTEX_COLOR']
+_shaderConfigDefines = ['DIFFUSE', 'BUMPMAP', 'NORMALMAP', 'DISPLACEMENT', 'SPECULARMAP', 'VERTEX_COLOR', 'TRANSPARENCYMAP']
 
 # Protected shader parameters that are set exclusively by means of material properties (configureShading())
 _materialShaderParams = ['diffuse', 'ambient', 'specular', 'emissive', 'diffuseTexture', 'bumpmapTexture', 'bumpmapIntensity', 'normalmapTexture', 'normalmapIntensity', 'displacementmapTexture', 'displacementmapTexture', 'specularmapTexture', 'specularmapIntensity', 'transparencymapTexture', 'transparencymapIntensity']
