@@ -195,17 +195,17 @@ class SkeletonLibrary(gui3d.TaskView):
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
-        self.presetSecondLifeBtn = self.presetBox.addWidget(gui.Button("Second Life"))
-        @self.presetSecondLifeBtn.mhEvent
+        self.presetSecondLifeBonesBtn = self.presetBox.addWidget(gui.Button("Second Life (bones)"))
+        @self.presetSecondLifeBonesBtn.mhEvent
         def onClicked(event):
-            descr = self.amtOptions.loadPreset("second_life", self.optionsSelector)
+            descr = self.amtOptions.loadPreset("second_life_bones", self.optionsSelector)
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
-        self.presetSecondLife2Btn = self.presetBox.addWidget(gui.Button("Second Life II"))
-        @self.presetSecondLife2Btn.mhEvent
+        self.presetSecondLifeJointsBtn = self.presetBox.addWidget(gui.Button("Second Life (joints)"))
+        @self.presetSecondLifeJointsBtn.mhEvent
         def onClicked(event):
-            descr = self.amtOptions.loadPreset("second_life_ii", self.optionsSelector)
+            descr = self.amtOptions.loadPreset("second_life_joints", self.optionsSelector)
             self.descrLbl.setText("Description: %s" % descr)
             self.updateSkeleton()
 
