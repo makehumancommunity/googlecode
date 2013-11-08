@@ -298,15 +298,20 @@ class Shader(object):
             pass
 
     @staticmethod
-    def createShader(file, type, defines = []):
+    def createShader(file, type, defines = [], defineables = None):
         with open(file, 'rU') as f:
             source = f.read()
         if "#version" not in source:
             log.warning("The shader source in %s does not contain an explicit GLSL version declaration. This could cause problems with some compilers.", file)
+
+        if defineables != None:
+            for d in Shader._getDefineables(source):
+                if d not in defineables:
+                    defineables.append(d)
         if defines:
             # Add #define instructions for shader preprocessor to enable extra
             # shader features at compile time
-            firstComments, code = Shader.splitVersionDeclaration(source)
+            firstComments, code = Shader._splitVersionDeclaration(source)
             defineLines = "\n".join([ "#define " + define for define in defines])
             source = "\n".join([firstComments, defineLines, code])
         shader = glCreateShader(type)
@@ -319,7 +324,26 @@ class Shader(object):
         return shader
 
     @staticmethod
-    def splitVersionDeclaration(sourceStr):
+    def _getDefineables(sourceStr):
+        """
+        Note: currently only supports #ifdef and #ifndef preprocessor statements
+        The syntax #if defined DEFINEABLE is not supported
+        """
+        lines = sourceStr.split("\n")
+        result = []
+        for l in lines:
+            l = l.strip()
+            if not l:
+                continue
+            l = l.split()
+            if len(l) < 2:
+                continue
+            if l[0] in ['#ifdef', '#ifndef']:
+                result.append(l[1])
+        return result
+
+    @staticmethod
+    def _splitVersionDeclaration(sourceStr):
         """
         Split source string in part that contains the #version declaration,
         that should occur before any instructions (only comments can preceed),
@@ -362,20 +386,22 @@ class Shader(object):
 
         self.shaderId = glCreateProgram()
 
+        self.defineables = []
+
         if os.path.isfile(vertexSource):
-            self.vertexId = self.createShader(vertexSource, GL_VERTEX_SHADER, self.defines)
+            self.vertexId = self.createShader(vertexSource, GL_VERTEX_SHADER, self.defines, self.defineables)
             if self.vertexId == None:
                 raise RuntimeError("No vertex shader program compiled, cannot set vertex shader. (%s)" % vertexSource)
             glAttachShader(self.shaderId, self.vertexId)
 
         if os.path.isfile(geometrySource) and 'GL_GEOMETRY_SHADER' in globals():
-            self.geometryId = self.createShader(geometrySource, GL_GEOMETRY_SHADER, self.defines)
+            self.geometryId = self.createShader(geometrySource, GL_GEOMETRY_SHADER, self.defines, self.defineables)
             if self.geometryId == None:
                 raise RuntimeError("No geometry shader program compiled, cannot set geometry shader. (%s)" % geometrySource)
             glAttachShader(self.shaderId, self.geometryId)
 
         if os.path.isfile(fragmentSource):
-            self.fragmentId = self.createShader(fragmentSource, GL_FRAGMENT_SHADER, self.defines)
+            self.fragmentId = self.createShader(fragmentSource, GL_FRAGMENT_SHADER, self.defines, self.defineables)
             if self.fragmentId == None:
                 raise RuntimeError("No fragment shader program compiled, cannot set fragment shader. (%s)" % fragmentSource)
             glAttachShader(self.shaderId, self.fragmentId)
