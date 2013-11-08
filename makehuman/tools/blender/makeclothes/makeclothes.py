@@ -1626,12 +1626,15 @@ def getHumanVerts(me, scn):
 def addHelperVerts(me, htype, verts):
     vnums = theSettings.vertices
     if htype == 'All':
+        checkEnoughVerts(me, htype, theSettings.clothesVerts[0])
         for vn in range(theSettings.clothesVerts[0], theSettings.clothesVerts[1]):
             verts[vn] = me.vertices[vn]
     elif htype in ['Skirt', 'Tights']:
+        checkEnoughVerts(me, htype, vnums[htype][0])
         for vn in range(vnums[htype][0], vnums[htype][1]):
             verts[vn] = me.vertices[vn]
     elif htype == 'Coat':
+        checkEnoughVerts(me, htype, vnums["Tights"][0])
         zmax = -1e6
         for vn in theSettings.topOfSkirt:
             zn = me.vertices[vn].co[2]
@@ -1643,6 +1646,13 @@ def addHelperVerts(me, htype, verts):
             zn = me.vertices[vn].co[2]
             if zn > zmax:
                 verts[vn] = me.vertices[vn]
+    else:
+        raise MHError("Unknown helper type %s" % htype)
+
+
+def checkEnoughVerts(me, htype, first):
+    if len(me.vertices) < first:
+        raise MHError("Mesh has too few vertices for assigning to %s" % (htype))
 
 
 def addBodyVerts(me, verts):

@@ -24,8 +24,8 @@ Abstract
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.26",
-    "blender": (2, 6, 4),
+    "version": "1.27",
+    "blender": (2, 6, 9),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
     "warning": "",

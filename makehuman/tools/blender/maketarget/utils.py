@@ -174,11 +174,10 @@ def removeShapeKeys(ob):
         return
     skeys = ob.data.shape_keys.key_blocks
     n = len(skeys)
-    while n >= 0:
+    while n > 0:
+        n -= 1
         ob.active_shape_key_index = n
         bpy.ops.object.shape_key_remove()
-        n -= 1
-    return
 
 
 def printVec(string, vec):
