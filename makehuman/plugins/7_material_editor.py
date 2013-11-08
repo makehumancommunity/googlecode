@@ -59,6 +59,8 @@ class MaterialEditorTaskView(gui3d.TaskView):
                     shaderConfig[str(child.text())] = child.isChecked()
                 self.getSelectedObject().material.configureShading(**shaderConfig)
 
+        self.shaderDefBox = self.addLeftWidget(gui.GroupBox('Custom shader defines'))
+
         self.paramBox = self.addRightWidget(gui.GroupBox('Shader parameters'))
 
         self.materialBox = self.addRightWidget(gui.GroupBox('Material settings'))
@@ -104,14 +106,12 @@ class MaterialEditorTaskView(gui3d.TaskView):
             self.materialBox.removeWidget(child)
 
         mat = obj.material
-        try:
-            shader = mat.shaderObj
-            uniforms = [u.name for u in shader.getUniforms()] + shader.glUniforms
-        except:
-            shader = None
+        sh = self.getSelectedShader()
+        if sh:
+            uniforms = [u.name for u in sh.getUniforms()] + sh.glUniforms
 
         w1 = self.materialBox.addWidget(ColorValue("Diffuse", mat.diffuseColor))
-        if shader:
+        if sh:
             w1.setEnabled(('diffuse' in uniforms or 'gl_FrontMaterial.diffuse' in uniforms) and not mat.autoBlendSkin)
         else:
             w1.setEnabled(not mat.autoBlendSkin)
@@ -119,42 +119,44 @@ class MaterialEditorTaskView(gui3d.TaskView):
         def onActivate(event):
             mat.diffuseColor = w1.value
 
+        diffuseMapAvailable = (not sh) or ('diffuseTexture' in uniforms) or ('DIFFUSE' in sh.defineables)
         w3 = self.materialBox.addWidget(ImageValue("Diffuse texture", mat.diffuseTexture, mh.getSysDataPath('textures')))
+        w3.setEnabled(diffuseMapAvailable)
         @w3.mhEvent
         def onActivate(event):
             mat.diffuseTexture = w3.value
             self.updateShaderConfig()
 
         w4 = self.materialBox.addWidget(ColorValue("Ambient", mat.ambientColor))
-        if shader:
+        if sh:
             w4.setEnabled('ambient' in uniforms or 'gl_FrontMaterial.ambient' in uniforms)
         @w4.mhEvent
         def onActivate(event):
             mat.ambientColor = w4.value
 
         w5 = self.materialBox.addWidget(ColorValue("Specular", mat.specularColor))
-        if shader:
+        if sh:
             w5.setEnabled('specular' in uniforms or 'gl_FrontMaterial.specular' in uniforms)
         @w5.mhEvent
         def onActivate(event):
             mat.specularColor = w5.value
 
         w7 = self.materialBox.addWidget(ScalarValue("Specular shininess", mat.shininess))
-        if shader:
+        if sh:
             w7.setEnabled('specular' in uniforms or 'gl_FrontMaterial' in uniforms)
         @w7.mhEvent
         def onActivate(event):
             mat.shininess = w7.value
 
         w8 = self.materialBox.addWidget(ColorValue("Emissive", mat.emissiveColor))
-        if shader:
+        if sh:
             w8.setEnabled('emissive' in uniforms or 'gl_FrontMaterial' in uniforms)
         @w8.mhEvent
         def onActivate(event):
             mat.emissiveColor = w8.value
 
         w9 = self.materialBox.addWidget(ScalarValue("Opacity", mat.opacity))
-        if shader:
+        if sh:
             w9.setEnabled('diffuse' in uniforms or 'gl_FrontMaterial' in uniforms)
         @w9.mhEvent
         def onActivate(event):
@@ -197,77 +199,92 @@ class MaterialEditorTaskView(gui3d.TaskView):
             self.listMaterialSettings(self.getSelectedObject()) # Update diffuse color property state
             self.listUniforms(mat) # Update litsphere texture enabled state
 
+        transparencyMapAvailable = sh and \
+                                   (('transparencymapTexture' in uniforms) or \
+                                   ('TRANSPARENCYMAP' in sh.defineables))
         w11 = self.materialBox.addWidget(ImageValue("Transparency map texture", mat.transparencyMapTexture, mh.getSysDataPath('textures')))
-        if shader:
-            w11.setEnabled('transparencymapTexture' in uniforms)
+        if sh:
+            w11.setEnabled(transparencyMapAvailable)
         @w11.mhEvent
         def onActivate(event):
             mat.transparencyMapTexture = w11.value
             self.updateShaderConfig()
 
         w12 = self.materialBox.addWidget(ScalarValue("Transparency (map) intensity", mat.transparencyMapIntensity))
-        if shader:
-            w12.setEnabled('transparencymapIntensity' in uniforms)
+        if sh:
+            w12.setEnabled(transparencyMapAvailable)
         @w12.mhEvent
         def onActivate(event):
             mat.transparencyMapIntensity = w12.value
 
+        bumpMapAvailable = sh and \
+                           (('bumpmapTexture' in uniforms) or \
+                           ('BUMPMAP' in sh.defineables))
         w13 = self.materialBox.addWidget(ImageValue("Bump map texture", mat.bumpMapTexture, mh.getSysDataPath('textures')))
-        if shader:
-            w13.setEnabled('bumpmapTexture' in uniforms)
+        if sh:
+            w13.setEnabled(bumpMapAvailable)
         @w13.mhEvent
         def onActivate(event):
             mat.bumpMapTexture = w13.value
             self.updateShaderConfig()
 
         w14 = self.materialBox.addWidget(ScalarValue("Bump map intensity", mat.bumpMapIntensity))
-        if shader:
-            w14.setEnabled('bumpmapIntensity' in uniforms)
+        if sh:
+            w14.setEnabled(bumpMapAvailable)
         @w14.mhEvent
         def onActivate(event):
             mat.bumpMapIntensity = w14.value
 
+        normalMapAvailable = sh and \
+                             (('normalmapTexture' in uniforms) or \
+                             ('NORMALMAP' in sh.defineables))
         w15 = self.materialBox.addWidget(ImageValue("Normal map texture", mat.normalMapTexture, mh.getSysDataPath('textures')))
-        if shader:
-            w15.setEnabled('normalmapTexture' in uniforms)
+        if sh:
+            w15.setEnabled(normalMapAvailable)
         @w15.mhEvent
         def onActivate(event):
             mat.normalMapTexture = w15.value
             self.updateShaderConfig()
 
         w16 = self.materialBox.addWidget(ScalarValue("Normal map intensity", mat.normalMapIntensity))
-        if shader:
-            w16.setEnabled('normalmapIntensity' in uniforms)
+        if sh:
+            w16.setEnabled(normalMapAvailable)
         @w16.mhEvent
         def onActivate(event):
             mat.normalMapIntensity = w16.value
 
+        displacementMapAvailable = sh and \
+                                   (('displacementmapTexture' in uniforms) or \
+                                   ('DISPLACEMENT' in sh.defineables))
         w17 = self.materialBox.addWidget(ImageValue("Displacement map texture", mat.displacementMapTexture, mh.getSysDataPath('textures')))
-        if shader:
-            w17.setEnabled('displacementmapTexture' in uniforms)
+        if sh:
+            w17.setEnabled(displacementMapAvailable)
         @w17.mhEvent
         def onActivate(event):
             mat.displacementMapTexture = w17.value
             self.updateShaderConfig()
 
         w18 = self.materialBox.addWidget(ScalarValue("Displacement map intensity", mat.displacementMapIntensity))
-        if shader:
-            w18.setEnabled('displacementmapIntensity' in uniforms)
+        if sh:
+            w18.setEnabled(displacementMapAvailable)
         @w18.mhEvent
         def onActivate(event):
             mat.displacementMapIntensity = w18.value
 
+        specularMapAvailable = sh and \
+                               (('specularmapTexture' in uniforms) or \
+                               ('SPECULARMAP' in sh.defineables))
         w19 = self.materialBox.addWidget(ImageValue("Specular map texture", mat.specularMapTexture, mh.getSysDataPath('textures')))
-        if shader:
-            w19.setEnabled('specularmapTexture' in uniforms)
+        if sh:
+            w19.setEnabled(specularMapAvailable)
         @w19.mhEvent
         def onActivate(event):
             mat.specularMapTexture = w19.value
             self.updateShaderConfig()
 
         w20 = self.materialBox.addWidget(ScalarValue("Specular map intensity", mat.specularMapIntensity))
-        if shader:
-            w20.setEnabled('specularmapIntensity' in uniforms)
+        if sh:
+            w20.setEnabled(specularMapAvailable)
         @w20.mhEvent
         def onActivate(event):
             mat.specularMapIntensity = w20.value
@@ -327,13 +344,67 @@ class MaterialEditorTaskView(gui3d.TaskView):
 
     def updateShaderConfig(self, mat = None):
         if not mat:
-            mat = self.getSelectedObject().material
+            mat = self.getSelectedMaterial()
 
+        sh = self.getSelectedShader()
         shaderConfig = mat.shaderConfig
 
         for child in self.shaderConfBox.children:
             name = str(child.text())
             child.setChecked( shaderConfig[name] )
+
+            if name == 'diffuse':
+                child.setEnabled(mat.supportsDiffuse())
+            elif name == 'bump':
+                child.setEnabled(mat.supportsBump())
+            elif name == 'normal':
+                child.setEnabled(sh and mat.supportsNormal())
+            elif name == 'displacement':
+                child.setEnabled(sh and mat.supportsDisplacement())
+            elif name == 'spec':
+                child.setEnabled(sh and mat.supportsSpecular())
+            elif name == 'transparency':
+                child.setEnabled(sh and mat.supportsTransparency())
+            elif name == 'vertexColors':
+                child.setEnabled((not sh) or ('VERTEX_COLOR' in sh.defineables))
+
+        self.updateCustomShaderDefines()
+
+    def updateCustomShaderDefines(self, mat = None):
+        for child in self.shaderDefBox.children[:]:
+            self.shaderDefBox.removeWidget(child)
+
+        if not mat:
+            mat = self.getSelectedMaterial()
+
+        sh = self.getSelectedShader()
+        if not sh:
+            return
+
+        defineables = sh.defineables
+        for d in defineables:
+            if d in material._shaderConfigDefines:
+                # Do not show defines that are controlled by shaderConfig
+                continue
+
+            chkBox = gui.CheckBox(d, d in mat.shaderDefines)
+            self.shaderDefBox.addWidget(chkBox)
+            @chkBox.mhEvent
+            def onClicked(event):
+                shaderConfig = dict()
+                for child in self.shaderDefBox.children:
+                    defName = str(child.text())
+                    enabled = child.isChecked()
+                    try:
+                        if enabled:
+                            mat.addShaderDefine(defName)
+                        else:
+                            mat.removeShaderDefine(defName)
+                    except:
+                        pass
+                # Reload material properties (update enabled states) and shader uniforms
+                self.listUniforms(mat)
+                self.listMaterialSettings(self.getSelectedObject())
 
     def setShader(self, path, mat = None):
         if not mat:
@@ -346,17 +417,10 @@ class MaterialEditorTaskView(gui3d.TaskView):
         for child in self.paramBox.children[:]:
             self.paramBox.removeWidget(child)
 
-        path = mat.shader
-
-        if not path:
-            return
-
-        try:
-            sh = mat.shaderObj
-        except:
-            sh = None
+        sh = self.getSelectedShader()
         if not sh:
             return
+
         uniforms = sh.getUniforms()
         for index, uniform in enumerate(uniforms):
             if uniform.name in material._materialShaderParams:
@@ -365,6 +429,16 @@ class MaterialEditorTaskView(gui3d.TaskView):
 
     def getSelectedObject(self):
         return self.humanObjSelector.getSelectedObject()
+
+    def getSelectedMaterial(self):
+        return self.getSelectedObject().material
+
+    def getSelectedShader(self):
+        mat = self.getSelectedMaterial()
+        try:
+            return mat.shaderObj
+        except:
+            return None
 
     def reloadMaterial(self):
         obj = self.getSelectedObject()

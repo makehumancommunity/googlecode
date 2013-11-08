@@ -185,13 +185,14 @@ class Object3D(object):
             self._shaderObj = None
         if self._shaderObj is False:
             return None
+
         if self._shaderObj is None or self.parent.shaderChanged:
             self._shaderPath = self.parent.shader
             if self._shaderPath is None:
                 self._shaderObj = None
             else:
                 try:
-                    self._shaderObj = shader.getShader(self._shaderPath, self.parent.shaderDefines)
+                    self._shaderObj = self.parent.shaderObj
                 except (Exception, RuntimeError), e:
                     self._shaderObj = False
                     log.error(e, exc_info=True)

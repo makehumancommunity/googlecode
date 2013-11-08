@@ -673,22 +673,46 @@ class Material(object):
 
 
     def supportsDiffuse(self):
-        return self.diffuseTexture != None
+        result = (self.diffuseTexture != None)
+        if self.shader and result:
+            return 'DIFFUSE' in self.shaderObj.defineables
+        else:
+            return result
 
     def supportsBump(self):
-        return self.bumpMapTexture != None
+        result = (self.bumpMapTexture != None)
+        if self.shader and result:
+            return 'BUMPMAP' in self.shaderObj.defineables
+        else:
+            return result
 
     def supportsDisplacement(self):
-        return self.displacementMapTexture != None
+        result = (self.displacementMapTexture != None)
+        if self.shader and result:
+            return 'DISPLACEMENT' in self.shaderObj.defineables
+        else:
+            return result
 
     def supportsNormal(self):
-        return self.normalMapTexture != None
+        result = (self.normalMapTexture != None)
+        if self.shader and result:
+            return 'NORMALMAP' in self.shaderObj.defineables
+        else:
+            return result
 
     def supportsSpecular(self):
-        return self.specularMapTexture != None
+        result = (self.specularMapTexture != None)
+        if self.shader and result:
+            return 'SPECULARMAP' in self.shaderObj.defineables
+        else:
+            return result
 
     def supportsTransparency(self):
-        return self.transparencyMapTexture != None
+        result = (self.transparencyMapTexture != None)
+        if self.shader and result:
+            return 'TRANSPARENCYMAP' in self.shaderObj.defineables
+        else:
+            return result
 
     def configureShading(self, diffuse=None, bump = None, normal=None, displacement=None, spec = None, vertexColors = None, transparency=None):
         """
@@ -787,7 +811,11 @@ class Material(object):
 
     def getShaderObj(self):
         import shader
-        return shader.getShader(self.getShader(), self.shaderDefines)
+        shaderPath = self.getShader()
+        print shaderPath
+        if not shaderPath:
+            return None
+        return shader.getShader(shaderPath, self.shaderDefines)
 
     @property
     def shaderObj(self):
