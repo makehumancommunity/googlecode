@@ -115,7 +115,7 @@ class Color(object):
 _shaderConfigDefines = ['DIFFUSE', 'BUMPMAP', 'NORMALMAP', 'DISPLACEMENT', 'SPECULARMAP', 'VERTEX_COLOR']
 
 # Protected shader parameters that are set exclusively by means of material properties (configureShading())
-_materialShaderParams = ['diffuse', 'ambient', 'specular', 'emissive', 'diffuseTexture', 'bumpmapTexture', 'bumpmapIntensity', 'normalmapTexture', 'normalmapIntensity', 'displacementmapTexture', 'displacementmapTexture', 'specularmapTexture', 'specularmapIntensity']
+_materialShaderParams = ['diffuse', 'ambient', 'specular', 'emissive', 'diffuseTexture', 'bumpmapTexture', 'bumpmapIntensity', 'normalmapTexture', 'normalmapIntensity', 'displacementmapTexture', 'displacementmapTexture', 'specularmapTexture', 'specularmapIntensity', 'transparencymapTexture', 'transparencymapIntensity']
 
 class Material(object):
     """
@@ -175,7 +175,8 @@ class Material(object):
             'normal'       : True,
             'displacement' : True,
             'spec'         : True,
-            'vertexColors' : True
+            'vertexColors' : True,
+            'transparency' : True
         }
         self._shaderParameters = {}
         self._shaderDefines = []
@@ -258,6 +259,7 @@ class Material(object):
         shaderConfig_displacement = None
         shaderConfig_spec = None
         shaderConfig_vertexColors = None
+        shaderConfig_transparency = None
 
         for line in f:
             words = line.split()
@@ -357,9 +359,13 @@ class Material(object):
                     shaderConfig_spec = words[2].lower() in ["yes", "enabled", "true"]
                 elif words[1] == "vertexColors":
                     shaderConfig_vertexColors = words[2].lower() in ["yes", "enabled", "true"]
+                elif words[1] == "transparency":
+                    shaderConfig_transparency = words[2].lower() in ["yes", "enabled", "true"]
+                else:
+                    log.warning('Unknown material shaderConfig property: %s', words[1])
 
         f.close()
-        self.configureShading(diffuse=shaderConfig_diffuse, bump=shaderConfig_bump, normal=shaderConfig_normal, displacement=shaderConfig_displacement, spec=shaderConfig_spec, vertexColors=shaderConfig_vertexColors)
+        self.configureShading(diffuse=shaderConfig_diffuse, bump=shaderConfig_bump, normal=shaderConfig_normal, displacement=shaderConfig_displacement, spec=shaderConfig_spec, vertexColors=shaderConfig_vertexColors, transparency=shaderConfig_transparency)
 
     def _texPath(self, filename, materialPath = None):
         """
@@ -684,7 +690,7 @@ class Material(object):
     def supportsTransparency(self):
         return self.transparencyMapTexture != None
 
-    def configureShading(self, diffuse=None, bump = None, normal=None, displacement=None, spec = None, vertexColors = None):
+    def configureShading(self, diffuse=None, bump = None, normal=None, displacement=None, spec = None, vertexColors = None, transparency=None):
         """
         Configure shading options and set the necessary properties based on
         the material configuration of this object. This configuration applies
@@ -700,6 +706,7 @@ class Material(object):
         if displacement != None: self._shaderConfig['displacement'] = displacement
         if spec != None: self._shaderConfig['spec'] = spec
         if vertexColors != None: self._shaderConfig['vertexColors'] = vertexColors
+        if transparency != None: self._shaderConfig['transparency'] = transparency
 
         self._updateShaderConfig()
 
@@ -760,6 +767,10 @@ class Material(object):
             self._shaderDefines.append('SPECULARMAP')
             self._shaderParameters['specularmapTexture'] = self.specularMapTexture
             self._shaderParameters['specularmapIntensity'] = self._specularMapIntensity
+        if self._shaderConfig['transparency'] and self.supportsTransparency():
+            self._shaderDefines.append('TRANSPARENCYMAP')
+            self._shaderParameters['transparencymapTexture'] = self.transparencyMapTexture
+            self._shaderParameters['transparencymapIntensity'] = self.transparencyMapIntensity
 
         self._shaderDefines.sort()   # This is important for shader caching
         self.shaderChanged = True
@@ -795,7 +806,7 @@ class Material(object):
         result['ambient']  = self.ambientColor.values
         result['diffuse'] = self.diffuseColor.values + [self.opacity]
         result['specular'] = self.specularColor.values + [self.shininess]
-        result['emissive'] = self.emissiveColor
+        result['emissive'] = self.emissiveColor.values
 
         if self.autoBlendSkin:
             result["litsphereTexture"] = getSkinBlender().getLitsphereTexture()
