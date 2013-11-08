@@ -30,6 +30,28 @@ import log
 # TODO share with algos3d
 TARGETS_NPZ_PATH = getSysDataPath('targets.npz')
 
+# Defines reserved value keywords and which category they map to
+# Used for specifying dependencies between targets using their filename
+_cat_data = [
+   # category     values
+    ('gender',   ['male', 'female']),
+    ('age',      ['baby', 'child', 'young', 'old']),
+    ('race',     ['caucasian', 'asian', 'african']),
+    ('muscle',   ['maxmuscle', 'averagemuscle', 'minmuscle']),
+    ('weight',   ['minweight', 'averageweight', 'maxweight']),
+    ('height',   ['dwarf', 'giant']),
+    ('cup',      ['cup1', 'cup2']),
+    ('firmness', ['firmness0', 'firmness1'])
+    ]
+
+_cat_values = dict(_cat_data)
+_categories = [cat for cat, value in _cat_data]
+_value_cat = dict([(value, cat)
+                   for cat, values in _cat_data
+                   for value in values])
+del cat, value, values
+
+
 class Component(object):
     """
     Defines a target or target folder.
@@ -37,27 +59,6 @@ class Component(object):
     A Component does not actually contain target data, see algos3d.Target for
     that.
     """
-
-    # Defines reserved value keywords and which category they map to
-    # Used for specifying dependencies between targets using their filename
-    _cat_data = [
-       # category     values
-        ('gender',   ['male', 'female']),
-        ('age',      ['baby', 'child', 'young', 'old']),
-        ('race',     ['caucasian', 'asian', 'african']),
-        ('muscle',   ['maxmuscle', 'averagemuscle', 'minmuscle']),
-        ('weight',   ['minweight', 'averageweight', 'maxweight']),
-        ('height',   ['dwarf', 'giant']),
-        ('cup',      ['cup1', 'cup2']),
-        ('firmness', ['firmness0', 'firmness1'])
-        ]
-
-    _cat_values = dict(_cat_data)
-    _categories = [cat for cat, value in _cat_data]
-    _value_cat = dict([(value, cat)
-                       for cat, values in _cat_data
-                       for value in values])
-    del cat, value, values
 
     def __init__(self, other = None):
         self.path = None
@@ -67,6 +68,11 @@ class Component(object):
         else:
             self.key = other.key[:]
             self.data = other.data.copy()
+
+        global _categories, _value_cat
+
+        self._categories = list(_categories)
+        self._value_cat = dict(_value_cat)
 
     def __repr__(self):
         return repr((self.key, self.data, self.path))

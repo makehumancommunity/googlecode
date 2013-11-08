@@ -332,17 +332,7 @@ class GenericModifier(BaseModifier):
         else:
             return -sum([human.getDetail(target[0]) for target in self.l_targets])
 
-    # TODO is duplicate from targets.Component._cat_data
-    _variables = [
-        'female', 'male',
-        'baby', 'child', 'young', 'old',
-        'minmuscle', 'averagemuscle', 'maxmuscle',
-        'minweight', 'averageweight', 'maxweight',
-        'dwarf', 'giant',
-        'cup1', 'cup2',
-        'firmness0', 'firmness1',
-        'caucasian', 'african', 'asian'
-        ]
+    _variables = targets._value_cat.keys()
 
     def getFactors(self, human, value):
         #print 'genericModifier: getFactors'
@@ -415,11 +405,11 @@ class MacroModifier(GenericModifier):
         """
         if self.variable:
             var = self.variable.lower()
-            if var in targets.Component._categories:
+            if var in targets._categories:
                 return var
-            elif var in targets.Component._value_cat:
+            elif var in targets._value_cat:
                 # necessary for caucasian, asian, african
-                return targets.Component._value_cat[var]
+                return targets._value_cat[var]
         return None
 
     def getValue(self, human):
