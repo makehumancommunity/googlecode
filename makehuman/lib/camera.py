@@ -715,6 +715,15 @@ class OrbitalCamera(Camera):
             log.debug("OrbitalCamera scale: %s", scale)
         return scale
 
+    def getPosition(self):
+        return polarToCartesian([math.radians(self.horizontalRotation), math.radians(self.verticalInclination)], self.radius) + self.center
+
+    def getUpVector(self):
+        return polarToCartesian([math.radians(self.horizontalRotation+90), math.radians(self.verticalInclination)])
+
+    def getRightVector(self):
+        return polarToCartesian([math.radians(self.horizontalRotation), math.radians(self.verticalInclination+90)])
+
     def getEye(self):
         return [self.center[0], self.center[1], self.center[2] + self.radius]
 
