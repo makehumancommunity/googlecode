@@ -147,7 +147,7 @@ def writeCamera(hfile, cam, settings):
     
     cameraPos = cam.getPosition()
     upVector = cam.getUpVector() * cam.getScale()/7.5
-    rightVector = cam.getRightVector() * (float(settings['resw'])/float(settings['resh']))) * cam.getScale()/7.5
+    rightVector = cam.getRightVector() * (float(settings['resw'])/float(settings['resh'])) * cam.getScale()/7.5
 
     hfile.write("camera {\n  orthographic\n")
     hfile.write("  location <%f,%f,%f>\n" % tuple(cameraPos))
