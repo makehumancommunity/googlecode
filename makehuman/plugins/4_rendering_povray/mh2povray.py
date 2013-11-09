@@ -149,10 +149,10 @@ def writeCamera(hfile, cam, settings):
                                          math.radians(cam.verticalInclination)],
                                         cam.radius)+cam.center
     upVector = camera.polarToCartesian([math.radians(cam.horizontalRotation+90),
-                                        math.radians(cam.verticalInclination)])
+                                        math.radians(cam.verticalInclination)]) * cam.getScale()/7.5
     rightVector = (camera.polarToCartesian([math.radians(cam.horizontalRotation),
                                             math.radians(cam.verticalInclination+90)])
-                   * (float(settings['resw'])/float(settings['resh'])))
+                   * (float(settings['resw'])/float(settings['resh']))) * cam.getScale()/7.5
 
     hfile.write("camera {\n  orthographic\n")
     hfile.write("  location <%f,%f,%f>\n" % tuple(cameraPos))
