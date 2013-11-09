@@ -141,13 +141,25 @@ def povrayExport(settings):
             'Download', 'Cancel', downloadPovRay)
 
 
-def writeCamera(hfile, camera, settings):
+def writeCamera(hfile, cam, settings):
+    import camera
+    import math
+    
+    cameraPos = camera.polarToCartesian([math.radians(cam.horizontalRotation),
+                                         math.radians(cam.verticalInclination)],
+                                        cam.radius)+cam.center
+    upVector = camera.polarToCartesian([math.radians(cam.horizontalRotation+90),
+                                        math.radians(cam.verticalInclination)])
+    rightVector = (camera.polarToCartesian([math.radians(cam.horizontalRotation),
+                                            math.radians(cam.verticalInclination+90)])
+                   * (float(settings['resw'])/float(settings['resh'])))
+
     hfile.write("camera {\n  orthographic\n")
-    hfile.write("  location <%f,%f,%f>\n" % invx(camera.eye))
-    hfile.write("  up <0,1,0>\n  right <%f,0,0>\n" %
-                (float(settings['resw'])/float(settings['resh'])))
-    hfile.write("  angle %f\n" % camera.fovAngle)
-    hfile.write("  look_at <%f,%f,%f>\n}\n\n" % invx(camera.focus))
+    hfile.write("  location <%f,%f,%f>\n" % tuple(cameraPos))
+    hfile.write("  look_at <-(%f),%f,%f>\n" % tuple(cam.center))
+    hfile.write("  right <-(%f),%f,%f>\n" % tuple(rightVector))
+    hfile.write("  up <-(%f),%f,%f>\n" % tuple(upVector))
+    hfile.write("  angle\n}\n\n")
 
 def writeLights(scene, hfile):
     hflig = open(mh.getSysDataPath('povray/lights.inc'),'r')
