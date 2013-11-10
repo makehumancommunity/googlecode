@@ -135,6 +135,9 @@ class BaseModifier(object):
         self.name = 'BaseModifier'
         self.variable = 'None'
 
+    def getName(self):
+        return self.name+"/"+self.variable
+
     def setValue(self, human, value):
         value = self.clampValue(value)
         factors = self.getFactors(human, value)
@@ -438,7 +441,7 @@ class MacroModifier(GenericModifier):
     def buildLists(self):
         pass
 
-def getModifierDependencies():
+def debugModifierDependencies():
     human = G.app.selectedHuman
     varMapping = dict()
     for m in human.modifiers:
