@@ -132,6 +132,9 @@ class BaseModifier(object):
         self.macroDependencies = []
         G.app.selectedHuman.modifiers.append(self)
 
+        self.name = 'BaseModifier'
+        self.variable = 'None'
+
     def setValue(self, human, value):
         value = self.clampValue(value)
         factors = self.getFactors(human, value)
@@ -226,6 +229,7 @@ class SimpleModifier(BaseModifier):
         self.targets = self.expandTemplate([(self.template, [])])
 
         self.macroDependencies = []
+
 
     def expandTemplate(self, targets):
 
@@ -441,7 +445,10 @@ def getModifierDependencies():
         if m.macroVariable:
             if m.macroVariable in varMapping:
                 # This can happen for race (maybe we only need to map the modifier.name group, not individual modifiers)
-                log.error("Error, multiple modifiers setting var %s", m.macroVariable)
+                e= varMapping[m.macroVariable]
+                nm = e.name + "/" + e.variable
+                nm2 = m.name + "/" + m.variable
+                log.error("Error, multiple modifiers setting var %s (%s and %s)", m.macroVariable, nm, nm2)
             else:
                 varMapping[m.macroVariable] = m
 
@@ -449,10 +456,22 @@ def getModifierDependencies():
         if len(m.macroDependencies) > 0:
             for var in m.macroDependencies:
                 if var not in varMapping:
-                    log.error("Error var %s not mapped", var)
+                    nm = m.name + "/" + m.variable
+                    log.error("Error var %s not mapped (%s)", var, nm)
                     continue
                 depM = varMapping[var]
                 if depM.name == m.name: # Beware, name is only available for macro modifiers
                     log.debug("%s depends on %s but both are in same group, ignoring dependency", m.name+"/"+m.variable, depM.name+"/"+depM.variable) # variable is only available for macro modifiers
                 else:
                     log.debug("%s depends on %s", m.name+"/"+m.variable, depM.name+"/"+depM.variable)
+
+def debugModifiers():
+    human = G.app.selectedHuman
+    for m in human.modifiers:
+        mName = m.name + "/" + m.variable
+        log.debug("%s %s:", type(m), mName)
+        log.debug("    controls: %s", m.macroVariable)
+        log.debug("    dependencies: %s", (str(m.macroDependencies)))
+        log.debug("\n")
+
+
