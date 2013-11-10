@@ -40,8 +40,8 @@ _cat_data = [
     ('muscle',   ['maxmuscle', 'averagemuscle', 'minmuscle']),
     ('weight',   ['minweight', 'averageweight', 'maxweight']),
     ('height',   ['dwarf', 'giant']),
-    ('cup',      ['cup1', 'cup2']),
-    ('firmness', ['firmness0', 'firmness1'])
+    ('breastsize',     ['cup1', 'cup2']),
+    ('breastfirmness', ['firmness0', 'firmness1'])
     ]
 
 _cat_values = dict(_cat_data)
