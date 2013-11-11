@@ -26,30 +26,18 @@ import os
 from bpy.props import *
 from .utils import getMyDocuments
 
-#----------------------------------------------------------
-#   Settings
-#----------------------------------------------------------
-
-def drawDirectories(layout, scn, outdir):
-    layout.operator("mh.factory_settings")
-    layout.operator("mh.read_settings")
-    layout.operator("mh.save_settings")
-    #layout.label("MakeHuman Program Directory")
-    #layout.prop(scn, "MhProgramPath", text="")
-    layout.label("Output Directory")
-    layout.prop(scn, outdir, text="")
-    layout.separator()
+_Paths = ["MhProgramPath", "MhUserPath", "MhTargetPath", "MhClothesDir", "MhUvsDir"]
 
 
-def settingsFile(name):
+def settingsFile(name, tool="make_target"):
     outdir = os.path.join(getMyDocuments(), "makehuman/settings/")
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
-    return os.path.join(outdir, "make_target.%s" % name)
+    return os.path.join(outdir, "%s.%s" % (tool, name))
 
 
-def readDefaultSettings(context):
-    fname = settingsFile("settings")
+def readDefaultSettings(context, tool):
+    fname = settingsFile("settings", tool)
     try:
         fp = open(fname, "rU")
     except:
@@ -60,35 +48,49 @@ def readDefaultSettings(context):
     for line in fp:
         words = line.split()
         prop = words[0]
-        value = words[1].replace("\%20", " ")
-        scn[prop] = value
+        value = eval(words[1])
+        try:
+            value = value.replace("%20", " ")
+        except AttributeError:
+            pass
+        if hasattr(scn, prop):
+            scn[prop] = value
     fp.close()
     return
 
 
-def saveDefaultSettings(context):
-    fname = settingsFile("settings")
+def saveDefaultSettings(context, tool, prefix):
+    fname = settingsFile("settings", tool)
     fp = open(fname, "w", encoding="utf-8", newline="\n")
     scn = context.scene
-    for (key, value) in [
-        ("MhProgramPath", scn.MhProgramPath),
-        ("MhUserPath", scn.MhUserPath),
-        ("MhTargetPath", scn.MhTargetPath),
-        ("MhClothesDir", scn.MhClothesDir),
-        ("MhUvsDir", scn.MhUvsDir),
-        ]:
-        fp.write("%s %s\n" % (key, value.replace(" ", "\%20")))
+    for key in _Paths:
+        saveAttr(scn, key, fp)
+    for key in dir(scn):
+        if key[0:2] == prefix and key[2:6] != "Show":
+            saveAttr(scn, key, fp)
     fp.close()
     return
 
 
-def restoreFactorySettings(context):
+def saveAttr(scn, key, fp):
+    value = getattr(scn, key)
+    try:
+        value = '"' + value.replace(" ", "%20").replace("\\", "/") + '"'
+    except AttributeError:
+        pass
+    fp.write("%s %s\n" % (key, value))
+
+
+def restoreFactorySettings(context, prefix):
     scn = context.scene
-    scn.MhProgramPath = os.path.join(getMyDocuments(), "makehuman")
-    scn.MhUserPath = os.path.join(getMyDocuments(), "makehuman")
-    scn.MhTargetPath = "/program/makehuman/data/correctives"
-    scn.MhClothesDir = os.path.join(getMyDocuments(), "makehuman/data/clothes")
-    scn.MhUvsDir = os.path.join(getMyDocuments(), "makehuman/data/uvs")
+    for key in _Paths:
+        _,props = getattr(bpy.types.Scene, key)
+        setattr(scn, key, props["default"])
+    for key in dir(scn):
+        if key[0:2] == prefix and key[2:6] != "Show":
+            _,props = getattr(bpy.types.Scene, key)
+            setattr(scn, key, props["default"])
+
 
 #----------------------------------------------------------
 #   Settings buttons
@@ -98,8 +100,10 @@ class OBJECT_OT_FactorySettingsButton(bpy.types.Operator):
     bl_idname = "mh.factory_settings"
     bl_label = "Restore Factory Settings"
 
+    prefix = StringProperty()
+
     def execute(self, context):
-        restoreFactorySettings(context)
+        restoreFactorySettings(context, self.prefix)
         return{'FINISHED'}
 
 
@@ -107,8 +111,11 @@ class OBJECT_OT_SaveSettingsButton(bpy.types.Operator):
     bl_idname = "mh.save_settings"
     bl_label = "Save Settings"
 
+    tool = StringProperty()
+    prefix = StringProperty()
+
     def execute(self, context):
-        saveDefaultSettings(context)
+        saveDefaultSettings(context, self.tool, self.prefix)
         return{'FINISHED'}
 
 
@@ -116,8 +123,10 @@ class OBJECT_OT_ReadSettingsButton(bpy.types.Operator):
     bl_idname = "mh.read_settings"
     bl_label = "Read Settings"
 
+    tool = StringProperty()
+
     def execute(self, context):
-        readDefaultSettings(context)
+        readDefaultSettings(context, self.tool)
         return{'FINISHED'}
 
 #----------------------------------------------------------
@@ -125,31 +134,33 @@ class OBJECT_OT_ReadSettingsButton(bpy.types.Operator):
 #----------------------------------------------------------
 
 def init():
+    mydocs = getMyDocuments()
+
     bpy.types.Scene.MhProgramPath = StringProperty(
         name="MakeHuman Program Directory",
         description="Path to the MakeHuman program",
         maxlen=1024,
-        default=os.path.join(getMyDocuments(), "makehuman")
+        default=os.path.join(mydocs, "makehuman")
     )
     bpy.types.Scene.MhUserPath = StringProperty(
         name = "User Path",
         maxlen=1024,
-        default=os.path.join(getMyDocuments(), "makehuman")
+        default=os.path.join(mydocs, "makehuman")
     )
     bpy.types.Scene.MhTargetPath = StringProperty(
         name = "Target Path",
-        default = "/program/makehuman/data/correctives"
+        default = os.path.join(mydocs, "makehuman", "custom")
     )
     bpy.types.Scene.MhClothesDir = StringProperty(
         name="Directory",
         description="Path to the directory where clothes are stored",
         maxlen=1024,
-        default=os.path.join(getMyDocuments(), "makehuman/data/clothes")
+        default=os.path.join(mydocs, "makehuman", "data", "clothes")
     )
     bpy.types.Scene.MhUvsDir = StringProperty(
         name="Directory",
         description="Path to the directory where UV sets are stored",
         maxlen=1024,
-        default=os.path.join(getMyDocuments(), "makehuman/data/uvs")
+        default=os.path.join(mydocs, "makehuman", "data", "uvs")
     )
 

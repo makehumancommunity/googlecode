@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.922",
+    "version": "0.923",
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -77,7 +77,15 @@ class MakeClothesPanel(bpy.types.Panel):
 
         layout.prop(scn, "MCShowSettings")
         if scn.MCShowSettings:
-            maketarget.settings.drawDirectories(inset(layout), scn, "MhClothesDir")
+            ins = inset(layout)
+            ins.operator("mh.factory_settings").prefix = "MC"
+            ins.operator("mh.read_settings").tool = "make_clothes"
+            props = ins.operator("mh.save_settings")
+            props.tool = "make_clothes"
+            props.prefix = "MC"
+            ins.label("Output Directory")
+            ins.prop(scn, "MhClothesDir", text="")
+            ins.separator()
 
         #layout.operator("mhclo.snap_selected_verts")
         '''
