@@ -317,7 +317,7 @@ class Human(guicommon.Object):
                 obj.setSubdivided(*args, **kwargs)
         self.callEvent('onChanged', events3d.HumanEvent(self, 'smooth'))
 
-    def setGender(self, gender):
+    def setGender(self, gender, updateModifier = True):
         """
         Sets the gender of the model. 0 is female, 1 is male.
 
@@ -328,6 +328,11 @@ class Human(guicommon.Object):
             *float*. An amount, usually between 0 and 1, specifying how much
             of the attribute to apply.
         """
+        if updateModifier:
+            modifier = self.getModifier('macrodetails/Gender')
+            modifier.setValue(age)
+            self.applyAllTargets(G.app.progress)
+            return
 
         gender = min(max(gender, 0.0), 1.0)
         if self.gender == gender:
@@ -347,7 +352,7 @@ class Human(guicommon.Object):
         self.maleVal = self.gender
         self.femaleVal = 1 - self.gender
 
-    def setAge(self, age):
+    def setAge(self, age, updateModifier = True):
         """
         Sets the age of the model. 0 for 0 years old, 1 is 70. To set a
         particular age in years, use the formula age_value = age_in_years / 70.
@@ -359,6 +364,12 @@ class Human(guicommon.Object):
             *float*. An amount, usually between 0 and 1, specifying how much
             of the attribute to apply.
         """
+        if updateModifier:
+            modifier = self.getModifier('macrodetails/Age')
+            modifier.setValue(age)
+            self.applyAllTargets(G.app.progress)
+            return
+
         age = min(max(age, 0.0), 1.0)
         if self.age == age:
             return
@@ -422,7 +433,7 @@ class Human(guicommon.Object):
             self.oldVal = max(0.0, self.age * 2 - 1)
             self.youngVal = 1 - self.oldVal
 
-    def setWeight(self, weight):
+    def setWeight(self, weight, updateModifier = True):
         """
         Sets the amount of weight of the model. 0 for underweight, 1 for heavy.
 
@@ -433,6 +444,11 @@ class Human(guicommon.Object):
             *float*. An amount, usually between 0 and 1, specifying how much
             of the attribute to apply.
         """
+        if updateModifier:
+            modifier = self.getModifier('macrodetails/Weight')
+            modifier.setValue(age)
+            self.applyAllTargets(G.app.progress)
+            return
 
         weight = min(max(weight, 0.0), 1.0)
         if self.weight == weight:
@@ -449,7 +465,7 @@ class Human(guicommon.Object):
         self.minweightVal = max(0.0, 1 - self.weight * 2)
         self.averageweightVal = 1 - (self.maxweightVal + self.minweightVal)
 
-    def setMuscle(self, muscle):
+    def setMuscle(self, muscle, updateModifier = True):
         """
         Sets the amount of muscle of the model. 0 for flacid, 1 for muscular.
 
@@ -460,6 +476,11 @@ class Human(guicommon.Object):
             *float*. An amount, usually between 0 and 1, specifying how much
             of the attribute to apply.
         """
+        if updateModifier:
+            modifier = self.getModifier('macrodetails/Muscle')
+            modifier.setValue(age)
+            self.applyAllTargets(G.app.progress)
+            return
 
         muscle = min(max(muscle, 0.0), 1.0)
         if self.muscle == muscle:
@@ -476,7 +497,13 @@ class Human(guicommon.Object):
         self.minmuscleVal = max(0.0, 1 - self.muscle * 2)
         self.averagemuscleVal = 1 - (self.maxmuscleVal + self.minmuscleVal)
 
-    def setHeight(self, height):
+    def setHeight(self, height, updateModifier = True):
+        if updateModifier:
+            modifier = self.getModifier('macrodetails/Height')
+            modifier.setValue(age)
+            self.applyAllTargets(G.app.progress)
+            return
+
         height = min(max(height, 0.0), 1.0)
         if self.height == height:
             return
@@ -498,7 +525,13 @@ class Human(guicommon.Object):
         self.dwarfVal = max(0.0, 1 - self.height * 2)
         self.giantVal = max(0.0, self.height * 2 - 1)
 
-    def setBreastSize(self, size):
+    def setBreastSize(self, size, updateModifier = True):
+        if updateModifier:
+            modifier = self.getModifier('macrodetails/BreastSize')
+            modifier.setValue(age)
+            self.applyAllTargets(G.app.progress)
+            return
+
         size = min(max(size, 0.0), 1.0)
         if self.breastSize == size:
             return
@@ -513,7 +546,13 @@ class Human(guicommon.Object):
         self.cup2Val = max(0.0, self.breastSize * 2 - 1)
         self.cup1Val = max(0.0, 1 - self.breastSize * 2)
 
-    def setBreastFirmness(self, firmness):
+    def setBreastFirmness(self, firmness, updateModifier = True):
+        if updateModifier:
+            modifier = self.getModifier('macrodetails/BreastFirmness')
+            modifier.setValue(age)
+            self.applyAllTargets(G.app.progress)
+            return
+
         firmness = min(max(firmness, 0.0), 1.0)
         if self.breastFirmness == firmness:
             return
@@ -528,7 +567,13 @@ class Human(guicommon.Object):
         self.firmness1Val = self.breastFirmness
         self.firmness0Val = 1 - self.breastFirmness
 
-    def setCaucasian(self, caucasian, sync=True):
+    def setCaucasian(self, caucasian, sync=True, updateModifier = True):
+        if updateModifier:
+            modifier = self.getModifier('macrodetails/Caucasian')
+            modifier.setValue(age)
+            self.applyAllTargets(G.app.progress)
+            return
+
         caucasian = min(max(caucasian, 0.0), 1.0)
         old = 1 - self.caucasianVal
         self.caucasianVal = caucasian
@@ -546,7 +591,13 @@ class Human(guicommon.Object):
     def getCaucasian(self):
         return self.caucasianVal
 
-    def setAfrican(self, african, sync=True):
+    def setAfrican(self, african, sync=True, updateModifier = True):
+        if updateModifier:
+            modifier = self.getModifier('macrodetails/African')
+            modifier.setValue(age)
+            self.applyAllTargets(G.app.progress)
+            return
+
         african = min(max(african, 0.0), 1.0)
         old = 1 - self.africanVal
         self.africanVal = african
@@ -564,7 +615,13 @@ class Human(guicommon.Object):
     def getAfrican(self):
         return self.africanVal
 
-    def setAsian(self, asian, sync=True):
+    def setAsian(self, asian, sync=True, updateModifier = True):
+        if updateModifier:
+            modifier = self.getModifier('macrodetails/Asian')
+            modifier.setValue(age)
+            self.applyAllTargets(G.app.progress)
+            return
+
         asian = min(max(asian, 0.0), 1.0)
         old = 1 - self.asianVal
         self.asianVal = asian
@@ -612,7 +669,7 @@ class Human(guicommon.Object):
         return self._modifiers.keys()
 
     def getModifier(self, name):
-        return self.modifiers[name]
+        return self._modifiers[name]
 
     @property
     def modifierGroups(self):

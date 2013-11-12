@@ -491,7 +491,7 @@ class MacroModifier(GenericModifier):
 
     def setValue(self, value):
         value = self.clampValue(value)
-        getattr(self.human, self.setter)(value)
+        getattr(self.human, self.setter)(value, updateModifier=False)
         super(MacroModifier, self).setValue(value)
 
     def clampValue(self, value):
