@@ -409,8 +409,8 @@ class UniversalModifier(GenericModifier):
                 self.targetName = self.targetName + "-" + leftExt + "|" + rightExt
                 name = targetName + "-" + leftExt + "|" + rightExt
         else:
-            self.left = self.targetName
-            self.right = None
+            self.left = None
+            self.right = self.targetName
             self.center = None
             name = targetName
 
