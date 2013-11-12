@@ -331,7 +331,7 @@ class Human(guicommon.Object):
         if updateModifier:
             modifier = self.getModifier('macrodetails/Gender')
             modifier.setValue(age)
-            self.applyAllTargets(G.app.progress)
+            self.applyAllTargets()
             return
 
         gender = min(max(gender, 0.0), 1.0)
@@ -367,7 +367,7 @@ class Human(guicommon.Object):
         if updateModifier:
             modifier = self.getModifier('macrodetails/Age')
             modifier.setValue(age)
-            self.applyAllTargets(G.app.progress)
+            self.applyAllTargets()
             return
 
         age = min(max(age, 0.0), 1.0)
@@ -447,7 +447,7 @@ class Human(guicommon.Object):
         if updateModifier:
             modifier = self.getModifier('macrodetails/Weight')
             modifier.setValue(age)
-            self.applyAllTargets(G.app.progress)
+            self.applyAllTargets()
             return
 
         weight = min(max(weight, 0.0), 1.0)
@@ -479,7 +479,7 @@ class Human(guicommon.Object):
         if updateModifier:
             modifier = self.getModifier('macrodetails/Muscle')
             modifier.setValue(age)
-            self.applyAllTargets(G.app.progress)
+            self.applyAllTargets()
             return
 
         muscle = min(max(muscle, 0.0), 1.0)
@@ -501,7 +501,7 @@ class Human(guicommon.Object):
         if updateModifier:
             modifier = self.getModifier('macrodetails/Height')
             modifier.setValue(age)
-            self.applyAllTargets(G.app.progress)
+            self.applyAllTargets()
             return
 
         height = min(max(height, 0.0), 1.0)
@@ -529,7 +529,7 @@ class Human(guicommon.Object):
         if updateModifier:
             modifier = self.getModifier('macrodetails/BreastSize')
             modifier.setValue(age)
-            self.applyAllTargets(G.app.progress)
+            self.applyAllTargets()
             return
 
         size = min(max(size, 0.0), 1.0)
@@ -550,7 +550,7 @@ class Human(guicommon.Object):
         if updateModifier:
             modifier = self.getModifier('macrodetails/BreastFirmness')
             modifier.setValue(age)
-            self.applyAllTargets(G.app.progress)
+            self.applyAllTargets()
             return
 
         firmness = min(max(firmness, 0.0), 1.0)
@@ -571,7 +571,7 @@ class Human(guicommon.Object):
         if updateModifier:
             modifier = self.getModifier('macrodetails/Caucasian')
             modifier.setValue(age)
-            self.applyAllTargets(G.app.progress)
+            self.applyAllTargets()
             return
 
         caucasian = min(max(caucasian, 0.0), 1.0)
@@ -595,7 +595,7 @@ class Human(guicommon.Object):
         if updateModifier:
             modifier = self.getModifier('macrodetails/African')
             modifier.setValue(age)
-            self.applyAllTargets(G.app.progress)
+            self.applyAllTargets()
             return
 
         african = min(max(african, 0.0), 1.0)
@@ -619,7 +619,7 @@ class Human(guicommon.Object):
         if updateModifier:
             modifier = self.getModifier('macrodetails/Asian')
             modifier.setValue(age)
-            self.applyAllTargets(G.app.progress)
+            self.applyAllTargets()
             return
 
         asian = min(max(asian, 0.0), 1.0)
@@ -788,7 +788,13 @@ class Human(guicommon.Object):
 
         **Parameters:** None.
 
+        progressCallback will automatically be set to G.app.progress if the
+        progressCallback parameter is left to None. Set it to False to disable
+        progress reporting.
         """
+        if progressCallback is None:
+            progressCallback = G.app.progress
+
         if progressCallback:
             progressCallback(0.0)
 
