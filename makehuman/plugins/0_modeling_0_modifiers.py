@@ -183,13 +183,13 @@ class ModifierTaskView(gui3d.TaskView):
         if values[0] == self._group:
             modifier = self.modifiers.get(values[1], None)
             if modifier:
-                modifier.setValue(human, float(values[2]))
+                modifier.setValue(float(values[2]))
 
     def saveHandler(self, human, file):
         for name, modifier in self.modifiers.iteritems():
             if name is None:
                 continue
-            value = modifier.getValue(human)
+            value = modifier.getValue()
             if value or isinstance(modifier, humanmodifier.MacroModifier):
                 file.write('%s %s %f\n' % (self._group, name, value))
 
