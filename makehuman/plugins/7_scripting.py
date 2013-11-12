@@ -225,7 +225,7 @@ class ScriptingView(gui3d.TaskView):
             if(item == 'setAge()'):
                 text = "# setAge(age)\n"
                 text = text + "#\n"
-                text = text + "# Sets the age of the model. The age parameter is a float between 0 and 1, where 0 is 12 years old and 1 is 70.\n\n"
+                text = text + "# Sets the age of the model. The age parameter is a float between 0 and 1, where 0 is 1 year old, 0.18 is 10 years old, 0.5 is 25 years and 1 equals 90 years old.\n\n"
                 text = text + "MHScript.setAge(0.5)\n\n"
                 self.scriptText.addText(text)
 
@@ -537,7 +537,6 @@ class Scripting():
         filename = os.path.join(path,name + ".obj")
         import wavefront
         wavefront.writeObjFile(filename, self.human.mesh)
-        self.human.save(filename,name)
 
     def screenShot(self,fileName):
         log.message("SCRIPT: screenShot(" + fileName + ")")
