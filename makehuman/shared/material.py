@@ -812,7 +812,6 @@ class Material(object):
     def getShaderObj(self):
         import shader
         shaderPath = self.getShader()
-        print shaderPath
         if not shaderPath:
             return None
         return shader.getShader(shaderPath, self.shaderDefines)
