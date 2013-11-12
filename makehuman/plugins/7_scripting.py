@@ -120,7 +120,11 @@ class ScriptingView(gui3d.TaskView):
             'setRotationY()',
             'setRotationZ()',
             'setZoom()',
-            'setWeight()'
+            'setWeight()',
+            'setHeadSquareness()',
+            'getModelingParameters()',
+            'updateModelingParameter()',
+            'saveObj()'
         ]
 
         self.listView.setData(testlist)
@@ -203,6 +207,14 @@ class ScriptingView(gui3d.TaskView):
                 text = text + "MHScript.saveModel('myTestModel')\n\n"
                 self.scriptText.addText(text)
 
+            if(item == 'saveObj()'):
+                text = "# saveObj(<model name>,[path])\n"
+                text = text + "#\n"
+                text = text + "# This will save the human model to a wavefront .OBJ file. The <model name> part should be a string without spaces\n"
+                text = text + "# and without the .obj extension. The [path] part defaults to the user's makehuman/exports directory.\n"
+                text = text + "MHScript.saveObj('myOBJExport')\n\n"
+                self.scriptText.addText(text)
+
             if(item == 'screenShot()'):
                 text = "# screenShot(<png file name>)\n"
                 text = text + "#\n"
@@ -223,6 +235,29 @@ class ScriptingView(gui3d.TaskView):
                 text = text + "# Sets the weight of the model. The weight parameter is a float between 0 and 1, where 0 is starved and\n"
                 text = text + "# 1 is severely overweight\n\n"
                 text = text + "MHScript.setWeight(0.5)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'setHeadSquareness()'):
+                text = "# setHeadSquareness(squareness)\n"
+                text = text + "#\n"
+                text = text + "# Sets the squaredness of the model's head. The squareness parameter is a float between 0 and 1, where 0 is not square and\n"
+                text = text + "# 1 is very square shaped\n\n"
+                text = text + "MHScript.setHeadSquareness(0.5)\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'getModelingParameters()'):
+                text = "# getModelingParameters()\n"
+                text = text + "#\n"
+                text = text + "# Prints the names of all modeling aspects that can be modified on the human model.\n"
+                text = text + "MHScript.getModelingParameters()\n\n"
+                self.scriptText.addText(text)
+
+            if(item == 'updateModelingParameter()'):
+                text = "# updateModelingParameter(parameterName, value)\n"
+                text = text + "#\n"
+                text = text + "# Sets the modeling parameter with specified name of the model to the specified value.\n"
+                text = text + "# The value is a float between 0 and 1, where 0 means nothing at all or minimal, and 1 is the maximum value.\n\n"
+                text = text + "MHScript.updateModelingParameter('macrodetails/Age', 0.7)\n\n"
                 self.scriptText.addText(text)
 
             if(item == 'setPositionX()'):
@@ -497,6 +532,13 @@ class Scripting():
         filename = os.path.join(path,name + ".mhm")
         self.human.load(filename, True, gui3d.app.progress)
 
+    def saveObj(self, name, path = mh.getPath('exports')):
+        log.message("SCRIPT: saveObj(" + name + "," + path + ")")
+        filename = os.path.join(path,name + ".obj")
+        import wavefront
+        wavefront.writeObjFile(filename, self.human.mesh)
+        self.human.save(filename,name)
+
     def screenShot(self,fileName):
         log.message("SCRIPT: screenShot(" + fileName + ")")
         width = G.windowWidth;
@@ -525,14 +567,30 @@ class Scripting():
     def setAge(self,age):
         log.message("SCRIPT: setAge(" + str(age) + ")")
         self.human.setAge(age)
-        humanmodifier.MacroModifier('macrodetails', None, 'Age').setValue(gui3d.app.selectedHuman, age)
-        self.human.applyAllTargets()
         mh.redraw()
 
     def setWeight(self,weight):
         log.message("SCRIPT: setWeight(" + str(weight) + ")")
         self.human.setWeight(weight)
-        humanmodifier.MacroModifier('macrodetails', 'universal', 'Weight').setValue(gui3d.app.selectedHuman, weight)
+        mh.redraw()
+
+    def getModelingParameters(self):
+        log.message("SCRIPT: getModelingParameters()")
+        modifierNamesList = sorted( self.human.modifierNames )
+        print "Modifier names:"
+        print "\n".join( modifierNamesList )
+
+    def updateModelingParameter(self, parameterName, value):
+        log.message("SCRIPT: updateModelingParameter(parameterName, value)")
+        modifier = self.human.getModifier(parameterName)
+        modifier.setValue(value)
+        self.human.applyAllTargets()
+        mh.redraw()
+
+    def setHeadSquareness(self, squareness):
+        log.message("SCRIPT: setHeadSquareness(" + str(squareness) + ")")
+        modifier = self.human.getModifier('head/head-square')
+        modifier.setValue(squareness)
         self.human.applyAllTargets()
         mh.redraw()
 
@@ -653,6 +711,7 @@ class Scripting():
     def printCameraInfo(self):
         log.message("SCRIPT: printCameraInfo()")
 
+        # TODO update to new camera
         print "eyeX:\t" + str(self.cam.eyeX)
         print "eyeY:\t" + str(self.cam.eyeY)
         print "eyeZ:\t" + str(self.cam.eyeZ)
@@ -683,16 +742,16 @@ class Scripting():
 
     def getZoom(self):
         log.message("SCRIPT: getZoom()")
-        return self.cam.eyeZ
+        return self.cam.zoomFactor
 
     def setZoom(self, zoom):
         log.message("SCRIPT: setZoom(" + str(zoom) + ")")
-        self.cam.eyeZ = zoom
+        self.cam.zoomFactor = zoom
         mh.redraw()
 
     def modifyZoom(self, zmod):
         log.message("SCRIPT: modifyZoom(" + str(zmod) + ")")
-        self.cam.eyeZ = self.cam.eyeZ + zmod
+        self.cam.addZoom(zmod)
         mh.redraw()
 
 MHScript = None
