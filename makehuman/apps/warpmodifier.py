@@ -84,7 +84,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         template = template.replace("\\","/")
 
         warppath = template.replace('$','').replace('{','').replace('}','')
-        humanmodifier.SimpleModifier.__init__(self, warppath)
+        humanmodifier.SimpleModifier.__init__(self, 'warp', warppath)
         self.name = self.eventType = 'warp'
         self.warppath = warppath
         self.template = str(template)
@@ -103,14 +103,14 @@ class WarpModifier (humanmodifier.SimpleModifier):
         return ("<WarpModifier %s>" % (os.path.basename(self.template)))
 
 
-    def setValue(self, human, value):
-        self.compileTargetIfNecessary(human)
-        humanmodifier.SimpleModifier.setValue(self, human, value)
+    def setValue(self, value):
+        self.compileTargetIfNecessary(self.human)
+        humanmodifier.SimpleModifier.setValue(self, value)
 
 
-    def updateValue(self, human, value, updateNormals=1):
-        self.compileTargetIfNecessary(human)
-        humanmodifier.SimpleModifier.updateValue(self, human, value, updateNormals)
+    def updateValue(self, value, updateNormals=1):
+        self.compileTargetIfNecessary(self.human)
+        humanmodifier.SimpleModifier.updateValue(self, value, updateNormals)
 
 
     def clampValue(self, value):
@@ -370,6 +370,7 @@ def compileWarpTarget(modtype, template, human, bodypart):
     else:
         raise TypeError("compileWarpTarget modtype = %s" % modtype)
 
+    mod.setHuman(human)
     return mod.compileWarpTarget(human)
 
 #----------------------------------------------------------

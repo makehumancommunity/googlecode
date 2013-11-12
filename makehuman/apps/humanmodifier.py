@@ -8,7 +8,7 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Marc Flerackers
+**Authors:**           Marc Flerackers, Glynn Clements, Jonas Hauquier
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
@@ -100,29 +100,32 @@ class DetailAction(guicommon.Action):
         return True
 
 class ModifierAction(guicommon.Action):
-    def __init__(self, human, modifier, before, after, postAction):
+    def __init__(self, modifier, before, after, postAction):
         super(ModifierAction, self).__init__('Change modifier')
-        self.human = human
+        self.human = modifier.human
         self.modifier = modifier
         self.before = before
         self.after = after
         self.postAction = postAction
 
     def do(self):
-        self.modifier.setValue(self.human, self.after)
+        self.modifier.setValue(self.after)
         self.human.applyAllTargets(G.app.progress)
         self.postAction()
         return True
 
     def undo(self):
-        self.modifier.setValue(self.human, self.before)
+        self.modifier.setValue(self.before)
         self.human.applyAllTargets(G.app.progress)
         self.postAction()
         return True
 
 class BaseModifier(object):
 
-    def __init__(self):
+    def __init__(self, groupName, name):
+        self.groupName = groupName.replace('/', '-')
+        self.name = name.replace('/', '-')
+
         self.verts = None
         self.faces = None
         self.eventType = 'modifier'
@@ -130,77 +133,111 @@ class BaseModifier(object):
 
         self.macroVariable = None
         self.macroDependencies = []
-        G.app.selectedHuman.modifiers.append(self)
 
-        self.name = 'BaseModifier'
-        self.variable = 'None'
+        self.human = None
 
-    def getName(self):
-        return self.name+"/"+self.variable
+    def setHuman(self, human):
+        human.addModifier(self)
+        self.human = human
 
-    def setValue(self, human, value):
+    @property
+    def fullName(self):
+        return self.groupName+"/"+self.name
+
+    def setValue(self, value):
         value = self.clampValue(value)
-        factors = self.getFactors(human, value)
+        factors = self.getFactors(value)
 
         for target in self.targets:
-            human.setDetail(target[0], value * reduce(operator.mul, [factors[factor] for factor in target[1]]))
+            self.human.setDetail(target[0], value * reduce(operator.mul, [factors[factor] for factor in target[1]]))
 
     def clampValue(self, value):
         raise NotImplementedError()
 
-    def getFactors(self, human, value):
+    def getFactors(self, value):
         raise NotImplementedError()
 
-    def getValue(self, human):
-        return sum([human.getDetail(target[0]) for target in self.targets])
+    def getValue(self):
+        return sum([self.human.getDetail(target[0]) for target in self.targets])
 
     def buildLists(self):
-        human = G.app.selectedHuman
         # Collect vertex and face indices if we didn't yet
         if self.verts is None and self.faces is None:
             # Collect verts
-            vmask = np.zeros(human.meshData.getVertexCount(), dtype=bool)
+            vmask = np.zeros(self.human.meshData.getVertexCount(), dtype=bool)
             for target in self.targets:
-                t = algos3d.getTarget(human.meshData, target[0])
+                t = algos3d.getTarget(self.human.meshData, target[0])
                 vmask[t.verts] = True
             self.verts = np.argwhere(vmask)[...,0]
             del vmask
 
             # collect faces
-            self.faces = human.meshData.getFacesForVertices(self.verts)
+            self.faces = self.human.meshData.getFacesForVertices(self.verts)
 
-    def updateValue(self, human, value, updateNormals=1):
+    def updateValue(self, value, updateNormals=1):
         if self.verts is None and self.faces is None:
             self.buildLists()
 
         # Update detail state
-        old_detail = [human.getDetail(target[0]) for target in self.targets]
-        self.setValue(human, value)
-        new_detail = [human.getDetail(target[0]) for target in self.targets]
+        old_detail = [self.human.getDetail(target[0]) for target in self.targets]
+        self.setValue(value)
+        new_detail = [self.human.getDetail(target[0]) for target in self.targets]
 
         # Apply changes
         for target, old, new in zip(self.targets, old_detail, new_detail):
             if new == old:
                 continue
-            algos3d.loadTranslationTarget(human.meshData, target[0], new - old, None, 0, 0)
+            algos3d.loadTranslationTarget(self.human.meshData, target[0], new - old, None, 0, 0)
 
         # Update vertices
         if updateNormals:
-            human.meshData.calcNormals(1, 1, self.verts, self.faces)
-        human.meshData.update()
-        event = events3d.HumanEvent(human, self.eventType)
+            self.human.meshData.calcNormals(1, 1, self.verts, self.faces)
+        self.human.meshData.update()
+        event = events3d.HumanEvent(self.human, self.eventType)
         #print 'onChanging %s' % event
-        event.modifier = self.name
-        #print self.name
-        human.callEvent('onChanging', event)
+        event.modifier = self.fullName
+        self.human.callEvent('onChanging', event)
 
 class Modifier(BaseModifier):
+    # TODO what is the difference between this and UniversalModifier (this appears only used by the measurement plugin) -- might perhaps be useful for ad-hoc target applications, by directly specifying the file
 
     def __init__(self, left, right):
-        super(Modifier, self).__init__()
+        lpath = Modifier.split_path(left)
+        rpath = Modifier.split_path(right)
+        common = Modifier.longest_subpath(lpath, rpath)
+        lExt = '-'.join(lpath[len(common):])
+        rExt = '-'.join(rpath[len(common):])
+        name = '-'.join(common) + '-' + lExt + "|" + rExt
+
+        super(Modifier, self).__init__("targetfile-modifier", name)
+
+        log.debug("Modifier(%s,%s)  :             %s", left, right, self.fullName)
+
         self.left = left
         self.right = right
         self.targets = [[self.left], [self.right]]
+
+    @staticmethod
+    def split_path(pathStr):
+        pathStr = pathStr.replace('\\', '-')
+        pathStr = pathStr.replace('/', '-')
+        pathStr = pathStr.replace('.target', '')
+
+        components = pathStr.split('-')
+        return components
+
+    @staticmethod
+    def longest_subpath(p1, p2):
+        """
+        Longest common sequence of components of two paths starting at position 0.
+        """
+        subp = []
+        for idx, component in enumerate(p1):
+            if idx >= len(p2):
+                return subp
+            if component == p2[idx]:
+                subp.append(component)
+        return subp
 
     def setValue(self, human, value, update=1):
 
@@ -224,14 +261,19 @@ class Modifier(BaseModifier):
             return 0.0
 
 class SimpleModifier(BaseModifier):
-    # overrides
+    # TODO do we need SimpleModifier and Modifier?
 
-    def __init__(self, template):
-        super(SimpleModifier, self).__init__()
+    def __init__(self, groupName, template):
+        name = template.replace('.target', '')
+        name = name.replace('/', '-')
+        name = name.replace('\\', '-')
+        super(SimpleModifier, self).__init__(groupName, name)
         self.template = template
         self.targets = self.expandTemplate([(self.template, [])])
 
-        self.macroDependencies = []
+        log.debug("SimpleModifier(%s,%s)  :             %s", groupName, template, self.fullName)
+
+        self.macroDependencies = []  # TODO
 
 
     def expandTemplate(self, targets):
@@ -240,7 +282,7 @@ class SimpleModifier(BaseModifier):
 
         return targets
 
-    def getFactors(self, human, value):
+    def getFactors(self, value):
         # TODO this is useless
         factors = {
             'dummy': 1.0
@@ -252,6 +294,9 @@ class SimpleModifier(BaseModifier):
         return max(0.0, min(1.0, value))
 
 class GenericModifier(BaseModifier):
+    def __init__(self, groupName, name):
+        super(GenericModifier, self).__init__(groupName, name)
+
     @staticmethod
     def findTargets(path):
         """
@@ -321,53 +366,72 @@ class GenericModifier(BaseModifier):
             value = max( 0.0, value)
         return value
 
-    def setValue(self, human, value):
+    def setValue(self, value):
         value = self.clampValue(value)
-        factors = self.getFactors(human, value)
+        factors = self.getFactors(value)
 
         for tpath, tfactors in self.targets:
-            human.setDetail(tpath, reduce((lambda x, y: x * y), [factors[factor] for factor in tfactors]))
+            self.human.setDetail(tpath, reduce((lambda x, y: x * y), [factors[factor] for factor in tfactors]))
 
     @staticmethod
     def parseTarget(target):
         return target[0].split('/')[-1].split('.')[0].split('-')
 
-    def getValue(self, human):
-        right = sum([human.getDetail(target[0]) for target in self.r_targets])
+    def getValue(self):
+        right = sum([self.human.getDetail(target[0]) for target in self.r_targets])
         if right:
             return right
         else:
-            return -sum([human.getDetail(target[0]) for target in self.l_targets])
+            return -sum([self.human.getDetail(target[0]) for target in self.l_targets])
 
     _variables = targets._value_cat.keys()
 
-    def getFactors(self, human, value):
+    def getFactors(self, value):
         #print 'genericModifier: getFactors'
-        return dict((name, getattr(human, name + 'Val'))
+        return dict((name, getattr(self.human, name + 'Val'))
                     for name in self._variables)
 
 class UniversalModifier(GenericModifier):
-    def __init__(self, left, right, center=None):
-        super(UniversalModifier, self).__init__()
+    def __init__(self, groupName, targetName, leftExt=None, rightExt=None, centerExt=None):
+        self.targetName = groupName + "-" + targetName
+        if leftExt and rightExt:
+            self.left = self.targetName + "-" + leftExt
+            self.right = self.targetName + "-" + rightExt
 
-        self.left = left
-        self.right = right
-        self.center = center
+            if centerExt:
+                self.center = self.targetName + "-" + centerExt
 
-        self.l_targets = self.findTargets(left)
-        self.r_targets = self.findTargets(right)
-        self.c_targets = self.findTargets(center)
+                self.targetName = self.targetName + "-" + leftExt + "|" + centerExt + "|" + rightExt
+                name = targetName + "-" + leftExt + "|" + centerExt + "|" + rightExt
+            else:
+                self.center = None
 
-        self.macroDependencies = self.findMacroDependencies(left)
-        self.macroDependencies.update(self.findMacroDependencies(right))
-        self.macroDependencies.update(self.findMacroDependencies(center))
+                self.targetName = self.targetName + "-" + leftExt + "|" + rightExt
+                name = targetName + "-" + leftExt + "|" + rightExt
+        else:
+            self.left = self.targetName
+            self.right = None
+            self.center = None
+            name = targetName
+
+        super(UniversalModifier, self).__init__(groupName, name)
+
+        log.debug("UniversalModifier(%s, %s, %s, %s)  :  %s", self.groupName, targetName, leftExt, rightExt, self.fullName)
+
+        self.l_targets = self.findTargets(self.left)
+        self.r_targets = self.findTargets(self.right)
+        self.c_targets = self.findTargets(self.center)
+
+        self.macroDependencies = self.findMacroDependencies(self.left)
+        self.macroDependencies.update(self.findMacroDependencies(self.right))
+        self.macroDependencies.update(self.findMacroDependencies(self.center))
         self.macroDependencies = list(self.macroDependencies)
 
         self.targets = self.l_targets + self.r_targets + self.c_targets
 
-    def getFactors(self, human, value):
+    def getFactors(self, value):
         #print "UniversalModifier factors:"
-        factors = super(UniversalModifier, self).getFactors(human, value)
+        factors = super(UniversalModifier, self).getFactors(value)
 
         if self.left is not None:
             factors[self.left] = -min(value, 0.0)
@@ -381,30 +445,33 @@ class UniversalModifier(GenericModifier):
         return factors
 
 class MacroModifier(GenericModifier):
-    def __init__(self, base, name, variable):
-        # TODO name is not used! (None is passed from modeling plugin)
-        super(MacroModifier, self).__init__()
+    def __init__(self, groupName, variable):
+        super(MacroModifier, self).__init__(groupName, variable)
 
-        self.name = '-'.join(atom
-                             for atom in (base, name)
-                             if atom is not None)
-        self.variable = variable
+        log.debug("MacroModifier(%s, %s)  :  %s", self.groupName, self.name, self.fullName)
+
         self.setter = 'set' + self.variable
         self.getter = 'get' + self.variable
 
-        self.targets = self.findTargets(self.name)
+        self.targets = self.findTargets(self.groupName)
+
         if self.name == 'macrodetails':
             # Update weight/muscle modifiers when macro modifiers are updated
             self.targets.extend(self.findTargets('macrodetails-universal')) # TODO make a more generic solution to this using dependencies (while still allowing to propagate updates to a select group of depencies during slider dragging (onChanging))
+
         # log.debug('macro modifier %s.%s(%s): %s', base, name, variable, self.targets)
 
-        self.macroDependencies = self.findMacroDependencies(self.name)
+        self.macroDependencies = self.findMacroDependencies(self.groupName)
         var = self.getMacroVariable()
         if var:
             self.macroDependencies.remove(var)
         self.macroDependencies = list(self.macroDependencies)
 
         self.macroVariable = var
+
+    @property
+    def variable(self):
+        return self.name
 
     def getMacroVariable(self):
         """
@@ -419,23 +486,23 @@ class MacroModifier(GenericModifier):
                 return targets._value_cat[var]
         return None
 
-    def getValue(self, human):
-        return getattr(human, self.getter)()
+    def getValue(self):
+        return getattr(self.human, self.getter)()
 
-    def setValue(self, human, value):
+    def setValue(self, value):
         value = self.clampValue(value)
-        getattr(human, self.setter)(value)
-        super(MacroModifier, self).setValue(human, value)
+        getattr(self.human, self.setter)(value)
+        super(MacroModifier, self).setValue(value)
 
     def clampValue(self, value):
         return max(0.0, min(1.0, value))
 
-    def getFactors(self, human, value):
-        factors = super(MacroModifier, self).getFactors(human, value)
-        factors[self.name] = 1.0
-        if self.name == 'macrodetails':
+    def getFactors(self, value):
+        factors = super(MacroModifier, self).getFactors(value)
+        factors[self.groupName] = 1.0
+        if self.groupName == 'macrodetails':
             # Update weight/muscle modifiers when macro modifiers are updated
-            factors['macrodetails-universal'] = 1.0
+            factors['macrodetails-universal'] = 1.0     # TODO remove hardcoded hack
         return factors
 
     def buildLists(self):
@@ -471,10 +538,10 @@ def debugModifierDependencies():
 def debugModifiers():
     human = G.app.selectedHuman
     for m in human.modifiers:
-        mName = m.name + "/" + m.variable
-        log.debug("%s %s:", type(m), mName)
+        log.debug("%s %s:", type(m), m.fullName)
         log.debug("    controls: %s", m.macroVariable)
-        log.debug("    dependencies: %s", (str(m.macroDependencies)))
+        log.debug("    dependencies (variables): %s", str(m.macroDependencies))
+        log.debug("    dependencies (modifiers): %s", str(list(human.getModifierDependencies(m))))
         log.debug("\n")
 
 

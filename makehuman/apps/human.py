@@ -82,7 +82,10 @@ class Human(guicommon.Object):
         self.material = material.fromFile(getSysDataPath('skins/default.mhmat'))
         self._defaultMaterial = material.Material().copyFrom(self.material)
 
-        self.modifiers = []
+        self._modifiers = dict()
+        self._modifier_varMapping = dict()              # Maps macro variable to the modifier group that modifies it
+        self._modifier_dependencyMapping = dict()       # Maps a macro variable to all the modifiers that depend on it
+        self._modifier_groups = dict()
 
 
     # TODO introduce better system for managing proxies, nothing done for clothes yet
@@ -600,6 +603,112 @@ class Human(guicommon.Object):
         name = canonicalPath(name)
         return self.targetsDetailStack.get(name, 0.0)
 
+    @property
+    def modifiers(self):
+        return self._modifiers.values()
+
+    @property
+    def modifierNames(self):
+        return self._modifiers.keys()
+
+    def getModifier(self, name):
+        return self.modifiers[name]
+
+    @property
+    def modifierGroups(self):
+        return self._modifier_groups.keys()
+
+    def getModifiersByGroup(self, groupName):
+        """
+        Get all modifiers for this human belonging to the same modifier group.
+        NOTE: do not confuse groupName with facegroup names!
+        """
+        try:
+            return self._modifier_groups[groupName]
+        except:
+            log.warning('Modifier group %s does not exist.', groupName)
+            return []
+
+    def addModifier(self, modifier):
+        #log.debug("Adding modifier of type %s: %s", type(modifier), modifier.fullName)
+
+        if modifier.fullName in self.modifiers:
+            log.error("Modifier with name %s is already attached to human.", modifier.fullName)
+            raise RuntimeError("Modifier with name %s is already attached to human." % modifier.fullName)
+
+        self._modifiers[modifier.fullName] = modifier
+
+        if modifier.groupName not in self._modifier_groups:
+            self._modifier_groups[modifier.groupName] = []
+        self._modifier_groups[modifier.groupName].append(modifier)
+
+        # Update dependency mapping
+        if modifier.macroVariable and modifier.macroVariable != 'None':
+            if modifier.macroVariable in self._modifier_varMapping and \
+               self._modifier_varMapping[modifier.macroVariable] != modifier.groupName:
+                log.error("Error, multiple modifier groups setting var %s (%s and %s)", modifier.macroVariable, modifier.groupName, self._modifier_varMapping[modifier.macroVariable])
+            else:
+                self._modifier_varMapping[modifier.macroVariable] = modifier.groupName
+
+        for dep in modifier.macroDependencies:
+            if dep not in self._modifier_dependencyMapping:
+                self._modifier_dependencyMapping[dep] = []
+            self._modifier_dependencyMapping[dep].append(modifier)
+
+    def getModifierDependencies(self, modifier, filter = None):
+        result = set()
+
+        if len(modifier.macroDependencies) > 0:
+            for var in modifier.macroDependencies:
+                if var not in self._modifier_varMapping:
+                    log.error("Error var %s not mapped", var)
+                    continue
+                depMGroup = self._modifier_varMapping[var]
+
+                if depMGroup != modifier.groupName:
+                    if filter is not None:
+                        if depMGroup in filter:
+                            result.add(depMGroup)
+                            if len(result) == len(filter):
+                                return result   # Early out
+                    else:
+                        result.add(depMGroup)
+        return result
+
+    def getModifiersAffectedBy(self, modifier, filter = None):
+        """
+        Reverse dependency search. Returns all modifier groups to update that
+        are affected by the change in the specified modifier.
+        """
+        return self._modifier_dependencyMapping.get(modifier.macroVariable, [])
+
+    def removeModifier(self, modifier):
+        try:
+            del self._modifiers[modifier.fullName]
+            self._modifier_groups[modifier.groupName].remove(modifier)
+
+            # Clean up empty modifier groups
+            if len(self._modifier_groups[modifier.groupName]) == 0:
+                del self._modifier_groups[modifier.groupName]
+
+                # Update dependency map
+                reverseMapping = dict()
+                for k,v in self._modifier_varMapping.items():
+                    if v not in reverseMapping:
+                        reverseMapping[v] = []
+                    reverseMapping[v].append(k)
+
+                for dep in reverseMapping.get(modifier.groupName, []):
+                    del self._modifier_varMapping[dep]
+
+            for dep in modifier.macroDependencies:
+                self._modifier_dependencyMapping[dep].remove(modifier)
+                if len(self._modifier_dependencyMapping[dep]) == 0:
+                    del self._modifier_dependencyMapping[dep]
+        except:
+            log.debug('Failed to remove modifier % from human.', modifier.fullName)
+            pass
+
     def getSymmetryGroup(self, group):
         if group.name.find('l-', 0, 2) != -1:
             return self.mesh.getFaceGroup(group.name.replace('l-', 'r-', 1))
@@ -669,6 +778,7 @@ class Human(guicommon.Object):
         self.callEvent('onChanged', events3d.HumanEvent(self, 'targets'))
 
     def getPartNameForGroupName(self, groupName):
+        # TODO is this still used anywhere
         for k in self.bodyZones:
             if k in groupName:
                 return k

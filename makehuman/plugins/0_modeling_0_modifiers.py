@@ -89,7 +89,12 @@ class ModifierTaskView(gui3d.TaskView):
                 if macro:
                     tname, tvar, opts = template
                     resolveOptionsDict(opts, 'macro')
-                    modifier = humanmodifier.MacroModifier(base, tname, tvar)
+                    if tname:
+                        groupName = base + "-" + tname
+                    else:
+                        groupName = base
+                    modifier = humanmodifier.MacroModifier(groupName, tvar)
+                    modifier.setHuman(G.app.selectedHuman)
                     self.modifiers[tvar] = modifier
                     tpath = '-'.join(template[1:-1])
                     slider = modifierslider.MacroSlider(modifier, opts['label'], ('%s.png' % tpath).lower(),
@@ -104,8 +109,8 @@ class ModifierTaskView(gui3d.TaskView):
                     else:
                         tname, opts = template
                         resolveOptionsDict(opts)
-                        left = None
-                        right = '-'.join([base, tname])
+                        tleft = None
+                        tright = None
 
                     if opts['label'] is None:
                         tlabel = tname.split('-')
@@ -113,7 +118,10 @@ class ModifierTaskView(gui3d.TaskView):
                             tlabel = tlabel[1:]
                         opts['label'] = ' '.join([word.capitalize() for word in tlabel])
 
-                    modifier = humanmodifier.UniversalModifier(left, right)
+                    groupName = base
+                    name = tname
+                    modifier = humanmodifier.UniversalModifier(groupName, name, tleft, tright, centerExt=None)
+                    modifier.setHuman(G.app.selectedHuman)
 
                     tpath = '-'.join(template[0:-1])
                     modifierName = tpath
@@ -148,10 +156,9 @@ class ModifierTaskView(gui3d.TaskView):
                 if name[:2] not in ("r-", "l-")]
 
     def updateMacro(self):
-        human = G.app.selectedHuman
         for modifier in self.modifiers.itervalues():
             if isinstance(modifier, humanmodifier.MacroModifier):
-                modifier.setValue(human, modifier.getValue(human))
+                modifier.setValue(modifier.getValue())
 
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)
@@ -559,6 +566,7 @@ class MacroTaskView(ModifierTaskView):
             slider.setValue(1.0/3)
 
     def raceSliders(self):
+        # TODO refactor using human.getModifiers()
         for slider in self.sliders:
             modifier = slider.modifier
             if not isinstance(modifier, humanmodifier.MacroModifier):
@@ -598,8 +606,8 @@ class MacroTaskView(ModifierTaskView):
                 # Do not update slider when it is being clicked or dragged
                 continue
             slider.setValue(1.0/3)
-            value = modifier.getValue(human)
-            modifier.setValue(human, value)
+            value = modifier.getValue()
+            modifier.setValue(value)
             slider.setValue(value)
 
     def setStatus(self, format, *args):

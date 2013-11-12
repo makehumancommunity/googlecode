@@ -194,6 +194,7 @@ class MeasureTaskView(gui3d.TaskView):
 
             # Create sliders
             for subname in subnames:
+                # TODO use another modifier
                 modifier = humanmodifier.Modifier(
                     os.path.join(measureDataPath, "measure-%s-decrease.target" % subname),
                     os.path.join(measureDataPath, "measure-%s-increase.target" % subname))

@@ -48,14 +48,14 @@ class ModifierSlider(gui.Slider):
         if G.app.settings.get('realtimeUpdates', True):
             human = G.app.selectedHuman
             if self.value is None:
-                self.value = self.modifier.getValue(human)
+                self.value = self.modifier.getValue()
                 if human.isSubdivided():
                     if human.isProxied():
                         human.getProxyMesh().setVisibility(1)
                     else:
                         human.getSeedMesh().setVisibility(1)
                     human.getSubdivisionMesh(False).setVisibility(0)
-            self.modifier.updateValue(human, value, G.app.settings.get('realtimeNormalUpdates', True))
+            self.modifier.updateValue(value, G.app.settings.get('realtimeNormalUpdates', True))
             human.updateProxyMesh()  # Is this not too slow?
 
 
@@ -73,10 +73,9 @@ class ModifierSlider(gui.Slider):
         value = self.getValue()
         human = G.app.selectedHuman
         if self.value is None:
-            self.value = self.modifier.getValue(human)
+            self.value = self.modifier.getValue()
         if self.value != value:
-            G.app.do(humanmodifier.ModifierAction(human, self.modifier, self.value, value, self.update))
-            #G.app.do(humanmodifier.ModifierAction(human, self.modifier, self.value, value, self.update))
+            G.app.do(humanmodifier.ModifierAction(self.modifier, self.value, value, self.update))
         if human.isSubdivided():
             if human.isProxied():
                 human.getProxyMesh().setVisibility(0)
@@ -94,7 +93,7 @@ class ModifierSlider(gui.Slider):
         self.blockSignals(True)
         if not self.slider.isSliderDown():
             # Only update slider position when it is not being clicked or dragged
-            self.setValue(self.modifier.getValue(human))
+            self.setValue(self.modifier.getValue())
         self.blockSignals(False)
 
 

@@ -47,7 +47,7 @@ class GroupBoxRadioButton(gui.RadioButton):
 class ExpressionSimpleModifier(humanmodifier.SimpleModifier):
 
     def __init__(self, template):
-        humanmodifier.SimpleModifier.__init__(self, template)
+        humanmodifier.SimpleModifier.__init__(self, 'expression', template)
         self.eventType = 'expression'
 
 
@@ -114,6 +114,7 @@ class ExpressionTaskView(gui3d.TaskView):
                     template = 'data/targets/expression/units/caucasian/%s-%s.target' % (name, subname)
                     modifier = ExpressionSimpleModifier(template)
 
+                modifier.setHuman(gui3d.app.selectedHuman)
                 slider = box.addWidget(ExpressionModifierSlider(taskview=self, label=subname.capitalize(), modifier=modifier))
                 slider.modifier = modifier
                 self.modifiers[name + '-' + subname] = modifier
@@ -179,13 +180,13 @@ class ExpressionTaskView(gui3d.TaskView):
         modifier = self.modifiers.get(values[1], None)
         if modifier:
             value = float(values[2])
-            modifier.setValue(human, value)
-            modifier.updateValue(human, value)  # Force recompilation
+            modifier.setValue(value)
+            modifier.updateValue(value)  # Force recompilation
 
 
     def saveHandler(self, human, file):
         for name, modifier in self.modifiers.iteritems():
-            value = modifier.getValue(human)
+            value = modifier.getValue()
             if value:
                 file.write('expression %s %f\n' % (name, value))
 
@@ -203,8 +204,8 @@ class ExpressionTaskView(gui3d.TaskView):
                         modifier = self.modifiers.get(lineData[1], None)
                         if modifier:
                             value = float(lineData[2])
-                            modifier.setValue(human, value)
-                            modifier.updateValue(human, value)  # Force recompilation
+                            modifier.setValue(value)
+                            modifier.updateValue(value)  # Force recompilation
 
 
 #----------------------------------------------------------
@@ -222,7 +223,7 @@ class ExpressionAction(gui3d.Action):
         self.before = {}
 
         for name, modifier in self.taskView.modifiers.iteritems():
-            self.before[name] = modifier.getValue(self.human)
+            self.before[name] = modifier.getValue()
 
     def do(self):
         task = self.taskView
@@ -242,7 +243,7 @@ class ExpressionAction(gui3d.Action):
         task.resetTargets()
         for name, value in self.before.iteritems():
             modifier = task.modifiers[name]
-            modifier.setValue(self.human, value)
+            modifier.setValue(value)
             task.addTarget(modifier.target)
         self.human.applyAllTargets(gui3d.app.progress, True)
         for slider in task.sliders:

@@ -106,7 +106,7 @@ def clearPoseDetails(human):
             continue
         if (isinstance(target, warpmodifier.WarpTarget) and
             isinstance(target.modifier, PoseModifier)):
-            target.modifier.updateValue(human, 0.0)
+            target.modifier.updateValue(0.0)
             human.setDetail(path, 0)
     human.applyAllTargets()
 
@@ -199,7 +199,8 @@ def loadMhpFile(filepath, pose=None, clearOnly=False):
             modifier = _storage.modifiers[modpath]
         except KeyError:
             modifier = _storage.modifiers[modpath] = PoseModifier(modpath)
-        modifier.setValue(human, 1.0)
+        modifier.setHuman(human)
+        modifier.setValue(1.0)
         human.applyAllTargets()
     else:
         modifier = None
