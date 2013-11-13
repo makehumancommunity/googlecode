@@ -98,7 +98,7 @@ class Object3D(object):
 
         self.name = objName
         self.vertsPerPrimitive = vertsPerPrimitive
-        self.loc = np.zeros(3)
+        self._loc = np.zeros(3)
         self.rot = np.zeros(3)
         self.scale = np.ones(3)
         self._faceGroups = []
@@ -120,6 +120,14 @@ class Object3D(object):
         self._r_color_diff = None
 
         self.__object = None
+
+    def getLoc(self):
+        return self._loc
+
+    def setLoc(self, loc):
+        self._loc = loc
+
+    loc = property(getLoc, setLoc)
 
     def get_x(self):
         return self.loc[0]

@@ -454,6 +454,7 @@ class MHApplication(gui3d.Application, mh.Application):
         offset = self.selectedHuman.getJointPosition('ground')[1]
         spacing = 1 if self.settings['units'] == 'metric' else 3.048
 
+        # Background grid
         gridSize = int(200/spacing)
         if gridSize % 2 != 0:
             gridSize += 1
@@ -468,9 +469,11 @@ class MHApplication(gui3d.Application, mh.Application):
         backGridMesh.restrictVisibleToCamera = True
         backGridMesh.minSubgridZoom = (1.0/spacing) * float(subgrids)/5
         self.backplaneGrid = gui3d.Object(backGridMesh)
-        self.backplaneGrid.setPosition([0,offset,0])
+        #self.backplaneGrid.setPosition([0,offset,0])
+        backGridMesh.placeAtFeet = True
         self.addObject(self.backplaneGrid)
 
+        # Ground grid
         gridSize = int(20/spacing)
         if gridSize % 2 != 0:
             gridSize += 1
@@ -479,7 +482,8 @@ class MHApplication(gui3d.Application, mh.Application):
         groundGridMesh.setSubColor(self.gridSubColor)
         groundGridMesh.minSubgridZoom = (1.0/spacing) * float(subgrids)/5
         self.groundplaneGrid = gui3d.Object(groundGridMesh)
-        self.groundplaneGrid.setPosition([0,offset,0])
+        #self.groundplaneGrid.setPosition([0,offset,0])
+        groundGridMesh.placeAtFeet = True
         self.addObject(self.groundplaneGrid)
 
     def loadMacroTargets(self):

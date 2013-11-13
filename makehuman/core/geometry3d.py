@@ -253,6 +253,7 @@ class GridMesh(module3d.Object3D):
 
         typeName = "ground" if plane == 1 else "back"
         module3d.Object3D.__init__(self, '%s_grid' % typeName, vertsPerPrimitive = 2)
+        self.plane = plane
 
         # create group
         fg = self.createFaceGroup('grid')
@@ -339,6 +340,7 @@ class GridMesh(module3d.Object3D):
 
         self.restrictVisibleToCamera = False    # Set to True to only show the grid when the camera is set to a defined parallel view (front, left, top, ...)
         self.minSubgridZoom = 1.0   # Minimum zoom factor of the camera in which the subgrid will be shown
+        self.placeAtFeet = False
 
         self._subgridVisible = True
 
@@ -399,5 +401,22 @@ class GridMesh(module3d.Object3D):
             #return camera.isInParallelView()
             # Hide the grid in top and bottom view:
             return camera.isInFrontView() or camera.isInBackView() or camera.isInSideView()
+        elif self.plane == 1 and (camera.isInFrontView() or camera.isInBackView() or camera.isInSideView()):
+            # Hide if this is a horizontal grid and camera is looking at it horizontally
+            return False
+        elif self.plane == 0 and (camera.isInTopView() and camera.isInBottomView()):
+            # Hide if this is a vertical grid and camera is looking at it horizontally
+            return False
         else:
             return super(GridMesh, self).visibility
+
+    @module3d.Object3D.loc.getter
+    def loc(self):
+        result = np.zeros(3, dtype=np.float32)
+        result[:] = super(GridMesh, self).loc[:]
+        if self.placeAtFeet:
+            from core import G
+            human = G.app.selectedHuman
+            result[1] = human.getJointPosition('ground')[1]
+        return result
+
