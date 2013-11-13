@@ -64,14 +64,14 @@ class MeasurementValueConverter(object):
                     if value == minValue:
                         break
                     self.value = minValue + (self.value - minValue) / 2.0
-                    self.modifier.updateValue(gui3d.app.selectedHuman, self.value, 0)
+                    self.modifier.updateValue(self.value, 0)
                     measure = self.task.getMeasure(self.measure)
                 else:
                     minValue = self.value
                     if value == maxValue:
                         break
                     self.value = self.value + (maxValue - self.value) / 2.0
-                    self.modifier.updateValue(gui3d.app.selectedHuman, self.value, 0)
+                    self.modifier.updateValue(self.value, 0)
                     measure = self.task.getMeasure(self.measure)
                 tries -= 1
         return self.value
@@ -198,6 +198,7 @@ class MeasureTaskView(gui3d.TaskView):
                 modifier = humanmodifier.Modifier(
                     os.path.join(measureDataPath, "measure-%s-decrease.target" % subname),
                     os.path.join(measureDataPath, "measure-%s-increase.target" % subname))
+                modifier.setHuman(gui3d.app.selectedHuman)
                 self.modifiers[subname] = modifier
                 slider = box.addWidget(MeasureSlider(sliderLabel[subname], self, subname, modifier))
                 self.sliders.append(slider)
@@ -351,12 +352,12 @@ class MeasureTaskView(gui3d.TaskView):
 
         modifier = self.modifiers.get(values[1], None)
         if modifier:
-            modifier.setValue(human, float(values[2]))
+            modifier.setValue(float(values[2]))
 
     def saveHandler(self, human, file):
 
         for name, modifier in self.modifiers.iteritems():
-            value = modifier.getValue(human)
+            value = modifier.getValue()
             if value:
                 file.write('measure %s %f\n' % (name, value))
 

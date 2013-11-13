@@ -245,22 +245,22 @@ class Modifier(BaseModifier):
                 subp.append(component)
         return subp
 
-    def setValue(self, human, value, update=1):
+    def setValue(self, value, update=1):
 
         value = max(-1.0, min(1.0, value))
 
         left = -value if value < 0.0 else 0.0
         right = value if value > 0.0 else 0.0
 
-        human.setDetail(self.left, left)
-        human.setDetail(self.right, right)
+        self.human.setDetail(self.left, left)
+        self.human.setDetail(self.right, right)
 
-    def getValue(self, human):
+    def getValue(self):
 
-        value = human.getDetail(self.left)
+        value = self.human.getDetail(self.left)
         if value:
             return -value
-        value = human.getDetail(self.right)
+        value = self.human.getDetail(self.right)
         if value:
             return value
         else:
