@@ -706,11 +706,30 @@ class Human(guicommon.Object):
                 log.error("Error, multiple modifier groups setting var %s (%s and %s)", modifier.macroVariable, modifier.groupName, self._modifier_varMapping[modifier.macroVariable])
             else:
                 self._modifier_varMapping[modifier.macroVariable] = modifier.groupName
+                # Update any new backwards references that might be influenced by this change (to make it independent of order of adding modifiers)
+                toRemove = set()  # Modifiers to remove again from backwards map because they belogn to the same group as the modifier controlling the var
+                dep = modifier.macroVariable
+                for affectedModifierGroup in self._modifier_dependencyMapping.get(dep, []):
+                    if affectedModifierGroup == modifier.groupName:
+                        toRemove.add(affectedModifierGroup)
+                        #log.debug('REMOVED from backwards map again %s', affectedModifierGroup)
+                if len(toRemove) > 0:
+                    if len(toRemove) == len(self._modifier_dependencyMapping[dep]):
+                        del self._modifier_dependencyMapping[dep]
+                    else:
+                        for t in toRemove:
+                            self._modifier_dependencyMapping[dep].remove(t)
 
         for dep in modifier.macroDependencies:
+            groupName = self._modifier_varMapping.get(dep, None)
+            if groupName and groupName == modifier.groupName:
+                # Do not include dependencies within the same modifier group 
+                # (this step might be omitted if the mapping is still incomplete (dependency is not yet mapped to a group), and can later be fixed by removing the entry again from the reverse mapping)
+                continue
             if dep not in self._modifier_dependencyMapping:
                 self._modifier_dependencyMapping[dep] = []
-            self._modifier_dependencyMapping[dep].append(modifier)
+            if modifier.groupName not in self._modifier_dependencyMapping[dep]:
+                self._modifier_dependencyMapping[dep].append(modifier.groupName)
 
     def getModifierDependencies(self, modifier, filter = None):
         result = set()

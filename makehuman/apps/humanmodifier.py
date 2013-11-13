@@ -198,6 +198,12 @@ class BaseModifier(object):
         event.modifier = self.fullName
         self.human.callEvent('onChanging', event)
 
+    def __str__(self):
+        return "%s %s" % (type(self).__name__, self.fullName)
+
+    def __repr__(self):
+        return self.__str__()
+
 class Modifier(BaseModifier):
     # TODO what is the difference between this and UniversalModifier (this appears only used by the measurement plugin) -- might perhaps be useful for ad-hoc target applications, by directly specifying the file
 
@@ -211,7 +217,7 @@ class Modifier(BaseModifier):
 
         super(Modifier, self).__init__("targetfile-modifier", name)
 
-        log.debug("Modifier(%s,%s)  :             %s", left, right, self.fullName)
+        #log.debug("Modifier(%s,%s)  :             %s", left, right, self.fullName)
 
         self.left = left
         self.right = right
@@ -271,7 +277,7 @@ class SimpleModifier(BaseModifier):
         self.template = template
         self.targets = self.expandTemplate([(self.template, [])])
 
-        log.debug("SimpleModifier(%s,%s)  :             %s", groupName, template, self.fullName)
+        #log.debug("SimpleModifier(%s,%s)  :             %s", groupName, template, self.fullName)
 
         self.macroDependencies = []  # TODO
 
@@ -416,7 +422,7 @@ class UniversalModifier(GenericModifier):
 
         super(UniversalModifier, self).__init__(groupName, name)
 
-        log.debug("UniversalModifier(%s, %s, %s, %s)  :  %s", self.groupName, targetName, leftExt, rightExt, self.fullName)
+        #log.debug("UniversalModifier(%s, %s, %s, %s)  :  %s", self.groupName, targetName, leftExt, rightExt, self.fullName)
 
         self.l_targets = self.findTargets(self.left)
         self.r_targets = self.findTargets(self.right)
@@ -448,7 +454,7 @@ class MacroModifier(GenericModifier):
     def __init__(self, groupName, variable):
         super(MacroModifier, self).__init__(groupName, variable)
 
-        log.debug("MacroModifier(%s, %s)  :  %s", self.groupName, self.name, self.fullName)
+        #log.debug("MacroModifier(%s, %s)  :  %s", self.groupName, self.name, self.fullName)
 
         self.setter = 'set' + self.variable
         self.getter = 'get' + self.variable
@@ -508,40 +514,15 @@ class MacroModifier(GenericModifier):
     def buildLists(self):
         pass
 
-def debugModifierDependencies():
-    human = G.app.selectedHuman
-    varMapping = dict()
-    for m in human.modifiers:
-        if m.macroVariable:
-            if m.macroVariable in varMapping:
-                # This can happen for race (maybe we only need to map the modifier.name group, not individual modifiers)
-                e= varMapping[m.macroVariable]
-                nm = e.name + "/" + e.variable
-                nm2 = m.name + "/" + m.variable
-                log.error("Error, multiple modifiers setting var %s (%s and %s)", m.macroVariable, nm, nm2)
-            else:
-                varMapping[m.macroVariable] = m
-
-    for m in human.modifiers:
-        if len(m.macroDependencies) > 0:
-            for var in m.macroDependencies:
-                if var not in varMapping:
-                    nm = m.name + "/" + m.variable
-                    log.error("Error var %s not mapped (%s)", var, nm)
-                    continue
-                depM = varMapping[var]
-                if depM.name == m.name: # Beware, name is only available for macro modifiers
-                    log.debug("%s depends on %s but both are in same group, ignoring dependency", m.name+"/"+m.variable, depM.name+"/"+depM.variable) # variable is only available for macro modifiers
-                else:
-                    log.debug("%s depends on %s", m.name+"/"+m.variable, depM.name+"/"+depM.variable)
-
 def debugModifiers():
     human = G.app.selectedHuman
-    for m in human.modifiers:
-        log.debug("%s %s:", type(m), m.fullName)
+    modifierNames = sorted(human.modifierNames)
+    for mName in modifierNames:
+        m = human.getModifier(mName)
+        log.debug("%s:", m)
         log.debug("    controls: %s", m.macroVariable)
         log.debug("    dependencies (variables): %s", str(m.macroDependencies))
-        log.debug("    dependencies (modifiers): %s", str(list(human.getModifierDependencies(m))))
+        log.debug("    dependencies (modifier groups): %s", str(list(human.getModifierDependencies(m))))
+        log.debug("    influences (modifier groups): %s", str(list(human.getModifiersAffectedBy(m))))
         log.debug("\n")
-
 
