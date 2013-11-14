@@ -363,7 +363,7 @@ class MhmatFileLoader(FileHandler):
 
 class FileChooserBase(QtGui.QWidget, gui.Widget):
 
-    def __init__(self, path, extension, sort = FileSort()):
+    def __init__(self, path, extension, sort = FileSort(), doNotRecurse = False):
         super(FileChooserBase, self).__init__()
         gui.Widget.__init__(self)
 
@@ -371,6 +371,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         self.extension = extension
         self.previewExtensions = None
         self.notFoundImage = None
+        self.doNotRecurse = doNotRecurse
 
         self.sort = sort
         self.sortBy = self.sort.fields()[0]
@@ -430,13 +431,22 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         else:
             extensions = self.extension
 
-        for path in self.paths:
-            for root, dirs, files in os.walk(path):
-                for f in files:
-                    ext = os.path.splitext(f)[1][1:].lower()
-                    if ext in extensions:
-                        if f.lower().endswith('.' + ext):
-                            yield os.path.join(root, f)
+        if self.doNotRecurse:
+            for path in self.paths:
+                print path
+                print os.listdir(path)
+                for f in os.listdir(path):
+                    f = os.path.join(path, f)
+                    if os.path.isfile(f):
+                        yield f
+        else:
+            for path in self.paths:
+                for root, dirs, files in os.walk(path):
+                    for f in files:
+                        ext = os.path.splitext(f)[1][1:].lower()
+                        if ext in extensions:
+                            if f.lower().endswith('.' + ext):
+                                yield os.path.join(root, f)
 
     def clearList(self):
         for i in xrange(self.children.count()):
@@ -581,8 +591,8 @@ class FileChooser(FileChooserBase):
 
 class ListFileChooser(FileChooserBase):
 
-    def __init__(self, path, extension, name="File chooser" , multiSelect=False, verticalScrolling=False, sort=FileSort(), noneItem = False):
-        super(ListFileChooser, self).__init__(path, extension, sort)
+    def __init__(self, path, extension, name="File chooser" , multiSelect=False, verticalScrolling=False, sort=FileSort(), noneItem = False, doNotRecurse = False):
+        super(ListFileChooser, self).__init__(path, extension, sort, doNotRecurse)
         self.listItems = []
         self.multiSelect = multiSelect
         self.noneItem = noneItem
@@ -744,8 +754,8 @@ class ListFileChooser(FileChooserBase):
                 self.setSelection(selections[0])
 
 class IconListFileChooser(ListFileChooser):
-    def __init__(self, path, extension, previewExtensions='bmp', notFoundImage=None, clearImage=None, name="File chooser", multiSelect=False, verticalScrolling=False, sort=FileSort(), noneItem = False):
-        super(IconListFileChooser, self).__init__(path, extension, name, multiSelect, verticalScrolling, sort, noneItem)
+    def __init__(self, path, extension, previewExtensions='bmp', notFoundImage=None, clearImage=None, name="File chooser", multiSelect=False, verticalScrolling=False, sort=FileSort(), noneItem = False, doNotRecurse = False):
+        super(IconListFileChooser, self).__init__(path, extension, name, multiSelect, verticalScrolling, sort, noneItem, doNotRecurse)
         self.setPreviewExtensions(previewExtensions)
         self.notFoundImage = notFoundImage
         self.clearImage = clearImage
