@@ -674,43 +674,43 @@ class Material(object):
 
     def supportsDiffuse(self):
         result = (self.diffuseTexture != None)
-        if self.shader and result:
-            return 'DIFFUSE' in self.shaderObj.defineables
+        if self.shaderObj and result:
+            return ('DIFFUSE' in self.shaderObj.defineables)
         else:
             return result
 
     def supportsBump(self):
         result = (self.bumpMapTexture != None)
-        if self.shader and result:
-            return 'BUMPMAP' in self.shaderObj.defineables
+        if self.shaderObj and result:
+            return ('BUMPMAP' in self.shaderObj.defineables)
         else:
             return result
 
     def supportsDisplacement(self):
         result = (self.displacementMapTexture != None)
-        if self.shader and result:
-            return 'DISPLACEMENT' in self.shaderObj.defineables
+        if self.shaderObj and result:
+            return ('DISPLACEMENT' in self.shaderObj.defineables)
         else:
             return result
 
     def supportsNormal(self):
         result = (self.normalMapTexture != None)
-        if self.shader and result:
-            return 'NORMALMAP' in self.shaderObj.defineables
+        if self.shaderObj and result:
+            return ('NORMALMAP' in self.shaderObj.defineables)
         else:
             return result
 
     def supportsSpecular(self):
         result = (self.specularMapTexture != None)
-        if self.shader and result:
-            return 'SPECULARMAP' in self.shaderObj.defineables
+        if self.shaderObj and result:
+            return ('SPECULARMAP' in self.shaderObj.defineables)
         else:
             return result
 
     def supportsTransparency(self):
         result = (self.transparencyMapTexture != None)
-        if self.shader and result:
-            return 'TRANSPARENCYMAP' in self.shaderObj.defineables
+        if self.shaderObj and result:
+            return ('TRANSPARENCYMAP' in self.shaderObj.defineables)
         else:
             return result
 
@@ -811,6 +811,8 @@ class Material(object):
 
     def getShaderObj(self):
         import shader
+        if not shader.Shader.supported():
+            return None
         shaderPath = self.getShader()
         if not shaderPath:
             return None

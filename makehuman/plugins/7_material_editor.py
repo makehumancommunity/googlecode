@@ -358,15 +358,15 @@ class MaterialEditorTaskView(gui3d.TaskView):
             elif name == 'bump':
                 child.setEnabled(mat.supportsBump())
             elif name == 'normal':
-                child.setEnabled(sh and mat.supportsNormal())
+                child.setEnabled(bool(sh and mat.supportsNormal()))
             elif name == 'displacement':
-                child.setEnabled(sh and mat.supportsDisplacement())
+                child.setEnabled(bool(sh and mat.supportsDisplacement()))
             elif name == 'spec':
-                child.setEnabled(sh and mat.supportsSpecular())
+                child.setEnabled(bool(sh and mat.supportsSpecular()))
             elif name == 'transparency':
-                child.setEnabled(sh and mat.supportsTransparency())
+                child.setEnabled(bool(sh and mat.supportsTransparency()))
             elif name == 'vertexColors':
-                child.setEnabled((not sh) or ('VERTEX_COLOR' in sh.defineables))
+                child.setEnabled(bool((not sh) or ('VERTEX_COLOR' in sh.defineables)))
 
         self.updateCustomShaderDefines()
 
