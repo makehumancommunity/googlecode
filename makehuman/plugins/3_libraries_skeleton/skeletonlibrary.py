@@ -154,12 +154,16 @@ class SkeletonLibrary(gui3d.TaskView):
         '''
 
         self.sysDataPath = mh.getSysDataPath('rigs')
+        self.homeDataPath = mh.getPath('data/rigs')
+        if not os.path.exists(self.homeDataPath):
+            os.makedirs(self.homeDataPath)
+        self.paths = [self.homeDataPath, self.sysDataPath]
 
         #
         #   Preset box
         #
 
-        self.presetChooser = self.addRightWidget(fc.IconListFileChooser(self.sysDataPath, 'json', 'thumb', name='Rig presets', notFoundImage = mh.getSysDataPath('notfound.thumb'), noneItem = True, doNotRecurse = True))
+        self.presetChooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'json', 'thumb', name='Rig presets', notFoundImage = mh.getSysDataPath('notfound.thumb'), noneItem = True, doNotRecurse = True))
         self.presetChooser.setIconSize(50,50)
 
         @self.presetChooser.mhEvent

@@ -433,8 +433,6 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
 
         if self.doNotRecurse:
             for path in self.paths:
-                print path
-                print os.listdir(path)
                 for f in os.listdir(path):
                     f = os.path.join(path, f)
                     if os.path.isfile(f):
