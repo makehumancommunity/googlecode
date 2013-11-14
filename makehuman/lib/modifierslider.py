@@ -76,7 +76,6 @@ class ModifierSlider(gui.Slider):
             self.value = self.modifier.getValue()
         if self.value != value:
             G.app.do(humanmodifier.ModifierAction(self.modifier, self.value, value, self.update))
-            # TODO even if value has not changed, perhaps some other modifier needs updating
         if human.isSubdivided():
             if human.isProxied():
                 human.getProxyMesh().setVisibility(0)
