@@ -27,7 +27,7 @@ import gui
 import gui3d
 import log
 from collections import OrderedDict
-#import filechooser as fc
+import filechooser as fc
 
 import skeleton
 import skeleton_drawing
@@ -153,68 +153,18 @@ class SkeletonLibrary(gui3d.TaskView):
         self.showJointsTggl.setSelected(True)
         '''
 
+        self.sysDataPath = mh.getSysDataPath('rigs')
 
         #
         #   Preset box
         #
 
-        self.presetBox = self.addRightWidget(gui.GroupBox('Rig Presets'))
+        self.presetChooser = self.addRightWidget(fc.IconListFileChooser(self.sysDataPath, 'json', 'thumb', name='Rig presets', notFoundImage = mh.getSysDataPath('notfound.thumb'), noneItem = True, doNotRecurse = True))
+        self.presetChooser.setIconSize(50,50)
 
-        self.presetClearBtn = self.presetBox.addWidget(gui.Button("Clear"))
-        @self.presetClearBtn.mhEvent
-        def onClicked(event):
-            self.amtOptions.reset(self.optionsSelector, useMuscles=False)
-            self.descrLbl.setText("")
-            self.updateSkeleton(useOptions=False)
-
-        self.presetDefaultBtn = self.presetBox.addWidget(gui.Button("Default"))
-        @self.presetDefaultBtn.mhEvent
-        def onClicked(event):
-            descr = self.amtOptions.loadPreset("default", self.optionsSelector)
-            self.descrLbl.setText("Description: %s" % descr)
-            self.updateSkeleton()
-
-        self.presetMuscleBtn = self.presetBox.addWidget(gui.Button("Muscles"))
-        @self.presetMuscleBtn.mhEvent
-        def onClicked(event):
-            descr = self.amtOptions.loadPreset("muscles", self.optionsSelector)
-            self.descrLbl.setText("Description: %s" % descr)
-            self.updateSkeleton()
-
-        self.presetGameBtn = self.presetBox.addWidget(gui.Button("Game"))
-        @self.presetGameBtn.mhEvent
-        def onClicked(event):
-            descr = self.amtOptions.loadPreset("game", self.optionsSelector)
-            self.descrLbl.setText("Description: %s" % descr)
-            self.updateSkeleton()
-
-        self.presetHumanIkBtn = self.presetBox.addWidget(gui.Button("HumanIK"))
-        @self.presetHumanIkBtn.mhEvent
-        def onClicked(event):
-            descr = self.amtOptions.loadPreset("humanik", self.optionsSelector)
-            self.descrLbl.setText("Description: %s" % descr)
-            self.updateSkeleton()
-
-        self.presetSecondLifeBonesBtn = self.presetBox.addWidget(gui.Button("Second Life (bones)"))
-        @self.presetSecondLifeBonesBtn.mhEvent
-        def onClicked(event):
-            descr = self.amtOptions.loadPreset("second_life_bones", self.optionsSelector)
-            self.descrLbl.setText("Description: %s" % descr)
-            self.updateSkeleton()
-
-        self.presetSecondLifeJointsBtn = self.presetBox.addWidget(gui.Button("Second Life (joints)"))
-        @self.presetSecondLifeJointsBtn.mhEvent
-        def onClicked(event):
-            descr = self.amtOptions.loadPreset("second_life_joints", self.optionsSelector)
-            self.descrLbl.setText("Description: %s" % descr)
-            self.updateSkeleton()
-
-        self.presetXonoticBtn = self.presetBox.addWidget(gui.Button("Xonotic"))
-        @self.presetXonoticBtn.mhEvent
-        def onClicked(event):
-            descr = self.amtOptions.loadPreset("xonotic", self.optionsSelector)
-            self.descrLbl.setText("Description: %s" % descr)
-            self.updateSkeleton()
+        @self.presetChooser.mhEvent
+        def onFileSelected(filename):
+            self.rigPresetFileSelected(filename)
 
         self.infoBox = self.addLeftWidget(gui.GroupBox('Rig info'))
         self.boneCountLbl = self.infoBox.addWidget(gui.TextView('Bones: '))
@@ -222,6 +172,17 @@ class SkeletonLibrary(gui3d.TaskView):
         self.descrLbl.setSizePolicy(gui.QtGui.QSizePolicy.Ignored, gui.QtGui.QSizePolicy.Preferred)
         self.descrLbl.setWordWrap(True)
 
+    def rigPresetFileSelected(self, filename):
+        if not filename:
+            self.amtOptions.reset(self.optionsSelector, useMuscles=False)
+            self.descrLbl.setText("")
+            self.updateSkeleton(useOptions=False)
+            return
+
+        rigName = os.path.splitext(os.path.basename(filename))[0]
+        descr = self.amtOptions.loadPreset(rigName, self.optionsSelector)
+        self.descrLbl.setText("Description: %s" % descr)
+        self.updateSkeleton()
 
     def updateSkeleton(self, useOptions=True):
         if self.human.getSkeleton():
