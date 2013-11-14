@@ -79,6 +79,12 @@ import targets
 
 # Caucasian
 
+
+# The modifier groups that have to be updated in realtime (during slider dragging)
+# when a value they depend on changes. After dragged slider is released, all
+# dependencies will be updated (this is a performance feature)
+realtimeDependencyUpdates = ['macrodetails', 'macrodetails-universal']
+
 class DetailAction(guicommon.Action):
     def __init__(self, human, before, after, update=True):
         super(DetailAction, self).__init__('Change detail')
@@ -144,12 +150,37 @@ class BaseModifier(object):
     def fullName(self):
         return self.groupName+"/"+self.name
 
-    def setValue(self, value):
+    def setValue(self, value, skipDependencies = False):
         value = self.clampValue(value)
         factors = self.getFactors(value)
 
         for target in self.targets:
             self.human.setDetail(target[0], value * reduce(operator.mul, [factors[factor] for factor in target[1]]))
+
+        if skipDependencies:
+            return
+
+        # Update dependent modifiers
+        self.propagateUpdate(realtime = False)
+
+    def propagateUpdate(self, realtime = False):
+        """
+        Propagate modifier update to dependent modifiers
+        """
+        if realtime:
+            f=realtimeDependencyUpdates
+        else:
+            f = None
+
+        # TODO cache this list? Or store dependencies in modifiers
+        for dependentModifierGroup in self.human.getModifiersAffectedBy(self, filter = f):
+            # Only updating one modifier in a group should suffice to update the
+            # targets affected by the entire group.
+            m = self.human.getModifiersByGroup(dependentModifierGroup)[0]
+            if realtime:
+                m.updateValue(m.getValue(), skipUpdate = True)
+            else:
+                m.setValue(m.getValue(), skipDependencies = True)
 
     def clampValue(self, value):
         raise NotImplementedError()
@@ -174,13 +205,13 @@ class BaseModifier(object):
             # collect faces
             self.faces = self.human.meshData.getFacesForVertices(self.verts)
 
-    def updateValue(self, value, updateNormals=1):
+    def updateValue(self, value, updateNormals=1, skipUpdate=False):
         if self.verts is None and self.faces is None:
             self.buildLists()
 
         # Update detail state
         old_detail = [self.human.getDetail(target[0]) for target in self.targets]
-        self.setValue(value)
+        self.setValue(value, skipDependencies = True)
         new_detail = [self.human.getDetail(target[0]) for target in self.targets]
 
         # Apply changes
@@ -188,6 +219,13 @@ class BaseModifier(object):
             if new == old:
                 continue
             algos3d.loadTranslationTarget(self.human.meshData, target[0], new - old, None, 0, 0)
+
+        if skipUpdate:
+            # Used for dependency updates (avoid dependency loops and double updates to human)
+            return
+
+        # Update dependent modifiers
+        self.propagateUpdate(realtime = True)
 
         # Update vertices
         if updateNormals:
@@ -245,7 +283,7 @@ class Modifier(BaseModifier):
                 subp.append(component)
         return subp
 
-    def setValue(self, value, update=1):
+    def setValue(self, value, skipDependencies = False):
 
         value = max(-1.0, min(1.0, value))
 
@@ -254,6 +292,12 @@ class Modifier(BaseModifier):
 
         self.human.setDetail(self.left, left)
         self.human.setDetail(self.right, right)
+
+        if skipDependencies:
+            return
+
+        # Update dependent modifiers
+        self.propagateUpdate(realtime = False)
 
     def getValue(self):
 
@@ -372,12 +416,18 @@ class GenericModifier(BaseModifier):
             value = max( 0.0, value)
         return value
 
-    def setValue(self, value):
+    def setValue(self, value, skipDependencies = False):
         value = self.clampValue(value)
         factors = self.getFactors(value)
 
         for tpath, tfactors in self.targets:
             self.human.setDetail(tpath, reduce((lambda x, y: x * y), [factors[factor] for factor in tfactors]))
+
+        if skipDependencies:
+            return
+
+        # Update dependent modifiers
+        self.propagateUpdate(realtime = False)
 
     @staticmethod
     def parseTarget(target):
@@ -461,10 +511,6 @@ class MacroModifier(GenericModifier):
 
         self.targets = self.findTargets(self.groupName)
 
-        if self.name == 'macrodetails':
-            # Update weight/muscle modifiers when macro modifiers are updated
-            self.targets.extend(self.findTargets('macrodetails-universal')) # TODO make a more generic solution to this using dependencies (while still allowing to propagate updates to a select group of depencies during slider dragging (onChanging))
-
         # log.debug('macro modifier %s.%s(%s): %s', base, name, variable, self.targets)
 
         self.macroDependencies = self.findMacroDependencies(self.groupName)
@@ -495,10 +541,10 @@ class MacroModifier(GenericModifier):
     def getValue(self):
         return getattr(self.human, self.getter)()
 
-    def setValue(self, value):
+    def setValue(self, value, skipDependencies = False):
         value = self.clampValue(value)
         getattr(self.human, self.setter)(value, updateModifier=False)
-        super(MacroModifier, self).setValue(value)
+        super(MacroModifier, self).setValue(value, skipDependencies)
 
     def clampValue(self, value):
         return max(0.0, min(1.0, value))
@@ -506,9 +552,6 @@ class MacroModifier(GenericModifier):
     def getFactors(self, value):
         factors = super(MacroModifier, self).getFactors(value)
         factors[self.groupName] = 1.0
-        if self.groupName == 'macrodetails':
-            # Update weight/muscle modifiers when macro modifiers are updated
-            factors['macrodetails-universal'] = 1.0     # TODO remove hardcoded hack
         return factors
 
     def buildLists(self):

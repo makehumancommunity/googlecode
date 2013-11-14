@@ -756,7 +756,11 @@ class Human(guicommon.Object):
         Reverse dependency search. Returns all modifier groups to update that
         are affected by the change in the specified modifier.
         """
-        return self._modifier_dependencyMapping.get(modifier.macroVariable, [])
+        result = self._modifier_dependencyMapping.get(modifier.macroVariable, [])
+        if filter is None:
+            return result
+        else:
+            return [e for e in result if e in filter]
 
     def removeModifier(self, modifier):
         try:

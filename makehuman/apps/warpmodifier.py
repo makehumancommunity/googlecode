@@ -103,14 +103,14 @@ class WarpModifier (humanmodifier.SimpleModifier):
         return ("<WarpModifier %s>" % (os.path.basename(self.template)))
 
 
-    def setValue(self, value):
+    def setValue(self, value, skipDependencies = False):
         self.compileTargetIfNecessary(self.human)
-        humanmodifier.SimpleModifier.setValue(self, value)
+        humanmodifier.SimpleModifier.setValue(self, value, skipDependencies)
 
 
-    def updateValue(self, value, updateNormals=1):
+    def updateValue(self, value, updateNormals=1, skipUpdate=False):
         self.compileTargetIfNecessary(self.human)
-        humanmodifier.SimpleModifier.updateValue(self, value, updateNormals)
+        humanmodifier.SimpleModifier.updateValue(self, value, updateNormals, skipUpdate)
 
 
     def clampValue(self, value):
