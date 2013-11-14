@@ -664,7 +664,10 @@ def updateProxyFileCache(paths, fileExt, cache = None):
 
         mtime = os.path.getmtime(proxyFile)
         if proxyId in cache:
-            del entries[proxyId]    # Mark that old cache entry is still valid
+            try: # Guard against doubles
+                del entries[proxyId]    # Mark that old cache entry is still valid
+            except:
+                pass
             cached_mtime = cache[proxyId][0]
             if not (mtime > cached_mtime):
                 continue
@@ -673,7 +676,10 @@ def updateProxyFileCache(paths, fileExt, cache = None):
         cache[proxyId] = (mtime, uuid, tags)
     # Remove entries from cache that no longer exist
     for key in entries.keys():
-        del cache[key]
+        try:
+            del cache[key]
+        except:
+            pass
     return cache
 
 def _findProxyFiles(folder, fileExt = "mhclo", depth = 6):
