@@ -125,7 +125,8 @@ class CustomTargetsTaskView(gui3d.TaskView):
         # We want the slider to start from the middle
         targetName = os.path.splitext(targetFile)[0]
 
-        modifier = humanmodifier.SimpleModifier(os.path.join(targetPath, targetFile))
+        modifier = humanmodifier.SimpleModifier('custom', os.path.join(targetPath, targetFile))
+        modifier.setHuman(gui3d.app.selectedHuman)
         self.modifiers[targetName] = modifier
         self.sliders.append(box.addWidget(modifierslider.ModifierSlider(value=0, label=targetName, modifier=modifier)))
 
@@ -163,12 +164,12 @@ class CustomTargetsTaskView(gui3d.TaskView):
 
         modifier = self.modifiers.get(values[1], None)
         if modifier:
-            modifier.setValue(human, float(values[2]))
+            modifier.setValue(float(values[2]))
 
     def saveHandler(self, human, file):
 
         for name, modifier in self.modifiers.iteritems():
-            value = modifier.getValue(human)
+            value = modifier.getValue()
             if value:
                 file.write('custom %s %f\n' % (name, value))
 
