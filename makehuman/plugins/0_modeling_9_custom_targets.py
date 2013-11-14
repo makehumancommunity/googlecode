@@ -49,7 +49,7 @@ class CustomTargetsTaskView(gui3d.TaskView):
     def __init__(self, category, app):
         self.app = app
         gui3d.TaskView.__init__(self, category, 'Custom')
-        self.targetsPath = mh.getPath('custom')
+        self.targetsPath = mh.getPath('data/custom')
         if not os.path.exists(self.targetsPath):
             os.makedirs(self.targetsPath)
 
