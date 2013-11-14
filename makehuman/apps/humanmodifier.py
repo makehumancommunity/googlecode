@@ -172,7 +172,6 @@ class BaseModifier(object):
         else:
             f = None
 
-        # TODO cache this list? Or store dependencies in modifiers
         for dependentModifierGroup in self.human.getModifiersAffectedBy(self, filter = f):
             # Only updating one modifier in a group should suffice to update the
             # targets affected by the entire group.
