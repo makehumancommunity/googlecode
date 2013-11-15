@@ -469,12 +469,6 @@ class GenderTaskView(ModifierTaskView):
     _name = 'Gender'
     _group = 'gendered'
     _features = [
-        ('Genitals', 'genitals', [
-            ('penis-length', 'min', 'max', {}),
-            ('penis-circ', 'min', 'max', {}),
-            ('penis-testicles', 'min', 'max', {}),
-            ('penis-bulgeeffect', 'one', 'two', {}),
-            ]),
         ('Breast', 'breast', [
             (None, 'BreastSize', {'label' : 'Breast size'}),
             (None, 'BreastFirmness', {'label' : 'Breast firmness', 'reverse' : True}),
@@ -482,6 +476,12 @@ class GenderTaskView(ModifierTaskView):
             ('breast-dist', 'min', 'max', {}),
             ('breast-point', 'min', 'max', {}),
             ('breast-volume-vert', 'up', 'down', {}),
+            ]),
+        ('Genitals', 'genitals', [
+            ('penis-length', 'min', 'max', {}),
+            ('penis-circ', 'min', 'max', {}),
+            ('penis-testicles', 'min', 'max', {}),
+            ('penis-bulgeeffect', 'one', 'two', {}),
             ]),
         ]
 
