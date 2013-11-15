@@ -434,12 +434,12 @@ class Slider(QtGui.QWidget, Widget):
         return self.min + (x / float(self.scale)) * (self.max - self.min)
 
     def setValue(self, value):
-        if self._f2i(value) == self.slider.value():
-            return
         vmax = max(self.max, self.min)  # Virtual min and max values.
         vmin = min(self.max, self.min)  # Useful in case the slider is reversed.
         value = min(vmax, max(vmin, value))
         self._sync(value)
+        if self._f2i(value) == self.slider.value():
+            return
         self.slider.blockSignals(True)
         self.slider.setValue(self._f2i(value))
         self.slider.blockSignals(False)
