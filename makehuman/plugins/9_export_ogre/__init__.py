@@ -37,6 +37,7 @@ class OgreConfig(Config):
 
     def selectedOptions(self, exporter):
         self.useHelpers            = exporter.useHelpers.selected
+        self.feetOnGround          = exporter.feetOnGround.selected
         #self.scale,self.unit    = exporter.taskview.getScale()
         self.subdivide          = gui3d.app.selectedHuman.isSubdivided()
 
@@ -54,9 +55,10 @@ class ExporterOgre(Exporter):
         mh2ogre.exportOgreMesh(human, filename("mesh.xml"), OgreConfig(self))
 
     def build(self, options, taskview):
-        self.taskview       = taskview
-        self.useHelpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
-        #self.scales         = self.addScales(options)
+        self.taskview     = taskview
+        self.useHelpers   = options.addWidget(gui.CheckBox("Helper geometry", False))
+        self.feetOnGround = options.addWidget(gui.CheckBox("Feet on ground", True))
+        #self.scales       = self.addScales(options)  # TODO reintroduce scales?
 
     def onShow(self, exportTaskView):
         exportTaskView.scaleBox.hide()

@@ -37,7 +37,6 @@ import exportutils
 import skeleton
 import log
 
-feetOnGround = True
 
 def exportOgreMesh(human, filepath, config, progressCallback = None):
     progress = Progress()
@@ -46,7 +45,8 @@ def exportOgreMesh(human, filepath, config, progressCallback = None):
 
     progress(0, 0.05, "Setting properties")
     config.setHuman(human)
-    config.feetOnGround = False    # TODO translate skeleton with feet-on-ground offset too
+    feetOnGround = config.feetOnGround
+    config.feetOnGround = False
     # TODO account for config.scale in skeleton
     config.setupTexFolder(filepath)
     filename = os.path.basename(filepath)
@@ -59,6 +59,8 @@ def exportOgreMesh(human, filepath, config, progressCallback = None):
         config=config,
         useHelpers=config.useHelpers,
         subdivide=config.subdivide)
+
+    config.feetOnGround = feetOnGround
 
     progress(0.2, 0.95 - 0.35*bool(human.getSkeleton()), "Writing Objects")
     writeMeshFile(human, filepath, rmeshes, config)
@@ -116,7 +118,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
         f.write('                <vertexbuffer positions="true" normals="true">\n')
         #f.write('                <vertexbuffer positions="true">\n')
         for vIdx, co in enumerate(obj.r_coord):
-            if feetOnGround:
+            if config.feetOnGround:
                 co = co.copy()
                 co[1] += getFeetOnGroundOffset(human)
 
@@ -223,7 +225,7 @@ def writeSkeletonFile(human, filepath, config):
     progress = Progress(len(skel.getBones()))
     for bIdx, bone in enumerate(skel.getBones()):
         pos = bone.getRestOffset()
-        if feetOnGround and not bone.parent:
+        if config.feetOnGround and not bone.parent:
             pos[1] += getFeetOnGroundOffset(human)
         f.write('        <bone id="%s" name="%s">\n' % (bIdx, bone.name))
         f.write('            <position x="%s" y="%s" z="%s" />\n' % (pos[0], pos[1], pos[2]))
@@ -335,4 +337,4 @@ def formatName(name):
 
 
 def getFeetOnGroundOffset(human):
-    return human.getJointPosition('ground')[1]
+    return -human.getJointPosition('ground')[1]
