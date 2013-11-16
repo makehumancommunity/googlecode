@@ -147,13 +147,20 @@ class ExportArmature(Armature):
 
 
     def writeEditBones(self, fp):
-        scale = self.scale
-        offs = self.config.offset
+        offs = self.config.scale * self.config.offset
+
+        bone = self.bones["thigh.L"]
+        log.debug("THIG")
+        log.debug(self.config.scale)
+        log.debug(offs)
+        log.debug(bone.head)
+        log.debug(bone.tail)
+
         for bone in self.bones.values():
             fp.write("\n  Bone %s %s\n" % (bone.name, True))
-            (x, y, z) = scale*(bone.head - offs)
+            (x, y, z) = bone.head - offs
             fp.write("    head  %.6g %.6g %.6g  ;\n" % (x,-z,y))
-            (x, y, z) = scale*(bone.tail - offs)
+            (x, y, z) = bone.tail - offs
             fp.write("    tail %.6g %.6g %.6g  ;\n" % (x,-z,y))
 
             if bone.parent:

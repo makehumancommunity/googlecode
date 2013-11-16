@@ -56,7 +56,7 @@ class Parser:
         options = amt.options
 
         self.locations = {}
-        self.origin = [0,0,0]
+        self.origin = np.array([0,0,0], float)
         self.normals = {}
         self.headsTails = None
         self.parents = {}
@@ -71,6 +71,7 @@ class Parser:
         self.propDrivers = []
         self.lrPropDrivers = []
         self.boneDrivers = []
+
         self.vertexGroupFiles = []
 
         self.master = None
@@ -396,7 +397,6 @@ class Parser:
         self.setupJoints(self.human)
         self.setupNormals()
         self.setupPlaneJoints()
-        self.moveOriginToFloor(options.feetOnGround)
         self.createBones({})
 
         for bone in amt.bones.values():
@@ -509,16 +509,6 @@ class Parser:
             n = self.normals[plane]
             t = np.cross(n, vec)
             self.locations[key] = x0 + dist*t
-
-
-    def moveOriginToFloor(self, feetOnGround):
-        if feetOnGround:
-            self.origin = self.locations['ground']
-            for key in self.locations.keys():
-                self.locations[key] = self.locations[key] - self.origin
-        else:
-            self.origin = np.array([0,0,0], float)
-        return
 
 
     def findLocation(self, joint):
@@ -855,7 +845,12 @@ class Parser:
     def readVertexGroupFiles(self, files):
         vgroups = OrderedDict()
         for file in files:
-            filepath = os.path.join(getSysDataPath("vertexgroups"), "vgrp_"+file+".json")
+            try:
+                folder,fname = file
+            except:
+                folder = getSysDataPath("vertexgroups")
+                fname = file
+            filepath = os.path.join(folder, "vgrp_"+fname+".json")
             log.message("Loading %s" % filepath)
             vglist = io_json.loadJson(filepath)
             for key,data in vglist:

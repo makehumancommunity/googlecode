@@ -61,7 +61,7 @@ class ExpressionWarpModifier(warpmodifier.EthnicWarpModifier):
 class ExpressionModifierSlider(modifierslider.ModifierSlider):
 
     def __init__(self, taskview=None, label=None, modifier=None):
-        modifierslider.ModifierSlider.__init__(self, label=label, modifier=modifier)
+        modifierslider.ModifierSlider.__init__(self, label=label, modifier=modifier, min=-1.0, max=2.0)
         self.taskview = taskview
 
     def onChange(self, value):

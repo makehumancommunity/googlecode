@@ -38,7 +38,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from the 
 bl_info = {
     'name': 'Import: MakeHuman (.mhx)',
     'author': 'Thomas Larsson',
-    'version': "1.16.12",
+    'version': "1.16.13",
     "blender": (2, 68, 0),
     'location': "File > Import > MakeHuman (.mhx)",
     'description': 'Import files in the MakeHuman eXchange format (.mhx)',
@@ -51,7 +51,6 @@ bl_info = {
 MAJOR_VERSION = 1
 MINOR_VERSION = 16
 FROM_VERSION = 13
-SUB_VERSION = 12
 
 majorVersion = MAJOR_VERSION
 minorVersion = MINOR_VERSION
@@ -2851,7 +2850,10 @@ class OBJECT_OT_RigifyMhxButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        rigifyMhx(context)
+        try:
+            rigifyMhx(context)
+        except MhxError as err:
+            print("Error when rigifying mhx rig: %s" % err)
         return{'FINISHED'}
 
 #
@@ -4827,7 +4829,7 @@ def menu_func(self, context):
 
 def register():
     bpy.types.Object.MhxVersionStr = StringProperty(name="Version", default="", maxlen=128)
-    bpy.types.Object.MhAlpha8 = BoolProperty(default=True)
+    bpy.types.Object.MhAlpha8 = BoolProperty(default=False)
     bpy.types.Object.MhxMesh = BoolProperty(default=False)
     bpy.types.Object.MhxRig = StringProperty(default="")
     bpy.types.Object.MhxVisemeSet = StringProperty(default="")
