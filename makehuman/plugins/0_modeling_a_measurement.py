@@ -205,6 +205,7 @@ class MeasureTaskView(gui3d.TaskView):
                 self.modifiers[subname] = modifier
                 slider = box.addWidget(MeasureSlider(sliderLabel[subname], self, subname, modifier))
                 self.sliders.append(slider)
+        self.lastActive = None
 
         self.statsBox = self.addRightWidget(gui.GroupBox('Statistics'))
         self.height = self.statsBox.addWidget(gui.TextView('Height: '))
