@@ -426,6 +426,9 @@ class Slider(QtGui.QWidget, Widget):
             self.label.setText(self.text % self.toDisplay(value))
         if self.edit is not None:
             self.edit.setText('%.2f' % self.toDisplay(value))
+        if hasattr(self.valueConverter, 'units') and \
+           self.valueConverter.units != str(self.units.text()):
+            self.units.setText(self.valueConverter.units)
 
     def _f2i(self, x):
         return int(round(self.scale * (x - self.min) / (self.max - self.min)))

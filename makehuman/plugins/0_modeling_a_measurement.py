@@ -41,7 +41,10 @@ class MeasurementValueConverter(object):
         self.measure = measure
         self.modifier = modifier
         self.value = 0.0
-        self.units = 'cm' if gui3d.app.settings['units'] == 'metric' else 'in'
+
+    @property
+    def units(self):
+        return 'cm' if gui3d.app.settings['units'] == 'metric' else 'in'
 
     def dataToDisplay(self, value):
         self.value = value
