@@ -151,7 +151,7 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
 
     # Vertices
     if config:
-        offs = config.offset
+        offs = config.scale * config.offset
     else:
         offs = np.array((0,0,0))
     for obj in objects:
