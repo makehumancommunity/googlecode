@@ -99,7 +99,7 @@ class Writer(mhx_writer.Writer):
             fp.write(
                 "  MTex %d %s UV SPECULAR_COLOR\n" % (slot, spec) +
                 "    texture Refer Texture %s ;\n" % spec +
-                "    specular_factor %.4g ;" % (0.1*mat.specularIntensity) +
+                "    specular_factor %.4g ;" % (0.1*mat.specularMapIntensity) +
 """
     use_map_color_diffuse False ;
     use_map_specular True ;
@@ -151,14 +151,14 @@ class Writer(mhx_writer.Writer):
 
 
     def writeMaterialSettings(self, fp, mat, alpha):
-        log.debug("%s %s %s" % (mat.specularColor, mat.specularIntensity, mat.shininess))
+        log.debug("%s %s %s" % (mat.specularColor, 1.0, mat.shininess))
         fp.write(
             "  diffuse_color Array %.4g %.4g %.4g  ;\n" % mat.diffuseColor.asTuple() +
             "  diffuse_shader 'LAMBERT' ;\n" +
-            "  diffuse_intensity %.4g ;\n" % mat.diffuseIntensity +
+            "  diffuse_intensity %.4g ;\n" % 1.0 +
             "  specular_color Array %.4g %.4g %.4g ;\n" % mat.specularColor.asTuple() +
             "  specular_shader 'PHONG' ;\n" +
-            "  specular_intensity %.4g ;\n" % (0.1*mat.specularIntensity) +
+            "  specular_intensity %.4g ;\n" % (1.0) +
             "  specular_hardness %.4g ;\n" % (512*(1-mat.shininess)))
 
         if alpha < 0.99:
