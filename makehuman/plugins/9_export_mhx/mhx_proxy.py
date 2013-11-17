@@ -92,10 +92,7 @@ class Writer(mhx_writer.Writer):
       Faces
     """)
 
-        if proxy.type == "ProxyMeshes":
-            obj = self.human.getProxyMesh()
-        else:
-            obj = proxy.getObject()
+        obj = proxy.getSeedObject()
         log.debug("PROXY %s %s" % (proxy, obj))
 
 

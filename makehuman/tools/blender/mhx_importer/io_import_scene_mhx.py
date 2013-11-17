@@ -36,17 +36,17 @@ Alternatively, run the script in the script editor (Alt-P), and access from the 
 """
 
 bl_info = {
-    'name': 'Import: MakeHuman (.mhx)',
+    'name': 'Import: MakeHuman Exchange (.mhx)',
     'author': 'Thomas Larsson',
-    'version': "1.16.13",
-    "blender": (2, 68, 0),
+    'version': "1.16.14",
+    "blender": (2, 69, 0),
     'location': "File > Import > MakeHuman (.mhx)",
     'description': 'Import files in the MakeHuman eXchange format (.mhx)',
     'warning': '',
     'wiki_url': 'http://www.makehuman.org/documentation',
     'tracker_url': 'https://projects.blender.org/tracker/index.php?'\
         'func=detail&aid=21872',
-    'category': 'Import-Export'}
+    'category': 'MakeHuman'}
 
 MAJOR_VERSION = 1
 MINOR_VERSION = 16
@@ -1218,12 +1218,14 @@ def parseMesh (args, tokens):
         elif key == 'Faces':
             faces = parseFaces(sub)
 
+    print("Create mesh with %d verts and %d faces" % (len(verts), len(faces)))
     if faces:
         me.from_pydata(verts, [], faces)
     else:
         me.from_pydata(verts, edges, [])
     me.update()
     linkObject(ob, me)
+    print("Created %s and %s" % (me, ob))
 
     if faces:
         try:

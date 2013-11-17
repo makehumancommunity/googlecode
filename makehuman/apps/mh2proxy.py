@@ -153,7 +153,7 @@ class Proxy:
         self.scale = numpy.array((1.0,1.0,1.0), float)
 
         self.z_depth = 50
-        self.max_pole = None    # Signifies the maximum number of faces per vertex on the mesh topology. Set to none for default. 
+        self.max_pole = None    # Signifies the maximum number of faces per vertex on the mesh topology. Set to none for default.
         self.cull = False
 
         self.uvLayers = {}
@@ -192,32 +192,25 @@ class Proxy:
         return ("<Proxy %s %s %s %s>" % (self.name, self.type, self.file, self.uuid))
 
 
-    def getObject(self):
+    def getSeedObject(self):
         import object3d, module3d
 
         human = G.app.selectedHuman
-        # TODO use more generic way of retrieving a proxy type
         for proxy,obj in human.getProxiesAndObjects():
             if self == proxy:
-                return obj.mesh
+                return obj.getSeedMesh()
 
         if self.type == "Proxymeshes":
             if not human.proxy:
                 return None
-            return human.mesh
-            #return human.getProxyMesh()
+            #return human.mesh
+            return human.getProxyMesh()
         elif self.type == "Cage":
             return None
         elif self.type == "Converter":
             return None
         else:
             raise NameError("Unknown proxy type %s" % self.type)
-
-        if isinstance(obj, guicommon.Object):
-            obj = obj.mesh
-        if not (isinstance(obj, module3d.Object3D) or isinstance(obj, object3d.Object3D)):
-            raise NameError("%s is not an object" % obj)
-        return obj
 
 
     def getActualTexture(self, human):

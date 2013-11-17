@@ -9,6 +9,8 @@ echo Copy files to %1
 rem Mhx importer already bundled with Blender
 rem copy .\tools\blender\mhx_importer\*.py %1
 
+copy .\tools\blender\mhx_importer\*.py %1
+
 mkdir %1\makeclothes
 del %1\makeclothes\*.* /q
 mkdir %1\makeclothes\__pycache__
