@@ -158,7 +158,7 @@ class RichMesh(object):
 
 def getRichMesh(obj, proxy, rawWeights, rawShapes, amt, scale=1.0):
     if proxy:
-        obj = proxy.getObject()
+        obj = proxy.getSeedObject()
         weights = proxy.getWeights(rawWeights, amt)
         shapes = proxy.getShapes(rawShapes, scale)
         rmesh = RichMesh(proxy.name, amt).fromObject(obj, weights, shapes)
