@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.923",
+    "version": "0.924",
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -78,9 +78,9 @@ class MakeClothesPanel(bpy.types.Panel):
         layout.prop(scn, "MCShowSettings")
         if scn.MCShowSettings:
             ins = inset(layout)
-            ins.operator("mh.factory_settings").prefix = "MC"
-            ins.operator("mh.read_settings").tool = "make_clothes"
-            props = ins.operator("mh.save_settings")
+            ins.operator("mhclo.factory_settings").prefix = "MC"
+            ins.operator("mhclo.read_settings").tool = "make_clothes"
+            props = ins.operator("mhclo.save_settings")
             props.tool = "make_clothes"
             props.prefix = "MC"
             ins.label("Output Directory")
@@ -250,45 +250,46 @@ class MakeClothesPanel(bpy.types.Panel):
         row.label("%s2:   %d" % (name,n))
 
 
-#
-#    class OBJECT_OT_InitInterfaceButton(bpy.types.Operator):
-#
-
-class OBJECT_OT_InitInterfaceButton(bpy.types.Operator):
-    bl_idname = "mhclo.init_interface"
-    bl_label = "Init"
-
-    def execute(self, context):
-        makeclothes.init()
-        makeclothes.readDefaultSettings(context)
-        print("Interface initialized")
-        return{'FINISHED'}
-
-#
-#    class OBJECT_OT_FactorySettingsButton(bpy.types.Operator):
-#
+#----------------------------------------------------------
+#   Settings buttons
+#----------------------------------------------------------
 
 class OBJECT_OT_FactorySettingsButton(bpy.types.Operator):
     bl_idname = "mhclo.factory_settings"
-    bl_label = "Restore factory settings"
-    bl_options = {'UNDO'}
+    bl_label = "Restore Factory Settings"
+
+    prefix = StringProperty()
 
     def execute(self, context):
-        makeclothes.init()
+        maketarget.settings.restoreFactorySettings(context, self.prefix)
         return{'FINISHED'}
 
-#
-#    class OBJECT_OT_SaveSettingsButton(bpy.types.Operator):
-#
 
 class OBJECT_OT_SaveSettingsButton(bpy.types.Operator):
     bl_idname = "mhclo.save_settings"
-    bl_label = "Save settings"
+    bl_label = "Save Settings"
+
+    tool = StringProperty()
+    prefix = StringProperty()
 
     def execute(self, context):
-        makeclothes.saveDefaultSettings(context)
+        maketarget.settings.saveDefaultSettings(context, self.tool, self.prefix)
         return{'FINISHED'}
 
+
+class OBJECT_OT_ReadSettingsButton(bpy.types.Operator):
+    bl_idname = "mhclo.read_settings"
+    bl_label = "Read Settings"
+
+    tool = StringProperty()
+
+    def execute(self, context):
+        maketarget.settings.readDefaultSettings(context, self.tool)
+        return{'FINISHED'}
+
+#----------------------------------------------------------
+#
+#----------------------------------------------------------
 #
 #    class OBJECT_OT_SnapSelectedVertsButton(bpy.types.Operator):
 #
