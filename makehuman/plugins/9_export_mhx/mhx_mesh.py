@@ -109,6 +109,7 @@ class Writer(mhx_writer.Writer):
       lock_scale Array 1 1 1  ;
       Property MhxScale theScale ;
       Property MhxMesh True ;
+      Property MhHuman True ;
       Modifier SubSurf SUBSURF
         levels 0 ;
         render_levels 1 ;
