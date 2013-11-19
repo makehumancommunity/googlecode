@@ -1036,10 +1036,7 @@ def parseObject(args, tokens, versionInfoStr=""):
             defaultKey(key, val, sub, ob, ['type', 'data'])
 
     if versionInfoStr:
-        print('============= updating version string %s' % versionInfoStr)
         ob.MhxVersionStr = versionInfoStr
-    else:
-        print('============= not updating version str')
 
     if bpy.context.object == ob:
         if ob.type == 'MESH':
