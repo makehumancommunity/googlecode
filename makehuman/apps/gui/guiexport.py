@@ -143,6 +143,18 @@ class ExportTaskView(gui3d.PoseModeTaskView):
         def onClicked(event):
             self.updateGui()
 
+    def getExporter(self, exporterName, includeOptions = False):
+        for exporterFormat in self.formats:
+            exporter, _, _ = exporterFormat
+            if exporter.name == exporterName:
+                if includeOptions:
+                    return (exporter, options)
+                else:
+                    return exporter
+
+    def getExporterNames(self):
+        return [exporter.name for exporter, _, _ in self.formats]
+
     def setFileExtension(self, extension, filter='All Files (*.*)'):
         self.fileentry.setFilter(filter)
         path,ext = os.path.splitext(unicode(self.fileentry.edit.text()))
