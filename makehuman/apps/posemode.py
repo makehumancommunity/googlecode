@@ -191,14 +191,13 @@ def loadMhpFile(filepath, pose=None, clearOnly=False):
             break
 
     if hasTargets:
-        (fname, ext) = os.path.splitext(os.path.basename(filepath))
-        filenamePattern = "${gender}-${age}-${tone}-${weight}-%s.target" % fname
-        modpath = os.path.join(folder, filenamePattern)
-        log.debug('PoseLoadTaskView.loadMhpFile: %s %s', filepath, modpath)
+        (poseName, ext) = os.path.splitext(os.path.basename(filepath))
+        modName = 'poses-' + poseName
+        log.debug('PoseLoadTaskView.loadMhpFile: %s %s', filepath, modName)
         try:
-            modifier = _storage.modifiers[modpath]
+            modifier = _storage.modifiers[modName]
         except KeyError:
-            modifier = _storage.modifiers[modpath] = PoseModifier(modpath)
+            modifier = _storage.modifiers[modName] = PoseModifier(poseName)
         modifier.setHuman(human)
         modifier.setValue(1.0)
         human.applyAllTargets()
