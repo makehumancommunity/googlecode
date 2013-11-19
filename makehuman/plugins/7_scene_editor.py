@@ -30,6 +30,7 @@ like lights and ambience, that are defined in the scene class.
 import mh
 import gui
 import gui3d
+import getpath
 
 import os
 import scene
@@ -197,6 +198,8 @@ class SceneEditorTaskView(gui3d.TaskView):
         self.scene = scene.Scene()
         self.readScene()
 
+        self.oldShader = None
+
         def doLoad():
             filename = mh.getOpenFileName(mh.getPath("scenes"), 'MakeHuman scene (*.mhscene);;All files (*.*)')
             if filename:
@@ -283,10 +286,17 @@ class SceneEditorTaskView(gui3d.TaskView):
         self.fnlbl.setText(lbltxt)
 
     def onShow(self, event):
+        human = gui3d.app.selectedHuman
+        self.oldShader = human.material.shader
+        human.material.shader = getpath.getSysDataPath('shaders/glsl/phong')
+
         # Set currently edited scene
         self.updateScene()
 
     def onHide(self, event):
+        human = gui3d.app.selectedHuman
+        human.material.shader = self.oldShader
+
         # Restore selected scene
         sceneTask = gui3d.app.getTask('Rendering', 'Scene')
         scene = sceneTask.scene

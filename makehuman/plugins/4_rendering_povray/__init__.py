@@ -32,6 +32,8 @@ from . import mh2povray
 import gui3d
 import gui
 
+import getpath
+
 class PovrayTaskView(gui3d.PoseModeTaskView):
 
     def __init__(self, category):
@@ -125,6 +127,8 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
             
             mh2povray.povrayExport(settings)
 
+        self.oldShader = None
+
     @property
     def resWidth(self):
         return gui3d.app.settings.get('rendering_width', 800)
@@ -142,8 +146,16 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
         gui3d.app.settings['rendering_height'] = 0 if not value else int(value)
 
     def onShow(self, event):
+        human = gui3d.app.selectedHuman
+        self.oldShader = human.material.shader
+        human.material.shader = getpath.getSysDataPath('shaders/glsl/phong')
+
         self.renderButton.setFocus()
         gui3d.PoseModeTaskView.onShow(self, event)
+
+    def onHide(self, event):
+        human = gui3d.app.selectedHuman
+        human.material.shader = self.oldShader
 
 
 def load(app):
