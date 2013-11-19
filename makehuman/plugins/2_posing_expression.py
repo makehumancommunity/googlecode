@@ -51,10 +51,13 @@ class ExpressionSimpleModifier(humanmodifier.SimpleModifier):
         self.eventType = 'expression'
 
 
-class ExpressionWarpModifier(warpmodifier.EthnicWarpModifier):
+class ExpressionWarpModifier(warpmodifier.WarpModifier):
 
-    def __init__(self, template):
-        warpmodifier.EthnicWarpModifier.__init__(self, template, "face")
+    def __init__(self, targetName):
+        # Macro variables which are fixed and on which the warptargets were modeled
+        referenceVariables = { 'gender': 'female',
+                               'age':    'young' }
+        super(ExpressionWarpModifier, self).__init__('expression-units', targetName, "face", referenceVariables)
         self.eventType = 'expression'
 
 
@@ -108,8 +111,8 @@ class ExpressionTaskView(gui3d.TaskView):
             # Create sliders
             for subname in subnames:
                 if _UseWarping:
-                    template = 'data/targets/expression/units/${ethnic}/%s-%s.target' % (name, subname)
-                    modifier = ExpressionWarpModifier(template)
+                    targetName = name + "-" + subname
+                    modifier = ExpressionWarpModifier(targetName)
                 else:
                     template = 'data/targets/expression/units/caucasian/%s-%s.target' % (name, subname)
                     modifier = ExpressionSimpleModifier(template)

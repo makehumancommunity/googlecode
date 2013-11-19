@@ -32,6 +32,7 @@ import os
 import algos3d
 import meshstat
 import humanmodifier
+import targets
 import log
 from core import G
 
@@ -46,24 +47,28 @@ _refTargetCache = {}
 
 class WarpTarget(algos3d.Target):
 
-    def __init__(self, shape, modifier, human):
-
-        algos3d.Target.__init__(self, human.meshData, None)
-
-        self.human = human
-        self.modifier = modifier
+    def __init__(self, name, shape, modifier, human):
+        self.name = name
+        self.morphFactor = -1
 
         data = list(shape.items())
         data.sort()
         raw = np.asarray(data, dtype=algos3d.Target.dtype)
         self.verts = raw['index']
+
+        self.human = human
+        self.modifier = modifier
+
         self.data = raw['vector']
 
-        self.faces = human.meshData.getFacesForVertices(self.verts)
+        self.faces = self.human.meshData.getFacesForVertices(self.verts)
 
+    def apply(self, obj, morphFactor, faceGroupToUpdateName=None, update=1, calcNorm=1, scale=[1.0,1.0,1.0]):
+        print 'Apply()ing warp target %s at %s' % (self.name, morphFactor)
+        super(WarpTarget, self).apply(obj, morphFactor, faceGroupToUpdateName, update, calcNorm, scale)
 
     def __repr__(self):
-        return ( "<WarpTarget %s>" % (os.path.basename(self.modifier.warppath)) )
+        return ( "<WarpTarget %s>" % (self.name) )
 
 
 def saveWarpedTarget(shape, path):
@@ -78,69 +83,174 @@ def saveWarpedTarget(shape, path):
 #   class WarpModifier
 #----------------------------------------------------------
 
-class WarpModifier (humanmodifier.SimpleModifier):
+class WarpModifier (humanmodifier.UniversalModifier):
 
-    def __init__(self, template, bodypart):
-        template = template.replace("\\","/")
+    def __init__(self, groupName, targetName, bodypart, referenceVariables):
+        super(WarpModifier, self).__init__(groupName, targetName)
 
-        warppath = template.replace('$','').replace('{','').replace('}','')
-        humanmodifier.SimpleModifier.__init__(self, 'warp', warppath)
-        self.name = self.eventType = 'warp'
-        self.warppath = warppath
-        self.template = str(template)
+        self.eventType = 'warp'
         self.bodypart = bodypart
         self.slider = None
+        self.referenceVariables = referenceVariables
 
-        #for (tlabel, tname, tvar) in self.modifierTypes:
-        #    self.fallback = humanmodifier.MacroModifier(tlabel, tname, tvar)
-        #    break
+        self.nonfixedDependencies = list(self.macroDependencies)
+        self.macroDependencies.extend(self.referenceVariables.keys())
 
-        self.setupReferences()
         self.refTargetVerts = {}
 
+    def setHuman(self, human):
+        super(WarpModifier, self).setHuman(human)
+        self.setupReferences()
 
-    def __repr__(self):
-        return ("<WarpModifier %s>" % (os.path.basename(self.template)))
+    def setupReferences(self):
+        self.referenceGroups = []
 
+        # Gather all dependent targets
+        groups = self.human.getModifierDependencies(self)
+        targets = []
+        for g in groups:
+            m = self.human.getModifiersByGroup(g)[0]
+            targets.extend(m.targets)
+        factors = self.getFixedFactors().values()
+
+        # Gather reference targets
+        self.referenceTargets = []
+        for tpath, tfactors in targets:
+            # Reference targets are targets whose macro variables match the fixed variables for this warpmodifier
+            # When all is correct, only the variables in self.nonfixedDependencies should still be free in this set of targets.
+            if all([bool(f in tfactors) for f in factors]):
+                self.referenceTargets.append( (tpath, tfactors) )
+
+        self.refTargetPaths = {}
+        self.refCharPaths = {}
+
+    def getFixedFactors(self):
+        """
+        Get the macro variables for which this warpmodifier has no explicitly
+        defined varieties of source warp targets. Instead those are the variables
+        fixed to a certain value on which the source warp targets were modeled.
+        These are the variables over which the actual warping will happen.
+
+        Returns a dict of (var category, var name) tuples.
+        """
+        return self.referenceVariables
+
+    def getDependentFactors(self, factors):
+        """
+        Get the macro variables for which this warpmodifier has varieties of
+        source warp target files.
+
+        Factors should either be a dict of (var category, var name) tuples, or
+        should be a list with variable names.
+
+        Returns either a dict of (var category, var name) tuples, when input was
+        a dict, or a list.
+        """
+        if isinstance(factors, list):
+            # Factors is a list of variable names
+            return [f for f in factors if targets._value_cat.get(f, 'unknown') not in self.getFixedFactors()]
+        else:
+            # Factors is a dict of (macro variable category, variable name paris)
+            return dict([(v,f) for v,f in factors.items() if v not in self.getFixedFactors()])
+
+    # TODO add extended debug printing for warpmodifiers
+
+    def getReferenceTarget(self, factors):
+        """
+        Get reference target needed for this warpmodifier for an absolute set of
+        factor variables. Factors is a dict of (variable category,
+        variable) pairs of which the variables are applied at strength 1.
+        """
+        factors = self.getDependentFactors(factors)
+        for tpath, tfactors in self.referenceTargets:
+            if all([bool(f in tfactors) for f in factors.values()]):
+                return tpath
+        return None
+
+    def getReferenceTargets(self, factors):
+        """
+        Get the reference targets that this warpmodifier depends on that are needed
+        for the current combination of factors.
+        With factors a key,value dict.
+        """
+        factors = dict([(fname, fval) for fname,fval in factors.items() if fval > 0])
+        factors = self.getDependentFactors(factors.keys())
+        result = []
+        for tpath, tfactors in self.referenceTargets:
+            # Retrieve all targets which belong to a combination of factors
+            targetVarCategs = [targets._value_cat.get(tf, None) for tf in tfactors]
+            varCategsF      = [targets._value_cat.get(f, None)  for f  in factors if f in tfactors]
+            varCategs   = set([targets._value_cat.get(f, None)  for f  in factors if \
+                                        targets._value_cat.get(f, None) in targetVarCategs])
+            if sum([bool(fc in targetVarCategs) for fc in varCategsF]) >= len(varCategs):
+                result.append( (tpath, tfactors) )
+        return result
+
+    def getWarpTargetFile(self, factors):
+        """
+        Get the warp source target file that has to be applied for the specified
+        absolute set of factor variables. Factors is a dict of (variable category,
+        variable) pairs of which the variables are applied at strength 1.
+        """
+        factors = dict([(fname, fval) for fname,fval in factors.items() if fval > 0])
+        factors = self.getDependentFactors(factors)
+        for tpath, tfactors in self.targets:
+            if all([bool(f in tfactors) for f in factors]):
+                return tpath
+
+    def getWarpTargetFiles(self, factors):
+        """
+        Get the warp source target files that are needed to build the warptarget
+        for the specified macro factors. With factors a key,value dict.
+        """
+        factors = dict([(fname, fval) for fname,fval in factors.items() if fval > 0])
+        factors = self.getDependentFactors(factors.keys())
+        result = []
+        for tpath, tfactors in self.targets:
+            if all([bool(f in factors) for f in tfactors if \
+                                          f not in self.referenceVariables.values() and \
+                                          f in targets._value_cat ]):
+                result.append( (tpath, tfactors) )
+        return result
 
     def setValue(self, value, skipDependencies = False):
-        self.compileTargetIfNecessary(self.human)
-        humanmodifier.SimpleModifier.setValue(self, value, skipDependencies)
+        self.compileTargetIfNecessary()
+        value = self.clampValue(value)
+
+        self.human.setDetail(canonicalPath(self.fullName), value)
+
+        #super(WarpModifier, self).setValue(value, skipDependencies)
 
 
     def updateValue(self, value, updateNormals=1, skipUpdate=False):
-        self.compileTargetIfNecessary(self.human)
-        humanmodifier.SimpleModifier.updateValue(self, value, updateNormals, skipUpdate)
+        return  # TODO allow updating while dragging slider
+
+        self.compileTargetIfNecessary()
+        #super(WarpModifier, self).updateValue(value, updateNormals, skipUpdate)
 
 
     def clampValue(self, value):
         return max(0.0, min(1.0, value))
 
 
-    def compileTargetIfNecessary(self, human):
-        try:
-            target = algos3d.getTarget(human.meshData, self.warppath)
-        except KeyError:
-            target = None
-        if target and isinstance(target, WarpTarget):
-            return
-        elif target:
-            log.debug("Warning: %s is not a warp target, path '%s'" % (target, self.warppath))
-        shape = self.compileWarpTarget(human)
-        target = WarpTarget(shape, self, human)
-        algos3d._targetBuffer[canonicalPath(self.warppath)] = target
-        human.hasWarpTargets = True
+    def compileTargetIfNecessary(self):
+        # TODO find out when compile is needed
+        #if alreadyCompiled:
+        #    return
+
+        shape = self.compileWarpTarget()
+        targetName = self.groupName + '-' + self.targetName
+        target = WarpTarget(targetName, shape, self, self.human)
+        algos3d._targetBuffer[canonicalPath(self.fullName)] = target    # TODO remove direct use of the target buffer?
+        self.human.hasWarpTargets = True
 
         log.debug("DONE %s" % target)
-        log.debug(self.warppath)
-        log.debug(canonicalPath(self.warppath))
-        human.traceStack()
+        #self.human.traceStack()
 
 
-    def compileWarpTarget(self, human):
+    def compileWarpTarget(self):
         log.message("Compile %s", self)
-        srcTargetCoord, srcPoints, trgPoints = self.getReferences(human)
-        obj = human.meshData
+        srcTargetCoord, srcPoints, trgPoints = self.getReferences()
         if srcTargetCoord:
             #shape = srcTargetCoord
             shape = self.scaleTarget(srcTargetCoord, srcPoints, trgPoints)
@@ -167,7 +277,7 @@ class WarpModifier (humanmodifier.SimpleModifier):
         for key,value in self.refCharPaths.items():
             log.debug("  %s: %s" % (key, value))
 
-
+    # Reference keypoints
     BodySizes = {
         "face" : [
             (5399, 11998, 1.4800),
@@ -181,73 +291,102 @@ class WarpModifier (humanmodifier.SimpleModifier):
         ],
     }
 
-    def getReferences(self, human):
+    def getKeypoints(self):
+        """
+        Get landmark points used for warping
+        """
+        keypoints = []
+        for n in range(3):
+            keypoints += self.BodySizes[self.bodypart][n][0:2]
+        return keypoints
+
+    def getReferences(self):
         """
         Building source and target characters from scratch.
         The source character is the sum of reference characters.
         The target character is the sum of all non-warp targets.
         Cannot use human.getSeedMesh() which returns sum of all targets.
         """
-
-        srcCharCoord = human.meshData.orig_coord.copy()
+        srcCharCoord = self.human.meshData.orig_coord.copy()
         trgCharCoord = srcCharCoord.copy()
         srcTargetCoord = {}
 
-        sumtargets = 0
-        for charpath,value in human.targetsDetailStack.items():
-            try:
-                self.refCharPaths[localPath(charpath)]
-                sumtargets += value
-            except KeyError:
-                continue
-        if abs(sumtargets-1) > 1e-3 and abs(sumtargets-2) > 1e-3:
-            log.debug("Inconsistent target sum %s." % sumtargets)
-            human.traceStack()
-            self.traceReference()
-            raise NameError("Warping problem")
-
-        keypoints = []
-        for n in range(3):
-            keypoints += self.BodySizes[self.bodypart][n][0:2]
+        keypoints = self.getKeypoints()
         trgPoints = np.zeros(6, float)
         srcPoints = np.zeros(6, float)
 
-        for charpath,value in human.targetsDetailStack.items():
+
+        # Traverse targets on stack
+        for charpath,value in self.human.targetsDetailStack.items():
+            if 'expression' in charpath:
+                # TODO remove this stupid hack
+                continue
+
+            # The original target
             try:
-                trgChar = algos3d.getTarget(human.meshData, charpath)
+                trgChar = algos3d.getTarget(self.human.meshData, charpath)
             except KeyError:
                 continue    # Warp target? - ignore
             if isinstance(trgChar, WarpTarget):
                 continue
 
-            # This is very wasteful, because we only need trgCharCoord and
+            # TODO This is very wasteful, because we only need trgCharCoord and
             # srcCharCoord at the six keypoints
 
             srcVerts = np.s_[...]
             dstVerts = trgChar.verts[srcVerts]
-            trgCharCoord[dstVerts] += value * trgChar.data[srcVerts]
+            trgCharCoord[dstVerts] += value * trgChar.data[srcVerts]    # TODO replace with getting whole stack
+        del charpath
+        del value
 
-            try:
-                refCharPath = self.refCharPaths[localPath(charpath)]
-            except KeyError:
-                refCharPath = None
 
-            if refCharPath:
-                srcChar = algos3d.getTarget(human.meshData, refCharPath)
-                dstVerts = srcChar.verts[srcVerts]
-                srcCharCoord[dstVerts] +=  value * srcChar.data[srcVerts]
+        # The reference target (from reference variables)
+        factors = self.getFactors(1.0)  # Calculate the fully applied warp target (weight = 1.0)
+        factors = self.toReferenceFactors(factors)
 
-            try:
-                refTrgPath = self.refTargetPaths[localPath(charpath)]
-            except KeyError:
-                refTrgPath = None
-            if refTrgPath:
-                srcTrg = readTargetCoords(refTrgPath)
-                addVerts(srcTargetCoord, value, srcTrg)
+        refTargets = self.referenceTargets
+        # alternative: refTargets = self.referenceTargets
+        tWeights = humanmodifier.getTargetWeights(refTargets, factors, ignoreNotfound = True)
+        for tpath, tweight in tWeights.items():
+            srcChar = algos3d.getTarget(self.human.meshData, tpath)
+            dstVerts = srcChar.verts[srcVerts]
+            srcCharCoord[dstVerts] += tweight * srcChar.data[srcVerts]
 
+
+        # The warp target
+        warpTargets = self.targets
+        # alternative: warpTargets = self.getWarpTargetFiles(factors)
+        tWeights = humanmodifier.getTargetWeights(warpTargets, factors, ignoreNotfound = True)
+        for tpath, tweight in tWeights.items():
+            srcTrg = readTargetCoords(tpath)
+            addVerts(srcTargetCoord, tweight, srcTrg)
+
+        # Aggregate the keypoints differences
         trgPoints = trgCharCoord[keypoints]
         srcPoints = srcCharCoord[keypoints]
         return srcTargetCoord, srcPoints, trgPoints
+
+    def toReferenceFactors(self, factors):
+        vars_per_cat = dict()
+        for (varName, varValue) in factors.items():
+            varCateg = targets._value_cat.get(varName, 'unknown')
+            if varCateg not in vars_per_cat:
+                vars_per_cat[varCateg] = []
+            vars_per_cat[varCateg].append(varName)
+
+        result = dict()
+        for (varCateg, varList) in vars_per_cat.items():
+            if varCateg in self.getFixedFactors():
+                # Replace fixed variables to reference target
+                value = sum([factors[v] for v in varList])
+                result[self.getFixedFactors()[varCateg]] = value
+            else:
+                for v in varList:
+                    result[v] = factors[v]
+        return result
+
+def _factorsDict(factors):
+    return dict([(targets._value_cat.get(f, 'unknown'), f) for f in factors])
 
 
 def printDebugCoord(string, coord, obj=None, offset=None):
@@ -279,70 +418,6 @@ def printDebugCoord(string, coord, obj=None, offset=None):
 
 
 #----------------------------------------------------------
-#   Specialized warp modifiers
-#----------------------------------------------------------
-
-class EthnicGenderAgeWarpModifier (WarpModifier):
-
-    def getRefChar(self, ethnic, gender, age):
-        return getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
-
-    def setupReferences(self):
-        self.refTargetPaths = {}
-        self.refCharPaths = {}
-
-        for ethnic in ["caucasian", "african", "asian"]:
-            for gender in ["female", "male"]:
-                for age in ["baby", "child", "young", "old"]:
-                    refTrgPath = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
-                    refCharPath = self.getRefChar(ethnic, gender, age)
-                    base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
-                    self.refCharPaths[base] = refCharPath
-                    self.refTargetPaths[base] = refTrgPath
-
-
-class GenderAgeWarpModifier (EthnicGenderAgeWarpModifier):
-
-    def getRefChar(self, ethnic, gender, age):
-        return getSysDataPath("targets/macrodetails/caucasian-%s-%s.target" % (gender, age))
-
-
-class EthnicWarpModifier (EthnicGenderAgeWarpModifier):
-
-    def getRefChar(self, ethnic, gender, age):
-        return getSysDataPath("targets/macrodetails/%s-female-young.target" % (ethnic))
-
-
-class EthnicGenderAgeToneWeightWarpModifier (WarpModifier):
-
-    def getRefChar(self, ethnic, gender, age):
-        return getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
-
-    def setupReferences(self):
-        self.refTargetPaths = {}
-        self.refCharPaths = {}
-
-        for ethnic in ["caucasian", "african", "asian"]:
-            for gender in ["female", "male"]:
-                for age in ["baby", "child", "young", "old"]:
-                    refCharPath = self.getRefChar(ethnic, gender, age)
-                    base = getSysDataPath("targets/macrodetails/%s-%s-%s.target" % (ethnic, gender, age))
-                    self.refCharPaths[base] = refCharPath
-                    path = self.template.replace("${ethnic}", ethnic).replace("${gender}", gender).replace("${age}", age)
-                    for tone in ["minmuscle", "averagemuscle", "maxmuscle"]:
-                        for weight in ["minweight", "averageweight", "maxweight"]:
-                            univ = getSysDataPath("targets/macrodetails/universal-%s-%s-%s-%s.target") % (gender, age, tone, weight)
-                            self.refCharPaths[univ] = univ
-                            self.refTargetPaths[univ] = path.replace("${tone}", tone).replace("${weight}", weight)
-
-
-class GenderAgeToneWeightWarpModifier (EthnicGenderAgeToneWeightWarpModifier):
-
-    def getRefChar(self, ethnic, gender, age):
-        return getSysDataPath("targets/macrodetails/caucasian-%s-%s.target" % (gender, age))
-
-
-#----------------------------------------------------------
 #   Reset warp buffer
 #----------------------------------------------------------
 
@@ -362,19 +437,14 @@ def resetWarpBuffer():
 #   Call from exporter
 #----------------------------------------------------------
 
-def compileWarpTarget(modtype, template, human, bodypart):
-    if modtype == 'Ethnic':
-        mod = EthnicWarpModifier(template, bodypart)
-    elif modtype == 'GenderAgeToneWeight':
-        mod = GenderAgeToneWeightWarpModifier(template, bodypart)
-    else:
-        raise TypeError("compileWarpTarget modtype = %s" % modtype)
-
+def compileWarpTarget(groupName, targetName, human, bodypart, referenceVariables):
+    mod = WarpModifier(groupName, targetName, bodypart, referenceVariables)
     mod.setHuman(human)
     return mod.compileWarpTarget(human)
 
 #----------------------------------------------------------
-#   Add verts. Replace with something faster using numpy.
+#   Add verts. 
+# TODO Replace with something faster using numpy.
 #----------------------------------------------------------
 
 def addVerts(targetVerts, value, verts):
@@ -398,24 +468,10 @@ def readTargetCoords(filepath):
     except KeyError:
         pass
 
-    filepath = filepath.replace("\\","/")
-    words = filepath.rsplit("-",3)
-    if words[0] == getSysDataPath("targets/macrodetails/universal"):
-        if words[1] == "averagemuscle":
-            if words[2] == "averageweight.target":
-                return {}
-            else:
-                filepath = words[0] + "-" + words[2]
-        elif words[2] == "averageweight.target":
-            filepath = words[0] + "-" + words[1] + ".target"
-
     try:
         fp = open(filepath, "rU")
     except IOError:
         fp = None
-
-    if fp is None:
-        fp = findReplacementFile(filepath)
 
     if fp:
         target = {}
@@ -431,64 +487,3 @@ def readTargetCoords(filepath):
     else:
         raise IOError("Can't find neither %s nor a replacement target" % filepath)
 
-
-def findReplacementFile(filepath):
-    # If some targets are missing, try to find a good default
-    replacements = [
-        (["-minmuscle"], "-averagemuscle"),
-        (["-maxmuscle"], "-averagemuscle"),
-        (["-minweight"], "-averageweight"),
-        (["-maxweight"], "-averageweight"),
-        (["-asian", "-african"], "-caucasian"),
-        (["/asian", "/african"], "/caucasian"),
-        (["\\asian", "\\african"], "\\caucasian"),
-        (["-baby"], "-child"),
-        (["-child", "-old"], "-young"),
-        (["/baby", "/child", "/old"], "/young"),
-        (["\\baby", "\\child", "\\old"], "/young"),
-        (["-male"], "-female"),
-        (["/male"], "/female"),
-        (["\\male"], "\\female"),
-        (["-female"], "-male"),
-        (["/female"], "/male"),
-        (["\\female"], "\\male"),
-    ]
-
-    filepath1 = filepath
-    tried = [filepath]
-    for variants,default in replacements:
-        for variant in variants:
-            filepath1 = filepath1.replace(variant, default)
-            if filepath1 not in tried:
-                try:
-                    fp = open(filepath1, "rU")
-                    log.message("   Replaced %s\n  -> %s", filepath, filepath1)
-                    return fp
-                except IOError:
-                    log.debug("  Tried %s" % filepath1)
-                    tried.append(filepath1)
-
-    string = "Warning: Found none of:"
-    for filepath1 in tried:
-        string += "\n    %s" % filepath1
-    log.message(string)
-    return None
-
-#----------------------------------------------------------
-#   Utilities
-#----------------------------------------------------------
-
-def order(dict):
-    stru = list(dict.items())
-    stru.sort()
-    return stru
-
-
-def loglist(dict):
-    #return
-    stru = list(dict.items())
-    stru.sort()
-    log.debug("  [")
-    for x,y in stru:
-        log.debug("    %s: %s" % (x,y))
-    log.debug("  ]")

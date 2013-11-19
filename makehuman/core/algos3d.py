@@ -51,10 +51,14 @@ _targetBuffer = {}
 
 
 class Target(object):
-
     """
     This class is used to store morph targets.
     """
+
+    dtype = [('index','u4'),('vector','(3,)f4')]
+    npzfile = None
+    npztime = None
+    npzdir = None
 
     def __init__(self, obj, name):
         """
@@ -73,13 +77,8 @@ class Target(object):
 
 
         """
-
         self.name = name
         self.morphFactor = -1
-
-        if self.name is None:
-            # Warp target - don't load from disk
-            return
 
         try:
             self._load(self.name)
@@ -90,15 +89,8 @@ class Target(object):
 
         self.faces = obj.getFacesForVertices(self.verts)
 
-    dtype = [('index','u4'),('vector','(3,)f4')]
-    npzfile = None
-    npztime = None
-    npzdir = None
-
-
     def __repr__(self):
         return ( "<Target %s>" % (os.path.basename(self.name)) )
-
 
     def _load_text(self, name):
         data = []

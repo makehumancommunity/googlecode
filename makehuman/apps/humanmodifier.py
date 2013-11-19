@@ -137,7 +137,9 @@ class BaseModifier(object):
         self.eventType = 'modifier'
         self.targets = []
 
+        # Macro variable controlled by this modifier
         self.macroVariable = None
+        # Macro variables on which the targets controlled by this modifier depend
         self.macroDependencies = []
 
         self.human = None
@@ -154,8 +156,9 @@ class BaseModifier(object):
         value = self.clampValue(value)
         factors = self.getFactors(value)
 
-        for target in self.targets:
-            self.human.setDetail(target[0], value * reduce(operator.mul, [factors[factor] for factor in target[1]]))
+        tWeights = getTargetWeights(self.targets, factors, value)
+        for tpath, tWeight in tWeights.items():
+            self.human.setDetail(tpath, tWeight)
 
         if skipDependencies:
             return
@@ -320,10 +323,9 @@ class SimpleModifier(BaseModifier):
         self.template = template
         self.targets = self.expandTemplate([(self.template, [])])
 
+        # TODO resolve macro dependencies as well?
+
         #log.debug("SimpleModifier(%s,%s)  :             %s", groupName, template, self.fullName)
-
-        self.macroDependencies = []  # TODO
-
 
     def expandTemplate(self, targets):
 
@@ -419,8 +421,9 @@ class GenericModifier(BaseModifier):
         value = self.clampValue(value)
         factors = self.getFactors(value)
 
-        for tpath, tfactors in self.targets:
-            self.human.setDetail(tpath, reduce((lambda x, y: x * y), [factors[factor] for factor in tfactors]))
+        tWeights = getTargetWeights(self.targets, factors)
+        for tpath, tWeight in tWeights.items():
+            self.human.setDetail(tpath, tWeight)
 
         if skipDependencies:
             return
@@ -515,6 +518,7 @@ class MacroModifier(GenericModifier):
         self.macroDependencies = self.findMacroDependencies(self.groupName)
         var = self.getMacroVariable()
         if var:
+            # Macro modifier is not dependent on variable it controls itself
             self.macroDependencies.remove(var)
         self.macroDependencies = list(self.macroDependencies)
 
@@ -555,6 +559,17 @@ class MacroModifier(GenericModifier):
 
     def buildLists(self):
         pass
+
+def getTargetWeights(targets, factors, value = 1.0, ignoreNotfound = False):
+    result = dict()
+    if ignoreNotfound:
+        for (tpath, tfactors) in targets:
+            result[tpath] = value * reduce(operator.mul, [factors.get(factor, 1.0) for factor in tfactors])
+    else:
+        for (tpath, tfactors) in targets:
+            result[tpath] = value * reduce(operator.mul, [factors[factor] for factor in tfactors])
+    return result
+
 
 def debugModifiers():
     human = G.app.selectedHuman
