@@ -50,7 +50,7 @@ from getpath import getSysDataPath, canonicalPath
 _targetBuffer = {}
 
 
-class Target:
+class Target(object):
 
     """
     This class is used to store morph targets.
