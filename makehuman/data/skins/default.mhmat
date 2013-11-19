@@ -14,8 +14,8 @@ translucency 0.0
 autoBlendSkin true
 
 sssEnabled true
-sssRScale 5.0
-sssGScale 2.5
+sssRScale 4.0
+sssGScale 2.0
 sssBScale 1.0
 
 // Set LitSphere shader programme
