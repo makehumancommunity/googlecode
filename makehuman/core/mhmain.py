@@ -427,6 +427,18 @@ class MHApplication(gui3d.Application, mh.Application):
             except Exception, _:
                 log.warning('Could not unload %s', name, exc_info=True)
 
+    def getLoadedPlugins(self):
+        """
+        Get the names of loaded plugins.
+        """
+        return self.modules.keys()
+
+    def getPlugin(self, name):
+        """
+        Get the (python) module of the plugin with specified name.
+        """
+        return self.modules[name]
+
     def loadGui(self):
 
         self.progress(0.9)
