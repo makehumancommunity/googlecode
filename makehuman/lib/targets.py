@@ -341,6 +341,13 @@ class Targets(object):
                             if value is not None])
                 log.debug("             depends on variables: %s", dependsOn)
 
+    def getTargetsByGroup(self, group):
+        if isinstance(group, basestring):
+            group = tuple(group.split('-'))
+        elif not isinstance(group, tuple):
+            group = tuple(group)
+        return self.groups[group]
+
     def walk(self, dataPath):
         try:
             # Load cached targets from .npz file
