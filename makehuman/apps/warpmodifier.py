@@ -155,64 +155,6 @@ class WarpModifier (humanmodifier.UniversalModifier):
 
     # TODO add extended debug printing for warpmodifiers
 
-    def getReferenceTarget(self, factors):
-        """
-        Get reference target needed for this warpmodifier for an absolute set of
-        factor variables. Factors is a dict of (variable category,
-        variable) pairs of which the variables are applied at strength 1.
-        """
-        factors = self.getDependentFactors(factors)
-        for tpath, tfactors in self.referenceTargets:
-            if all([bool(f in tfactors) for f in factors.values()]):
-                return tpath
-        return None
-
-    def getReferenceTargets(self, factors):
-        """
-        Get the reference targets that this warpmodifier depends on that are needed
-        for the current combination of factors.
-        With factors a key,value dict.
-        """
-        factors = dict([(fname, fval) for fname,fval in factors.items() if fval > 0])
-        factors = self.getDependentFactors(factors.keys())
-        result = []
-        for tpath, tfactors in self.referenceTargets:
-            # Retrieve all targets which belong to a combination of factors
-            targetVarCategs = [targets._value_cat.get(tf, None) for tf in tfactors]
-            varCategsF      = [targets._value_cat.get(f, None)  for f  in factors if f in tfactors]
-            varCategs   = set([targets._value_cat.get(f, None)  for f  in factors if \
-                                        targets._value_cat.get(f, None) in targetVarCategs])
-            if sum([bool(fc in targetVarCategs) for fc in varCategsF]) >= len(varCategs):
-                result.append( (tpath, tfactors) )
-        return result
-
-    def getWarpTargetFile(self, factors):
-        """
-        Get the warp source target file that has to be applied for the specified
-        absolute set of factor variables. Factors is a dict of (variable category,
-        variable) pairs of which the variables are applied at strength 1.
-        """
-        factors = dict([(fname, fval) for fname,fval in factors.items() if fval > 0])
-        factors = self.getDependentFactors(factors)
-        for tpath, tfactors in self.targets:
-            if all([bool(f in tfactors) for f in factors]):
-                return tpath
-
-    def getWarpTargetFiles(self, factors):
-        """
-        Get the warp source target files that are needed to build the warptarget
-        for the specified macro factors. With factors a key,value dict.
-        """
-        factors = dict([(fname, fval) for fname,fval in factors.items() if fval > 0])
-        factors = self.getDependentFactors(factors.keys())
-        result = []
-        for tpath, tfactors in self.targets:
-            if all([bool(f in factors) for f in tfactors if \
-                                          f not in self.referenceVariables.values() and \
-                                          f in targets._value_cat ]):
-                result.append( (tpath, tfactors) )
-        return result
-
     def setValue(self, value, skipDependencies = False):
         self.compileTargetIfNecessary()
         value = self.clampValue(value)
@@ -345,7 +287,6 @@ class WarpModifier (humanmodifier.UniversalModifier):
         factors = self.toReferenceFactors(factors)
 
         refTargets = self.referenceTargets
-        # alternative: refTargets = self.referenceTargets
         tWeights = humanmodifier.getTargetWeights(refTargets, factors, ignoreNotfound = True)
         for tpath, tweight in tWeights.items():
             srcChar = algos3d.getTarget(self.human.meshData, tpath)
@@ -355,7 +296,6 @@ class WarpModifier (humanmodifier.UniversalModifier):
 
         # The warp target
         warpTargets = self.targets
-        # alternative: warpTargets = self.getWarpTargetFiles(factors)
         tWeights = humanmodifier.getTargetWeights(warpTargets, factors, ignoreNotfound = True)
         for tpath, tweight in tWeights.items():
             srcTrg = readTargetCoords(tpath)
