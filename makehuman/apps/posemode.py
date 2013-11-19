@@ -215,8 +215,10 @@ def loadMhpFile(filepath, pose=None, clearOnly=False):
 #   class PoseModifier
 #----------------------------------------------------------
 
-class PoseModifier(warpmodifier.GenderAgeToneWeightWarpModifier):
+class PoseModifier(warpmodifier.WarpModifier):
 
-    def __init__(self, template):
-        warpmodifier.GenderAgeToneWeightWarpModifier.__init__(self, template, "body")
+    def __init__(self, poseName):
+        referenceVariables = { 'race': 'caucasian' }
+        super(PoseModifier, self).__init__('poses', poseName, "body", referenceVariables)
+        self.eventType = 'pose'
 

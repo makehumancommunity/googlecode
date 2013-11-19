@@ -8,7 +8,7 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Thomas Larsson
+**Authors:**           Thomas Larsson, Jonas Hauquier
 
 **Copyright(c):**      MakeHuman Team 2001-2013
 
