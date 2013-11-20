@@ -73,7 +73,7 @@ class RenderTaskView(guipose.PoseModeTaskView):
     # getScene(): Static method for getting the currently selected scene.
     # If scene selector plugin isn't available, it returns the default scene.
     @staticmethod
-    def getScene(self):
+    def getScene():
         mhscene = None
         try:
             mhscene = gui3d.app.getCategory('Rendering').getTaskByName('Scene').scene
