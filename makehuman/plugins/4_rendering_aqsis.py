@@ -23,6 +23,7 @@ TODO
 """
 
 import gui3d
+import guirender
 import os
 import sys
 if 'nt' in sys.builtin_module_names:
@@ -58,10 +59,10 @@ def which(program):
 
     return None
 
-class AqsisTaskView(gui3d.PoseModeTaskView):
+class AqsisTaskView(guirender.RenderTaskView):
 
     def __init__(self, category):
-        gui3d.PoseModeTaskView.__init__(self, category, 'Aqsis')
+        guirender.RenderTaskView.__init__(self, category, 'Aqsis')
 
         self.sceneToRender = None
 
@@ -116,7 +117,7 @@ class AqsisTaskView(gui3d.PoseModeTaskView):
 
     def onShow(self, event):
 
-        gui3d.PoseModeTaskView.onShow(self, event)
+        guirender.RenderTaskView.onShow(self, event)
         self.renderButton.setFocus()
         gui3d.app.prompt('Warning', 'The rendering is still an experimental feature since posing is not yet implemented.',
             'OK', helpId='alphaRenderWarning')
@@ -125,7 +126,7 @@ class AqsisTaskView(gui3d.PoseModeTaskView):
     def onHide(self, event):
 
         gui3d.app.statusPersist('')
-        gui3d.PoseModeTaskView.onHide(self, event)
+        guirender.RenderTaskView.onHide(self, event)
 
     def downloadAqsis(self):
 

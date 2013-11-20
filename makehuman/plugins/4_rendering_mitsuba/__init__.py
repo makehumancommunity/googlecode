@@ -25,20 +25,17 @@ TODO
 import sys
 import os
 
-# We need this for rendering
-
 from .import mh2mitsuba
 
-# We need this for gui controls
-
-import gui3d
 import mh
 import gui
+import gui3d
+import guirender
 
-class MitsubaTaskView(gui3d.PoseModeTaskView):
+class MitsubaTaskView(guirender.RenderTaskView):
 
     def __init__(self, category):
-        gui3d.PoseModeTaskView.__init__(self, category, 'Mitsuba')
+        guirender.RenderTaskView.__init__(self, category, 'Mitsuba')
 
         # Buttons
         pathBox = self.addLeftWidget(gui.GroupBox('Mitsuba  bin  path'))
@@ -90,8 +87,8 @@ class MitsubaTaskView(gui3d.PoseModeTaskView):
                  'sampler':'low' if self.lowdButton.selected else 'ind'})
 
     def onShow(self, event):
+        guirender.RenderTaskView.onShow(self, event)
         self.renderButton.setFocus()
-        gui3d.PoseModeTaskView.onShow(self, event)
 
 # This method is called when the plugin is loaded into makehuman
 # The app reference is passed so that a plugin can attach a new category, task, or other GUI elements

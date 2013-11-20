@@ -19,25 +19,23 @@
 Abstract
 --------
 
-TODO
+Graphical user interface plugin that creates the Povray task view, for
+rendering images with pov-ray.
 """
 
-import sys
 import os
+import sys
 
-# We need this for rendering
 from . import mh2povray
 
-# We need this for gui controls
-import gui3d
 import gui
+import gui3d
+import guirender
 
-import getpath
-
-class PovrayTaskView(gui3d.PoseModeTaskView):
+class PovrayTaskView(guirender.RenderTaskView):
 
     def __init__(self, category):
-        gui3d.PoseModeTaskView.__init__(self, category, 'Povray')
+        guirender.RenderTaskView.__init__(self, category, 'Povray')
 
         # for path to PovRay binaries file
         binary = ''
@@ -52,12 +50,10 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
         if sys.platform == 'win32':
             self.browse.setFilter('Executable programs (*.exe);;All files (*.*)')
 
-        #
         if os.name == 'nt':
-            #
             if os.environ['PROCESSOR_ARCHITECTURE'] == 'x86':
                 self.win32sse2Button = pathBox.addWidget(gui.CheckBox('Use SSE2 bin', True))
-        #
+        
         @self.path.mhEvent
         def onChange(value):
             gui3d.app.settings['povray_bin'] = 'Enter your path' if not value else str(value)
@@ -67,13 +63,11 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
             if os.path.isdir(path):
                 gui3d.app.settings['povray_bin'] = path
                 self.path.setText(path)
-        #------------------------------------------------------------------------------------
-        filter = []
 
         settingsBox = self.addLeftWidget(gui.GroupBox('Settings'))
         settingsBox.addWidget(gui.TextView("Resolution"))
         self.resBox = settingsBox.addWidget(gui.TextEdit(
-            "x".join([str(self.resWidth), str(self.resHeight)])))
+            "x".join([str(self.renderingWidth), str(self.renderingHeight)])))
         self.AAbox = settingsBox.addWidget(gui.Slider(value=gui3d.app.settings.get('POV_AA', 0.5), label="AntiAliasing"))
 
         materialsBox = self.addRightWidget(gui.GroupBox('Materials'))
@@ -86,8 +80,8 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
             try:
                 value = value.replace(" ", "")
                 res = [int(x) for x in value.split("x")]
-                self.resWidth = res[0]
-                self.resHeight = res[1]
+                self.renderingWidth = res[0]
+                self.renderingHeight = res[1]
             except: # The user hasn't typed the value correctly yet.
                 pass
 
@@ -111,15 +105,9 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
             # for Ubuntu.. atm
             if sys.platform == 'linux2':
                 binary = 'linux'
-            
-            try:
-                mhscene = gui3d.app.getCategory('Rendering').getTaskByName('Scene').scene
-            except:
-                import scene
-                mhscene = scene.Scene()
 
             settings = dict()
-            settings['scene'] = mhscene
+            settings['scene'] = self.getScene()
             settings['subdivide'] = gui3d.app.actions.smooth.isChecked()
             settings['AA'] = 0.5-0.49*self.AAbox.getValue()
             settings['bintype'] = binary
@@ -127,35 +115,9 @@ class PovrayTaskView(gui3d.PoseModeTaskView):
             
             mh2povray.povrayExport(settings)
 
-        self.oldShader = None
-
-    @property
-    def resWidth(self):
-        return gui3d.app.settings.get('rendering_width', 800)
-
-    @property
-    def resHeight(self):
-        return gui3d.app.settings.get('rendering_height', 600)
-
-    @resWidth.setter
-    def resWidth(self, value = None):
-        gui3d.app.settings['rendering_width'] = 0 if not value else int(value)
-
-    @resHeight.setter
-    def resHeight(self, value = None):
-        gui3d.app.settings['rendering_height'] = 0 if not value else int(value)
-
     def onShow(self, event):
-        human = gui3d.app.selectedHuman
-        self.oldShader = human.material.shader
-        human.material.shader = getpath.getSysDataPath('shaders/glsl/phong')
-
+        guirender.RenderTaskView.onShow(self, event)
         self.renderButton.setFocus()
-        gui3d.PoseModeTaskView.onShow(self, event)
-
-    def onHide(self, event):
-        human = gui3d.app.selectedHuman
-        human.material.shader = self.oldShader
 
 
 def load(app):

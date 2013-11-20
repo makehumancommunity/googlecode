@@ -27,12 +27,13 @@ import os
 import mh
 import gui
 import gui3d
+import guipose
 import log
 
-class ExportTaskView(gui3d.PoseModeTaskView):
+class ExportTaskView(guipose.PoseModeTaskView):
     def __init__(self, category):
 
-        gui3d.TaskView.__init__(self, category, 'Export')
+        guipose.PoseModeTaskView.__init__(self, category, 'Export')
 
         self.formats = []
         self.recentlyShown = None
@@ -176,7 +177,7 @@ class ExportTaskView(gui3d.PoseModeTaskView):
 
     def onShow(self, event):
 
-        gui3d.PoseModeTaskView.onShow(self, event)
+        guipose.PoseModeTaskView.onShow(self, event)
 
         self.fileentry.setFocus()
 
@@ -200,7 +201,7 @@ class ExportTaskView(gui3d.PoseModeTaskView):
 
     def onHide(self, event):
 
-        gui3d.PoseModeTaskView.onHide(self, event)
+        guipose.PoseModeTaskView.onHide(self, event)
 
         human = gui3d.app.selectedHuman
         camera = mh.cameras[0]

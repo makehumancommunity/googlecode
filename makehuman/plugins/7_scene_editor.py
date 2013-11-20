@@ -30,7 +30,7 @@ like lights and ambience, that are defined in the scene class.
 import mh
 import gui
 import gui3d
-import getpath
+import guirender
 
 import os
 import scene
@@ -171,10 +171,10 @@ class LightSceneItem(SceneItem):
             self.sceneview.readScene()
 
 
-class SceneEditorTaskView(gui3d.TaskView):
+class SceneEditorTaskView(guirender.RenderTaskView):
 
     def __init__(self, category):
-        gui3d.TaskView.__init__(self, category, 'Scene Editor')
+        guirender.RenderTaskView.__init__(self, category, 'Scene Editor')
         sceneBox = self.addLeftWidget(gui.GroupBox('Scene'))
         self.fnlbl = sceneBox.addWidget(gui.TextView('<New scene>'))
         self.saveButton = sceneBox.addWidget(gui.Button('Save'), 1, 0)
@@ -197,8 +197,6 @@ class SceneEditorTaskView(gui3d.TaskView):
         self.activeItem = None
         self.scene = scene.Scene()
         self.readScene()
-
-        self.oldShader = None
 
         def doLoad():
             filename = mh.getOpenFileName(mh.getPath("scenes"), 'MakeHuman scene (*.mhscene);;All files (*.*)')
@@ -286,22 +284,18 @@ class SceneEditorTaskView(gui3d.TaskView):
         self.fnlbl.setText(lbltxt)
 
     def onShow(self, event):
-        human = gui3d.app.selectedHuman
-        self.oldShader = human.material.shader
-        human.material.shader = getpath.getSysDataPath('shaders/glsl/phong')
-
+        guirender.RenderTaskView.onShow(self, event)
+        
         # Set currently edited scene
         self.updateScene()
 
     def onHide(self, event):
-        human = gui3d.app.selectedHuman
-        human.material.shader = self.oldShader
-
         # Restore selected scene
         sceneTask = gui3d.app.getTask('Rendering', 'Scene')
         scene = sceneTask.scene
         glmodule.setSceneLighting(scene)
 
+        guirender.RenderTaskView.onHide(self, event)
 
 class BooleanInput(gui.GroupBox):
     def __init__(self, name, value):

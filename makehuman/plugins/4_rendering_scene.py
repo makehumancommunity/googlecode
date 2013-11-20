@@ -30,11 +30,11 @@ import shutil
 import mh
 import scene
 import glmodule
-import getpath
+import guirender
 
-class SceneLibraryTaskView(gui3d.PoseModeTaskView):
+class SceneLibraryTaskView(guirender.RenderTaskView):
     def __init__(self, category):
-        gui3d.PoseModeTaskView.__init__(self, category, 'Scene')
+        guirender.RenderTaskView.__init__(self, category, 'Scene')
         self.scene = scene.Scene()
 
         sceneDir = mh.getPath('scenes')
@@ -60,27 +60,16 @@ class SceneLibraryTaskView(gui3d.PoseModeTaskView):
         def onFileSelected(filename):
             self.loadScene(filename)
 
-        self.oldShader = None
-
     def loadScene(self, filename):
         self.currentScene = filename
         self.scene.load(filename)
         glmodule.setSceneLighting(self.scene)
 
     def onShow(self, event):
-        human = gui3d.app.selectedHuman
-        self.oldShader = human.material.shader
-        human.material.shader = getpath.getSysDataPath('shaders/glsl/phong')
-
-        gui3d.PoseModeTaskView.onShow(self, event)
+        guirender.RenderTaskView.onShow(self, event)
         self.filechooser.refresh()
         self.filechooser.setHighlightedItem(self.currentScene)
         self.filechooser.setFocus()
-
-    def onHide(self, event):
-        human = gui3d.app.selectedHuman
-        human.material.shader = self.oldShader
-
 
 def load(app):
     category = app.getCategory('Rendering')
