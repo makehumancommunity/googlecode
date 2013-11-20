@@ -151,7 +151,6 @@ class Writer(mhx_writer.Writer):
 
 
     def writeMaterialSettings(self, fp, mat, alpha):
-        log.debug("%s %s %s" % (mat.specularColor, 1.0, mat.shininess))
         fp.write(
             "  diffuse_color Array %.4g %.4g %.4g  ;\n" % mat.diffuseColor.asTuple() +
             "  diffuse_shader 'LAMBERT' ;\n" +
@@ -159,7 +158,7 @@ class Writer(mhx_writer.Writer):
             "  specular_color Array %.4g %.4g %.4g ;\n" % mat.specularColor.asTuple() +
             "  specular_shader 'PHONG' ;\n" +
             "  specular_intensity %.4g ;\n" % (1.0) +
-            "  specular_hardness %.4g ;\n" % (512*(1-mat.shininess)))
+            "  specular_hardness %.4g ;\n" % (512*mat.shininess))
 
         if alpha < 0.99:
             fp.write(
