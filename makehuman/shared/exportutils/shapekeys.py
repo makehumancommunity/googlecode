@@ -35,12 +35,12 @@ from getpath import getSysDataPath
 #   Setup expressions
 #----------------------------------------------------------
 
-def setupExpressions(folder, prefix):
+def loadExpressions(folder, prefix):
     expressions = []
     try:
         files = os.listdir(folder)
     except:
-        log.debug("WARNING: Folder \"%s\" does not exist." % folder)
+        log.debug('WARNING: Folder "%s" does not exist.' % folder)
         return(expressions)
 
     for file in files:
@@ -54,8 +54,13 @@ def setupExpressions(folder, prefix):
                 expressions.append(fname)
     return(expressions)
 
+_expressionUnits = None
 
-ExpressionUnits = setupExpressions(getSysDataPath("targets/expression/units/caucasian"), "")
+def getExpressionUnits():
+    global _expressionUnits
+    if _expressionUnits is None:
+        _expressionUnits = loadExpressions(getSysDataPath("targets/expression/units/caucasian"), "")
+    return _expressionUnits
 
 
 def readShape(filename):
@@ -81,17 +86,16 @@ def readShape(filename):
 
 def readExpressionUnits(human, t0, t1, progressCallback = None):
     shapeList = []
-    t,dt = initTimes(ExpressionUnits, 0.0, 1.0)
+    t,dt = initTimes(getExpressionUnits(), 0.0, 1.0)
 
-    for name in ExpressionUnits:
+    referenceVariables = { 'gender': 'female',
+                           'age':    'young' }
+
+    for name in getExpressionUnits():
         if progressCallback:
             progressCallback(t, text="Reading expression %s" % name)
 
-        shape = warpmodifier.compileWarpTarget(
-                "Ethnic",
-                getSysDataPath('targets/expression/units/${ethnic}/%s.target') % name,
-                human,
-                "face")
+        shape = warpmodifier.compileWarpTarget('expression-units', name, human, "face", referenceVariables)
 
         shapeList.append((name, shape))
         t += dt

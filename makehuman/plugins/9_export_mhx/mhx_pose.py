@@ -195,7 +195,7 @@ class Writer(mhx_writer.Writer):
                 mhx_drivers.writeShapePropDrivers(fp, amt, [name], proxy, "Mhc", callback)
 
             if self.config.expressions:
-                mhx_drivers.writeShapePropDrivers(fp, amt, exportutils.shapekeys.ExpressionUnits, proxy, "Mhs", callback)
+                mhx_drivers.writeShapePropDrivers(fp, amt, exportutils.shapekeys.getExpressionUnits(), proxy, "Mhs", callback)
 
             skeys = []
             for (skey, val, string, min, max) in  self.customProps:
