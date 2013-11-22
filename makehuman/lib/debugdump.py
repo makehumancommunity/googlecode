@@ -32,6 +32,13 @@ if sys.platform == 'win32':
 import log
 import getpath
 
+class DependencyError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
 class DebugDump(object):
 
     """
@@ -84,6 +91,9 @@ class DebugDump(object):
 
         import numpy
         self.write("NUMPY.VERSION: %s", numpy.__version__)
+        numpyVer = numpy.__version__.split('.')
+        if int(numpyVer[0]) <= 1 and int(numpyVer[1]) < 6:
+            raise DependencyError('MakeHuman requires at least numpy version 1.6')
 
         self.close()
 

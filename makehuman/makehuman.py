@@ -242,6 +242,11 @@ def debug_dump():
     try:
         import debugdump
         debugdump.dump.reset()
+    except debugdump.DependencyError as e:
+        print >> sys.stderr,  "Dependency error: " + format(str(e))
+        import log
+        log.error("Dependency error: %s", e)
+        sys.exit(-1)
     except Exception as _:
         import log
         log.error("Could not create debug dump", exc_info=True)
