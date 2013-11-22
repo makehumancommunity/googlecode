@@ -95,7 +95,13 @@ def readExpressionUnits(human, t0, t1, progressCallback = None):
         if progressCallback:
             progressCallback(t, text="Reading expression %s" % name)
 
-        shape = warpmodifier.compileWarpTarget('expression-units', name, human, "face", referenceVariables)
+        target = warpmodifier.compileWarpTarget('expression-units', name, human, "face", referenceVariables)
+        shape = {}
+        for i in xrange(len(target.verts)):
+            vIdx = target.verts[i]
+            shape[vIdx] = target.data[i]
+
+        print shape
 
         shapeList.append((name, shape))
         t += dt

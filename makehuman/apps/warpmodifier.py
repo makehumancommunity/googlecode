@@ -41,43 +41,35 @@ from core import G
 #   class WarpTarget
 #----------------------------------------------------------
 
-_warpTargetCache = {}
-_refTargetCache = {}
-
-
 class WarpTarget(algos3d.Target):
 
-    def __init__(self, name, shape, modifier, human):
+    def __init__(self, name, vertIndices, vertData, modifier, human):
         self.name = name
         self.morphFactor = -1
 
+        '''
         data = list(shape.items())
         data.sort()
         raw = np.asarray(data, dtype=algos3d.Target.dtype)
         self.verts = raw['index']
 
+        self.data = raw['vector']
+        '''
+
         self.human = human
         self.modifier = modifier
 
-        self.data = raw['vector']
+        self.verts = vertIndices
+        self.data = vertData
 
         self.faces = self.human.meshData.getFacesForVertices(self.verts)
 
     def apply(self, obj, morphFactor, faceGroupToUpdateName=None, update=1, calcNorm=1, scale=[1.0,1.0,1.0]):
-        print 'Apply()ing warp target %s at %s' % (self.name, morphFactor)
         super(WarpTarget, self).apply(obj, morphFactor, faceGroupToUpdateName, update, calcNorm, scale)
 
     def __repr__(self):
         return ( "<WarpTarget %s>" % (self.name) )
 
-
-def saveWarpedTarget(shape, path):
-    slist = list(shape.items())
-    slist.sort()
-    fp = open(path, "w")
-    for (n, dr) in slist:
-        fp.write("%d %.4f %.4f %.4f\n" % (n, dr[0], dr[1], dr[2]))
-    fp.close()
 
 #----------------------------------------------------------
 #   class WarpModifier
@@ -174,15 +166,12 @@ class WarpModifier (humanmodifier.UniversalModifier):
     def clampValue(self, value):
         return max(0.0, min(1.0, value))
 
-
     def compileTargetIfNecessary(self):
         # TODO find out when compile is needed
         #if alreadyCompiled:
         #    return
 
-        shape = self.compileWarpTarget()
-        targetName = self.groupName + '-' + self.targetName
-        target = WarpTarget(targetName, shape, self, self.human)
+        target = self.compileWarpTarget()
         algos3d._targetBuffer[canonicalPath(self.fullName)] = target    # TODO remove direct use of the target buffer?
         self.human.hasWarpTargets = True
 
@@ -191,27 +180,31 @@ class WarpModifier (humanmodifier.UniversalModifier):
 
 
     def compileWarpTarget(self):
-        log.message("Compile %s", self)
+        log.message("Compile warp target %s", self)
         srcTargetCoord, srcPoints, trgPoints = self.getReferences()
-        if srcTargetCoord:
+        if srcTargetCoord is not None:
             #shape = srcTargetCoord
-            shape = self.scaleTarget(srcTargetCoord, srcPoints, trgPoints)
+            warpData = self._scaleTarget(srcTargetCoord, srcPoints, trgPoints)
         else:
-            shape = {}
-        return shape
+            warpData = np.asarray([])
+
+        # Maintain vertices with non-zero offset in warp target
+        verts = np.argwhere(warpData)[...,0]
+        data = warpData[verts]
+
+        target = WarpTarget(self.targetName, verts, data, self, self.human)
+        return target
 
 
-    def scaleTarget(self, morph, srcPoints, trgPoints):
+    def _scaleTarget(self, morph, srcPoints, trgPoints):
         scale = np.array((1.0,1.0,1.0))
         for n in range(3):
             tvec = trgPoints[2*n] - trgPoints[2*n+1]
             svec = srcPoints[2*n] - srcPoints[2*n+1]
             scale[n] = abs(tvec[n]/svec[n])
         log.debug("Scale %s" % scale)
-        smorph = {}
-        for vn,dr in morph.items():
-            smorph[vn] = scale*dr
-        return smorph
+        morph = scale*morph
+        return morph
 
 
     def traceReference(self):
@@ -251,7 +244,7 @@ class WarpModifier (humanmodifier.UniversalModifier):
         """
         srcCharCoord = self.human.meshData.orig_coord.copy()
         trgCharCoord = srcCharCoord.copy()
-        srcTargetCoord = {}
+        srcTargetCoord = np.zeros(srcCharCoord.shape, dtype=np.float32)
 
         keypoints = self.getKeypoints()
         trgPoints = np.zeros(6, float)
@@ -298,8 +291,8 @@ class WarpModifier (humanmodifier.UniversalModifier):
         warpTargets = self.targets
         tWeights = humanmodifier.getTargetWeights(warpTargets, factors, ignoreNotfound = True)
         for tpath, tweight in tWeights.items():
-            srcTrg = readTargetCoords(tpath)
-            addVerts(srcTargetCoord, tweight, srcTrg)
+            srcTrg = readTarget(tpath)
+            addTargetVerts(srcTargetCoord, tweight, srcTrg)
 
         # Aggregate the keypoints differences
         trgPoints = trgCharCoord[keypoints]
@@ -324,9 +317,6 @@ class WarpModifier (humanmodifier.UniversalModifier):
                 for v in varList:
                     result[v] = factors[v]
         return result
-
-def _factorsDict(factors):
-    return dict([(targets._value_cat.get(f, 'unknown'), f) for f in factors])
 
 
 def printDebugCoord(string, coord, obj=None, offset=None):
@@ -380,50 +370,23 @@ def resetWarpBuffer():
 def compileWarpTarget(groupName, targetName, human, bodypart, referenceVariables):
     mod = WarpModifier(groupName, targetName, bodypart, referenceVariables)
     mod.setHuman(human)
-    return mod.compileWarpTarget(human)
+    return mod.compileWarpTarget()
 
 #----------------------------------------------------------
 #   Add verts. 
-# TODO Replace with something faster using numpy.
 #----------------------------------------------------------
 
-def addVerts(targetVerts, value, verts):
-    for n,v in verts.items():
-        dr = value*v
-        try:
-            targetVerts[n] += dr
-        except KeyError:
-            targetVerts[n] = dr
+def addTargetVerts(targetVerts, value, target):
+    dstVerts = target.verts[:]
+    targetVerts[dstVerts] += value * target.data[:]
 
 #----------------------------------------------------------
 #   Read target
 #----------------------------------------------------------
 
-def readTargetCoords(filepath):
-    global _refTargetCache
+def readTarget(filepath):
+    target = algos3d.getTarget(G.app.selectedHuman.mesh, filepath)
+    if target is None:
+        raise IOError("Can't find target %s" % filepath)
 
-    # Ref targets are cached, but never appear directly in the target buffer
-    try:
-        return _refTargetCache[filepath]
-    except KeyError:
-        pass
-
-    try:
-        fp = open(filepath, "rU")
-    except IOError:
-        fp = None
-
-    if fp:
-        target = {}
-        for line in fp:
-            words = line.split()
-            if len(words) >= 4 and words[0][0] != '#':
-                n = int(words[0])
-                if n < meshstat.numberOfVertices:
-                    target[n] = np.array([float(words[1]), float(words[2]), float(words[3])])
-        fp.close()
-        _refTargetCache[filepath] = target
-        return target
-    else:
-        raise IOError("Can't find neither %s nor a replacement target" % filepath)
-
+    return target
