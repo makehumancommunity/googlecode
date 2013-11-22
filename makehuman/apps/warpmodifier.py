@@ -47,15 +47,6 @@ class WarpTarget(algos3d.Target):
         self.name = name
         self.morphFactor = -1
 
-        '''
-        data = list(shape.items())
-        data.sort()
-        raw = np.asarray(data, dtype=algos3d.Target.dtype)
-        self.verts = raw['index']
-
-        self.data = raw['vector']
-        '''
-
         self.human = human
         self.modifier = modifier
 
