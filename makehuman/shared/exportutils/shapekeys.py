@@ -101,8 +101,6 @@ def readExpressionUnits(human, t0, t1, progressCallback = None):
             vIdx = target.verts[i]
             shape[vIdx] = target.data[i]
 
-        print shape
-
         shapeList.append((name, shape))
         t += dt
     return shapeList
