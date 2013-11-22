@@ -37,6 +37,8 @@ import log
 from core import G
 
 
+debug = False
+
 #----------------------------------------------------------
 #   class WarpTarget
 #----------------------------------------------------------
@@ -166,7 +168,8 @@ class WarpModifier (humanmodifier.UniversalModifier):
         algos3d._targetBuffer[canonicalPath(self.fullName)] = target    # TODO remove direct use of the target buffer?
         self.human.hasWarpTargets = True
 
-        log.debug("DONE %s" % target)
+        if debug:
+            log.debug("DONE %s" % target)
         #self.human.traceStack()
 
 
@@ -193,7 +196,8 @@ class WarpModifier (humanmodifier.UniversalModifier):
             tvec = trgPoints[2*n] - trgPoints[2*n+1]
             svec = srcPoints[2*n] - srcPoints[2*n+1]
             scale[n] = abs(tvec[n]/svec[n])
-        log.debug("Scale %s" % scale)
+        if debug:
+            log.debug("Scale %s" % scale)
         morph = scale*morph
         return morph
 
@@ -309,35 +313,6 @@ class WarpModifier (humanmodifier.UniversalModifier):
                     result[v] = factors[v]
         return result
 
-
-def printDebugCoord(string, coord, obj=None, offset=None):
-    return
-
-    log.debug(string)
-    for vn in [5171, 11833]:
-        try:
-            log.debug("  %d: %s" % (vn, coord[vn]))
-        except KeyError:
-            pass
-
-    if offset:
-        coord = coord.copy()
-        for n,dx in offset.items():
-            coord[n] += dx
-
-    if obj:
-        folder = getPath('debug')
-        if not os.path.exists(folder):
-            os.makedirs(folder)
-
-        unit = np.array((1,1,1,1))
-        filepath = os.path.join(folder, "%s.obj" % string)
-        fp = open(filepath, "w")
-        fp.write("".join(["v %f %f %f\n" % tuple(co) for co in coord]))
-        fp.write("".join(["f %d %d %d %d\n" % tuple(fv+unit) for fv in obj.fvert]))
-        fp.close()
-
-
 #----------------------------------------------------------
 #   Reset warp buffer
 #----------------------------------------------------------
@@ -345,10 +320,12 @@ def printDebugCoord(string, coord, obj=None, offset=None):
 def resetWarpBuffer():
     human = G.app.selectedHuman
     if human.hasWarpTargets:
-        log.debug("WARP RESET")
+        if debug:
+            log.debug("WARP RESET")
         for path,target in algos3d._targetBuffer.items():
             if isinstance(target, WarpTarget):
-                log.debug("  DEL %s" % path)
+                if debug:
+                    log.debug("  DEL %s" % path)
                 human.setDetail(localPath(path), 0)
                 del algos3d._targetBuffer[path]
         human.applyAllTargets()
@@ -364,7 +341,7 @@ def compileWarpTarget(groupName, targetName, human, bodypart, referenceVariables
     return mod.compileWarpTarget()
 
 #----------------------------------------------------------
-#   Add verts. 
+#   Add verts
 #----------------------------------------------------------
 
 def addTargetVerts(targetVerts, value, target):
