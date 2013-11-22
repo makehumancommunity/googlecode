@@ -141,8 +141,10 @@ class WarpModifier (humanmodifier.UniversalModifier):
     # TODO add extended debug printing for warpmodifiers
 
     def setValue(self, value, skipDependencies = False):
-        self.compileTargetIfNecessary()
         value = self.clampValue(value)
+
+        if value != 0:
+            self.compileTargetIfNecessary()
 
         self.human.setDetail(canonicalPath(self.fullName), value)
 
@@ -150,6 +152,8 @@ class WarpModifier (humanmodifier.UniversalModifier):
 
 
     def updateValue(self, value, updateNormals=1, skipUpdate=False):
+        if value == 0:
+            return
         return  # TODO allow updating while dragging slider
 
         self.compileTargetIfNecessary()
