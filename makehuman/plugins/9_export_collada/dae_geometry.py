@@ -40,6 +40,7 @@ def writeLibraryGeometry(fp, rmeshes, config):
 
 
 def rotateCoord(coord, config):
+    coord = [co-config.offset for co in coord]
     if config.rotate90X:
         coord = [(x,-z,y) for (x,y,z) in coord]
     if config.rotate90Z:
@@ -62,8 +63,7 @@ def writeGeometry(fp, rmesh, config):
         '          <float_array count="%d" id="%s-Position-array">\n' % (3*nVerts,rmesh.name) +
         '          ')
 
-    coord = [co-config.offset for co in obj.coord]
-    coord = rotateCoord(coord, config)
+    coord = rotateCoord(obj.coord, config)
     fp.write( ''.join([("%.4f %.4f %.4f " % tuple(co)) for co in coord]) )
 
     fp.write('\n' +
