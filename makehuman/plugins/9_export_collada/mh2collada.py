@@ -78,7 +78,7 @@ def exportCollada(human, filepath, config):
     except:
         log.error("Unable to open file for writing %s" % filepath)
 
-    date = time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.localtime())
+    date = time.strftime(u"%a, %d %b %Y %H:%M:%S +0000".encode('utf-8'), time.localtime()).decode('utf-8')
     fp.write('<?xml version="1.0" encoding="utf-8"?>\n' +
         '<COLLADA version="1.4.0" xmlns="http://www.collada.org/2005/11/COLLADASchema">\n' +
         '  <asset>\n' +
