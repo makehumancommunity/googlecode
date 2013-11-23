@@ -154,7 +154,7 @@ class WarpModifier (humanmodifier.UniversalModifier):
     def updateValue(self, value, updateNormals=1, skipUpdate=False):
         if value == 0:
             return
-        return  # TODO allow updating while dragging slider
+        return  # TODO allow updating while dragging slider (but dont recompile warp targets while dragging)
 
         self.compileTargetIfNecessary()
         #super(WarpModifier, self).updateValue(value, updateNormals, skipUpdate)
@@ -357,7 +357,7 @@ def addTargetVerts(targetVerts, value, target):
 #----------------------------------------------------------
 
 def readTarget(filepath):
-    target = algos3d.getTarget(G.app.selectedHuman.mesh, filepath)
+    target = algos3d.getTarget(G.app.selectedHuman.meshData, filepath)
     if target is None:
         raise IOError("Can't find target %s" % filepath)
 
