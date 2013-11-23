@@ -43,7 +43,7 @@ class Storage:
 
 
     def store(self, human):
-        debugCoords("store")
+        #debugCoords("store")
         if self.coord is not None:
             raise NameError("Failed to set unposed coords")
         obj = human.meshData
@@ -72,7 +72,7 @@ class Storage:
             obj.calcNormals()
             obj.update()
             self.coord = None
-            debugCoords("restore1")
+            #debugCoords("restore1")
 
         if self.baseDetails is not None:
             self.poseDetails = {}
@@ -87,7 +87,7 @@ class Storage:
             human.applyAllTargets()
         self.filepath = filepath
         self.dirty = False
-        debugCoords("restore2")
+        #debugCoords("restore2")
 
 
 def touchStorage():
