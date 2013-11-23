@@ -40,7 +40,8 @@ def writeLibraryGeometry(fp, rmeshes, config):
 
 
 def rotateCoord(coord, config):
-    coord = [co-config.offset for co in coord]
+    offs = config.scale * config.offset
+    coord = [co-offs for co in coord]
     if config.rotate90X:
         coord = [(x,-z,y) for (x,y,z) in coord]
     if config.rotate90Z:
