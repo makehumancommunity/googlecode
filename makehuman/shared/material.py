@@ -1107,6 +1107,9 @@ def getFilePath(filename, folder = None):
     return os.path.normpath(filename)
 
 def getShaderPath(shader, folder = None):
+    if not shader:
+        return None
+
     shaderSuffixes = ['_vertex_shader.txt', '_fragment_shader.txt', '_geometry_shader.txt']
     paths = [shader+s for s in shaderSuffixes]
     paths = [p for p in paths if os.path.isfile(getFilePath(p, folder))]
