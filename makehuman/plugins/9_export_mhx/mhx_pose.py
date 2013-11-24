@@ -65,7 +65,7 @@ class Writer(mhx_writer.Writer):
             self.proxyShapes(ptype, 'T_Clothes', fp)
 
         fp.write("#if toggle&T_Mesh\n")
-        self.writeShapeKeysAndDrivers(fp, "%sMesh" % self.name, None)
+        self.writeShapeKeysAndDrivers(fp, "%sBody" % self.name, None)
 
         fp.write("""
     #endif
@@ -100,7 +100,7 @@ class Writer(mhx_writer.Writer):
         fp.write("#if toggle&%s\n" % test)
         for proxy in self.proxies.values():
             if proxy.name and proxy.type == typ:
-                self.writeShapeKeysAndDrivers(fp, self.name+proxy.name+"Mesh", proxy)
+                self.writeShapeKeysAndDrivers(fp, self.name+proxy.name, proxy)
         fp.write("#endif\n")
 
 

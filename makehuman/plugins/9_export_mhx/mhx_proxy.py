@@ -67,9 +67,6 @@ class Writer(mhx_writer.Writer):
     #-------------------------------------------------------------------------------
 
     def writeProxy(self, fp, proxy, layer):
-        scale = self.config.scale
-        ox,oy,oz = self.config.offset
-
         fp.write("""
     NoScale False ;
     """)
@@ -80,12 +77,13 @@ class Writer(mhx_writer.Writer):
 
         # Proxy mesh
 
-        name = self.name + proxy.name
+        proxyname = self.name + proxy.name
         fp.write(
-            "Mesh %sMesh %sMesh \n" % (name, name) +
+            "Mesh %s %s \n" % (proxyname, proxyname) +
             "  Verts\n")
 
-        fp.write("".join( ["  v %.4f %.4f %.4f ;\n" % (scale*(x-ox), scale*(-z+oz), scale*(y-oy)) for x,y,z in proxy.getCoords()] ))
+        coords = self.config.scale * (proxy.getCoords() - self.config.offset)
+        fp.write("".join( ["  v %.4f %.4f %.4f ;\n" % (x,-z,y) for x,y,z in coords] ))
 
         fp.write("""
       end Verts
@@ -93,8 +91,6 @@ class Writer(mhx_writer.Writer):
     """)
 
         obj = proxy.getSeedObject()
-        log.debug("PROXY %s %s" % (proxy, obj))
-
 
         fp.write("".join( ["    f %d %d %d %d ;\n" % tuple(fv) for fv in obj.fvert] ))
         fp.write("    ftall 0 1 ;\n")
@@ -118,7 +114,7 @@ class Writer(mhx_writer.Writer):
         self.meshWriter.writeVertexGroups(fp, proxy)
 
         if proxy.material:
-            fp.write("  Material %s_%s_%s ;" % (self.name, proxy.name, proxy.material.name))
+            fp.write("  Material %s_%s ;" % (self.name, proxy.material.name))
         elif proxy.useBaseMaterials:
             self.meshWriter.writeBaseMaterials(fp)
 
@@ -129,9 +125,8 @@ class Writer(mhx_writer.Writer):
 
         # Proxy object
 
-        name = self.name + proxy.name
         fp.write(
-            "Object %sMesh MESH %sMesh \n" % (name, name) +
+            "Object %s MESH %s \n" % (proxyname, proxyname) +
             "  parent Refer Object %s ;\n" % self.name +
             "  hide False ;\n" +
             "  hide_render False ;\n")
@@ -170,7 +165,7 @@ class Writer(mhx_writer.Writer):
     end Object
     """)
 
-        self.meshWriter.writeHideAnimationData(fp, self.armature, self.name, proxy.name)
+        self.meshWriter.writeHideAnimationData(fp, self.armature, self.name, proxy.name, "")
 
     #-------------------------------------------------------------------------------
     #
@@ -188,7 +183,7 @@ class Writer(mhx_writer.Writer):
                 offset = mod[1]
                 fp.write(
                     "    Modifier ShrinkWrap SHRINKWRAP\n" +
-                    "      target Refer Object %sMesh ;\n" % self.name +
+                    "      target Refer Object %sBody ;\n" % self.name +
                     "      offset %.4f ;\n" % offset +
                     "      use_keep_above_surface True ;\n" +
                     "    end Modifier\n")
@@ -217,7 +212,7 @@ class Writer(mhx_writer.Writer):
 
         # Write materials
 
-        fp.write("Material %s_%s_%s \n" % (self.name, proxy.name, mat.name))
+        fp.write("Material %s_%s \n" % (self.name, mat.name))
         uvlayer = "Texture"
         self.matWriter.writeMTexes(fp, texnames, mat)
         self.matWriter.writeMaterialSettings(fp, mat, alpha)

@@ -154,12 +154,12 @@ class Writer(mhx_writer.Writer):
 
     """)
         fp.write(
-            "PostProcess %sMesh %s 0000003f 00080000 %s 0000c000 ;\n" % (amt.name, amt.name, amt.visibleLayers) +
+            "PostProcess %sBody %s 0000003f 00080000 %s 0000c000 ;\n" % (amt.name, amt.name, amt.visibleLayers) +
             "Group %s\n"  % amt.name +
             "  Objects\n" +
             "    ob %s ;\n" % amt.name +
             "#if toggle&T_Mesh\n" +
-            "    ob %sMesh ;\n" % amt.name +
+            "    ob %sBody ;\n" % amt.name +
             "#endif\n")
 
         self.groupProxy('Cage', 'T_Cage', fp)
@@ -183,7 +183,7 @@ class Writer(mhx_writer.Writer):
         for proxy in self.proxies.values():
             if proxy.type == typ:
                 name = amt.name + proxy.name
-                fp.write("    ob %sMesh ;\n" % name)
+                fp.write("    ob %s ;\n" % name)
         fp.write("#endif\n")
         return
 

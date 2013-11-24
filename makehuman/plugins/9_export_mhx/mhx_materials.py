@@ -265,7 +265,7 @@ end Material
         for n in range(nTextures):
             fp.write(" 1")
         fp.write(" ;\n")
-        fp.write("  AnimationData %sMesh True\n" % self.name)
+        fp.write("  AnimationData %sBody True\n" % self.name)
         #mhx_drivers.writeTextureDrivers(fp, rig_panel.BodyLanguageTextureDrivers)
         fp.write("  end AnimationData\n")
 

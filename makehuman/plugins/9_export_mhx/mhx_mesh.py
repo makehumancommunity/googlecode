@@ -41,83 +41,92 @@ class Writer(mhx_writer.Writer):
 
     def writeMesh(self, fp, mesh):
         config = self.config
-        scale = config.scale
 
-        fp.write("\nMesh %sMesh %sMesh\n  Verts\n" % (self.name, self.name))
+        meshname = self.name + "Body"
+        fp.write("\nMesh %s %s\n  Verts\n" % (meshname, meshname))
         amt = self.armature
-        ox,oy,oz = config.offset
-        fp.write( "".join(["  v %.4f %.4f %.4f ;\n" % (scale*(co[0]-ox), scale*(-co[2]+oz), scale*(co[1]-oy)) for co in mesh.coord] ))
+        coords = config.scale * (mesh.coord - config.offset)
+        fp.write( "".join(["  v %.4f %.4f %.4f ;\n" % (x,-z,y) for (x,y,z) in coords] ))
 
         fp.write(
-    """
-      end Verts
+"""
+  end Verts
 
-      Faces
-    """)
+  Faces
+""")
         fp.write( "".join(["    f %d %d %d %d ;\n" % tuple(fv) for fv in mesh.fvert] ))
 
         self.writeFaceNumbers(fp)
 
         fp.write(
-    """
-      end Faces
+"""
+  end Faces
 
-      MeshTextureFaceLayer UVTex
-        Data
-    """)
+  MeshTextureFaceLayer UVTex
+    Data
+""")
 
         uvs = mesh.texco
         fuvs = mesh.fuvs
         for fuv in fuvs:
             fp.write( "    vt" + "".join([" %.4g %.4g" %(tuple(uvs[vt])) for vt in fuv]) + " ;\n")
 
-        fp.write("""
-        end Data
-        active True ;
-        active_clone True ;
-        active_render True ;
-      end MeshTextureFaceLayer
-    """)
+        fp.write(
+"""
+    end Data
+    active True ;
+    active_clone True ;
+    active_render True ;
+  end MeshTextureFaceLayer
+""")
 
         self.writeBaseMaterials(fp)
         self.writeVertexGroups(fp, None)
 
+        fp.write("#if toggle&T_Clothes\n")
+        weights = {}
+        for proxy in self.proxies.values():
+            log.debug("PR %s %s" % (proxy, proxy.deleteVerts))
+            if proxy.deleteVerts is not None:
+                weights["Delete_" + proxy.name] = proxy.deleteVerts
+        self.writeBoolWeights(fp, weights)
+        fp.write("#endif\n")
+
+        ox,oy,oz = config.scale*config.offset
         fp.write(
-    """
-    end Mesh
-    """ +
-    "Object %sMesh MESH %sMesh\n"  % (self.name, self.name) +
+    "end Mesh\n\n"+
+    "Object %s MESH %s\n"  % (meshname, meshname) +
     "  Property MhxOffsetX %.4f ;\n" % ox +
     "  Property MhxOffsetY %.4f ;\n" % oy +
     "  Property MhxOffsetZ %.4f ;\n" % oz +
-    """
-      layers Array 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  ;
-    #if toggle&T_Armature
-    """)
+"""
+  layers Array 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0  ;
+#if toggle&T_Armature
+""")
 
         self.writeArmatureModifier(fp, None)
 
         fp.write(
     "  parent Refer Object %s ;" % self.name +
-    """
-      parent_type 'OBJECT' ;
-    #endif
-      color Array 1.0 1.0 1.0 1.0  ;
-      select True ;
-      lock_location Array 1 1 1 ;
-      lock_rotation Array 1 1 1 ;
-      lock_scale Array 1 1 1  ;
-      Property MhxScale theScale ;
-      Property MhxMesh True ;
-      Property MhHuman True ;
-      Modifier SubSurf SUBSURF
-        levels 0 ;
-        render_levels 1 ;
-      end Modifier
-    end Object
-    """)
+"""
+  parent_type 'OBJECT' ;
+#endif
+  color Array 1.0 1.0 1.0 1.0  ;
+  select True ;
+  lock_location Array 1 1 1 ;
+  lock_rotation Array 1 1 1 ;
+  lock_scale Array 1 1 1  ;
+  Property MhxScale theScale ;
+  Property MhxMesh True ;
+  Property MhHuman True ;
+  Modifier SubSurf SUBSURF
+    levels 0 ;
+    render_levels 1 ;
+  end Modifier
+end Object
+""")
 
-        self.writeHideAnimationData(fp, amt, "", self.name)
+        self.writeHideAnimationData(fp, amt, "", self.name, "Body")
         return
 
 
@@ -242,16 +251,16 @@ class Writer(mhx_writer.Writer):
         )
 
 
-    def writeHideAnimationData(self, fp, amt, prefix, name):
-        fp.write("AnimationData %s%sMesh True\n" % (prefix, name))
+    def writeHideAnimationData(self, fp, amt, prefix, name, suffix):
+        fp.write("AnimationData %s%s%s True\n" % (prefix, name, suffix))
         mhx_drivers.writePropDriver(fp, amt, ["Mhh%s" % name], "x1", "hide", -1)
         mhx_drivers.writePropDriver(fp, amt, ["Mhh%s" % name], "x1", "hide_render", -1)
         fp.write("end AnimationData\n")
         return
 
-    #-------------------------------------------------------------------------------
-    #   Vertex groups
-    #-------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
+#   Vertex groups
+#-------------------------------------------------------------------------------
 
     def writeVertexGroups(self, fp, proxy):
         amt = self.armature
@@ -272,6 +281,15 @@ class Writer(mhx_writer.Writer):
                 "\n  VertexGroup %s\n" % grp +
                 "".join( ["    wv %d %.4g ;\n" % tuple(vw) for vw in weights[grp]] ) +
                 "  end VertexGroup\n")
-        return
+
+
+    def writeBoolWeights(self, fp, weights):
+        for grp in weights.keys():
+            string = "".join( ["    wv %d 1 ;\n" % vn for vn,val in enumerate(weights[grp]) if val] )
+            if string:
+                fp.write(
+                    "\n  VertexGroup %s\n" % grp +
+                    string +
+                    "  end VertexGroup\n")
 
 
