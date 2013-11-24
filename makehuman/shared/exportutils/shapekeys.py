@@ -29,37 +29,29 @@ import warpmodifier
 import algos3d
 import log
 from getpath import getSysDataPath
+import targets
 
 
 #----------------------------------------------------------
 #   Setup expressions
 #----------------------------------------------------------
 
-def loadExpressions(folder, prefix):
+def _loadExpressions():
     expressions = []
-    try:
-        files = os.listdir(folder)
-    except:
-        log.debug('WARNING: Folder "%s" does not exist.' % folder)
-        return(expressions)
-
-    for file in files:
-        (fname, ext) = os.path.splitext(file)
-        if ext == ".target":
-            if prefix:
-                (before, sep, after) = fname.partition(prefix)
-                if sep:
-                    expressions.append(after)
-            else:
-                expressions.append(fname)
-    return(expressions)
+    exprTargets = targets.getTargets().findTargets('expression-units')
+    for eComponent in exprTargets:
+        name = eComponent.key
+        # Remove 'expression-units' components from group name
+        name = name[2:]
+        expressions.append('-'.join(name))
+    return expressions
 
 _expressionUnits = None
 
 def getExpressionUnits():
     global _expressionUnits
     if _expressionUnits is None:
-        _expressionUnits = loadExpressions(getSysDataPath("targets/expression/units/caucasian"), "")
+        _expressionUnits = _loadExpressions()
     return _expressionUnits
 
 
