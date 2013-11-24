@@ -65,9 +65,11 @@ class Component(object):
         if other is None:
             self.key = []   # Used for referencing this component in Targets.groups
             self.data = {}  # Dependent (macro) variables that influence the weight of this target
+            self.parent = None
         else:
             self.key = other.key[:]
             self.data = other.data.copy()
+            self.parent = other
 
         global _categories, _value_cat
 
@@ -76,6 +78,9 @@ class Component(object):
 
     def __repr__(self):
         return repr((self.key, self.data, self.path))
+
+    def isRoot(self):
+        return self.parent == None
 
     def set_data(self, category, value):
         orig = self.data.get(category)
@@ -115,11 +120,6 @@ class TargetsCrawler(object):
     def __init__(self, dataPath):
         self.dataPath = dataPath
 
-        #if os.path.basename(os.path.normpath(self.dataPath)) != "data":
-        #    log.warning('Data path containing targets (%s) is not called "data", this might cause problems.', self.dataPath)
-
-        #self.relToPath = os.path.normpath(os.path.join(dataPath, '..'))
-
         self.rootComponent = Component()
 
         self.targets = []
@@ -135,14 +135,31 @@ class TargetsCrawler(object):
     def is_file(self, path):
         raise NotImplementedError("Implement TargetsCrawler.is_file(path)")
 
-    def get_root(self):
-        raise NotImplementedError("Implement TargetsCrawler.get_root()")
+    def real_path(self, path):
+        raise NotImplementedError("Implement TargetsCrawler.real_path(path)")
+
+    def buildIndex(self):
+        """
+        Build target index
+        """
+        self.index = {}
+        for target in self.targets:
+            if tuple(target.key) not in self.index:
+                self.index[tuple(target.key)] = []
+            self.index[tuple(target.key)].append(target)
+            component = target
+            while not component.isRoot():
+                parent = component.parent
+                if tuple(parent.key) not in self.index:
+                    self.index[tuple(parent.key)] = []
+                if tuple(component.key) not in self.index[tuple(parent.key)] \
+                   and tuple(component.key) != tuple(parent.key):
+                    self.index[tuple(parent.key)].append(tuple(component.key))
+                component = parent
 
     def findTargets(self):
         self.walkTargets('', self.rootComponent)
-
-    def real_path(self, path):
-        raise NotImplementedError("Implement TargetsCrawler.real_path(path)")
+        self.buildIndex()
 
     def walkTargets(self, root, base):
         dirs = self.list_dir(self.real_path(root))
@@ -205,9 +222,6 @@ class FilesTargetsCrawler(TargetsCrawler):
     def real_path(self, path):
         return os.path.normpath( os.path.join(self.dataPath, path) )
 
-    def get_root(self):
-        return self.root
-
 
 class ZippedTargetsCrawler(TargetsCrawler):
     """
@@ -245,9 +259,6 @@ class ZippedTargetsCrawler(TargetsCrawler):
 
     def real_path(self, path):
         return os.path.join(self.dataPath, path).replace('\\', '/')
-
-    def get_root(self):
-        return self.root
 
     def namei(self, path):
         if isinstance(path, basestring):
@@ -348,6 +359,22 @@ class Targets(object):
             group = tuple(group)
         return self.groups[group]
 
+    def findTargets(self, partialGroup):
+        if isinstance(partialGroup, basestring):
+            partialGroup = tuple(partialGroup.split('-'))
+        elif not isinstance(partialGroup, tuple):
+            partialGroup = tuple(partialGroup)
+
+        if partialGroup not in self.index:
+            return []
+        result = []
+        for entry in self.index[partialGroup]:
+            if isinstance(entry, Component):
+                result.append(entry)
+            else:
+                result.extend(self.findTargets(entry))
+        return result
+
     def walk(self, dataPath):
         try:
             # Load cached targets from .npz file
@@ -366,6 +393,7 @@ class Targets(object):
         self.targets = targetFinder.targets
         self.groups = targetFinder.groups
         self.images = targetFinder.images
+        self.index = targetFinder.index
 
 
 _targets = None
