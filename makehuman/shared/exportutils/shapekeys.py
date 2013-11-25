@@ -31,6 +31,18 @@ import log
 from getpath import getSysDataPath
 import targets
 
+#----------------------------------------------------------
+#   Get shapes for exporters.
+#   Shapekeys are now represented by targets.
+#----------------------------------------------------------
+
+def getShape(filepath, obj, isHuman=False):
+    if isHuman:
+        try:
+            return algos3d.targetbuffer[filepath]
+        except KeyError:
+            pass
+    return algos3d.Target(filepath, obj)
 
 #----------------------------------------------------------
 #   Setup expressions
@@ -51,33 +63,20 @@ _expressionUnits = None
 def getExpressionUnits():
     global _expressionUnits
     if _expressionUnits is None:
-        _expressionUnits = _loadExpressions()
+        # Remove duplicates
+        units = {}
+        for unit in _loadExpressions():
+            units[unit] = True
+        _expressionUnits = list(units.keys())
+        _expressionUnits.sort()
     return _expressionUnits
-
-
-def readShape(filename):
-    try:
-        fp = open(filename, "rU")
-    except:
-        log.error("*** Cannot open %s", filename)
-        return None
-
-    shape = {}
-    for line in fp:
-        words = line.split()
-        n = int(words[0])
-        if n < meshstat.numberOfVertices:
-            shape[n] = (float(words[1]), float(words[2]), float(words[3]))
-    fp.close()
-    log.message("    %s copied", filename)
-    return shape
 
 #----------------------------------------------------------
 #
 #----------------------------------------------------------
 
 def readExpressionUnits(human, t0, t1, progressCallback = None):
-    shapeList = []
+    targetList = []
     t,dt = initTimes(getExpressionUnits(), 0.0, 1.0)
 
     referenceVariables = { 'gender': 'female',
@@ -88,14 +87,9 @@ def readExpressionUnits(human, t0, t1, progressCallback = None):
             progressCallback(t, text="Reading expression %s" % name)
 
         target = warpmodifier.compileWarpTarget('expression-units', name, human, "face", referenceVariables)
-        shape = {}
-        for i in xrange(len(target.verts)):
-            vIdx = target.verts[i]
-            shape[vIdx] = target.data[i]
-
-        shapeList.append((name, shape))
+        targetList.append((name, target))
         t += dt
-    return shapeList
+    return targetList
 
 
 def initTimes(flist, t0, t1):

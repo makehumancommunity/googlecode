@@ -342,7 +342,15 @@ def resetWarpBuffer():
 def compileWarpTarget(groupName, targetName, human, bodypart, referenceVariables):
     mod = WarpModifier(groupName, targetName, bodypart, referenceVariables)
     mod.setHuman(human)
-    return mod.compileWarpTarget()
+    trg = mod.compileWarpTarget()
+
+    # Catch duplcate verts
+    slice = [n for n,vn in enumerate(trg.verts) if vn == 7452]
+    if len(slice) > 1:
+        n = slice[0]
+        raise NameError("Warptarget %d duplicate verts in %s: %d %d %s" %  (len(slice), trg, n, trg.verts[n], trg.data[n]))
+
+    return trg
 
 #----------------------------------------------------------
 #   Add verts

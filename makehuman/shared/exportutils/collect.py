@@ -29,11 +29,11 @@ import numpy
 import shutil
 
 import mh2proxy
-import richmesh
+from richmesh import FakeTarget, getRichMesh
 import log
 
-from .shapekeys import readExpressionUnits
-from .custom import listCustomFiles, readCustomTarget
+from .shapekeys import readExpressionUnits, getShape
+from .custom import listCustomFiles
 
 def readTargets(human, config):
     targets = []
@@ -45,10 +45,10 @@ def readTargets(human, config):
         files = listCustomFiles(config)
 
         log.message("Custom shapes:")
-        for path,name in files:
-            log.message("    %s", path)
-            shape = readCustomTarget(path)
-            targets.append((name,shape))
+        for filepath,name in files:
+            log.message("    %s", filepath)
+            trg = getShape(filepath, human)
+            targets.append((name,trg))
 
     return targets
 
@@ -78,7 +78,7 @@ def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidd
     from armature.armature import setupArmature
     amt = setupArmature(name, human, config.rigOptions)
 
-    richMesh = richmesh.getRichMesh(human.meshData, None, None, rawTargets, amt)
+    richMesh = getRichMesh(human.meshData, None, None, rawTargets, amt)
     richMesh.name = name
     if amt:
         richMesh.weights = amt.vertexWeights
@@ -134,7 +134,8 @@ def setupProxies(typename, name, human, rmeshes, richMesh, config, deleteGroups,
             deleteGroups += proxy.deleteGroups
             if deleteVerts != None:
                 deleteVerts = deleteVerts | proxy.deleteVerts
-            rmesh = richmesh.getRichMesh(None, proxy, richMesh.weights, richMesh.shapes, richMesh.armature)
+            log.debug("RICHMESH %s %s %s" % (richMesh.name, typename, richMesh.shapes))
+            rmesh = getRichMesh(None, proxy, richMesh.weights, richMesh.shapes, richMesh.armature)
             if name is not None:    # Make exportable names.
                 rmesh.name = name
             rmesh.name = re.sub('[^0-9a-zA-Z]+', '_', rmesh.name)
@@ -235,11 +236,10 @@ def filterMesh(richMesh, deleteGroups, deleteVerts, useFaceMask = False):
     shapes = []
     if richMesh.shapes:
         for (name, morphs1) in richMesh.shapes:
-            morphs2 = {}
-            for (v1,dx) in morphs1.items():
-                if not killVerts[v1]:
-                    morphs2[newVerts[v1]] = dx
-            shapes.append((name, morphs2))
+            verts = [newVerts[v1] for v1 in morphs1.verts if not killVerts[v1]]
+            slice = [n for n,v1 in enumerate(morphs1.verts) if not killVerts[v1]]
+            data = morphs1.data[slice]
+            shapes.append((name, FakeTarget(name, verts, data)))
 
     richMesh.fromProxy(coords, texVerts, faceVerts, faceUvs, weights, shapes, obj.material)
     richMesh.vertexMask = numpy.logical_not(killVerts)

@@ -108,17 +108,14 @@ def writeObjectProps(fp, rmeshes, amt):
 
 def writeShapeGeometry(fp, name, sname, shape):
         id,key = getId("Geometry::%s_%sShape" % (name, sname))
-        nVerts = len(shape)
+        nVerts = len(shape.verts)
         fp.write(
 '    Geometry: %d, "%s", "Shape" {\n' % (id, key) +
 '        version: 100\n' +
 '        Indexes: *%d   {\n' % nVerts +
 '            a: ')
 
-        shape = list(shape.items())
-        shape.sort()
-
-        string = "".join( ['%d,' % data[0] for data in shape] )
+        string = "".join( ['%d,' % vn for vn in shape.verts] )
         fp.write(string[:-1])
 
         fp.write('\n' +
@@ -126,7 +123,8 @@ def writeShapeGeometry(fp, name, sname, shape):
 '        Vertices: *%d   {\n' % (3*nVerts) +
 '            a: ')
 
-        string = "".join( ["%.4f,%.4f,%.4f," % tuple(data[1]) for data in shape] )
+        data = shape.data[np.s_[...]]
+        string = "".join( ["%.4f,%.4f,%.4f," % tuple(dr) for dr in data] )
         fp.write(string[:-1])
 
         # Must use normals for shapekeys

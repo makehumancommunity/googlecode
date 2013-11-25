@@ -23,7 +23,7 @@ TODO
 """
 
 import os
-import numpy
+import numpy as np
 import guicommon
 from core import G
 import getpath
@@ -51,7 +51,7 @@ for name in SimpleProxyTypes:
 #
 
 _A7converter = None
-Unit = numpy.array((1.0,1.0,1.0))
+Unit = np.array((1.0,1.0,1.0))
 
 #
 #   class ProxyRefVert:
@@ -68,7 +68,7 @@ class ProxyRefVert:
         v0 = int(words[0])
         self._verts = (v0,v0,v0)
         self._weights = (1,0,0)
-        self._offset = numpy.array((0,0,0), float)
+        self._offset = np.array((0,0,0), float)
         self.addProxyVertWeight(proxy, v0, vnum, 1)
         return self
 
@@ -90,7 +90,7 @@ class ProxyRefVert:
 
         self._verts = (v0,v1,v2)
         self._weights = (w0,w1,w2)
-        self._offset = numpy.array((d0,d1,d2), float)
+        self._offset = np.array((d0,d1,d2), float)
 
         self.addProxyVertWeight(proxy, v0, vnum, w0)
         self.addProxyVertWeight(proxy, v1, vnum, w1)
@@ -130,7 +130,6 @@ class ProxyRefVert:
         w0,w1,w2 = self._weights
         return (w0*v0 + w1*v1 + w2*v2 + scale*self._offset)
 
-
 #
 #    class Proxy
 #
@@ -150,7 +149,7 @@ class Proxy:
         self.refVerts = []
 
         self.scaleData = [None, None, None]
-        self.scale = numpy.array((1.0,1.0,1.0), float)
+        self.scale = np.array((1.0,1.0,1.0), float)
 
         self.z_depth = 50
         self.max_pole = None    # Signifies the maximum number of faces per vertex on the mesh topology. Set to none for default.
@@ -348,41 +347,35 @@ class Proxy:
 
 
     def getShapes(self, rawShapes, scale):
+        from richmesh import FakeTarget
+
+        targets = []
         if (not rawShapes) or (self.type not in ['Proxymeshes', 'Clothes']):
-            return []
-        shapes = []
+            return targets
+
         for (key, rawShape) in rawShapes:
-            shape = []
-            for (v,dr) in rawShape.items():
-                (dx,dy,dz) = dr
+            shape = {}
+            for n,vn in enumerate(rawShape.verts):
                 try:
-                    vlist = self.vertWeights[v]
+                    pvlist = self.vertWeights[vn]
                 except KeyError:
-                    vlist = []
-                for (pv, w) in vlist:
-                    shape.append((pv, scale*w*dx, scale*w*dy, scale*w*dz))
-            if shape != []:
-                fixedShape = self.fixShape(shape)
-                shapes.append((key,fixedShape))
-        return shapes
+                    pvlist = []
+                for (pv, w) in pvlist:
+                    dr = scale*w*rawShape.data[n]
+                    try:
+                        shape[pv] += dr
+                    except KeyError:
+                        shape[pv] = dr
 
+            verts = []
+            data = []
+            for pv,dr in shape.items():
+                if np.dot(dr,dr) > 1e-8:
+                    verts.append(pv)
+                    data.append(dr)
+            targets.append((key, FakeTarget(rawShape.name, verts, data)))
+        return targets
 
-    def fixShape(self, shape):
-        fixedShape = {}
-        shape.sort()
-        pv = -1
-        for (pv0, dx0, dy0, dz0) in shape:
-            if pv0 == pv:
-                dx += dx0
-                dy += dy0
-                dz += dz0
-            else:
-                if pv >= 0 and (dx*dx + dy*dy + dz*dz) > 1e-8:
-                    fixedShape[pv] = (dx, dy, dz)
-                (pv, dx, dy, dz) = (pv0, dx0, dy0, dz0)
-        if pv >= 0 and (dx*dx + dy*dy + dz*dz) > 1e-8:
-            fixedShape[pv] = (dx, dy, dz)
-        return fixedShape
 
 #
 #    readProxyFile(obj, filepath, type="Clothes"):
@@ -402,7 +395,7 @@ def readProxyFile(obj, filepath, type="Clothes"):
         return None
 
     proxy = Proxy(filepath, type)
-    proxy.deleteVerts = numpy.zeros(len(obj.coord), bool)
+    proxy.deleteVerts = np.zeros(len(obj.coord), bool)
 
     proxy.z_depth = -1
     proxy.max_pole = None
@@ -544,7 +537,7 @@ def readProxyFile(obj, filepath, type="Clothes"):
             offset = float(words[2])
             proxy.modifiers.append( ['solidify', thickness, offset] )
         elif key == 'shapekey':
-            proxy.shapekeys.append( words[1] )
+            proxy.shapekeys.append( getFileName(folder, words[1], ".target") )
         elif key == 'basemesh':
             proxy.basemesh = words[1]
 

@@ -51,20 +51,3 @@ def readCustomFolder(folder, config):
                 files.append((path, name))
     return files
 
-
-def readCustomTarget(path):
-    try:
-        fp = open(path, "rU")
-    except:
-        return []
-    shape = {}
-    for line in fp:
-        words = line.split()
-        try:
-            shape[int(words[0])] = numpy.array((float(words[1]), float(words[2]), float(words[3])))
-        except:
-            return {}
-    fp.close()
-    return shape
-
-

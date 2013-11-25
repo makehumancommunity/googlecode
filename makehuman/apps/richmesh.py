@@ -114,6 +114,8 @@ class RichMesh(object):
 
 
     def rescale(self, scale):
+        import mh2proxy
+
         obj = self.object
         newobj = module3d.Object3D(self.name)
         newobj.setCoords(scale*obj.coord)
@@ -126,9 +128,7 @@ class RichMesh(object):
 
         newshapes = []
         for name,shape in self.shapes:
-            newshape = {}
-            for vn,dr in shape.items():
-                newshape[vn] = scale*dr
+            newshape = FakeTarget(name, shape.verts, scale*shape.data)
             newshapes.append((name, newshape))
         self.shapes = newshapes
 
@@ -166,3 +166,22 @@ def getRichMesh(obj, proxy, rawWeights, rawShapes, amt, scale=1.0):
         return rmesh
     else:
         return RichMesh(obj.name, amt).fromObject(obj, rawWeights, rawShapes)
+
+
+#
+#   class FakeTarget
+#   A temporary class that exporters can access in the same way as a real Target.
+#
+
+class FakeTarget:
+    def __init__(self, name, verts, data):
+        self.name = name
+        self.verts = np.array(verts, int)
+        self.data = np.array(data, float)
+        if len(verts) != len(data):
+            log.debug("FakeTarget %s %s %s" % (name, verts, data))
+            halt
+
+    def __repr__(self):
+        return ("<FakeTarget %s %d %d>" % (self.name, len(self.verts), len(self.data)))
+

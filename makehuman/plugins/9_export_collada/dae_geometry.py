@@ -24,6 +24,7 @@ Geometry export
 """
 
 import numpy as np
+import log
 from progress import Progress
 
 #----------------------------------------------------------------------
@@ -165,9 +166,7 @@ def writeShapeKey(fp, name, shape, rmesh, config):
         '           ')
 
     target = np.array(obj.coord)
-    for n,dr in shape.items():
-        target[n] += np.array(dr)
-
+    target[shape.verts] += shape.data[np.s_[...]]
     target = rotateCoord(target, config)
     fp.write( ''.join([("%.4f %.4f %.4f " % tuple(co)) for co in target]) )
 

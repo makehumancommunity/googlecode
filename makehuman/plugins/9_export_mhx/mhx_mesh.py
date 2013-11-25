@@ -41,6 +41,7 @@ class Writer(mhx_writer.Writer):
 
     def writeMesh(self, fp, mesh):
         config = self.config
+        scale = config.scale
 
         meshname = self.name + "Body"
         fp.write("\nMesh %s %s\n  Verts\n" % (meshname, meshname))
@@ -86,7 +87,6 @@ class Writer(mhx_writer.Writer):
         fp.write("#if toggle&T_Clothes\n")
         weights = {}
         for proxy in self.proxies.values():
-            log.debug("PR %s %s" % (proxy, proxy.deleteVerts))
             if proxy.deleteVerts is not None:
                 weights["Delete_" + proxy.name] = proxy.deleteVerts
         self.writeBoolWeights(fp, weights)

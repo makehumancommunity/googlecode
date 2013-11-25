@@ -23,9 +23,10 @@ Pose
 """
 
 import log
+import os
 import mh
 import mh2proxy
-
+import algos3d
 import exportutils
 
 from . import mhx_writer
@@ -104,30 +105,27 @@ class Writer(mhx_writer.Writer):
         fp.write("#endif\n")
 
 
-    def writeShapeHeader(self, fp, pose, lr, min, max):
+    def writeShape1(self, fp, sname, lr, trg, min, max, proxy, scale):
+        if len(trg.verts) == 0:
+            return
         fp.write(
-            "ShapeKey %s %s True\n" % (pose, lr) +
+            "ShapeKey %s %s True\n" % (sname, lr) +
             "  slider_min %.3g ;\n" % min +
             "  slider_max %.3g ;\n" % max)
+        data = scale*trg.data
+        fp.write("".join( ["  sv %d %.4f %.4f %.4f ;\n" %  (trg.verts[n], dr[0], -dr[2], dr[1]) for n,dr in enumerate(data)] ))
+        fp.write("end ShapeKey\n")
 
 
-    def writeShape(self, fp, pose, lr, shape, min, max, proxy, scale):
+    def writeShape(self, fp, sname, lr, trg, min, max, proxy, scale):
         if proxy:
-            pshapes = proxy.getShapes([("shape",shape)], scale)
-            if len(pshapes) > 0:
-                name,pshape = pshapes[0]
-                if len(pshape.keys()) > 0:
-                    self.writeShapeHeader(fp, pose, lr, min, max)
-                    fp.write("".join( ["  sv %d %.4f %.4f %.4f ;\n" %  (pv, dr[0], -dr[2], dr[1]) for (pv, dr) in pshape.items()] ))
-                    fp.write("end ShapeKey\n")
-                    return False
+            ptargets = proxy.getShapes([("shape",trg)], scale)
+            log.debug("PTAR %s", ptargets)
+            if len(ptargets) > 0:
+                name,trg = ptargets[0]
+                self.writeShape1(fp, sname, lr, trg, min, max, proxy, scale)
         else:
-            self.writeShapeHeader(fp, pose, lr, min, max)
-            s = scale
-            fp.write("".join( ["  sv %d %.4f %.4f %.4f ;\n" %  (vn, s*dr[0], -s*dr[2], s*dr[1]) for (vn, dr) in shape.items()] ))
-            fp.write("end ShapeKey\n")
-            return False
-        return True
+            self.writeShape1(fp, sname, lr, trg, min, max, proxy, scale)
 
 
     def writeShapeKeysAndDrivers(self, fp, name, proxy):
@@ -147,7 +145,7 @@ class Writer(mhx_writer.Writer):
             "#endif\n")
 
 
-    def writeShapeKeys(self, fp, name, proxy):
+    def writeShapeKeys(self, fp, sname, proxy):
         amt = self.armature
         config = self.config
         scale = config.scale
@@ -155,27 +153,22 @@ class Writer(mhx_writer.Writer):
         isHuman = ((not proxy) or proxy.type == 'Proxymeshes')
 
         if isHuman and config.expressions:
-            try:
-                shapeList = self.loadedShapes["expressions"]
-            except KeyError:
-                shapeList = None
-            if shapeList is None:
-                shapeList = exportutils.shapekeys.readExpressionUnits(self.human, 0.7, 0.9, callback)
-                self.loadedShapes["expressions"] = shapeList
-            for (pose, shape) in shapeList:
-                self.writeShape(fp, pose, "Sym", shape, -1, 2, proxy, scale)
+            shapeList = exportutils.shapekeys.readExpressionUnits(self.human, 0.7, 0.9, callback)
+            for (sname, shape) in shapeList:
+                self.writeShape(fp, sname, "Sym", shape, 0, 1, proxy, scale)
+
+        if proxy:
+            obj = proxy.getSeedObject()
+            for filepath in proxy.shapekeys:
+                shape = exportutils.shapekeys.getShape(filepath, obj)
+                fname = os.path.splitext(os.path.basename(filepath))[0]
+                self.writeShape(fp, proxy.name+fname, "Sym", shape, 0, 1, proxy, scale)
 
         if isHuman:
             for path,name in self.customTargetFiles:
-                try:
-                    shape = self.loadedShapes[path]
-                except KeyError:
-                    shape = None
-                if shape is None:
-                    log.message("    %s", path)
-                    shape = exportutils.custom.readCustomTarget(path)
-                    self.loadedShapes[path] = shape
-                self.writeShape(fp, name, "Sym", shape, -1, 2, proxy, scale)
+                log.message("    %s", path)
+                trg = exportutils.custom.readCustomTarget(path)
+                self.writeShape(fp, name, "Sym", trg, 0, 1, proxy, scale)
 
         if config.expressions and not proxy:
             exprList = exportutils.shapekeys.readExpressionMhm(mh.getSysDataPath("expressions"))
