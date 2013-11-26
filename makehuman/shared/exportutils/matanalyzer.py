@@ -171,8 +171,10 @@ class MaterialAnalysis(object):
                     dest = os.path.join(path, self.getSaveName())
                     if isinstance(tex, basestring):
                         shutil.copy(tex, dest)
+                        log.debug('Copied %s to %s', tex, dest)
                     else:
                         tex.save(dest)
+                        log.debug('Saved texture to %s', dest)
 
             # Write exporter definition for the texture.
             def define(self, options = {}, func = None):
