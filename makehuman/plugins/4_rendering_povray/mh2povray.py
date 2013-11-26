@@ -92,13 +92,23 @@ def povrayExport(settings):
             mh.removeTimer(povwatchTimer)
 
     povray_bin = (gui3d.app.settings.get('povray_bin', ''))
-    # try to use the appropriate binary
     if os.path.exists(povray_bin):
+        # Try to guess povray version.
+        povdirname = os.path.basename(os.path.normpath(os.path.join(povray_bin, '../')))
+        if povdirname == 'v3.7':
+            settings['povver'] = (3, 7, 0)
+        if povdirname == 'v3.7 RC6':
+            settings['povver'] = (3, 7, 6)
+
+        # Try to use the appropriate binary.
         exetype = settings['bintype']
         if exetype == 'win64':
             povray_bin += '/pvengine64.exe'
         elif exetype == 'win32sse2':
-            povray_bin += '/pvengine-sse2.exe'
+            if settings['povver'] == (3, 7, 0):
+                povray_bin += '/pvengine32-sse2.exe'
+            else:
+                povray_bin += '/pvengine-sse2.exe'
         elif exetype == 'win32':
             povray_bin += '/pvengine.exe'
         elif exetype == 'linux':

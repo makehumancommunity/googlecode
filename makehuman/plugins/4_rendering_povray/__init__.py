@@ -42,8 +42,17 @@ class PovrayTaskView(guirender.RenderTaskView):
 
         bintype = []
         pathBox = self.addLeftWidget(gui.GroupBox('Povray  bin  path'))
-        # this part load old settings values for next session; str(povray_bin)
-        povray_bin = gui3d.app.settings.get('povray_bin', '')
+        # Try to guess where povray might be located. [maybe reading a reg/env key can help?]
+        defPovFolder = ''
+        if os.name == 'nt':
+            defPovFolder = 'C:/Program Files/POV-Ray'
+            if not os.path.isdir(defPovFolder):
+                defPovFolder = 'C:/Program Files/'
+        else:
+            defPovFolder = '/usr/local/bin'
+        if not os.path.isdir(defPovFolder):
+            defPovFolder = ''
+        povray_bin = gui3d.app.settings.get('povray_bin', defPovFolder)
         self.path= pathBox.addWidget(gui.TextEdit(str(povray_bin)), 0, 0, 1, 2)
         self.browse = pathBox.addWidget(gui.BrowseButton('dir'), 1, 0, 1, 1)
         self.browse.setPath(povray_bin)
