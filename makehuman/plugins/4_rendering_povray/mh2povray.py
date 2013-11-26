@@ -39,6 +39,7 @@ the exported files use 'Untitled'.
 """
 
 import os
+import shutil
 import re
 import projection
 import mh
@@ -66,32 +67,31 @@ def povrayExport(settings):
       *Dictionary*. Options passed from the Povray exporter GUI.
     """
 
-    povwatchApp = None
-    povwatchPath = ""
-    povwatchTimer = 0
-    def povwatch():
-        if povwatchApp.poll() is not None:
-            if os.path.exists(povwatchPath):
-                gui3d.app.getCategory('Rendering').getTaskByName('Viewer').setImage(povwatchPath)
-                mh.changeTask('Rendering', 'Viewer')
-                gui3d.app.statusPersist('Rendering complete. Output path: %s' % povwatchPath)
-            else:
-                log.notice("POV - Ray did not produce an output file!")
-                gui3d.app.statusPersist('Rendering failed!')
-            mh.removeTimer(povwatchTimer)
-
     settings['name'] = re.sub('[^0-9a-zA-Z]+', '_', getHumanName())
     log.message('POV-Ray Export of object: %s', settings['name'])
 
     settings['resw'] = gui3d.app.settings.get('rendering_width', 800)
     settings['resh'] = gui3d.app.settings.get('rendering_height', 600)
 
-    path = os.path.join(mh.getPath('render'),
-                        gui3d.app.settings.get('povray_render_dir', 'pov_output'),
-                        "%s.inc" % settings['name'])
+    path = os.path.join(mh.getPath('render'), gui3d.app.settings.get('povray_render_dir', 'pov_output'))
+
+    povwatchApp = None
+    povwatchPath = ""
+    povwatchTimer = 0
+    def povwatch():
+        if povwatchApp.poll() is not None:
+            if os.path.exists(povwatchPath):
+                imgpath = os.path.join(path, settings['name'] + '.png')
+                shutil.move(povwatchPath, imgpath)
+                gui3d.app.getCategory('Rendering').getTaskByName('Viewer').setImage(imgpath)
+                mh.changeTask('Rendering', 'Viewer')
+                gui3d.app.statusPersist('Rendering complete. Output path: %s' % imgpath)
+            else:
+                log.notice("POV - Ray did not produce an output file!")
+                gui3d.app.statusPersist('Rendering failed!')
+            mh.removeTimer(povwatchTimer)
 
     povray_bin = (gui3d.app.settings.get('povray_bin', ''))
-
     # try to use the appropriate binary
     if os.path.exists(povray_bin):
         exetype = settings['bintype']
@@ -110,28 +110,23 @@ def povrayExport(settings):
         # Export the files.
         povrayExportMesh2(path, settings)
 
-        outputDirectory = os.path.dirname(path)
-        log.debug('out folder: %s', outputDirectory)
-
         # Prepare command line.
         if os.name == 'nt':
-            cmdLine = (povray_bin, 'MHRENDER', '/EXIT')
+            cmdLine = (povray_bin, '/RENDER', 'MHRENDER.ini', '/EXIT')
         else:
             cmdLine = (povray_bin, 'MHRENDER')
 
         # Pass parameters by writing an .ini file.
-        iniFD = open(os.path.join(outputDirectory, 'MHRENDER.ini'), 'w')
+        iniFD = open(os.path.join(path, 'source/', 'MHRENDER.ini'), 'w')
         iniFD.write('Input_File_Name="%s.pov"\n' % settings['name'] +
                     '+W%d +H%d +a%s +am2\n' %
                     (settings['resw'], settings['resh'], settings['AA']))
         iniFD.close()
 
         # Run POV-Ray, and observe it while it renders.
-        povwatchApp = subprocess.Popen(cmdLine, cwd = os.path.dirname(path))
+        povwatchApp = subprocess.Popen(cmdLine, cwd = os.path.join(path, 'source/'))
         gui3d.app.statusPersist('POV - Ray is rendering.')
-        povwatchPath = path.replace('.inc','.png')
-        if os.path.exists(povwatchPath):
-            os.remove(povwatchPath)
+        povwatchPath = os.path.join(path, 'source/', settings['name'] + '.png')
         povwatchTimer = mh.addTimer(1000, lambda: povwatch())
 
     else:
@@ -244,25 +239,27 @@ def povrayExportMesh2(path, settings):
 
     progress = Progress.begin()
 
-    progress(0, 0.01, "Parsing Data")
-    # Define some additional file locations
-    outputSceneFile = path.replace('.inc', '.pov')
-    outputDirectory = os.path.dirname(path)
+    # Prepare the output directory.
+    progress(0, 0.01, "Preparing Filesystem")
+    if not os.path.isdir(path):
+        os.makedirs(path)
+    log.debug('POV-Ray output folder: %s', path)
+    # Cleanup output folder
+    for f in os.listdir(path):
+        temppath = os.path.join(path, f)
+        if os.path.isfile(temppath) and not os.path.splitext(f)[1] == '.png':
+            os.remove(temppath)
+    # Make empty source output folder
+    path = os.path.join(path, 'source/')
+    if os.path.isdir(path):
+        for f in os.listdir(path):
+            os.remove(os.path.join(path, f))
+    else:
+        os.makedirs(path)
+    log.debug('POV-Ray source output folder: %s', path)
 
-    # Make sure the directory exists
-    if not os.path.isdir(outputDirectory):
-        try:
-            os.makedirs(outputDirectory)
-        except:
-            log.error('Error creating export directory.')
-            return 0
-
-    # Open the output file in Write mode
-    try:
-        outputFileDescriptor = open(path, 'w')
-    except:
-        log.error('Error opening file to write data: %s', path)
-        return 0
+    # Open .inc file for writing.
+    outputFileDescriptor = open(os.path.join(path, settings['name'] + ".inc"), 'w')
 
     # Write position and dimension constants.
     writeConstants(outputFileDescriptor, settings)
@@ -332,7 +329,7 @@ def povrayExportMesh2(path, settings):
 
     # If SSS is enabled, render the lightmaps.
     progress(0.25, 0.6, "Processing SubSurface Scattering")
-    povrayProcessSSS(rmeshes, materials, outputDirectory, settings)
+    povrayProcessSSS(rmeshes, materials, path, settings)
 
     # Write mesh data for the object.
     progress(0.6, 0.9, "Writing Objects")
@@ -344,12 +341,12 @@ def povrayExportMesh2(path, settings):
     outputFileDescriptor.close()
 
     # Write .pov scene file.
-    writeScene(outputSceneFile, rmeshes, settings)
+    writeScene(os.path.join(path, settings['name'] + ".pov"), rmeshes, settings)
 
     progress(0.95, 0.99, "Writing Textures")
-    writeTextures(materials, outputDirectory)
+    writeTextures(materials, path)
 
-    progress(1.0, None, "Finished. Pov-Ray project exported successfully at %s" % outputDirectory)
+    progress(1.0, None, "Finished. Pov-Ray scene file exported successfully at %s" % path)
 
 def writeTextures(materials, outDir):
     progress = Progress(len(materials))
@@ -505,8 +502,6 @@ def getImageFType(ext):
     return ext
 
 def copyTexture(tex, dst):
-    import shutil
-
     if isinstance(tex, basestring):
         shutil.copy(tex, dst)
     else:
