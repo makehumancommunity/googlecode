@@ -352,9 +352,11 @@ class FaceTaskView(ModifierTaskView):
             ('l-cheek-volume', 'deflate', 'inflate', {'cam' : 'frontView'}),                      
             ('l-cheek-bones', 'in', 'out', {'cam' : 'frontView'}),
             ('l-cheek-inner', 'deflate', 'inflate', {'cam' : 'frontView'}),
+            ('l-cheek-trans-vert', 'down', 'up', {'cam' : 'frontView'}),   
             ('r-cheek-volume', 'deflate', 'inflate', {'cam' : 'frontView'}),
             ('r-cheek-bones', 'in', 'out', {'cam' : 'frontView'}),
-            ('r-cheek-inner', 'deflate', 'inflate', {'cam' : 'frontView'}),            
+            ('r-cheek-inner', 'deflate', 'inflate', {'cam' : 'frontView'}),
+            ('r-cheek-trans-vert', 'down', 'up', {'cam' : 'frontView'}),
             ]),
         ]
 
