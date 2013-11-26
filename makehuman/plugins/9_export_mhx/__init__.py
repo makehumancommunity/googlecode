@@ -52,6 +52,7 @@ class MhxConfig(Config):
         self.scale,self.unit =      exporter.taskview.getScale()
         self.useRelPaths =          True
         self.useHelpers =           True
+        self.useAdvancedMHX =       False
 
         self.feetOnGround =         exporter.feetOnGround.selected
         self.useFaceRig =           False # exporter.useFaceRig.selected
@@ -64,6 +65,7 @@ class MhxConfig(Config):
         else:
             self.rigOptions = exporter.getRigOptions()
             if not self.rigOptions:
+                self.useAdvancedMHX = True
                 self.rigOptions = ArmatureOptions()
                 self.rigOptions.loadPreset("advanced", None, folder="data/mhx")
 

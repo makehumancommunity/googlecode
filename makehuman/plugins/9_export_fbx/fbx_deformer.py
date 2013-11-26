@@ -83,7 +83,7 @@ def writeObjectDefs(fp, rmeshes, amt):
 #   Object properties
 #--------------------------------------------------------------------
 
-def writeObjectProps(fp, rmeshes, amt):
+def writeObjectProps(fp, rmeshes, amt, config):
     if amt:
         writeBindPose(fp, rmeshes, amt)
 
@@ -101,12 +101,12 @@ def writeObjectProps(fp, rmeshes, amt):
         name = getRmeshName(rmesh, amt)
         if rmesh.shapes:
             for sname,shape in rmesh.shapes:
-                writeShapeGeometry(fp, name, sname, shape)
+                writeShapeGeometry(fp, name, sname, shape, config)
                 writeShapeDeformer(fp, name, sname)
                 writeShapeSubDeformer(fp, name, sname, shape)
 
 
-def writeShapeGeometry(fp, name, sname, shape):
+def writeShapeGeometry(fp, name, sname, shape, config):
         id,key = getId("Geometry::%s_%sShape" % (name, sname))
         nVerts = len(shape.verts)
         fp.write(
@@ -123,8 +123,7 @@ def writeShapeGeometry(fp, name, sname, shape):
 '        Vertices: *%d   {\n' % (3*nVerts) +
 '            a: ')
 
-        data = shape.data[np.s_[...]]
-        string = "".join( ["%.4f,%.4f,%.4f," % tuple(dr) for dr in data] )
+        string = "".join( ["%.4f,%.4f,%.4f," % tuple(dr) for dr in shape.data] )
         fp.write(string[:-1])
 
         # Must use normals for shapekeys

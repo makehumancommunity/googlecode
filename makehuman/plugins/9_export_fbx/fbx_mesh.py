@@ -77,7 +77,8 @@ def writeGeometryProp(fp, name, obj, config):
 '        Vertices: *%d {\n' % (3*nVerts) +
 '            a: ')
 
-    string = "".join( ["%.4f,%.4f,%.4f," % (tuple(co-config.offset)) for co in obj.coord] )
+    coord = obj.coord - config.scale*config.offset
+    string = "".join( ["%.4f,%.4f,%.4f," % tuple(co) for co in coord] )
     fp.write(string[:-1])
 
     fp.write('\n' +

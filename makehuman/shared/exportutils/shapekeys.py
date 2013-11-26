@@ -42,7 +42,7 @@ def getShape(filepath, obj, isHuman=False):
             return algos3d.targetbuffer[filepath]
         except KeyError:
             pass
-    return algos3d.Target(filepath, obj)
+    return algos3d.Target(obj, filepath)
 
 #----------------------------------------------------------
 #   Setup expressions

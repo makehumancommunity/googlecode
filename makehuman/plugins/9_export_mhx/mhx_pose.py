@@ -54,19 +54,20 @@ class Writer(mhx_writer.Writer):
     def writePose(self, fp):
         amt = self.armature
         config = self.config
+        targets = exportutils.collect.readTargets(self.human, config)
 
         fp.write("""
     # --------------- Shapekeys ----------------------------- #
     """)
 
-        self.proxyShapes('Cage', 'T_Cage', fp)
-        self.proxyShapes('Proxymeshes', 'T_Proxy', fp)
-        self.proxyShapes('Clothes', 'T_Clothes', fp)
+        self.proxyShapes('Cage', 'T_Cage', fp, [])
+        self.proxyShapes('Proxymeshes', 'T_Proxy', fp, targets)
+        self.proxyShapes('Clothes', 'T_Clothes', fp, [])
         for ptype in mh2proxy.SimpleProxyTypes:
-            self.proxyShapes(ptype, 'T_Clothes', fp)
+            self.proxyShapes(ptype, 'T_Clothes', fp, [])
 
         fp.write("#if toggle&T_Mesh\n")
-        self.writeShapeKeysAndDrivers(fp, "%sBody" % self.name, None)
+        self.writeShapeKeysAndDrivers(fp, "%sBody" % self.name, None, targets)
 
         fp.write("""
     #endif
@@ -97,11 +98,11 @@ class Writer(mhx_writer.Writer):
     #
     #-------------------------------------------------------------------------------
 
-    def proxyShapes(self, typ, test, fp):
+    def proxyShapes(self, typ, test, fp, targets):
         fp.write("#if toggle&%s\n" % test)
         for proxy in self.proxies.values():
             if proxy.name and proxy.type == typ:
-                self.writeShapeKeysAndDrivers(fp, self.name+proxy.name, proxy)
+                self.writeShapeKeysAndDrivers(fp, self.name+proxy.name, proxy, targets)
         fp.write("#endif\n")
 
 
@@ -119,8 +120,7 @@ class Writer(mhx_writer.Writer):
 
     def writeShape(self, fp, sname, lr, trg, min, max, proxy, scale):
         if proxy:
-            ptargets = proxy.getShapes([("shape",trg)], scale)
-            log.debug("PTAR %s", ptargets)
+            ptargets = proxy.getShapes([("shape",trg)], 1.0)
             if len(ptargets) > 0:
                 name,trg = ptargets[0]
                 self.writeShape1(fp, sname, lr, trg, min, max, proxy, scale)
@@ -128,53 +128,45 @@ class Writer(mhx_writer.Writer):
             self.writeShape1(fp, sname, lr, trg, min, max, proxy, scale)
 
 
-    def writeShapeKeysAndDrivers(self, fp, name, proxy):
+    def writeShapeKeysAndDrivers(self, fp, name, proxy, targets):
+        config = self.config
+        ptargets = []
+        if proxy:
+            obj = proxy.getSeedObject()
+            for filepath in proxy.shapekeys:
+                shape = exportutils.shapekeys.getShape(filepath, obj)
+                fname = os.path.splitext(os.path.basename(filepath))[0]
+                ptargets.append((proxy.name+fname, shape))
+
+        if not targets and not ptargets:
+            return
+
         fp.write(
             "#if toggle&T_Shapekeys\n" +
             "ShapeKeys %s\n" % name +
             "  ShapeKey Basis Sym True\n" +
             "  end ShapeKey\n")
 
-        self.writeShapeKeys(fp, name, proxy)
+        for (sname, shape) in targets:
+            self.writeShape(fp, sname, "Sym", shape, 0, 1, proxy, config.scale)
 
-        fp.write("  AnimationData None (toggle&T_Symm==0)\n")
-        self.writeShapeKeyDrivers(fp, name, proxy)
-        fp.write(
-            "  end AnimationData\n\n" +
-            "  end ShapeKeys\n" +
-            "#endif\n")
-
-
-    def writeShapeKeys(self, fp, sname, proxy):
-        amt = self.armature
-        config = self.config
-        scale = config.scale
-
-        isHuman = ((not proxy) or proxy.type == 'Proxymeshes')
-
-        if isHuman and config.expressions:
-            shapeList = exportutils.shapekeys.readExpressionUnits(self.human, 0.7, 0.9, callback)
-            for (sname, shape) in shapeList:
-                self.writeShape(fp, sname, "Sym", shape, 0, 1, proxy, scale)
-
-        if proxy:
-            obj = proxy.getSeedObject()
-            for filepath in proxy.shapekeys:
-                shape = exportutils.shapekeys.getShape(filepath, obj)
-                fname = os.path.splitext(os.path.basename(filepath))[0]
-                self.writeShape(fp, proxy.name+fname, "Sym", shape, 0, 1, proxy, scale)
-
-        if isHuman:
-            for path,name in self.customTargetFiles:
-                log.message("    %s", path)
-                trg = exportutils.custom.readCustomTarget(path)
-                self.writeShape(fp, name, "Sym", trg, 0, 1, proxy, scale)
+        for (sname, shape) in ptargets:
+            self.writeShape(fp, sname, "Sym", shape, 0, 1, None, config.scale)
 
         if config.expressions and not proxy:
             exprList = exportutils.shapekeys.readExpressionMhm(mh.getSysDataPath("expressions"))
             self.writeExpressions(fp, exprList, "Expression")
             visemeList = exportutils.shapekeys.readExpressionMhm(mh.getSysDataPath("visemes"))
             self.writeExpressions(fp, visemeList, "Viseme")
+
+        if config.useAdvancedMHX:
+            fp.write("  AnimationData None (toggle&T_Symm==0)\n")
+            self.writeShapeKeyDrivers(fp, name, proxy)
+            fp.write("  end AnimationData\n\n")
+
+        fp.write(
+            "  end ShapeKeys\n" +
+            "#endif\n")
 
 
     def writeShapeKeyDrivers(self, fp, name, proxy):

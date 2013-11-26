@@ -276,9 +276,19 @@ end AnimationData
         return
 
 
-    def writeProperties(self, fp):
+    def writeProperties(self, fp, env):
         for (key, val) in self.objectProps:
             fp.write("  Property %s %s ;\n" % (key, val))
+
+        if not self.config.useAdvancedMHX:
+            return
+
+        self.writeHideProp(fp, self.name)
+        for proxy in env.proxies.values():
+            self.writeHideProp(fp, proxy.name)
+
+        for path,name in env.customTargetFiles:
+            self.defProp(fp, "FLOAT", "Mhc"+name, 0, name, -1.0, 2.0)
 
         for (key, val, string, min, max) in self.customProps:
             self.defProp(fp, "FLOAT", key, val, string, min, max)
@@ -410,8 +420,8 @@ end AnimationData
                 '  PropKeys %s "type":\'%s\', "min":%d,"max":%d, ;\n' % (key, type, min, max))
         elif type == "FLOAT":
             fp.write(
-                '  Property %s %.2f %s ;\n' % (key, val, string) +
-                '  PropKeys %s "min":%.2f,"max":%.2f, ;\n' % (key, min, max))
+                '  Property %s %.6f %s ;\n' % (key, val, string) +
+                '  PropKeys %s "min":%.6f,"max":%.6f, ;\n' % (key, min, max))
         else:
             halt
 
@@ -455,13 +465,7 @@ end Armature
   Property _RNA_UI {} ;
 """)
 
-        self.writeProperties(fp)
-        self.writeHideProp(fp, self.name)
-        for proxy in env.proxies.values():
-            self.writeHideProp(fp, proxy.name)
-        for path,name in env.customTargetFiles:
-            self.defProp(fp, "FLOAT", "Mhc"+name, 0, name, -1.0, 2.0)
-            #fp.write("  DefProp Float %s 0 %s  min=-1.0,max=2.0 ;\n" % (name, name[3:]))
+        self.writeProperties(fp, env)
 
         fp.write("""
 end Object

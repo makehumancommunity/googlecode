@@ -47,7 +47,7 @@ def readTargets(human, config):
         log.message("Custom shapes:")
         for filepath,name in files:
             log.message("    %s", filepath)
-            trg = getShape(filepath, human)
+            trg = getShape(filepath, human.getSeedMesh())
             targets.append((name,trg))
 
     return targets

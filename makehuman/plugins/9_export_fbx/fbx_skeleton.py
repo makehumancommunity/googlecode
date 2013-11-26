@@ -179,7 +179,7 @@ def writeNodeProp(fp, amt, config):
             P: "InheritType", "enum", "", "",1
             P: "ScalingMax", "Vector3D", "Vector", "",0,0,0
 """ +
-'            P: "Lcl Translation", "Lcl Translation", "", "A",%.4f,%.4f,%.4f\n' % tuple(-config.offset) +
+'            P: "Lcl Translation", "Lcl Translation", "", "A",%.4f,%.4f,%.4f\n' % tuple(-config.scale*config.offset) +
 '            P: "MHName", "KString", "", "", "%s"' % amt.name +
 """
         }
