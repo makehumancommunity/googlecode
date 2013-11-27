@@ -122,6 +122,18 @@ def loadObjFile(path, obj = None):
 
     objFile.close()
 
+    # Sanity check for loose vertices
+    strayVerts = []
+    referencedVerts = set([ v for fvert in fverts for v in fvert ])
+    for vIdx in xrange(len(verts)):
+        if vIdx not in referencedVerts:
+            strayVerts.append(vIdx)
+    if len(strayVerts) > 0:
+        import log
+        msg = "Error loading OBJ file %s: Contains loose vertices, not connected to a face (%s)"
+        log.error(msg, path, strayVerts)
+        raise RuntimeError(msg % (path, strayVerts))
+
     obj.setCoords(verts)
     obj.setUVs(uvs)
     obj.setFaces(fverts, fuvs if has_uv else None, groups, fmtls)
