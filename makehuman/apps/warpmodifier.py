@@ -343,13 +343,7 @@ def compileWarpTarget(groupName, targetName, human, bodypart, referenceVariables
     mod = WarpModifier(groupName, targetName, bodypart, referenceVariables)
     mod.setHuman(human)
     trg = mod.compileWarpTarget()
-
-    # Remove duplicate verts. Should not be necessary.
-    from richmesh import FakeTarget
-    struct = {}
-    for n,vn in enumerate(trg.verts):
-        struct[vn] = trg.data[n]
-    return FakeTarget(trg.name, struct.keys(), struct.values())
+    return trg
 
 #----------------------------------------------------------
 #   Add verts
