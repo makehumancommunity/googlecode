@@ -1551,6 +1551,34 @@ def deleteHelpers(context):
     return
 
 #
+#
+#
+
+def copyVertexGroups(context):
+    scn = context.scene
+    src = context.object
+    objects = []
+    for ob in scn.objects:
+        if (ob.select and ob.type == 'MESH' and ob != src):
+            objects.append(ob)
+            if len(ob.data.vertices) != len(src.data.vertices):
+                raise MHError("Selected objects %s and %s \ndon't have the same number of vertices:\n %d vs %d" %
+                    (ob.name, src.name, len(ob.data.vertices), len(src.data.vertices)))
+
+    for trg in objects:
+        scn.objects.active = trg
+        removeVertexGroups(context, 'All')
+        for sgrp in src.vertex_groups:
+            tgrp = trg.vertex_groups.new(sgrp.name)
+            for v in src.data.vertices:
+                for g in v.groups:
+                    if g.group == sgrp.index:
+                        tgrp.add([v.index], g.weight, 'REPLACE')
+
+    scn.objects.active = src
+
+
+#
 #    removeVertexGroups(context, removeType):
 #
 
