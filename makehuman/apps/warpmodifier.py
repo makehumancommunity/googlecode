@@ -187,7 +187,7 @@ class WarpModifier (humanmodifier.UniversalModifier):
             warpData = np.asarray([])
 
         # Maintain vertices with non-zero offset in warp target
-        verts = np.argwhere(warpData)[...,0]
+        verts = np.unique(np.argwhere(warpData, )[...,0])
         data = warpData[verts]
 
         target = WarpTarget(self.targetName, verts, data, self, self.human)
