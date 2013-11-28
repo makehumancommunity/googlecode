@@ -38,7 +38,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from the 
 bl_info = {
     'name': 'Import: MakeHuman Exchange (.mhx)',
     'author': 'Thomas Larsson',
-    'version': "1.16.14",
+    'version': "1.16.15",
     "blender": (2, 69, 0),
     'location': "File > Import > MakeHuman (.mhx)",
     'description': 'Import files in the MakeHuman eXchange format (.mhx)',
@@ -2788,7 +2788,10 @@ def fixConstraint(cns1, cns2, gen, bones):
             expr = ("cns2.%s = cns1.%s" % (key, key))
             setattr(cns2, key, getattr(cns1, key))
 
-    cns2.target = gen
+    try:
+        cns2.target = gen
+    except AttributeError:
+        pass
 
     if cns1.type == 'STRETCH_TO':
         bone = bones[cns1.subtarget]
