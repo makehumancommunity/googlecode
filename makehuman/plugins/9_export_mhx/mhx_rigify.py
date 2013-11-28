@@ -27,7 +27,8 @@ Only works with MHX export.
 from armature.parser import Parser
 from armature.options import ArmatureOptions, Locale
 from .mhx_armature import ExportArmature
-from armature import rig_bones
+from armature import rig_bones, utils
+from . import rig_rigify
 
 
 class RigifyArmature(ExportArmature):
@@ -102,3 +103,11 @@ class RigifyParser(Parser):
             "f_pinky.01" :  (2, "f_pinky.02", True),
         }
 
+
+        self.joints += rig_rigify.Joints
+        utils.addDict(rig_rigify.HeadsTails, self.headsTails)
+
+
+    def createBones(self, boneInfo):
+        self.addBones(rig_rigify.Armature, boneInfo)
+        Parser.createBones(self, boneInfo)
