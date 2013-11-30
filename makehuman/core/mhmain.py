@@ -496,6 +496,7 @@ class MHApplication(gui3d.Application, mh.Application):
         self.groundplaneGrid = gui3d.Object(groundGridMesh)
         #self.groundplaneGrid.setPosition([0,offset,0])
         groundGridMesh.placeAtFeet = True
+        groundGridMesh.restrictVisibleAboveGround = True
         self.addObject(self.groundplaneGrid)
 
     def loadMacroTargets(self):

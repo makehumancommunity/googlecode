@@ -339,6 +339,7 @@ class GridMesh(module3d.Object3D):
         self.setShadeless(1)
 
         self.restrictVisibleToCamera = False    # Set to True to only show the grid when the camera is set to a defined parallel view (front, left, top, ...)
+        self.restrictVisibleAboveGround = False # Set to true to make the grid invisible when camera inclination is below 0
         self.minSubgridZoom = 1.0   # Minimum zoom factor of the camera in which the subgrid will be shown
         self.placeAtFeet = False
 
@@ -396,6 +397,10 @@ class GridMesh(module3d.Object3D):
                     mask[self.mainGridEnd/2:] = False
                 self.changeFaceMask(mask)
                 self.updateIndexBufferFaces()
+
+        if self.restrictVisibleAboveGround:
+            if camera.getVerticalInclination() > 180 or camera.getVerticalInclination() < 0:
+                return False
 
         if self.restrictVisibleToCamera:
             #return camera.isInParallelView()
