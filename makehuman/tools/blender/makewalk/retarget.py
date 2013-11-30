@@ -68,7 +68,7 @@ class CAnimation:
             except KeyError:
                 print("  -", trgName, srcName)
                 continue
-            banim = self.boneAnims[trgName] = CBoneAnim(srcBone, trgBone, self)
+            banim = self.boneAnims[trgName] = CBoneAnim(srcBone, trgBone, self, scn)
 
 
     def printResult(self, scn, frame):
@@ -107,7 +107,7 @@ class CAnimation:
 
 class CBoneAnim:
 
-    def __init__(self, srcBone, trgBone, anim):
+    def __init__(self, srcBone, trgBone, anim, scn):
         self.name = srcBone.name
         self.srcMatrices = {}
         self.trgMatrices = {}
@@ -115,7 +115,7 @@ class CBoneAnim:
         self.trgMatrix = None
         self.srcBone = srcBone
         self.trgBone = trgBone
-        self.order,self.locks = getLocks(trgBone)
+        self.order,self.locks = getLocks(trgBone, scn)
         self.aMatrix = None
         self.parent = self.getParent(trgBone, anim)
         if self.parent:
@@ -229,9 +229,12 @@ class CBoneAnim:
             print("MB2", self.trgBone.matrix)
 
 
-def getLocks(pb):
+def getLocks(pb, scn):
     locks = []
     order = 'XYZ'
+    if scn.McpClearLocks:
+        pb.lock_rotation[0] = pb.lock_rotation[2] = False
+
     if pb.lock_rotation[1]:
         locks.append(1)
         order = 'YZX'

@@ -37,8 +37,8 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.933",
-    "blender": (2, 6, 8),
+    "version": "0.934",
+    "blender": (2, 6, 9),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
     "warning": "",
@@ -167,6 +167,7 @@ class OptionsPanel(bpy.types.Panel):
         layout.prop(scn, "McpAutoScale")
         layout.prop(scn, "McpBvhScale")
         layout.prop(scn, "McpUseLimits")
+        layout.prop(scn, "McpClearLocks")
         layout.prop(scn, "McpMakeHumanTPose")
         layout.prop(scn, 'McpAutoSourceRig')
         layout.prop(scn, 'McpAutoTargetRig')

@@ -103,6 +103,11 @@ def initInterface(context):
         description="Rotate 90 degress so Z points up",
         default=True)
 
+    bpy.types.Scene.McpClearLocks = BoolProperty(
+        name="Unlock Rotation",
+        description="Clear X and Z rotation locks",
+        default=True)
+
     bpy.types.Scene.McpFlipYAxis = BoolProperty(
         name="Flix Y Axis",
         description="Rotate 180 degress so Y points down (for Ni-Mate)",

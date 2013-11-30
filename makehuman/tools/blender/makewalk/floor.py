@@ -126,7 +126,7 @@ def toeBelowBall(scn, frames, rig, plane, suffix):
 
     foot,toe,mBall,mToe,mHeel = getFkFeetBones(rig, suffix)
     ez,origin,rot = getPlaneInfo(plane)
-    order,lock = getLocks(toe)
+    order,lock = getLocks(toe, scn)
     factor = 1.0/toe.length
     nFrames = len(frames)
     if mBall:

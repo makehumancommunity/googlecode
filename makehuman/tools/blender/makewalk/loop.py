@@ -260,7 +260,7 @@ def stitchActions(context):
     locks = {}
     for bname in bmats2.keys():
         pb = rig.pose.bones[bname]
-        orders[bname],locks[bname] = getLocks(pb)
+        orders[bname],locks[bname] = getLocks(pb, scn)
 
     nFrames = len(frames)
     for n,frame in enumerate(frames):
@@ -425,7 +425,7 @@ def shiftBoneFCurves(rig, scn):
         pb = rig.pose.bones[bname]
         bmat = bmats[0]
         deltaMat[pb.name] = pb.matrix_basis * bmat.inverted()
-        orders[pb.name], locks[pb.name] = getLocks(pb)
+        orders[pb.name], locks[pb.name] = getLocks(pb, scn)
 
     for n,frame in enumerate(frames[1:]):
         scn.frame_set(frame)
