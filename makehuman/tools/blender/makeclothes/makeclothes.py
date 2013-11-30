@@ -171,12 +171,12 @@ theShapeKeys = [
     ]
 
 #
-#    findClothes(context, bob, pob, log):
+#    findClothes(context, hum, clo, log):
 #
 
-def findClothes(context, bob, pob, log):
-    base = bob.data
-    proxy = pob.data
+def findClothes(context, hum, clo, log):
+    base = hum.data
+    proxy = clo.data
     scn = context.scene
 
     bestVerts = []
@@ -186,12 +186,12 @@ def findClothes(context, bob, pob, log):
         except:
             pindex = -1
         if pindex < 0:
-            selectVerts([pv], pob)
-            raise MHError("Clothes %s vert %d not member of any group" % (pob.name, pv.index))
+            selectVerts([pv], clo)
+            raise MHError("Clothes %s vert %d not member of any group" % (clo.name, pv.index))
 
-        gname = pob.vertex_groups[pindex].name
+        gname = clo.vertex_groups[pindex].name
         bindex = None
-        for bvg in bob.vertex_groups:
+        for bvg in hum.vertex_groups:
             if bvg.name == gname:
                 bindex = bvg.index
         if bindex == None:
@@ -234,7 +234,7 @@ def findClothes(context, bob, pob, log):
             "Clothes index %d, Human index %d\n" % (pindex, bindex) +
             "Vertex coordinates (%.4f %.4f %.4f)\n" % (pv.co[0], pv.co[1], pv.co[2])
             )
-            selectVerts([pv], pob)
+            selectVerts([pv], clo)
             raise MHError(msg)
         if mindist > 5:
             msg = (
@@ -242,7 +242,7 @@ def findClothes(context, bob, pob, log):
             "Max allowed value is 5dm. Check human and clothes scales.\n" +
             "Vertex coordinates (%.4f %.4f %.4f)\n" % (pv.co[0], pv.co[1], pv.co[2])
             )
-            selectVerts([pv], pob)
+            selectVerts([pv], clo)
             raise MHError(msg)
 
         if gname[0:3] != "Mid" and gname[-2:] != "_M":
@@ -285,9 +285,9 @@ def findClothes(context, bob, pob, log):
                     v1 = base.vertices[f[1]]
                     v2 = base.vertices[f[2]]
                     if (bindex >= 0) and (pv.co[0] < 0.01) and (pv.co[0] > -0.01):
-                        wts = midWeights(pv, bindex, v0, v1, v2, bob, pob)
+                        wts = midWeights(pv, bindex, v0, v1, v2, hum, clo)
                     else:
-                        wts = cornerWeights(pv, v0, v1, v2, bob, pob)
+                        wts = cornerWeights(pv, v0, v1, v2, hum, clo)
                     fcs.append((f, wts))
 
     print("Finding best weights")
@@ -315,10 +315,10 @@ def findClothes(context, bob, pob, log):
             pv.select = True
             """
             if scn['MCForbidFailures']:
-                selectVerts([pv], pob)
+                selectVerts([pv], clo)
                 print("Tried", mverts)
                 msg = (
-                "Did not find optimal triangle for %s vert %d.\n" % (pob.name, pv.index) +
+                "Did not find optimal triangle for %s vert %d.\n" % (clo.name, pv.index) +
                 "Avoid the message by unchecking Forbid failures.")
                 raise MHError(msg)
             """
@@ -349,7 +349,7 @@ def minWeight(wts):
     return best
 
 #
-#    cornerWeights(pv, v0, v1, v2, bob, pob):
+#    cornerWeights(pv, v0, v1, v2, hum, clo):
 #
 #    px = w0*x0 + w1*x1 + w2*x2
 #    py = w0*y0 + w1*y1 + w2*y2
@@ -369,7 +369,7 @@ def minWeight(wts):
 #    det*w1 = -a10*b0 + a00*b1
 #
 
-def cornerWeights(pv, v0, v1, v2, bob, pob):
+def cornerWeights(pv, v0, v1, v2, hum, clo):
     r0 = v0.co
     r1 = v1.co
     r2 = v2.co
@@ -413,8 +413,8 @@ def cornerWeights(pv, v0, v1, v2, bob, pob):
         print("r1 ( %.6f  %.6f  %.6f )" % (r1[0], r1[1], r1[2]))
         print("r2 ( %.6f  %.6f  %.6f )" % (r2[0], r2[1], r2[2]))
         print("A [ %.6f %.6f ]\n  [ %.6f %.6f ]" % (a00,a01,a10,a11))
-        selectVerts([pv], pob)
-        selectVerts([v0, v1, v2], bob)
+        selectVerts([pv], clo)
+        selectVerts([v0, v1, v2], hum)
         raise MHError("Singular matrix in cornerWeights")
 
     w0 = (a11*b0 - a01*b1)/det
@@ -423,10 +423,10 @@ def cornerWeights(pv, v0, v1, v2, bob, pob):
     return (w0, w1, 1-w0-w1)
 
 #
-#   midWeights(pv, bindex, v0, v1, v2, bob, pob):
+#   midWeights(pv, bindex, v0, v1, v2, hum, clo):
 #
 
-def midWeights(pv, bindex, v0, v1, v2, bob, pob):
+def midWeights(pv, bindex, v0, v1, v2, hum, clo):
     #print("Mid", pv.index, bindex)
     pv.select = True
     if isInGroup(v0, bindex):
@@ -444,7 +444,7 @@ def midWeights(pv, bindex, v0, v1, v2, bob, pob):
         v2.select = True
         return (w0, w1, w2)
     #print("  Failed mid")
-    return cornerWeights(pv, v0, v1, v2, bob, pob)
+    return cornerWeights(pv, v0, v1, v2, hum, clo)
 
 def isInGroup(v, bindex):
     for g in v.groups:
@@ -461,7 +461,7 @@ def midWeight(pv, r0, r1):
     return (1-w, w, 0)
 
 #
-#    writeClothes(context, bob, pob, data):
+#    writeClothes(context, hum, clo, data):
 #
 
 def writeClothesHeader(fp, scn):
@@ -486,26 +486,26 @@ def writeClothesHeader(fp, scn):
     fp.write("\n")
 
 
-def writeClothes(context, bob, pob, data, matfile):
+def writeClothes(context, hum, clo, data, matfile):
     scn = context.scene
     firstVert = 0
-    (outpath, outfile) = mc.getFileName(pob, scn.MhClothesDir, "mhclo")
+    (outpath, outfile) = mc.getFileName(clo, scn.MhClothesDir, "mhclo")
     fp = mc.openOutputFile(outfile)
     writeClothesHeader(fp, scn)
-    fp.write("name %s\n" % pob.name.replace(" ","_"))
-    fp.write("obj_file %s.obj\n" % mc.goodName(pob.name))
+    fp.write("name %s\n" % clo.name.replace(" ","_"))
+    fp.write("obj_file %s.obj\n" % mc.goodName(clo.name))
     vnums = theSettings.bodyPartVerts[scn.MCBodyPart]
     if scn.MCScaleUniform:
-        printScale(fp, bob, scn, 'x_scale', 0, vnums[0])
-        printScale(fp, bob, scn, 'z_scale', 0, vnums[0])
-        printScale(fp, bob, scn, 'y_scale', 0, vnums[0])
+        printScale(fp, hum, scn, 'x_scale', 0, vnums[0])
+        printScale(fp, hum, scn, 'z_scale', 0, vnums[0])
+        printScale(fp, hum, scn, 'y_scale', 0, vnums[0])
     else:
-        printScale(fp, bob, scn, 'x_scale', 0, vnums[0])
-        printScale(fp, bob, scn, 'z_scale', 1, vnums[1])
-        printScale(fp, bob, scn, 'y_scale', 2, vnums[2])
+        printScale(fp, hum, scn, 'x_scale', 0, vnums[0])
+        printScale(fp, hum, scn, 'z_scale', 1, vnums[1])
+        printScale(fp, hum, scn, 'y_scale', 2, vnums[2])
 
-    writeStuff(fp, pob, context, matfile)
-    printFaceNumbers(fp, pob)
+    writeStuff(fp, clo, context, matfile)
+    printFaceNumbers(fp, clo)
 
     fp.write("verts %d\n" % (firstVert))
 
@@ -521,8 +521,8 @@ def writeClothes(context, bob, pob, data, matfile):
             fp.write("%5d %5d %5d %.5f %.5f %.5f %.5f %.5f %.5f\n" % (
                 verts[0], verts[1], verts[2], wts[0], wts[1], wts[2], diff[0], diff[2], -diff[1]))
     fp.write('\n')
-    printDeleteVerts(fp, bob)
-    printMhcloUvLayers(fp, pob, scn, True)
+    printDeleteVerts(fp, hum)
+    printMhcloUvLayers(fp, clo, scn, True)
     fp.close()
     print("%s done" % outfile)
     return
@@ -554,8 +554,8 @@ def printFaceNumbers(fp, ob):
     return
 
 
-def printMhcloUvLayers(fp, pob, scn, hasObj, offset=0):
-    me = pob.data
+def printMhcloUvLayers(fp, clo, scn, hasObj, offset=0):
+    me = clo.data
     if me.uv_textures:
         for layer,uvtex in enumerate(me.uv_textures):
             if hasObj and (layer == scn.MCTextureLayer):
@@ -566,7 +566,7 @@ def printMhcloUvLayers(fp, pob, scn, hasObj, offset=0):
                 printLayer = 1
                 if layer != scn.MCMaskLayer:
                     continue
-            (vertEdges, vertFaces, edgeFaces, faceEdges, faceNeighbors, uvFaceVertsList, texVertsList) = setupTexVerts(pob)
+            (vertEdges, vertFaces, edgeFaces, faceEdges, faceNeighbors, uvFaceVertsList, texVertsList) = setupTexVerts(clo)
             texVerts = texVertsList[layer]
             uvFaceVerts = uvFaceVertsList[layer]
             nTexVerts = len(texVerts)
@@ -588,12 +588,12 @@ def printMhcloUvLayers(fp, pob, scn, hasObj, offset=0):
 
 
 def reexportMhclo(context):
-    pob = getClothing(context)
+    clo = getClothing(context)
     scn = context.scene
-    scn.objects.active = pob
+    scn.objects.active = clo
     bpy.ops.object.mode_set(mode='OBJECT')
-    (outpath, outfile) = mc.getFileName(pob, scn.MhClothesDir, "mhclo")
-    matfile = materials.writeMaterial(pob, scn.MhClothesDir)
+    (outpath, outfile) = mc.getFileName(clo, scn.MhClothesDir, "mhclo")
+    matfile = materials.writeMaterial(clo, scn.MhClothesDir)
 
     lines = []
     print("Reading clothes file %s" % outfile)
@@ -612,7 +612,7 @@ def reexportMhclo(context):
             if words[1] in ["texVerts", "texFaces"]:
                 break
             elif words[1] == "z_depth":
-                writeStuff(fp, pob, context, matfile)
+                writeStuff(fp, clo, context, matfile)
                 doingStuff = True
             elif words[1] == "use_projection":
                 doingStuff = False
@@ -622,24 +622,24 @@ def reexportMhclo(context):
                 fp.write(line)
         elif not doingStuff:
             fp.write(line)
-    printMhcloUvLayers(fp, pob, scn, True)
+    printMhcloUvLayers(fp, clo, scn, True)
     fp.close()
     print("%s written" % outfile)
     return
 
 
 def exportDeleteVerts(context):
-    bob = getHuman(context)
+    hum = getHuman(context)
     path = os.path.realpath(os.path.expanduser("~/killverts.txt"))
     fp = mc.openOutputFile(path)
-    printDeleteVerts(fp, bob)
+    printDeleteVerts(fp, hum)
     fp.close()
     print("Delete verts written to %s" % path)
 
 
-def printDeleteVerts(fp, bob):
+def printDeleteVerts(fp, hum):
     kill = None
-    for g in bob.vertex_groups:
+    for g in hum.vertex_groups:
         if g.name == "Delete":
             kill = g
             break
@@ -647,7 +647,7 @@ def printDeleteVerts(fp, bob):
         return
 
     killList = []
-    for v in bob.data.vertices:
+    for v in hum.data.vertices:
         for vg in v.groups:
             if vg.group == kill.index:
                 killList.append(v.index)
@@ -677,15 +677,15 @@ def printDeleteVerts(fp, bob):
     fp.write("\n")
 
 #
-#   writeStuff(fp, pob, context, matfile):
+#   writeStuff(fp, clo, context, matfile):
 #   From z_depth to use_projection
 #
 
-def writeStuff(fp, pob, context, matfile):
+def writeStuff(fp, clo, context, matfile):
     scn = context.scene
     fp.write("z_depth %d\n" % scn.MCZDepth)
 
-    for mod in pob.modifiers:
+    for mod in clo.modifiers:
         if mod.type == 'SHRINKWRAP':
             fp.write("shrinkwrap %.3f\n" % (mod.offset))
         elif mod.type == 'SUBSURF':
@@ -783,10 +783,10 @@ def writeColor(fp, string1, string2, color, intensity):
         "%s %.4g\n" % (string2, intensity))
 
 
-def printScale(fp, bob, scn, name, index, vnums):
+def printScale(fp, hum, scn, name, index, vnums):
     if not scn.MCUseBoundary:
         return
-    verts = bob.data.vertices
+    verts = hum.data.vertices
     n1,n2 = vnums
     if scn.MCScaleUniform:
         if n1 >=0 and n2 >= 0:
@@ -883,15 +883,15 @@ def findTexVert(uv, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob):
 
 
 #
-#   storeData(pob, bob, data):
+#   storeData(clo, hum, data):
 #   restoreData(context):
 #
 
-def storeData(pob, bob, data):
+def storeData(clo, hum, data):
     outfile = settingsFile("stored")
     fp = mc.openOutputFile(outfile)
-    fp.write("%s\n" % pob.name)
-    fp.write("%s\n" % bob.name)
+    fp.write("%s\n" % clo.name)
+    fp.write("%s\n" % hum.name)
     for (pv, exact, verts, wts, diff) in data:
         if exact:
             bv,n = verts[0]
@@ -908,7 +908,7 @@ def parse(string):
     return ast.literal_eval(string)
 
 def restoreData(context):
-    (bob, pob) = getObjectPair(context)
+    (hum, clo) = getObjectPair(context)
     fname = settingsFile("stored")
     fp = mc.openInputFile(fname)
     status = 0
@@ -918,23 +918,23 @@ def restoreData(context):
         words = line.split()
         if status == 0:
             pname = line.rstrip()
-            if pname != pob.name:
+            if pname != clo.name:
                 raise MHError(
-                "Restore error: stored data for %s does not match selected object %s\n" % (pname, pob.name) +
-                "Make clothes for %s first\n" % pob.name)
+                "Restore error: stored data for %s does not match selected object %s\n" % (pname, clo.name) +
+                "Make clothes for %s first\n" % clo.name)
             status = 10
         elif status == 10:
             bname = line.rstrip()
-            if bname != bob.name:
+            if bname != hum.name:
                 raise MHError(
-                "Restore error: stored human %s does not match selected human %s\n" % (bname, bob.name) +
-                "Make clothes for %s first\n" % pob.name)
+                "Restore error: stored human %s does not match selected human %s\n" % (bname, hum.name) +
+                "Make clothes for %s first\n" % clo.name)
             status = 1
         elif status == 1:
-            pv = pob.data.vertices[int(words[0])]
+            pv = clo.data.vertices[int(words[0])]
             exact = int(words[1])
             if exact:
-                bv = bob.data.vertices[int(words[2])]
+                bv = hum.data.vertices[int(words[2])]
                 data.append((pv, exact, ((bv,-1),0,1), 0, 0))
                 status = 1
             else:
@@ -953,8 +953,8 @@ def restoreData(context):
             diff = Vector( parse(line) )
             data.append((pv, exact, verts, wts, diff))
             status = 1
-    bob = context.scene.objects[bname]
-    return (bob, data)
+    hum = context.scene.objects[bname]
+    return (hum, data)
 
 #
 #    makeClothes(context, doFindClothes):
@@ -962,38 +962,48 @@ def restoreData(context):
 
 def makeClothes(context, doFindClothes):
     from .project import saveClosest
-    (bob, pob) = getObjectPair(context)
+    (hum, clo) = getObjectPair(context)
     scn = context.scene
-    checkNoTriangles(pob)
-    checkObjectOK(bob, context, False)
-    autoVertexGroupsIfNecessary(bob, scn)
-    checkAndVertexDiamonds(context, bob)
-    checkObjectOK(pob, context, True)
-    autoVertexGroupsIfNecessary(pob, scn)
-    checkSingleVertexGroups(pob, scn)
+    checkNoTriangles(clo)
+    checkObjectOK(hum, context, False)
+    autoVertexGroupsIfNecessary(hum, scn)
+    checkAndVertexDiamonds(context, hum)
+    checkObjectOK(clo, context, True)
+    autoVertexGroupsIfNecessary(clo, scn)
+    checkSingleVertexGroups(clo, scn)
     saveClosest({})
     if scn.MCLogging:
         logfile = '%s/clothes.log' % scn.MhClothesDir
         log = mc.openOutputFile(logfile)
     else:
         log = None
-    matfile = materials.writeMaterial(pob, scn.MhClothesDir)
+    matfile = materials.writeMaterial(clo, scn.MhClothesDir)
     if doFindClothes:
-        data = findClothes(context, bob, pob, log)
-        storeData(pob, bob, data)
+        data = findClothes(context, hum, clo, log)
+        storeData(clo, hum, data)
     else:
-        (bob, data) = restoreData(context)
-    writeClothes(context, bob, pob, data, matfile)
+        (hum, data) = restoreData(context)
+    writeClothes(context, hum, clo, data, matfile)
     if log:
         log.close()
     return
 
 
 def checkNoTriangles(ob):
+    strayVerts = {}
+    for vn in range(len(ob.data.vertices)):
+        strayVerts[vn] = True
+
     for f in ob.data.polygons:
         if len(f.vertices) != 4:
             msg = "Object %s can not be used for clothes creation because it has non-quad faces.\n" % (ob.name)
-            print(msg)
+            raise MHError(msg)
+        for vn in f.vertices:
+            strayVerts[vn] = False
+
+    stray = [vn for vn in strayVerts.keys() if strayVerts[vn]]
+    if len(stray) > 0:
+            msg = "Object %s can not be used for clothes creation because it has stray verts:\n  %s" % (ob.name, stray)
             raise MHError(msg)
 
 
@@ -1047,7 +1057,6 @@ def checkObjectOK(ob, context, isClothing):
         msg = "Object %s can not be used for clothes creation because it has %s.\n" % (ob.name, word)
         if err:
             msg +=  line2
-            print(msg)
             raise MHError(msg)
         else:
             print(msg)
@@ -1056,11 +1065,11 @@ def checkObjectOK(ob, context, isClothing):
     return
 
 #
-#   checkSingleVertexGroups(pob, scn):
+#   checkSingleVertexGroups(clo, scn):
 #
 
-def checkSingleVertexGroups(pob, scn):
-    for v in pob.data.vertices:
+def checkSingleVertexGroups(clo, scn):
+    for v in clo.data.vertices:
         n = 0
         for g in v.groups:
             #print("Key", g.group, g.weight)
@@ -1068,10 +1077,10 @@ def checkSingleVertexGroups(pob, scn):
         if n != 1:
             v.select = True
             for g in v.groups:
-                for vg in pob.vertex_groups:
+                for vg in clo.vertex_groups:
                     if vg.index == g.group:
                         print("  ", vg.name)
-            raise MHError("Vertex %d in %s belongs to %d groups. Must be exactly one" % (v.index, pob.name, n))
+            raise MHError("Vertex %d in %s belongs to %d groups. Must be exactly one" % (v.index, clo.name, n))
     return
 
 #
@@ -1079,14 +1088,14 @@ def checkSingleVertexGroups(pob, scn):
 #
 
 def offsetCloth(context):
-    (bob, pob) = getObjectPair(context)
-    bverts = bob.data.vertices
-    pverts = pob.data.vertices
-    print("Offset %s to %s" % (bob.name, pob.name))
+    (hum, clo) = getObjectPair(context)
+    bverts = hum.data.vertices
+    pverts = clo.data.vertices
+    print("Offset %s to %s" % (hum.name, clo.name))
 
-    inpath = '%s/%s.mhclo' % (context.scene.MhClothesDir, mc.goodName(bob.name))
+    inpath = '%s/%s.mhclo' % (context.scene.MhClothesDir, mc.goodName(hum.name))
     infile = os.path.realpath(os.path.expanduser(inpath))
-    outpath = '%s/%s.mhclo' % (context.scene.MhClothesDir, mc.goodName(pob.name))
+    outpath = '%s/%s.mhclo' % (context.scene.MhClothesDir, mc.goodName(clo.name))
     outfile = os.path.realpath(os.path.expanduser(outpath))
     print("Modifying clothes file %s => %s" % (infile, outfile))
     infp = mc.openInputFile(infile)
@@ -1110,15 +1119,15 @@ def offsetCloth(context):
             elif words[1] == "obj_data":
                 if context.scene.MCVertexGroups:
                     infp.close()
-                    writeFaces(pob, outfp)
-                    writeVertexGroups(pob, outfp)
+                    writeFaces(clo, outfp)
+                    writeVertexGroups(clo, outfp)
                     outfp.close()
                     print("Clothes file modified %s => %s" % (infile, outfile))
                     return
                 outfp.write(line)
                 status = 0
             elif words[1] == "name":
-                outfp.write("name %s\n" % pob.name.replace(" ","_"))
+                outfp.write("name %s\n" % clo.name.replace(" ","_"))
             else:
                 outfp.write(line)
             vn = 0
@@ -1145,19 +1154,19 @@ def offsetCloth(context):
     print("Clothes file modified %s => %s" % (infile, outfile))
     return
 
-def writeFaces(pob, fp):
+def writeFaces(clo, fp):
     fp.write("faces\n")
-    meFaces = getFaces(pob.data)
+    meFaces = getFaces(clo.data)
     for f in meFaces:
         for v in f.vertices:
             fp.write(" %d" % (v+1))
         fp.write("\n")
     return
 
-def writeVertexGroups(pob, fp):
-    for vg in pob.vertex_groups:
+def writeVertexGroups(clo, fp):
+    for vg in clo.vertex_groups:
         fp.write("weights %s\n" % vg.name)
-        for v in pob.data.vertices:
+        for v in clo.data.vertices:
             for g in v.groups:
                 if g.group == vg.index and g.weight > 1e-4:
                     fp.write(" %d %.4g \n" % (v.index, g.weight))
