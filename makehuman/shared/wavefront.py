@@ -167,19 +167,19 @@ def writeObjFile(path, objects, writeMTL = True, config = None):
     else:
         offs = np.array((0,0,0))
     for obj in objects:
-        fp.write("".join( ["v %.4g %.4g %.4g\n" % tuple(co-offs) for co in obj.coord] ))
+        fp.write("".join( ["v %.4f %.4f %.4f\n" % tuple(co-offs) for co in obj.coord] ))
 
     # Vertex normals
     if config == None or config.useNormals:
         for obj in objects:
             obj.calcFaceNormals()
             #obj.calcVertexNormals()
-            fp.write("".join( ["vn %.4g %.4g %.4g\n" % tuple(no/math.sqrt(no.dot(no))) for no in obj.fnorm] ))
+            fp.write("".join( ["vn %.4f %.4f %.4f\n" % tuple(no/math.sqrt(no.dot(no))) for no in obj.fnorm] ))
 
     # UV vertices
     for obj in objects:
         if obj.has_uv:
-            fp.write("".join( ["vt %.4g %.4g\n" % tuple(uv) for uv in obj.texco] ))
+            fp.write("".join( ["vt %.4f %.4f\n" % tuple(uv) for uv in obj.texco] ))
 
     # Faces
     nVerts = 1
