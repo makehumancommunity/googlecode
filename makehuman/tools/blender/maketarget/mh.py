@@ -92,6 +92,3 @@ class CSettings:
 #----------------------------------------------------------
 
 proxy = None
-confirm = None
-confirmString = ""
-confirmString2 = ""

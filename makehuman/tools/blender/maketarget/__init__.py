@@ -24,7 +24,7 @@ Abstract
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.28",
+    "version": "1.29",
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -125,8 +125,6 @@ class MakeTargetPanel(bpy.types.Panel):
         else:
             rig = None
         scn = context.scene
-        if not utils.drawConfirm(layout, scn):
-            return
 
         if Thomas:
             layout.label("Pruning")
@@ -310,9 +308,6 @@ def menu_func(self, context):
 
 
 def register():
-    mh.confirm = None
-    mh.confirmString = "?"
-
     maketarget.init()
     try:
         maketarget.initBatch(bpy.context.scene)

@@ -45,7 +45,7 @@ from bpy_extras.io_utils import ExportHelper, ImportHelper
 from . import mh
 from .error import MHError, handleMHError
 from . import utils
-from .utils import round, setObjectMode
+from .utils import round, setObjectMode, invokeWithFileCheck, drawFileCheck
 from . import import_obj
 from .proxy import CProxy
 from .symmetry_map import *
@@ -666,6 +666,8 @@ class VIEW3D_OT_SaveTargetButton(bpy.types.Operator):
     bl_description = "Save target(s), overwriting existing file. If Active Only is selected, only save the last target, otherwise save the sum of all targets"
     bl_options = {'UNDO'}
 
+    filepath = StringProperty(default="")
+
     @classmethod
     def poll(self, context):
         return context.object
@@ -673,19 +675,17 @@ class VIEW3D_OT_SaveTargetButton(bpy.types.Operator):
     def execute(self, context):
         setObjectMode(context)
         try:
-            ob = context.object
-            path = ob["FilePath"]
-            if mh.confirm:
-                mh.confirm = None
-                doSaveTarget(context, path)
-                print("Target saved")
-            else:
-                mh.confirm = "mh.save_target"
-                mh.confirmString = "Overwrite target file?"
-                mh.confirmString2 = ' "%s?"' % os.path.basename(path)
+            doSaveTarget(context, self.filepath)
+            print("Target saved")
         except MHError:
             handleMHError(context)
         return{'FINISHED'}
+
+    def invoke(self, context, event):
+        return invokeWithFileCheck(self, context, context.object["FilePath"])
+
+    def draw(self, context):
+        drawFileCheck(self)
 
 
 class VIEW3D_OT_SaveasTargetButton(bpy.types.Operator, ExportHelper):
@@ -854,12 +854,6 @@ class VIEW3D_OT_BatchFitButton(bpy.types.Operator):
         global TargetSubPaths
         setObjectMode(context)
         scn = context.scene
-        if not mh.confirm:
-            mh.confirmString = "Really batch fit targets?"
-            mh.confirmString2 = None
-            mh.confirm = "mh.batch_fit"
-            return {'FINISHED'}
-        mh.confirm = None
         folder = os.path.realpath(os.path.expanduser(scn.MhTargetPath))
         batchFitTargets(context, folder)
         #for subfolder in TargetSubPaths:
@@ -867,6 +861,13 @@ class VIEW3D_OT_BatchFitButton(bpy.types.Operator):
         #        batchFitTargets(context, os.path.join(folder, subfolder))
         print("All targets fited")
         return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=200, height=20)
+
+    def draw(self, context):
+        self.layout.label("Really batch fit targets?")
 
 #----------------------------------------------------------
 #   batch render
@@ -1318,6 +1319,7 @@ def fixInconsistency(context):
         ob.shape_key_add(name="Basis")
         ob["NTargets"] = 0
 
+
 class VIEW3D_OT_FixInconsistencyButton(bpy.types.Operator):
     bl_idname = "mh.fix_inconsistency"
     bl_label = "Fix It!"
@@ -1330,15 +1332,6 @@ class VIEW3D_OT_FixInconsistencyButton(bpy.types.Operator):
             fixInconsistency(context)
         except MHError:
             handleMHError(context)
-        return{'FINISHED'}
-
-class VIEW3D_OT_SkipButton(bpy.types.Operator):
-    bl_idname = "mh.skip"
-    bl_label = "No"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        utils.skipConfirm()
         return{'FINISHED'}
 
 #----------------------------------------------------------

@@ -57,28 +57,23 @@ def setObjectMode(context):
         bpy.ops.object.mode_set(mode='OBJECT')
 
 #----------------------------------------------------------
-#   Common panel parts
+#   Check overwrite
 #----------------------------------------------------------
 
-def drawConfirm(layout, scn):
-    #if not maketarget.isInited(scn):
-    #    layout.operator("mh.init")
-    #    return False
-    if mh.confirm:
-        layout.label(mh.confirmString)
-        if mh.confirmString2:
-           layout.label(mh.confirmString2)
-        layout.operator(mh.confirm, text="Yes")
-        layout.operator("mh.skip")
-        return False
-    return True
+def invokeWithFileCheck(self, context, filepath):
+    self.filepath = filepath
+    if not os.path.exists(filepath):
+        return self.execute(context)
+    else:
+        width = 60 + 7*len(filepath)
+        height = 20
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=width, height=height)
 
 
-def skipConfirm():
-    print("Skipped:", mh.confirmString)
-    mh.confirm = None
-    mh.confirmString = "?"
-    mh.confirmString2 = None
+def drawFileCheck(self):
+    self.layout.label("File \"%s\"" % self.filepath)
+    self.layout.label("already exists. Press OK to overwrite.")
 
 
 #----------------------------------------------------------

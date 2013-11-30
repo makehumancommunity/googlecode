@@ -137,27 +137,8 @@ class CProxy:
             if len(words) == 0:
                 pass
             elif words[0] == '#':
-                status = 0
-                if len(words) == 1:
-                    pass
-                elif words[1] == 'verts':
-                    if len(words) > 2:
-                        self.firstVert = int(words[2])
-                    status = doVerts
-                elif words[1] == 'name':
-                    self.name = words[2]
-                elif words[1] == 'r_scale':
-                    self.xScale = self.yScale = self.zScale = scaleInfo(words)
-                elif words[1] == 'x_scale':
-                    self.xScale = scaleInfo(words)
-                elif words[1] == 'y_scale':
-                    self.yScale = scaleInfo(words)
-                elif words[1] == 'z_scale':
-                    self.zScale = scaleInfo(words)
-                elif words[1] == 'obj_file':
-                    self.obj_file = os.path.join(folder, words[2])
-                else:
-                    pass
+                pass
+
             elif status == doVerts:
                 if len(words) == 1:
                     v = int(words[0])
@@ -174,13 +155,33 @@ class CProxy:
                     d2 = float(words[8])
                     self.refVerts[vn] = CRefVert(vn).fromTriple((v0,v1,v2), (w0,w1,w2), (d0,-d2,d1))
                 vn += 1
-        return
+            else:
+                key = words[0]
+                status = 0
+                if key == 'verts':
+                    if len(words) > 1:
+                        self.firstVert = int(words[1])
+                    status = doVerts
+                elif key == 'name':
+                    self.name = words[1]
+                elif key == 'r_scale':
+                    self.xScale = self.yScale = self.zScale = scaleInfo(words)
+                elif key == 'x_scale':
+                    self.xScale = scaleInfo(words)
+                elif key == 'y_scale':
+                    self.yScale = scaleInfo(words)
+                elif key == 'z_scale':
+                    self.zScale = scaleInfo(words)
+                elif key == 'obj_file':
+                    self.obj_file = os.path.join(folder, words[1])
+                else:
+                    pass
 
 
 def scaleInfo(words):
-    v1 = int(words[2])
-    v2 = int(words[3])
-    den = float(words[4])
+    v1 = int(words[1])
+    v2 = int(words[2])
+    den = float(words[3])
     return (v1, v2, den)
 
 

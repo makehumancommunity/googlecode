@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.926",
+    "version": "0.927",
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -49,11 +49,22 @@ else:
     from bpy.props import *
     import maketarget
     from .error import MHError, handleMHError
-    from maketarget.utils import setObjectMode
+    from maketarget.utils import setObjectMode, drawFileCheck
     from . import mc
     from . import materials
     from . import makeclothes
     from . import project
+
+
+def invokeWithFileCheck(self, context, ftypes):
+    ob = makeclothes.getClothing(context)
+    scn = context.scene
+    for ftype in ftypes:
+        (outpath, outfile) = mc.getFileName(ob, scn.MhClothesDir, ftype)
+        filepath = os.path.join(outpath, outfile)
+        if os.path.exists(filepath):
+            break
+    return maketarget.utils.invokeWithFileCheck(self, context, filepath)
 
 #
 #    class MakeClothesPanel(bpy.types.Panel):
@@ -98,12 +109,20 @@ class MakeClothesPanel(bpy.types.Panel):
         '''
         layout.prop(scn, "MCShowAutoVertexGroups")
         if scn.MCShowAutoVertexGroups:
+            ins = inset(layout)
+            row = ins.row()
+            row.operator("mhclo.set_human", text="Set Human").isHuman = True
+            row.operator("mhclo.set_human", text="Set Clothing").isHuman = False
+            ins.separator()
+
             layout.prop(scn, "MCRemoveGroupType", expand=True)
-            inset(layout).operator("mhclo.remove_vertex_groups")
+            ins = inset(layout)
+            ins.operator("mhclo.remove_vertex_groups")
             layout.separator()
             layout.prop(scn, "MCAutoGroupType", expand=True)
             if scn.MCAutoGroupType == 'Helpers':
                 layout.prop(scn, "MCAutoHelperType", expand=True)
+
             ins = inset(layout)
             ins.operator("mhclo.auto_vertex_groups")
             ins.separator()
@@ -331,35 +350,6 @@ class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
 
     def draw(self, context):
         drawFileCheck(self)
-
-
-#
-#   Check overwrite
-#
-
-def invokeWithFileCheck(self, context, ftypes):
-    ob = makeclothes.getClothing(context)
-    scn = context.scene
-    exists = False
-    for ftype in ftypes:
-        (outpath, outfile) = mc.getFileName(ob, scn.MhClothesDir, ftype)
-        self.filepath = os.path.join(outpath, outfile)
-        if os.path.exists(self.filepath):
-            exists = True
-            break
-
-    if not exists:
-        return self.execute(context)
-    else:
-        width = 60 + 7*len(outpath)
-        height = 20
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self, width=width, height=height)
-
-
-def drawFileCheck(self):
-    self.layout.label("File \"%s\"" % self.filepath)
-    self.layout.label("already exists. Press OK to overwrite.")
 
 
 class OBJECT_OT_PrintClothesButton(bpy.types.Operator):

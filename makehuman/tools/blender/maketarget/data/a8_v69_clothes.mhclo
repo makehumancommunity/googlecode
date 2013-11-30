@@ -1,16 +1,16 @@
 # author Thomas Larsson
 # license AGPL3 (see also http://www.makehuman.org/node/320)
 # homepage http://www.makehuman.org/
-# uuid 26a27336-ba1a-4ec1-a087-4acbf89efa45
-# basemesh alpha8
+uuid 26a27336-ba1a-4ec1-a087-4acbf89efa45
+basemesh alpha8
 
-# name A8_v74_clothes
-# obj_file a8_v74.obj
-# x_scale 13868 14308 16.0466
-# z_scale 10854 10981 2.4356
-# y_scale 881 13137 16.7271
-# objfile_layer 0
-# verts 0
+name A8_v74_clothes
+obj_file a8_v74.obj
+x_scale 13868 14308 16.0466
+z_scale 10854 10981 2.4356
+y_scale 881 13137 16.7271
+objfile_layer 0
+verts 0
     0
     1
     2
