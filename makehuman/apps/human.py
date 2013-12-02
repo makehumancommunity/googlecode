@@ -543,8 +543,12 @@ class Human(guicommon.Object):
         return self.breastSize
 
     def _setBreastSizeVals(self):
-        self.cup2Val = max(0.0, self.breastSize * 2 - 1)
-        self.cup1Val = max(0.0, 1 - self.breastSize * 2)
+        self.maxcupVal = max(0.0, self.breastSize * 2 - 1)
+        self.mincupVal = max(0.0, 1 - self.breastSize * 2)
+        if self.maxcupVal > self.mincupVal:
+            self.averagecupVal = 1 - self.maxcupVal
+        else:
+            self.averagecupVal = 1 - self.mincupVal
 
     def setBreastFirmness(self, firmness, updateModifier = True):
         if updateModifier:
@@ -564,8 +568,8 @@ class Human(guicommon.Object):
         return self.breastFirmness
 
     def _setBreastFirmnessVals(self):
-        self.firmness1Val = self.breastFirmness
-        self.firmness0Val = 1 - self.breastFirmness
+        self.maxfirmnessVal = self.breastFirmness
+        self.minfirmnessVal = 1 - self.breastFirmness
 
     def setCaucasian(self, caucasian, sync=True, updateModifier = True):
         if updateModifier:
