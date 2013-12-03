@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.927",
+    "version": "0.928",
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -109,12 +109,6 @@ class MakeClothesPanel(bpy.types.Panel):
         '''
         layout.prop(scn, "MCShowAutoVertexGroups")
         if scn.MCShowAutoVertexGroups:
-            ins = inset(layout)
-            row = ins.row()
-            row.operator("mhclo.set_human", text="Set Human").isHuman = True
-            row.operator("mhclo.set_human", text="Set Clothing").isHuman = False
-            ins.separator()
-
             layout.prop(scn, "MCRemoveGroupType", expand=True)
             ins = inset(layout)
             ins.operator("mhclo.remove_vertex_groups")
@@ -161,12 +155,18 @@ class MakeClothesPanel(bpy.types.Panel):
         '''
 
         layout.separator()
-        split = layout.split(0.3)
-        split.label("Load")
-        split.prop(scn, "MhBodyType", text="Type")
-        row = layout.row()
+        layout.label("Load Human Mesh")
+        layout.prop(scn, "MhBodyType", text="Type")
+        row = inset(layout).row()
         row.operator("mhclo.load_human", text="Nude Human").helpers = False
         row.operator("mhclo.load_human", text="Human With Helpers").helpers = True
+
+        layout.separator()
+        layout.label("Change Active Mesh Type")
+        row = inset(layout).row()
+        row.operator("mhclo.set_human", text="Human").isHuman = True
+        row.operator("mhclo.set_human", text="Clothing").isHuman = False
+
         layout.separator()
         layout.operator("mhclo.make_clothes")
         layout.separator()
@@ -199,31 +199,25 @@ class MakeClothesPanel(bpy.types.Panel):
 
         layout.prop(scn, "MCShowExportDetails")
         if scn.MCShowExportDetails:
-            ins = inset(layout)
-
-            row = ins.row()
-            row.operator("mhclo.set_human", text="Set Human").isHuman = True
-            row.operator("mhclo.set_human", text="Set Clothing").isHuman = False
-            ins.separator()
 
             '''
             ins.label("Shapekeys")
             for skey in makeclothes.theShapeKeys:
                 ins.prop(scn, "MC%s" % skey)
-
             ins.separator()
-            ins.label("Z depth")
+            '''
+
+            layout.label("Z depth (%d-%d range)" % (makeclothes.MinZDepth, makeclothes.MaxZDepth))
+            ins = inset(layout)
             ins.prop(scn, "MCZDepthName")
             ins.operator("mhclo.set_zdepth")
             ins.prop(scn, "MCZDepth")
-            '''
-
             ins.separator()
-            ins.label("Boundary")
-            row = ins.row()
-            row.prop(scn, "MCUseBoundary")
+
+            layout.label("Boundary")
+            ins = inset(layout)
+            ins.prop(scn, "MCUseBoundary")
             if scn.MCUseBoundary:
-                row.prop(scn, "MCScaleUniform")
                 ins.prop(scn, "MCScaleCorrect")
                 ins.prop(scn, "MCBodyPart")
                 vnums = makeclothes.theSettings.bodyPartVerts[scn.MCBodyPart]

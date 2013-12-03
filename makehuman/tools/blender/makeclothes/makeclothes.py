@@ -1505,6 +1505,9 @@ ZDepth = {
     "Backpack" : 100,
     }
 
+MinZDepth = 31
+MaxZDepth = 69
+
 def setZDepthItems():
     global ZDepthItems
     zlist = sorted(list(ZDepth.items()), key=lambda z: z[1])
@@ -1514,7 +1517,7 @@ def setZDepthItems():
     return
 
 def setZDepth(scn):
-    scn.MCZDepth = ZDepth[scn.MCZDepthName]
+    scn.MCZDepth = 50 + int((ZDepth[scn.MCZDepthName]-50)/2.6)
     return
 
 
@@ -1977,6 +1980,7 @@ def init():
         min=0.5, max=1.5)
 
     bpy.types.Scene.MCBodyPart = EnumProperty(
+        name = "Body Part",
         items = [('Head', 'Head', 'Head'),
                  ('Torso', 'Torso', 'Torso'),
                  ('Arm', 'Arm', 'Arm'),
@@ -1990,13 +1994,16 @@ def init():
 
     setZDepthItems()
     bpy.types.Scene.MCZDepthName = EnumProperty(
+        name = "Clothes Type",
         items = ZDepthItems,
         default='Sweater')
 
     bpy.types.Scene.MCZDepth = IntProperty(
         name="Z depth",
         description="Location in the Z buffer",
-        default=ZDepth['Sweater'])
+        default=ZDepth['Sweater'],
+        min = MinZDepth,
+        max = MaxZDepth)
 
     bpy.types.Scene.MCAutoGroupType = EnumProperty(
         items = [('Helpers','Helpers','Helpers'),

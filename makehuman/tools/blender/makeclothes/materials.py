@@ -62,8 +62,10 @@ def writeMaterial(ob, folder):
             _,filepath = mc.getFileName(ob, folder, "mhmat")
             outdir = os.path.dirname(filepath)
             fp = mc.openOutputFile(filepath)
-            matfile = writeMaterialFile(fp, mat, name, outdir)
-            fp.close()
+            try:
+                matfile = writeMaterialFile(fp, mat, name, outdir)
+            finally:
+                fp.close()
             print("%s created" % filepath)
             return os.path.basename(filepath)
     return None
@@ -93,8 +95,11 @@ def writeMaterialFile(fp, mat, name, outdir):
         if mtex is None or not mat.use_textures[slotNo]:
             continue
         tex = mtex.texture
-        if tex.type != 'IMAGE' or tex.image is None:
+        if (tex.type != 'IMAGE' or
+            tex.image is None):
             continue
+        if tex.image.filepath == "":
+            raise MHError("Texture %s image must be saved first" % tex.name)
         blenddir = os.path.dirname(bpy.data.filepath)
         relpath =  bpy.path.relpath(tex.image.filepath)     # starts with //
         filepath = os.path.join(blenddir, relpath[2:])
