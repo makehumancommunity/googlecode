@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.929",
+    "version": "0.930",
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -130,14 +130,13 @@ class MakeClothesPanel(bpy.types.Panel):
         row.operator("mhclo.load_human", text="Nude Human").helpers = False
         row.operator("mhclo.load_human", text="Human With Helpers").helpers = True
 
-        if ob and ob.type == 'MESH':
-            layout.separator()
-            row = layout.row()
-            row.label("Mesh Type:")
-            if ob.MhHuman:
-                row.operator("mhclo.set_human", text="Human").isHuman = False
-            else:
-                row.operator("mhclo.set_human", text="Clothing").isHuman = True
+        layout.separator()
+        row = layout.row()
+        row.label("Mesh Type:")
+        if ob.MhHuman:
+            row.operator("mhclo.set_human", text="Human").isHuman = False
+        else:
+            row.operator("mhclo.set_human", text="Clothing").isHuman = True
 
         layout.separator()
         layout.operator("mhclo.make_clothes")
@@ -326,6 +325,10 @@ class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
 
     filepath = StringProperty(default="")
 
+    @classmethod
+    def poll(self, context):
+        return (context.object and context.object.type == 'MESH')
+
     def execute(self, context):
         setObjectMode(context)
         try:
@@ -362,6 +365,10 @@ class OBJECT_OT_ExportMaterialButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     filepath = StringProperty(default="")
+
+    @classmethod
+    def poll(self, context):
+        return (context.object and context.object.type == 'MESH')
 
     def execute(self, context):
         setObjectMode(context)
@@ -501,6 +508,10 @@ class OBJECT_OT_MakeHumanButton(bpy.types.Operator):
     bl_label = "Make Human"
     bl_options = {'UNDO'}
     isHuman = BoolProperty()
+
+    @classmethod
+    def poll(self, context):
+        return (context.object and context.object.type == 'MESH')
 
     def execute(self, context):
         setObjectMode(context)
