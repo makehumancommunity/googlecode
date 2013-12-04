@@ -1472,9 +1472,9 @@ def exportDefault(typ, data, header, prio, exclude, arrays, pad, fp):
 
 def examineBoundary(ob, scn):
     verts = ob.data.vertices
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
-    for v in verts:
-        v.select = False
     vnums = theSettings.bodyPartVerts[scn.MCBodyPart]
     for m,n in vnums:
         verts[m].select = True
@@ -2070,7 +2070,8 @@ def init():
     bpy.types.Scene.MCShowMaterials = BoolProperty(name = "Show Materials", default=False)
     bpy.types.Scene.MCShowAdvanced = BoolProperty(name = "Show Advanced", default=False)
     bpy.types.Scene.MCShowUVProject = BoolProperty(name = "Show UV Projection", default=False)
-    bpy.types.Scene.MCShowExportDetails = BoolProperty(name = "Show Export Details", default=False)
+    bpy.types.Scene.MCShowZDepth = BoolProperty(name = "Show ZDepth (%d-%d range)" % (MinZDepth, MaxZDepth), default=False)
+    bpy.types.Scene.MCShowBoundary = BoolProperty(name = "Show Boundary", default=False)
     bpy.types.Scene.MCShowLicense = BoolProperty(name = "Show License", default=False)
 
     MCIsInited = True
