@@ -675,42 +675,48 @@ class Material(object):
     def supportsDiffuse(self):
         result = (self.diffuseTexture != None)
         if self.shaderObj and result:
-            return ('DIFFUSE' in self.shaderObj.defineables)
+            return ('DIFFUSE' in self.shaderObj.defineables \
+                    or 'diffuseTexture' in self.shaderUniforms)
         else:
             return result
 
     def supportsBump(self):
         result = (self.bumpMapTexture != None)
         if self.shaderObj and result:
-            return ('BUMPMAP' in self.shaderObj.defineables)
+            return ('BUMPMAP' in self.shaderObj.defineables \
+                    or 'bumpmapTexture' in self.shaderUniforms)
         else:
             return result
 
     def supportsDisplacement(self):
         result = (self.displacementMapTexture != None)
         if self.shaderObj and result:
-            return ('DISPLACEMENT' in self.shaderObj.defineables)
+            return ('DISPLACEMENT' in self.shaderObj.defineables \
+                    or 'displacementmapTexture' in self.shaderUniforms)
         else:
             return result
 
     def supportsNormal(self):
         result = (self.normalMapTexture != None)
         if self.shaderObj and result:
-            return ('NORMALMAP' in self.shaderObj.defineables)
+            return ('NORMALMAP' in self.shaderObj.defineables \
+                    or 'normalmapTexture' in self.shaderUniforms)
         else:
             return result
 
     def supportsSpecular(self):
         result = (self.specularMapTexture != None)
         if self.shaderObj and result:
-            return ('SPECULARMAP' in self.shaderObj.defineables)
+            return ('SPECULARMAP' in self.shaderObj.defineables \
+                    or 'specularmapTexture' in self.shaderUniforms)
         else:
             return result
 
     def supportsTransparency(self):
         result = (self.transparencyMapTexture != None)
         if self.shaderObj and result:
-            return ('TRANSPARENCYMAP' in self.shaderObj.defineables)
+            return ('TRANSPARENCYMAP' in self.shaderObj.defineables \
+                    or 'transparencymapTexture' in self.shaderUniforms)
         else:
             return result
 
@@ -822,6 +828,15 @@ class Material(object):
     def shaderObj(self):
         return self.getShaderObj()
 
+    @property
+    def shaderUniforms(self, includeGLReserved = True):
+        shaderObj = self.shaderObj
+        if not shaderObj:
+            return []
+        uniforms = [u.name for u in shaderObj.getUniforms()]
+        if includeGLReserved:
+            uniforms = uniforms + shaderObj.glUniforms
+        return uniforms
 
     @property
     def shaderParameters(self):
