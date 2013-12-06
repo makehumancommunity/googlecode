@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.930",
+    "version": "0.931",
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -96,33 +96,6 @@ class MakeClothesPanel(bpy.types.Panel):
             ins.operator("mhclo.copy_vert_locs")
             ins.separator()
         '''
-        '''
-        layout.prop(scn, "MCShowMaterials")
-        if scn.MCShowMaterials:
-            ins = inset(layout)
-            """
-            ins.prop(scn, "MCMaterials")
-            #ins.prop(scn, "MCBlenderMaterials")
-            ins.prop(scn, "MCHairMaterial")
-            """
-
-            row = ins.row()
-            col = row.column()
-            col.prop(scn, "MCUseTexture")
-            col.prop(scn, "MCUseMask")
-            col.prop(scn, "MCUseBump")
-            col.prop(scn, "MCUseNormal")
-            col.prop(scn, "MCUseDisp")
-            col.prop(scn, "MCUseTrans")
-            col = row.column()
-            col.prop(scn, "MCTextureLayer", text = "")
-            col.prop(scn, "MCMaskLayer", text="")
-            col.prop(scn, "MCBumpStrength", text="")
-            col.prop(scn, "MCNormalStrength", text="")
-            col.prop(scn, "MCDispStrength", text="")
-            ins.prop(scn, "MCAllUVLayers")
-            ins.separator()
-        '''
 
         layout.label("Load Human Mesh")
         layout.prop(scn, "MhBodyType", text="Type")
@@ -133,15 +106,13 @@ class MakeClothesPanel(bpy.types.Panel):
         layout.separator()
         row = layout.row()
         row.label("Mesh Type:")
-        if ob.MhHuman:
+        if ob and ob.MhHuman:
             row.operator("mhclo.set_human", text="Human").isHuman = False
         else:
             row.operator("mhclo.set_human", text="Clothing").isHuman = True
 
         layout.separator()
         layout.operator("mhclo.make_clothes")
-        layout.separator()
-        layout.operator("mhclo.export_material")
         layout.separator()
 
         layout.prop(scn, "MCShowAutoVertexGroups")
@@ -163,6 +134,12 @@ class MakeClothesPanel(bpy.types.Panel):
             #ins.operator("mhclo.delete_helpers")
             #ins.separator()
 
+
+        layout.prop(scn, "MCShowMaterials")
+        if scn.MCShowMaterials:
+            ins = inset(layout)
+            ins.operator("mhclo.export_material")
+            ins.separator()
 
         '''
         layout.prop(scn, "MCShowAdvanced")
