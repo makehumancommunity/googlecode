@@ -121,9 +121,10 @@ class MakeClothesPanel(bpy.types.Panel):
             ins = inset(layout)
             ins.operator("mhclo.remove_vertex_groups")
             layout.separator()
-            layout.prop(scn, "MCAutoGroupType", expand=True)
-            if scn.MCAutoGroupType == 'Helpers':
-                layout.prop(scn, "MCAutoHelperType", expand=True)
+            if ob and ob.MhHuman:
+                layout.prop(scn, "MCAutoGroupType", expand=True)
+                if scn.MCAutoGroupType == 'Helpers':
+                    layout.prop(scn, "MCAutoHelperType", expand=True)
 
             ins = inset(layout)
             ins.operator("mhclo.auto_vertex_groups")
@@ -528,7 +529,6 @@ class OBJECT_OT_LoadHumanButton(bpy.types.Operator):
         setObjectMode(context)
         scn = context.scene
 
-        print("BODY", scn.MhBodyType)
         try:
             if self.helpers:
                 basepath = mt.baseMhcloFile

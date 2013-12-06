@@ -88,17 +88,18 @@ def afterImport(context, filepath, deleteHelpers, useMaterials):
     settings = getSettings(ob)
 
     if ob.MhUseMaterials:
-        addMaterial(ob, 0, "Skin", (1,1,1), (0, settings.nTotalVerts))
-        addMaterial(ob, 1, "Tights", (1,0,0), settings.vertices["Tights"])
+        addMaterial(ob, 0, "Body", (1,1,1), (0, settings.nTotalVerts))
+        addMaterial(ob, 1, "Tongue", (0.5,0,0.5), settings.vertices["Tongue"])
         addMaterial(ob, 2, "Joints", (0,1,0), settings.vertices["Joints"])
-        addMaterial(ob, 3, "Skirt", (0,0,1), settings.vertices["Skirt"])
-        addMaterial(ob, 4, "Hair", (1,1,0), settings.vertices["Hair"])
-        addMaterial(ob, 5, "Eyes", (0,1,1), settings.vertices["Eyes"])
-        addMaterial(ob, 6, "Penis", (0.5,0,1), settings.vertices["Penis"])
-        addMaterial(ob, 7, "UpTeeth", (0,0.5,1), settings.vertices["UpTeeth"])
-        addMaterial(ob, 8, "LoTeeth", (0,0.5,0.5), settings.vertices["LoTeeth"])
-        addMaterial(ob, 9, "Lashes", (1,0,1), settings.vertices["EyeLashes"])
-        addMaterial(ob, 10, "Tongue", (0.5,0,0.5), settings.vertices["Tongue"])
+        addMaterial(ob, 3, "Eyes", (0,1,1), settings.vertices["Eyes"])
+        addMaterial(ob, 4, "EyeLashes", (1,0,1), settings.vertices["EyeLashes"])
+        addMaterial(ob, 5, "LoTeeth", (0,0.5,0.5), settings.vertices["LoTeeth"])
+        addMaterial(ob, 6, "UpTeeth", (0,0.5,1), settings.vertices["UpTeeth"])
+        addMaterial(ob, 7, "Penis", (0.5,0,1), settings.vertices["Penis"])
+        addMaterial(ob, 8, "Tights", (1,0,0), settings.vertices["Tights"])
+        addMaterial(ob, 9, "Skirt", (0,0,1), settings.vertices["Skirt"])
+        addMaterial(ob, 10, "Hair", (1,1,0), settings.vertices["Hair"])
+        addMaterial(ob, 11, "Ground", (1,0.5,0.5), (settings.vertices["Hair"][1], settings.nTotalVerts))
 
     if ob.MhDeleteHelpers:
         affect = "Body"
