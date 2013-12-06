@@ -253,6 +253,9 @@ class Object3D(object):
         self.vnorm[ix] = norms
 
     def calcVertexTangents(self, ix = None):
+        """
+        Calculate vertex tangents using Lengyel’s Method.
+        """
         if not self.has_uv:
             return
         self.markCoords(ix, norm=True)
