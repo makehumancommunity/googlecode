@@ -50,7 +50,7 @@ void main() {
     #ifdef NORMALMAP
         vec3 tang = normalize(gl_NormalMatrix * tangent.xyz);
         //normal = normalize(gl_NormalMatrix * gl_Normal);
-        vec3 binormal = normalize(cross(vNormal, tang)) * -tangent.w;
+        vec3 binormal = normalize(cross(vNormal, tang));
 
         mat3 tangMat = mat3(tang, binormal, vNormal);
         tNormVec = normalize(vec3(1.0) * tangMat);
