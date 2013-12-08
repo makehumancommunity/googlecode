@@ -38,7 +38,7 @@
 
 #ifdef NORMALMAP
     uniform sampler2D normalmapTexture;
-    uniform float normalScale = 1.0;
+    uniform float normalmapIntensity = 1.0;
     //define CALC_NORMAL_Z
 
     // Inputs: tangent-space vector
@@ -62,11 +62,11 @@ void main() {
         #ifdef CALC_NORMAL_Z
             vec2 normalH = 0.5 * texture2D(normalmapTexture, gl_TexCoord[0].xy).rg;
             vec3 normal;
-            normal.xy = (2.0 * normalH -1.0) * normalScale;
+            normal.xy = (2.0 * normalH -1.0) * normalmapIntensity;
             normal.z = sqrt(1.0 - dot(normal.xy, normal.xy));
         #else
             vec3 normalH = texture2D(normalmapTexture, gl_TexCoord[0].xy).rgb;
-            vec3 normal = (2.0 * normalH -1.0) * normalScale;
+            vec3 normal = (2.0 * normalH -1.0) * normalmapIntensity;
         #endif
 
         normal = normalize(vNormal + (tNormVec * normal));
