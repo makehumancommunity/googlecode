@@ -568,8 +568,8 @@ class Human(guicommon.Object):
         return self.breastFirmness
 
     def _setBreastFirmnessVals(self):
-        self.maxfirmnessVal = self.breastFirmness
-        self.minfirmnessVal = 1 - self.breastFirmness
+        self.maxfirmnessVal = max(0.0, self.breastFirmness * 2 - 1)
+        self.minfirmnessVal = max(0.0, 1 - self.breastFirmness * 2)
 
     def setCaucasian(self, caucasian, sync=True, updateModifier = True):
         if updateModifier:

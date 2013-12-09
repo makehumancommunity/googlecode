@@ -473,7 +473,7 @@ class GenderTaskView(ModifierTaskView):
     _features = [
         ('Breast', 'breast', [
             (None, 'BreastSize', {'label' : 'Breast size'}),
-            (None, 'BreastFirmness', {'label' : 'Breast firmness', 'reverse' : True}),
+            (None, 'BreastFirmness', {'label' : 'Breast firmness'}),
             ('breast-trans-vert', 'down', 'up', {}),
             ('breast-dist', 'min', 'max', {}),
             ('breast-point', 'min', 'max', {}),
