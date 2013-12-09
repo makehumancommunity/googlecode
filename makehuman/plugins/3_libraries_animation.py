@@ -607,6 +607,7 @@ def setColorForFaceGroup(mesh, fgName, color):
 
 
 def load(app):
+    return # Disabled because not working with HM08 basemesh
     category = app.getCategory('Pose/Animate')
     taskview = AnimationLibrary(category)
     taskview.sortOrder = 3.5
