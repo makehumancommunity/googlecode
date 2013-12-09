@@ -71,7 +71,7 @@ void main() {
         #endif
 
         // Convert sampled normal from tangent to view space
-        normal = tbnMat * normal;
+        normal = normalize(tbnMat * normal);
     #else
         vec3 normal = vNormal;
     #endif

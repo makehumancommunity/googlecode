@@ -60,7 +60,6 @@ void main() {
         vec3 binormal = normalize(cross(vNormal, tang));
 
         tbnMat = mat3(tang, binormal, vNormal);   // TBN matrix, converts from Tangent space in view space
-        //tNormVec = normalize(vec3(0.0, 0.0, 1.0) * tangMat);    // transform Z-up normal from tangent space to world space
     #endif
 
     #ifdef VERTEX_COLOR
