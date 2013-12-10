@@ -971,7 +971,7 @@ def makeClothes(context, doFindClothes):
     from .project import saveClosest
     (hum, clo) = getObjectPair(context)
     scn = context.scene
-    checkNoTriangles(clo)
+    checkNoTriangles(scn, clo)
     checkObjectOK(hum, context, False)
     autoVertexGroupsIfNecessary(hum, scn)
     checkAndVertexDiamonds(context, hum)
@@ -996,10 +996,12 @@ def makeClothes(context, doFindClothes):
     return
 
 
-def checkNoTriangles(ob):
+def checkNoTriangles(scn, ob):
     strayVerts = {}
+    nPoles = {}
     for vn in range(len(ob.data.vertices)):
         strayVerts[vn] = True
+        nPoles[vn] = 0
 
     for f in ob.data.polygons:
         if len(f.vertices) != 4:
@@ -1007,11 +1009,32 @@ def checkNoTriangles(ob):
             raise MHError(msg)
         for vn in f.vertices:
             strayVerts[vn] = False
+            nPoles[vn] += 1
 
     stray = [vn for vn in strayVerts.keys() if strayVerts[vn]]
     if len(stray) > 0:
-            msg = "Object %s can not be used for clothes creation because it has stray verts:\n  %s" % (ob.name, stray)
-            raise MHError(msg)
+        highlightVerts(scn, ob, stray)
+        msg = "Object %s can not be used for clothes creation because it has stray verts:\n  %s" % (ob.name, stray)
+        raise MHError(msg)
+
+    excess = [vn for vn in nPoles.keys() if nPoles[vn] > 8]
+    if len(excess) > 0:
+        highlightVerts(scn, ob, excess)
+        msg = "Object %s can not be used for clothes creation because it has verts with more than 8 poles:\n  %s" % (ob.name, excess)
+        raise MHError(msg)
+
+
+def highlightVerts(scn, ob, verts):
+    bpy.ops.object.mode_set(mode='OBJECT')
+    scn.objects.active = ob
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.reveal()
+    bpy.ops.mesh.select_all(action='DESELECT')
+    bpy.ops.object.mode_set(mode='OBJECT')
+    for vn in verts:
+        print(vn)
+        ob.data.vertices[vn].select = True
+    bpy.ops.object.mode_set(mode='EDIT')
 
 
 def checkObjectOK(ob, context, isClothing):

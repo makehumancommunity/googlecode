@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.932",
+    "version": "0.933",
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -57,14 +57,18 @@ else:
 
 
 def invokeWithFileCheck(self, context, ftypes):
-    ob = makeclothes.getClothing(context)
-    scn = context.scene
-    for ftype in ftypes:
-        (outpath, outfile) = mc.getFileName(ob, scn.MhClothesDir, ftype)
-        filepath = os.path.join(outpath, outfile)
-        if os.path.exists(filepath):
-            break
-    return maketarget.utils.invokeWithFileCheck(self, context, filepath)
+    try:
+        ob = makeclothes.getClothing(context)
+        scn = context.scene
+        for ftype in ftypes:
+            (outpath, outfile) = mc.getFileName(ob, scn.MhClothesDir, ftype)
+            filepath = os.path.join(outpath, outfile)
+            if os.path.exists(filepath):
+                break
+        return maketarget.utils.invokeWithFileCheck(self, context, filepath)
+    except MHError:
+        handleMHError(context)
+        return {'FINISHED'}
 
 #
 #    class MakeClothesPanel(bpy.types.Panel):
