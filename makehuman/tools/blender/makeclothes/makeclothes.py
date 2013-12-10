@@ -754,7 +754,14 @@ def exportObjFile(context):
         fp.write("\n".join(flist))
 
     fp.close()
-    print(objfile, "closed")
+    print(objfile, "exported")
+
+    npzfile = os.path.splitext(objfile)[0] + ".npz"
+    try:
+        os.remove(npzfile)
+        print(npzfile, "removed")
+    except FileNotFoundError:
+        pass
 
 
 def writeObjTextureData(fp, me, texVerts, uvFaceVerts):
