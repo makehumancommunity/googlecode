@@ -141,6 +141,10 @@ class Proxy:
         self.name = name.capitalize().replace(" ","_")
         self.type = typ
         self.file = file
+        if file:
+            self.mtime = os.path.getmtime(file)
+        else:
+            self.mtime = None
         self.uuid = None
         self.basemesh = "alpha_7"
         self.tags = []

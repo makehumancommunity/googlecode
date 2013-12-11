@@ -140,6 +140,10 @@ class ProxyChooserTaskView(gui3d.TaskView):
         def onFileSelected(filename):
             self.proxyFileSelected(filename)
 
+        @self.filechooser.mhEvent
+        def onRefresh(e):
+            self.updateProxyFileCache()
+
         if self.multiProxy:
             @self.filechooser.mhEvent
             def onFileDeselected(filename):
@@ -257,13 +261,18 @@ class ProxyChooserTaskView(gui3d.TaskView):
         log.debug('Selecting proxy file "%s" from %s library.', mhclofile, self.proxyName)
         human = self.human
 
-        if mhclofile not in self._proxyCache:
+        proxy = None
+        mhcloId = getpath.canonicalPath(mhclofile)
+        if mhcloId in self._proxyCache:
+            proxy = self._proxyCache[mhcloId]
+            if proxy.mtime < os.path.getmtime(mhclofile):
+                proxy = None
+
+        if not proxy:
             proxy = mh2proxy.readProxyFile(human.meshData,
                                            mhclofile,
                                            type=self.proxyName.capitalize())
-            self._proxyCache[mhclofile] = proxy
-        else:
-            proxy = self._proxyCache[mhclofile]
+            self._proxyCache[mhcloId] = proxy
 
         if proxy.uuid in [p.uuid for p in self.getSelection()]:
             log.debug("Proxy with UUID %s (%s) already loaded in %s library. Skipping.", proxy.uuid, proxy.file, self.proxyName)
