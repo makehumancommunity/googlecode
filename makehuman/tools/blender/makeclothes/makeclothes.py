@@ -464,7 +464,7 @@ def midWeight(pv, r0, r1):
 #    writeClothes(context, hum, clo, data):
 #
 
-def writeClothesHeader(fp, scn):
+def writeClothesHeader(fp, prevUuid, scn):
     import sys
     if sys.platform == 'win32':
         # Avoid error message in blender by using a version without ctypes
@@ -475,8 +475,11 @@ def writeClothesHeader(fp, scn):
     fp.write(
         "# author %s\n" % scn.MCAuthor +
         "# license %s\n" % scn.MCLicense +
-        "# homepage %s\n" % scn.MCHomePage +
-        "uuid %s\n" % uuid.uuid4())
+        "# homepage %s\n" % scn.MCHomePage)
+    if prevUuid:
+        fp.write("uuid %s\n" % prevUuid)
+    else:
+        fp.write("uuid %s\n" % uuid.uuid4())
     if theSettings:
         fp.write("basemesh %s\n" % theSettings.baseMesh)
     for n in range(1,6):
@@ -490,8 +493,8 @@ def writeClothes(context, hum, clo, data, matfile):
     scn = context.scene
     firstVert = 0
     (outpath, outfile) = mc.getFileName(clo, scn.MhClothesDir, "mhclo")
-    fp = mc.openOutputFile(outfile)
-    writeClothesHeader(fp, scn)
+    fp, uuid = mc.openOutputFile(outfile)
+    writeClothesHeader(fp, uuid, scn)
     fp.write("name %s\n" % clo.name.replace(" ","_"))
     fp.write("obj_file %s.obj\n" % mc.goodName(clo.name))
     vnums = theSettings.bodyPartVerts[scn.MCBodyPart]
@@ -599,7 +602,7 @@ def reexportMhclo(context):
         lines.append(line)
     fp.close()
 
-    fp = mc.openOutputFile(outfile)
+    fp,_ = mc.openOutputFile(outfile)
     doingStuff = False
     for line in lines:
         words = line.split()
@@ -628,7 +631,7 @@ def reexportMhclo(context):
 def exportDeleteVerts(context):
     hum = getHuman(context)
     path = os.path.realpath(os.path.expanduser("~/killverts.txt"))
-    fp = mc.openOutputFile(path)
+    fp,_ = mc.openOutputFile(path)
     printDeleteVerts(fp, hum)
     fp.close()
     print("Delete verts written to %s" % path)
@@ -728,7 +731,7 @@ def exportObjFile(context):
     ob = getClothing(context)
     deleteStrayVerts(context, ob)
     (objpath, objfile) = mc.getFileName(ob, scn.MhClothesDir, "obj")
-    fp = mc.openOutputFile(objfile)
+    fp,_ = mc.openOutputFile(objfile)
     fp.write("Exported from make_clothes.py\n")
 
     me = ob.data
@@ -883,7 +886,7 @@ def findTexVert(uv, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob):
 
 def storeData(clo, hum, data):
     outfile = settingsFile("stored")
-    fp = mc.openOutputFile(outfile)
+    fp,_ = mc.openOutputFile(outfile)
     fp.write("%s\n" % clo.name)
     fp.write("%s\n" % hum.name)
     for (pv, exact, verts, wts, diff) in data:
@@ -968,7 +971,7 @@ def makeClothes(context, doFindClothes):
     saveClosest({})
     if scn.MCLogging:
         logfile = '%s/clothes.log' % scn.MhClothesDir
-        log = mc.openOutputFile(logfile)
+        log,_ = mc.openOutputFile(logfile)
     else:
         log = None
     matfile = materials.writeMaterial(clo, scn.MhClothesDir)
@@ -1116,7 +1119,7 @@ def offsetCloth(context):
     outfile = os.path.realpath(os.path.expanduser(outpath))
     print("Modifying clothes file %s => %s" % (infile, outfile))
     infp = mc.openInputFile(infile)
-    outfp = mc.openOutputFile(outfile)
+    outfp,_ = mc.openOutputFile(outfile)
 
     status = 0
     alwaysOutside = context.scene['MCOutside']
@@ -1210,7 +1213,7 @@ def exportBlenderMaterial(me, path):
     matname = mc.goodName(mats[0].name)
     mhxfile = "%s_material.mhx" % matname
     mhxpath = os.path.join(path, mhxfile)
-    fp = mc.openOutputFile(mhxpath)
+    fp,_ = mc.openOutputFile(mhxpath)
     for tex in texs:
         exportTexture(tex, matname, fp)
     for mat in mats:
@@ -1807,7 +1810,7 @@ def readDefaultSettings(context):
 
 def saveDefaultSettings(context):
     fname = settingsFile("settings")
-    fp = mc.openOutputFile(fname)
+    fp,_ = mc.openOutputFile(fname)
     scn = context.scene
     for (prop, value) in scn.items():
         if prop[0:2] == "MC":

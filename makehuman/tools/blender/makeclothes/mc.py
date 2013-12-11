@@ -96,9 +96,23 @@ def getFileName(pob, folder, ext):
 
 
 def openOutputFile(filepath):
+    uuid = ""
+    if os.path.splitext(filepath)[1] == ".mhclo":
+        try:
+            fp = open(filepath, "rU")
+        except IOError:
+            fp = None
+        if fp:
+            for line in fp:
+                words = line.split()
+                if len(words) > 1 and words[0] == "uuid":
+                    uuid = words[1]
+                    break
+            fp.close()
+
     print("Create file \"%s\"" % filepath)
     try:
-        return open(filepath, "w", encoding="utf-8", newline="\n")
+        return open(filepath, "w", encoding="utf-8", newline="\n"), uuid
     except IOError:
         raise MHError("Could not open\n\"%s\"     \nfor writing" % filepath)
 
