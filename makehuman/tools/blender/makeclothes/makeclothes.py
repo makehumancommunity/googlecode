@@ -495,14 +495,11 @@ def writeClothes(context, hum, clo, data, matfile):
     fp.write("name %s\n" % clo.name.replace(" ","_"))
     fp.write("obj_file %s.obj\n" % mc.goodName(clo.name))
     vnums = theSettings.bodyPartVerts[scn.MCBodyPart]
+    printScale(fp, hum, scn, 'x_scale', 0, vnums[0])
+    printScale(fp, hum, scn, 'z_scale', 1, vnums[1])
+    printScale(fp, hum, scn, 'y_scale', 2, vnums[2])
     if scn.MCScaleUniform:
-        printScale(fp, hum, scn, 'x_scale', 0, vnums[0])
-        printScale(fp, hum, scn, 'z_scale', 0, vnums[0])
-        printScale(fp, hum, scn, 'y_scale', 0, vnums[0])
-    else:
-        printScale(fp, hum, scn, 'x_scale', 0, vnums[0])
-        printScale(fp, hum, scn, 'z_scale', 1, vnums[1])
-        printScale(fp, hum, scn, 'y_scale', 2, vnums[2])
+        fp.write("uniform_scale %.4f\n" % scn.MCScaleCorrect)
 
     writeStuff(fp, clo, context, matfile)
     printFaceNumbers(fp, clo)
@@ -795,20 +792,10 @@ def printScale(fp, hum, scn, name, index, vnums):
         return
     verts = hum.data.vertices
     n1,n2 = vnums
-    if scn.MCScaleUniform:
-        if n1 >=0 and n2 >= 0:
-            v1 = verts[n1].co
-            v2 = verts[n2].co
-            dx = v1[0]-v2[0]
-            dy = v1[1]-v2[1]
-            dz = v1[2]-v2[2]
-            dr = math.sqrt(dx*dx + dy*dy + dz*dz)
-            fp.write("r_scale %d %d %.4f\n" % (n1, n2, dr/scn.MCScaleCorrect))
-    else:
-        if n1 >=0 and n2 >= 0:
-            x1 = verts[n1].co[index]
-            x2 = verts[n2].co[index]
-            fp.write("%s %d %d %.4f\n" % (name, n1, n2, abs(x1-x2)/scn.MCScaleCorrect))
+    if n1 >=0 and n2 >= 0:
+        x1 = verts[n1].co[index]
+        x2 = verts[n2].co[index]
+        fp.write("%s %d %d %.4f\n" % (name, n1, n2, abs(x1-x2)/scn.MCScaleCorrect))
     return
 
 #

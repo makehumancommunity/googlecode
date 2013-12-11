@@ -23,6 +23,7 @@ TODO
 """
 
 import os
+import math
 import numpy as np
 import guicommon
 from core import G
@@ -154,6 +155,8 @@ class Proxy:
 
         self.scaleData = [None, None, None]
         self.scale = np.array((1.0,1.0,1.0), float)
+        self.uniformScale = False
+        self.scaleCorrect = 1.0
 
         self.z_depth = 50
         self.max_pole = None    # Signifies the maximum number of faces per vertex on the mesh topology. Set to none for default.
@@ -216,6 +219,15 @@ class Proxy:
             raise NameError("Unknown proxy type %s" % self.type)
 
 
+    def uniformizeScale(self):
+        if self.uniformScale:
+            x = self.scale[0]
+            y = self.scale[1]
+            z = self.scale[2]
+            r = self.scaleCorrect * math.sqrt(x*x + y*y + z*z)
+            self.scale = np.array((r,r,r))
+
+
     def getActualTexture(self, human):
         uuid = self.getUuid()
         mesh = None
@@ -235,6 +247,7 @@ class Proxy:
         obj = G.app.selectedHuman.meshData
         for n in range(3):
             self.scale[n] = self.getScale(self.scaleData[n], obj, n)
+        self.uniformizeScale()
 
         converter = self.getConverter()
         if converter:
@@ -494,6 +507,11 @@ def readProxyFile(obj, filepath, type="Clothes"):
         elif key == 'z_scale':
             proxy.scaleData[2] = getScaleData(words)
             proxy.scale[2] = proxy.getScale(proxy.scaleData[2], obj, 2)
+        elif key == 'uniform_scale':
+            proxy.uniformScale = True
+            if len(words) > 1:
+                proxy.scaleCorrect = float(words[1])
+            proxy.uniformizeScale()
         elif key == 'use_projection':
             # TODO still used?
             proxy.useProjection = int(words[1])
@@ -594,6 +612,7 @@ def getFileName(folder, file, suffix):
         return os.path.join(folder, file)
     else:
         return os.path.join(folder, file+suffix)
+
 
 def getScaleData(words):
     v1 = int(words[1])

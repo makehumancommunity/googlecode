@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.933",
+    "version": "0.934",
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -182,15 +182,14 @@ class MakeClothesPanel(bpy.types.Panel):
             ins = inset(layout)
             ins.prop(scn, "MCUseBoundary")
             if scn.MCUseBoundary:
-                ins.prop(scn, "MCScaleCorrect")
+                row = ins.row()
+                row.prop(scn, "MCScaleUniform")
+                row.prop(scn, "MCScaleCorrect")
                 ins.prop(scn, "MCBodyPart")
                 vnums = makeclothes.theSettings.bodyPartVerts[scn.MCBodyPart]
-                if scn.MCScaleUniform:
-                    self.drawXYZ(vnums[0], "XYZ", ins)
-                else:
-                    self.drawXYZ(vnums[0], "X", ins)
-                    self.drawXYZ(vnums[1], "Y", ins)
-                    self.drawXYZ(vnums[2], "Z", ins)
+                self.drawXYZ(vnums[0], "X", ins)
+                self.drawXYZ(vnums[1], "Y", ins)
+                self.drawXYZ(vnums[2], "Z", ins)
                 ins.operator("mhclo.examine_boundary")
             ins.separator()
 
