@@ -140,10 +140,6 @@ class ProxyChooserTaskView(gui3d.TaskView):
         def onFileSelected(filename):
             self.proxyFileSelected(filename)
 
-        @self.filechooser.mhEvent
-        def onRefresh(e):
-            self.updateProxyFileCache()
-
         if self.multiProxy:
             @self.filechooser.mhEvent
             def onFileDeselected(filename):
