@@ -507,6 +507,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
         Initialize or update the proxy file cache for this proxy library.
         Will attempt to load a previous cache from file if restoreFromFile is true.
         """
+        self._proxyFilePerUuid = None
         if restoreFromFile:
             try:
                 cacheFile = getpath.getPath(os.path.join('cache', self.proxyName + '_filecache.mhc'))
@@ -533,17 +534,25 @@ class ProxyChooserTaskView(gui3d.TaskView):
             self.loadProxyFileCache()
 
         if self._proxyFilePerUuid is None:
-            items = [ (values[1], path) for (path, values) in self._proxyFileCache.items() ]
-            self._proxyFilePerUuid = dict()
-            for (_uuid, path) in items:
-                if _uuid in self._proxyFilePerUuid and self._proxyFilePerUuid[_uuid] != path:
-                    log.warning("WARNING: Duplicate UUID found for different proxy files in %s library (files %s and %s share uuid %s). Make sure that all proxy files in your data folders have unique UUIDs (unless they are exactly the same file). Else this may lead to unexpected behaviour.", self.proxyName, path, self._proxyFilePerUuid[_uuid], _uuid)
-                self._proxyFilePerUuid[_uuid] = path
+            self._loadUuidLookup()
 
         if uuid not in self._proxyFilePerUuid:
-            log.warning('Could not find a proxy with UUID %s. Does not exist in %s library.', uuid, self.proxyName)
-            return None
+            # Try again once more, but update the proxy UUID lookup table first (lazy cache for performance reasons)
+            self.updateProxyFileCache()
+            self._loadUuidLookup()
+            if uuid not in self._proxyFilePerUuid:
+                log.warning('Could not find a proxy with UUID %s. Does not exist in %s library.', uuid, self.proxyName)
+                return None
+
         return self._proxyFilePerUuid[uuid]
+
+    def _loadUuidLookup(self):
+        items = [ (values[1], path) for (path, values) in self._proxyFileCache.items() ]
+        self._proxyFilePerUuid = dict()
+        for (_uuid, path) in items:
+            if _uuid in self._proxyFilePerUuid and self._proxyFilePerUuid[_uuid] != path:
+                log.warning("WARNING: Duplicate UUID found for different proxy files in %s library (files %s and %s share uuid %s). Make sure that all proxy files in your data folders have unique UUIDs (unless they are exactly the same file). Else this may lead to unexpected behaviour.", self.proxyName, path, self._proxyFilePerUuid[_uuid], _uuid)
+            self._proxyFilePerUuid[_uuid] = path
 
     def getTags(self, uuid = None, filename = None):
         """
