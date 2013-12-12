@@ -41,7 +41,7 @@ _cat_data = [
     ('weight',   ['minweight', 'averageweight', 'maxweight']),
     ('height',   ['dwarf', 'giant']),
     ('breastsize',     ['mincup', 'averagecup', 'maxcup']),
-    ('breastfirmness', ['minfirmness', 'maxfirmness'])
+    ('breastfirmness', ['minfirmness', 'averagefirmness', 'maxfirmness'])
     ]
 
 _cat_values = dict(_cat_data)

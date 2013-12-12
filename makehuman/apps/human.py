@@ -571,6 +571,11 @@ class Human(guicommon.Object):
         self.maxfirmnessVal = max(0.0, self.breastFirmness * 2 - 1)
         self.minfirmnessVal = max(0.0, 1 - self.breastFirmness * 2)
 
+        if self.maxfirmnessVal > self.minfirmnessVal:
+            self.averagefirmnessVal = 1 - self.maxfirmnessVal
+        else:
+            self.averagefirmnessVal = 1 - self.minfirmnessVal
+
     def setCaucasian(self, caucasian, sync=True, updateModifier = True):
         if updateModifier:
             modifier = self.getModifier('macrodetails/Caucasian')
