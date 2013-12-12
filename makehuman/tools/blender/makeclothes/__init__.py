@@ -25,12 +25,12 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.935",
+    "version": "0.936",
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
     "warning": "",
-    'wiki_url': "http://www.makehuman.org/node/228",
+    'wiki_url': "http://makehuman.org/doc/node/makeclothes.html",
     "category": "MakeHuman"}
 
 
@@ -150,9 +150,6 @@ class MakeClothesPanel(bpy.types.Panel):
         layout.prop(scn, "MCShowAdvanced")
         if scn.MCShowAdvanced:
             ins = inset(layout)
-            ins.operator("mhclo.print_clothes")
-            ins.operator("mhclo.export_obj_file")
-            ins.operator("mhclo.export_delete_verts")
             ins.label("Algorithm Control")
             row = ins.row()
             row.prop(scn, "MCThreshold")
@@ -230,9 +227,6 @@ class MakeClothesPanel(bpy.types.Panel):
         ins.operator("mhclo.select_helpers")
         ins.operator("mhclo.export_base_uvs_py")
 
-        #ins.prop(scn, "MCVertexGroups")
-        #ins.operator("mhclo.offset_clothes")
-        return
 
     def drawXYZ(self, pair, name, layout):
         m,n = pair
@@ -326,20 +320,6 @@ class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
         drawFileCheck(self)
 
 
-class OBJECT_OT_PrintClothesButton(bpy.types.Operator):
-    bl_idname = "mhclo.print_clothes"
-    bl_label = "Print Mhclo File"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        setObjectMode(context)
-        try:
-            makeclothes.makeClothes(context, False)
-        except MHError:
-            handleMHError(context)
-        return{'FINISHED'}
-
-
 class OBJECT_OT_ExportMaterialButton(bpy.types.Operator):
     bl_idname = "mhclo.export_material"
     bl_label = "Export Material Only"
@@ -389,48 +369,6 @@ class OBJECT_OT_CopyVertLocsButton(bpy.types.Operator):
 
 
 #
-#   class OBJECT_OT_ExportDeleteVertsButton(bpy.types.Operator):
-#
-
-class OBJECT_OT_ExportDeleteVertsButton(bpy.types.Operator):
-    bl_idname = "mhclo.export_delete_verts"
-    bl_label = "Export Delete Verts"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        setObjectMode(context)
-        try:
-            makeclothes.exportDeleteVerts(context)
-        except MHError:
-            handleMHError(context)
-        return{'FINISHED'}
-
-#
-#   class OBJECT_OT_ExportObjFileButton(bpy.types.Operator):
-#
-
-class OBJECT_OT_ExportObjFileButton(bpy.types.Operator):
-    bl_idname = "mhclo.export_obj_file"
-    bl_label = "Export Obj File"
-    bl_options = {'UNDO'}
-
-    filepath = StringProperty(default="")
-
-    def execute(self, context):
-        setObjectMode(context)
-        try:
-            makeclothes.exportObjFile(context)
-        except MHError:
-            handleMHError(context)
-        return{'FINISHED'}
-
-    def invoke(self, context, event):
-        return invokeWithFileCheck(self, context, ["obj"])
-
-    def draw(self, context):
-        drawFileCheck(self)
-
-#
 #   class OBJECT_OT_ExportBaseUvsPyButton(bpy.types.Operator):
 #   class OBJECT_OT_SplitHumanButton(bpy.types.Operator):
 #
@@ -457,25 +395,6 @@ class OBJECT_OT_SelectHelpersButton(bpy.types.Operator):
         setObjectMode(context)
         try:
             makeclothes.selectHelpers(context)
-        except MHError:
-            handleMHError(context)
-        return{'FINISHED'}
-
-#
-#    class OBJECT_OT_ExportBlenderMaterialsButton(bpy.types.Operator):
-#
-
-class OBJECT_OT_ExportBlenderMaterialButton(bpy.types.Operator):
-    bl_idname = "mhclo.export_blender_material"
-    bl_label = "Export Blender Material"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        setObjectMode(context)
-        try:
-            pob = makeclothes.getClothing(context)
-            (outpath, outfile) = makeclothes.getFileName(pob, context, "mhx")
-            makeclothes.exportBlenderMaterial(pob.data, outpath)
         except MHError:
             handleMHError(context)
         return{'FINISHED'}
@@ -581,23 +500,6 @@ class OBJECT_OT_ExamineBoundaryButton(bpy.types.Operator):
         setObjectMode(context)
         try:
             makeclothes.examineBoundary(context.object, context.scene)
-        except MHError:
-            handleMHError(context)
-        return{'FINISHED'}
-
-#
-#    class OBJECT_OT_OffsetClothesButton(bpy.types.Operator):
-#
-
-class OBJECT_OT_OffsetClothesButton(bpy.types.Operator):
-    bl_idname = "mhclo.offset_clothes"
-    bl_label = "Offset Clothes"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        setObjectMode(context)
-        try:
-            makeclothes.offsetCloth(context)
         except MHError:
             handleMHError(context)
         return{'FINISHED'}

@@ -313,15 +313,6 @@ def findClothes(context, hum, clo, log):
         if minmax < scn.MCThreshold:
             badVerts.append(pv.index)
             pv.select = True
-            """
-            if scn['MCForbidFailures']:
-                selectVerts([pv], clo)
-                print("Tried", mverts)
-                msg = (
-                "Did not find optimal triangle for %s vert %d.\n" % (clo.name, pv.index) +
-                "Avoid the message by unchecking Forbid failures.")
-                raise MHError(msg)
-            """
             (mv, mdist) = mverts[0]
             bVerts = [mv.index,0,1]
             bWts = (1,0,0)
@@ -626,15 +617,6 @@ def reexportMhclo(context):
     fp.close()
     print("%s written" % outfile)
     return
-
-
-def exportDeleteVerts(context):
-    hum = getHuman(context)
-    path = os.path.realpath(os.path.expanduser("~/killverts.txt"))
-    fp,_ = mc.openOutputFile(path)
-    printDeleteVerts(fp, hum)
-    fp.close()
-    print("Delete verts written to %s" % path)
 
 
 def printDeleteVerts(fp, hum):
@@ -1103,76 +1085,6 @@ def checkSingleVertexGroups(clo, scn):
             raise MHError("Vertex %d in %s belongs to %d groups. Must be exactly one" % (v.index, clo.name, n))
     return
 
-#
-#   offsetCloth(context):
-#
-
-def offsetCloth(context):
-    (hum, clo) = getObjectPair(context)
-    bverts = hum.data.vertices
-    pverts = clo.data.vertices
-    print("Offset %s to %s" % (hum.name, clo.name))
-
-    inpath = '%s/%s.mhclo' % (context.scene.MhClothesDir, mc.goodName(hum.name))
-    infile = os.path.realpath(os.path.expanduser(inpath))
-    outpath = '%s/%s.mhclo' % (context.scene.MhClothesDir, mc.goodName(clo.name))
-    outfile = os.path.realpath(os.path.expanduser(outpath))
-    print("Modifying clothes file %s => %s" % (infile, outfile))
-    infp = mc.openInputFile(infile)
-    outfp,_ = mc.openOutputFile(outfile)
-
-    status = 0
-    alwaysOutside = context.scene['MCOutside']
-    minOffset = context.scene['MCMinOffset']
-
-    for line in infp:
-        words = line.split()
-        if len(words) < 1:
-            outfp.write(line)
-        elif words[0] == "#":
-            if len(words) < 2:
-                status = 0
-                outfp.write(line)
-            elif words[1] == "verts":
-                status = 1
-                outfp.write(line)
-            elif words[1] == "obj_data":
-                if context.scene.MCVertexGroups:
-                    infp.close()
-                    writeFaces(clo, outfp)
-                    writeVertexGroups(clo, outfp)
-                    outfp.close()
-                    print("Clothes file modified %s => %s" % (infile, outfile))
-                    return
-                outfp.write(line)
-                status = 0
-            elif words[1] == "name":
-                outfp.write("name %s\n" % clo.name.replace(" ","_"))
-            else:
-                outfp.write(line)
-            vn = 0
-        elif status == 1:
-            # 4715  5698  5726 0.00000 1.00000 -0.00000 0.00921
-            verts = [int(words[0]), int(words[1]), int(words[2])]
-            wts = [float(words[3]), float(words[4]), float(words[5])]
-            bv = bverts[vn]
-            pv = pverts[vn]
-            diff = pv.co - bv.co
-            proj = diff.dot(bv.normal)
-            print(diff, proj)
-            if alwaysOutside and proj < minOffset:
-                proj = minOffset
-            outfp.write("%5d %5d %5d %.5f %.5f %.5f %.5f\n" % (
-                verts[0], verts[1], verts[2], wts[0], wts[1], wts[2], proj))
-            # print(vn, bv.co, pv.co)
-            vn += 1
-        else:
-            outfp.write(line)
-
-    infp.close()
-    outfp.close()
-    print("Clothes file modified %s => %s" % (infile, outfile))
-    return
 
 def writeFaces(clo, fp):
     fp.write("faces\n")
@@ -1191,158 +1103,6 @@ def writeVertexGroups(clo, fp):
                 if g.group == vg.index and g.weight > 1e-4:
                     fp.write(" %d %.4g \n" % (v.index, g.weight))
     return
-
-###################################################################################
-#
-#   Export of clothes material
-#
-###################################################################################
-
-def exportBlenderMaterial(me, path):
-    mats = []
-    texs = []
-    for mat in me.materials:
-        if mat:
-            mats.append(mat)
-            for mtex in mat.texture_slots:
-                if mtex:
-                    tex = mtex.texture
-                    if tex and (tex not in texs):
-                        texs.append(tex)
-
-    matname = mc.goodName(mats[0].name)
-    mhxfile = "%s_material.mhx" % matname
-    mhxpath = os.path.join(path, mhxfile)
-    fp,_ = mc.openOutputFile(mhxpath)
-    for tex in texs:
-        exportTexture(tex, matname, fp)
-    for mat in mats:
-        exportMaterial(mat, fp)
-    fp.close()
-    return "%s" % mhxfile
-
-#
-#    exportMaterial(mat, fp):
-#    exportMTex(index, mtex, use, fp):
-#    exportTexture(tex, fp):
-#    exportImage(img, fp)
-#
-
-def exportMaterial(mat, fp):
-    fp.write("Material %s \n" % mat.name)
-    for (n,mtex) in enumerate(mat.texture_slots):
-        if mtex:
-            exportMTex(n, mtex, mat.use_textures[n], fp)
-    prio = ['diffuse_color', 'diffuse_shader', 'diffuse_intensity',
-        'specular_color', 'specular_shader', 'specular_intensity']
-    writePrio(mat, prio, "  ", fp)
-    exportRamp(mat.diffuse_ramp, 'diffuse_ramp', fp)
-    exportRamp(mat.specular_ramp, 'specular_ramp', fp)
-    exclude = []
-    exportDefault("Halo", mat.halo, [], [], exclude, [], '  ', fp)
-    exclude = []
-    exportDefault("RaytraceTransparency", mat.raytrace_transparency, [], [], exclude, [], '  ', fp)
-    exclude = []
-    exportDefault("SSS", mat.subsurface_scattering, [], [], exclude, [], '  ', fp)
-    exclude = ['use_surface_diffuse']
-    exportDefault("Strand", mat.strand, [], [], exclude, [], '  ', fp)
-    writeDir(mat, prio+['texture_slots', 'volume', 'node_tree',
-        'diffuse_ramp', 'specular_ramp', 'use_diffuse_ramp', 'use_specular_ramp',
-        'halo', 'raytrace_transparency', 'subsurface_scattering', 'strand',
-        'is_updated', 'is_updated_data'], "  ", fp)
-    fp.write("end Material\n\n")
-    return
-
-MapToTypes = {
-    'use_map_alpha' : 'ALPHA',
-    'use_map_ambient' : 'AMBIENT',
-    'use_map_color_diffuse' : 'COLOR',
-    'use_map_color_emission' : 'COLOR_EMISSION',
-    'use_map_color_reflection' : 'COLOR_REFLECTION',
-    'use_map_color_spec' : 'COLOR_SPEC',
-    'use_map_color_transmission' : 'COLOR_TRANSMISSION',
-    'use_map_density' : 'DENSITY',
-    'use_map_diffuse' : 'DIFFUSE',
-    'use_map_displacement' : 'DISPLACEMENT',
-    'use_map_emission' : 'EMISSION',
-    'use_map_emit' : 'EMIT',
-    'use_map_hardness' : 'HARDNESS',
-    'use_map_mirror' : 'MIRROR',
-    'use_map_normal' : 'NORMAL',
-    'use_map_raymir' : 'RAYMIR',
-    'use_map_reflect' : 'REFLECTION',
-    'use_map_scatter' : 'SCATTERING',
-    'use_map_specular' : 'SPECULAR_COLOR',
-    'use_map_translucency' : 'TRANSLUCENCY',
-    'use_map_warp' : 'WARP',
-}
-
-def exportMTex(index, mtex, use, fp):
-    tex = mtex.texture
-    texname = tex.name.replace(' ','_')
-    mapto = None
-    prio = []
-    for ext in MapToTypes.keys():
-        if getattr(mtex, ext):
-            if mapto == None:
-                mapto = MapToTypes[ext]
-            prio.append(ext)
-    fp.write("  MTex %d %s %s %s\n" % (index, texname, mtex.texture_coords, mapto))
-    writePrio(mtex, ['texture']+prio, "    ", fp)
-    writeDir(mtex, list(MapToTypes.keys()) + [
-        'texture', 'type', 'texture_coords', 'offset', 'is_updated', 'is_updated_data'], "    ", fp)
-    fp.write("  end MTex\n\n")
-    return
-
-def exportTexture(tex, matname, fp):
-    if not tex:
-        return
-    if tex.type == 'IMAGE' and tex.image:
-        exportImage(tex.image, matname, fp)
-        fp.write("Texture %s %s\n" % (tex.name, tex.type))
-        fp.write("  Image %s ;\n" % tex.image.name)
-    else:
-        fp.write("Texture %s %s\n" % (tex.name, tex.type))
-
-    exportRamp(tex.color_ramp, "color_ramp", fp)
-    writeDir(tex, [
-        'color_ramp', 'node_tree', 'image_user', 'use_nodes', 'use_textures', 'type',
-        'users_material', 'is_updated', 'is_updated_data'], "  ", fp)
-    fp.write("end Texture\n\n")
-
-def exportImage(img, matname, fp):
-    imgName = img.name
-    if imgName == 'Render_Result':
-        return
-
-    (major, minor, rev) = bpy.app.version
-    if major == 2 and minor == 65 and rev < 5:
-        if img.use_premultiply:
-            alphaMode = 'PREMUL'
-        else:
-            alphaMode = 'SKY'
-    else:
-        alphaMode = img.alpha_mode
-
-    fp.write(
-"Image %s\n" % imgName +
-"  Filename %s ;\n" % os.path.basename(img.filepath) +
-"  alpha_mode '%s' ;\n" %  alphaMode +
-"end Image\n\n")
-    return
-
-def exportRamp(ramp, name, fp):
-    if ramp == None:
-        return
-    print(ramp)
-    fp.write("  Ramp %s\n" % name)
-
-    for elt in ramp.elements:
-        col = elt.color
-        fp.write("    Element (%.3f,%.3f,%.3f,%.3f) %.3f ;\n" % (col[0], col[1], col[2], col[3], elt.position))
-    writeDir(ramp, ['elements'], "    ", fp)
-    fp.write("  end Ramp\n")
-
 
 #
 #    writePrio(data, prio, pad, fp):
@@ -1450,38 +1210,6 @@ def writeValue(ext, arg, exclude, pad, depth, fp):
         if (type(r) == float) and (type(g) == float) and (type(b) == float):
             fp.write("%s%s (%.4f,%.4f,%.4f) ;\n" % (pad, ext, r, g, b))
             print(ext, arg)
-    return
-
-#
-#    exportDefault(typ, data, header, prio, exclude, arrays, pad, fp):
-#
-
-def exportDefault(typ, data, header, prio, exclude, arrays, pad, fp):
-    if not data:
-        return
-    try:
-        if not data.enabled:
-            return
-    except:
-        pass
-    try:
-        name = data.name
-    except:
-        name = ''
-
-    fp.write("%s%s %s" % (pad, typ, name))
-    for val in header:
-        fp.write(" %s" % val)
-    fp.write("\n")
-    writePrio(data, prio, pad+"  ", fp)
-
-    for (arrname, arr) in arrays:
-        #fp.write(%s%s\n" % (pad, arrname))
-        for elt in arr:
-            exportDefault(arrname, elt, [], [], [], [], pad+'  ', fp)
-
-    writeDir(data, prio+exclude+arrays, pad+"  ", fp)
-    fp.write("%send %s\n" % (pad,typ))
     return
 
 ###################################################################################
@@ -1861,36 +1589,6 @@ def init():
         description="Use materials",
         default=False)
 
-    bpy.types.Scene.MCUseBump = BoolProperty(
-        name="Bump",
-        description="Use bump map",
-        default=False)
-
-    bpy.types.Scene.MCUseNormal = BoolProperty(
-        name="Normal",
-        description="Use normal map",
-        default=False)
-
-    bpy.types.Scene.MCUseDisp = BoolProperty(
-        name="Displace",
-        description="Use displacement map",
-        default=False)
-
-    bpy.types.Scene.MCUseTrans = BoolProperty(
-        name="Transparency",
-        description="Use transparency map",
-        default=False)
-
-    bpy.types.Scene.MCUseMask = BoolProperty(
-        name="Mask",
-        description="Use mask map",
-        default=False)
-
-    bpy.types.Scene.MCUseTexture = BoolProperty(
-        name="Texture",
-        description="Use texture",
-        default=True)
-
     bpy.types.Scene.MCMaskLayer = IntProperty(
         name="Mask UV layer",
         description="UV layer for mask, starting with 0",
@@ -1901,43 +1599,10 @@ def init():
         description="UV layer for textures, starting with 0",
         default=0)
 
-    bpy.types.Scene.MCBumpStrength = FloatProperty(
-        name="Bump strength",
-        description="Bump strength",
-        default=1.0,
-        min=0.0, max=1.0)
-
-    bpy.types.Scene.MCNormalStrength = FloatProperty(
-        name="Normal strength",
-        description="Normal strength",
-        default=1.0,
-        min=0.0, max=1.0)
-
-    bpy.types.Scene.MCDispStrength = FloatProperty(
-        name="Disp strength",
-        description="Displacement strength",
-        default=0.2,
-        min=0.0, max=1.0)
-
     bpy.types.Scene.MCAllUVLayers = BoolProperty(
         name="All UV layers",
         description="Include all UV layers in export",
         default=False)
-
-    bpy.types.Scene.MCBlenderMaterials = BoolProperty(
-        name="Blender materials",
-        description="Save materials as mhx file",
-        default=False)
-
-    bpy.types.Scene.MCHairMaterial = BoolProperty(
-        name="Hair material",
-        description="Fill in hair material",
-        default=False)
-
-    bpy.types.Scene.MCVertexGroups = BoolProperty(
-        name="Save vertex groups",
-        description="Save vertex groups but not texverts",
-        default=True)
 
     bpy.types.Scene.MCThreshold = FloatProperty(
         name="Threshold",
@@ -1949,13 +1614,6 @@ def init():
         name="List length",
         description="Max number of verts considered",
         default=4)
-
-    """
-    bpy.types.Scene.MCForbidFailures = BoolProperty(
-        name="Forbid failures",
-        description="Raise error if not found optimal triangle")
-    scn['MCForbidFailures'] = True
-    """
 
     bpy.types.Scene.MCUseInternal = BoolProperty(
         name="Use Internal",
