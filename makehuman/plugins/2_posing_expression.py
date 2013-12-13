@@ -297,7 +297,7 @@ class MhmLoadTaskView(gui3d.TaskView):
 class ExpressionLoadTaskView(MhmLoadTaskView):
 
     def __init__(self, category, expressionTaskView):
-        MhmLoadTaskView.__init__(self, category, expressionTaskView, 'Expression', 'expressions')
+        MhmLoadTaskView.__init__(self, category, expressionTaskView, 'Expressions', 'expressions')
 
 
 class VisemeLoadTaskView(MhmLoadTaskView):
@@ -323,14 +323,14 @@ _UseWarping = True
 def load(app):
     category = app.getCategory('Pose/Animate')
     expressionTuning = ExpressionTaskView(category)
-    expressionTuning.sortOrder = 0.5
+    expressionTuning.sortOrder = 8.5
     category.addTask(expressionTuning)
 
     app.addLoadHandler('expression', expressionTuning.loadHandler)
     app.addSaveHandler(expressionTuning.saveHandler)
 
     expressionView = ExpressionLoadTaskView(category, expressionTuning)
-    expressionView.sortOrder = 0
+    expressionView.sortOrder = 8
     category.addTask(expressionView)
 
     visemeView = VisemeLoadTaskView(category, expressionTuning)
