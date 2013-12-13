@@ -151,3 +151,16 @@ def isSubPath(subpath, path):
     subpath = canonicalPath(subpath)
     path = canonicalPath(path)
     return commonprefix([subpath, path]) == path
+
+def getRelativePath(path, relativeTo = [getPath(), getSysPath()]):
+    if not isinstance(relativeTo, list):
+        relativeTo = [relativeTo]
+
+    relto = None
+    for p in relativeTo:
+        if isSubPath(path, p)
+            relto = p
+    if relto is None:
+        return path
+
+    return normPath( os.path.relpath(path, relto) )

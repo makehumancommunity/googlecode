@@ -34,7 +34,7 @@ import mh2proxy
 import filechooser as fc
 from humanobjchooser import HumanObjectSelector
 import log
-from getpath import isSubPath
+import getpath
 
 class MaterialAction(gui3d.Action):
     def __init__(self, obj, after):
@@ -221,8 +221,6 @@ class MaterialTaskView(gui3d.TaskView):
         Produce a portable path for writing to file.
         """
         # TODO move as helper func to material module
-        _originalPath = filepath
-        filepath = os.path.abspath(filepath)
         if objFile:
             objFile = os.path.abspath(objFile)
             if os.path.isdir(objFile):
@@ -231,11 +229,7 @@ class MaterialTaskView(gui3d.TaskView):
         else:
             searchPaths = self.searchPaths
 
-        for dataPath in searchPaths:
-            if isSubPath(filepath, dataPath):
-                return os.path.relpath(filepath, dataPath).replace('\\', '/')
-
-        return _originalPath.replace('\\', '/')
+        return getpath.getRelativePath(filepath, searchPaths)
 
     def getMaterialPath(self, relPath, objFile = None):
         if objFile:
