@@ -78,7 +78,7 @@ def writeMaterialFile(fp, mat, name, outdir):
     """
 
     fp.write(
-        '# Material definition for MakeHuman benchmark clothes\n' +
+        '# MakeHuman Material definition\n' +
         '\n' +
         'name %sMaterial\n' % name +
         '\n' +
@@ -139,5 +139,5 @@ def writeMaterialFile(fp, mat, name, outdir):
         'shaderConfig normal  %s\n' % useNormal +
         'shaderConfig displacement  %s\n' % useDisplacement +
         'shaderConfig spec  %s\n' % useSpecular +
-        'shaderConfig vertexColors true\n')
+        'shaderConfig vertexColors false\n')
 
