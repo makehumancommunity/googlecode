@@ -33,6 +33,7 @@ import events3d
 import qtgui
 import queue
 import time
+import getpath
 
 # Timeout in seconds after which moving the mousewheel will pick a new mouse pos
 # TODO make this configureable in settings?
@@ -371,11 +372,14 @@ class Frame(QtGui.QMainWindow):
 
         self.setWindowTitle(self.title)
         qtVersion = getQtVersion()
-        if qtVersion[0] >= 4 and qtVersion[1] >= 2:
-            self.setWindowIcon(QtGui.QIcon("icons/makehuman_bg.svg"))
+        if qtVersion[0] >= 4 and qtVersion[1] >= 2 \
+        and not sys.platform.startswith("win"):
+            # Explicitly include Qt SVG lib to force pyinstaller to pack it
+            #from PyQt4 import QtSvg
+            self.setWindowIcon(QtGui.QIcon(getpath.getSysPath("icons/makehuman_bg.svg")))
         else:
             # Older Qt libraries do not support svg icons
-            self.setWindowIcon(QtGui.QIcon("icons/makehuman.bmp"))
+            self.setWindowIcon(QtGui.QIcon(getpath.getSysPath("icons/makehuman.png")))
 
         self.setAttribute(QtCore.Qt.WA_KeyCompression, False)
         self.resize(*size)
