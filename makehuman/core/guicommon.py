@@ -410,26 +410,34 @@ class Object(events3d.EventHandler):
     material = property(getMaterial, setMaterial)
 
     def onMouseDown(self, event):
-        self._view().callEvent('onMouseDown', event)
+        if self._view():
+            self._view().callEvent('onMouseDown', event)
 
     def onMouseMoved(self, event):
-        self._view().callEvent('onMouseMoved', event)
+        if self._view():
+            self._view().callEvent('onMouseMoved', event)
 
     def onMouseDragged(self, event):
-        self._view().callEvent('onMouseDragged', event)
+        if self._view():
+            self._view().callEvent('onMouseDragged', event)
 
     def onMouseUp(self, event):
-        self._view().callEvent('onMouseUp', event)
+        if self._view():
+            self._view().callEvent('onMouseUp', event)
 
     def onMouseEntered(self, event):
-        self._view().callEvent('onMouseEntered', event)
+        if self._view():
+            self._view().callEvent('onMouseEntered', event)
 
     def onMouseExited(self, event):
-        self._view().callEvent('onMouseExited', event)
+        if self._view():
+            self._view().callEvent('onMouseExited', event)
 
     def onClicked(self, event):
-        self._view().callEvent('onClicked', event)
+        if self._view():
+            self._view().callEvent('onClicked', event)
 
     def onMouseWheel(self, event):
-        self._view().callEvent('onMouseWheel', event)
+        if self._view():
+            self._view().callEvent('onMouseWheel', event)
 
