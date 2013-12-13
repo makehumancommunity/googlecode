@@ -67,7 +67,7 @@ class MhxConfig(Config):
             if not self.rigOptions:
                 self.useAdvancedMHX = True
                 self.rigOptions = ArmatureOptions()
-                self.rigOptions.loadPreset("advanced", None, folder="data/mhx")
+                self.rigOptions.loadPreset("data/mhx/advanced.json", None)
 
         self.rigOptions.setExportOptions(
             useCustomShapes = True,

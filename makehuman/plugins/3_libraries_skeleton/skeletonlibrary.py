@@ -34,6 +34,7 @@ import skeleton_drawing
 import animation
 import armature
 from armature.options import ArmatureOptions
+import getpath
 
 import numpy as np
 import os
@@ -111,6 +112,8 @@ class SkeletonLibrary(gui3d.TaskView):
         self.human.getSkeleton = types.MethodType(_getSkeleton, self.human, self.human.__class__)
         self.human.getVertexWeights = types.MethodType(_getVertexWeights, self.human, self.human.__class__)
 
+        self.selectedRig = None
+
         self.oldSmoothValue = False
 
         self.humanChanged = False   # Used for determining when joints need to be redrawn
@@ -176,19 +179,20 @@ class SkeletonLibrary(gui3d.TaskView):
         self.descrLbl.setSizePolicy(gui.QtGui.QSizePolicy.Ignored, gui.QtGui.QSizePolicy.Preferred)
         self.descrLbl.setWordWrap(True)
 
-    def rigPresetFileSelected(self, filename):
+    def rigPresetFileSelected(self, filename, suppressAction = False):
+        self.selectedRig = filename
+
         if not filename:
             self.amtOptions.reset(self.optionsSelector, useMuscles=False)
             self.descrLbl.setText("")
             self.updateSkeleton(useOptions=False)
             return
 
-        rigName = os.path.splitext(os.path.basename(filename))[0]
-        descr = self.amtOptions.loadPreset(rigName, self.optionsSelector)
+        descr = self.amtOptions.loadPreset(filename, self.optionsSelector)   # TODO clean up this design
         self.descrLbl.setText("Description: %s" % descr)
-        self.updateSkeleton()
+        self.updateSkeleton(suppressAction = suppressAction)
 
-    def updateSkeleton(self, useOptions=True):
+    def updateSkeleton(self, useOptions=True, suppressAction = False):
         if self.human.getSkeleton():
             oldSkelOptions = self.human.getSkeleton().options
         else:
@@ -200,7 +204,11 @@ class SkeletonLibrary(gui3d.TaskView):
         else:
             string = "Clear skeleton"
             options = None
-        gui3d.app.do(SkeletonAction(string, self, oldSkelOptions, options))
+
+        if suppressAction:
+            self.chooseSkeleton(options)
+        else:
+            gui3d.app.do(SkeletonAction(string, self, oldSkelOptions, options))
 
 
     def onShow(self, event):
@@ -464,6 +472,7 @@ class SkeletonLibrary(gui3d.TaskView):
     def onHumanChanging(self, event):
         if event.change == 'reset':
             self.chooseSkeleton(None)
+            self.selectedRig = None # TODO because there is no proper chooseSkeleton(filename) method
 
 
     def onHumanRotated(self, event):
@@ -482,12 +491,13 @@ class SkeletonLibrary(gui3d.TaskView):
     def loadHandler(self, human, values):
         if values[0] == "skeleton":
             skelFile = values[1]
-            for path in self.rigPaths:
-                skelPath = os.path.join(path, skelFile)
-                if os.path.isfile(skelPath):
-                    self.chooseSkeleton(skelPath)
-                    return
-            log.warning("Could not load rig %s, file does not exist." % skelFile)
+
+            skelFile = getpath.findFile(skelFile, self.paths)
+            if not os.path.isfile(skelFile):
+                log.warning("Could not load rig %s, file does not exist." % skelFile)
+            else:
+                self.rigPresetFileSelected(skelFile, True)
+            return
 
         # Make sure no skeleton is drawn
         if self.skelObj:
@@ -495,7 +505,8 @@ class SkeletonLibrary(gui3d.TaskView):
 
     def saveHandler(self, human, file):
         if human.getSkeleton():
-            file.write('skeleton %s ' % human.getSkeleton().options)
+            rigFile = getpath.getRelativePath(self.selectedRig, self.paths)
+            file.write('skeleton %s ' % rigFile)
 
 
 

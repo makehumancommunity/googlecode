@@ -128,9 +128,8 @@ class ArmatureOptions(object):
             "   useMasterBone : %s\n" % self.useMasterBone +
             "   useCorrectives : %s\n" % self.useCorrectives +
             "   merge : %s\n" % self.merge +
-            "   locale : %s\n" % self.locale +
+            "   locale : %s\n" % self.locale +  # TODO currently impossible to serialize
             ">")
-
 
     def fromSelector(self, selector):
         if selector is None:
@@ -168,8 +167,7 @@ class ArmatureOptions(object):
             selector.fromOptions(self)
 
 
-    def loadPreset(self, filename, selector, folder=getSysDataPath("rigs/")):
-        filepath = os.path.join(folder, filename + ".json")
+    def loadPreset(self, filepath, selector):
         struct = io_json.loadJson(filepath)
         self._setDefaults()
         try:
