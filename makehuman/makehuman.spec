@@ -129,6 +129,7 @@ elif sys.platform == 'win32':
         a.scripts,
         exclude_binaries=True,
         name='makehuman.exe',
+        icon='icons/makehuman.ico',
         debug=False,
         strip=None,
         upx=True,
