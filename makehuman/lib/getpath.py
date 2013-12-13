@@ -162,7 +162,7 @@ def getRelativePath(path, relativeTo = [getPath(), getSysPath()]):
 
     relto = None
     for p in relativeTo:
-        if isSubPath(path, p)
+        if isSubPath(path, p):
             relto = p
     if relto is None:
         return path
