@@ -153,6 +153,10 @@ def isSubPath(subpath, path):
     return commonprefix([subpath, path]) == path
 
 def getRelativePath(path, relativeTo = [getPath(), getSysPath()]):
+    """
+    Return a relative file path, relative to one of the specified search paths.
+    First valid path is returned, so order in which search paths are given matters.
+    """
     if not isinstance(relativeTo, list):
         relativeTo = [relativeTo]
 
@@ -164,3 +168,20 @@ def getRelativePath(path, relativeTo = [getPath(), getSysPath()]):
         return path
 
     return normPath( os.path.relpath(path, relto) )
+
+def findFile(relPath, searchPaths = [getPath(), getSysPath()]):
+    """
+    Inverse of getRelativePath: find an absolute path from specified relative
+    path in one of the search paths.
+    First occurence is returned, so order in which search paths are given matters.
+    """
+    if not isinstance(searchPaths, list):
+        searchPaths = [searchPaths]
+
+    for dataPath in searchPaths:
+        path = os.path.join(dataPath, relPath)
+        if os.path.isfile(path):
+            return normPath( path )
+
+    return relPath
+

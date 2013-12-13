@@ -174,13 +174,13 @@ class MaterialTaskView(gui3d.TaskView):
                 human.material = mat
                 return
             else:
-                for d in [mh.getPath('data'), mh.getSysDataPath()]:
-                    absP = os.path.join(d, path)
-                    if os.path.isfile(absP):
-                        mat = material.fromFile(absP)
-                        human.material = mat
-                        return
-            log.warning('Could not find material %s for skinMaterial parameter.', values[1])
+                absP = getpath.findFile(path, [mh.getPath('data'), mh.getSysDataPath()])
+                if not os.path.isfile(absP):
+                    log.warning('Could not find material %s for skinMaterial parameter.', values[1])
+                    return
+                mat = material.fromFile(absP)
+                human.material = mat
+                return
         elif values[0] == 'material':
             if len(values) == 3:
                 uuid = values[1]
@@ -240,12 +240,7 @@ class MaterialTaskView(gui3d.TaskView):
         else:
             searchPaths = self.searchPaths
 
-        for dataPath in searchPaths:
-            path = os.path.join(dataPath, relPath)
-            if os.path.isfile(path):
-                return path
-
-        return relPath
+        return getpath.findFile(relPath, searchPaths)
 
     def saveHandler(self, human, file):
         file.write('skinMaterial %s\n' % self.getRelativeMaterialPath(human.material.filename))
