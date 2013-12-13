@@ -410,8 +410,7 @@ class MaterialEditorTaskView(gui3d.TaskView):
         if not mat:
             mat = self.getSelectedObject().material
         mat.setShader(path)
-        self.listUniforms(mat)
-        self.listMaterialSettings(self.getSelectedObject())
+        self.updateShaderConfig()
 
     def listUniforms(self, mat):
         for child in self.paramBox.children[:]:
