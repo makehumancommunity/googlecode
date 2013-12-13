@@ -88,6 +88,7 @@ def findSrcArmature(context, rig):
     from . import t_pose
     scn = context.scene
 
+    setCategory("Identify Source Rig")
     if not scn.McpAutoSourceRig:
         mcp.srcArmature = mcp.sourceArmatures[scn.McpSourceRig]
     else:
@@ -100,6 +101,7 @@ def findSrcArmature(context, rig):
 
     rig.McpArmature = mcp.srcArmature.name
     print("Using matching armature %s." % rig.McpArmature)
+    clearCategory()
 
 #
 #    setArmature(rig, scn)

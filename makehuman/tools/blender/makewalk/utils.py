@@ -463,19 +463,46 @@ def showProgress(n, frame, nFrames, step=20):
 #
 #
 
+_category = ""
+_errorLines = ""
+
+def setCategory(string):
+    global _category
+    _category = string
+
+def clearCategory():
+    global _category
+    _category = "General error"
+
+clearCategory()
+
+
 class MocapError(Exception):
     def __init__(self, value):
+        global _errorLines
         self.value = value
-        print("*** Mocap error ***\n%s" % value)
-        mcp.errorLines = value.split("\n")
+        _errorLines = (
+            ["Catogory: %s" % _category] +
+            value.split("\n") +
+            ["" +
+             "For corrective actions see:",
+             "http://www.makehuman.org/doc/node/",
+             "  makewalk_errors_and_corrective_actions.html"]
+            )
+        print("*** Mocap error ***")
+        for line in _errorLines:
+            print(line)
+
     def __str__(self):
         return repr(self.value)
+
 
 class ErrorOperator(bpy.types.Operator):
     bl_idname = "mcp.error"
     bl_label = "Mocap error"
 
     def execute(self, context):
+        clearCategory()
         return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
@@ -483,8 +510,10 @@ class ErrorOperator(bpy.types.Operator):
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
-        for line in mcp.errorLines:
+        global _errorLines
+        for line in _errorLines:
             self.layout.label(line)
+
 #
 #
 #

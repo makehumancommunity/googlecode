@@ -24,7 +24,7 @@ Abstract
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": "1.30",
+    "version": (1, 30),
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -33,7 +33,7 @@ bl_info = {
     "category": "MakeHuman"}
 
 if "bpy" in locals():
-    print("Reloading maketarget v %s" % bl_info["version"])
+    print("Reloading maketarget v %d.%d" % bl_info["version"])
     import imp
 
     imp.reload(mh)
@@ -75,7 +75,7 @@ Thomas = False
 #----------------------------------------------------------
 
 class ConvertTargetPanel(bpy.types.Panel):
-    bl_label = "Convert Target %s" % bl_info["version"]
+    bl_label = "Convert Target %d.%d" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
@@ -113,7 +113,7 @@ class ConvertTargetPanel(bpy.types.Panel):
 #----------------------------------------------------------
 
 class MakeTargetPanel(bpy.types.Panel):
-    bl_label = "Make Target  Version %s" % bl_info["version"]
+    bl_label = "Make Target  Version %d.%d" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
 

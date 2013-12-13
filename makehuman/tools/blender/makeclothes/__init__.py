@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": "0.936",
+    "version": (0, 936),
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -35,7 +35,7 @@ bl_info = {
 
 
 if "bpy" in locals():
-    print("Reloading makeclothes v %s" % bl_info["version"])
+    print("Reloading makeclothes v %d.%d" % bl_info["version"])
     import imp
     imp.reload(maketarget)
     imp.reload(mc)
@@ -43,7 +43,7 @@ if "bpy" in locals():
     imp.reload(makeclothes)
     imp.reload(project)
 else:
-    print("Loading makeclothes v %s" % bl_info["version"])
+    print("Loading makeclothes v %d.%d" % bl_info["version"])
     import bpy
     import os
     from bpy.props import *
@@ -82,7 +82,7 @@ def inset(layout):
 
 
 class MakeClothesPanel(bpy.types.Panel):
-    bl_label = "Make Clothes version %s" % bl_info["version"]
+    bl_label = "Make Clothes version %d.%d" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
 

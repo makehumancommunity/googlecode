@@ -37,12 +37,12 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": "0.934",
+    "version": (0, 935),
     "blender": (2, 6, 9),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
     "warning": "",
-    'wiki_url': "http://www.makehuman.org/doc/node/makewalk_user_interface.html",
+    'wiki_url': "http://www.makehuman.org/doc/node/makewalk.html",
     "category": "MakeHuman"}
 
 # To support reload properly, try to access a package var, if it's there, reload everything
@@ -100,7 +100,7 @@ def inset(layout):
 #
 
 class MainPanel(bpy.types.Panel):
-    bl_label = "MakeWalk v %s: Main" % bl_info["version"]
+    bl_label = "MakeWalk v %d.%d: Main" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "TOOLS"
 

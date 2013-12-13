@@ -180,9 +180,14 @@ class CArmature:
         bnames = ["hip"+suffix, "thigh"+suffix, "shin"+suffix, "foot"+suffix, "toe"+suffix]
         prefnames = ["X", "X", "X", "foot", "toe"]
         print("  hip%s:" % suffix, hip.name)
-        thigh = self.validChildren(hip)[0]
+        try:
+            thigh = self.validChildren(hip)[0]
+        except IndexError:
+            raise MocapError("Hip %s has no children" % hip.name)
         shins = self.validChildren(thigh, True)
-        if len(shins) != 1:
+        if len(shins) == 0:
+            raise MocapError("Thigh %s has no children" % thigh.name)
+        elif len(shins) > 1:
             shin = thigh
             thigh = hip
             print("  thigh%s:" % suffix, thigh.name)
@@ -213,9 +218,15 @@ class CArmature:
     def findArm(self, shoulder, suffix):
         bnames = ["shoulder"+suffix, "upper_arm"+suffix, "forearm"+suffix, "hand"+suffix]
         print("  shoulder%s:" % suffix, shoulder.name)
-        upperarm = self.validChildren(shoulder)[0]
+        try:
+            upperarm = self.validChildren(shoulder)[0]
+        except IndexError:
+            raise MocapError("Shoulder %s has no children" % shoulder.name)
         print("  upper_arm%s:" % suffix, upperarm.name)
-        forearm = self.validChildren(upperarm, True)[0]
+        try:
+            forearm = self.validChildren(upperarm, True)[0]
+        except IndexError:
+            raise MocapError("Upper arm %s has no children" % upperarm.name)
         print("  forearm%s:" % suffix, forearm.name)
         hands = self.validChildren(forearm)
         if hands:

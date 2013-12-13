@@ -42,6 +42,7 @@ from .armature import CArmature
 #
 
 def getTargetArmature(rig, scn):
+    setCategory("Identify Target Rig")
     selectAndSetRestPose(rig, scn)
     bones = rig.data.bones.keys()
 
@@ -54,6 +55,7 @@ def getTargetArmature(rig, scn):
             raise MocapError("Initialize Target Panel first")
 
     if name == "Automatic":
+        setCategory("Automatic Target Rig")
         amt = mcp.trgArmature = CArmature()
         amt.findArmature(rig, ignoreHiddenLayers=scn.McpIgnoreHiddenLayers)
         mcp.targetArmatures["Automatic"] = amt
@@ -68,9 +70,11 @@ def getTargetArmature(rig, scn):
         mcp.ikBones = []
         rig.McpTPoseFile = ""
         mcp.targetInfo[name] = (boneAssoc, mcp.ikBones, rig.McpTPoseFile)
+        clearCategory()
         return boneAssoc
 
     else:
+        setCategory("Manual Target Rig")
         scn.McpTargetRig = name
         mcp.target = name
         (boneAssoc, mcp.ikBones, rig.McpTPoseFile) = mcp.targetInfo[name]
@@ -89,6 +93,7 @@ def getTargetArmature(rig, scn):
                 print("  ", bname)
                 pass
 
+        clearCategory()
         return boneAssoc
 
 

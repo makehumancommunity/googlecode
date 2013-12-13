@@ -119,6 +119,7 @@ Epsilon = 1e-5
 
 def readBvhFile(context, filepath, scn, scan):
     props.ensureInited(context)
+    setCategory("Load Bvh File")
     scale = scn.McpBvhScale
     startFrame = scn.McpStartFrame
     endFrame = scn.McpEndFrame
@@ -255,6 +256,7 @@ def readBvhFile(context, filepath, scn, scan):
         print("Warning: No frames in range %d -- %d." % (startFrame, endFrame))
     renameBvhRig(rig, filepath)
     rig.McpIsSourceRig = True
+    clearCategory()
     return rig
 
 #
@@ -508,6 +510,7 @@ def rescaleRig(scn, trgRig, srcRig):
 
 def renameAndRescaleBvh(context, srcRig, trgRig):
     from . import source, target
+    setCategory("Rename And Rescale")
     try:
         if srcRig["McpRenamed"]:
             raise MocapError("%s already renamed and rescaled." % srcRig.name)
@@ -526,7 +529,7 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
     setInterpolation(srcRig)
     rescaleRig(context.scene, trgRig, srcRig)
     srcRig["McpRenamed"] = True
-    return
+    clearCategory()
 
 ########################################################################
 #

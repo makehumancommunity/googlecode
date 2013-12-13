@@ -347,6 +347,7 @@ def retargetAnimation(context, srcRig, trgRig):
     anim = CAnimation(srcRig, trgRig, boneAssoc, scn)
     anim.setTPose(scn)
 
+    setCategory("Retarget")
     frameBlock = frames[0:100]
     index = 0
     try:
@@ -366,6 +367,7 @@ def retargetAnimation(context, srcRig, trgRig):
     act = trgRig.animation_data.action
     act.name = trgRig.name[:4] + srcRig.name[2:]
     act.use_fake_user = True
+    clearCategory()
     endProgress("Retargeted %s --> %s" % (srcRig.name, trgRig.name))
 
 
