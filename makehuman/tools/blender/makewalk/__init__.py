@@ -37,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": (0, 935),
+    "version": (0, 936),
     "blender": (2, 6, 9),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -155,15 +155,6 @@ class OptionsPanel(bpy.types.Panel):
         scn = context.scene
         rig = context.object
 
-        layout.label("SubSample and Rescale")
-        layout.prop(scn, "McpDefaultSS")
-        if not scn.McpDefaultSS:
-            layout.prop(scn, "McpSubsample")
-            layout.prop(scn, "McpSSFactor")
-        layout.prop(scn, "McpRescale")
-        layout.prop(scn, "McpRescaleFactor")
-
-        layout.separator()
         layout.prop(scn, "McpAutoScale")
         layout.prop(scn, "McpBvhScale")
         layout.prop(scn, "McpUseLimits")
@@ -172,15 +163,26 @@ class OptionsPanel(bpy.types.Panel):
         layout.prop(scn, 'McpAutoSourceRig')
         layout.prop(scn, 'McpAutoTargetRig')
         layout.prop(scn, "McpIgnoreHiddenLayers")
-        layout.prop(rig, "MhReverseHip")
+
+        layout.separator()
+        layout.label("SubSample and Rescale")
+        ins = inset(layout)
+        ins.prop(scn, "McpDefaultSS")
+        if not scn.McpDefaultSS:
+            ins.prop(scn, "McpSubsample")
+            ins.prop(scn, "McpSSFactor")
+            ins.prop(scn, "McpRescale")
+            ins.prop(scn, "McpRescaleFactor")
+            ins.operator("mcp.rescale_fcurves")
 
         layout.separator()
         layout.label("Simplification")
-        layout.prop(scn, "McpDoSimplify")
-        layout.prop(scn, "McpErrorLoc")
-        layout.prop(scn, "McpErrorRot")
-        layout.prop(scn, "McpSimplifyVisible")
-        layout.prop(scn, "McpSimplifyMarkers")
+        ins = inset(layout)
+        ins.prop(scn, "McpDoSimplify")
+        ins.prop(scn, "McpErrorLoc")
+        ins.prop(scn, "McpErrorRot")
+        ins.prop(scn, "McpSimplifyVisible")
+        ins.prop(scn, "McpSimplifyMarkers")
 
 
 ########################################################################
