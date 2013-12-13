@@ -977,7 +977,7 @@ def checkNoTriangles(scn, ob):
 
     for f in ob.data.polygons:
         if len(f.vertices) != 4:
-            msg = "Object %s can not be used for clothes creation because it has non-quad faces.\n" % (ob.name)
+            msg = "Object %s\ncan not be used for clothes creation\nbecause it has non-quad faces.\n" % (ob.name)
             raise MHError(msg)
         for vn in f.vertices:
             strayVerts[vn] = False
@@ -986,13 +986,13 @@ def checkNoTriangles(scn, ob):
     stray = [vn for vn in strayVerts.keys() if strayVerts[vn]]
     if len(stray) > 0:
         highlightVerts(scn, ob, stray)
-        msg = "Object %s can not be used for clothes creation because it has stray verts:\n  %s" % (ob.name, stray)
+        msg = "Object %s\ncan not be used for clothes creation\nbecause it has stray verts:\n  %s" % (ob.name, stray)
         raise MHError(msg)
 
     excess = [vn for vn in nPoles.keys() if nPoles[vn] > 8]
     if len(excess) > 0:
         highlightVerts(scn, ob, excess)
-        msg = "Object %s can not be used for clothes creation because it has verts with more than 8 poles:\n  %s" % (ob.name, excess)
+        msg = "Object %s\ncan not be used for clothes creation\nbecause it has verts with more than 8 poles:\n  %s" % (ob.name, excess)
         raise MHError(msg)
 
 
@@ -1056,7 +1056,7 @@ def checkObjectOK(ob, context, isClothing):
     #    err = True
 
     if word:
-        msg = "Object %s can not be used for clothes creation because it has %s.\n" % (ob.name, word)
+        msg = "Object %s\ncan not be used for clothes creation because\nit has %s.\n" % (ob.name, word)
         if err:
             msg +=  line2
             raise MHError(msg)
