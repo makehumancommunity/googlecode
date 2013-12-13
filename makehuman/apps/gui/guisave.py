@@ -99,13 +99,9 @@ class SaveTaskView(gui3d.TaskView):
         # When the task gets shown, set the focus to the file entry
         gui3d.TaskView.onShow(self, event)
         self.fileentry.setFocus()
-        self.oldZoom = gui3d.app.modelCamera.zoomFactor
-        gui3d.app.modelCamera.zoomFactor = 0.5
-        gui3d.app.setGlobalCamera();
         self.selection.show()
 
     def onHide(self, event):
         
         gui3d.TaskView.onHide(self, event)
-        gui3d.app.modelCamera.zoomFactor = self.oldZoom
         self.selection.hide()

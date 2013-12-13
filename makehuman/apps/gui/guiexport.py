@@ -184,15 +184,6 @@ class ExportTaskView(guipose.PoseModeTaskView):
         human = gui3d.app.selectedHuman
         camera = mh.cameras[0]
 
-        self.pan = human.getPosition()
-        self.eye = camera.eye
-        self.focus = camera.focus
-        self.rotation = human.getRotation()
-        human.setPosition([0, -1, 0])
-        gui3d.app.setGlobalCamera();
-        camera.eyeZ = 70
-        human.setRotation([0.0, 0.0, 0.0])
-
         skel = human.getSkeleton()
         if skel and skel.object:
             skel.object.show()
@@ -204,11 +195,6 @@ class ExportTaskView(guipose.PoseModeTaskView):
         guipose.PoseModeTaskView.onHide(self, event)
 
         human = gui3d.app.selectedHuman
-        camera = mh.cameras[0]
-        human.setPosition(self.pan)
-        camera.eye = self.eye
-        camera.focus = self.focus
-        human.setRotation(self.rotation)
 
         skel = human.getSkeleton()
         if skel and skel.object:
