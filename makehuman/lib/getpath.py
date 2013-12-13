@@ -167,7 +167,7 @@ def getRelativePath(path, relativeTo = [getPath(), getSysPath()]):
     if relto is None:
         return path
 
-    return normPath( os.path.relpath(path, relto) )
+    return formatPath( os.path.relpath(path, relto) )
 
 def findFile(relPath, searchPaths = [getPath(), getSysPath()]):
     """
@@ -181,7 +181,7 @@ def findFile(relPath, searchPaths = [getPath(), getSysPath()]):
     for dataPath in searchPaths:
         path = os.path.join(dataPath, relPath)
         if os.path.isfile(path):
-            return normPath( path )
+            return formatPath( path )
 
     return relPath
 
