@@ -1,3 +1,8 @@
+# MakeHuman 3d morphing modelled by Manuel Bastioni
+# Copyright (C) 2013 Manuel Bastioni (mb@makehuman.org)
+# license AGPL3 (see also http://www.makehuman.org/node/320)
+# homepage http://www.makehuman.org
+# basemesh hm08
 1363 -.003 .012 -.003
 1364 .001 .006 -.021
 1373 0 .02 -.001
