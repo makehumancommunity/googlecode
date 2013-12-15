@@ -398,6 +398,9 @@ def saveTPose(context, filepath):
         if magn > 1e-4:
             if pb.McpBone:
                 struct.append((pb.McpBone, tuple(q)))
+
+    if os.path.splitext(filepath)[1] != ".json":
+        filepath = filepath + ".json"
     filepath = os.path.join(os.path.dirname(__file__), filepath)
     print("Saving %s" % filepath)
     saveJson(struct, filepath)

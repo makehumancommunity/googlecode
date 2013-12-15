@@ -182,20 +182,19 @@ class VIEW3D_OT_McpUndoEditButton(bpy.types.Operator):
         return (context.object.McpUndoAction != "")
 
     def execute(self, context):
-        mcp.editString = "?"
-        if self.answer == "":
-            mcp.editString = "Really undo editing?"
-            mcp.editConfirm = self.bl_idname
-        elif self.answer == "yes":
-            mcp.editConfirm = ""
-            setKeyMap(context, "mcp.insert_locrot", False)
-            try:
-                undoEdit(context)
-            except MocapError:
-                bpy.ops.mcp.error('INVOKE_DEFAULT')
-        else:
-            mcp.editConfirm = ""
+        setKeyMap(context, "mcp.insert_locrot", False)
+        try:
+            undoEdit(context)
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=200, height=20)
+
+    def draw(self, context):
+        self.layout.label("Really undo editing?")
 
 #
 #   getActionPair(context):

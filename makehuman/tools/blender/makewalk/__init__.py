@@ -37,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": (0, 936),
+    "version": (0, 937),
     "blender": (2, 6, 9),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -206,10 +206,6 @@ class EditPanel(bpy.types.Panel):
         scn = context.scene
         rig = context.object
 
-        if mcp.editConfirm:
-            confirmPanel(layout, mcp.editConfirm, mcp.editString)
-            return
-
         layout.prop(scn, "McpShowIK")
         if scn.McpShowIK:
             ins = inset(layout)
@@ -243,7 +239,7 @@ class EditPanel(bpy.types.Panel):
         if scn.McpShowDisplace:
             ins = inset(layout)
             ins.operator("mcp.start_edit")
-            ins.operator("mcp.undo_edit").answer=""
+            ins.operator("mcp.undo_edit")
 
             row = ins.row()
             props = row.operator("mcp.insert_key", text="Loc")
@@ -457,10 +453,6 @@ class UtilityPanel(bpy.types.Panel):
         scn = context.scene
         rig = context.object
 
-        if mcp.utilityConfirm:
-            confirmPanel(layout, mcp.utilityConfirm, mcp.utilityString)
-            return
-
         layout.label("Default Settings")
         #layout.operator("mcp.init_interface")
         layout.operator("mcp.save_defaults")
@@ -473,7 +465,7 @@ class UtilityPanel(bpy.types.Panel):
         layout.operator("mcp.update_action_list")
         layout.operator("mcp.set_current_action").prop = 'McpActions'
         #layout.prop(scn, "McpReallyDelete")
-        layout.operator("mcp.delete").answer=""
+        layout.operator("mcp.delete")
         layout.operator("mcp.delete_hash")
 
         layout.separator()
@@ -500,22 +492,6 @@ class UtilityPanel(bpy.types.Panel):
         layout.prop(scn, "McpDirectory")
         layout.prop(scn, "McpPrefix")
         layout.operator("mcp.batch")
-
-#
-#    Confirm
-#
-
-mcp.editConfirm = None
-mcp.editString = "?"
-mcp.utilityConfirm = None
-mcp.utilityString = "?"
-
-def confirmPanel(layout, confirm, string):
-    layout.label(string)
-    layout.operator(confirm, text="yes").answer="yes"
-    layout.operator(confirm, text="no").answer="no"
-    return
-
 
 #
 #    init

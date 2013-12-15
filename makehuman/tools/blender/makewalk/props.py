@@ -337,7 +337,7 @@ def initInterface(context):
         default = True)
 
     bpy.types.Object.MhReverseHip = BoolProperty(
-        name = "ReverseHip",
+        name = "Reverse Hip",
         description = "The rig has a reverse hip",
         default = False)
 

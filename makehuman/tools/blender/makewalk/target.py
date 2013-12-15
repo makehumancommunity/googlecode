@@ -276,8 +276,8 @@ class VIEW3D_OT_McpInitTargetsButton(bpy.types.Operator):
 
 class VIEW3D_OT_McpGetTargetRigButton(bpy.types.Operator):
     bl_idname = "mcp.get_target_rig"
-    bl_label = "Get Target Rig"
-    bl_description = "Get the target rig type of the active armature."
+    bl_label = "Identify Target Rig"
+    bl_description = "Identify the target rig type of the active armature."
     bl_options = {'UNDO'}
 
     def execute(self, context):

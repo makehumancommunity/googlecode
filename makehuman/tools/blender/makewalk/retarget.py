@@ -532,7 +532,7 @@ class VIEW3D_OT_LoadAndRetargetButton(bpy.types.Operator, ImportHelper):
 class VIEW3D_OT_ClearTempPropsButton(bpy.types.Operator):
     bl_idname = "mcp.clear_temp_props"
     bl_label = "Clear Temporary Properties"
-    bl_description = "Clear properaties used by MakeWalk. Animation editing may fail after this."
+    bl_description = "Clear properties used by MakeWalk. Animation editing may fail after this."
     bl_options = {'UNDO'}
 
     def execute(self, context):
