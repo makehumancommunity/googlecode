@@ -127,7 +127,7 @@ class MaterialTaskView(gui3d.TaskView):
         if subPath:
             paths = [mh.getPath(os.path.join('data', subPath)), mh.getSysDataPath(subPath)]
             for p in paths:
-                if isSubPath(p, mh.getPath()) and not os.path.exists(p):
+                if getpath.isSubPath(p, mh.getPath()) and not os.path.exists(p):
                     os.makedirs(p)
         else:
             paths = []
