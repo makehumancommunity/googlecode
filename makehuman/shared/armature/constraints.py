@@ -330,17 +330,18 @@ class CLimitRotConstraint(CConstraint):
         (self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax) = data[1]
         (self.usex, self.usey, self.usez) = data[2]
         self.ltra = (flags & C_LTRA != 0)
+        log.debug("CC %s", data)
 
     def writeMhx(self, amt, fp):
         fp.write(
             "    Constraint %s LIMIT_ROTATION True\n" % self.name +
             "      use_transform_limit %s ; \n" % self.ltra+
-            "      max_x %.6g ;\n" % self.xmax +
-            "      max_y %.6g ;\n" % self.ymax +
-            "      max_z %.6g ;\n" % self.zmax +
-            "      min_x %.6g ;\n" % self.xmin +
-            "      min_y %.6g ;\n" % self.ymin +
-            "      min_z %.6g ;\n" % self.zmin +
+            "      max_x %.4g ;\n" % (self.xmax*D) +
+            "      max_y %.4g ;\n" % (self.ymax*D) +
+            "      max_z %.4g ;\n" % (self.zmax*D) +
+            "      min_x %.4g ;\n" % (self.xmin*D) +
+            "      min_y %.4g ;\n" % (self.ymin*D) +
+            "      min_z %.4g ;\n" % (self.zmin*D) +
             "      use_limit_x %s ; \n" % self.usex +
             "      use_limit_y %s ; \n" % self.usey +
             "      use_limit_z %s ; \n" % self.usez)
@@ -407,12 +408,12 @@ class CLimitScaleConstraint(CConstraint):
     def writeMhx(self, amt, fp):
         fp.write(
             "    Constraint %s LIMIT_SCALE True\n" % self.name +
-            "      max_x %.6g ;\n" % self.xmax +
-            "      max_y %.6g ;\n" % self.ymax +
-            "      max_z %.6g ;\n" % self.zmax +
-            "      min_x %.6g ;\n" % self.xmin +
-            "      min_y %.6g ;\n" % self.ymin +
-            "      min_z %.6g ;\n" % self.zmin +
+            "      max_x %.4g ;\n" % self.xmax +
+            "      max_y %.4g ;\n" % self.ymax +
+            "      max_z %.4g ;\n" % self.zmax +
+            "      min_x %.4g ;\n" % self.xmin +
+            "      min_y %.4g ;\n" % self.ymin +
+            "      min_z %.4g ;\n" % self.zmin +
             "      use_max_x %s ;\n" % self.usex +
             "      use_max_y %s ;\n" % self.usey +
             "      use_max_z %s ;\n" % self.usez +

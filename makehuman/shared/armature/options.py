@@ -43,6 +43,7 @@ class ArmatureOptions(object):
         self.useReverseHip = False
         self.useMuscles = False
         self.useFaceRig = False
+        self.useLocks = False
         self.useRotationLimits = False
         self.addConnectingBones = False
         self.useQuaternionsOnly = False
@@ -85,6 +86,8 @@ class ArmatureOptions(object):
             useConstraints = False,
             useBoneGroups = False,
             useCorrectives = False,
+            useRotationLimits = False,
+            useLocks = False,
             useFaceRig = False,
             useExpressions = False,
             useTPose = False,
@@ -95,6 +98,8 @@ class ArmatureOptions(object):
         self.useConstraints = useConstraints
         self.useBoneGroups = useBoneGroups
         self.useCorrectives = useCorrectives
+        self.useRotationLimits = useRotationLimits
+        self.useLocks = useLocks
         self.useFaceRig = useFaceRig
         self.useExpressions = useExpressions
         self.useTPose = useTPose
@@ -126,7 +131,8 @@ class ArmatureOptions(object):
             "   useIkLegs : %s\n" % self.useIkLegs +
             "   useFingers : %s\n" % self.useFingers +
             "   useMasterBone : %s\n" % self.useMasterBone +
-            "   useCorrectives : %s\n" % self.useCorrectives +
+            "   useLocks : %s\n" % self.useLocks +
+            "   useRotationLimits : %s\n" % self.useRotationLimits +
             "   merge : %s\n" % self.merge +
             "   locale : %s\n" % self.locale +  # TODO currently impossible to serialize
             ">")
@@ -139,7 +145,6 @@ class ArmatureOptions(object):
         self.useFaceRig = selector.useFaceRig.selected
         self.useReverseHip = selector.useReverseHip.selected
         #self.useCorrectives = selector.useCorrectives.selected
-        self.useRotationLimits = selector.useRotationLimits.selected
         self.addConnectingBones = selector.addConnectingBones.selected
 
         self.mergeSpine = selector.mergeSpine.selected
@@ -213,7 +218,6 @@ class ArmatureSelector:
         self.useFaceRig = box.addWidget(gui.ToggleButton("Face rig (MHX only)"))
         self.useReverseHip = box.addWidget(gui.ToggleButton("Reverse hips"))
         self.addConnectingBones = box.addWidget(gui.ToggleButton("Connecting bones"))
-        self.useRotationLimits = box.addWidget(gui.ToggleButton("Use rotation limits (MHX only)"))
 
         self.mergeSpine = box.addWidget(gui.ToggleButton("Merge spine"))
         self.mergeShoulders = box.addWidget(gui.ToggleButton("Merge shoulders"))
@@ -236,7 +240,6 @@ class ArmatureSelector:
         self.useFaceRig.setSelected(options.useFaceRig)
         self.useReverseHip.setSelected(options.useReverseHip)
         self.addConnectingBones.setSelected(options.addConnectingBones)
-        self.useRotationLimits.setSelected(options.useRotationLimits)
 
         self.mergeSpine.setSelected(options.mergeSpine)
         self.mergeShoulders.setSelected(options.mergeShoulders)

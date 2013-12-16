@@ -128,7 +128,7 @@ class Parser:
             if options.useFaceRig:
                 self.setConstraints(rig_face.FaceRigConstraints)
 
-        if options.useRotationLimits:
+        if options.useLocks:
             addDict(rig_bones.RotationLimits, self.rotationLimits)
             addDict(rig_face.RotationLimits, self.rotationLimits)
             addDict(rig_face.LocationLimits, self.locationLimits)
@@ -227,7 +227,7 @@ class Parser:
         if options.useFingers and options.useConstraints:
             self.addBones(rig_control.FingerArmature, boneInfo)
 
-        if options.useConstraints and options.useRotationLimits:
+        if options.useConstraints and options.useLocks:
             for bname,limits in self.rotationLimits.items():
                 try:
                     bone = boneInfo[bname]
@@ -242,9 +242,10 @@ class Parser:
                 if minZ == maxZ == 0:
                     lockZ = 1
                 bone.lockRotation = lockX,lockY,lockZ
-                #if minX != None and bone.lockRotation != (1,1,1):
-                #    cns = ("LimitRot", C_LOCAL, 0.8, ["LimitRot", limits, (1,1,1)])
-                #    self.addConstraint(bname, cns)
+                log.debug("LL %s %s" % (bname, bone.lockRotation))
+                if minX != None and options.useRotationLimits and bone.lockRotation != (1,1,1):
+                    cns = ("LimitRot", C_LOCAL, 0.8, ["LimitRot", limits, (1,1,1)])
+                    self.addConstraint(bname, cns)
 
             for bname,limits in self.locationLimits.items():
                 try:
@@ -611,7 +612,7 @@ class Parser:
                 self.customShapes[bone.name] = None
                 bone.layers = L_HELP
 
-                if options.useRotationLimits:
+                if options.useLocks:
                     try:
                         limits = self.rotationLimits[bname]
                     except KeyError:

@@ -61,6 +61,7 @@ Only works with MHX export.
         # Options set by MHX exporter
         self.useCustomShapes = False
         self.useConstraints = True
+        self.useLocks = False
         self.useRotationLimits = False
         self.useBoneGroups = False
         self.useCorrectives = False
