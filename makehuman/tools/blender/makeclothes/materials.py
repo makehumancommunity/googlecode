@@ -61,7 +61,7 @@ def writeMaterial(ob, folder):
             name = mc.goodName(mat.name)
             _,filepath = mc.getFileName(ob, folder, "mhmat")
             outdir = os.path.dirname(filepath)
-            fp,_ = mc.openOutputFile(filepath)
+            fp = mc.openOutputFile(filepath)
             try:
                 matfile = writeMaterialFile(fp, mat, name, outdir)
             finally:

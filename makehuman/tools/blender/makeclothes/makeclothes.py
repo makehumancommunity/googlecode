@@ -593,7 +593,7 @@ def reexportMhclo(context):
         lines.append(line)
     fp.close()
 
-    fp,_ = mc.openOutputFile(outfile)
+    fp = mc.openOutputFile(outfile)
     doingStuff = False
     for line in lines:
         words = line.split()
@@ -713,7 +713,7 @@ def exportObjFile(context):
     ob = getClothing(context)
     deleteStrayVerts(context, ob)
     (objpath, objfile) = mc.getFileName(ob, scn.MhClothesDir, "obj")
-    fp,_ = mc.openOutputFile(objfile)
+    fp = mc.openOutputFile(objfile)
     fp.write("Exported from make_clothes.py\n")
 
     me = ob.data
@@ -868,7 +868,7 @@ def findTexVert(uv, vtn, f, faceNeighbors, uvFaceVerts, texVerts, ob):
 
 def storeData(clo, hum, data):
     outfile = settingsFile("stored")
-    fp,_ = mc.openOutputFile(outfile)
+    fp = mc.openOutputFile(outfile)
     fp.write("%s\n" % clo.name)
     fp.write("%s\n" % hum.name)
     for (pv, exact, verts, wts, diff) in data:
@@ -1538,7 +1538,7 @@ def readDefaultSettings(context):
 
 def saveDefaultSettings(context):
     fname = settingsFile("settings")
-    fp,_ = mc.openOutputFile(fname)
+    fp = mc.openOutputFile(fname)
     scn = context.scene
     for (prop, value) in scn.items():
         if prop[0:2] == "MC":
