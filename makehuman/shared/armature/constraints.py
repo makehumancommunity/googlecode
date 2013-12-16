@@ -330,7 +330,6 @@ class CLimitRotConstraint(CConstraint):
         (self.xmin, self.xmax, self.ymin, self.ymax, self.zmin, self.zmax) = data[1]
         (self.usex, self.usey, self.usez) = data[2]
         self.ltra = (flags & C_LTRA != 0)
-        log.debug("CC %s", data)
 
     def writeMhx(self, amt, fp):
         fp.write(
