@@ -136,11 +136,11 @@ class ProxyRefVert:
 #
 
 class Proxy:
-    def __init__(self, file, typ):
+    def __init__(self, file, type):
         log.debug("Loading proxy file: %s.", file)
         name = os.path.splitext(os.path.basename(file))[0]
         self.name = name.capitalize().replace(" ","_")
-        self.type = typ
+        self.type = type
         self.file = file
         if file:
             self.mtime = os.path.getmtime(file)

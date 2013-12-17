@@ -78,7 +78,7 @@ def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidd
     from armature.armature import setupArmature
     amt = setupArmature(name, human, config.rigOptions)
 
-    richMesh = getRichMesh(human.meshData, None, None, rawTargets, amt)
+    richMesh = getRichMesh(human.meshData, None, {}, rawTargets, amt)
     richMesh.name = name
     if amt:
         richMesh.weights = amt.vertexWeights

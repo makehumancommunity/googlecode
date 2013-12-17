@@ -98,10 +98,10 @@ class Writer(mhx_writer.Writer):
     #
     #-------------------------------------------------------------------------------
 
-    def proxyShapes(self, typ, test, fp, targets):
+    def proxyShapes(self, type, test, fp, targets):
         fp.write("#if toggle&%s\n" % test)
         for proxy in self.proxies.values():
-            if proxy.name and proxy.type == typ:
+            if proxy.name and proxy.type == type:
                 self.writeShapeKeysAndDrivers(fp, self.name+proxy.name, proxy, targets)
         fp.write("#endif\n")
 

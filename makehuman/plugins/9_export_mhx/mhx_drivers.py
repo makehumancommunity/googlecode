@@ -282,11 +282,11 @@ def writeMuscleDrivers(fp, drivers, rig):
             drvdata = ('SCRIPTED', expr)
         else:
             drvdata = 'MIN'
-        for (var, typ, targ1, targ2) in targs:
-            if typ == 'ROTATION_DIFF':
-                drvVars.append( (var, typ, [('OBJECT', rig, targ1, C_LOC), ('OBJECT', rig, targ2, C_LOC)]) )
-            elif typ == 'SINGLE_PROP':
-                drvVars.append( (var, typ, [('OBJECT', amt.name, '["%s"]' % (targ1))]) )
+        for (var, type, targ1, targ2) in targs:
+            if type == 'ROTATION_DIFF':
+                drvVars.append( (var, type, [('OBJECT', rig, targ1, C_LOC), ('OBJECT', rig, targ2, C_LOC)]) )
+            elif type == 'SINGLE_PROP':
+                drvVars.append( (var, type, [('OBJECT', amt.name, '["%s"]' % (targ1))]) )
         drv = writeDriver(fp, True, drvdata, "","pose.bones[\"%s\"].constraints[\"%s\"].influence" % (bone, cnsName), -1, keypoints, drvVars)
         driverList.append(drv)
     return driverList
@@ -319,20 +319,20 @@ def writeScriptedBoneDrivers(fp, amt, boneDrivers):
 def writeDrivers(fp, cond, drivers):
     driverList = []
     for drv in drivers:
-        (bone, typ, drvdata, name, index, coeffs, variables) = drv
-        if typ == 'INFL':
+        (bone, type, drvdata, name, index, coeffs, variables) = drv
+        if type == 'INFL':
             drv = writeDriver(fp, cond, drvdata, "", "pose.bones[\"%s\"].constraints[\"%s\"].influence" % (bone, name), index, coeffs, variables)
-        elif typ == 'ROTE':
+        elif type == 'ROTE':
             drv = writeDriver(fp, cond, drvdata, "", "pose.bones[\"%s\"].rotation_euler" % bone, index, coeffs, variables)
-        elif typ == 'ROTQ':
+        elif type == 'ROTQ':
             drv = writeDriver(fp, cond, drvdata, "", "pose.bones[\"%s\"].rotation_quaternion" % bone, index, coeffs, variables)
-        elif typ == 'LOC':
+        elif type == 'LOC':
             drv = writeDriver(fp, cond, drvdata, "*theScale", "pose.bones[\"%s\"].location" % bone, index, coeffs, variables)
-        elif typ == 'SCALE':
+        elif type == 'SCALE':
             drv = writeDriver(fp, cond, drvdata, "", "pose.bones[\"%s\"].scale" % bone, index, coeffs, variables)
         else:
             log.message(drv)
-            raise NameError("Unknown driver type %s", typ)
+            raise NameError("Unknown driver type %s", type)
         driverList.append(drv)
     return driverList
 

@@ -28,6 +28,7 @@ import os
 import numpy as np
 import log
 import module3d
+import gui3d
 
 from material import Material, Color
 
@@ -40,7 +41,7 @@ class RichMesh(object):
         self.weights = {}
         self.shapes = []
         self.armature = amt
-        self.material = None
+        self._material = None
         self._proxy = None
 
         self.vertexMask = None
@@ -51,13 +52,25 @@ class RichMesh(object):
     def getProxy(self):
         return self._proxy
 
-    def setProxy(self, newProxy):
-        self._proxy = newProxy
-        self.type = newProxy.type
-        if newProxy.material:
-            self.material = newProxy.material
+    def setProxy(self, proxy):
+        self._proxy = proxy
+        self.type = proxy.type
+        self._material = proxy.material
 
     proxy = property(getProxy, setProxy)
+
+
+    def getMaterial(self):
+        if self.type == 'Proxymeshes':
+            return gui3d.app.selectedHuman.material
+        else:
+            return self._material
+
+    def setMaterial(self, material):
+        self._material = material
+
+    material = property(getMaterial, setMaterial)
+
 
     def fromProxy(self, coords, texVerts, faceVerts, faceUvs, weights, shapes, material):
         for fv in faceVerts:
@@ -74,17 +87,17 @@ class RichMesh(object):
         obj.updateIndexBuffer()
         self.weights = weights
         self.shapes = shapes
-        self.material = obj.material = material
+        self._material = obj.material = material
         self.normalizeVertexWeights()
         return self
 
 
-    def fromObject(self, obj, weights, shapes):
+    def fromObject(self, obj, type, weights, shapes):
         self.object = obj
-
+        self.type = type
         self.weights = weights
         self.shapes = shapes
-        self.material = obj.material
+        self._material = obj.material
         self.normalizeVertexWeights()
         return self
 
@@ -161,11 +174,11 @@ def getRichMesh(obj, proxy, rawWeights, rawShapes, amt, scale=1.0):
         obj = proxy.getSeedObject()
         weights = proxy.getWeights(rawWeights, amt)
         shapes = proxy.getShapes(rawShapes, scale)
-        rmesh = RichMesh(proxy.name, amt).fromObject(obj, weights, shapes)
+        rmesh = RichMesh(proxy.name, amt).fromObject(obj, proxy.type, weights, shapes)
         rmesh.proxy = proxy
         return rmesh
     else:
-        return RichMesh(obj.name, amt).fromObject(obj, rawWeights, rawShapes)
+        return RichMesh(obj.name, amt).fromObject(obj, None, rawWeights, rawShapes)
 
 
 #

@@ -177,11 +177,11 @@ class Writer(mhx_writer.Writer):
         return
 
 
-    def groupProxy(self, typ, test, fp):
+    def groupProxy(self, type, test, fp):
         amt = self.armature
         fp.write("#if toggle&%s\n" % test)
         for proxy in self.proxies.values():
-            if proxy.type == typ:
+            if proxy.type == type:
                 name = amt.name + proxy.name
                 fp.write("    ob %s ;\n" % name)
         fp.write("#endif\n")

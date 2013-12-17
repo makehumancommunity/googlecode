@@ -440,26 +440,26 @@ class Parser:
         """
 
         obj = human.meshData
-        for (key, typ, data) in self.joints:
-            if typ == 'j':
+        for (key, type, data) in self.joints:
+            if type == 'j':
                 loc = calcJointPos(obj, data)
                 self.locations[key] = loc
                 self.locations[data] = loc
-            elif typ == 'v':
+            elif type == 'v':
                 v = int(data)
                 self.locations[key] = obj.coord[v]
-            elif typ == 'x':
+            elif type == 'x':
                 self.locations[key] = np.array((float(data[0]), float(data[2]), -float(data[1])))
-            elif typ == 'vo':
+            elif type == 'vo':
                 v = int(data[0])
                 offset = np.array((float(data[1]), float(data[3]), -float(data[2])))
                 self.locations[key] = (obj.coord[v] + offset)
-            elif typ == 'vl':
+            elif type == 'vl':
                 ((k1, v1), (k2, v2)) = data
                 loc1 = obj.coord[int(v1)]
                 loc2 = obj.coord[int(v2)]
                 self.locations[key] = (k1*loc1 + k2*loc2)
-            elif typ == 'f':
+            elif type == 'f':
                 (raw, head, tail, offs) = data
                 rloc = self.locations[raw]
                 hloc = self.locations[head]
@@ -468,35 +468,35 @@ class Parser:
                 vraw = rloc - hloc
                 x = np.dot(vec, vraw)/np.dot(vec,vec)
                 self.locations[key] = hloc + x*vec + np.array(offs)
-            elif typ == 'b':
+            elif type == 'b':
                 self.locations[key] = self.locations[data]
-            elif typ == 'p':
+            elif type == 'p':
                 x = self.locations[data[0]]
                 y = self.locations[data[1]]
                 z = self.locations[data[2]]
                 self.locations[key] = np.array((x[0],y[1],z[2]))
-            elif typ == 'vz':
+            elif type == 'vz':
                 v = int(data[0])
                 z = obj.coord[v][2]
                 loc = self.locations[data[1]]
                 self.locations[key] = np.array((loc[0],loc[1],z))
-            elif typ == 'X':
+            elif type == 'X':
                 r = self.locations[data[0]]
                 (x,y,z) = data[1]
                 r1 = np.array([float(x), float(y), float(z)])
                 self.locations[key] = np.cross(r, r1)
-            elif typ == 'l':
+            elif type == 'l':
                 ((k1, joint1), (k2, joint2)) = data
                 self.locations[key] = k1*self.locations[joint1] + k2*self.locations[joint2]
-            elif typ == 'o':
+            elif type == 'o':
                 (joint, offsSym) = data
-                if type(offsSym) == str:
+                if isinstance(offsSym, str):
                     offs = self.locations[offsSym]
                 else:
                     offs = np.array(offsSym)
                 self.locations[key] = self.locations[joint] + offs
             else:
-                raise NameError("Unknown %s" % typ)
+                raise NameError("Unknown %s" % type)
         return
 
 
