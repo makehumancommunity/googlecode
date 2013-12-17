@@ -589,7 +589,7 @@ def markEdges(pv0, pv1, pob, pVertEdges, taken, depth):
 
 def saveClosest(closest):
     fname = settingsFile("closest")
-    fp,_ = mc.openOutputFile(fname)
+    fp = mc.openOutputFile(fname)
     if fp:
         for bvn,pv in closest.items():
             fp.write("%d %d\n" % (bvn, pv.index))

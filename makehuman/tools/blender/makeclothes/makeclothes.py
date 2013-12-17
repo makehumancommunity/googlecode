@@ -953,7 +953,7 @@ def makeClothes(context, doFindClothes):
     saveClosest({})
     if scn.MCLogging:
         logfile = '%s/clothes.log' % scn.MhClothesDir
-        log,_ = mc.openOutputFile(logfile)
+        log = mc.openOutputFile(logfile)
     else:
         log = None
     matfile = materials.writeMaterial(clo, scn.MhClothesDir)
