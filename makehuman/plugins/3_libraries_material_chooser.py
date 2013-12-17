@@ -118,7 +118,7 @@ class MaterialTaskView(gui3d.TaskView):
             objType = 'clothes'
         objType = objType.lower()
 
-        if proxy:
+        if proxy and objType != 'skins':
             subPath = None
         else:
             subPath = objType
