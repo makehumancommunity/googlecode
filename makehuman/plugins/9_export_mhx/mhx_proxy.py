@@ -73,7 +73,8 @@ class Writer(mhx_writer.Writer):
 
         # Proxy material
 
-        self.writeProxyMaterial(fp, proxy)
+        if proxy.type != 'Proxymeshes':
+            self.writeProxyMaterial(fp, proxy)
 
         # Proxy mesh
 
@@ -113,10 +114,10 @@ class Writer(mhx_writer.Writer):
 
         self.meshWriter.writeVertexGroups(fp, proxy)
 
-        if proxy.material:
+        if proxy.type == 'Proxymeshes':
+            fp.write("  Material %sSkin ;" % self.name)
+        elif proxy.material:
             fp.write("  Material %s_%s ;" % (self.name, proxy.material.name))
-        elif proxy.useBaseMaterials:
-            self.meshWriter.writeBaseMaterials(fp)
 
 
         fp.write("""
