@@ -493,6 +493,7 @@ def drawMesh(obj):
         if have_multisample:
             # Enable alpha-to-coverage (also called CSAA)
             glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE)
+            #glEnable(GL_SAMPLE_ALPHA_TO_ONE)  # Enable this if transparent objects are too transparent
             glDisable(GL_BLEND)    # TODO try not to disable MSAA (anti-aliasing)
         else:
             glDepthMask(GL_FALSE)
@@ -601,14 +602,26 @@ def drawOrPick(pickMode, obj):
         if hasattr(obj, 'draw'):
             obj.draw()
 
-_hasRenderSkin = None
+_hasRenderToTexture = None
+def hasRenderToTexture():
+    global _hasRenderToTexture
+    if _hasRenderToTexture is None:
+        _hasRenderToTexture = all([
+            bool(glGenFramebuffers), bool(glBindFramebuffer), bool(glFramebufferTexture2D)])
+    return _hasRenderToTexture
+
 def hasRenderSkin():
-    global _hasRenderSkin
-    if _hasRenderSkin is None:
-        _hasRenderSkin = all([
+    return hasRenderToTexture()
+
+_hasRenderToRenderbuffer = None
+def hasRenderToRenderbuffer():
+    global _hasRenderToRenderbuffer
+    if _hasRenderToRenderbuffer is None:
+        _hasRenderToRenderbuffer = all([
             bool(glGenRenderbuffers), bool(glBindRenderbuffer), bool(glRenderbufferStorage),
             bool(glGenFramebuffers), bool(glBindFramebuffer), bool(glFramebufferRenderbuffer)])
-    return _hasRenderSkin
+    return _hasRenderToRenderbuffer
+
 
 def renderSkin(dst, vertsPerPrimitive, verts, index = None, objectMatrix = None,
                texture = None, UVs = None, textureMatrix = None,
@@ -722,6 +735,92 @@ def renderSkin(dst, vertsPerPrimitive, verts, index = None, objectMatrix = None,
     glBindFramebuffer(GL_FRAMEBUFFER, 0)
     glDeleteFramebuffers(np.array([framebuffer]))
     glBindTexture(GL_TEXTURE_2D, 0)
+
+    return surface
+
+def renderToBuffer(width, height):
+    """
+    Perform offscreen render and return the pixelbuffer.
+    Verify whether OpenGL drivers support renderbuffers using 
+    hasRenderToRenderbuffer().
+    """
+    # Create and bind framebuffer
+    framebuffer = glGenFramebuffers(1)
+    #glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer)
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer)
+
+    # Now that framebuffer is bound, verify whether dimensions are within max supported dimensions
+    maxWidth, maxHeight = glGetInteger(GL_MAX_VIEWPORT_DIMS)
+    width = min(width, maxWidth)
+    height = min(height, maxHeight)
+
+    # Create and bind renderbuffers
+    renderbuffer = glGenRenderbuffers(1)    # We need a renderbuffer for both color and depth
+    depthRenderbuffer = glGenRenderbuffers(1)
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer)
+    global have_multisample
+    if have_multisample:
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA, width, height)
+    else:
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height)
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer)
+
+    glBindRenderbuffer(GL_RENDERBUFFER, depthRenderbuffer)
+    if have_multisample:
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_DEPTH_COMPONENT16, width, height)
+    else:
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height)
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderbuffer)
+
+    # Adapt camera projection matrix to framebuffer size
+    oldWidth = G.windowWidth
+    oldHeight = G.windowHeight
+    G.windowWidth = width
+    G.windowHeight = height
+    glPushAttrib(GL_VIEWPORT_BIT)
+    glViewport(0, 0, width, height)
+
+    # Draw scene as usual
+    draw()
+
+    if have_multisample:
+        # If we have drawn to a multisample renderbuffer, we need to transfer it to a simple buffer to read it
+        downsampledFramebuffer = glGenFramebuffers(1)
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer)       # Multisampled FBO
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, downsampledFramebuffer) # Regular FBO
+        regularRenderbuffer = glGenRenderbuffers(1)
+        glBindRenderbuffer(GL_RENDERBUFFER, regularRenderbuffer)
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height)
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, regularRenderbuffer)
+        glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST)
+
+        # Dealloc what we no longer need
+        glDeleteFramebuffers(np.array([framebuffer]))
+        framebuffer = downsampledFramebuffer
+        del downsampledFramebuffer
+        glDeleteRenderbuffers(0, np.array([renderbuffer]))
+        renderbuffer = regularRenderbuffer
+        del regularRenderbuffer
+
+    # Read pixels
+    surface = np.empty((height, width, 4), dtype = np.uint8)
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer)
+    glReadBuffer(GL_COLOR_ATTACHMENT0)
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, surface)
+    surface = Image(data = np.ascontiguousarray(surface[::-1,:,:3]))
+
+    # Unbind frame buffer
+    glDeleteFramebuffers(np.array([framebuffer]))
+    glDeleteRenderbuffers(0, np.array([renderbuffer]))
+    glDeleteRenderbuffers(0, np.array([depthRenderbuffer]));
+    glBindRenderbuffer(GL_RENDERBUFFER, 0)
+    glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
+    # Restore viewport dimensions to those of the window
+    G.windowWidth = oldWidth
+    G.windowHeight = oldHeight
+    glPushAttrib(GL_VIEWPORT_BIT)
+    glViewport(0, 0, oldWidth, oldHeight)
 
     return surface
 
