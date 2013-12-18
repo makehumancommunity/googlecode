@@ -452,10 +452,10 @@ def midWeight(pv, r0, r1):
     return (1-w, w, 0)
 
 #
-#    writeClothes(context, hum, clo, data):
+#    writeClothes(context, hum, clo, data, matfile):
 #
 
-def writeClothesHeader(fp, prevUuid, scn):
+def writeClothesHeader(fp, scn):
     import sys
     if sys.platform == 'win32':
         # Avoid error message in blender by using a version without ctypes
@@ -466,11 +466,8 @@ def writeClothesHeader(fp, prevUuid, scn):
     fp.write(
         "# author %s\n" % scn.MCAuthor +
         "# license %s\n" % scn.MCLicense +
-        "# homepage %s\n" % scn.MCHomePage)
-    if prevUuid:
-        fp.write("uuid %s\n" % prevUuid)
-    else:
-        fp.write("uuid %s\n" % uuid.uuid4())
+        "# homepage %s\n" % scn.MCHomePage +
+        "uuid %s\n" % uuid.uuid4())
     if theSettings:
         fp.write("basemesh %s\n" % theSettings.baseMesh)
     for n in range(1,6):
@@ -484,8 +481,8 @@ def writeClothes(context, hum, clo, data, matfile):
     scn = context.scene
     firstVert = 0
     (outpath, outfile) = mc.getFileName(clo, scn.MhClothesDir, "mhclo")
-    fp, uuid = mc.openOutputFile(outfile)
-    writeClothesHeader(fp, uuid, scn)
+    fp = mc.openOutputFile(outfile)
+    writeClothesHeader(fp, scn)
     fp.write("name %s\n" % clo.name.replace(" ","_"))
     fp.write("obj_file %s.obj\n" % mc.goodName(clo.name))
     vnums = theSettings.bodyPartVerts[scn.MCBodyPart]
