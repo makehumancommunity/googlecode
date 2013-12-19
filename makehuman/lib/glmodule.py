@@ -798,7 +798,7 @@ def renderToBuffer(width, height):
         glDeleteFramebuffers(np.array([framebuffer]))
         framebuffer = downsampledFramebuffer
         del downsampledFramebuffer
-        glDeleteRenderbuffers(0, np.array([renderbuffer]))
+        glDeleteRenderbuffers(1, np.array([renderbuffer]))
         renderbuffer = regularRenderbuffer
         del regularRenderbuffer
 
@@ -811,8 +811,8 @@ def renderToBuffer(width, height):
 
     # Unbind frame buffer
     glDeleteFramebuffers(np.array([framebuffer]))
-    glDeleteRenderbuffers(0, np.array([renderbuffer]))
-    glDeleteRenderbuffers(0, np.array([depthRenderbuffer]));
+    glDeleteRenderbuffers(1, np.array([renderbuffer]))
+    glDeleteRenderbuffers(1, np.array([depthRenderbuffer]));
     glBindRenderbuffer(GL_RENDERBUFFER, 0)
     glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
