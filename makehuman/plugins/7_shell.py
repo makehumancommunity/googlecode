@@ -98,6 +98,9 @@ class ShellTaskView(gui3d.TaskView):
     def write(self, text):
         self.text.addText(text)
 
+    def flush(self):
+        pass
+
     def clearText(self):
         self.text.setText('')
 
