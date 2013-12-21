@@ -38,7 +38,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from the 
 bl_info = {
     'name': 'Import: MakeHuman Exchange (.mhx)',
     'author': 'Thomas Larsson',
-    'version': "1.16.15",
+    'version': (1,16,16),
     "blender": (2, 69, 0),
     'location': "File > Import > MakeHuman (.mhx)",
     'description': 'Import files in the MakeHuman eXchange format (.mhx)',
@@ -48,8 +48,8 @@ bl_info = {
         'func=detail&aid=21872',
     'category': 'MakeHuman'}
 
-MAJOR_VERSION = 1
-MINOR_VERSION = 16
+MAJOR_VERSION = bl_info["version"][0]
+MINOR_VERSION = bl_info["version"][1]
 FROM_VERSION = 13
 
 majorVersion = MAJOR_VERSION
@@ -423,7 +423,7 @@ def parse(tokens):
     for (key, val, sub) in tokens:
         data = None
         if key == 'MHX':
-            importerVerStr = "MHXImporter:_%s" % (bl_info["version"])
+            importerVerStr = "MHXImporter:_%d.%d.%d" % bl_info["version"]
             versionInfoStr = " ".join(val + [importerVerStr])
 
             printMHXVersionInfo(versionInfoStr, performVersionCheck = True)
@@ -2565,7 +2565,7 @@ def rigifyMhx(context):
     else:
         rig = None
     if not(rig and rig.type == 'ARMATURE'):
-        raise NameError("Rigify: %s is neither an armature nor has armature parent" % ob)
+        raise RuntimeError("Rigify: %s is neither an armature nor has armature parent" % ob)
     rig.MhxRigify = True
     scn.objects.active = rig
 
@@ -3084,7 +3084,7 @@ OtherLayers = [
 #
 
 class MhxMainPanel(bpy.types.Panel):
-    bl_label = "MHX Main v %s" % bl_info["version"]
+    bl_label = "MHX Main v %d.%d.%d" % bl_info["version"]
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     #bl_options = {'DEFAULT_CLOSED'}
@@ -4162,6 +4162,15 @@ def insertRotation(pb, mat, auto):
     bpy.ops.object.mode_set(mode='POSE')
 
 
+def matchPoseTwist(pb, src, auto):
+    pmat0 = getPoseMatrix(src.matrix, pb)
+    euler = pmat0.to_3x3().to_euler('YZX')
+    euler.x = euler.z = 0
+    pmat = euler.to_matrix().to_4x4()
+    pmat.col[3] = pmat0.col[3]
+    insertRotation(pb, pmat, auto)
+
+
 def matchIkLeg(legIk, toeFk, mBall, mToe, mHeel, auto):
     rmat = toeFk.matrix.to_3x3()
     tHead = Vector(toeFk.matrix.col[3][:3])
@@ -4208,15 +4217,30 @@ def matchIkLeg(legIk, toeFk, mBall, mToe, mHeel, auto):
 
 
 def matchPoleTarget(pb, above, below, auto):
+    ax,ay,az = above.matrix.to_3x3().to_euler('YZX')
+    bx,by,bz = below.matrix.to_3x3().to_euler('YZX')
     x = Vector(above.matrix.col[1][:3])
     y = Vector(below.matrix.col[1][:3])
     p0 = Vector(below.matrix.col[3][:3])
     n = x.cross(y)
+    print("MPT")
+    print("  X", x)
+    print("  Y", y)
+    print("  A", ax, ay, az)
+    print("  B", bx, by, bz)
+    print(" p0", p0)
+    print("  n", n, n.length)
     if abs(n.length) > 1e-4:
         z = x - y
         n = n/n.length
+        print("  Z", z, z.length)
+        print(" Nn", n)
         z -= z.dot(n)*n
-        p = p0 + z/z.length*3.0
+        print(" Zz", z, z.length)
+        z = z/z.length
+        p = p0 + 3.0*z
+        print(" Zz", z, z.length)
+        print(" P", p)
     else:
         p = p0
     gmat = Matrix.Translation(p)
@@ -4351,13 +4375,13 @@ def snapIkLeg(context, data):
     #matchPoseRotation(legIk, legFk, auto)
     matchIkLeg(legIk, toeFk, mBall, mToe, mHeel, auto)
 
+    #matchPoseRotation(uplegIk, uplegFk, auto)
+    matchPoseTwist(lolegIk, lolegFk, auto)
+
     matchPoseReverse(toeRev, toeFk, auto)
     matchPoseReverse(footRev, footFk, auto)
 
     matchPoleTarget(kneePt, uplegFk, lolegFk, auto)
-
-    #matchPoseRotation(uplegIk, uplegFk, auto)
-    #matchPoseRotation(lolegIk, lolegFk, auto)
 
     if not legIkToAnkle:
         matchPoseTranslation(ankleIk, footFk, auto)
@@ -4384,7 +4408,7 @@ def getSnapBones(rig, key, suffix):
         pb = None
 
     if pb is not None:
-        raise NameError("MakeHuman alpha 7 not supported after Blender 2.68")
+        raise RuntimeError("MakeHuman alpha 7 not supported after Blender 2.68")
 
     try:
         rig.pose.bones["thigh.fk.L"]
@@ -4394,7 +4418,7 @@ def getSnapBones(rig, key, suffix):
         names = None
 
     if not names:
-        raise NameError("Not an mhx armature")
+        raise RuntimeError("Not an mhx armature")
 
     pbones = []
     constraints = []
