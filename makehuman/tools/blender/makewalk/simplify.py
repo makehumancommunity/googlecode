@@ -26,7 +26,7 @@
 import bpy
 from math import pi
 from . import utils
-from .utils import MocapError
+from .utils import *
 
 #
 #    simplifyFCurves(context, rig, useVisible, useMarkers):
@@ -34,7 +34,7 @@ from .utils import MocapError
 
 def simplifyFCurves(context, rig, useVisible, useMarkers):
     scn = context.scene
-    act = utils.getAction(rig)
+    act = getAction(rig)
     if not act:
         return
     (fcurves, minTime, maxTime) = getActionFCurves(act, useVisible, useMarkers, scn)
@@ -43,7 +43,7 @@ def simplifyFCurves(context, rig, useVisible, useMarkers):
 
     for fcu in fcurves:
         simplifyFCurve(fcu, rig.animation_data.action, scn.McpErrorLoc, scn.McpErrorRot, minTime, maxTime)
-    utils.setInterpolation(rig)
+    setInterpolation(rig)
     print("Curves simplified")
     return
 
@@ -62,7 +62,7 @@ def getActionFCurves(act, useVisible, useMarkers, scn):
         fcurves = act.fcurves
 
     if useMarkers:
-        (minTime, maxTime) = utils.getMarkedTime(scn)
+        (minTime, maxTime) = getMarkedTime(scn)
         if minTime == None:
             print("Need two selected markers")
             return ([], 0, 0)
@@ -173,7 +173,7 @@ def iterateFCurves(points, keeps, maxErr):
 #
 
 def rescaleFCurves(context, rig, factor):
-    act = utils.getAction(context.object)
+    act = getAction(context.object)
     if not act:
         return
     for fcu in act.fcurves:

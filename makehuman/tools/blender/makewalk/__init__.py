@@ -51,7 +51,6 @@ if "bpy" in locals():
     import imp
     imp.reload(utils)
     imp.reload(io_json)
-    imp.reload(mcp)
     imp.reload(props)
     imp.reload(t_pose)
     imp.reload(armature)
@@ -73,7 +72,6 @@ else:
 
     from . import utils
     from . import io_json
-    from . import mcp
     from . import props
     from . import t_pose
     from . import armature
@@ -163,6 +161,7 @@ class OptionsPanel(bpy.types.Panel):
         layout.prop(scn, 'McpAutoSourceRig')
         layout.prop(scn, 'McpAutoTargetRig')
         layout.prop(scn, "McpIgnoreHiddenLayers")
+        layout.prop(scn, "McpDoBendPositive")
 
         layout.separator()
         layout.label("SubSample and Rescale")
@@ -222,6 +221,12 @@ class EditPanel(bpy.types.Panel):
         if scn.McpShowGlobal:
             ins = inset(layout)
             ins.operator("mcp.shift_bone")
+
+            ins.separator()
+            row = ins.row()
+            row.prop(scn, "McpBendElbows")
+            row.prop(scn, "McpBendKnees")
+            ins.operator("mcp.limbs_bend_positive")
 
             ins.separator()
             row = ins.row()
@@ -347,7 +352,9 @@ class MhxSourceBonesPanel(bpy.types.Panel):
         layout.prop(scn, "McpSourceRig")
 
         if scn.McpSourceRig:
-            amt = mcp.sourceArmatures[scn.McpSourceRig]
+            from .source import getSourceArmature
+
+            amt = getSourceArmature(scn.McpSourceRig)
             if amt:
                 bones = amt.boneNames
                 box = layout.box()
@@ -404,7 +411,9 @@ class MhxTargetBonesPanel(bpy.types.Panel):
         layout.separator()
 
         if scn.McpTargetRig:
-            (bones, ikBones, tpose) = mcp.targetInfo[scn.McpTargetRig]
+            from .target import getTargetInfo
+
+            (bones, ikBones, tpose) = getTargetInfo(scn.McpTargetRig)
 
             layout.label("FK bones")
             box = layout.box()
@@ -498,6 +507,8 @@ class UtilityPanel(bpy.types.Panel):
 #
 
 props.initInterface(bpy.context)
+target.initPath()
+source.initPath()
 
 def register():
     bpy.utils.register_module(__name__)

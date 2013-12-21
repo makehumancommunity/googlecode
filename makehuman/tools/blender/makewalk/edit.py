@@ -27,10 +27,9 @@ import bpy
 from bpy.props import *
 from math import pi, sqrt
 from mathutils import *
-from . import utils, load, simplify, props, action
+from . import load, simplify, props, action
 #from .target_rigs import rig_mhx
-from . import mcp
-from .utils import MocapError
+from .utils import *
 
 
 _Markers = []
@@ -91,7 +90,7 @@ def startEdit(context):
     scn = context.scene
     if getUndoAction(rig):
         raise MocapError("Action already being edited. Undo or confirm edit first")
-    act = utils.getAction(rig)
+    act = getAction(rig)
     if not act:
         raise MocapError("Object %s has no action" % rig.name)
     aname = act.name
@@ -102,17 +101,17 @@ def startEdit(context):
     rig.McpActionName = aname
 
     saveMarkers(scn)
-    _EditLoc = utils.quadDict()
-    _EditRot = utils.quadDict()
+    _EditLoc = quadDict()
+    _EditRot = quadDict()
 
     for fcu in act.fcurves:
-        (name, mode) = utils.fCurveIdentity(fcu)
+        (name, mode) = fCurveIdentity(fcu)
         nfcu = nact.fcurves.new(fcu.data_path, index=fcu.array_index, action_group=name)
         n = len(fcu.keyframe_points)
         nfcu.keyframe_points.add(count=n)
         for i in range(n):
             nfcu.keyframe_points[i].co = fcu.keyframe_points[i].co
-    utils.setInterpolation(rig)
+    setInterpolation(rig)
     print("Action editing started")
     return nact
 
@@ -166,7 +165,7 @@ def undoEdit(context):
     act.name = "#Delete"
     oact.name = rig.McpActionName
     rig.animation_data.action = oact
-    utils.deleteAction(act)
+    deleteAction(act)
     print("Action changes undone")
     return
 
@@ -218,10 +217,10 @@ def getActionPair(context):
         raise MocapError("No action is currently being edited")
         return None
     if not _EditLoc:
-        _EditLoc = utils.quadDict()
+        _EditLoc = quadDict()
     if not _EditRot:
-        _EditRot = utils.quadDict()
-    act = utils.getAction(rig)
+        _EditRot = quadDict()
+    act = getAction(rig)
     if act:
         return (act, oact)
     else:
@@ -242,17 +241,17 @@ def confirmEdit(context):
     (act, oact) = pair
 
     for fcu in act.fcurves:
-        ofcu = utils.findFCurve(fcu.data_path, fcu.array_index, oact.fcurves)
+        ofcu = findFCurve(fcu.data_path, fcu.array_index, oact.fcurves)
         if not ofcu:
             continue
-        (name,mode) =  utils.fCurveIdentity(fcu)
-        if utils.isRotation(mode):
+        (name,mode) =  fCurveIdentity(fcu)
+        if isRotation(mode):
             try:
                 edit = _EditRot[fcu.array_index][name]
             except:
                 continue
             displaceFCurve(fcu, ofcu, edit)
-        elif  utils.isLocation(mode):
+        elif  isLocation(mode):
             try:
                 edit = _EditLoc[fcu.array_index][name]
             except:
@@ -264,7 +263,7 @@ def confirmEdit(context):
     restoreMarkers(context.scene)
     _EditLoc = None
     _EditRot = None
-    utils.deleteAction(oact)
+    deleteAction(oact)
     print("Action changed")
     return
 
@@ -345,14 +344,14 @@ def insertKey(context, useLoc, useRot, delete):
                     setEditDict(_EditRot, frame, pb.name, pb.rotation_euler, 3)
 
         for fcu in act.fcurves:
-            ofcu = utils.findFCurve(fcu.data_path, fcu.array_index, oact.fcurves)
+            ofcu = findFCurve(fcu.data_path, fcu.array_index, oact.fcurves)
             if not ofcu:
                 continue
-            (name,mode) = utils.fCurveIdentity(fcu)
+            (name,mode) = fCurveIdentity(fcu)
             if name == pb.name:
-                if utils.isRotation(mode) and useRot:
+                if isRotation(mode) and useRot:
                     displaceFCurve(fcu, ofcu, _EditRot[fcu.array_index][name])
-                if utils.isLocation(mode) and useLoc:
+                if isLocation(mode) and useLoc:
                     displaceFCurve(fcu, ofcu, _EditLoc[fcu.array_index][name])
 
 

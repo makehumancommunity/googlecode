@@ -209,6 +209,21 @@ def initInterface(context):
         description="Also adjust character COM when keeping feet above floor",
         default=True)
 
+    bpy.types.Scene.McpBendElbows = BoolProperty(
+        name="Elbows",
+        description="Keep elbow bending positive",
+        default=True)
+
+    bpy.types.Scene.McpBendKnees = BoolProperty(
+        name="Knees",
+        description="Keep knee bending positive",
+        default=True)
+
+    bpy.types.Scene.McpDoBendPositive = BoolProperty(
+        name="Bend Positive",
+        description="Ensure that elbow and knee bending is positive",
+        default=True)
+
     # Loop
 
     bpy.types.Scene.McpLoopBlendRange = IntProperty(

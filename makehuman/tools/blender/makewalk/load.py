@@ -33,7 +33,6 @@ from bpy.props import *
 
 from . import props
 from . import simplify
-from . import mcp
 from .utils import *
 
 ###################################################################################
@@ -231,10 +230,6 @@ def readBvhFile(context, filepath, scn, scan):
                 bpy.ops.object.mode_set(mode='POSE')
                 pbones = rig.pose.bones
                 for pb in pbones:
-                    #try:
-                    #    trgName = mcp.srcArmature[pb.name.lower()]
-                    #    pb.rotation_mode = trgPbones[trgName].rotation_mode
-                    #except:
                     pb.rotation_mode = 'QUATERNION'
         elif status == Frames:
             if (frame >= startFrame and
@@ -368,6 +363,8 @@ class CEditBone():
 #
 
 def renameBones(srcRig, scn):
+    from .source import getSourceBoneName
+
     srcBones = []
     trgBones = {}
 
@@ -388,11 +385,7 @@ def renameBones(srcRig, scn):
         action = adata.action
     for srcBone in srcBones:
         srcName = srcBone.name
-        lname = canonicalName(srcName)
-        try:
-            trgName = mcp.srcArmature.boneNames[lname]
-        except KeyError:
-            trgName = None
+        trgName = getSourceBoneName(srcName)
         if isinstance(trgName, tuple):
             print("BUG. Target name is tuple:", trgName)
             trgName = trgName[0]
@@ -411,16 +404,6 @@ def renameBones(srcRig, scn):
         eb.name = name
     #createExtraBones(ebones, trgBones)
     bpy.ops.object.mode_set(mode='POSE')
-    return
-
-
-def getTargetFromSource(srcName):
-    lname = canonicalName(srcName)
-    try:
-        return mcp.srcArmature.boneNames[lname]
-    except KeyError:
-        pass
-    raise MocapError("No target bone corresponding to source bone %s (%s)" % (srcName, lname))
 
 #
 #    renameBvhRig(srcRig, filepath):

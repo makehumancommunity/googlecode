@@ -65,6 +65,15 @@ def matchPoseRotation(pb, src):
     insertRotation(pb, pmat)
 
 
+def matchPoseTwist(pb, src):
+    pmat0 = getPoseMatrix(src.matrix, pb)
+    euler = pmat0.to_3x3().to_euler('YZX')
+    euler.x = euler.z = 0
+    pmat = euler.to_matrix().to_4x4()
+    pmat.col[3] = pmat0.col[3]
+    insertRotation(pb, pmat)
+
+
 def printMatrix(string,mat):
     print(string)
     for i in range(4):
@@ -198,6 +207,7 @@ def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
     #matchPoseTranslation(legIk, legFk)
     #matchPoseRotation(legIk, legFk)
     matchIkLeg(legIk, toeFk, mBall, mToe, mHeel)
+    matchPoseTwist(lolegIk, lolegFk)
     updateScene()
 
     matchPoseReverse(toeRev, toeFk)
@@ -231,7 +241,7 @@ def getSnapBones(rig, key, suffix):
     except KeyError:
         names = None
     if not names:
-        raise NameError("Not an mhx armature")
+        raise McpError("Not an mhx armature")
 
     pbones = []
     constraints = []

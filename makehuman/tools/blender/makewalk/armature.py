@@ -33,7 +33,6 @@ from mathutils import *
 from bpy.props import *
 from bpy_extras.io_utils import ImportHelper
 
-from . import mcp
 from .utils import *
 
 

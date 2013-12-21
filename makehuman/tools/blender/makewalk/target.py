@@ -32,17 +32,52 @@ import math
 import os
 
 from . import utils
-from . import mcp
 from . import t_pose
 from .utils import *
 from .armature import CArmature
+
+#
+#   Global variables
+#
+
+_target = None
+_targetInfo = {}
+#_targetArmatures = { "Automatic" : ([],[],[]) }
+_targetArmatures = {}
+_trgArmature = None
+_trgArmatureEnums =[("Automatic", "Automatic", "Automatic")]
+_targetRigs = None
+_ikBones = []
+
+def getTargetInfo(rigname):
+    global _targetInfo
+    return _targetInfo[rigname]
+
+def initPath():
+    global _targetRigs
+    basePath = os.path.realpath(".")
+    _targetRigs = initModulesPath(basePath, "target_rigs")
+
+def loadTargets():
+    global _targetInfo
+    _targetInfo = {}
+
+def isTargetInited(scn):
+    return ( _targetArmatures != {} )
+
+def ensureTargetInited(scn):
+    if not isTargetInited(scn):
+        initTargets(scn)
 
 #
 #   getTargetArmature(rig, scn):
 #
 
 def getTargetArmature(rig, scn):
+    global _target, _targetArmatures, _targetInfo, _trgArmature, _ikBones
+
     setCategory("Identify Target Rig")
+    ensureTargetInited(scn)
     selectAndSetRestPose(rig, scn)
     bones = rig.data.bones.keys()
 
@@ -56,9 +91,9 @@ def getTargetArmature(rig, scn):
 
     if name == "Automatic":
         setCategory("Automatic Target Rig")
-        amt = mcp.trgArmature = CArmature()
+        amt = _trgArmature = CArmature()
         amt.findArmature(rig, ignoreHiddenLayers=scn.McpIgnoreHiddenLayers)
-        mcp.targetArmatures["Automatic"] = amt
+        _targetArmatures["Automatic"] = amt
         scn.McpTargetRig = "Automatic"
         amt.display("Target")
 
@@ -67,17 +102,17 @@ def getTargetArmature(rig, scn):
             if pb.McpBone:
                 boneAssoc.append( (pb.name, pb.McpBone) )
 
-        mcp.ikBones = []
+        _ikBones = []
         rig.McpTPoseFile = ""
-        mcp.targetInfo[name] = (boneAssoc, mcp.ikBones, rig.McpTPoseFile)
+        _targetInfo[name] = (boneAssoc, _ikBones, rig.McpTPoseFile)
         clearCategory()
         return boneAssoc
 
     else:
         setCategory("Manual Target Rig")
         scn.McpTargetRig = name
-        mcp.target = name
-        (boneAssoc, mcp.ikBones, rig.McpTPoseFile) = mcp.targetInfo[name]
+        _target = name
+        (boneAssoc, _ikBones, rig.McpTPoseFile) = _targetInfo[name]
         if not testTargetRig(name, rig, boneAssoc):
             print("WARNING:\nTarget armature %s does not match armature %s.\nBones:" % (rig.name, name))
             for pair in boneAssoc:
@@ -99,6 +134,7 @@ def getTargetArmature(rig, scn):
 
 
 def guessTargetArmatureFromList(rig, bones, scn):
+    global _target, _targetArmatures, _targetInfo
     ensureTargetInited(scn)
     print("Guessing target")
 
@@ -109,9 +145,9 @@ def guessTargetArmatureFromList(rig, bones, scn):
     elif isMhx7Rig(rig):
         return "MH-alpha7"
     elif False:
-        for name in mcp.targetInfo.keys():
+        for name in _targetInfo.keys():
             if name not in ["MHX", "Rigify", "MH-alpha7"]:
-                (boneAssoc, _ikBones, _tpose) = mcp.targetInfo[name]
+                (boneAssoc, _ikBones, _tpose) = _targetInfo[name]
                 if testTargetRig(name, rig, boneAssoc):
                     return name
     else:
@@ -124,7 +160,7 @@ def testTargetRig(name, rig, rigBones):
     for (bname, mhxname) in rigBones:
         try:
             pb = rig.pose.bones[bname]
-        except NameError:
+        except KeyError:
             pb = None
         if pb is None or not validBone(pb):
             print("  Did not find bone %s (%s)" % (bname, mhxname))
@@ -187,36 +223,26 @@ TargetBoneNames = [
 ###############################################################################
 
 
-def loadTargets():
-    mcp.targetInfo = {}
-
-def isTargetInited(scn):
-    try:
-        scn.McpTargetRig
-        return True
-    except:
-        return False
-
-
 def initTargets(scn):
-    mcp.targetInfo = { "Automatic" : ([], [], "") }
-    mcp.targetArmatures = { "Automatic" : CArmature() }
+    global _targetArmatures, _targetInfo, _trgArmatureEnums
+    _targetInfo = { "Automatic" : ([], [], "") }
+    _targetArmatures = { "Automatic" : CArmature() }
     path = os.path.join(os.path.dirname(__file__), "target_rigs")
     for fname in os.listdir(path):
         file = os.path.join(path, fname)
         (name, ext) = os.path.splitext(fname)
         if ext == ".trg" and os.path.isfile(file):
             (name, stuff) = readTrgArmature(file, name)
-            mcp.targetInfo[name] = stuff
+            _targetInfo[name] = stuff
 
-    mcp.trgArmatureEnums =[("Automatic", "Automatic", "Automatic")]
-    keys = list(mcp.targetInfo.keys())
+    _trgArmatureEnums =[("Automatic", "Automatic", "Automatic")]
+    keys = list(_targetInfo.keys())
     keys.sort()
     for key in keys:
-        mcp.trgArmatureEnums.append((key,key,key))
+        _trgArmatureEnums.append((key,key,key))
 
     bpy.types.Scene.McpTargetRig = EnumProperty(
-        items = mcp.trgArmatureEnums,
+        items = _trgArmatureEnums,
         name = "Target rig",
         default = 'Automatic')
     print("Defined McpTargetRig")
@@ -248,16 +274,11 @@ def readTrgArmature(file, name):
             elif len(words) != 2:
                 print("Ignored illegal line", line)
             elif status == 1:
-                bones.append( (words[0], utils.nameOrNone(words[1])) )
+                bones.append( (words[0], nameOrNone(words[1])) )
             elif status == 2:
-                ikbones.append( (words[0], utils.nameOrNone(words[1])) )
+                ikbones.append( (words[0], nameOrNone(words[1])) )
     fp.close()
     return (name, (bones,ikbones,tpose))
-
-
-def ensureTargetInited(scn):
-    if not isTargetInited(scn):
-        initTargets(scn)
 
 
 class VIEW3D_OT_McpInitTargetsButton(bpy.types.Operator):

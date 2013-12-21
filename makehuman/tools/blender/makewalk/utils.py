@@ -29,8 +29,6 @@ from bpy.props import *
 from math import sin, cos, atan, pi
 from mathutils import *
 
-from . import mcp
-
 Deg2Rad = pi/180
 Rad2Deg = 180/pi
 
@@ -360,7 +358,23 @@ def findFCurve(path, index, fcurves):
         if (fcu.data_path == path and
             fcu.array_index == index):
             return fcu
+    print('F-curve "%s" not found.' % path)
     return None
+
+def findBoneFCurve(bname, rig, index):
+    pb = getTrgBone(bname, rig)
+    if pb.rotation_mode == 'QUATERNION':
+        mode = "rotation_quaternion"
+    else:
+        mode = "rotation_euler"
+    path = 'pose.bones["%s"].%s' % (pb.name, mode)
+
+    if rig.animation_data is None:
+        return None
+    action = rig.animation_data.action
+    if action is None:
+        return None
+    return findFCurve(path, index, action.fcurves)
 
 #
 #   isRotation(mode):
@@ -522,17 +536,10 @@ import os
 import imp
 import sys
 
-def initModules():
-    basePath = os.path.realpath(".")
-    print("Path", basePath)
-    mcp.targetRigs = initModulesPath(basePath, "target_rigs")
-    mcp.sourceRigs = initModulesPath(basePath, "source_rigs")
-    return
-
 def initModulesPath(basePath, subPath):
     path = os.path.join(basePath, subPath)
     rignames = []
-    for relpath in os.listdir:
+    for relpath in os.listdir():
         (modname, ext) = os.path.splitext(relpath)
         if ext == ".py":
             file = os.path.join(path, relpath)

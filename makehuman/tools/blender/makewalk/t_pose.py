@@ -30,7 +30,6 @@ from bpy.props import *
 import os
 import math
 from mathutils import Quaternion, Matrix
-from . import mcp, utils
 from .utils import *
 from .io_json import *
 
@@ -207,11 +206,13 @@ def setStoredPose(rig):
 
 
 def addTPoseAtFrame0(rig, scn):
+    from .source import getSourceTPoseFile
+
     scn.frame_current = 0
     if rig.McpTPoseLoaded:
         setTPose(rig, scn)
-    elif mcp.srcArmature.tposeFile:
-        rig.McpTPoseFile = mcp.srcArmature.tposeFile
+    elif getSourceTPoseFile():
+        rig.McpTPoseFile = getSourceTPoseFile()
         setTPose(rig, scn)
     else:
         setRestPose(rig)
@@ -443,7 +444,7 @@ def getBoneName(rig, name):
     if rig.McpIsSourceRig:
         return name
     else:
-        pb = utils.getTrgBone(name, rig)
+        pb = getTrgBone(name, rig)
         if pb:
             return pb.name
         else:

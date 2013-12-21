@@ -33,9 +33,46 @@ from mathutils import *
 from bpy.props import *
 from bpy_extras.io_utils import ImportHelper
 
-from . import mcp
 from .armature import CArmature
 from .utils import *
+
+#
+#   Global variables
+#
+
+#_sourceArmatures = { "Automatic" : None }
+_sourceArmatures = {}
+_srcArmature = None
+_sourceRigs = None
+
+def initPath():
+    global _sourceRigs
+    basePath = os.path.realpath(".")
+    _sourceRigs = initModulesPath(basePath, "target_rigs")
+
+def getSourceArmature(name):
+    global _sourceArmatures
+    return _sourceArmatures[name]
+
+def getSourceBoneName(bname):
+    global _srcArmature
+    lname = canonicalName(bname)
+    try:
+        return _srcArmature.boneNames[lname]
+    except KeyError:
+        return None
+
+def getSourceTPoseFile():
+    global _srcArmature
+    return _srcArmature.tposeFile
+
+def isSourceInited(scn):
+    global _sourceArmatures
+    return (_sourceArmatures != {})
+
+def ensureSourceInited(scn):
+    if not isSourceInited(scn):
+        initSources(scn)
 
 #
 #    guessSrcArmatureFromList(rig, scn):
@@ -46,10 +83,10 @@ def guessSrcArmatureFromList(rig, scn):
     bestMisses = 1000
 
     misses = {}
-    for name in mcp.sourceArmatures.keys():
+    for name in _sourceArmatures.keys():
         if name == "Automatic":
             continue
-        amt = mcp.sourceArmatures[name]
+        amt = _sourceArmatures[name]
         nMisses = 0
         for bone in rig.data.bones:
             try:
@@ -69,7 +106,7 @@ def guessSrcArmatureFromList(rig, scn):
         for (name, n) in misses.items():
             print("  %14s: %2d" % (name, n))
         print("Best bone map for armature %s:" % best.name)
-        amt = mcp.sourceArmatures[best.name]
+        amt = _sourceArmatures[best.name]
         for bone in rig.data.bones:
             try:
                 bname = amt.boneNames[canonicalName(bone.name)]
@@ -85,21 +122,23 @@ def guessSrcArmatureFromList(rig, scn):
 #
 
 def findSrcArmature(context, rig):
+    global _srcArmature, _sourceArmatures
     from . import t_pose
     scn = context.scene
 
     setCategory("Identify Source Rig")
+    ensureSourceInited(scn)
     if not scn.McpAutoSourceRig:
-        mcp.srcArmature = mcp.sourceArmatures[scn.McpSourceRig]
+        _srcArmature = _sourceArmatures[scn.McpSourceRig]
     else:
-        amt = mcp.srcArmature = CArmature()
+        amt = _srcArmature = CArmature()
         selectAndSetRestPose(rig, scn)
         amt.findArmature(rig)
         t_pose.autoTPose(rig, scn)
-        mcp.sourceArmatures["Automatic"] = amt
+        _sourceArmatures["Automatic"] = amt
         amt.display("Source")
 
-    rig.McpArmature = mcp.srcArmature.name
+    rig.McpArmature = _srcArmature.name
     print("Using matching armature %s." % rig.McpArmature)
     clearCategory()
 
@@ -108,6 +147,7 @@ def findSrcArmature(context, rig):
 #
 
 def setArmature(rig, scn):
+    global _srcArmature, _sourceArmatures
     try:
         name = rig.McpArmature
     except:
@@ -118,7 +158,7 @@ def setArmature(rig, scn):
         scn.McpSourceRig = name
     else:
         raise MocapError("No source armature set")
-    mcp.srcArmature = mcp.sourceArmatures[name]
+    _srcArmature = _sourceArmatures[name]
     print("Set source armature to %s" % name)
     return
 
@@ -140,31 +180,25 @@ def findSourceKey(bname, struct):
 ###############################################################################
 
 
-def isSourceInited(scn):
-    try:
-        scn.McpSourceRig
-        return True
-    except:
-        return False
-
-
 def initSources(scn):
-    mcp.sourceArmatures = { "Automatic" : CArmature() }
+    global _sourceArmatures, _srcArmatureEnums
+
+    _sourceArmatures = { "Automatic" : CArmature() }
     path = os.path.join(os.path.dirname(__file__), "source_rigs")
     for fname in os.listdir(path):
         file = os.path.join(path, fname)
         (name, ext) = os.path.splitext(fname)
         if ext == ".src" and os.path.isfile(file):
             armature = readSrcArmature(file, name)
-            mcp.sourceArmatures[armature.name] = armature
-    mcp.srcArmatureEnums = [("Automatic", "Automatic", "Automatic")]
-    keys = list(mcp.sourceArmatures.keys())
+            _sourceArmatures[armature.name] = armature
+    _srcArmatureEnums = [("Automatic", "Automatic", "Automatic")]
+    keys = list(_sourceArmatures.keys())
     keys.sort()
     for key in keys:
-        mcp.srcArmatureEnums.append((key,key,key))
+        _srcArmatureEnums.append((key,key,key))
 
     bpy.types.Scene.McpSourceRig = EnumProperty(
-        items = mcp.srcArmatureEnums,
+        items = _srcArmatureEnums,
         name = "Source rig",
         default = 'Automatic')
     scn.McpSourceRig = 'Automatic'
@@ -199,10 +233,6 @@ def readSrcArmature(file, name):
     fp.close()
     return armature
 
-
-def ensureSourceInited(scn):
-    if not isSourceInited(scn):
-        initSources(scn)
 
 class VIEW3D_OT_McpInitSourcesButton(bpy.types.Operator):
     bl_idname = "mcp.init_sources"

@@ -112,6 +112,7 @@ def toesBelowBall(context):
     if useIk:
         raise MocapError("Toe Below Ball only for FK feet")
 
+    layers = list(rig.data.layers)
     startProgress("Keep toes down")
     frames = getActiveFramesBetweenMarkers(rig, scn)
     print("Left toe")
@@ -119,6 +120,7 @@ def toesBelowBall(context):
     print("Right toe")
     toeBelowBall(scn, frames, rig, plane, ".R")
     endProgress("Toes kept down")
+    rig.data.layers = layers
 
 
 def toeBelowBall(scn, frames, rig, plane, suffix):
@@ -136,14 +138,22 @@ def toeBelowBall(scn, frames, rig, plane, suffix):
             zToe = getProjection(mToe.matrix.col[3], ez)
             zBall = getProjection(mBall.matrix.col[3], ez)
             if zToe > zBall:
-                offsetToeRotation(toe, ez, factor, order, lock, scn)
+                pmat = offsetToeRotation(toe, ez, factor, order, lock, scn)
+            else:
+                pmat = fkik.getPoseMatrix(toe.matrix, toe)
+            pmat = keepToeRotationNegative(pmat, scn)
+            fkik.insertRotation(toe, pmat)
     else:
         for n,frame in enumerate(frames):
             scn.frame_set(frame)
             showProgress(n, frame, nFrames)
             dzToe = getProjection(toe.matrix.col[1], ez)
             if dzToe > 0:
-                offsetToeRotation(toe, ez, factor, order, lock, scn)
+                pmat = offsetToeRotation(toe, ez, factor, order, lock, scn)
+            else:
+                pmat = fkik.getPoseMatrix(toe.matrix, toe)
+            pmat = keepToeRotationNegative(pmat, scn)
+            fkik.insertRotation(toe, pmat)
 
 
 def offsetToeRotation(toe, ez, factor, order, lock, scn):
@@ -163,8 +173,17 @@ def offsetToeRotation(toe, ez, factor, order, lock, scn):
     gmat = mat.to_4x4()
     gmat.col[3] = toe.matrix.col[3]
     pmat = fkik.getPoseMatrix(gmat, toe)
-    pmat = correctMatrixForLocks(pmat, order, lock, toe, scn.McpUseLimits)
-    fkik.insertRotation(toe, pmat)
+    return correctMatrixForLocks(pmat, order, lock, toe, scn.McpUseLimits)
+
+
+def keepToeRotationNegative(pmat, scn):
+    euler = pmat.to_3x3().to_euler('YZX')
+    if euler.x > 0:
+        pmat0 = pmat
+        euler.x = 0
+        pmat = euler.to_matrix().to_4x4()
+        pmat.col[3] = pmat0.col[3]
+    return pmat
 
 
 class VIEW3D_OT_McpOffsetToeButton(bpy.types.Operator):
@@ -178,6 +197,56 @@ class VIEW3D_OT_McpOffsetToeButton(bpy.types.Operator):
         getTargetArmature(context.object, context.scene)
         try:
             toesBelowBall(context)
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
+        return{'FINISHED'}
+
+#-------------------------------------------------------------
+#   Limbs bend positive
+#-------------------------------------------------------------
+
+def limbsBendPositive(rig, doElbows, doKnees, frames):
+    limbs = {}
+    if doElbows:
+        minimizeFCurve("forearm.L", rig, 0, frames)
+        minimizeFCurve("forearm.R", rig, 0, frames)
+    if doKnees:
+        minimizeFCurve("shin.L", rig, 0, frames)
+        minimizeFCurve("shin.R", rig, 0, frames)
+
+
+def minimizeFCurve(bname, rig, index, frames):
+    fcu = findBoneFCurve(bname, rig, index)
+    if fcu is None:
+        return
+    y0 = fcu.evaluate(0)
+    t0 = frames[0]
+    t1 = frames[-1]
+    for kp in fcu.keyframe_points:
+        t = kp.co[0]
+        if t >= t0 and t <= t1:
+            y = kp.co[1]
+            if y < y0:
+                kp.co[1] = y0
+
+
+class VIEW3D_OT_McpLimbsBendPositiveButton(bpy.types.Operator):
+    bl_idname = "mcp.limbs_bend_positive"
+    bl_label = "Bend Limbs Positive"
+    bl_description = "Ensure that limbs' X rotation is positive."
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        from .target import getTargetArmature
+        scn = context.scene
+        rig = context.object
+        getTargetArmature(rig, scn)
+        try:
+            layers = list(rig.data.layers)
+            frames = getActiveFramesBetweenMarkers(rig, scn)
+            limbsBendPositive(rig, scn.McpBendElbows, scn.McpBendKnees, frames)
+            rig.data.layers = layers
+            print("Limbs bent positive")
         except MocapError:
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}

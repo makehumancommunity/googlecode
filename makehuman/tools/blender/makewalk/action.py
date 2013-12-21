@@ -26,9 +26,14 @@
 import bpy
 from bpy.props import EnumProperty, StringProperty
 
-from . import mcp
 from . import utils
-from .utils import MocapError
+from .utils import *
+
+#
+#   Global variables
+#
+
+_actions = []
 
 #
 #   Select or delete action
@@ -40,6 +45,8 @@ from .utils import MocapError
 #
 
 def listAllActions(context):
+    global _actions
+
     scn = context.scene
     try:
         doFilter = scn.McpFilterActions
@@ -52,26 +59,26 @@ def listAllActions(context):
     except:
         doFilter = False
 
-    mcp.actions = []
+    _actions = []
     for act in bpy.data.actions:
         name = act.name
         if (not doFilter) or (name[0:flen] == filter):
-            mcp.actions.append((name, name, name))
+            _actions.append((name, name, name))
     bpy.types.Scene.McpActions = EnumProperty(
-        items = mcp.actions,
+        items = _actions,
         name = "Actions")
     bpy.types.Scene.McpFirstAction = EnumProperty(
-        items = mcp.actions,
+        items = _actions,
         name = "First action")
     bpy.types.Scene.McpSecondAction = EnumProperty(
-        items = mcp.actions,
+        items = _actions,
         name = "Second action")
     print("Actions declared")
-    return
 
 
 def findActionNumber(name):
-    for n,enum in enumerate(mcp.actions):
+    global _actions
+    for n,enum in enumerate(_actions):
         (name1, name2, name3) = enum
         if name == name1:
             return n
@@ -98,6 +105,7 @@ class VIEW3D_OT_McpUpdateActionListButton(bpy.types.Operator):
 #
 
 def deleteAction(context):
+    global _actions
     listAllActions(context)
     scn = context.scene
     try:
@@ -111,7 +119,7 @@ def deleteAction(context):
     if act.users == 0:
         print("Deleting", act)
         n = findActionNumber(act.name)
-        mcp.actions.pop(n)
+        _actions.pop(n)
         bpy.data.actions.remove(act)
         print('Action', act, 'deleted')
         listAllActions(context)
@@ -148,7 +156,7 @@ class VIEW3D_OT_McpDeleteButton(bpy.types.Operator):
 def deleteHash():
     for act in bpy.data.actions:
         if act.name[0] == '#':
-            utils.deleteAction(act)
+            deleteAction(act)
     return
 
 

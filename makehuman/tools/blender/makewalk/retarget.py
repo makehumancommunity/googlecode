@@ -48,8 +48,9 @@ from mathutils import *
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import *
 
-from . import props, source, target, load, simplify, t_pose
-from . import mcp
+from .simplify import simplifyFCurves, rescaleFCurves
+from .floor import limbsBendPositive
+from .t_pose import setTPose, getStoredBonePose
 from .utils import *
 
 
@@ -80,13 +81,13 @@ class CAnimation:
 
     def setTPose(self, scn):
         selectAndSetRestPose(self.srcRig, scn)
-        t_pose.setTPose(self.srcRig, scn)
+        setTPose(self.srcRig, scn)
         selectAndSetRestPose(self.trgRig, scn)
         if isMakeHumanRig(self.trgRig) and scn.McpMakeHumanTPose:
             tpose = "target_rigs/makehuman_tpose.json"
         else:
             tpose = None
-        t_pose.setTPose(self.trgRig, scn, filename=tpose)
+        setTPose(self.trgRig, scn, filename=tpose)
         for banim in self.boneAnims.values():
             banim.insertTPoseFrame()
         scn.frame_set(0)
@@ -181,7 +182,7 @@ class CBoneAnim:
 
 
     def insertTPoseFrame(self):
-        mat = t_pose.getStoredBonePose(self.trgBone)
+        mat = getStoredBonePose(self.trgBone)
         self.insertKeyFrame(mat, 0)
 
 
@@ -319,6 +320,8 @@ def clearMcpProps(rig):
 
 
 def retargetAnimation(context, srcRig, trgRig):
+    from . import source, target
+
     startProgress("Retargeting")
     scn = context.scene
     setMhxIk(trgRig, True, True, False)
@@ -456,6 +459,8 @@ def restoreTargetData(rig, data):
 #
 
 def loadRetargetSimplify(context, filepath):
+    from . import load
+
     print("\nLoad and retarget %s" % filepath)
     time1 = time.clock()
     scn = context.scene
@@ -468,10 +473,12 @@ def loadRetargetSimplify(context, filepath):
             load.renameAndRescaleBvh(context, srcRig, trgRig)
             retargetAnimation(context, srcRig, trgRig)
             scn = context.scene
+            if scn.McpDoBendPositive:
+                limbsBendPositive(trgRig, True, True, (0,1e6))
             if scn.McpDoSimplify:
-                simplify.simplifyFCurves(context, trgRig, False, False)
+                simplifyFCurves(context, trgRig, False, False)
             if scn.McpRescale:
-                simplify.rescaleFCurves(context, trgRig, scn.McpRescaleFactor)
+                rescaleFCurves(context, trgRig, scn.McpRescaleFactor)
         finally:
             load.deleteSourceRig(context, srcRig, 'Y_')
     finally:
@@ -492,6 +499,8 @@ class VIEW3D_OT_NewRetargetMhxButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
+        from . import target
+
         trgRig = context.object
         scn = context.scene
         data = changeTargetData(trgRig, scn)
