@@ -90,7 +90,7 @@ class CProxy:
         if (first+rlen) != mlen:
             string = "Warning: %d refVerts != %d meshVerts" % (first+rlen, mlen)
             print(string)
-            #raise NameError(string)
+            #raise MHError(string)
         return rlen,first
 
 

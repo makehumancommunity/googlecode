@@ -131,7 +131,7 @@ def findBase(context):
     for ob in context.scene.objects:
         if isBase(ob):
             return ob
-    raise NameError("No base object found")
+    raise MHError("No base object found")
 
 def isBase(ob):
     try:

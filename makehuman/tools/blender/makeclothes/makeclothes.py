@@ -698,7 +698,7 @@ def deleteStrayVerts(context, ob):
             onFaces[vn] = True
     for v in verts:
         if not onFaces[v.index]:
-            raise NameError("Mesh %s has stray vert %d" % (ob.name, v.index))
+            raise MHError("Mesh %s has stray vert %d" % (ob.name, v.index))
         return
 
 #

@@ -564,7 +564,7 @@ def doSaveTarget(context, filepath):
     ob = context.object
     settings = getSettings(ob)
     if not utils.isTarget(ob):
-        raise NameError("%s is not a target")
+        raise MHError("%s is not a target")
     bpy.ops.object.mode_set(mode='OBJECT')
     ob.active_shape_key_index = ob["NTargets"]
     if not checkValid(ob):
@@ -942,7 +942,7 @@ def fitTarget(context):
             mh.proxy = CProxy()
             mh.proxy.read(path)
         else:
-            raise NameError("Object %s has no associated mhclo file. Cannot fit" % ob.name)
+            raise MHError("Object %s has no associated mhclo file. Cannot fit" % ob.name)
             return
     if ob.MhAffectOnly != 'All':
         first,last = settings.affectedVerts[ob.MhAffectOnly]

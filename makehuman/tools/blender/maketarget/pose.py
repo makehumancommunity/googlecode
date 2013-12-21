@@ -50,7 +50,7 @@ def saveMhpFile(context, filepath):
     if rig and rig.type == 'ARMATURE':
         roots = rigRoots(rig)
         if len(roots) > 1:
-            raise NameError("Armature %s has multiple roots: %s" % (rig.name, roots))
+            raise MHError("Armature %s has multiple roots: %s" % (rig.name, roots))
         (pname, ext) = os.path.splitext(filepath)
         mhppath = pname + ".mhp"
 
@@ -248,7 +248,7 @@ def saveBvhFile(context, filepath):
     if rig and rig.type == 'ARMATURE':
         roots = rigRoots(rig)
         if len(roots) > 1:
-            raise NameError("Armature %s has multiple roots: %s" % (rig.name, roots))
+            raise MHError("Armature %s has multiple roots: %s" % (rig.name, roots))
         scn.objects.active = rig
         (pname, ext) = os.path.splitext(filepath)
         bvhpath = pname + ".bvh"
