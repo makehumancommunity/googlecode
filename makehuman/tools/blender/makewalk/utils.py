@@ -76,7 +76,7 @@ MhxLayers = 8*[True] + 8*[False] + 8*[True] + 8*[False]
 RigifyLayers = 27*[True] + 5*[False]
 
 #
-#
+#   Identify rig type
 #
 
 def isMhxRig(rig):
@@ -103,50 +103,11 @@ def isRigify(rig):
         return False
 
 
-def setRigifyFKIK(rig, value):
-    rig.pose.bones["hand.ik.L"]["ikfk_switch"] = value
-    rig.pose.bones["hand.ik.R"]["ikfk_switch"] = value
-    rig.pose.bones["foot.ik.L"]["ikfk_switch"] = value
-    rig.pose.bones["foot.ik.R"]["ikfk_switch"] = value
-    on = (value < 0.5)
-    for n in [6, 9, 12, 15]:
-        rig.data.layers[n] = on
-    for n in [7, 10, 13, 16]:
-        rig.data.layers[n] = not on
-
-
 def isMakeHumanRig(rig):
     try:
         return rig["MhAlpha8"]
     except KeyError:
         return False
-
-
-def setMhxIk(rig, useArms, useLegs, turnOn):
-    if isMhxRig(rig):
-        ikLayers = []
-        fkLayers = []
-        if useArms:
-            rig["MhaArmIk_L"] = turnOn
-            rig["MhaArmIk_R"] = turnOn
-            ikLayers += [2,18]
-            fkLayers += [3,19]
-        if useLegs:
-            rig["MhaLegIk_L"] = turnOn
-            rig["MhaLegIk_R"] = turnOn
-            ikLayers += [4,20]
-            fkLayers += [5,21]
-
-        if turnOn:
-            first = ikLayers
-            second = fkLayers
-        else:
-            first = fkLayers
-            second = ikLayers
-        for n in first:
-            rig.data.layers[n] = True
-        for n in second:
-            rig.data.layers[n] = False
 
 #
 #   nameOrNone(string):
@@ -361,12 +322,13 @@ def findFCurve(path, index, fcurves):
     print('F-curve "%s" not found.' % path)
     return None
 
-def findBoneFCurve(bname, rig, index):
-    pb = getTrgBone(bname, rig)
-    if pb.rotation_mode == 'QUATERNION':
-        mode = "rotation_quaternion"
-    else:
-        mode = "rotation_euler"
+
+def findBoneFCurve(pb, rig, index, mode='rotation'):
+    if mode == 'rotation':
+        if pb.rotation_mode == 'QUATERNION':
+            mode = "rotation_quaternion"
+        else:
+            mode = "rotation_euler"
     path = 'pose.bones["%s"].%s' % (pb.name, mode)
 
     if rig.animation_data is None:
@@ -375,6 +337,16 @@ def findBoneFCurve(bname, rig, index):
     if action is None:
         return None
     return findFCurve(path, index, action.fcurves)
+
+
+def fillKeyFrames(pb, rig, frames, nIndices, mode='rotation'):
+    for index in range(nIndices):
+        fcu = findBoneFCurve(pb, rig, index, mode)
+        if fcu is None:
+            return
+        for frame in frames:
+            y = fcu.evaluate(frame)
+            fcu.keyframe_points.insert(frame, y, options={'FAST'})
 
 #
 #   isRotation(mode):

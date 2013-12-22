@@ -201,55 +201,6 @@ class VIEW3D_OT_McpOffsetToeButton(bpy.types.Operator):
             bpy.ops.mcp.error('INVOKE_DEFAULT')
         return{'FINISHED'}
 
-#-------------------------------------------------------------
-#   Limbs bend positive
-#-------------------------------------------------------------
-
-def limbsBendPositive(rig, doElbows, doKnees, frames):
-    limbs = {}
-    if doElbows:
-        minimizeFCurve("forearm.L", rig, 0, frames)
-        minimizeFCurve("forearm.R", rig, 0, frames)
-    if doKnees:
-        minimizeFCurve("shin.L", rig, 0, frames)
-        minimizeFCurve("shin.R", rig, 0, frames)
-
-
-def minimizeFCurve(bname, rig, index, frames):
-    fcu = findBoneFCurve(bname, rig, index)
-    if fcu is None:
-        return
-    y0 = fcu.evaluate(0)
-    t0 = frames[0]
-    t1 = frames[-1]
-    for kp in fcu.keyframe_points:
-        t = kp.co[0]
-        if t >= t0 and t <= t1:
-            y = kp.co[1]
-            if y < y0:
-                kp.co[1] = y0
-
-
-class VIEW3D_OT_McpLimbsBendPositiveButton(bpy.types.Operator):
-    bl_idname = "mcp.limbs_bend_positive"
-    bl_label = "Bend Limbs Positive"
-    bl_description = "Ensure that limbs' X rotation is positive."
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        from .target import getTargetArmature
-        scn = context.scene
-        rig = context.object
-        getTargetArmature(rig, scn)
-        try:
-            layers = list(rig.data.layers)
-            frames = getActiveFramesBetweenMarkers(rig, scn)
-            limbsBendPositive(rig, scn.McpBendElbows, scn.McpBendKnees, frames)
-            rig.data.layers = layers
-            print("Limbs bent positive")
-        except MocapError:
-            bpy.ops.mcp.error('INVOKE_DEFAULT')
-        return{'FINISHED'}
 
 #-------------------------------------------------------------
 #   Floor
@@ -337,24 +288,32 @@ def floorIkFoot(rig, plane, scn, frames):
     rleg = rig.pose.bones["foot.ik.R"]
     ez,origin,rot = getPlaneInfo(plane)
 
+    fillKeyFrames(lleg, rig, frames, 3, mode='location')
+    fillKeyFrames(rleg, rig, frames, 3, mode='location')
+    if scn.McpFloorHips:
+        fillKeyFrames(root, rig, frames, 3, mode='location')
+
     nFrames = len(frames)
     for n,frame in enumerate(frames):
         scn.frame_set(frame)
-        fkik.updateScene()
-        offset = 0
+        showProgress(n, frame, nFrames)
+
         if scn.McpFloorLeft:
-            offset = getIkOffset(rig, ez, origin, lleg)
-            if offset > 0:
-                addOffset(lleg, offset, ez)
+            lOffset = getIkOffset(rig, ez, origin, lleg)
+            if lOffset > 0:
+                addOffset(lleg, lOffset, ez)
+        else:
+            lOffset = 0
         if scn.McpFloorRight:
             rOffset = getIkOffset(rig, ez, origin, rleg)
             if rOffset > 0:
                 addOffset(rleg, rOffset, ez)
-            if rOffset > offset:
-                offset = rOffset
-        if offset > 0 and scn.McpFloorHips:
-            addOffset(root, offset, ez)
-        showProgress(n, frame, nFrames)
+        else:
+            rOffset = 0
+
+        hOffset = min(lOffset,rOffset)
+        if hOffset > 0 and scn.McpFloorHips:
+            addOffset(root, hOffset, ez)
 
 
 def getIkOffset(rig, ez, origin, leg):

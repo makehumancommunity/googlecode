@@ -49,7 +49,6 @@ from bpy_extras.io_utils import ImportHelper
 from bpy.props import *
 
 from .simplify import simplifyFCurves, rescaleFCurves
-from .floor import limbsBendPositive
 from .t_pose import setTPose, getStoredBonePose
 from .utils import *
 
@@ -321,6 +320,7 @@ def clearMcpProps(rig):
 
 def retargetAnimation(context, srcRig, trgRig):
     from . import source, target
+    from .fkik import setMhxIk, setRigifyFKIK
 
     startProgress("Retargeting")
     scn = context.scene
@@ -460,6 +460,7 @@ def restoreTargetData(rig, data):
 
 def loadRetargetSimplify(context, filepath):
     from . import load
+    from .fkik import limbsBendPositive
 
     print("\nLoad and retarget %s" % filepath)
     time1 = time.clock()

@@ -288,6 +288,8 @@ class VIEW3D_OT_McpSetTPoseButton(bpy.types.Operator):
 
     def execute(self, context):
         from .retarget import changeTargetData, restoreTargetData
+        from .fkik import setRigifyFKIK
+
         rig = context.object
         scn = context.scene
         #data = changeTargetData(rig, scn)

@@ -291,6 +291,33 @@ def clearAnimation(rig, scn, act, type, snapBones):
         act.fcurves.remove(fcu)
 
 
+def setMhxIk(rig, useArms, useLegs, turnOn):
+    if isMhxRig(rig):
+        ikLayers = []
+        fkLayers = []
+        if useArms:
+            rig["MhaArmIk_L"] = turnOn
+            rig["MhaArmIk_R"] = turnOn
+            ikLayers += [2,18]
+            fkLayers += [3,19]
+        if useLegs:
+            rig["MhaLegIk_L"] = turnOn
+            rig["MhaLegIk_R"] = turnOn
+            ikLayers += [4,20]
+            fkLayers += [5,21]
+
+        if turnOn:
+            first = ikLayers
+            second = fkLayers
+        else:
+            first = fkLayers
+            second = ikLayers
+        for n in first:
+            rig.data.layers[n] = True
+        for n in second:
+            rig.data.layers[n] = False
+
+
 def transferMhxToFk(rig, scn):
     from . import target
 
@@ -316,6 +343,8 @@ def transferMhxToFk(rig, scn):
 
     frames = getActiveFramesBetweenMarkers(rig, scn)
     nFrames = len(frames)
+    limbsBendPositive(rig, scn.McpFkIkArms, scn.McpFkIkLegs, frames)
+
     for n,frame in enumerate(frames):
         showProgress(n, frame, nFrames)
         scn.frame_set(frame)
@@ -432,6 +461,18 @@ def setLocRot(bname, rig):
         pb.keyframe_insert("rotation_euler", group=pb.name)
 
 
+def setRigifyFKIK(rig, value):
+    rig.pose.bones["hand.ik.L"]["ikfk_switch"] = value
+    rig.pose.bones["hand.ik.R"]["ikfk_switch"] = value
+    rig.pose.bones["foot.ik.L"]["ikfk_switch"] = value
+    rig.pose.bones["foot.ik.R"]["ikfk_switch"] = value
+    on = (value < 0.5)
+    for n in [6, 9, 12, 15]:
+        rig.data.layers[n] = on
+    for n in [7, 10, 13, 16]:
+        rig.data.layers[n] = not on
+
+
 def transferRigifyToFk(rig, scn):
     from rig_ui import fk2ik_arm, fk2ik_leg
 
@@ -541,6 +582,59 @@ def transferRigifyToIk(rig, scn):
         if scn.McpFkIkLegs:
             rig.pose.bones["foot.ik"+suffix]["ikfk_switch"] = 1.0
 
+#-------------------------------------------------------------
+#   Limbs bend positive
+#-------------------------------------------------------------
+
+def limbsBendPositive(rig, doElbows, doKnees, frames):
+    limbs = {}
+    if doElbows:
+        pb = getTrgBone("forearm.L", rig)
+        minimizeFCurve(pb, rig, 0, frames)
+        pb = getTrgBone("forearm.R", rig)
+        minimizeFCurve(pb, rig, 0, frames)
+    if doKnees:
+        pb = getTrgBone("shin.L", rig)
+        minimizeFCurve(pb, rig, 0, frames)
+        pb = getTrgBone("shin.R", rig)
+        minimizeFCurve(pb, rig, 0, frames)
+
+
+def minimizeFCurve(pb, rig, index, frames):
+    fcu = findBoneFCurve(pb, rig, index)
+    if fcu is None:
+        return
+    y0 = fcu.evaluate(0)
+    t0 = frames[0]
+    t1 = frames[-1]
+    for kp in fcu.keyframe_points:
+        t = kp.co[0]
+        if t >= t0 and t <= t1:
+            y = kp.co[1]
+            if y < y0:
+                kp.co[1] = y0
+
+
+class VIEW3D_OT_McpLimbsBendPositiveButton(bpy.types.Operator):
+    bl_idname = "mcp.limbs_bend_positive"
+    bl_label = "Bend Limbs Positive"
+    bl_description = "Ensure that limbs' X rotation is positive."
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        from .target import getTargetArmature
+        scn = context.scene
+        rig = context.object
+        try:
+            layers = list(rig.data.layers)
+            getTargetArmature(rig, scn)
+            frames = getActiveFramesBetweenMarkers(rig, scn)
+            limbsBendPositive(rig, scn.McpBendElbows, scn.McpBendKnees, frames)
+            rig.data.layers = layers
+            print("Limbs bent positive")
+        except MocapError:
+            bpy.ops.mcp.error('INVOKE_DEFAULT')
+        return{'FINISHED'}
 
 #------------------------------------------------------------------------
 #   Buttons

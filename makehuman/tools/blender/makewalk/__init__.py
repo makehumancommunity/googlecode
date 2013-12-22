@@ -37,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": (0, 937),
+    "version": (0, 939),
     "blender": (2, 6, 9),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -222,11 +222,11 @@ class EditPanel(bpy.types.Panel):
             ins = inset(layout)
             ins.operator("mcp.shift_bone")
 
-            ins.separator()
-            row = ins.row()
-            row.prop(scn, "McpBendElbows")
-            row.prop(scn, "McpBendKnees")
-            ins.operator("mcp.limbs_bend_positive")
+            #ins.separator()
+            #row = ins.row()
+            #row.prop(scn, "McpBendElbows")
+            #row.prop(scn, "McpBendKnees")
+            #ins.operator("mcp.limbs_bend_positive")
 
             ins.separator()
             row = ins.row()
