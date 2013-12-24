@@ -330,7 +330,7 @@ class Human(guicommon.Object):
         """
         if updateModifier:
             modifier = self.getModifier('macrodetails/Gender')
-            modifier.setValue(age)
+            modifier.setValue(gender)
             self.applyAllTargets()
             return
 
@@ -445,8 +445,8 @@ class Human(guicommon.Object):
             of the attribute to apply.
         """
         if updateModifier:
-            modifier = self.getModifier('macrodetails/Weight')
-            modifier.setValue(age)
+            modifier = self.getModifier('macrodetails-universal/Weight')
+            modifier.setValue(weight)
             self.applyAllTargets()
             return
 
@@ -477,8 +477,8 @@ class Human(guicommon.Object):
             of the attribute to apply.
         """
         if updateModifier:
-            modifier = self.getModifier('macrodetails/Muscle')
-            modifier.setValue(age)
+            modifier = self.getModifier('macrodetails-universal/Muscle')
+            modifier.setValue(muscle)
             self.applyAllTargets()
             return
 
@@ -499,8 +499,8 @@ class Human(guicommon.Object):
 
     def setHeight(self, height, updateModifier = True):
         if updateModifier:
-            modifier = self.getModifier('macrodetails/Height')
-            modifier.setValue(age)
+            modifier = self.getModifier('macrodetails-universal-stature/Height')
+            modifier.setValue(height)
             self.applyAllTargets()
             return
 
@@ -527,8 +527,8 @@ class Human(guicommon.Object):
 
     def setBreastSize(self, size, updateModifier = True):
         if updateModifier:
-            modifier = self.getModifier('macrodetails/BreastSize')
-            modifier.setValue(age)
+            modifier = self.getModifier('breast/BreastSize')
+            modifier.setValue(size)
             self.applyAllTargets()
             return
 
@@ -552,8 +552,8 @@ class Human(guicommon.Object):
 
     def setBreastFirmness(self, firmness, updateModifier = True):
         if updateModifier:
-            modifier = self.getModifier('macrodetails/BreastFirmness')
-            modifier.setValue(age)
+            modifier = self.getModifier('breast/BreastFirmness')
+            modifier.setValue(firmness)
             self.applyAllTargets()
             return
 
@@ -579,7 +579,7 @@ class Human(guicommon.Object):
     def setCaucasian(self, caucasian, sync=True, updateModifier = True):
         if updateModifier:
             modifier = self.getModifier('macrodetails/Caucasian')
-            modifier.setValue(age)
+            modifier.setValue(caucasian)
             self.applyAllTargets()
             return
 
@@ -603,7 +603,7 @@ class Human(guicommon.Object):
     def setAfrican(self, african, sync=True, updateModifier = True):
         if updateModifier:
             modifier = self.getModifier('macrodetails/African')
-            modifier.setValue(age)
+            modifier.setValue(african)
             self.applyAllTargets()
             return
 
@@ -627,7 +627,7 @@ class Human(guicommon.Object):
     def setAsian(self, asian, sync=True, updateModifier = True):
         if updateModifier:
             modifier = self.getModifier('macrodetails/Asian')
-            modifier.setValue(age)
+            modifier.setValue(asian)
             self.applyAllTargets()
             return
 
