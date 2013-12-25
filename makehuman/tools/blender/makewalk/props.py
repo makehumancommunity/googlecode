@@ -106,7 +106,7 @@ def initInterface(context):
     bpy.types.Scene.McpClearLocks = BoolProperty(
         name="Unlock Rotation",
         description="Clear X and Z rotation locks",
-        default=True)
+        default=False)
 
     bpy.types.Scene.McpFlipYAxis = BoolProperty(
         name="Flix Y Axis",

@@ -43,6 +43,9 @@ Joints = [
     ('l-rock-1',            'v', 12859),
     ('r-rock-2',            'v', 6275),
     ('r-rock-1',            'v', 6262),
+
+    ('l-foot-pt',           'l', ((0.5, 'l-ankle'), (0.5, 'l-toe-2'))),
+    ('r-foot-pt',           'l', ((0.5, 'r-ankle'), (0.5, 'r-toe-2'))),
 ]
 
 PlaneJoints = [
@@ -189,22 +192,26 @@ RevFootHeadsTails = {
     'foot.ik.L' :       ('l-heel', 'l-toe-2'),
     'toe.rev.L' :       ('l-toe-2', 'l-foot-1'),
     'foot.rev.L' :      ('l-foot-1', 'l-ankle'),
+    'foot.pt.ik.L' :    ('l-foot-pt', ('l-foot-pt', (0,1,0))),
 
     'foot.ik.R' :       ('r-heel', 'r-toe-2'),
     'toe.rev.R' :       ('r-toe-2', 'r-foot-1'),
     'foot.rev.R' :      ('r-foot-1', 'r-ankle'),
+    'foot.pt.ik.R' :    ('r-foot-pt', ('r-foot-pt', (0,1,0))),
 }
 
 RevFootArmature = {
     'foot.ik.L' :      (180*D, None, F_WIR|F_NOLOCK, L_LLEGIK),
-    'toe.rev.L' :      ("PlaneToe.L", 'foot.ik.L', F_WIR, L_LLEGIK),
+    'toe.rev.L' :      ("PlaneFoot.L", 'foot.ik.L', F_WIR, L_LLEGIK),
     'foot.rev.L' :     ("PlaneFoot.L", 'toe.rev.L', F_WIR, L_LLEGIK, P_XYZ),
+    'foot.pt.ik.L' :   (0, 'foot.rev.L', 0, L_HELP2),
     'ankle.L' :        (0, None, F_WIR, L_LEXTRA),
     'ankle.ik.L' :     (0, 'foot.rev.L', F_NOLOCK, L_HELP2),
 
     'foot.ik.R' :      (180*D, None, F_WIR|F_NOLOCK, L_RLEGIK),
-    'toe.rev.R' :      ("PlaneToe.R", 'foot.ik.R', F_WIR, L_RLEGIK),
+    'toe.rev.R' :      ("PlaneFoot.R", 'foot.ik.R', F_WIR, L_RLEGIK),
     'foot.rev.R' :     ("PlaneFoot.R", 'toe.rev.R', F_WIR, L_RLEGIK, P_XYZ),
+    'foot.pt.ik.R' :   (0, 'foot.rev.R', 0, L_HELP2),
     'ankle.R' :        (0, None, F_WIR, L_REXTRA),
     'ankle.ik.R' :     (0, 'foot.rev.R', F_NOLOCK, L_HELP2),
 
@@ -316,13 +323,13 @@ CustomShapes = {
 
 IkArmChains = {
     "upper_arm" :   ("Upstream", L_LARMIK, "Arm"),
-    "forearm" :     ("Leaf", L_LARMIK, L_HELP, 2, "Arm", "hand", "elbow.pt", -90*D, -90*D),
+    "forearm" :     ("Leaf", L_LARMIK, L_HELP, 2, "Arm", "hand", "elbow.pt", -90, -90),
     "hand" :        ("DownStream", L_LARMIK, "Arm"),
 }
 
 IkLegChains = {
     "thigh" :       ("Upstream", L_LLEGIK, "Leg"),
-    "shin" :        ("Leaf", L_LLEGIK, L_TWEAK, 2, "Leg", "ankle", "knee.pt", -90*D, -90*D),
+    "shin" :        ("Leaf", L_LLEGIK, L_TWEAK, 2, "Leg", "ankle", "knee.pt", -90, -90),
     "foot" :        ("DownStream", L_LLEGIK, "Leg"),
     "toe" :         ("DownStream", L_LLEGIK, "Leg"),
 }
@@ -358,18 +365,18 @@ RevFootConstraints = {
         ('LimitRot', C_OW_LOCAL, 1, ['Hint', (Hint,Hint, 0,0, 0,0), (1,0,0)])
         ],
     'foot.L' : [
-         ('IK', 0, 0, ['LegIK', 'foot.rev.L', 1, None, (1,0,1)]),
+         ('IK', 0, 0, ['LegIK', 'foot.rev.L', 1, (90, 'foot.pt.ik.L'), (1,0,1)]),
          #('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,True)])
         ],
     'foot.R' : [
-         ('IK', 0, 0, ['LegIK', 'foot.rev.R', 1, None, (1,0,1)]),
+         ('IK', 0, 0, ['LegIK', 'foot.rev.R', 1, (90, 'foot.pt.ik.R'), (1,0,1)]),
          #('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,True)])
         ],
     'toe.L' : [
-         ('IK', 0, 0, ['LegIK', 'toe.rev.L', 1, None, (1,0,1)]),
+         ('IK', 0, 0, ['LegIK', 'toe.rev.L', 1, (90, 'foot.pt.ik.L'), (1,0,1)]),
         ],
     'toe.R' : [
-         ('IK', 0, 0, ['LegIK', 'toe.rev.R', 1, None, (1,0,1)]),
+         ('IK', 0, 0, ['LegIK', 'toe.rev.R', 1, (90, 'foot.pt.ik.R'), (1,0,1)]),
         ],
     'ankle.ik.L' : [
          ('CopyLoc', 0, 1, ['Foot', 'foot.rev.L', (1,1,1), (0,0,0), 1, False]),

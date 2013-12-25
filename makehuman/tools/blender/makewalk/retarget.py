@@ -234,6 +234,9 @@ def getLocks(pb, scn):
     order = 'XYZ'
     if scn.McpClearLocks:
         pb.lock_rotation[0] = pb.lock_rotation[2] = False
+        for cns in pb.constraints:
+            if cns.type == 'LIMIT_ROTATION':
+                cns.use_limit_x = cns.use_limit_z = 0
 
     if pb.lock_rotation[1]:
         locks.append(1)

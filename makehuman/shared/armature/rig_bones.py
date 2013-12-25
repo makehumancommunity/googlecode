@@ -59,10 +59,10 @@ Joints = [
     ('r-plane-thumb-2',     'v', 2725),
     ('r-plane-thumb-3',     'v', 2697),
 
-    ('l-plane-foot',        'o', ('l-ankle', (0,-1,0))),
-    ('r-plane-foot',        'o', ('r-ankle', (0,-1,0))),
-    ('l-plane-toe',         'o', ('l-foot-1', (0,-1,0))),
-    ('r-plane-toe',         'o', ('r-foot-1', (0,-1,0))),
+    #('l-plane-foot',        'o', ('l-ankle', (0,-1,0))),
+    #('r-plane-foot',        'o', ('r-ankle', (0,-1,0))),
+    #('l-plane-toe',         'o', ('l-foot-1', (0,-1,0))),
+    #('r-plane-toe',         'o', ('r-foot-1', (0,-1,0))),
 
     ('pubis',               'vl', ((0.9, 4341), (0.1, 4250))),
 ]
@@ -153,8 +153,7 @@ Planes = {
     "PlaneArm.L" :         ('l-shoulder', 'l-elbow', 'l-hand'),
     "PlaneHand.L" :        ('l-elbow', 'l-wrist-top', 'l-hand-end'),
     "PlaneLeg.L" :         ('l-upper-leg', 'l-knee', 'l-ankle'),
-    "PlaneFoot.L" :        ('l-plane-foot', 'l-ankle', 'l-foot-1'),
-    "PlaneToe.L" :         ('l-plane-toe', 'l-foot-1', 'l-toe-2'),
+    "PlaneFoot.L" :        ('l-ankle', 'l-foot-1', 'l-toe-2'),
 
     "PlaneThumb.L" :       ('l-plane-thumb-1', 'l-plane-thumb-2', 'l-plane-thumb-3'),
     "PlaneIndex.L" :       ('l-finger-2-1', 'l-finger-2-2', 'l-finger-2-4'),
@@ -165,8 +164,7 @@ Planes = {
     "PlaneArm.R" :         ('r-shoulder', 'r-elbow', 'r-hand'),
     "PlaneHand.R" :        ('r-elbow', 'r-wrist-top', 'r-hand-end'),
     "PlaneLeg.R" :         ('r-upper-leg', 'r-knee', 'r-ankle'),
-    "PlaneFoot.R" :        ('r-plane-foot', 'r-ankle', 'r-foot-1'),
-    "PlaneToe.R" :         ('r-plane-toe', 'r-foot-1', 'r-toe-2'),
+    "PlaneFoot.R" :        ('r-ankle', 'r-foot-1', 'r-toe-2'),
 
     "PlaneThumb.R" :       ('r-plane-thumb-1', 'r-plane-thumb-2', 'r-plane-thumb-3'),
     "PlaneIndex.R" :       ('r-finger-2-1', 'r-finger-2-2', 'r-finger-2-4'),
@@ -247,12 +245,12 @@ Armature = {
     'thigh.L' :            ("PlaneLeg.L", 'hips', F_DEF, L_LLEGFK),
     'shin.L' :             ("PlaneLeg.L", 'thigh.L', F_DEF|F_CON, L_LLEGFK, P_YZX),
     'foot.L' :             ("PlaneFoot.L", 'shin.L', F_DEF|F_CON, L_LLEGFK, P_YZX),
-    'toe.L' :              ("PlaneToe.L", 'foot.L', F_DEF|F_CON, L_LLEGFK, P_YZX),
+    'toe.L' :              ("PlaneFoot.L", 'foot.L', F_DEF|F_CON, L_LLEGFK, P_YZX),
 
     'thigh.R' :            ("PlaneLeg.R", 'hips', F_DEF, L_RLEGFK),
     'shin.R' :             ("PlaneLeg.R", 'thigh.R', F_DEF|F_CON, L_RLEGFK, P_YZX),
     'foot.R' :             ("PlaneFoot.R", 'shin.R', F_DEF|F_CON, L_RLEGFK, P_YZX),
-    'toe.R' :              ("PlaneToe.R", 'foot.R', F_DEF|F_CON, L_RLEGFK, P_YZX),
+    'toe.R' :              ("PlaneFoot.R", 'foot.R', F_DEF|F_CON, L_RLEGFK, P_YZX),
 }
 
 RotationLimits = {
@@ -275,8 +273,8 @@ RotationLimits = {
     'clavicle.L' :      (-16,50,  -70,70,  -45,45),
     'upper_arm.L' :     (-45,135, -60,60, -135,135),
     'upper_arm.R' :     (-45,135, -60,60, -135,135),
-    'forearm.L' :       (-45,130, 0,0, -40,40),
-    'forearm.R' :       (-45,130, 0,0, -40,40),
+    'forearm.L' :       (-45,130, 0,0, 0,0),
+    'forearm.R' :       (-45,130, 0,0, 0,0),
     'hand.L' :          (-90,70, -90,90, -20,20),
     'hand.R' :          (-90,70, -90,90, -20,20),
 

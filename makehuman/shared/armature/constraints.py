@@ -130,7 +130,7 @@ class CIkConstraint(CConstraint):
 
         if self.pole:
             fp.write(
-            "      pole_angle %.6g ;\n" % self.angle +
+            "      pole_angle %.6g ;\n" % (self.angle*D) +
             "      pole_subtarget '%s' ;\n" % self.ptar +
             "      pole_target Refer Object %s ;\n" % (amt.name))
 

@@ -762,8 +762,8 @@ class Parser:
                         self.addConstraint(defName2, ('CopyRot', C_LOCAL, 0.5, [target, target+ext, (0,1,0), (0,0,0), True]))
                         self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [target, target+ext, (0,1,0), (0,0,0), True]))
                     else:
-                        self.addConstraint(defName2, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
-                        self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
+                        self.addConstraint(defName2, ('CopyRot', 0, 0.5, [bname, bname, (1,1,1), (0,0,0), False]))
+                        self.addConstraint(defName3, ('CopyRot', 0, 1.0, [bname, bname, (1,1,1), (0,0,0), False]))
 
 
     def renameDeformBones(self, muscles, custom, boneInfo):
