@@ -92,7 +92,7 @@ class ExporterMHX(Exporter):
     def build(self, options, taskview):
         self.taskview       = taskview
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
-        self.useRotationLimits   = options.addWidget(gui.CheckBox("Rotation limits", False))
+        self.useRotationLimits   = options.addWidget(gui.CheckBox("Rotation limits", True))
         #self.useFaceRig     = options.addWidget(gui.CheckBox("Face rig", True))
         self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))
         self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))

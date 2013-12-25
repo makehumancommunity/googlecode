@@ -66,9 +66,9 @@ def matchPoseRotation(pb, src):
 
 
 def matchPoseTwist(pb, src):
-    pmat0 = getPoseMatrix(src.matrix, pb)
+    pmat0 = src.matrix_basis
     euler = pmat0.to_3x3().to_euler('YZX')
-    euler.x = euler.z = 0
+    euler.z = 0
     pmat = euler.to_matrix().to_4x4()
     pmat.col[3] = pmat0.col[3]
     insertRotation(pb, pmat)
@@ -203,10 +203,9 @@ def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
 
     if legIkToAnkle:
         matchPoseTranslation(ankleIk, footFk)
+    else:
+        matchIkLeg(legIk, toeFk, mBall, mToe, mHeel)
 
-    #matchPoseTranslation(legIk, legFk)
-    #matchPoseRotation(legIk, legFk)
-    matchIkLeg(legIk, toeFk, mBall, mToe, mHeel)
     matchPoseTwist(lolegIk, lolegFk)
     updateScene()
 
@@ -216,9 +215,6 @@ def snapIkLeg(rig, snapIk, snapFk, frame, legIkToAnkle):
     updateScene()
 
     matchPoleTarget(kneePt, uplegFk, lolegFk)
-
-    #matchPoseRotation(uplegIk, uplegFk)
-    #matchPoseRotation(lolegIk, lolegFk)
 
     if not legIkToAnkle:
         matchPoseTranslation(ankleIk, footFk)

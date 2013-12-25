@@ -80,11 +80,9 @@ HeadsTails = {
 
     # Pole Targets
     'knee.pt.ik.L' :    ('l-knee-pt', ('l-knee-pt', ysmall)),
-    'knee.pt.fk.L' :    ('l-knee-pt', ('l-knee-pt', ysmall)),
     'knee.link.L' :     ('l-knee', 'l-knee-pt'),
 
     'knee.pt.ik.R' :    ('r-knee-pt', ('r-knee-pt', ysmall)),
-    'knee.pt.fk.R' :    ('r-knee-pt', ('r-knee-pt', ysmall)),
     'knee.link.R' :     ('r-knee', 'r-knee-pt'),
 
     # Arm
@@ -99,12 +97,10 @@ HeadsTails = {
 
     'hand.ik.L' :       ('l-hand', 'l-hand-end'),
     'elbow.pt.ik.L' :   ('l-elbow-pt', ('l-elbow-pt', ysmall)),
-    'elbow.pt.fk.L' :   ('l-elbow-pt', ('l-elbow-pt', ysmall)),
     'elbow.link.L' :    ('l-elbow', 'l-elbow-pt'),
 
     'hand.ik.R' :       ('r-hand', 'r-hand-end'),
     'elbow.pt.ik.R' :   ('r-elbow-pt', ('r-elbow-pt', ysmall)),
-    'elbow.pt.fk.R' :   ('r-elbow-pt', ('r-elbow-pt', ysmall)),
     'elbow.link.R' :    ('r-elbow', 'r-elbow-pt'),
 
     # Finger
@@ -191,49 +187,41 @@ MarkerArmature = {
 
 RevFootHeadsTails = {
     'foot.ik.L' :       ('l-heel', 'l-toe-2'),
-    'foot_helper.L':    ('l-heel', 'l-toe-2'),
     'toe.rev.L' :       ('l-toe-2', 'l-foot-1'),
     'foot.rev.L' :      ('l-foot-1', 'l-ankle'),
 
     'foot.ik.R' :       ('r-heel', 'r-toe-2'),
-    'foot_helper.R':    ('r-heel', 'r-toe-2'),
     'toe.rev.R' :       ('r-toe-2', 'r-foot-1'),
     'foot.rev.R' :      ('r-foot-1', 'r-ankle'),
 }
 
 RevFootArmature = {
     'foot.ik.L' :      (180*D, None, F_WIR|F_NOLOCK, L_LLEGIK),
-    'foot_helper.L' :  (0, 'toe.fk.L', 0, L_HELP),
     'toe.rev.L' :      ("PlaneToe.L", 'foot.ik.L', F_WIR, L_LLEGIK),
     'foot.rev.L' :     ("PlaneFoot.L", 'toe.rev.L', F_WIR, L_LLEGIK, P_XYZ),
     'ankle.L' :        (0, None, F_WIR, L_LEXTRA),
     'ankle.ik.L' :     (0, 'foot.rev.L', F_NOLOCK, L_HELP2),
 
     'foot.ik.R' :      (180*D, None, F_WIR|F_NOLOCK, L_RLEGIK),
-    'foot_helper.R' :  (0, 'toe.fk.R', 0, L_HELP),
     'toe.rev.R' :      ("PlaneToe.R", 'foot.ik.R', F_WIR, L_RLEGIK),
     'foot.rev.R' :     ("PlaneFoot.R", 'toe.rev.R', F_WIR, L_RLEGIK, P_XYZ),
     'ankle.R' :        (0, None, F_WIR, L_REXTRA),
     'ankle.ik.R' :     (0, 'foot.rev.R', F_NOLOCK, L_HELP2),
 
-    'knee.pt.ik.L' :   (0, 'hips', F_WIR|F_NOLOCK, L_LLEGIK+L_LEXTRA),
-    'knee.pt.fk.L' :   (0, 'thigh.L', 0, L_HELP2),
+    'knee.pt.ik.L' :   (0, 'ankle.ik.L', F_WIR|F_NOLOCK, L_LLEGIK+L_LEXTRA),
     'knee.link.L' :    (0, 'thigh.ik.L', F_RES, L_LLEGIK+L_LEXTRA),
 
-    'knee.pt.ik.R' :   (0, 'hips', F_WIR|F_NOLOCK, L_RLEGIK+L_REXTRA),
-    'knee.pt.fk.R' :   (0, 'thigh.R', 0, L_HELP2),
+    'knee.pt.ik.R' :   (0, 'ankle.ik.R', F_WIR|F_NOLOCK, L_RLEGIK+L_REXTRA),
     'knee.link.R' :    (0, 'thigh.ik.R', F_RES, L_RLEGIK+L_REXTRA),
 }
 
 IkArmArmature = {
     'hand.ik.L' :      ('hand.L', None, F_WIR|F_NOLOCK, L_LARMIK),
     'elbow.pt.ik.L' :  (0, 'clavicle.L', F_WIR|F_NOLOCK, L_LARMIK+L_LEXTRA),
-    'elbow.pt.fk.L' :  (0, 'upper_arm.L', 0, L_HELP2),
     'elbow.link.L' :   (0, 'upper_arm.ik.L', F_RES, L_LARMIK+L_LEXTRA),
 
     'hand.ik.R' :      ('hand.R', None, F_WIR|F_NOLOCK, L_RARMIK),
     'elbow.pt.ik.R' :  (0, 'clavicle.R', F_WIR|F_NOLOCK, L_RARMIK+L_REXTRA),
-    'elbow.pt.fk.R' :  (0, 'upper_arm.R', 0, L_HELP2),
     'elbow.link.R' :   (0, 'upper_arm.ik.R', F_RES, L_RARMIK+L_REXTRA),
 }
 
@@ -328,13 +316,13 @@ CustomShapes = {
 
 IkArmChains = {
     "upper_arm" :   ("Upstream", L_LARMIK, "Arm"),
-    "forearm" :     ("Leaf", L_LARMIK, 2, "Arm", "hand", "elbow.pt", -90*D, -90*D),
+    "forearm" :     ("Leaf", L_LARMIK, L_HELP, 2, "Arm", "hand", "elbow.pt", -90*D, -90*D),
     "hand" :        ("DownStream", L_LARMIK, "Arm"),
 }
 
 IkLegChains = {
     "thigh" :       ("Upstream", L_LLEGIK, "Leg"),
-    "shin" :        ("Leaf", L_LLEGIK, 2, "Leg", "ankle", "knee.pt", -90*D, -90*D),
+    "shin" :        ("Leaf", L_LLEGIK, L_TWEAK, 2, "Leg", "ankle", "knee.pt", -90*D, -90*D),
     "foot" :        ("DownStream", L_LLEGIK, "Leg"),
     "toe" :         ("DownStream", L_LLEGIK, "Leg"),
 }
@@ -344,7 +332,7 @@ LegMarkers = [
 ]
 
 
-Hint = 18*D
+Hint = 18
 
 
 HeadConstraints = {

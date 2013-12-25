@@ -38,7 +38,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from the 
 bl_info = {
     'name': 'Import: MakeHuman Exchange (.mhx)',
     'author': 'Thomas Larsson',
-    'version': (1,16,16),
+    'version': (1,16,17),
     "blender": (2, 69, 0),
     'location': "File > Import > MakeHuman (.mhx)",
     'description': 'Import files in the MakeHuman eXchange format (.mhx)',
@@ -2983,9 +2983,9 @@ class ImportMhx(bpy.types.Operator, ImportHelper):
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "scale")
         layout.prop(self, "advanced")
         if self.advanced:
+            layout.prop(self, "scale")
             for (prop, name, desc, flag) in MhxBoolProps:
                 layout.prop(self, prop)
 
@@ -3315,6 +3315,683 @@ class VIEW3D_OT_SaveasMhpFileButton(bpy.types.Operator, ExportHelper):
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
+
+#########################################
+#
+#   FK-IK snapping.
+#
+#########################################
+
+def getPoseMatrix(gmat, pb):
+    restInv = pb.bone.matrix_local.inverted()
+    if pb.parent:
+        parInv = pb.parent.matrix.inverted()
+        parRest = pb.parent.bone.matrix_local
+        return restInv * (parRest * (parInv * gmat))
+    else:
+        return restInv * gmat
+
+
+def getGlobalMatrix(mat, pb):
+    gmat = pb.bone.matrix_local * mat
+    if pb.parent:
+        parMat = pb.parent.matrix
+        parRest = pb.parent.bone.matrix_local
+        return parMat * (parRest.inverted() * gmat)
+    else:
+        return gmat
+
+
+def matchPoseTranslation(pb, src, auto):
+    pmat = getPoseMatrix(src.matrix, pb)
+    insertLocation(pb, pmat, auto)
+
+
+def insertLocation(pb, mat, auto):
+    pb.location = mat.to_translation()
+    if auto:
+        pb.keyframe_insert("location", group=pb.name)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.mode_set(mode='POSE')
+
+
+def matchPoseRotation(pb, src, auto):
+    pmat = getPoseMatrix(src.matrix, pb)
+    insertRotation(pb, pmat, auto)
+
+
+def printMatrix(string,mat):
+    print(string)
+    for i in range(4):
+        print("    %.4g %.4g %.4g %.4g" % tuple(mat[i]))
+
+
+def insertRotation(pb, mat, auto):
+    q = mat.to_quaternion()
+    if pb.rotation_mode == 'QUATERNION':
+        pb.rotation_quaternion = q
+        if auto:
+            pb.keyframe_insert("rotation_quaternion", group=pb.name)
+    else:
+        pb.rotation_euler = q.to_euler(pb.rotation_mode)
+        if auto:
+            pb.keyframe_insert("rotation_euler", group=pb.name)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.mode_set(mode='POSE')
+
+
+def matchPoseTwist(pb, src, auto):
+    pmat0 = src.matrix_basis
+    euler = pmat0.to_3x3().to_euler('YZX')
+    euler.z = 0
+    pmat = euler.to_matrix().to_4x4()
+    pmat.col[3] = pmat0.col[3]
+    insertRotation(pb, pmat, auto)
+
+
+def matchIkLeg(legIk, toeFk, mBall, mToe, mHeel, auto):
+    rmat = toeFk.matrix.to_3x3()
+    tHead = Vector(toeFk.matrix.col[3][:3])
+    ty = rmat.col[1]
+    tail = tHead + ty * toeFk.bone.length
+
+    try:
+        zBall = mBall.matrix.col[3][2]
+    except AttributeError:
+        return
+    zToe = mToe.matrix.col[3][2]
+    zHeel = mHeel.matrix.col[3][2]
+
+    x = Vector(rmat.col[0])
+    y = Vector(rmat.col[1])
+    z = Vector(rmat.col[2])
+
+    if zHeel > zBall and zHeel > zToe:
+        # 1. foot.ik is flat
+        if abs(y[2]) > abs(z[2]):
+            y = -z
+        y[2] = 0
+    else:
+        # 2. foot.ik starts at heel
+        hHead = Vector(mHeel.matrix.col[3][:3])
+        y = tail - hHead
+
+    y.normalize()
+    x -= x.dot(y)*y
+    x.normalize()
+    z = x.cross(y)
+    head = tail - y * legIk.bone.length
+
+    # Create matrix
+    gmat = Matrix()
+    gmat.col[0][:3] = x
+    gmat.col[1][:3] = y
+    gmat.col[2][:3] = z
+    gmat.col[3][:3] = head
+    pmat = getPoseMatrix(gmat, legIk)
+
+    insertLocation(legIk, pmat, auto)
+    insertRotation(legIk, pmat, auto)
+
+
+def matchPoleTarget(pb, above, below, auto):
+    ax,ay,az = above.matrix.to_3x3().to_euler('YZX')
+    bx,by,bz = below.matrix.to_3x3().to_euler('YZX')
+    x = Vector(above.matrix.col[1][:3])
+    y = Vector(below.matrix.col[1][:3])
+    p0 = Vector(below.matrix.col[3][:3])
+    n = x.cross(y)
+    if abs(n.length) > 1e-4:
+        z = x - y
+        n = n/n.length
+        z -= z.dot(n)*n
+        z = z/z.length
+        p = p0 + 3.0*z
+    else:
+        p = p0
+    gmat = Matrix.Translation(p)
+    pmat = getPoseMatrix(gmat, pb)
+    insertLocation(pb, pmat, auto)
+
+
+def matchPoseReverse(pb, src, auto):
+    gmat = src.matrix
+    tail = gmat.col[3] + src.length * gmat.col[1]
+    rmat = Matrix((gmat.col[0], -gmat.col[1], -gmat.col[2], tail))
+    rmat.transpose()
+    pmat = getPoseMatrix(rmat, pb)
+    pb.matrix_basis = pmat
+    insertRotation(pb, pmat, auto)
+
+
+def matchPoseScale(pb, src, auto):
+    pmat = getPoseMatrix(src.matrix, pb)
+    pb.scale = pmat.to_scale()
+    if auto:
+        pb.keyframe_insert("scale", group=pb.name)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.mode_set(mode='POSE')
+
+
+def snapFkArm(context, data):
+    rig = context.object
+    prop,old,suffix = setSnapProp(rig, data, 1.0, context, False)
+    auto = context.scene.tool_settings.use_keyframe_insert_auto
+
+    print("Snap FK Arm%s" % suffix)
+    snapFk,cnsFk = getSnapBones(rig, "ArmFK", suffix)
+    (uparmFk, loarmFk, handFk) = snapFk
+    muteConstraints(cnsFk, True)
+    snapIk,cnsIk = getSnapBones(rig, "ArmIK", suffix)
+    (uparmIk, loarmIk, elbow, elbowPt, handIk) = snapIk
+
+    matchPoseRotation(uparmFk, uparmIk, auto)
+    matchPoseScale(uparmFk, uparmIk, auto)
+
+    matchPoseRotation(loarmFk, loarmIk, auto)
+    matchPoseScale(loarmFk, loarmIk, auto)
+
+    restoreSnapProp(rig, prop, old, context)
+
+    try:
+        matchHand = rig["MhaHandFollowsWrist" + suffix]
+    except KeyError:
+        matchHand = True
+    if matchHand:
+        matchPoseRotation(handFk, handIk, auto)
+        matchPoseScale(handFk, handIk, auto)
+
+    #muteConstraints(cnsFk, False)
+    return
+
+
+def snapIkArm(context, data):
+    rig = context.object
+    prop,old,suffix = setSnapProp(rig, data, 0.0, context, True)
+    auto = context.scene.tool_settings.use_keyframe_insert_auto
+
+    print("Snap IK Arm%s" % suffix)
+    snapIk,cnsIk = getSnapBones(rig, "ArmIK", suffix)
+    (uparmIk, loarmIk, elbow, elbowPt, handIk) = snapIk
+    snapFk,cnsFk = getSnapBones(rig, "ArmFK", suffix)
+    (uparmFk, loarmFk, handFk) = snapFk
+    muteConstraints(cnsIk, True)
+
+    matchPoseTranslation(handIk, handFk, auto)
+    matchPoseRotation(handIk, handFk, auto)
+
+    matchPoleTarget(elbowPt, uparmFk, loarmFk, auto)
+
+    #matchPoseRotation(uparmIk, uparmFk, auto)
+    #matchPoseRotation(loarmIk, loarmFk, auto)
+
+    restoreSnapProp(rig, prop, old, context)
+    #muteConstraints(cnsIk, False)
+    return
+
+
+def snapFkLeg(context, data):
+    rig = context.object
+    prop,old,suffix = setSnapProp(rig, data, 1.0, context, False)
+    auto = context.scene.tool_settings.use_keyframe_insert_auto
+
+    print("Snap FK Leg%s" % suffix)
+    snap,_ = getSnapBones(rig, "Leg", suffix)
+    (upleg, loleg, foot, toe) = snap
+    snapIk,cnsIk = getSnapBones(rig, "LegIK", suffix)
+    (uplegIk, lolegIk, kneePt, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
+    snapFk,cnsFk = getSnapBones(rig, "LegFK", suffix)
+    (uplegFk, lolegFk, footFk, toeFk) = snapFk
+    muteConstraints(cnsFk, True)
+
+    matchPoseRotation(uplegFk, uplegIk, auto)
+    matchPoseScale(uplegFk, uplegIk, auto)
+
+    matchPoseRotation(lolegFk, lolegIk, auto)
+    matchPoseScale(lolegFk, lolegIk, auto)
+
+    restoreSnapProp(rig, prop, old, context)
+
+    if not rig["MhaLegIkToAnkle" + suffix]:
+        matchPoseReverse(footFk, footRev, auto)
+        matchPoseReverse(toeFk, toeRev, auto)
+
+    #muteConstraints(cnsFk, False)
+    return
+
+
+def snapIkLeg(context, data):
+    rig = context.object
+    scn = context.scene
+    prop,old,suffix = setSnapProp(rig, data, 0.0, context, True)
+    auto = scn.tool_settings.use_keyframe_insert_auto
+
+    print("Snap IK Leg%s" % suffix)
+    snapIk,cnsIk = getSnapBones(rig, "LegIK", suffix)
+    (uplegIk, lolegIk, kneePt, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
+    snapFk,cnsFk = getSnapBones(rig, "LegFK", suffix)
+    (uplegFk, lolegFk, footFk, toeFk) = snapFk
+    muteConstraints(cnsIk, True)
+
+    legIkToAnkle = rig["MhaLegIkToAnkle" + suffix]
+    if legIkToAnkle:
+        matchPoseTranslation(ankleIk, footFk, auto)
+    else:
+        matchIkLeg(legIk, toeFk, mBall, mToe, mHeel, auto)
+
+    matchPoseReverse(toeRev, toeFk, auto)
+    matchPoseReverse(footRev, footFk, auto)
+
+    matchPoleTarget(kneePt, uplegFk, lolegFk, auto)
+
+    matchPoseTwist(lolegIk, lolegFk, auto)
+
+    if not legIkToAnkle:
+        matchPoseTranslation(ankleIk, footFk, auto)
+
+    restoreSnapProp(rig, prop, old, context)
+    #muteConstraints(cnsIk, False)
+    return
+
+
+SnapBonesAlpha8 = {
+    "Arm"   : ["upper_arm", "forearm", "hand"],
+    "ArmFK" : ["upper_arm.fk", "forearm.fk", "hand.fk"],
+    "ArmIK" : ["upper_arm.ik", "forearm.ik", None, "elbow.pt.ik", "hand.ik"],
+    "Leg"   : ["thigh", "shin", "foot", "toe"],
+    "LegFK" : ["thigh.fk", "shin.fk", "foot.fk", "toe.fk"],
+    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
+}
+
+
+def getSnapBones(rig, key, suffix):
+    try:
+        pb = rig.pose.bones["UpLeg_L"]
+    except KeyError:
+        pb = None
+
+    if pb is not None:
+        raise RuntimeError("MakeHuman alpha 7 not supported after Blender 2.68")
+
+    try:
+        rig.pose.bones["thigh.fk.L"]
+        names = SnapBonesAlpha8[key]
+        suffix = '.' + suffix[1:]
+    except KeyError:
+        names = None
+
+    if not names:
+        raise RuntimeError("Not an mhx armature")
+
+    pbones = []
+    constraints = []
+    for name in names:
+        if name:
+            try:
+                pb = rig.pose.bones[name+suffix]
+            except KeyError:
+                pb = None
+            pbones.append(pb)
+            if pb is not None:
+                for cns in pb.constraints:
+                    if cns.type == 'LIMIT_ROTATION' and not cns.mute:
+                        constraints.append(cns)
+        else:
+            pbones.append(None)
+    return tuple(pbones),constraints
+
+
+def muteConstraints(constraints, value):
+    for cns in constraints:
+        cns.mute = value
+
+
+class VIEW3D_OT_MhxSnapFk2IkButton(bpy.types.Operator):
+    bl_idname = "mhx.snap_fk_ik"
+    bl_label = "Snap FK"
+    bl_options = {'UNDO'}
+    data = StringProperty()
+
+    def execute(self, context):
+        bpy.ops.object.mode_set(mode='POSE')
+        rig = context.object
+        if rig.MhxSnapExact:
+            rig["MhaRotationLimits"] = 0.0
+        if self.data[:6] == "MhaArm":
+            snapFkArm(context, self.data)
+        elif self.data[:6] == "MhaLeg":
+            snapFkLeg(context, self.data)
+        return{'FINISHED'}
+
+
+class VIEW3D_OT_MhxSnapIk2FkButton(bpy.types.Operator):
+    bl_idname = "mhx.snap_ik_fk"
+    bl_label = "Snap IK"
+    bl_options = {'UNDO'}
+    data = StringProperty()
+
+    def execute(self, context):
+        bpy.ops.object.mode_set(mode='POSE')
+        rig = context.object
+        if rig.MhxSnapExact:
+            rig["MhaRotationLimits"] = 0.0
+        if self.data[:6] == "MhaArm":
+            snapIkArm(context, self.data)
+        elif self.data[:6] == "MhaLeg":
+            snapIkLeg(context, self.data)
+        return{'FINISHED'}
+
+
+def setSnapProp(rig, data, value, context, isIk):
+    words = data.split()
+    prop = words[0]
+    oldValue = rig[prop]
+    rig[prop] = value
+    ik = int(words[1])
+    fk = int(words[2])
+    extra = int(words[3])
+    oldIk = rig.data.layers[ik]
+    oldFk = rig.data.layers[fk]
+    oldExtra = rig.data.layers[extra]
+    rig.data.layers[ik] = True
+    rig.data.layers[fk] = True
+    rig.data.layers[extra] = True
+    updatePose(context)
+    if isIk:
+        oldValue = 1.0
+        oldIk = True
+        oldFk = False
+    else:
+        oldValue = 0.0
+        oldIk = False
+        oldFk = True
+        oldExtra = False
+    return (prop, (oldValue, ik, fk, extra, oldIk, oldFk, oldExtra), prop[-2:])
+
+
+def restoreSnapProp(rig, prop, old, context):
+    updatePose(context)
+    (oldValue, ik, fk, extra, oldIk, oldFk, oldExtra) = old
+    rig[prop] = oldValue
+    rig.data.layers[ik] = oldIk
+    rig.data.layers[fk] = oldFk
+    rig.data.layers[extra] = oldExtra
+    updatePose(context)
+    return
+
+
+class VIEW3D_OT_MhxToggleFkIkButton(bpy.types.Operator):
+    bl_idname = "mhx.toggle_fk_ik"
+    bl_label = "FK - IK"
+    bl_options = {'UNDO'}
+    toggle = StringProperty()
+
+    def execute(self, context):
+        words = self.toggle.split()
+        rig = context.object
+        prop = words[0]
+        value = float(words[1])
+        onLayer = int(words[2])
+        offLayer = int(words[3])
+        rig.data.layers[onLayer] = True
+        rig.data.layers[offLayer] = False
+        rig[prop] = value
+        # Don't do autokey - confusing.
+        #if context.tool_settings.use_keyframe_insert_auto:
+        #    rig.keyframe_insert('["%s"]' % prop, frame=scn.frame_current)
+        updatePose(context)
+        return{'FINISHED'}
+
+#
+#   MHX FK/IK Switch panel
+#
+
+class MhxFKIKPanel(bpy.types.Panel):
+    bl_label = "MHX FK/IK Switch"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    #bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return (context.object and context.object.MhxRig == 'MHX')
+
+    def draw(self, context):
+        rig = context.object
+        layout = self.layout
+
+        row = layout.row()
+        row.label("")
+        row.label("Left")
+        row.label("Right")
+
+        layout.label("FK/IK switch")
+        row = layout.row()
+        row.label("Arm")
+        self.toggleButton(row, rig, "MhaArmIk_L", " 3", " 2")
+        self.toggleButton(row, rig, "MhaArmIk_R", " 19", " 18")
+        row = layout.row()
+        row.label("Leg")
+        self.toggleButton(row, rig, "MhaLegIk_L", " 5", " 4")
+        self.toggleButton(row, rig, "MhaLegIk_R", " 21", " 20")
+
+        layout.label("IK Influence")
+        row = layout.row()
+        row.label("Arm")
+        row.prop(rig, '["MhaArmIk_L"]', text="")
+        row.prop(rig, '["MhaArmIk_R"]', text="")
+        row = layout.row()
+        row.label("Leg")
+        row.prop(rig, '["MhaLegIk_L"]', text="")
+        row.prop(rig, '["MhaLegIk_R"]', text="")
+
+        try:
+            ok = (rig["MhxVersion"] >= 12)
+        except:
+            ok = False
+        if not ok:
+            layout.label("Snapping only works with MHX version 1.12 and later.")
+            return
+
+        layout.separator()
+        layout.label("Snapping")
+        row = layout.row()
+        row.label("Rotation Limits")
+        row.prop(rig, '["MhaRotationLimits"]', text="")
+        row.prop(rig, "MhxSnapExact", text="Exact Snapping")
+
+        layout.label("Snap Arm bones")
+        row = layout.row()
+        row.label("FK Arm")
+        row.operator("mhx.snap_fk_ik", text="Snap L FK Arm").data = "MhaArmIk_L 2 3 12"
+        row.operator("mhx.snap_fk_ik", text="Snap R FK Arm").data = "MhaArmIk_R 18 19 28"
+        row = layout.row()
+        row.label("IK Arm")
+        row.operator("mhx.snap_ik_fk", text="Snap L IK Arm").data = "MhaArmIk_L 2 3 12"
+        row.operator("mhx.snap_ik_fk", text="Snap R IK Arm").data = "MhaArmIk_R 18 19 28"
+
+        layout.label("Snap Leg bones")
+        row = layout.row()
+        row.label("FK Leg")
+        row.operator("mhx.snap_fk_ik", text="Snap L FK Leg").data = "MhaLegIk_L 4 5 12"
+        row.operator("mhx.snap_fk_ik", text="Snap R FK Leg").data = "MhaLegIk_R 20 21 28"
+        row = layout.row()
+        row.label("IK Leg")
+        row.operator("mhx.snap_ik_fk", text="Snap L IK Leg").data = "MhaLegIk_L 4 5 12"
+        row.operator("mhx.snap_ik_fk", text="Snap R IK Leg").data = "MhaLegIk_R 20 21 28"
+
+
+    def toggleButton(self, row, rig, prop, fk, ik):
+        if rig[prop] > 0.5:
+            row.operator("mhx.toggle_fk_ik", text="IK").toggle = prop + " 0" + fk + ik
+        else:
+            row.operator("mhx.toggle_fk_ik", text="FK").toggle = prop + " 1" + ik + fk
+
+
+###################################################################################
+#
+#    Posing panel
+#
+###################################################################################
+#
+#    class MhxDriversPanel(bpy.types.Panel):
+#
+
+class MhxDriversPanel(bpy.types.Panel):
+    bl_label = "MHX Drivers"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return (context.object and context.object.MhxRig == 'MHX')
+
+    def draw(self, context):
+        lrProps = []
+        props = []
+        lrFaceProps = []
+        faceProps = []
+        plist = list(context.object.keys())
+        plist.sort()
+        for prop in plist:
+            if prop[0:3] == 'Mha':
+                if prop[-2:] == '_L':
+                    lrProps.append(prop[:-2])
+                elif prop[-2:] != '_R':
+                    props.append(prop)
+            elif prop[0:3] == 'Mhf':
+                if prop[-2:] == '_L':
+                    lrFaceProps.append(prop[:-2])
+                elif prop[-2:] != '_R':
+                    faceProps.append(prop)
+
+        ob = context.object
+        layout = self.layout
+        for prop in props:
+            layout.prop(ob, '["%s"]' % prop, text=prop[3:])
+
+        layout.separator()
+        row = layout.row()
+        row.label("Left")
+        row.label("Right")
+        for prop in lrProps:
+            row = layout.row()
+            row.prop(ob, '["%s"]' % (prop+"_L"), text=prop[3:])
+            row.prop(ob, '["%s"]' % (prop+"_R"), text=prop[3:])
+
+        if faceProps:
+            layout.separator()
+            layout.label("Face shapes")
+            for prop in faceProps:
+                layout.prop(ob, '["%s"]' % prop, text=prop[3:])
+
+            layout.separator()
+            row = layout.row()
+            row.label("Left")
+            row.label("Right")
+            for prop in lrFaceProps:
+                row = layout.row()
+                row.prop(ob, '["%s"]' % (prop+"_L"), text=prop[3:])
+                row.prop(ob, '["%s"]' % (prop+"_R"), text=prop[3:])
+
+        return
+
+###################################################################################
+#
+#    Visibility panel
+#
+###################################################################################
+#
+#    class MhxVisibilityPanel(bpy.types.Panel):
+#
+
+class MhxVisibilityPanel(bpy.types.Panel):
+    bl_label = "MHX Visibility"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    @classmethod
+    def poll(cls, context):
+        return (context.object and context.object.MhxRig)
+
+    def draw(self, context):
+        ob = context.object
+        layout = self.layout
+        props = list(ob.keys())
+        props.sort()
+        for prop in props:
+            if prop[0:3] == "Mhh":
+                layout.prop(ob, '["%s"]' % prop, text="Hide %s" % prop[3:])
+        layout.separator()
+        layout.operator("mhx.update_textures")
+        layout.separator()
+        layout.operator("mhx.add_hiders")
+        layout.operator("mhx.remove_hiders")
+        return
+
+class VIEW3D_OT_MhxUpdateTexturesButton(bpy.types.Operator):
+    bl_idname = "mhx.update_textures"
+    bl_label = "Update"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        scn = context.scene
+        for mat in bpy.data.materials:
+            if mat.animation_data:
+                try:
+                    mat["MhxDriven"]
+                except:
+                    continue
+                for driver in mat.animation_data.drivers:
+                    prop = mat.path_resolve(driver.data_path)
+                    value = driver.evaluate(scn.frame_current)
+                    prop[driver.array_index] = value
+        return{'FINISHED'}
+
+class VIEW3D_OT_MhxAddHidersButton(bpy.types.Operator):
+    bl_idname = "mhx.add_hiders"
+    bl_label = "Add Hide Property"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        rig = context.object
+        for ob in context.scene.objects:
+            if ob.select and ob != rig:
+                prop = "Mhh%s" % ob.name
+                defNewProp(prop, "Bool", "default=False")
+                rig[prop] = False
+                addHider(ob, "hide", rig, prop)
+                addHider(ob, "hide_render", rig, prop)
+        return{'FINISHED'}
+
+def addHider(ob, attr, rig, prop):
+    fcu = ob.driver_add(attr)
+    drv = fcu.driver
+    drv.type = 'SCRIPTED'
+    drv.expression = "x"
+    drv.show_debug_info = True
+    var = drv.variables.new()
+    var.name = "x"
+    targ = var.targets[0]
+    targ.id = rig
+    targ.data_path = '["%s"]' % prop
+    return
+
+class VIEW3D_OT_MhxRemoveHidersButton(bpy.types.Operator):
+    bl_idname = "mhx.remove_hiders"
+    bl_label = "Remove Hide Property"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        rig = context.object
+        for ob in context.scene.objects:
+            if ob.select and ob != rig:
+                ob.driver_remove("hide")
+                ob.driver_remove("hide_render")
+                del rig["Mhh%s" % ob.name]
+        return{'FINISHED'}
 
 ###################################################################################
 #
@@ -4096,699 +4773,6 @@ class MhxCustomShapePanel(bpy.types.Panel):
 
     def draw(self, context):
         drawShapePanel(self, context, "Mhc", "custom shape")
-
-
-#########################################
-#
-#   FK-IK snapping.
-#
-#########################################
-
-def getPoseMatrix(gmat, pb):
-    restInv = pb.bone.matrix_local.inverted()
-    if pb.parent:
-        parInv = pb.parent.matrix.inverted()
-        parRest = pb.parent.bone.matrix_local
-        return restInv * (parRest * (parInv * gmat))
-    else:
-        return restInv * gmat
-
-
-def getGlobalMatrix(mat, pb):
-    gmat = pb.bone.matrix_local * mat
-    if pb.parent:
-        parMat = pb.parent.matrix
-        parRest = pb.parent.bone.matrix_local
-        return parMat * (parRest.inverted() * gmat)
-    else:
-        return gmat
-
-
-def matchPoseTranslation(pb, src, auto):
-    pmat = getPoseMatrix(src.matrix, pb)
-    insertLocation(pb, pmat, auto)
-
-
-def insertLocation(pb, mat, auto):
-    pb.location = mat.to_translation()
-    if auto:
-        pb.keyframe_insert("location", group=pb.name)
-    bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.mode_set(mode='POSE')
-
-
-def matchPoseRotation(pb, src, auto):
-    pmat = getPoseMatrix(src.matrix, pb)
-    insertRotation(pb, pmat, auto)
-
-
-def printMatrix(string,mat):
-    print(string)
-    for i in range(4):
-        print("    %.4g %.4g %.4g %.4g" % tuple(mat[i]))
-
-
-def insertRotation(pb, mat, auto):
-    q = mat.to_quaternion()
-    if pb.rotation_mode == 'QUATERNION':
-        pb.rotation_quaternion = q
-        if auto:
-            pb.keyframe_insert("rotation_quaternion", group=pb.name)
-    else:
-        pb.rotation_euler = q.to_euler(pb.rotation_mode)
-        if auto:
-            pb.keyframe_insert("rotation_euler", group=pb.name)
-    bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.mode_set(mode='POSE')
-
-
-def matchPoseTwist(pb, src, auto):
-    pmat0 = getPoseMatrix(src.matrix, pb)
-    euler = pmat0.to_3x3().to_euler('YZX')
-    euler.x = euler.z = 0
-    pmat = euler.to_matrix().to_4x4()
-    pmat.col[3] = pmat0.col[3]
-    insertRotation(pb, pmat, auto)
-
-
-def matchIkLeg(legIk, toeFk, mBall, mToe, mHeel, auto):
-    rmat = toeFk.matrix.to_3x3()
-    tHead = Vector(toeFk.matrix.col[3][:3])
-    ty = rmat.col[1]
-    tail = tHead + ty * toeFk.bone.length
-
-    try:
-        zBall = mBall.matrix.col[3][2]
-    except AttributeError:
-        return
-    zToe = mToe.matrix.col[3][2]
-    zHeel = mHeel.matrix.col[3][2]
-
-    x = Vector(rmat.col[0])
-    y = Vector(rmat.col[1])
-    z = Vector(rmat.col[2])
-
-    if zHeel > zBall and zHeel > zToe:
-        # 1. foot.ik is flat
-        if abs(y[2]) > abs(z[2]):
-            y = -z
-        y[2] = 0
-    else:
-        # 2. foot.ik starts at heel
-        hHead = Vector(mHeel.matrix.col[3][:3])
-        y = tail - hHead
-
-    y.normalize()
-    x -= x.dot(y)*y
-    x.normalize()
-    z = x.cross(y)
-    head = tail - y * legIk.bone.length
-
-    # Create matrix
-    gmat = Matrix()
-    gmat.col[0][:3] = x
-    gmat.col[1][:3] = y
-    gmat.col[2][:3] = z
-    gmat.col[3][:3] = head
-    pmat = getPoseMatrix(gmat, legIk)
-
-    insertLocation(legIk, pmat, auto)
-    insertRotation(legIk, pmat, auto)
-
-
-def matchPoleTarget(pb, above, below, auto):
-    ax,ay,az = above.matrix.to_3x3().to_euler('YZX')
-    bx,by,bz = below.matrix.to_3x3().to_euler('YZX')
-    x = Vector(above.matrix.col[1][:3])
-    y = Vector(below.matrix.col[1][:3])
-    p0 = Vector(below.matrix.col[3][:3])
-    n = x.cross(y)
-    print("MPT")
-    print("  X", x)
-    print("  Y", y)
-    print("  A", ax, ay, az)
-    print("  B", bx, by, bz)
-    print(" p0", p0)
-    print("  n", n, n.length)
-    if abs(n.length) > 1e-4:
-        z = x - y
-        n = n/n.length
-        print("  Z", z, z.length)
-        print(" Nn", n)
-        z -= z.dot(n)*n
-        print(" Zz", z, z.length)
-        z = z/z.length
-        p = p0 + 3.0*z
-        print(" Zz", z, z.length)
-        print(" P", p)
-    else:
-        p = p0
-    gmat = Matrix.Translation(p)
-    pmat = getPoseMatrix(gmat, pb)
-    insertLocation(pb, pmat, auto)
-
-
-def matchPoseReverse(pb, src, auto):
-    gmat = src.matrix
-    tail = gmat.col[3] + src.length * gmat.col[1]
-    rmat = Matrix((gmat.col[0], -gmat.col[1], -gmat.col[2], tail))
-    rmat.transpose()
-    pmat = getPoseMatrix(rmat, pb)
-    pb.matrix_basis = pmat
-    insertRotation(pb, pmat, auto)
-
-
-def matchPoseScale(pb, src, auto):
-    pmat = getPoseMatrix(src.matrix, pb)
-    pb.scale = pmat.to_scale()
-    if auto:
-        pb.keyframe_insert("scale", group=pb.name)
-    bpy.ops.object.mode_set(mode='OBJECT')
-    bpy.ops.object.mode_set(mode='POSE')
-
-
-def snapFkArm(context, data):
-    rig = context.object
-    prop,old,suffix = setSnapProp(rig, data, 1.0, context, False)
-    auto = context.scene.tool_settings.use_keyframe_insert_auto
-
-    print("Snap FK Arm%s" % suffix)
-    snapFk,cnsFk = getSnapBones(rig, "ArmFK", suffix)
-    (uparmFk, loarmFk, handFk) = snapFk
-    muteConstraints(cnsFk, True)
-    snapIk,cnsIk = getSnapBones(rig, "ArmIK", suffix)
-    (uparmIk, loarmIk, elbow, elbowPt, handIk) = snapIk
-
-    matchPoseRotation(uparmFk, uparmIk, auto)
-    matchPoseScale(uparmFk, uparmIk, auto)
-
-    matchPoseRotation(loarmFk, loarmIk, auto)
-    matchPoseScale(loarmFk, loarmIk, auto)
-
-    restoreSnapProp(rig, prop, old, context)
-
-    try:
-        matchHand = rig["MhaHandFollowsWrist" + suffix]
-    except KeyError:
-        matchHand = True
-    if matchHand:
-        matchPoseRotation(handFk, handIk, auto)
-        matchPoseScale(handFk, handIk, auto)
-
-    #muteConstraints(cnsFk, False)
-    return
-
-
-def snapIkArm(context, data):
-    rig = context.object
-    prop,old,suffix = setSnapProp(rig, data, 0.0, context, True)
-    auto = context.scene.tool_settings.use_keyframe_insert_auto
-
-    print("Snap IK Arm%s" % suffix)
-    snapIk,cnsIk = getSnapBones(rig, "ArmIK", suffix)
-    (uparmIk, loarmIk, elbow, elbowPt, handIk) = snapIk
-    snapFk,cnsFk = getSnapBones(rig, "ArmFK", suffix)
-    (uparmFk, loarmFk, handFk) = snapFk
-    muteConstraints(cnsIk, True)
-
-    matchPoseTranslation(handIk, handFk, auto)
-    matchPoseRotation(handIk, handFk, auto)
-
-    matchPoleTarget(elbowPt, uparmFk, loarmFk, auto)
-
-    #matchPoseRotation(uparmIk, uparmFk, auto)
-    #matchPoseRotation(loarmIk, loarmFk, auto)
-
-    restoreSnapProp(rig, prop, old, context)
-    #muteConstraints(cnsIk, False)
-    return
-
-
-def snapFkLeg(context, data):
-    rig = context.object
-    prop,old,suffix = setSnapProp(rig, data, 1.0, context, False)
-    auto = context.scene.tool_settings.use_keyframe_insert_auto
-
-    print("Snap FK Leg%s" % suffix)
-    snap,_ = getSnapBones(rig, "Leg", suffix)
-    (upleg, loleg, foot, toe) = snap
-    snapIk,cnsIk = getSnapBones(rig, "LegIK", suffix)
-    (uplegIk, lolegIk, kneePt, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
-    snapFk,cnsFk = getSnapBones(rig, "LegFK", suffix)
-    (uplegFk, lolegFk, footFk, toeFk) = snapFk
-    muteConstraints(cnsFk, True)
-
-    matchPoseRotation(uplegFk, uplegIk, auto)
-    matchPoseScale(uplegFk, uplegIk, auto)
-
-    matchPoseRotation(lolegFk, lolegIk, auto)
-    matchPoseScale(lolegFk, lolegIk, auto)
-
-    restoreSnapProp(rig, prop, old, context)
-
-    if not rig["MhaLegIkToAnkle" + suffix]:
-        matchPoseReverse(footFk, footRev, auto)
-        matchPoseReverse(toeFk, toeRev, auto)
-
-    #muteConstraints(cnsFk, False)
-    return
-
-
-def snapIkLeg(context, data):
-    rig = context.object
-    scn = context.scene
-    prop,old,suffix = setSnapProp(rig, data, 0.0, context, True)
-    auto = scn.tool_settings.use_keyframe_insert_auto
-
-    print("Snap IK Leg%s" % suffix)
-    snapIk,cnsIk = getSnapBones(rig, "LegIK", suffix)
-    (uplegIk, lolegIk, kneePt, ankleIk, legIk, footRev, toeRev, mBall, mToe, mHeel) = snapIk
-    snapFk,cnsFk = getSnapBones(rig, "LegFK", suffix)
-    (uplegFk, lolegFk, footFk, toeFk) = snapFk
-    muteConstraints(cnsIk, True)
-
-    legIkToAnkle = rig["MhaLegIkToAnkle" + suffix]
-    if legIkToAnkle:
-        matchPoseTranslation(ankleIk, footFk, auto)
-
-    #matchPoseTranslation(legIk, legFk, auto)
-    #matchPoseRotation(legIk, legFk, auto)
-    matchIkLeg(legIk, toeFk, mBall, mToe, mHeel, auto)
-
-    #matchPoseRotation(uplegIk, uplegFk, auto)
-    matchPoseTwist(lolegIk, lolegFk, auto)
-
-    matchPoseReverse(toeRev, toeFk, auto)
-    matchPoseReverse(footRev, footFk, auto)
-
-    matchPoleTarget(kneePt, uplegFk, lolegFk, auto)
-
-    if not legIkToAnkle:
-        matchPoseTranslation(ankleIk, footFk, auto)
-
-    restoreSnapProp(rig, prop, old, context)
-    #muteConstraints(cnsIk, False)
-    return
-
-
-SnapBonesAlpha8 = {
-    "Arm"   : ["upper_arm", "forearm", "hand"],
-    "ArmFK" : ["upper_arm.fk", "forearm.fk", "hand.fk"],
-    "ArmIK" : ["upper_arm.ik", "forearm.ik", None, "elbow.pt.ik", "hand.ik"],
-    "Leg"   : ["thigh", "shin", "foot", "toe"],
-    "LegFK" : ["thigh.fk", "shin.fk", "foot.fk", "toe.fk"],
-    "LegIK" : ["thigh.ik", "shin.ik", "knee.pt.ik", "ankle.ik", "foot.ik", "foot.rev", "toe.rev", "ball.marker", "toe.marker", "heel.marker"],
-}
-
-
-def getSnapBones(rig, key, suffix):
-    try:
-        pb = rig.pose.bones["UpLeg_L"]
-    except KeyError:
-        pb = None
-
-    if pb is not None:
-        raise RuntimeError("MakeHuman alpha 7 not supported after Blender 2.68")
-
-    try:
-        rig.pose.bones["thigh.fk.L"]
-        names = SnapBonesAlpha8[key]
-        suffix = '.' + suffix[1:]
-    except KeyError:
-        names = None
-
-    if not names:
-        raise RuntimeError("Not an mhx armature")
-
-    pbones = []
-    constraints = []
-    for name in names:
-        if name:
-            try:
-                pb = rig.pose.bones[name+suffix]
-            except KeyError:
-                pb = None
-            pbones.append(pb)
-            if pb is not None:
-                for cns in pb.constraints:
-                    if cns.type == 'LIMIT_ROTATION' and not cns.mute:
-                        constraints.append(cns)
-        else:
-            pbones.append(None)
-    return tuple(pbones),constraints
-
-
-def muteConstraints(constraints, value):
-    for cns in constraints:
-        cns.mute = value
-
-
-class VIEW3D_OT_MhxSnapFk2IkButton(bpy.types.Operator):
-    bl_idname = "mhx.snap_fk_ik"
-    bl_label = "Snap FK"
-    bl_options = {'UNDO'}
-    data = StringProperty()
-
-    def execute(self, context):
-        bpy.ops.object.mode_set(mode='POSE')
-        rig = context.object
-        if rig.MhxSnapExact:
-            rig["MhaRotationLimits"] = 0.0
-        if self.data[:6] == "MhaArm":
-            snapFkArm(context, self.data)
-        elif self.data[:6] == "MhaLeg":
-            snapFkLeg(context, self.data)
-        return{'FINISHED'}
-
-
-class VIEW3D_OT_MhxSnapIk2FkButton(bpy.types.Operator):
-    bl_idname = "mhx.snap_ik_fk"
-    bl_label = "Snap IK"
-    bl_options = {'UNDO'}
-    data = StringProperty()
-
-    def execute(self, context):
-        bpy.ops.object.mode_set(mode='POSE')
-        rig = context.object
-        if rig.MhxSnapExact:
-            rig["MhaRotationLimits"] = 0.0
-        if self.data[:6] == "MhaArm":
-            snapIkArm(context, self.data)
-        elif self.data[:6] == "MhaLeg":
-            snapIkLeg(context, self.data)
-        return{'FINISHED'}
-
-
-def setSnapProp(rig, data, value, context, isIk):
-    words = data.split()
-    prop = words[0]
-    oldValue = rig[prop]
-    rig[prop] = value
-    ik = int(words[1])
-    fk = int(words[2])
-    extra = int(words[3])
-    oldIk = rig.data.layers[ik]
-    oldFk = rig.data.layers[fk]
-    oldExtra = rig.data.layers[extra]
-    rig.data.layers[ik] = True
-    rig.data.layers[fk] = True
-    rig.data.layers[extra] = True
-    updatePose(context)
-    if isIk:
-        oldValue = 1.0
-        oldIk = True
-        oldFk = False
-    else:
-        oldValue = 0.0
-        oldIk = False
-        oldFk = True
-        oldExtra = False
-    return (prop, (oldValue, ik, fk, extra, oldIk, oldFk, oldExtra), prop[-2:])
-
-
-def restoreSnapProp(rig, prop, old, context):
-    updatePose(context)
-    (oldValue, ik, fk, extra, oldIk, oldFk, oldExtra) = old
-    rig[prop] = oldValue
-    rig.data.layers[ik] = oldIk
-    rig.data.layers[fk] = oldFk
-    rig.data.layers[extra] = oldExtra
-    updatePose(context)
-    return
-
-
-class VIEW3D_OT_MhxToggleFkIkButton(bpy.types.Operator):
-    bl_idname = "mhx.toggle_fk_ik"
-    bl_label = "FK - IK"
-    bl_options = {'UNDO'}
-    toggle = StringProperty()
-
-    def execute(self, context):
-        words = self.toggle.split()
-        rig = context.object
-        prop = words[0]
-        value = float(words[1])
-        onLayer = int(words[2])
-        offLayer = int(words[3])
-        rig.data.layers[onLayer] = True
-        rig.data.layers[offLayer] = False
-        rig[prop] = value
-        # Don't do autokey - confusing.
-        #if context.tool_settings.use_keyframe_insert_auto:
-        #    rig.keyframe_insert('["%s"]' % prop, frame=scn.frame_current)
-        updatePose(context)
-        return{'FINISHED'}
-
-#
-#   MHX FK/IK Switch panel
-#
-
-class MhxFKIKPanel(bpy.types.Panel):
-    bl_label = "MHX FK/IK Switch"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    #bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object and context.object.MhxRig == 'MHX')
-
-    def draw(self, context):
-        rig = context.object
-        layout = self.layout
-
-        row = layout.row()
-        row.label("")
-        row.label("Left")
-        row.label("Right")
-
-        layout.label("FK/IK switch")
-        row = layout.row()
-        row.label("Arm")
-        self.toggleButton(row, rig, "MhaArmIk_L", " 3", " 2")
-        self.toggleButton(row, rig, "MhaArmIk_R", " 19", " 18")
-        row = layout.row()
-        row.label("Leg")
-        self.toggleButton(row, rig, "MhaLegIk_L", " 5", " 4")
-        self.toggleButton(row, rig, "MhaLegIk_R", " 21", " 20")
-
-        layout.label("IK Influence")
-        row = layout.row()
-        row.label("Arm")
-        row.prop(rig, '["MhaArmIk_L"]', text="")
-        row.prop(rig, '["MhaArmIk_R"]', text="")
-        row = layout.row()
-        row.label("Leg")
-        row.prop(rig, '["MhaLegIk_L"]', text="")
-        row.prop(rig, '["MhaLegIk_R"]', text="")
-
-        try:
-            ok = (rig["MhxVersion"] >= 12)
-        except:
-            ok = False
-        if not ok:
-            layout.label("Snapping only works with MHX version 1.12 and later.")
-            return
-
-        layout.separator()
-        layout.label("Snapping")
-        row = layout.row()
-        row.label("Rotation Limits")
-        row.prop(rig, '["MhaRotationLimits"]', text="")
-        row.prop(rig, "MhxSnapExact", text="Exact Snapping")
-
-        layout.label("Snap Arm bones")
-        row = layout.row()
-        row.label("FK Arm")
-        row.operator("mhx.snap_fk_ik", text="Snap L FK Arm").data = "MhaArmIk_L 2 3 12"
-        row.operator("mhx.snap_fk_ik", text="Snap R FK Arm").data = "MhaArmIk_R 18 19 28"
-        row = layout.row()
-        row.label("IK Arm")
-        row.operator("mhx.snap_ik_fk", text="Snap L IK Arm").data = "MhaArmIk_L 2 3 12"
-        row.operator("mhx.snap_ik_fk", text="Snap R IK Arm").data = "MhaArmIk_R 18 19 28"
-
-        layout.label("Snap Leg bones")
-        row = layout.row()
-        row.label("FK Leg")
-        row.operator("mhx.snap_fk_ik", text="Snap L FK Leg").data = "MhaLegIk_L 4 5 12"
-        row.operator("mhx.snap_fk_ik", text="Snap R FK Leg").data = "MhaLegIk_R 20 21 28"
-        row = layout.row()
-        row.label("IK Leg")
-        row.operator("mhx.snap_ik_fk", text="Snap L IK Leg").data = "MhaLegIk_L 4 5 12"
-        row.operator("mhx.snap_ik_fk", text="Snap R IK Leg").data = "MhaLegIk_R 20 21 28"
-
-
-    def toggleButton(self, row, rig, prop, fk, ik):
-        if rig[prop] > 0.5:
-            row.operator("mhx.toggle_fk_ik", text="IK").toggle = prop + " 0" + fk + ik
-        else:
-            row.operator("mhx.toggle_fk_ik", text="FK").toggle = prop + " 1" + ik + fk
-
-
-###################################################################################
-#
-#    Posing panel
-#
-###################################################################################
-#
-#    class MhxDriversPanel(bpy.types.Panel):
-#
-
-class MhxDriversPanel(bpy.types.Panel):
-    bl_label = "MHX Drivers"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object and context.object.MhxRig == 'MHX')
-
-    def draw(self, context):
-        lrProps = []
-        props = []
-        lrFaceProps = []
-        faceProps = []
-        plist = list(context.object.keys())
-        plist.sort()
-        for prop in plist:
-            if prop[0:3] == 'Mha':
-                if prop[-2:] == '_L':
-                    lrProps.append(prop[:-2])
-                elif prop[-2:] != '_R':
-                    props.append(prop)
-            elif prop[0:3] == 'Mhf':
-                if prop[-2:] == '_L':
-                    lrFaceProps.append(prop[:-2])
-                elif prop[-2:] != '_R':
-                    faceProps.append(prop)
-
-        ob = context.object
-        layout = self.layout
-        for prop in props:
-            layout.prop(ob, '["%s"]' % prop, text=prop[3:])
-
-        layout.separator()
-        row = layout.row()
-        row.label("Left")
-        row.label("Right")
-        for prop in lrProps:
-            row = layout.row()
-            row.prop(ob, '["%s"]' % (prop+"_L"), text=prop[3:])
-            row.prop(ob, '["%s"]' % (prop+"_R"), text=prop[3:])
-
-        if faceProps:
-            layout.separator()
-            layout.label("Face shapes")
-            for prop in faceProps:
-                layout.prop(ob, '["%s"]' % prop, text=prop[3:])
-
-            layout.separator()
-            row = layout.row()
-            row.label("Left")
-            row.label("Right")
-            for prop in lrFaceProps:
-                row = layout.row()
-                row.prop(ob, '["%s"]' % (prop+"_L"), text=prop[3:])
-                row.prop(ob, '["%s"]' % (prop+"_R"), text=prop[3:])
-
-        return
-
-###################################################################################
-#
-#    Visibility panel
-#
-###################################################################################
-#
-#    class MhxVisibilityPanel(bpy.types.Panel):
-#
-
-class MhxVisibilityPanel(bpy.types.Panel):
-    bl_label = "MHX Visibility"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object and context.object.MhxRig)
-
-    def draw(self, context):
-        ob = context.object
-        layout = self.layout
-        props = list(ob.keys())
-        props.sort()
-        for prop in props:
-            if prop[0:3] == "Mhh":
-                layout.prop(ob, '["%s"]' % prop, text="Hide %s" % prop[3:])
-        layout.separator()
-        layout.operator("mhx.update_textures")
-        layout.separator()
-        layout.operator("mhx.add_hiders")
-        layout.operator("mhx.remove_hiders")
-        return
-
-class VIEW3D_OT_MhxUpdateTexturesButton(bpy.types.Operator):
-    bl_idname = "mhx.update_textures"
-    bl_label = "Update"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        scn = context.scene
-        for mat in bpy.data.materials:
-            if mat.animation_data:
-                try:
-                    mat["MhxDriven"]
-                except:
-                    continue
-                for driver in mat.animation_data.drivers:
-                    prop = mat.path_resolve(driver.data_path)
-                    value = driver.evaluate(scn.frame_current)
-                    prop[driver.array_index] = value
-        return{'FINISHED'}
-
-class VIEW3D_OT_MhxAddHidersButton(bpy.types.Operator):
-    bl_idname = "mhx.add_hiders"
-    bl_label = "Add Hide Property"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        rig = context.object
-        for ob in context.scene.objects:
-            if ob.select and ob != rig:
-                prop = "Mhh%s" % ob.name
-                defNewProp(prop, "Bool", "default=False")
-                rig[prop] = False
-                addHider(ob, "hide", rig, prop)
-                addHider(ob, "hide_render", rig, prop)
-        return{'FINISHED'}
-
-def addHider(ob, attr, rig, prop):
-    fcu = ob.driver_add(attr)
-    drv = fcu.driver
-    drv.type = 'SCRIPTED'
-    drv.expression = "x"
-    drv.show_debug_info = True
-    var = drv.variables.new()
-    var.name = "x"
-    targ = var.targets[0]
-    targ.id = rig
-    targ.data_path = '["%s"]' % prop
-    return
-
-class VIEW3D_OT_MhxRemoveHidersButton(bpy.types.Operator):
-    bl_idname = "mhx.remove_hiders"
-    bl_label = "Remove Hide Property"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        rig = context.object
-        for ob in context.scene.objects:
-            if ob.select and ob != rig:
-                ob.driver_remove("hide")
-                ob.driver_remove("hide_render")
-                del rig["Mhh%s" % ob.name]
-        return{'FINISHED'}
 
 ###################################################################################
 #

@@ -154,9 +154,10 @@ class Parser:
 
         self.splitBones = {}
         if options.useSplitBones:
+            # npieces,target,numAfter,followNext
             self.splitBones = {
-                "forearm" :     (3, "hand", False),
-                "shin" :        (3, "foot", False),
+                "forearm" :     (3, "hand", False, True),
+                "shin" :        (3, "foot", False, False),
             }
 
 
@@ -585,6 +586,7 @@ class Parser:
                 pbase,pext = splitBoneName(bone.parent)
                 value = ikChains[base]
                 type = value[0]
+                iklayer = L_HELP
                 if type == "DownStream":
                     _,layer,cnsname = value
                     fkParent = getFkName(pbase,pext)
@@ -592,7 +594,7 @@ class Parser:
                     _,layer,cnsname = value
                     fkParent = ikParent = bone.parent
                 elif type == "Leaf":
-                    _, layer, count, cnsname, target, pole, lang, rang = value
+                    _, layer, iklayer, count, cnsname, target, pole, lang, rang = value
                     fkParent = getFkName(pbase,pext)
                     ikParent = getIkName(pbase,pext)
                 else:
@@ -628,7 +630,7 @@ class Parser:
                 ikName = getIkName(base,ext)
                 self.headsTails[ikName] = headTail
                 ikBone = boneInfo[ikName] = Bone(amt, ikName)
-                ikBone.fromInfo((bname, ikParent, F_WIR, L_HELP))
+                ikBone.fromInfo((bname, ikParent, F_WIR, L_HELP, bone.poseFlags))
 
                 self.customShapes[ikName] = customShape
                 self.addConstraint(bname, copyTransform(ikName, cnsname+"IK", 0))
@@ -642,6 +644,11 @@ class Parser:
                         pext = "." + words[1]
                     fkBone.parent = pbase + ".fk" + pext
                     ikBone.parent = pbase + ".ik" + pext
+                    ikBone.layers = iklayer
+                    if iklayer == L_TWEAK:
+                        ikBone.lockRotation = (0,0,1)
+                        ikBone.layers = layer
+                    bone.norot = True
 
                     ikTarget = target + ".ik" + ext
                     poleTarget = pole + ".ik" + ext
@@ -717,7 +724,7 @@ class Parser:
 
         for base in self.splitBones.keys():
             for ext in [".L", ".R"]:
-                npieces,target,numAfter = self.splitBones[base]
+                npieces,target,numAfter,followNext = self.splitBones[base]
                 defName1,defName2,defName3 = splitBonesNames(base, ext, self.deformPrefix, numAfter)
                 bname = base + ext
                 head,tail = self.headsTails[bname]
@@ -745,18 +752,18 @@ class Parser:
 
                     defBone1 = boneInfo[defName1] = Bone(amt, defName1)
                     defBone1.fromInfo((bname, defParent, F_DEF+F_CON, L_DEF, rotMode))
-                    #self.addConstraint(defName1, ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)]))
-                    self.addConstraint(defName1, ('CopyRot', C_LOCAL, 1, [bname, bname, (1,0,1), (0,0,0), False]))
-
                     defBone2 = boneInfo[defName2] = Bone(amt, defName2)
                     defBone2.fromInfo((bname, defName1, F_DEF+F_CON, L_DEF, rotMode))
-                    #self.addConstraint(defName2, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
-                    self.addConstraint(defName2, ('CopyRot', C_LOCAL, 0.5, [target, target+ext, (0,1,0), (0,0,0), True]))
-
                     defBone3 = boneInfo[defName3] = Bone(amt, defName3)
                     defBone3.fromInfo((bname, defName2, F_DEF+F_CON, L_DEF, rotMode))
-                    #self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
-                    self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [target, target+ext, (0,1,0), (0,0,0), True]))
+
+                    self.addConstraint(defName1, ('IK', 0, 1, ['IK', target+ext, 1, None, (True, False,True)]))
+                    if followNext:
+                        self.addConstraint(defName2, ('CopyRot', C_LOCAL, 0.5, [target, target+ext, (0,1,0), (0,0,0), True]))
+                        self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [target, target+ext, (0,1,0), (0,0,0), True]))
+                    else:
+                        self.addConstraint(defName2, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
+                        self.addConstraint(defName3, ('CopyRot', C_LOCAL, 0.5, [bname, bname, (0,1,0), (0,0,0), True]))
 
 
     def renameDeformBones(self, muscles, custom, boneInfo):
@@ -882,7 +889,7 @@ class Parser:
 
         amt = self.armature
         base,ext = splitBoneName(bname)
-        npieces,target,numAfter = self.splitBones[base]
+        npieces,target,numAfter,_followNext = self.splitBones[base]
         defName1,defName2,defName3 = splitBonesNames(base, ext, self.deformPrefix, numAfter)
 
         head,tail = self.headsTails[bname]

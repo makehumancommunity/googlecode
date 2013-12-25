@@ -283,8 +283,8 @@ Constraints = {
         ],
 
     'gluteus.L' : [
-        ('CopyRot', C_LOCAL, 0.5,
-            ['Thigh', 'thigh.L', (1,0,1), (0,0,0), False])
+        #('CopyRot', C_LOCAL, 0.5,
+        #    ['Thigh', 'thigh.L', (1,0,1), (0,0,0), False])
         ],
 
     'quadriceps.L' : [
@@ -351,8 +351,8 @@ Constraints = {
         ],
 
     'gluteus.R' : [
-        ('CopyRot', C_LOCAL, 0.5,
-            ['Thigh', 'thigh.R', (1,0,1), (0,0,0), False])
+        #('CopyRot', C_LOCAL, 0.5,
+        #    ['Thigh', 'thigh.R', (1,0,1), (0,0,0), False])
         ],
 
     'quadriceps.R' : [

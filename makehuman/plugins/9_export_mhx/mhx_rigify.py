@@ -91,17 +91,18 @@ class RigifyParser(Parser):
     def __init__(self, amt, human):
         Parser.__init__(self, amt, human)
 
+        # npieces,target,numAfter,followNext
         self.splitBones = {
-            "upper_arm" :   (2, "forearm", False),
-            "forearm" :     (2, "hand", False),
-            "thigh" :       (2, "shin", False),
-            "shin" :        (2, "foot", False),
+            "upper_arm" :   (2, "forearm", False, True),
+            "forearm" :     (2, "hand", False, True),
+            "thigh" :       (2, "shin", False, True),
+            "shin" :        (2, "foot", False, True),
 
-            "thumb.01" :    (2, "thumb.02", True),
-            "f_index.01" :  (2, "f_index.02", True),
-            "f_middle.01" : (2, "f_middle.02", True),
-            "f_ring.01" :   (2, "f_ring.02", True),
-            "f_pinky.01" :  (2, "f_pinky.02", True),
+            "thumb.01" :    (2, "thumb.02", True, True),
+            "f_index.01" :  (2, "f_index.02", True, True),
+            "f_middle.01" : (2, "f_middle.02", True, True),
+            "f_ring.01" :   (2, "f_ring.02", True, True),
+            "f_pinky.01" :  (2, "f_pinky.02", True, True),
         }
 
 
