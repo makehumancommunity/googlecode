@@ -431,14 +431,6 @@ class ArmsLegsTaskView(ModifierTaskView):
             ('l-foot-trans', 'down', 'up', {'cam' : 'setLeftFootFrontCamera'}),
             ('l-foot-trans', 'forward', 'backward', {'cam' : 'setLeftFootLeftCamera'}),
             ]),
-        ('left arm', 'armslegs', [
-            ('l-lowerarm-scale-depth', 'decr', 'incr', {'cam' : 'setLeftArmTopCamera'}),
-            ('l-lowerarm-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftArmFrontCamera'}),
-            ('l-lowerarm-scale-vert', 'decr', 'incr', {'cam' : 'setLeftArmFrontCamera'}),
-            ('l-upperarm-scale-depth', 'decr', 'incr', {'cam' : 'setLeftArmTopCamera'}),
-            ('l-upperarm-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftArmFrontCamera'}),
-            ('l-upperarm-scale-vert', 'decr', 'incr', {'cam' : 'setLeftArmFrontCamera'}),
-            ]),
         ('right arm', 'armslegs', [
             ('r-lowerarm-scale-depth', 'decr', 'incr', {'cam' : 'setRightArmTopCamera'}),
             ('r-lowerarm-scale-horiz', 'decr', 'incr', {'cam' : 'setRightArmFrontCamera'}),
@@ -447,15 +439,14 @@ class ArmsLegsTaskView(ModifierTaskView):
             ('r-upperarm-scale-horiz', 'decr', 'incr', {'cam' : 'setRightArmFrontCamera'}),
             ('r-upperarm-scale-vert', 'decr', 'incr', {'cam' : 'setRightArmFrontCamera'}),
             ]),
-        ('left leg', 'armslegs', [
-            ('l-leg-genu', 'varun', 'valgus', {'cam' : 'setLeftLegLeftCamera'}),
-            ('l-lowerleg-scale-depth', 'decr', 'incr', {'cam' : 'setLeftLegLeftCamera'}),
-            ('l-lowerleg-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftLegFrontCamera'}),
-            ('l-lowerleg-scale-vert', 'decr', 'incr', {'cam' : 'setLeftLegFrontCamera'}),            
-            ('l-upperleg-scale-depth', 'decr', 'incr', {'cam' : 'setLeftLegLeftCamera'}),
-            ('l-upperleg-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftLegFrontCamera'}),
-            ('l-upperleg-scale-vert', 'decr', 'incr', {'cam' : 'setLeftLegFrontCamera'}),            
-            ]),
+        ('left arm', 'armslegs', [
+            ('l-lowerarm-scale-depth', 'decr', 'incr', {'cam' : 'setLeftArmTopCamera'}),
+            ('l-lowerarm-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftArmFrontCamera'}),
+            ('l-lowerarm-scale-vert', 'decr', 'incr', {'cam' : 'setLeftArmFrontCamera'}),
+            ('l-upperarm-scale-depth', 'decr', 'incr', {'cam' : 'setLeftArmTopCamera'}),
+            ('l-upperarm-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftArmFrontCamera'}),
+            ('l-upperarm-scale-vert', 'decr', 'incr', {'cam' : 'setLeftArmFrontCamera'}),
+            ]),  
         ('right leg', 'armslegs', [
             ('r-leg-genu', 'varun', 'valgus', {'cam' : 'setRightLegRightCamera'}),
             ('r-lowerleg-scale-depth', 'decr', 'incr', {'cam' : 'setRightLegRightCamera'}),
@@ -464,7 +455,16 @@ class ArmsLegsTaskView(ModifierTaskView):
             ('r-upperleg-scale-depth', 'decr', 'incr', {'cam' : 'setRightLegRightCamera'}),
             ('r-upperleg-scale-horiz', 'decr', 'incr', {'cam' : 'setRightLegFrontCamera'}),
             ('r-upperleg-scale-vert', 'decr', 'incr', {'cam' : 'setRightLegFrontCamera'}),            
-            ])
+            ]),      
+        ('left leg', 'armslegs', [
+            ('l-leg-genu', 'varun', 'valgus', {'cam' : 'setLeftLegLeftCamera'}),
+            ('l-lowerleg-scale-depth', 'decr', 'incr', {'cam' : 'setLeftLegLeftCamera'}),
+            ('l-lowerleg-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftLegFrontCamera'}),
+            ('l-lowerleg-scale-vert', 'decr', 'incr', {'cam' : 'setLeftLegFrontCamera'}),            
+            ('l-upperleg-scale-depth', 'decr', 'incr', {'cam' : 'setLeftLegLeftCamera'}),
+            ('l-upperleg-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftLegFrontCamera'}),
+            ('l-upperleg-scale-vert', 'decr', 'incr', {'cam' : 'setLeftLegFrontCamera'}),            
+            ])       
         ]
 
 class GenderTaskView(ModifierTaskView):
