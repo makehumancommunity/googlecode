@@ -87,7 +87,7 @@ class Writer(mhx_writer.Writer):
         fp.write("#if toggle&T_Clothes\n")
         weights = {}
         for proxy in self.proxies.values():
-            if proxy.deleteVerts is not None:
+            if proxy.deleteVerts.any():
                 weights["Delete_" + proxy.name] = proxy.deleteVerts
         self.writeBoolWeights(fp, weights)
         fp.write("#endif\n")
@@ -119,6 +119,19 @@ class Writer(mhx_writer.Writer):
   Property MhxScale theScale ;
   Property MhxMesh True ;
   Property MhHuman True ;
+""")
+
+        for proxy in self.proxies.values():
+            if proxy.deleteVerts.any():
+                fp.write(
+                    "  Modifier Mask%s MASK\n" % proxy.name +
+                    "    mode 'VERTEX_GROUP' ;\n" +
+                    "    vertex_group 'Delete_%s' ;\n" % proxy.name +
+                    "    invert_vertex_group True ;\n" +
+                    "  end Modifier\n")
+
+        fp.write(
+"""
   Modifier SubSurf SUBSURF
     levels 0 ;
     render_levels 1 ;
@@ -252,10 +265,21 @@ end Object
 
 
     def writeHideAnimationData(self, fp, amt, prefix, name, suffix):
-        fp.write("AnimationData %s%s%s True\n" % (prefix, name, suffix))
+        fp.write(
+            "#if toggle&T_ShapeDrivers\n" +
+            "AnimationData %s%s%s True\n" % (prefix, name, suffix))
         mhx_drivers.writePropDriver(fp, amt, ["Mhh%s" % name], "x1", "hide", -1)
         mhx_drivers.writePropDriver(fp, amt, ["Mhh%s" % name], "x1", "hide_render", -1)
-        fp.write("end AnimationData\n")
+        if suffix == "Body":
+            for proxy in self.proxies.values():
+                if proxy.deleteVerts.any():
+                    path = ["Mhh%s" % proxy.name]
+                    mask = 'modifiers["Mask%s"]' % proxy.name
+                    mhx_drivers.writePropDriver(fp, amt, path, "not(x1)", mask + ".show_viewport", -1)
+                    mhx_drivers.writePropDriver(fp, amt, path, "not(x1)", mask + ".show_render", -1)
+        fp.write(
+            "end AnimationData\n" +
+            "#endif\n")
         return
 
 #-------------------------------------------------------------------------------

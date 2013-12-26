@@ -283,9 +283,11 @@ end AnimationData
         if not self.config.useAdvancedMHX:
             return
 
+        fp.write("#if toggle&T_ShapeDrivers\n")
         self.writeHideProp(fp, self.name)
         for proxy in env.proxies.values():
             self.writeHideProp(fp, proxy.name)
+        fp.write("#endif\n")
 
         for path,name in env.customTargetFiles:
             self.defProp(fp, "FLOAT", "Mhc"+name, 0, name, -1.0, 2.0)

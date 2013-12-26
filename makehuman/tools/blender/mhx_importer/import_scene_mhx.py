@@ -38,7 +38,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from the 
 bl_info = {
     'name': 'Import: MakeHuman Exchange (.mhx)',
     'author': 'Thomas Larsson',
-    'version': (1,16,17),
+    'version': (1,16,18),
     "blender": (2, 69, 0),
     'location': "File > Import > MakeHuman (.mhx)",
     'description': 'Import files in the MakeHuman eXchange format (.mhx)',
@@ -118,7 +118,7 @@ T_Opcns = 0x2000
 T_Symm = 0x4000
 
 DefaultToggle = ( T_EnforceVersion + T_Mesh + T_Armature +
-    T_Shapekeys + T_ShapeDrivers + T_Proxy + T_Clothes + T_Rigify )
+    T_Shapekeys + T_Proxy + T_Clothes + T_Rigify )
 
 toggle = DefaultToggle
 toggleSettings = toggle
@@ -2955,7 +2955,7 @@ MhxBoolProps = [
     ("cage", "Cage", "Load mesh deform cage", T_Cage),
     ("clothes", "Clothes", "Include clothes", T_Clothes),
     ("shapekeys", "Shapekeys", "Include shapekeys", T_Shapekeys),
-    ("shapedrivers", "Shapekey drivers", "Include shapekey drivers", T_ShapeDrivers),
+    ("drivers", "Drivers", "Include drivers", T_ShapeDrivers),
     #("symm", "Symmetric shapes", "Keep shapekeys symmetric", T_Symm),
     ("diamond", "Helper geometry", "Keep helper geometry", T_Diamond),
     ("rigify", "Rigify", "Create rigify control rig", T_Rigify),
@@ -2975,7 +2975,7 @@ class ImportMhx(bpy.types.Operator, ImportHelper):
     filepath = StringProperty(subtype='FILE_PATH')
 
     scale = FloatProperty(name="Scale", description="Default meter, decimeter = 1.0", default = theScale)
-    advanced = BoolProperty(name="Advanced settings", description="Use advanced import settings", default=False)
+    advanced = BoolProperty(name="Override default settings", description="Use advanced import settings", default=False)
     for (prop, name, desc, flag) in MhxBoolProps:
         expr = '%s = BoolProperty(name="%s", description="%s", default=(toggleSettings&%s != 0))' % (prop, name, desc, flag)
         exec(expr)   # Trusted source: this file.
@@ -3830,15 +3830,12 @@ class MhxFKIKPanel(bpy.types.Panel):
 
 ###################################################################################
 #
-#    Posing panel
+#    Control panel
 #
 ###################################################################################
-#
-#    class MhxDriversPanel(bpy.types.Panel):
-#
 
-class MhxDriversPanel(bpy.types.Panel):
-    bl_label = "MHX Drivers"
+class MhxControlPanel(bpy.types.Panel):
+    bl_label = "MHX Control"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_options = {'DEFAULT_CLOSED'}
