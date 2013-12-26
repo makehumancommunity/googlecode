@@ -386,9 +386,10 @@ class TorsoTaskView(ModifierTaskView):
             ]),
         ('Stomach', 'stomach', [
             ('stomach-tone', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
+            ('stomach-pregnant', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
             ]),
         ('Buttocks', 'buttocks', [
-            ('buttocks-tone', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
+            ('buttocks-volume', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
             ]),
         ('Pelvis', 'pelvis', [
             ('pelvis-tone', 'decr', 'incr', {'cam' : 'setGlobalCamera'}),
@@ -474,10 +475,10 @@ class GenderTaskView(ModifierTaskView):
         ('Breast', 'breast', [
             (None, 'BreastSize', {'label' : 'Breast size'}),
             (None, 'BreastFirmness', {'label' : 'Breast firmness'}),
-            ('breast-trans-vert', 'down', 'up', {}),
-            ('breast-dist', 'min', 'max', {}),
-            ('breast-point', 'min', 'max', {}),
-            ('breast-volume-vert', 'up', 'down', {}),
+            ('breast-trans-vert', 'down', 'up', {'label':'Vertical position'}),
+            ('breast-dist', 'min', 'max', {'label':'Horizontal distance'}),
+            ('breast-point', 'min', 'max', {'label':'Pointiness'}),
+            ('breast-volume-vert', 'up', 'down', {'label':'Volume'}),
             ]),
         ('Genitals', 'genitals', [
             ('penis-length', 'min', 'max', {}),
