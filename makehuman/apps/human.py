@@ -576,6 +576,32 @@ class Human(guicommon.Object):
         else:
             self.averagefirmnessVal = 1 - self.minfirmnessVal
 
+    def setBodyProportions(self, proportion, updateModifier = True):
+        if updateModifier:
+            modifier = self.getModifier('macrodetails/BreastFirmness')
+            modifier.setValue(proportion)
+            self.applyAllTargets()
+            return
+
+        proportion = min(1.0, max(0.0, proportion))
+        if self.bodyProportions == proportion:
+            return
+        self.bodyProportions = proportion
+        self._setBodyProportionVals()
+        self.callEvent('onChanging', events3d.HumanEvent(self, 'bodyProportions'))
+
+    def _setBodyProportionVals(self):
+        self.idealproportionsVal = max(0.0, self.bodyProportions * 2 - 1)
+        self.uncommonproportionsVal = max(0.0, 1 - self.bodyProportions * 2)
+
+        if self.idealproportionsVal > self.uncommonproportionsVal:
+            self.regularproportionsVal = 1 - self.idealproportionsVal
+        else:
+            self.regularproportionsVal = 1 - self.uncommonproportionsVal
+
+    def getBodyProportions(self):
+        return self.bodyProportions
+
     def setCaucasian(self, caucasian, sync=True, updateModifier = True):
         if updateModifier:
             modifier = self.getModifier('macrodetails/Caucasian')
@@ -961,6 +987,7 @@ class Human(guicommon.Object):
         self.height = 0.5
         self.breastSize = 0.5
         self.breastFirmness = 0.5
+        self.bodyProportions = 0.5
 
         self._setGenderVals()
         self._setAgeVals()
@@ -969,6 +996,7 @@ class Human(guicommon.Object):
         self._setHeightVals()
         self._setBreastSizeVals()
         self._setBreastFirmnessVals()
+        self._setBodyProportionVals()
 
         self.caucasianVal = 1.0/3
         self.asianVal = 1.0/3

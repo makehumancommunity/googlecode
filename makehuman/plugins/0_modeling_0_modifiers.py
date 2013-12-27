@@ -557,6 +557,7 @@ class MacroTaskView(ModifierTaskView):
             ('universal', 'Muscle', {'label' : 'Muscle'}),
             ('universal', 'Weight', {'label' : 'Weight'}),
             ('universal-stature', 'Height', {'label' : 'Height'}),
+            ('proportions', 'BodyProportions', {'label' : 'Proportions'}),
             (None, 'African', {'label' : 'African'}),
             (None, 'Asian', {'label' : 'Asian'}),
             (None, 'Caucasian', {'label' : 'Caucasian'}),
