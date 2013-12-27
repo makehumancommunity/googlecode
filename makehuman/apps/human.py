@@ -578,7 +578,7 @@ class Human(guicommon.Object):
 
     def setBodyProportions(self, proportion, updateModifier = True):
         if updateModifier:
-            modifier = self.getModifier('macrodetails/BreastFirmness')
+            modifier = self.getModifier('macrodetails-proportions/BodyProportions')
             modifier.setValue(proportion)
             self.applyAllTargets()
             return
