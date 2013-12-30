@@ -153,6 +153,9 @@ class Writer(mhx_writer.Writer):
         for (sname, shape) in ptargets:
             self.writeShape(fp, sname, "Sym", shape, 0, 1, None, config.scale)
 
+        '''
+        fp.write("#if toggle&T_ShapeDrivers\n")
+
         if config.expressions and not proxy:
             exprList = exportutils.shapekeys.readExpressionMhm(mh.getSysDataPath("expressions"))
             self.writeExpressions(fp, exprList, "Expression")
@@ -164,6 +167,9 @@ class Writer(mhx_writer.Writer):
             self.writeShapeKeyDrivers(fp, name, proxy)
             fp.write("  end AnimationData\n\n")
 
+        fp.write("#endif\n")
+        '''
+
         fp.write(
             "  end ShapeKeys\n" +
             "#endif\n")
@@ -172,8 +178,6 @@ class Writer(mhx_writer.Writer):
     def writeShapeKeyDrivers(self, fp, name, proxy):
         isHuman = ((not proxy) or proxy.type == 'Proxymeshes')
         amt = self.armature
-
-        fp.write("#if toggle&T_ShapeDrivers\n")
 
         if isHuman:
             for path,name in self.customTargetFiles:
@@ -186,7 +190,6 @@ class Writer(mhx_writer.Writer):
             for (skey, val, string, min, max) in  self.customProps:
                 skeys.append(skey)
             mhx_drivers.writeShapePropDrivers(fp, amt, skeys, proxy, "Mha", callback)
-        fp.write("#endif\n")
 
 
     def writeExpressions(self, fp, exprList, label):

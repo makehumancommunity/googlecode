@@ -283,11 +283,11 @@ end AnimationData
         if not self.config.useAdvancedMHX:
             return
 
+        '''
         fp.write("#if toggle&T_ShapeDrivers\n")
         self.writeHideProp(fp, self.name)
         for proxy in env.proxies.values():
             self.writeHideProp(fp, proxy.name)
-        fp.write("#endif\n")
 
         for path,name in env.customTargetFiles:
             self.defProp(fp, "FLOAT", "Mhc"+name, 0, name, -1.0, 2.0)
@@ -301,6 +301,8 @@ end AnimationData
                 self.defProp(fp, "FLOAT", "Mhs%s"%skey, 0.0, skey, -1.0, 2.0)
                 #fp.write("  DefProp Float Mhs%s 0.0 %s min=-1.0,max=2.0 ;\n" % (skey, skey))
             fp.write("#endif\n")
+        fp.write("#endif\n")
+        '''
 
         if self.options.useIkArms:
             fp.write(

@@ -265,6 +265,7 @@ end Object
 
 
     def writeHideAnimationData(self, fp, amt, prefix, name, suffix):
+        return
         fp.write(
             "#if toggle&T_ShapeDrivers\n" +
             "AnimationData %s%s%s True\n" % (prefix, name, suffix))
@@ -280,7 +281,6 @@ end Object
         fp.write(
             "end AnimationData\n" +
             "#endif\n")
-        return
 
 #-------------------------------------------------------------------------------
 #   Vertex groups
