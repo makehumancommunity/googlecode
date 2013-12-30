@@ -113,7 +113,7 @@ def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidd
             import catmull_clark_subdivision as cks
             subMesh = cks.createSubdivisionObject(
                 rmesh.object, lambda p: progress(progbase+((i+p)/rmeshnum)*(1-progbase)))
-            rmesh.fromObject(subMesh, rmesh.weights, rawTargets)
+            rmesh.fromObject(subMesh, rmesh.type, rmesh.weights, rawTargets)
         i += 1.0
 
     progress(1)
