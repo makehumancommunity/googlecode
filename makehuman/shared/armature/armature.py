@@ -103,7 +103,9 @@ class Armature:
 
         newbones = OrderedDict()
         for bone in self.bones.values():
+            bname = bone.name
             bone.rename(locale, newbones)
+
         self.bones = newbones
 
         for bname,vgroup in self.vertexWeights.items():
@@ -149,7 +151,7 @@ class Armature:
         self.bindInverse = la.inv(self.bindMatrix)
 
         if self.options.useTPose:
-            filepath = "tools/blender26x/mh_mocap_tool/t_pose.json"
+            filepath = "tools/blender26x/makewalk/t_pose.json"
             blist = io_json.loadJson(filepath)
             for bname,quat in blist:
                 pmat = tm.quaternion_matrix(quat)

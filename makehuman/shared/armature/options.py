@@ -24,6 +24,7 @@ Armature options
 """
 
 import os
+import log
 import io_json
 from getpath import getSysDataPath
 
@@ -290,6 +291,7 @@ class Locale:
         try:
             return self.bones[bname]
         except KeyError:
+            #log.debug("Locale: no such bone: %s" % bname)
             pass
 
         words = bname.split(".", 1)

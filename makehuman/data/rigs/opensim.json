@@ -1,0 +1,63 @@
+{
+    "name" :            "OpenSim",
+
+    "description" :     "Rig for use with OpenSim",
+
+    "settings" : {
+        "useMasterBone" : true
+	},
+	
+    "bones" : {
+    	"master":		"Root",
+        "hips":         "Pelvis",
+        "spine":        "Spine",
+        "spine-1":      "Spine1",
+        "chest":        "Spine2",
+        "chest-1":      "Spine3",
+        "neck":         "Neck",
+        "head":         "Head",
+
+        "clavicle.L":   "LeftClavicle",
+        "upper_arm.L":  "LeftUpperArm",
+        "forearm.L":    "LeftForearm",
+        "hand.L":       "LeftHand",
+
+        "clavicle.R":   "RightClavicle",
+        "upper_arm.R":  "RightUpperArm",
+        "forearm.R":    "RightForearm",
+        "hand.R":       "RightHand",
+
+        "thigh.L":      "LeftThigh",
+        "shin.L":       "LeftCalf",
+        "foot.L":       "LeftFoot",
+        "toe.L":        "LeftToe",
+
+        "thigh.R":      "RightThigh",
+        "shin.R":       "RightCalf",
+        "foot.R":       "RightFoot",
+        "toe.R":        "RightToe"
+    },
+
+    "merge" : {
+            "head":         ["eye.L", "eye.R", "uplid.L", "lolid.L", "uplid.R", "lolid.R", "jaw",
+                             "tongue_base", "tongue_mid", "tongue_tip"],
+
+            "clavicle.L":   ["clavicle.L", "deltoid.L"],                             
+
+            "clavicle.R":   ["clavicle.R", "deltoid.R"],                             
+
+            "hand.L":       ["hand.L", "palm_index.L", "palm_middle.L", "palm_ring.L", "palm_pinky.L",
+                             "thumb.01.L", "thumb.02.L", "thumb.03.L",
+                             "f_index.01.L", "f_index.02.L", "f_index.03.L",
+                             "f_middle.01.L", "f_middle.02.L", "f_middle.03.L",
+                             "f_ring.01.L", "f_ring.02.L", "f_ring.03.L",
+                             "f_pinky.01.L", "f_pinky.02.L", "f_pinky.03.L"],
+
+            "hand.R":       ["hand.R", "palm_index.R", "palm_middle.R", "palm_ring.R", "palm_pinky.R",
+                             "thumb.01.R", "thumb.02.R", "thumb.03.R",
+                             "f_index.01.R", "f_index.02.R", "f_index.03.R",
+                             "f_middle.01.R", "f_middle.02.R", "f_middle.03.R",
+                             "f_ring.01.R", "f_ring.02.R", "f_ring.03.R",
+                             "f_pinky.01.R", "f_pinky.02.R", "f_pinky.03.R"]
+    }
+}
