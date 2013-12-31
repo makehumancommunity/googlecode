@@ -26,13 +26,52 @@
 
 import os
 import bpy
-from mathutils import Vector
+from mathutils import Vector, Matrix
 from bpy_extras.io_utils import ImportHelper
 from bpy.props import *
 
 #------------------------------------------------------------------------
 #   General
 #------------------------------------------------------------------------
+
+class Eye:
+    def createMiddle(self, prefix, mfile):
+        nmarkers = []
+        for marker in mfile.markers:
+            marker = marker.upper()
+            if marker.startswith(prefix):
+                if marker.endswith("UP"):
+                    up = marker
+                elif marker.endswith("DOWN"):
+                    down = marker
+                elif marker.endswith("LEFT"):
+                    left = marker
+                elif marker.endswith("RIGHT"):
+                    right = marker
+                else:
+                    nmarkers.append(marker)
+            else:
+                nmarkers.append(marker)
+
+        if not (up and down and left and right):
+            return
+
+        middle = prefix + "MIDDLE"
+        nmarkers.append(middle)
+        mfile.markers = nmarkers
+
+        for fdata in mfile.fdatas:
+            rup = fdata.markers[up]
+            rdown = fdata.markers[down]
+            rleft = fdata.markers[left]
+            rright = fdata.markers[right]
+            rmiddle = (rup + rdown + rleft + rright)/4
+            fdata.markers[middle] = rmiddle
+            del fdata.markers[up]
+            del fdata.markers[down]
+            del fdata.markers[left]
+            del fdata.markers[right]
+
 
 class FrameData:
     def __init__(self, frame, time):
@@ -41,13 +80,15 @@ class FrameData:
         self.markers = {}
 
 
-class GeneralData:
+class MarkerFile:
     def __init__(self, filepath):
         self.filepath = filepath
         self.info = {}
         self.markers = []
         self.restpos = {}
         self.fdatas = []
+        self.leftEye = Eye()
+        self.rightEye = Eye()
 
 
     def load(self, filepath):
@@ -67,6 +108,9 @@ class GeneralData:
         scn.objects.link(rig)
         scn.objects.active = rig
 
+        #self.leftEye.createMiddle("L_EYE_", self)
+        #self.rightEye.createMiddle("R_EYE_", self)
+
         bpy.ops.object.mode_set(mode='EDIT')
         fdata = self.fdatas[0]
         restloc = {}
@@ -82,21 +126,60 @@ class GeneralData:
                 print(fdata.frame)
             for marker,loc in fdata.markers.items():
                 pb = rig.pose.bones[marker]
-                pb.location = loc - restloc[marker]
-                pb.keyframe_insert("location", group=pb.name)
+                gmat = Matrix.Translation(loc)
+                pmat = getPoseMatrix(gmat, pb)
+                insertLocation(pb, pmat)
 
         return rig
+
+#------------------------------------------------------------------------
+#   Utils
+#------------------------------------------------------------------------
+
+def getPoseMatrix(gmat, pb):
+    restInv = pb.bone.matrix_local.inverted()
+    if pb.parent:
+        parInv = pb.parent.matrix.inverted()
+        parRest = pb.parent.bone.matrix_local
+        return restInv * (parRest * (parInv * gmat))
+    else:
+        return restInv * gmat
+
+
+def getGlobalMatrix(mat, pb):
+    gmat = pb.bone.matrix_local * mat
+    if pb.parent:
+        parMat = pb.parent.matrix
+        parRest = pb.parent.bone.matrix_local
+        return parMat * (parRest.inverted() * gmat)
+    else:
+        return gmat
+
+
+def insertLocation(pb, mat):
+    pb.location = mat.to_translation()
+    pb.keyframe_insert("location", group=pb.name)
+
+
+def insertRotation(pb, mat):
+    q = mat.to_quaternion()
+    if pb.rotation_mode == 'QUATERNION':
+        pb.rotation_quaternion = q
+        pb.keyframe_insert("rotation_quaternion", group=pb.name)
+    else:
+        pb.rotation_euler = q.to_euler(pb.rotation_mode)
+        pb.keyframe_insert("rotation_euler", group=pb.name)
 
 #------------------------------------------------------------------------
 #   TRC
 #------------------------------------------------------------------------
 
-class TrcData(GeneralData):
+class TrcFile(MarkerFile):
 
     def __init__(self, filepath):
         if os.path.splitext(filepath)[1].lower() != ".trc":
             filepath += ".trc"
-        GeneralData.__init__(self, filepath)
+        MarkerFile.__init__(self, filepath)
 
 
     def load(self, scn):
@@ -144,12 +227,12 @@ class TrcData(GeneralData):
 #   TXT
 #------------------------------------------------------------------------
 
-class TxtData(GeneralData):
+class TxtFile(MarkerFile):
 
     def __init__(self, filepath):
         if os.path.splitext(filepath)[1].lower() != ".txt":
             filepath += ".txt"
-        GeneralData.__init__(self, filepath)
+        MarkerFile.__init__(self, filepath)
 
 
     def load(self, scn):
@@ -204,7 +287,7 @@ class VIEW3D_OT_LoadTrcFileButton(bpy.types.Operator, ImportHelper):
     filepath = StringProperty(name="File Path", description="Filepath used for importing the TRC file", maxlen=1024, default="")
 
     def execute(self, context):
-        trc = TrcData(self.filepath)
+        trc = TrcFile(self.filepath)
         trc.load(context.scene)
         trc.build(context.scene)
         return{'FINISHED'}
@@ -224,7 +307,7 @@ class VIEW3D_OT_LoadTxtFileButton(bpy.types.Operator, ImportHelper):
     filepath = StringProperty(name="File Path", description="Filepath used for importing the TXT file", maxlen=1024, default="")
 
     def execute(self, context):
-        txt = TxtData(self.filepath)
+        txt = TxtFile(self.filepath)
         txt.load(context.scene)
         txt.build(context.scene)
         return{'FINISHED'}

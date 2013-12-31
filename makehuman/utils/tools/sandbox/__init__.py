@@ -95,6 +95,7 @@ class MainPosePanel(bpy.types.Panel):
         layout.separator()
         layout.operator("mp.save_facerig")
         layout.operator("mp.load_facerig")
+        layout.operator("mp.transfer_face_anim")
 
 
 ########################################################################

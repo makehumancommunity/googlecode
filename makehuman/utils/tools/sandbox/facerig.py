@@ -42,7 +42,10 @@ def getRigAndMesh(context):
     if ob.type == 'MESH':
         return ob.parent, ob
     elif ob.type == 'ARMATURE':
-        return ob, ob.children[0]
+        for child in ob.children:
+            if child.type == 'MESH':
+                return ob, child
+    raise RuntimeError("An armature and a mesh must be selected")
 
 
 def saveFaceRig(context, filepath):
@@ -74,34 +77,9 @@ def saveFaceRig(context, filepath):
         except KeyError:
             del weights[vname]
 
-    minvec = Vector((1e6, 1e6, 1e6))
-    maxvec = Vector((-1e6, -1e6, -1e6))
-    minbones = ["","",""]
-    maxbones = ["","",""]
-    for bname in markers:
-        head = rig.data.bones[bname].head_local
-        vec = head - minvec
-        for n in range(3):
-            if vec[n] < 0:
-                minvec[n] = head[n]
-                minbones[n] = bname
-        vec = head - maxvec
-        for n in range(3):
-            if vec[n] > 0:
-                maxvec[n] = head[n]
-                maxbones[n] = bname
-
-    minima = OrderedDict()
-    maxima = OrderedDict()
-    for n in range(3):
-        minima[n] = (minbones[n], minvec[n])
-        maxima[n] = (maxbones[n], maxvec[n])
-
     struct = OrderedDict()
     struct["markers"] = markers
     struct["vertex_groups"] = weights
-    struct["minima"] = minima
-    struct["maxima"] = maxima
     io_json.saveJson(struct, filepath, maxDepth=1)
 
 
@@ -148,7 +126,7 @@ def loadFaceRig(context, filepath):
         eb.head = loc
         eb.tail = loc + Vector((0,0.1,0))
 
-    # Control jaw with chin
+    # Control jaw with chin and eye with
 
     jaw = rig.data.edit_bones["jaw"]
     djaw = rig.data.edit_bones["DEF-jaw"]
@@ -157,13 +135,34 @@ def loadFaceRig(context, filepath):
     jaw.tail = chin.head
     djaw.tail = chin.head
 
+    leye = rig.data.edit_bones["eye.L"]
+    reye = rig.data.edit_bones["eye.R"]
+    head = rig.data.edit_bones["head"]
+    leye.parent = head
+    reye.parent = head
+
     bpy.ops.object.mode_set(mode='POSE')
+
     pjaw = rig.pose.bones["jaw"]
     pjaw.custom_shape = None
     cns = pjaw.constraints.new('STRETCH_TO')
     cns.target = rig
     cns.subtarget = chin.name
     cns.rest_length = pjaw.length
+
+    pleye = rig.pose.bones["eye.L"]
+    pleye.custom_shape = None
+    cns = pleye.constraints.new('IK')
+    cns.target = rig
+    cns.subtarget = "L_EYE"
+    cns.chain_count = 1
+
+    preye = rig.pose.bones["eye.R"]
+    preye.custom_shape = None
+    cns = preye.constraints.new('IK')
+    cns.target = rig
+    cns.subtarget = "R_EYE"
+    cns.chain_count = 1
 
     bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -196,13 +195,6 @@ def loadFaceRig(context, filepath):
             vgrp = ob.vertex_groups[vname]
             vgrp.add([vn], w, 'REPLACE')
 
-    # Save properties for scaling animations
-
-    for n,data in struct["minima"].items():
-        rig["MpMinBone"+n],rig["MpMinLoc"+n] = data
-    for n,data in struct["maxima"].items():
-        rig["MpMaxBone"+n],rig["MpMaxLoc"+n] = data
-
 
 class VIEW3D_OT_LoadFaceRigButton(bpy.types.Operator, ImportHelper):
     bl_idname = "mp.load_facerig"
@@ -224,3 +216,82 @@ class VIEW3D_OT_LoadFaceRigButton(bpy.types.Operator, ImportHelper):
         return {'RUNNING_MODAL'}
 
 
+#------------------------------------------------------------------------
+#   Transfer face animation
+#------------------------------------------------------------------------
+
+def transferFaceAnim(src, trg, scn):
+
+    # Get scale
+
+    minvec = Vector((1e6, 1e6, 1e6))
+    maxvec = Vector((-1e6, -1e6, -1e6))
+    minbones = ["","",""]
+    maxbones = ["","",""]
+    for bone in src.data.bones:
+        try:
+            trg.data.bones[bone.name]
+        except KeyError:
+            continue
+        head = bone.head_local
+        vec = head - minvec
+        for n in range(3):
+            if vec[n] < 0:
+                minvec[n] = head[n]
+                minbones[n] = bone.name
+        vec = head - maxvec
+        for n in range(3):
+            if vec[n] > 0:
+                maxvec[n] = head[n]
+                maxbones[n] = bone.name
+
+    scale = Vector((1,1,1))
+    svec = maxvec - minvec
+    for n in range(3):
+        minbone = trg.data.bones[minbones[n]]
+        maxbone = trg.data.bones[maxbones[n]]
+        tvec = maxbone.head_local - minbone.head_local
+        scale[n] = tvec[n]/svec[n]
+
+    print("Using scale %s" % scale)
+
+    # Copy and scale F-curves
+
+    sact = src.animation_data.action
+    tact = bpy.data.actions.new(trg.name + "Action")
+    if not trg.animation_data:
+        trg.animation_data_create()
+    trg.animation_data.action = tact
+
+    for sfcu in sact.fcurves:
+        bname = sfcu.data_path.split('"')[1]
+        try:
+            trg.data.bones[bname]
+        except KeyError:
+            continue
+        mode = sfcu.data_path.split('.')[-1]
+        if mode != "location":
+            continue
+
+        s = scale[sfcu.array_index]
+        tfcu = tact.fcurves.new(sfcu.data_path, index=sfcu.array_index, action_group=bname)
+        n = len(sfcu.keyframe_points)
+        tfcu.keyframe_points.add(count=n)
+        for i in range(n):
+            t,y = sfcu.keyframe_points[i].co
+            tfcu.keyframe_points[i].co = (t, s*y)
+
+
+class VIEW3D_OT_TransferFaceAnimButton(bpy.types.Operator):
+    bl_idname = "mp.transfer_face_anim"
+    bl_label = "Transfer Face Animation"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        src = context.object
+        scn = context.scene
+        for trg in scn.objects:
+            if trg.select and trg != src and trg.type == 'ARMATURE':
+                transferFaceAnim(src, trg, scn)
+        print("Face animation transferred")
+        return{'FINISHED'}
