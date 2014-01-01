@@ -134,7 +134,6 @@ class Writer(mhx_writer.Writer):
         if proxy.wire:
             fp.write("  draw_type 'WIRE' ;\n")
 
-
         # Proxy layers
 
         fp.write("layers Array ")
@@ -163,8 +162,13 @@ class Writer(mhx_writer.Writer):
       lock_scale Array 1 1 1  ;
       Property MhxScale theScale ;
       Property MhxProxy True ;
-    end Object
-    """)
+   """)
+        fp.write(
+            '      Property MhxProxyName "%s" ;\n' % proxy.name.replace(" ","_") +
+            '      Property MhxProxyUuid "%s" ;\n' % proxy.uuid +
+            '      Property MhxProxyFile "%s" ;\n' % proxy.file.replace("\\", "/").replace(" ","%20") +
+            '      Property MhxProxyType "%s" ;\n' % proxy.type +
+            '    end Object')
 
         self.meshWriter.writeHideAnimationData(fp, self.armature, self.name, proxy.name, "")
 
