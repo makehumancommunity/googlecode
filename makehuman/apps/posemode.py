@@ -172,42 +172,45 @@ def changePoseMode(event):
 def loadMhpFile(filepath, pose=None, clearOnly=False):
 
     human = G.app.selectedHuman
-    if not pose:
-        pose = createPoseRig(human)
+    wasSubdivided = human.isSubdivided()
+    human.setSubdivided(False)
+    try:
+        if not pose:
+            pose = createPoseRig(human)
 
-    clearPoseDetails(human)
-    pose.clear()
-    if clearOnly:
-        pose.storeCoords()
-        pose.setModifier(None)
-        pose.update()
-        return pose
+        clearPoseDetails(human)
+        pose.clear()
+        if clearOnly:
+            pose.storeCoords()
+            pose.setModifier(None)
+            pose.update()
+        else:
+            folder = os.path.dirname(filepath)
+            hasTargets = False
+            for file in os.listdir(folder):
+                if os.path.splitext(file)[1] == ".target":
+                    hasTargets = True
+                    break
 
-    folder = os.path.dirname(filepath)
-    hasTargets = False
-    for file in os.listdir(folder):
-        if os.path.splitext(file)[1] == ".target":
-            hasTargets = True
-            break
+            if hasTargets:
+                (poseName, ext) = os.path.splitext(os.path.basename(filepath))
+                modName = 'poses-' + poseName
+                log.debug('PoseLoadTaskView.loadMhpFile: %s %s', filepath, modName)
+                try:
+                    modifier = _storage.modifiers[modName]
+                except KeyError:
+                    modifier = _storage.modifiers[modName] = PoseModifier(poseName)
+                modifier.setHuman(human)
+                modifier.setValue(1.0)
+                human.applyAllTargets()
+            else:
+                modifier = None
 
-    if hasTargets:
-        (poseName, ext) = os.path.splitext(os.path.basename(filepath))
-        modName = 'poses-' + poseName
-        log.debug('PoseLoadTaskView.loadMhpFile: %s %s', filepath, modName)
-        try:
-            modifier = _storage.modifiers[modName]
-        except KeyError:
-            modifier = _storage.modifiers[modName] = PoseModifier(poseName)
-        modifier.setHuman(human)
-        modifier.setValue(1.0)
-        human.applyAllTargets()
-    else:
-        modifier = None
-
-    pose.storeCoords()
-    pose.setModifier(modifier)
-    pose.readMhpFile(filepath)
-
+            pose.storeCoords()
+            pose.setModifier(modifier)
+            pose.readMhpFile(filepath)
+    finally:
+        human.setSubdivided(wasSubdivided)
     return pose
 
 #----------------------------------------------------------
