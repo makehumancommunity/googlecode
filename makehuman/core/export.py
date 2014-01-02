@@ -35,7 +35,6 @@ class Exporter(object):
         import gui
 
         self.taskview       = taskview
-        self.useHelpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
 
     def export(self, human, filename):

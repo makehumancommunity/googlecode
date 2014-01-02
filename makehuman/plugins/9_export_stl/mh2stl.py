@@ -62,11 +62,10 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
     name = config.goodName(os.path.splitext(filename)[0])
 
     progress(0, 0.3, "Collecting Objects")
-    rmeshes,_amt = exportutils.collect.setupObjects(
+    rmeshes = exportutils.collect.setupMeshes(
         name,
         human,
         config=config,
-        useHelpers=config.useHelpers,
         subdivide=config.subdivide)
 
     fp = open(filepath, 'w')
@@ -120,11 +119,10 @@ def exportStlBinary(human, filepath, config, exportJoints = False):
     name = config.goodName(os.path.splitext(filename)[0])
 
     progress(0, 0.3, "Collecting Objects")
-    rmeshes,_amt = exportutils.collect.setupObjects(
+    rmeshes = exportutils.collect.setupMeshes(
         name,
         human,
         config=config,
-        useHelpers=config.useHelpers,
         subdivide=config.subdivide)
 
     fp = open(filepath, 'wb')

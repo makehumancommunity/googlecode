@@ -51,7 +51,6 @@ class MhxConfig(Config):
         Config.__init__(self)
         self.scale,self.unit =      exporter.taskview.getScale()
         self.useRelPaths =          True
-        self.useHelpers =           True
         self.useAdvancedMHX =       False
 
         self.feetOnGround =         exporter.feetOnGround.selected

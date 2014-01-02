@@ -149,7 +149,7 @@ def povrayExport(settings):
 def writeCamera(hfile, cam, settings):
     import camera
     import math
-    
+
     cameraPos = cam.getPosition()
     upVector = cam.getUpVector() * cam.getScale()/7.5
     rightVector = cam.getRightVector() * (float(settings['resw'])/float(settings['resh'])) * cam.getScale()/7.5
@@ -276,7 +276,7 @@ def povrayExportMesh2(path, settings):
 
     # Collect and prepare all objects.
     progress(0.01, 0.2, "Analyzing Objects")
-    rmeshes,_amt = collect.setupObjects(settings['name'], gui3d.app.selectedHuman, useHelpers=False, hidden=False,
+    rmeshes = collect.setupMeshes(settings['name'], gui3d.app.selectedHuman, hidden=False,
                                             subdivide = settings['subdivide'])
 
     # Analyze the materials of each richmesh to povray compatible format.

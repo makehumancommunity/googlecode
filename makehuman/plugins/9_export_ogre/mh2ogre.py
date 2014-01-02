@@ -53,11 +53,10 @@ def exportOgreMesh(human, filepath, config, progressCallback = None):
     name = formatName(config.goodName(os.path.splitext(filename)[0]))
 
     progress(0.05, 0.2, "Collecting Objects")
-    rmeshes,_amt = exportutils.collect.setupObjects(
+    rmeshes = exportutils.collect.setupMeshes(
         name,
         human,
         config=config,
-        useHelpers=config.useHelpers,
         subdivide=config.subdivide)
 
     config.feetOnGround = feetOnGround

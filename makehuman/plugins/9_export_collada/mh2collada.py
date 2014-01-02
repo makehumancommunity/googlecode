@@ -50,6 +50,7 @@ Delta = [0,0.01,0]
 #
 
 def exportCollada(human, filepath, config):
+    from armature.armature import setupArmature
     progress = Progress()
 
     time1 = time.clock()
@@ -59,13 +60,14 @@ def exportCollada(human, filepath, config):
     name = config.goodName(os.path.splitext(filename)[0])
 
     progress(0, 0.5, "Preparing")
+    amt = setupArmature(name, human, config.rigOptions)
     rawTargets = exportutils.collect.readTargets(human, config)
-    rmeshes,amt = exportutils.collect.setupObjects(
+    rmeshes = exportutils.collect.setupMeshes(
         name,
         human,
+        amt=amt,
         config=config,
-        rawTargets = rawTargets,
-        useHelpers=config.useHelpers)
+        rawTargets = rawTargets)
 
     if amt:
         amt.calcBindMatrices()

@@ -41,6 +41,8 @@ from . import fbx_anim
 
 
 def exportFbx(human, filepath, config):
+    from armature.armature import setupArmature
+
     #posemode.exitPoseMode()
     #posemode.enterPoseMode()
 
@@ -51,15 +53,16 @@ def exportFbx(human, filepath, config):
 
     log.message("Write FBX file %s" % filepath)
 
-    rawTargets = exportutils.collect.readTargets(human, config)
     filename = os.path.basename(filepath)
     name = config.goodName(os.path.splitext(filename)[0])
-    rmeshes,amt = exportutils.collect.setupObjects(
+    amt = setupArmature(name, human, config.rigOptions)
+    rawTargets = exportutils.collect.readTargets(human, config)
+    rmeshes = exportutils.collect.setupMeshes(
         name,
         human,
+        amt=amt,
         config=config,
-        rawTargets=rawTargets,
-        useHelpers=config.useHelpers)
+        rawTargets=rawTargets)
 
     if amt:
         amt.calcBindMatrices(config)

@@ -36,8 +36,6 @@ class MD5Config(Config):
         self.useRelPaths = True
 
     def selectedOptions(self, exporter):
-        self.useHelpers            = exporter.useHelpers.selected
-        #self.scale,self.unit    = exporter.taskview.getScale()
         self.smooth = self.subdivide = gui3d.app.selectedHuman.isSubdivided()
 
         return self
@@ -52,7 +50,6 @@ class ExporterMD5(Exporter):
 
     def build(self, options, taskview):
         self.taskview       = taskview
-        self.useHelpers        = options.addWidget(gui.CheckBox("Helper geometry", False))
 
     def export(self, human, filename):
         from . import mh2md5

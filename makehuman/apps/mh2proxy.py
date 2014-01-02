@@ -198,9 +198,7 @@ class Proxy:
         return ("<Proxy %s %s %s %s>" % (self.name, self.type, self.file, self.uuid))
 
 
-    def getSeedObject(self):
-        import object3d, module3d
-
+    def getSeedMesh(self):
         human = G.app.selectedHuman
         for proxy,obj in human.getProxiesAndObjects():
             if self == proxy:
@@ -211,9 +209,23 @@ class Proxy:
                 return None
             #return human.mesh
             return human.getProxyMesh()
-        elif self.type == "Cage":
+        elif self.type in ["Cage", "Converter"]:
             return None
-        elif self.type == "Converter":
+        else:
+            raise NameError("Unknown proxy type %s" % self.type)
+
+
+    def getMesh(self):
+        human = G.app.selectedHuman
+        for proxy,obj in human.getProxiesAndObjects():
+            if self == proxy:
+                return obj.mesh
+
+        if self.type == "Proxymeshes":
+            if not human.proxy:
+                return None
+            return human.mesh
+        elif self.type in ["Cage", "Converter"]:
             return None
         else:
             raise NameError("Unknown proxy type %s" % self.type)

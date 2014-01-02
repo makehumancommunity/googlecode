@@ -53,11 +53,7 @@ def readTargets(human, config):
     return targets
 
 
-#
-#   setupObjects
-#
-
-def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidden=False, subdivide = False, progressCallback=None):
+def setupMeshes(name, human, config=None, amt=None, rawTargets=[], hidden=False, subdivide = False, progressCallback=None):
 
     def progress(prog):
         if progressCallback == None:
@@ -74,24 +70,33 @@ def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidd
 
     rmeshes = []
 
-    # TODO 'setup' armature should have happened when it was selected from the skeleton library, or in the exporter plugin. Remove dependency from exportutils to armature package.
-    from armature.armature import setupArmature
-    amt = setupArmature(name, human, config.rigOptions)
+    # Can we use the meshes directly?
+    if rawTargets or amt:
+        # No, vertex groups and shapekeys are not subdivided
+        useCurrentMeshes = False
+    elif human.isSubdivided() or human.isProxied():
+        # Yes
+        useCurrentMeshes = True
+    else:
+        # No, helpers are not deleted
+        useCurrentMeshes = False
 
-    richMesh = getRichMesh(human.meshData, None, {}, rawTargets, amt)
+    log.debug("useCurrentMeshes %s" % useCurrentMeshes)
+
+    richMesh = getRichMesh(human, None, useCurrentMeshes, {}, rawTargets, amt)
     richMesh.name = name
     if amt:
         richMesh.weights = amt.vertexWeights
 
     deleteGroups = []
     deleteVerts = None  # Don't load deleteVerts from proxies directly, we use the facemask set in the gui module3d
-    _,deleteVerts = setupProxies('Clothes', None, human, rmeshes, richMesh, config, deleteGroups, deleteVerts)
+    _,deleteVerts = setupProxies('Clothes', None, human, rmeshes, richMesh, config, useCurrentMeshes, deleteGroups, deleteVerts)
     for ptype in mh2proxy.SimpleProxyTypes:
-        _,deleteVerts = setupProxies(ptype, None, human, rmeshes, richMesh, config, deleteGroups, deleteVerts)
-    foundProxy,deleteVerts = setupProxies('Proxymeshes', name, human, rmeshes, richMesh, config, deleteGroups, deleteVerts)
+        _,deleteVerts = setupProxies(ptype, None, human, rmeshes, richMesh, config, useCurrentMeshes, deleteGroups, deleteVerts)
+    foundProxy,deleteVerts = setupProxies('Proxymeshes', name, human, rmeshes, richMesh, config, useCurrentMeshes, deleteGroups, deleteVerts)
     progress(0.06*(3-2*subdivide))
     if not foundProxy:
-        if not useHelpers:     # useHelpers override everything
+        if not useCurrentMeshes:
             richMesh = filterMesh(richMesh, deleteGroups, deleteVerts, not hidden)
         rmeshes = [richMesh] + rmeshes
 
@@ -104,7 +109,9 @@ def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidd
     progbase = 0.12*(3-2*subdivide)
     progress(progbase)
 
-    # Subdivide, if requested.
+    # Subdivision should now be handled by using original meshes.
+    # If we use vertex groups or expressions, subdivision must be turned off anyway.
+    '''
     rmeshnum = float(len(rmeshes))
     i = 0.0
     for rmesh in rmeshes:
@@ -115,15 +122,16 @@ def setupObjects(name, human, config=None, rawTargets=[], useHelpers=False, hidd
                 rmesh.object, lambda p: progress(progbase+((i+p)/rmeshnum)*(1-progbase)))
             rmesh.fromObject(subMesh, rmesh.type, rmesh.weights, rawTargets)
         i += 1.0
+    '''
 
     progress(1)
-    return rmeshes,amt
+    return rmeshes
 
 #
-#    setupProxies(typename, name, human, rmeshes, richMesh, config, deleteGroups, deleteVerts):
+#    setupProxies(typename, name, human, rmeshes, richMesh, config, useCurrentMeshes, deleteGroups, deleteVerts):
 #
 
-def setupProxies(typename, name, human, rmeshes, richMesh, config, deleteGroups, deleteVerts):
+def setupProxies(typename, name, human, rmeshes, richMesh, config, useCurrentMeshes, deleteGroups, deleteVerts):
     # TODO document that this method does not only return values, it also modifies some of the passed parameters (deleteGroups and rmeshes, deleteVerts is modified only if it is not None)
     import re
 
@@ -131,11 +139,11 @@ def setupProxies(typename, name, human, rmeshes, richMesh, config, deleteGroups,
     for proxy in config.getProxies().values():
         if proxy.type == typename:
             foundProxy = True
-            deleteGroups += proxy.deleteGroups
-            if deleteVerts != None:
-                deleteVerts = deleteVerts | proxy.deleteVerts
-            log.debug("RICHMESH %s %s %s" % (richMesh.name, typename, richMesh.shapes))
-            rmesh = getRichMesh(None, proxy, richMesh.weights, richMesh.shapes, richMesh.armature)
+            if not useCurrentMeshes:
+                deleteGroups += proxy.deleteGroups
+                if deleteVerts != None:
+                    deleteVerts = deleteVerts | proxy.deleteVerts
+            rmesh = getRichMesh(None, proxy, useCurrentMeshes, richMesh.weights, richMesh.shapes, richMesh.armature)
             if name is not None:    # Make exportable names.
                 rmesh.name = name
             rmesh.name = re.sub('[^0-9a-zA-Z]+', '_', rmesh.name)

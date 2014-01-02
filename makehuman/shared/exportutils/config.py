@@ -36,7 +36,6 @@ import numpy as np
 class Config:
 
     def __init__(self):
-        self.useHelpers         = False
         self.useTPose           = False
         self.feetOnGround       = False
         self.scale              = 1.0
@@ -53,7 +52,6 @@ class Config:
 
 
     def selectedOptions(self, exporter):
-        self.useHelpers            = exporter.useHelpers.selected
         self.useTPose           = False # exporter.useTPose.selected
         self.feetOnGround =         exporter.feetOnGround.selected
         self.scale,self.unit    = exporter.taskview.getScale()

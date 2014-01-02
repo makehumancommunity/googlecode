@@ -36,9 +36,7 @@ class OgreConfig(Config):
         self.useRelPaths = True
 
     def selectedOptions(self, exporter):
-        self.useHelpers            = exporter.useHelpers.selected
         self.feetOnGround          = exporter.feetOnGround.selected
-        #self.scale,self.unit    = exporter.taskview.getScale()
         self.subdivide          = gui3d.app.selectedHuman.isSubdivided()
 
         return self
@@ -56,7 +54,6 @@ class ExporterOgre(Exporter):
 
     def build(self, options, taskview):
         self.taskview     = taskview
-        self.useHelpers   = options.addWidget(gui.CheckBox("Helper geometry", False))
         self.feetOnGround = options.addWidget(gui.CheckBox("Feet on ground", True))
         #self.scales       = self.addScales(options)  # TODO reintroduce scales?
 

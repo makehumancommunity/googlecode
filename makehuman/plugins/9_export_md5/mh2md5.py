@@ -76,11 +76,10 @@ def exportMd5(human, filepath, config):
     humanBBox = human.meshData.calcBBox()
 
     progress(0, 0.2, "Collecting Objects")
-    rmeshes,_amt = exportutils.collect.setupObjects(
+    rmeshes = exportutils.collect.setupMeshes(
         name,
         human,
         config=config,
-        useHelpers=config.useHelpers,
         subdivide=config.subdivide)
 
     if human.getSkeleton():

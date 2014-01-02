@@ -92,12 +92,12 @@ class RichMesh(object):
         return self
 
 
-    def fromObject(self, obj, type, weights, shapes):
-        self.object = obj
+    def fromMesh(self, mesh, type, weights={}, shapes=[]):
+        self.object = mesh
         self.type = type
         self.weights = weights
         self.shapes = shapes
-        self._material = obj.material
+        self._material = mesh.material
         self.normalizeVertexWeights()
         return self
 
@@ -169,16 +169,25 @@ class RichMesh(object):
             self.skinWeights.extend(wts)
 
 
-def getRichMesh(obj, proxy, rawWeights, rawShapes, amt, scale=1.0):
+def getRichMesh(human, proxy, useCurrentMeshes, rawWeights, rawShapes, amt, scale=1.0):
     if proxy:
-        obj = proxy.getSeedObject()
-        weights = proxy.getWeights(rawWeights, amt)
-        shapes = proxy.getShapes(rawShapes, scale)
-        rmesh = RichMesh(proxy.name, amt).fromObject(obj, proxy.type, weights, shapes)
-        rmesh.proxy = proxy
-        return rmesh
+        if useCurrentMeshes:
+            mesh = proxy.getMesh()
+            return RichMesh(proxy.name, amt).fromMesh(mesh, proxy.type)
+        else:
+            mesh = proxy.getSeedMesh()
+            weights = proxy.getWeights(rawWeights, amt)
+            shapes = proxy.getShapes(rawShapes, scale)
+            rmesh = RichMesh(proxy.name, amt).fromMesh(mesh, proxy.type, weights, shapes)
+            rmesh.proxy = proxy
+            return rmesh
     else:
-        return RichMesh(obj.name, amt).fromObject(obj, None, rawWeights, rawShapes)
+        if useCurrentMeshes:
+            mesh = human.mesh
+            return RichMesh(mesh.name, amt).fromMesh(mesh, None)
+        else:
+            mesh = human.getSeedMesh()
+            return RichMesh(mesh.name, amt).fromMesh(mesh, None, rawWeights, rawShapes)
 
 
 #

@@ -132,7 +132,7 @@ class Writer(mhx_writer.Writer):
         config = self.config
         ptargets = []
         if proxy:
-            obj = proxy.getSeedObject()
+            obj = proxy.getSeedMesh()
             for filepath in proxy.shapekeys:
                 shape = exportutils.shapekeys.getShape(filepath, obj)
                 fname = os.path.splitext(os.path.basename(filepath))[0]

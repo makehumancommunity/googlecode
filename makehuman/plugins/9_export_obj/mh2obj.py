@@ -41,13 +41,12 @@ def exportObj(human, filepath, config=None):
     name = config.goodName(os.path.splitext(filename)[0])
 
     progress(0, 0.3, "Collecting Objects")
-    rmeshes,_amt = exportutils.collect.setupObjects(
+    rmeshes = exportutils.collect.setupMeshes(
         name,
         human,
         config=config,
-        useHelpers=config.useHelpers,
         subdivide=config.subdivide)
-    
+
     progress(0.3, 1.0, "Writing Objects")
     objects = [rmesh.object for rmesh in rmeshes]
     wavefront.writeObjFile(filepath, objects, True, config)
