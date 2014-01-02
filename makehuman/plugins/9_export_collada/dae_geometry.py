@@ -151,6 +151,10 @@ def writeGeometry(fp, rmesh, config):
 
 
 def writeShapeKey(fp, name, shape, rmesh, config):
+    if len(shape.verts) == 0:
+        log.debug("Shapekey %s has zero verts. Ignored" % name)
+        return
+
     progress = Progress()
     obj = rmesh.object
     nVerts = len(obj.coord)
