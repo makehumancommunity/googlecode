@@ -53,16 +53,17 @@ def Render(settings):
         if settings['AA']:
             # Resize to 50% using Qt image class
             qtImg = img.toQImage()
+            del img
             # Bilinear filtered resize for anti-aliasing
-            qtImg = qtImg.scaled(width/2, height/2, transformMode = gui.QtCore.Qt.SmoothTransformation)
-            img = image.Image(qtImg)    # Convert back to MH image
+            scaledImg = qtImg.scaled(width/2, height/2, transformMode = gui.QtCore.Qt.SmoothTransformation)
+            del qtImg
+            img = scaledImg
+            #img = image.Image(scaledImg)    # Convert back to MH image
+            #del scaledImg
 
     # TODO restore scene object visibility
 
-    path = mh.getPath('render/opengl_render.png')
-    img.save(path)
-
-    gui3d.app.getCategory('Rendering').getTaskByName('Viewer').setImage(path)
+    gui3d.app.getCategory('Rendering').getTaskByName('Viewer').setImage(img)
     mh.changeTask('Rendering', 'Viewer')
-    gui3d.app.statusPersist('Rendering complete. Output path: %s' % path)
+    gui3d.app.statusPersist('Rendering complete.)
 
