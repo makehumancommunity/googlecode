@@ -36,7 +36,8 @@ class DaeConfig(Config):
 
         self.useRelPaths = True
         self.useNormals = exporter.useNormals.selected
-        self.rotate90X = exporter.rotate90X.selected
+        self.yup = exporter.yup.selected
+        self.zup = exporter.zup.selected
         self.secondlife = exporter.secondlife.selected
         self.expressions     = exporter.expressions.selected
         self.useCustomTargets = exporter.useCustomTargets.selected
@@ -62,11 +63,14 @@ class ExporterCollada(Exporter):
     def build(self, options, taskview):
         Exporter.build(self, options, taskview)
         self.useNormals = options.addWidget(gui.CheckBox("Normals", False))
-        self.rotate90X = options.addWidget(gui.CheckBox("Z up (Rotate 90 X)", False))
-        self.secondlife = options.addWidget(gui.CheckBox("Second Life", False))
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
         self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
 
+        orientBox = taskview.addRightWidget(gui.GroupBox('Orientation'))
+        orients = []
+        self.yup = orientBox.addWidget(gui.RadioButton(orients, "Y up, face Z", True))
+        self.zup = orientBox.addWidget(gui.RadioButton(orients, "Z up, face -Y", False))
+        self.secondlife = orientBox.addWidget(gui.RadioButton(orients, "Second Life (Z up, face X)", False))
 
     def export(self, human, filename):
         from .mh2collada import exportCollada

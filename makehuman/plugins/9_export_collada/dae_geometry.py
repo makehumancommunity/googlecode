@@ -45,7 +45,7 @@ def rotateCoord(coord, config):
     coord = [co-offs for co in coord]
     if config.secondlife:
         coord = [(z,-x,y) for (x,y,z) in coord]
-    elif config.rotate90X:
+    elif config.zup:
         coord = [(x,-z,y) for (x,y,z) in coord]
     return coord
 

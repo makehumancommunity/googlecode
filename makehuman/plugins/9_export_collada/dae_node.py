@@ -81,7 +81,7 @@ def globalMatrix(config):
     mat[:3,3] = -config.scale*config.offset
     if config.secondlife:
         rot = _RotOpenSim
-    elif config.rotate90X:
+    elif config.zup:
         rot = _RotX
     else:
         rot = _Identity
