@@ -55,6 +55,7 @@ class ArmatureOptions(object):
         self.mergePalms = False
         self.mergeHead = False
         self.merge = None
+        self.terminals = {}
 
         self.useSplitBones = False
         self.useSplitNames = False
@@ -186,6 +187,10 @@ class ArmatureOptions(object):
             pass
         try:
             self.merge = struct["merge"]
+        except KeyError:
+            pass
+        try:
+            self.terminals = struct["terminals"]
         except KeyError:
             pass
         try:

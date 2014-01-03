@@ -37,7 +37,7 @@ class DaeConfig(Config):
         self.useRelPaths = True
         self.useNormals = exporter.useNormals.selected
         self.rotate90X = exporter.rotate90X.selected
-        self.rotate90Z = exporter.rotate90Z.selected
+        self.secondlife = exporter.secondlife.selected
         self.expressions     = exporter.expressions.selected
         self.useCustomTargets = exporter.useCustomTargets.selected
 
@@ -63,7 +63,7 @@ class ExporterCollada(Exporter):
         Exporter.build(self, options, taskview)
         self.useNormals = options.addWidget(gui.CheckBox("Normals", False))
         self.rotate90X = options.addWidget(gui.CheckBox("Z up (Rotate 90 X)", False))
-        self.rotate90Z = options.addWidget(gui.CheckBox("Face X (Rotate 90 Z)", False))
+        self.secondlife = options.addWidget(gui.CheckBox("Second Life", False))
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
         self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
 

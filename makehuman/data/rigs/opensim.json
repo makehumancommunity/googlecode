@@ -3,43 +3,49 @@
 
     "description" :     "Rig for use with OpenSim",
 
-    "settings" : {
-        "useMasterBone" : true
-	},
-	
     "bones" : {
-    	"master":		"Root",
-        "hips":         "Pelvis",
-        "spine":        "Spine",
-        "spine-1":      "Spine1",
-        "chest":        "Spine2",
-        "chest-1":      "Spine3",
-        "neck":         "Neck",
-        "head":         "Head",
+        "hips":         "mPelvis",
+        "spine":        "mTorso",
+        "chest":        "mChest",
+        "neck":         "mNeck",
+        "head":         "mHead",
 
-        "clavicle.L":   "LeftClavicle",
-        "upper_arm.L":  "LeftUpperArm",
-        "forearm.L":    "LeftForearm",
-        "hand.L":       "LeftHand",
+        "eye.L":        "mEyeLeft",
+        "eye.R":        "mEyeRight",
 
-        "clavicle.R":   "RightClavicle",
-        "upper_arm.R":  "RightUpperArm",
-        "forearm.R":    "RightForearm",
-        "hand.R":       "RightHand",
+        "clavicle.L":   "mCollarLeft",
+        "upper_arm.L":  "mShoulderLeft",
+        "forearm.L":    "mElbowLeft",
+        "hand.L":       "mWristLeft",
 
-        "thigh.L":      "LeftThigh",
-        "shin.L":       "LeftCalf",
-        "foot.L":       "LeftFoot",
-        "toe.L":        "LeftToe",
+        "clavicle.R":   "mCollarRight",
+        "upper_arm.R":  "mShoulderRight",
+        "forearm.R":    "mElbowRight",
+        "hand.R":       "mWristRight",
 
-        "thigh.R":      "RightThigh",
-        "shin.R":       "RightCalf",
-        "foot.R":       "RightFoot",
-        "toe.R":        "RightToe"
+        "thigh.L":      "mHipLeft",
+        "shin.L":       "mKneeLeft",
+        "foot.L":       "mAnkleLeft",
+        "toe.L":        "mFootLeft",
+
+        "thigh.R":      "mHipRight",
+        "shin.R":       "mKneeRight",
+        "foot.R":       "mAnkleRight",
+        "toe.R":        "mFootRight"
     },
+    
+    "terminals" : {
+    	"mToeLeft":		"toe.L",
+    	"mToeRight":	"toe.R",
+    	"mSkull":		"head"
+  	},
 
     "merge" : {
-            "head":         ["eye.L", "eye.R", "uplid.L", "lolid.L", "uplid.R", "lolid.R", "jaw",
+            "spine":        ["spine", "spine-1"],
+            
+            "chest":        ["chest", "chest-1"],
+
+            "head":         ["uplid.L", "lolid.L", "uplid.R", "lolid.R", "jaw",
                              "tongue_base", "tongue_mid", "tongue_tip"],
 
             "clavicle.L":   ["clavicle.L", "deltoid.L"],                             

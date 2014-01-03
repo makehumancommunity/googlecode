@@ -56,6 +56,7 @@ class Parser:
         options = amt.options
 
         self.locations = {}
+        self.terminals = {}
         self.origin = np.array([0,0,0], float)
         self.normals = {}
         self.headsTails = None
@@ -120,6 +121,10 @@ class Parser:
         if options.useFaceRig:
             addDict(rig_face.FaceRigHeadsTails, self.headsTails)
 
+        for bname,parent in options.terminals.items():
+            _head,tail = self.headsTails[parent]
+            self.headsTails[bname] = (tail, (tail, (0,0.5,0)))
+
         if options.useConstraints:
             self.setConstraints(rig_bones.Constraints)
             self.setConstraints(rig_face.Constraints)
@@ -171,6 +176,9 @@ class Parser:
 
         self.addBones(rig_bones.Armature, boneInfo)
         self.addBones(rig_face.Armature, boneInfo)
+
+        for bname,parent in options.terminals.items():
+            self.addBones({bname: (0, parent, 0, L_DEF)}, boneInfo)
 
         if options.useMasterBone:
             self.master = 'master'
