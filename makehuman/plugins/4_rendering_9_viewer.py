@@ -45,10 +45,11 @@ class ViewerTaskView(gui3d.TaskView):
         @self.saveBtn.mhEvent
         def onClicked(event):
             if not self.path:
-                return
+                self.path = mh.getPath()
             filename = mh.getSaveFileName(os.path.splitext(self.path)[0],
                                           'PNG Image (*.png);;JPEG Image (*.jpg);;All files (*.*)')
             if filename:
+                self.path = os.path.dirname(filename)
                 self.image.save(filename)
 
         @self.refrBtn.mhEvent
@@ -58,7 +59,10 @@ class ViewerTaskView(gui3d.TaskView):
             self.image.setImage(self.path)
 
     def setImage(self, path):
-        self.path = path
+        if isinstance(self.path, basestring):
+            self.path = path
+        else:
+            self.path = None
         self.image.setImage(path)
         log.message('Image "%s" loaded in image viewer.', path)
 
