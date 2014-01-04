@@ -66,11 +66,11 @@ class ExporterCollada(Exporter):
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
         self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
 
-        orientBox = taskview.addRightWidget(gui.GroupBox('Orientation'))
+        #orientBox = self.addWidget(gui.GroupBox('Orientation'))
         orients = []
-        self.yup = orientBox.addWidget(gui.RadioButton(orients, "Y up, face Z", True))
-        self.zup = orientBox.addWidget(gui.RadioButton(orients, "Z up, face -Y", False))
-        self.secondlife = orientBox.addWidget(gui.RadioButton(orients, "Second Life (Z up, face X)", False))
+        self.yup = options.addWidget(gui.RadioButton(orients, "Y up, face Z", True))
+        self.zup = options.addWidget(gui.RadioButton(orients, "Z up, face -Y", False))
+        self.secondlife = options.addWidget(gui.RadioButton(orients, "Second Life (Z up, face X)", False))
 
     def export(self, human, filename):
         from .mh2collada import exportCollada
