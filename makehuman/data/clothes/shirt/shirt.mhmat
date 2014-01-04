@@ -1,17 +1,20 @@
-# Default material for shirt
+# Material definition for ShirtMaterial
 
 name ShirtMaterial
-
-// Color shading attributes
 ambientColor 1.0 1.0 1.0
-diffuseColor 0.6 0.0122 0.0122
-diffuseIntensity 0.8935
-specularColor 1.0 1.0 1.0
-specularIntensity 0.02336
-shininess 0.8
+diffuseColor 1.0 1.0 1.0
+specularColor 0.176470588235 0.176470588235 0.176470588235
+shininess 0.7
+emissiveColor 0.0 0.0 0.0
 opacity 1.0
+translucency 0.0
 
-// Textures and properties
+shadeless False
+wireframe False
+transparent False
+backfaceCull True
+depthless False
+
 diffuseTexture shirt_texture.png
 normalmapTexture shirt_normal.png
 normalmapIntensity 1.0
@@ -20,14 +23,12 @@ displacementmapIntensity 0.2
 transparencymapTexture shirt_mask.png
 transparencymapIntensity 1.0
 
-// Shader programme
-shader data/shaders/glsl/normalmap
+shader /home/duststorm/svn/makehuman-test/makehuman/data/shaders/glsl/normalmap
 
-// Configure built-in shader defines
-shaderConfig diffuse true
-shaderConfig bump false
-shaderConfig normal true
-shaderConfig displacement true
-shaderConfig spec true
-shaderConfig vertexColors true
-
+shaderConfig diffuse True
+shaderConfig transparency True
+shaderConfig normal True
+shaderConfig bump False
+shaderConfig spec True
+shaderConfig vertexColors True
+shaderConfig displacement True

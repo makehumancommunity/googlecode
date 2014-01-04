@@ -1,15 +1,15 @@
-# Material definition for MakeHuman benchmark clothes
+# Benchmark material definition for debugging MakeHuman clothes
 
 name BenchmarkMaterial
 
 // Color shading attributes
-ambientColor 1.0 1.0 1.0
-diffuseColor 0.8000 0.0184 0.0000
-diffuseIntensity 0.8
+ambientColor 0.847058823529 0.847058823529 0.847058823529
+diffuseColor 1.0 1.0 1.0
 specularColor 1.0 1.0 1.0
-specularIntensity 0.5
 shininess 0.8
+emissiveColor 0.0 0.0 0.0
 opacity 1.0
+translucency 0.0
 
 // Textures and properties
 diffuseTexture ../textures/uvgrid.png
