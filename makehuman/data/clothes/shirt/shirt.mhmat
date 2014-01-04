@@ -23,12 +23,12 @@ displacementmapIntensity 0.2
 transparencymapTexture shirt_mask.png
 transparencymapIntensity 1.0
 
-shader /home/duststorm/svn/makehuman-test/makehuman/data/shaders/glsl/normalmap
+shader data/shaders/glsl/normalmap
 
 shaderConfig diffuse True
 shaderConfig transparency True
 shaderConfig normal True
 shaderConfig bump False
-shaderConfig spec True
-shaderConfig vertexColors True
+shaderConfig spec false
+shaderConfig vertexColors false
 shaderConfig displacement True
