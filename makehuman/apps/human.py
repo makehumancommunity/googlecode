@@ -8,9 +8,9 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Manuel Bastioni, Marc Flerackers
+**Authors:**           Manuel Bastioni, Marc Flerackers, Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -499,7 +499,7 @@ class Human(guicommon.Object):
 
     def setHeight(self, height, updateModifier = True):
         if updateModifier:
-            modifier = self.getModifier('macrodetails-universal-stature/Height')
+            modifier = self.getModifier('macrodetails-height/Height')
             modifier.setValue(height)
             self.applyAllTargets()
             return
@@ -522,8 +522,12 @@ class Human(guicommon.Object):
         return 10*(bBox[1][1]-bBox[0][1])
 
     def _setHeightVals(self):
-        self.dwarfVal = max(0.0, 1 - self.height * 2)
-        self.giantVal = max(0.0, self.height * 2 - 1)
+        self.maxheightVal = max(0.0, self.height * 2 - 1)
+        self.minheightVal = max(0.0, 1 - self.height * 2)
+        if self.maxheightVal > self.minheightVal:
+            self.averageheightVal = 1 - self.maxheightVal
+        else:
+            self.averageheightVal = 1 - self.minheightVal
 
     def setBreastSize(self, size, updateModifier = True):
         if updateModifier:

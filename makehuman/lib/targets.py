@@ -8,9 +8,9 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Glynn Clements
+**Authors:**           Glynn Clements, Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -39,7 +39,7 @@ _cat_data = [
     ('race',     ['caucasian', 'asian', 'african']),
     ('muscle',   ['maxmuscle', 'averagemuscle', 'minmuscle']),
     ('weight',   ['minweight', 'averageweight', 'maxweight']),
-    ('height',   ['dwarf', 'giant']),
+    ('height',   ['minheight', 'averageheight', 'maxheight']),
     ('breastsize',     ['mincup', 'averagecup', 'maxcup']),
     ('breastfirmness', ['minfirmness', 'averagefirmness', 'maxfirmness']),
     ('bodyproportion', ['uncommonproportions', 'regularproportions', 'idealproportions'])

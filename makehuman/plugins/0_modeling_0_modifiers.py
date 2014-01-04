@@ -10,7 +10,7 @@
 
 **Authors:**           Glynn Clements
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -556,7 +556,7 @@ class MacroTaskView(ModifierTaskView):
             (None, 'Age', {'label' : 'Age'}),
             ('universal', 'Muscle', {'label' : 'Muscle'}),
             ('universal', 'Weight', {'label' : 'Weight'}),
-            ('universal-stature', 'Height', {'label' : 'Height'}),
+            ('height', 'Height', {'label' : 'Height'}),
             ('proportions', 'BodyProportions', {'label' : 'Proportions'}),
             (None, 'African', {'label' : 'African'}),
             (None, 'Asian', {'label' : 'Asian'}),
