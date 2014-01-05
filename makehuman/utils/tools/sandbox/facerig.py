@@ -31,6 +31,9 @@ from bpy.props import *
 from mathutils import Vector
 from collections import OrderedDict
 
+import makewalk
+from makewalk.utils import findBoneFCurve
+
 from . import io_json
 
 #------------------------------------------------------------------------
@@ -48,6 +51,26 @@ def getRigAndMesh(context):
     raise RuntimeError("An armature and a mesh must be selected")
 
 
+def getNewUuid():
+    import sys
+    if sys.platform == 'win32':
+        # Avoid error message in blender by using a version without ctypes
+        import makeclothes
+        from makeclothes import uuid4 as uuid
+    else:
+        import uuid
+    return str(uuid.uuid4())
+
+
+def sortDict(dict):
+    dlist = list(dict.items())
+    dlist.sort()
+    ndict = OrderedDict()
+    for key,val in dlist:
+        ndict[key] = val
+    return ndict
+
+
 def saveFaceRig(context, filepath):
     if os.path.splitext(filepath)[1] != ".json":
         filepath += ".json"
@@ -59,18 +82,18 @@ def saveFaceRig(context, filepath):
         for bone in rig.data.bones:
             vec = bone.head_local - v.co
             if vec.length < 1e-3:
-                markers[bone.name] = [(v.index, 1.0)]
+                markers[bone.name.lower()] = [(v.index, 1.0)]
                 break
 
     weights = {}
     vgroups = {}
     for vgrp in ob.vertex_groups:
         vgroups[vgrp.index] = vgrp
-        weights[vgrp.name] = []
+        weights[vgrp.name.lower()] = []
     for v in ob.data.vertices:
         for g in v.groups:
             vgrp = vgroups[g.group]
-            weights[vgrp.name].append((v.index, g.weight))
+            weights[vgrp.name.lower()].append((v.index, g.weight))
     for vname in list(weights):
         try:
             markers[vname]
@@ -78,8 +101,10 @@ def saveFaceRig(context, filepath):
             del weights[vname]
 
     struct = OrderedDict()
-    struct["markers"] = markers
-    struct["vertex_groups"] = weights
+    struct["name"] = rig.name.lower()
+    struct["uuid"] = getNewUuid()
+    struct["markers"] = sortDict(markers)
+    struct["vertex_groups"] = sortDict(weights)
     io_json.saveJson(struct, filepath, maxDepth=1)
 
 
@@ -106,6 +131,10 @@ class VIEW3D_OT_SaveFaceRigButton(bpy.types.Operator, ImportHelper):
 #   Load facerig
 #------------------------------------------------------------------------
 
+def putBoneOnLayer(n):
+    return (n*[False] + [True] + (31-n)*[False])
+
+
 def loadFaceRig(context, filepath):
     rig,ob = getRigAndMesh(context)
     scn = context.scene
@@ -119,7 +148,7 @@ def loadFaceRig(context, filepath):
     for bname,locs in struct["markers"].items():
         eb = rig.data.edit_bones.new(bname)
         eb.parent = parent
-        eb.layers = 8*[False] + [True] + 23*[False]
+        eb.layers = putBoneOnLayer(8)
         loc = Vector((0,0,0))
         for vn,w in locs:
             loc += w * ob.data.vertices[vn].co
@@ -131,7 +160,7 @@ def loadFaceRig(context, filepath):
     jaw = rig.data.edit_bones["jaw"]
     djaw = rig.data.edit_bones["DEF-jaw"]
     chin = rig.data.edit_bones["m_chin"]
-    jaw.layers = 15*[False] + [True] + 16*[False]
+    jaw.layers = putBoneOnLayer(15)
     jaw.tail = chin.head
     djaw.tail = chin.head
 
@@ -154,17 +183,18 @@ def loadFaceRig(context, filepath):
     pleye.custom_shape = None
     cns = pleye.constraints.new('IK')
     cns.target = rig
-    cns.subtarget = "L_EYE"
+    cns.subtarget = "l_eye"
     cns.chain_count = 1
 
     preye = rig.pose.bones["eye.R"]
     preye.custom_shape = None
     cns = preye.constraints.new('IK')
     cns.target = rig
-    cns.subtarget = "R_EYE"
+    cns.subtarget = "r_eye"
     cns.chain_count = 1
 
     bpy.ops.object.mode_set(mode='OBJECT')
+    rig.data.layers = putBoneOnLayer(8)
 
     # Modify weights
 
@@ -220,7 +250,7 @@ class VIEW3D_OT_LoadFaceRigButton(bpy.types.Operator, ImportHelper):
 #   Transfer face animation
 #------------------------------------------------------------------------
 
-def transferFaceAnim(src, trg, scn):
+def transferFaceAnim(src, trg, scn, markers, replacements):
 
     # Get scale
 
@@ -253,8 +283,6 @@ def transferFaceAnim(src, trg, scn):
         tvec = maxbone.head_local - minbone.head_local
         scale[n] = tvec[n]/svec[n]
 
-    print("Using scale %s" % scale)
-
     # Copy and scale F-curves
 
     sact = src.animation_data.action
@@ -263,23 +291,68 @@ def transferFaceAnim(src, trg, scn):
         trg.animation_data_create()
     trg.animation_data.action = tact
 
-    for sfcu in sact.fcurves:
-        bname = sfcu.data_path.split('"')[1]
+    for tmarker in markers:
         try:
-            trg.data.bones[bname]
+            trg.data.bones[tmarker]
         except KeyError:
+            print("Did not find target bone %s" % tmarker)
             continue
-        mode = sfcu.data_path.split('.')[-1]
-        if mode != "location":
-            continue
+        try:
+            smarkers = replacements[tmarker]
+        except KeyError:
+            smarkers = [tmarker]
+        if not isinstance(smarkers, list):
+            smarkers = [smarkers]
 
-        s = scale[sfcu.array_index]
-        tfcu = tact.fcurves.new(sfcu.data_path, index=sfcu.array_index, action_group=bname)
-        n = len(sfcu.keyframe_points)
-        tfcu.keyframe_points.add(count=n)
-        for i in range(n):
-            t,y = sfcu.keyframe_points[i].co
-            tfcu.keyframe_points[i].co = (t, s*y)
+        for index in range(3):
+            sfcus = []
+            for smarker in smarkers:
+                try:
+                    pb = src.pose.bones[smarker]
+                    sfcu = findBoneFCurve(pb, src, index, mode='location')
+                    sfcus.append(sfcu)
+                except KeyError:
+                    print("Did not find source marker %s" % smarker)
+                    continue
+
+            if len(sfcus) == 0:
+                continue
+            else:
+                sfcu = sfcus[0]
+
+            s = scale[sfcu.array_index]
+            tpath = 'pose.bones["%s"].location' % tmarker
+            tfcu = tact.fcurves.new(tpath, index=index, action_group=tmarker)
+            n = len(sfcu.keyframe_points)
+            tfcu.keyframe_points.add(count=n)
+            for i in range(n):
+                t,y = sfcu.keyframe_points[i].co
+                tfcu.keyframe_points[i].co = (t, s*y)
+
+            if len(sfcus) > 10:
+                factor = 1.0/len(sfcus)
+                for kp in tfcu.keyframe_points:
+                    t = kp.co[0]
+                    y = 0.0
+                    for sfcu in sfcus:
+                        y += sfcu.evaluate(t)
+                    kp.co[1] = factor*y
+
+
+
+
+def loadTransfer(filepath):
+    tstruct = io_json.loadJson(filepath)
+    try:
+        baseset = tstruct["baseset"]
+    except KeyError:
+        return None,None
+    folder = os.path.dirname(filepath)
+    basepath = os.path.join(folder, baseset)
+    if os.path.splitext(basepath)[1] != ".json":
+        basepath += ".json"
+    bstruct = io_json.loadJson(basepath)
+    return bstruct["markers"], tstruct["replacements"]
 
 
 class VIEW3D_OT_TransferFaceAnimButton(bpy.types.Operator):
@@ -287,11 +360,117 @@ class VIEW3D_OT_TransferFaceAnimButton(bpy.types.Operator):
     bl_label = "Transfer Face Animation"
     bl_options = {'UNDO'}
 
+    filename_ext = ".json"
+    filter_glob = StringProperty(default="*.json", options={'HIDDEN'})
+    filepath = StringProperty(name="Transfer File", description="Filepath to the transfer JSON file", maxlen=1024, default="")
+
     def execute(self, context):
         src = context.object
         scn = context.scene
+        markers,replacements = loadTransfer(self.filepath)
         for trg in scn.objects:
             if trg.select and trg != src and trg.type == 'ARMATURE':
-                transferFaceAnim(src, trg, scn)
+                transferFaceAnim(src, trg, scn, markers, replacements)
         print("Face animation transferred")
         return{'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+#------------------------------------------------------------------------
+#   Average F-curves
+#------------------------------------------------------------------------
+
+'''
+def findFCurve(path, index, fcurves):
+    for fcu in fcurves:
+        if (fcu.data_path == path and
+            fcu.array_index == index):
+            return fcu
+    print('F-curve "%s" not found.' % path)
+    return None
+
+
+def findBoneFCurve(pb, rig, index, mode='rotation'):
+    if mode == 'rotation':
+        if pb.rotation_mode == 'QUATERNION':
+            mode = "rotation_quaternion"
+        else:
+            mode = "rotation_euler"
+    path = 'pose.bones["%s"].%s' % (pb.name, mode)
+
+    if rig.animation_data is None:
+        return None
+    action = rig.animation_data.action
+    if action is None:
+        return None
+    return findFCurve(path, index, action.fcurves)
+'''
+
+def isVisible(pb, rig):
+    for n,layer in enumerate(pb.bone.layers):
+        if layer and rig.data.layers[n]:
+            return True
+    return False
+
+
+def averageFCurves(context):
+    rig = context.object
+    trg = context.active_pose_bone
+    srcs = []
+    for src in rig.pose.bones:
+        if (src.bone.select and
+            src != trg and
+            isVisible(src, rig)):
+            srcs.append(src)
+
+    if trg is None or srcs == []:
+        print("At least two bones must be selected")
+        return
+
+    print(trg)
+    print(srcs)
+
+    for index in range(3):
+        scurves = []
+        for src in srcs:
+            scu = findBoneFCurve(src, rig, index, mode='location')
+            print(scu.data_path, scu.array_index)
+            if scu is None:
+                print("Bone %s has no location F-curve with index %d. Skipping." % (src.name, index))
+            else:
+                scurves.append(scu)
+
+        tcu = findBoneFCurve(trg, rig, index, mode='location')
+        if tcu is None:
+            act = rig.animation_data.action
+            data_path = 'pose.bones["%s"].location' % trg.name
+            tcu = act.fcurves.new(data_path, index=index, action_group=trg.name)
+            scu = scurves[0]
+            n = len(scu.keyframe_points)
+            tcu.keyframe_points.add(count=n)
+            for n,kp in enumerate(tcu.keyframe_points):
+                kp.co = scu.keyframe_points[n].co
+
+        ncurves = len(scurves)
+        print(tcu.data_path, tcu.array_index)
+
+        for kp in tcu.keyframe_points:
+            t = kp.co[0]
+            xsum = 0.0
+            for scu in scurves:
+                xsum += scu.evaluate(t)
+            kp.co[1] = xsum/ncurves
+
+
+class VIEW3D_OT_AverageFCurvesButton(bpy.types.Operator):
+    bl_idname = "mp.average_fcurves"
+    bl_label = "Average F-curves"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        averageFCurves(context)
+        print("F-curves averaged")
+        return{'FINISHED'}
+

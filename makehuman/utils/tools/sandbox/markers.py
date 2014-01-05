@@ -38,15 +38,14 @@ class Eye:
     def createMiddle(self, prefix, mfile):
         nmarkers = []
         for marker in mfile.markers:
-            marker = marker.upper()
             if marker.startswith(prefix):
-                if marker.endswith("UP"):
+                if marker.endswith("up"):
                     up = marker
-                elif marker.endswith("DOWN"):
+                elif marker.endswith("down"):
                     down = marker
-                elif marker.endswith("LEFT"):
+                elif marker.endswith("left"):
                     left = marker
-                elif marker.endswith("RIGHT"):
+                elif marker.endswith("right"):
                     right = marker
                 else:
                     nmarkers.append(marker)
@@ -56,7 +55,7 @@ class Eye:
         if not (up and down and left and right):
             return
 
-        middle = prefix + "MIDDLE"
+        middle = prefix + "middle"
         nmarkers.append(middle)
         mfile.markers = nmarkers
 
@@ -108,8 +107,8 @@ class MarkerFile:
         scn.objects.link(rig)
         scn.objects.active = rig
 
-        #self.leftEye.createMiddle("L_EYE_", self)
-        #self.rightEye.createMiddle("R_EYE_", self)
+        #self.leftEye.createMiddle("l_eye_", self)
+        #self.rightEye.createMiddle("r_eye_", self)
 
         bpy.ops.object.mode_set(mode='EDIT')
         fdata = self.fdatas[0]
@@ -197,7 +196,8 @@ class TrcFile(MarkerFile):
                         keys = words
                         status = 1
                     elif words[0] == "Frame#":
-                        self.markers = words[2:]
+                        self.markers = [marker.lower() for marker in words[2:]]
+                        print(self.markers)
                         status = 2
                     elif status == 1:
                         for n,word in enumerate(words):

@@ -97,6 +97,10 @@ class MainPosePanel(bpy.types.Panel):
         layout.operator("mp.load_facerig")
         layout.operator("mp.transfer_face_anim")
 
+        layout.separator()
+        layout.label("Edit")
+        layout.operator("mp.average_fcurves")
+
 
 ########################################################################
 #
