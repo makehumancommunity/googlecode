@@ -481,6 +481,7 @@ class MHApplication(gui3d.Application, mh.Application):
         backGridMesh.restrictVisibleToCamera = True
         backGridMesh.minSubgridZoom = (1.0/spacing) * float(subgrids)/5
         self.backplaneGrid = gui3d.Object(backGridMesh)
+        self.backplaneGrid.excludeFromProduction = True
         #self.backplaneGrid.setPosition([0,offset,0])
         backGridMesh.placeAtFeet = True
         self.addObject(self.backplaneGrid)
@@ -494,6 +495,7 @@ class MHApplication(gui3d.Application, mh.Application):
         groundGridMesh.setSubColor(self.gridSubColor)
         groundGridMesh.minSubgridZoom = (1.0/spacing) * float(subgrids)/5
         self.groundplaneGrid = gui3d.Object(groundGridMesh)
+        self.groundplaneGrid.excludeFromProduction = True
         #self.groundplaneGrid.setPosition([0,offset,0])
         groundGridMesh.placeAtFeet = True
         groundGridMesh.restrictVisibleAboveGround = True
@@ -505,9 +507,9 @@ class MHApplication(gui3d.Application, mh.Application):
         groups.
         """
         import targets
-        import getpath
+        #import getpath
         for target in targets.getTargets().findTargets('macrodetails'):
-            log.debug('Preloading target %s', getpath.getRelativePath(target.path))
+            #log.debug('Preloading target %s', getpath.getRelativePath(target.path))
             algos3d.getTarget(self.selectedHuman.meshData, target.path)
 
     def loadFinish(self):
