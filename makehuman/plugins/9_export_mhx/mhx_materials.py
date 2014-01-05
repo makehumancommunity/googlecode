@@ -99,7 +99,7 @@ class Writer(mhx_writer.Writer):
             fp.write(
                 "  MTex %d %s UV SPECULAR_COLOR\n" % (slot, spec) +
                 "    texture Refer Texture %s ;\n" % spec +
-                "    specular_factor %.4g ;" % (0.1*mat.specularMapIntensity) +
+                "    specular_factor %.4g ;" % (mat.specularMapIntensity) +
 """
     use_map_color_diffuse False ;
     use_map_specular True ;
@@ -114,7 +114,7 @@ class Writer(mhx_writer.Writer):
             fp.write(
                 "  MTex %d %s UV NORMAL\n" % (slot, bump) +
                 "    texture Refer Texture %s ;\n" % bump +
-                "    normal_factor %.4g*theScale ;" % (0.1*scale*mat.bumpMapIntensity) +
+                "    normal_factor %.4g*theScale ;" % (scale*mat.bumpMapIntensity) +
 """
     use_map_color_diffuse False ;
     use_map_normal True ;
@@ -127,11 +127,11 @@ class Writer(mhx_writer.Writer):
             fp.write(
                 "  MTex %d %s UV NORMAL\n" % (slot, normal) +
                 "    texture Refer Texture %s ;\n" % normal +
-                "    normal_factor %.4g*theScale ;" % (0.1*scale*mat.normalMapIntensity) +
+                "    normal_factor %.4g*theScale ;" % (scale*mat.normalMapIntensity) +
 """
     use_map_color_diffuse False ;
     use_map_normal True ;
-    use_rgb_to_intensity True ;
+    use_rgb_to_intensity False ;
   end MTex
 """)
             slot += 1
@@ -140,10 +140,10 @@ class Writer(mhx_writer.Writer):
             fp.write(
                 "  MTex %d %s UV DISPLACEMENT\n" % (slot, disp) +
                 "    texture Refer Texture %s ;\n" % disp +
-                "    displacement_factor %.4g*theScale ;" % (0.1*scale*mat.displacementMapIntensity) +
+                "    displacement_factor %.4g*theScale ;" % (scale*mat.displacementMapIntensity) +
 """
     use_map_color_diffuse False ;
-    use_map_normal True ;
+    use_map_displacement True ;
     use_rgb_to_intensity True ;
   end MTex
 """)
