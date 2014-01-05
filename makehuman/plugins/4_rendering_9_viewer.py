@@ -45,7 +45,9 @@ class ViewerTaskView(gui3d.TaskView):
         @self.saveBtn.mhEvent
         def onClicked(event):
             if not self.path:
-                self.path = mh.getPath()
+                if not os.path.exists(mh.getPath('render')):
+                    os.makedirs(mh.getPath('render'))
+                self.path = mh.getPath('render')
             filename = mh.getSaveFileName(os.path.splitext(self.path)[0],
                                           'PNG Image (*.png);;JPEG Image (*.jpg);;All files (*.*)')
             if filename:
