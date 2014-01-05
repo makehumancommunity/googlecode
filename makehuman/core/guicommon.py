@@ -10,7 +10,7 @@
 
 **Authors:**           Manuel Bastioni, Marc Flerackers
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -60,6 +60,7 @@ class Object(events3d.EventHandler):
         self._view = None
 
         self.visible = visible
+        self.excludeFromProduction = False  # Set to true to exclude from production renders
 
         self.proxy = None
 
@@ -72,7 +73,7 @@ class Object(events3d.EventHandler):
 
     def _attach(self):
 
-        if self._view().isVisible() and self.visible:
+        if self.view.isVisible() and self.visible:
             self.mesh.setVisibility(1)
         else:
             self.mesh.setVisibility(0)
@@ -106,6 +107,10 @@ class Object(events3d.EventHandler):
 
     @property
     def view(self):
+        if not self._view or not callable(self._view):
+            import log
+            log.debug('The event handler object for mesh %s has no view attached.', self.mesh.name)
+            return None
         return self._view()
 
     def show(self):
@@ -122,8 +127,9 @@ class Object(events3d.EventHandler):
         return self.visible
 
     def setVisibility(self, visibility):
-
-        if self._view().isVisible() and self.visible and visibility:
+        if not self.view:
+            self.mesh.setVisibility(0)
+        if self.view.isVisible() and self.visible and visibility:
             self.mesh.setVisibility(1)
         else:
             self.mesh.setVisibility(0)
@@ -410,34 +416,52 @@ class Object(events3d.EventHandler):
     material = property(getMaterial, setMaterial)
 
     def onMouseDown(self, event):
-        if self._view():
-            self._view().callEvent('onMouseDown', event)
+        if self.view:
+            self.view.callEvent('onMouseDown', event)
+        else:
+            import log
+            log.debug('FAILED: mouseDown')
 
     def onMouseMoved(self, event):
-        if self._view():
-            self._view().callEvent('onMouseMoved', event)
+        if self.view:
+            self.view.callEvent('onMouseMoved', event)
+        else:
+            import log
+            log.debug('FAILED: mouseMoved')
 
     def onMouseDragged(self, event):
-        if self._view():
-            self._view().callEvent('onMouseDragged', event)
+        if self.view:
+            self.view.callEvent('onMouseDragged', event)
+        else:
+            import log
+            log.debug('FAILED: mouseDragged')
 
     def onMouseUp(self, event):
-        if self._view():
-            self._view().callEvent('onMouseUp', event)
+        if self.view:
+            self.view.callEvent('onMouseUp', event)
 
     def onMouseEntered(self, event):
-        if self._view():
-            self._view().callEvent('onMouseEntered', event)
+        if self.view:
+            self.view.callEvent('onMouseEntered', event)
+        else:
+            import log
+            log.debug('FAILED: mouseEntered')
 
     def onMouseExited(self, event):
-        if self._view():
-            self._view().callEvent('onMouseExited', event)
+        if self.view:
+            self.view.callEvent('onMouseExited', event)
+        else:
+            import log
+            log.debug('FAILED: mouseExited')
 
     def onClicked(self, event):
-        if self._view():
-            self._view().callEvent('onClicked', event)
+        if self.view:
+            self.view.callEvent('onClicked', event)
+        else:
+            import log
+            log.debug('FAILED: clicked')
 
     def onMouseWheel(self, event):
-        if self._view():
-            self._view().callEvent('onMouseWheel', event)
+        if self.view:
+            self.view.callEvent('onMouseWheel', event)
 
