@@ -8,9 +8,9 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Glynn Clements
+**Authors:**           Glynn Clements, Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -505,8 +505,9 @@ class MHApplication(gui3d.Application, mh.Application):
         groups.
         """
         import targets
+        import getpath
         for target in targets.getTargets().findTargets('macrodetails'):
-            log.debug('Preloading target %s', target.path)
+            log.debug('Preloading target %s', getpath.getRelativePath(target.path))
             algos3d.getTarget(self.selectedHuman.meshData, target.path)
 
     def loadFinish(self):
