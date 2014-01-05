@@ -10,7 +10,7 @@
 
 **Authors:**           Glynn Clements
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -59,7 +59,7 @@ class ViewerTaskView(gui3d.TaskView):
             self.image.setImage(self.path)
 
     def setImage(self, path):
-        if isinstance(self.path, basestring):
+        if isinstance(path, basestring):
             self.path = path
         else:
             self.path = None
