@@ -8,9 +8,9 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Glynn Clements
+**Authors:**           Glynn Clements, Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -738,7 +738,7 @@ def renderSkin(dst, vertsPerPrimitive, verts, index = None, objectMatrix = None,
 
     return surface
 
-def renderToBuffer(width, height):
+def renderToBuffer(width, height, productionRender = True):
     """
     Perform offscreen render and return the pixelbuffer.
     Verify whether OpenGL drivers support renderbuffers using 
@@ -781,7 +781,7 @@ def renderToBuffer(width, height):
     glViewport(0, 0, width, height)
 
     # Draw scene as usual
-    draw()
+    draw(productionRender)
 
     if have_multisample:
         # If we have drawn to a multisample renderbuffer, we need to transfer it to a simple buffer to read it
@@ -824,7 +824,7 @@ def renderToBuffer(width, height):
 
     return surface
 
-def drawMeshes(pickMode):
+def drawMeshes(pickMode, productionRender = False):
     if G.world is None:
         return
 
@@ -834,6 +834,8 @@ def drawMeshes(pickMode):
 
     # Draw all objects contained by G.world
     for obj in sorted(G.world, key = (lambda obj: obj.priority)):
+        if productionRender and obj.excludeFromProduction:
+            continue
         camera = G.cameras[obj.cameraMode]
         if camera.stereoMode:
             glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_TRUE) # Red
@@ -855,16 +857,16 @@ def drawMeshes(pickMode):
                 cameraMode = obj.cameraMode
             drawOrPick(pickMode, obj)
 
-def _draw():
+def _draw(productionRender = False):
     drawBegin()
-    drawMeshes(False)
+    drawMeshes(False, productionRender)
     drawEnd()
 
-def draw():
+def draw(productionRender = False):
     try:
         if profiler.active():
             profiler.accum('_draw()', globals(), locals())
         else:
-            _draw()
+            _draw(productionRender)
     except StandardError:
         log.error('gl.draw', exc_info=True)

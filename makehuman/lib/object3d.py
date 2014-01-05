@@ -10,7 +10,7 @@
 
 **Authors:**           Glynn Clements
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -103,6 +103,18 @@ class Object3D(object):
     @property
     def visibility(self):
         return self.parent.visibility
+
+    @property
+    def excludeFromProduction(self):
+        """
+        Whether or not to exclude this object from production renders 
+        (rendering plugin).
+        """
+        return self.object.excludeFromProduction
+
+    @property
+    def object(self):
+        return self.parent.object
 
     @property
     def cameraMode(self):
