@@ -500,12 +500,14 @@ class MHApplication(gui3d.Application, mh.Application):
         self.addObject(self.groundplaneGrid)
 
     def loadMacroTargets(self):
-        keys = ('macrodetails', 'universal', 'stature')
+        """
+        Preload all target files belonging to group macrodetails and its child
+        groups.
+        """
         import targets
-        for i in xrange(3):
-            key = keys[:i+1]
-            for target in targets.getTargets().groups[key]:
-                algos3d.getTarget(self.selectedHuman.meshData, target.path)
+        for target in targets.getTargets().findTargets('macrodetails'):
+            log.debug('Preloading target %s', target.path)
+            algos3d.getTarget(self.selectedHuman.meshData, target.path)
 
     def loadFinish(self):
 
