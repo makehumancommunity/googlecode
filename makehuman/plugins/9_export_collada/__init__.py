@@ -36,9 +36,10 @@ class DaeConfig(Config):
 
         self.useRelPaths = True
         self.useNormals = exporter.useNormals.selected
-        self.yup = exporter.yup.selected
-        self.zup = exporter.zup.selected
-        self.secondlife = exporter.secondlife.selected
+        self.yUpFaceZ = exporter.yUpFaceZ.selected
+        self.yUpFaceX = exporter.yUpFaceX.selected
+        self.zUpFaceNegY = exporter.zUpFaceNegY.selected
+        self.zUpFaceX = exporter.zUpFaceX.selected
         self.expressions     = exporter.expressions.selected
         self.useCustomTargets = exporter.useCustomTargets.selected
 
@@ -68,9 +69,10 @@ class ExporterCollada(Exporter):
 
         #orientBox = self.addWidget(gui.GroupBox('Orientation'))
         orients = []
-        self.yup = options.addWidget(gui.RadioButton(orients, "Y up, face Z", True))
-        self.zup = options.addWidget(gui.RadioButton(orients, "Z up, face -Y", False))
-        self.secondlife = options.addWidget(gui.RadioButton(orients, "Second Life (Z up, face X)", False))
+        self.yUpFaceZ = options.addWidget(gui.RadioButton(orients, "Y up, face Z", True))
+        self.yUpFaceX = options.addWidget(gui.RadioButton(orients, "Y up, face X", False))
+        self.zUpFaceNegY = options.addWidget(gui.RadioButton(orients, "Z up, face -Y", False))
+        self.zUpFaceX = options.addWidget(gui.RadioButton(orients, "Z up, face X", False))
 
     def export(self, human, filename):
         from .mh2collada import exportCollada

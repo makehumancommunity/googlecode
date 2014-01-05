@@ -43,10 +43,14 @@ def writeLibraryGeometry(fp, rmeshes, config):
 def rotateCoord(coord, config):
     offs = config.scale * config.offset
     coord = [co-offs for co in coord]
-    if config.secondlife:
-        coord = [(z,-x,y) for (x,y,z) in coord]
-    elif config.zup:
+    if config.yUpFaceZ:
+        pass
+    elif config.yUpFaceX:
+        coord = [(z,y,-x) for (x,y,z) in coord]
+    elif config.zUpFaceNegY:
         coord = [(x,-z,y) for (x,y,z) in coord]
+    elif config.zUpFaceX:
+        coord = [(z,x,y) for (x,y,z) in coord]
     return coord
 
 

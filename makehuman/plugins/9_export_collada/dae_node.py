@@ -73,18 +73,21 @@ def writeSceneWithArmature(fp, rmeshes, amt, config):
 
 _Identity = np.identity(4, float)
 _RotX = tm.rotation_matrix(math.pi/2, (1,0,0))
+_RotY = tm.rotation_matrix(math.pi/2, (0,1,0))
 _RotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
-_RotOpenSim = np.dot(_RotZ, _RotX)
+_RotZUpFaceX = np.dot(_RotZ, _RotX)
 
 def globalMatrix(config):
     mat = np.identity(4, float)
     mat[:3,3] = -config.scale*config.offset
-    if config.secondlife:
-        rot = _RotOpenSim
-    elif config.zup:
-        rot = _RotX
-    else:
+    if config.yUpFaceZ:
         rot = _Identity
+    elif config.yUpFaceX:
+        rot = _RotY
+    elif config.zUpFaceNegY:
+        rot = _RotX
+    elif config.zUpFaceX:
+        rot = _RotZUpFaceX
     return np.dot(rot, mat)
 
 
