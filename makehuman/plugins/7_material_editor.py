@@ -10,7 +10,7 @@
 
 **Authors:**           Glynn Clements, Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -410,7 +410,10 @@ class MaterialEditorTaskView(gui3d.TaskView):
         if not mat:
             mat = self.getSelectedObject().material
         mat.setShader(path)
-        self.updateShaderConfig()
+        if path:
+            self.listUniforms(mat)
+        self.updateShaderConfig(mat)
+        self.listMaterialSettings(self.getSelectedObject())
 
     def listUniforms(self, mat):
         for child in self.paramBox.children[:]:
