@@ -530,6 +530,8 @@ class MHApplication(gui3d.Application, mh.Application):
 
         #printtree(self)
 
+        mh.changeCategory("Modelling")
+
         mh.updatePickingBuffer()
         self.redraw()
 
