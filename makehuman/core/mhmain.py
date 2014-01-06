@@ -1136,6 +1136,12 @@ class MHApplication(gui3d.Application, mh.Application):
         mh.grabScreen(0, 0, G.windowWidth, G.windowHeight, os.path.join(grabPath, grabName))
 
     def resetHuman(self):
+        if self.modified:
+            self.prompt('Reset', 'By resetting the human you will lose all your changes, are you sure?', 'Yes', 'No', self._resetHuman)
+        else:
+            self._resetHuman()
+
+    def _resetHuman(self):
         human = self.selectedHuman
         human.resetMeshValues()
         human.applyAllTargets(self.progress)
