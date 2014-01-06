@@ -107,7 +107,10 @@ class Parser:
         if options.useMuscles:
             self.joints += rig_muscle.Joints
 
-        self.planes = rig_bones.Planes
+        self.planes = mergeDicts([
+            rig_bones.Planes,
+            rig_face.Planes,
+        ])
         self.planeJoints = rig_control.PlaneJoints
 
         self.headsTails = mergeDicts([

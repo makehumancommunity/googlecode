@@ -27,14 +27,43 @@ from .flags import *
 UseTranslationBones = False
 LidPct = 0.5
 eyeOffs = (0,0,0.3)
+dy = (0,1,0)
 
 Joints = [
     ('head-end',        'l', ((2.0, 'head'), (-1.0, 'neck'))),
     #('head-back',       'v', 955),
 
-    ('l-eye-end',        'p', ('l-eye', 'l-eye-target', 'l-eye-target')),
-    ('r-eye-end',        'p', ('r-eye', 'r-eye-target', 'r-eye-target')),
+    ('l-pupil',         'vl', ((0.5, 14625), (0.5, 14661))),
+    ('r-pupil',         'vl', ((0.5, 14670), (0.5, 14706))),
 
+    ('l-eye-end',        'l', ((1.5, 'l-pupil'), (-0.5, 'l-eye'))),
+    ('r-eye-end',        'l', ((1.5, 'r-pupil'), (-0.5, 'r-eye'))),
+
+    ('l-eye-top',       'o', ('l-eye-end', dy)),
+    ('r-eye-top',       'o', ('r-eye-end', dy)),
+
+    ('l-uplid1',       'v', 6785),
+    ('l-lolid1',       'v', 11479),
+    ('r-uplid1',       'v', 4847),
+    ('r-lolid1',       'v', 4861),
+
+    ('l-uplid0',        'p', ('l-uplid1', 'l-eye', 'l-eye')),
+    ('l-lolid0',        'p', ('l-lolid1', 'l-eye', 'l-eye')),
+    ('r-uplid0',        'p', ('r-uplid1', 'r-eye', 'r-eye')),
+    ('r-lolid0',        'p', ('r-lolid1', 'r-eye', 'r-eye')),
+
+    ('l-uplid',        'l', ((1.5, 'l-uplid1'), (-0.5, 'l-uplid0'))),
+    ('l-lolid',        'l', ((1.5, 'l-lolid1'), (-0.5, 'l-lolid0'))),
+    ('r-uplid',        'l', ((1.5, 'r-uplid1'), (-0.5, 'r-uplid0'))),
+    ('r-lolid',        'l', ((1.5, 'r-lolid1'), (-0.5, 'r-lolid0'))),
+
+    ('l-uplid-top',       'o', ('l-uplid', dy)),
+    ('l-lolid-top',       'o', ('l-lolid', dy)),
+    ('r-uplid-top',       'o', ('r-uplid', dy)),
+    ('r-lolid-top',       'o', ('r-lolid', dy)),
+
+]
+'''
     ('l-uplid0',        'p', ('l-eye', 'l-upperlid', 'l-upperlid')),
     ('r-uplid0',        'p', ('r-eye', 'r-upperlid', 'r-upperlid')),
     ('l-lolid0',        'p', ('l-eye', 'l-lowerlid', 'l-lowerlid')),
@@ -83,7 +112,12 @@ Joints = [
     ('r-brow-2',        'v', 204),
     ('l-brow-3',        'v', 6982),
     ('r-brow-3',        'v', 207),
-]
+'''
+
+Planes = {
+    "PlaneEye.L" :         ('l-eye', 'l-eye-end', 'l-eye-top'),
+    "PlaneEye.R" :         ('r-eye', 'r-eye-end', 'r-eye-top'),
+}
 
 HeadsTails = {
     'jaw' :                 ('mouth', 'jaw'),
@@ -93,13 +127,13 @@ HeadsTails = {
 
     'eye.R' :               ('r-eye', 'r-eye-end'),
     'eye_parent.R' :        ('r-eye', 'r-eye-end'),
-    'uplid.R' :             ('r-eye', 'r-uplid'),
-    'lolid.R' :             ('r-eye', 'r-lolid'),
+    'uplid.R' :             ('r-uplid0', 'r-uplid'),
+    'lolid.R' :             ('r-lolid0', 'r-lolid'),
 
     'eye.L' :               ('l-eye', 'l-eye-end'),
     'eye_parent.L' :        ('l-eye', 'l-eye-end'),
-    'uplid.L' :             ('l-eye', 'l-uplid'),
-    'lolid.L' :             ('l-eye', 'l-lolid'),
+    'uplid.L' :             ('l-uplid0', 'l-uplid'),
+    'lolid.L' :             ('l-lolid0', 'l-lolid'),
 }
 
 '''
@@ -166,8 +200,8 @@ Armature = {
     'tongue_base' :         (0, 'jaw', F_DEF|F_SCALE, L_HEAD),
     'tongue_mid' :          (0, 'tongue_base', F_DEF|F_SCALE, L_HEAD),
     'tongue_tip' :          (0, 'tongue_mid', F_DEF|F_SCALE, L_HEAD),
-    'eye.R' :               (180*D, 'head', F_DEF, L_HEAD),
-    'eye.L' :               (180*D, 'head', F_DEF, L_HEAD),
+    'eye.R' :               ('PlaneEye.L', 'head', F_DEF, L_HEAD),
+    'eye.L' :               ('PlaneEye.R', 'head', F_DEF, L_HEAD),
     'uplid.R' :             (0, 'head', F_DEF|F_LOCKY, L_HEAD),
     'lolid.R' :             (0, 'head', F_DEF|F_LOCKY, L_HEAD),
     'uplid.L' :             (0, 'head', F_DEF|F_LOCKY, L_HEAD),
