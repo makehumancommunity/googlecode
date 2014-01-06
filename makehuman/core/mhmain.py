@@ -346,13 +346,13 @@ class MHApplication(gui3d.Application, mh.Application):
                     task.callEvent('onHumanHidden', event)
 
         # Set up categories and tasks
+        self.files = guifiles.FilesCategory()
+        self.addCategory(self.files)
         self.getCategory("Modelling")
         self.getCategory("Geometries")
         self.getCategory("Materials")
         self.getCategory("Pose/Animate")
         self.getCategory("Rendering")
-        self.files = guifiles.FilesCategory()
-        self.addCategory(self.files)
 
     def loadPlugins(self):
 
