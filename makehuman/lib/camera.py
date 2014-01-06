@@ -508,7 +508,7 @@ class OrbitalCamera(Camera):
     def updateCamera(self):
         human = G.app.selectedHuman
         # Set camera to human y center to compensate for varying human height
-        bbox = human.meshData.calcBBox()
+        bbox = human.getBoundingBox()
         # Note that BB does not take into account human translation, scale or rotation
         humanHalfHeight = (bbox[1][1] - bbox[0][1]) / 2.0
         humanHalfWidth = (bbox[1][0] - bbox[0][0]) / 2.0
@@ -784,7 +784,7 @@ class OrbitalCamera(Camera):
         """
         result = [0, 0, 0]
         human = G.app.selectedHuman
-        bBox = human.mesh.calcBBox()
+        bBox = human.getBoundingBox()
 
         humanHalfWidth = (bBox[1][0] - bBox[0][0]) / 2.0
         hCenter = bBox[0][0] + humanHalfWidth

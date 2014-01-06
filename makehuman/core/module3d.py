@@ -10,7 +10,7 @@
 
 **Authors:**           Marc Flerackers, Glynn Clements, Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -1151,14 +1151,17 @@ class Object3D(object):
         if recalcFaceNormals or recalcVertexNormals and self.calculateTangents:
             self.calcVertexTangents(verticesToUpdate)
                 
-    def calcBBox(self, ix=None, onlyVisible = True):
+    def calcBBox(self, ix=None, onlyVisible = True, fixedFaceMask = None):
         """
         Calculates the axis aligned bounding box of this object in the object's coordinate system. 
         """
         # TODO maybe cache bounding box
         if ix is None:
             ix = np.s_[:]
-        if onlyVisible:
+        if fixedFaceMask is not None:
+            verts = self.getVerticesForFaceMask(fixedFaceMask)
+            coord = self.coord[verts]
+        elif onlyVisible:
             verts = self.getVerticesForFaceMask(self.getFaceMask())
             coord = self.coord[verts]
         else:

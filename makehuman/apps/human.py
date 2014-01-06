@@ -51,6 +51,7 @@ class Human(guicommon.Object):
         self.mesh.setCull(1)
         self.meshData = self.mesh
 
+        self._staticFaceMask = None
         self.maskFaces()
 
         self._hairObj = hairObj
@@ -152,12 +153,22 @@ class Human(guicommon.Object):
 
 
     def getFaceMask(self):
+        """
+        Get initial (static) face mask for the human basemesh that hides all
+        the faces associated with helper geometry.
+        """
+        if self._staticFaceMask is not None:
+            # Return cached copy for performance (this mask never changes anyway)
+            return self._staticFaceMask
+
         mesh = self.meshData
         group_mask = np.ones(len(mesh._faceGroups), dtype=bool)
         for g in mesh._faceGroups:
             if g.name.startswith('joint-') or g.name.startswith('helper-'):
                 group_mask[g.idx] = False
         face_mask = group_mask[mesh.group]
+        self._staticFaceMask = face_mask
+
         return face_mask
 
     def maskFaces(self):
@@ -518,8 +529,15 @@ class Human(guicommon.Object):
         """
         The height in cm.
         """
-        bBox = self.mesh.calcBBox()
+        bBox = self.getBoundingBox()
         return 10*(bBox[1][1]-bBox[0][1])
+
+    def getBoundingBox(self):
+        """
+        Returns the bounding box of the basemesh without the helpers, ignoring
+        any other facemask.
+        """
+        return self.meshData.calcBBox(fixedFaceMask = self.getFaceMask())
 
     def _setHeightVals(self):
         self.maxheightVal = max(0.0, self.height * 2 - 1)
