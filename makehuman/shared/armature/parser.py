@@ -314,13 +314,11 @@ class Parser:
                 self.renameDeformBones(rig_muscle.Armature, rig_muscle.CustomShapes, boneInfo)
                 if options.useConstraints:
                     self.renameConstraints(rig_muscle.Constraints, boneInfo)
+            custom = {}
             if options.useCustomShapes:
-                custom = mergeDicts([
-                    rig_muscle.CustomShapes,
-                    rig_face.FaceRigCustomShapes,
-                ])
-            else:
-                custom = {}
+                addDict(rig_muscle.CustomShapes, custom)
+                if options.useFaceRig:
+                    addDict(rig_face.FaceRigCustomShapes, custom)
             self.addDeformVertexGroups(vgroups, custom)
             #self.renameDeformVertexGroups(rig_muscle.Armature)
 

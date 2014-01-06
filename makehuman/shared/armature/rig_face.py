@@ -26,10 +26,14 @@ from .flags import *
 
 UseTranslationBones = False
 LidPct = 0.5
+eyeOffs = (0,0,0.3)
 
 Joints = [
     ('head-end',        'l', ((2.0, 'head'), (-1.0, 'neck'))),
-    ('head-back',       'v', 955),
+    #('head-back',       'v', 955),
+
+    ('l-eye-end',        'p', ('l-eye', 'l-eye-target', 'l-eye-target')),
+    ('r-eye-end',        'p', ('r-eye', 'r-eye-target', 'r-eye-target')),
 
     ('l-uplid0',        'p', ('l-eye', 'l-upperlid', 'l-upperlid')),
     ('r-uplid0',        'p', ('r-eye', 'r-upperlid', 'r-upperlid')),
@@ -81,25 +85,24 @@ Joints = [
     ('r-brow-3',        'v', 207),
 ]
 
-eyeOffs = (0,0,0.3)
-
 HeadsTails = {
     'jaw' :                 ('mouth', 'jaw'),
     'tongue_base' :         ('tongue-1', 'tongue-2'),
     'tongue_mid' :          ('tongue-2', 'tongue-3'),
     'tongue_tip' :          ('tongue-3', 'tongue-4'),
 
-    'eye.R' :               ('r-eye', ('r-eye', eyeOffs)),
-    'eye_parent.R' :        ('r-eye', ('r-eye', eyeOffs)),
+    'eye.R' :               ('r-eye', 'r-eye-end'),
+    'eye_parent.R' :        ('r-eye', 'r-eye-end'),
     'uplid.R' :             ('r-eye', 'r-uplid'),
     'lolid.R' :             ('r-eye', 'r-lolid'),
 
-    'eye.L' :               ('l-eye', ('l-eye', eyeOffs)),
-    'eye_parent.L' :        ('l-eye', ('l-eye', eyeOffs)),
+    'eye.L' :               ('l-eye', 'l-eye-end'),
+    'eye_parent.L' :        ('l-eye', 'l-eye-end'),
     'uplid.L' :             ('l-eye', 'l-uplid'),
     'lolid.L' :             ('l-eye', 'l-lolid'),
 }
 
+'''
 Markers = [
     ('lip_upper_mid',       'm-uplip-0', 'head_back'),
     ('lip_upper_1.L',       'l-uplip-1', 'head_back'),
@@ -156,7 +159,7 @@ else:
     for bone,marker,parent in Markers:
         Joints.append( (bone, 'p', (marker, marker, 'mouth')) )
         FaceRigHeadsTails[bone] = (bone, (marker, posOffs))
-
+'''
 
 Armature = {
     'jaw' :                 (0, 'head', F_DEF|F_NOLOCK, L_HEAD),
@@ -171,7 +174,7 @@ Armature = {
     'lolid.L' :             (0, 'head', F_DEF|F_LOCKY, L_HEAD),
 }
 
-
+'''
 FaceRigArmature = {
     'head_back' :           (0, 'head', 0, L_HELP),
     'head_jaw' :            (0, 'head', 0, L_HELP),
@@ -183,7 +186,7 @@ if UseTranslationBones:
 else:
     for bone,marker,parent in Markers:
         FaceRigArmature[bone] = (0, parent, F_DEF|F_WIR|F_LOCKY, L_PANEL)
-
+'''
 
 Constraints = {}
 
@@ -214,7 +217,7 @@ RotationLimits = {
     'lolid.R':  (-45,10, 0,0, 0,0),
 }
 
-
+'''
 FaceRigConstraints = {
      'head_jaw' : [('CopyTrans', 0, 0.5, ['Jaw', 'jaw', 0])],
 }
@@ -230,7 +233,7 @@ if UseTranslationBones:
 else:
     for bone,_,_ in Markers:
         FaceRigCustomShapes[bone] = 'GZM_FaceJaw'
-
+'''
 
 #
 #    DeformDrivers(fp, amt):
