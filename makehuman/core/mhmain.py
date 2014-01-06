@@ -1097,40 +1097,6 @@ class MHApplication(gui3d.Application, mh.Application):
     def goToHelp(self):
         mh.changeCategory("Help")
 
-    def setMono(self):
-        self.setStereo(0)
-
-    def setStereo1(self):
-        self.setStereo(1)
-
-    def setStereo2(self):
-        self.setStereo(2)
-
-    def setStereo(self, stereoMode):
-        self.modelCamera.stereoMode = stereoMode
-
-        # We need a black background for stereo
-        if stereoMode:
-            mh.setClearColor(0.0, 0.0, 0.0, 1.0)
-        else:
-            mh.setClearColor(self.clearColor[0], self.clearColor[1], self.clearColor[2], 1.0)
-
-        self.redraw()
-
-    def toggleStereo(self):
-        stereoMode = self.modelCamera.stereoMode
-        stereoMode += 1
-        if stereoMode > 2:
-            stereoMode = 0
-        self.setStereo(stereoMode)
-        self.updateStereoButtons()
-
-    def updateStereoButtons(self):
-        stereoMode = self.modelCamera.stereoMode
-        self.actions.mono.setChecked(stereoMode == 0)
-        self.actions.stereo1.setChecked(stereoMode == 1)
-        self.actions.stereo2.setChecked(stereoMode == 2)
-
     def toggleSolid(self):
         self.selectedHuman.setSolid(not self.actions.wireframe.isChecked())
         self.redraw()
@@ -1305,6 +1271,9 @@ class MHApplication(gui3d.Application, mh.Application):
             mh.changeTask('Utilities', 'Profile')
 
     def createActions(self):
+        """
+        Creates the actions toolbar with icon buttons.
+        """
         self.actions = gui.Actions()
 
         def action(*args, **kwargs):
@@ -1314,12 +1283,13 @@ class MHApplication(gui3d.Application, mh.Application):
                 toolbar.addAction(action)
             return action
 
+
+        # Global actions (eg. keyboard shortcuts)
         toolbar = None
 
         self.actions.rendering = action('rendering', 'Rendering',     self.goToRendering)
         self.actions.modelling = action('modelling', 'Modelling',     self.goToModelling)
         self.actions.exit      = action('exit'     , 'Exit',          self.promptAndExit)
-        self.actions.stereo    = action('stereo',    'Stereo',        self.toggleStereo)
 
         self.actions.rotateU   = action('rotateU',   'Rotate Up',     self.rotateUp)
         self.actions.rotateD   = action('rotateD',   'Rotate Down',   self.rotateDown)
@@ -1334,44 +1304,56 @@ class MHApplication(gui3d.Application, mh.Application):
 
         self.actions.profiling = action('profiling', 'Profiling',     self.toggleProfiling, toggle=True)
 
-        toolbar = self.main_toolbar = mh.addToolBar("Edit")
+
+        # 1 - File toolbar
+        toolbar = self.file_toolbar = mh.addToolBar("File")
+
+        self.actions.load      = action('load',      'Load',          self.goToLoad)
+        self.actions.save      = action('save',      'Save',          self.goToSave)
+        self.actions.export    = action('export',    'Export',        self.goToExport)
+        
+
+        # 2 - Edit toolbar
+        toolbar = self.edit_toolbar = mh.addToolBar("Edit")
 
         self.actions.undo      = action('undo',      'Undo',          self.undo)
         self.actions.redo      = action('redo',      'Redo',          self.redo)
         self.actions.reset     = action('reset',     'Reset',         self.resetHuman)
-        self.actions.smooth    = action('smooth',    'Smooth',        self.toggleSubdivision, toggle=True)
 
-        toolbar = self.main_toolbar = mh.addToolBar("Edit")
 
-        self.actions.save      = action('save',      'Save',          self.goToSave)
-        self.actions.load      = action('load',      'Load',          self.goToLoad)
-        self.actions.export    = action('export',    'Export',        self.goToExport)
-        self.actions.help      = action('help',      'Help',          self.goToHelp)
-        self.actions.savetgt   = action('savetgt',   'Save target',   self.saveTarget)
-        self.actions.grab      = action('grab',      'Grab screen',   self.grabScreen)
-
+        # 3 - View toolbar
         toolbar = self.view_toolbar = mh.addToolBar("View")
 
-        self.actions.mono      = action('mono',      'Mono',          self.setMono,    group='stereo')
-        self.actions.stereo1   = action('stereo1',   'Stereo 1',      self.setStereo1, group='stereo')
-        self.actions.stereo2   = action('stereo2',   'Stereo 2',      self.setStereo2, group='stereo')
+        self.actions.smooth    = action('smooth',    'Smooth',        self.toggleSubdivision, toggle=True)
         self.actions.wireframe = action('wireframe', 'Wireframe',     self.toggleSolid, toggle=True)
 
+
+        # 4 - Symmetry toolbar
         toolbar = self.sym_toolbar = mh.addToolBar("Symmetry")
 
         self.actions.symmetryR = action('symm1', 'Symmmetry R>L',     self.symmetryRight)
         self.actions.symmetryL = action('symm2', 'Symmmetry L>R',     self.symmetryLeft)
         self.actions.symmetry  = action('symm',  'Symmmetry',         self.symmetry, toggle=True)
 
+
+        # 5 - Camera toolbar
         toolbar = self.camera_toolbar = mh.addToolBar("Camera")
 
         self.actions.front     = action('front',     'Front view',    self.frontView)
         self.actions.back      = action('back',      'Back view',     self.backView)
-        self.actions.left      = action('left',      'Left view',     self.leftView)
         self.actions.right     = action('right',     'Right view',    self.rightView)
+        self.actions.left      = action('left',      'Left view',     self.leftView)
         self.actions.top       = action('top',       'Top view',      self.topView)
         self.actions.bottom    = action('bottom',    'Bottom view',   self.bottomView)
         self.actions.resetCam  = action('resetCam',  'Reset camera',  self.resetView)
+
+
+        # 6 - Other toolbar
+        toolbar = self.other_toolbar = mh.addToolBar("Other")
+
+        self.actions.grab      = action('grab',      'Grab screen',   self.grabScreen)
+        self.actions.help      = action('help',      'Help',          self.goToHelp)
+
 
     def createShortcuts(self):
         for action, (modifier, key) in self.shortcuts.iteritems():
@@ -1395,7 +1377,6 @@ class MHApplication(gui3d.Application, mh.Application):
         log.debug("Using Qt system style %s", self.getLookAndFeel())
 
         self.createActions()
-        self.updateStereoButtons()
         self.syncUndoRedo()
 
         self.createShortcuts()
