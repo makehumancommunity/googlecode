@@ -24,7 +24,7 @@ Abstract
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": (1, 30),
+    "version": (1, 31),
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -47,6 +47,7 @@ if "bpy" in locals():
     imp.reload(maketarget)
     imp.reload(convert)
     imp.reload(pose)
+    imp.reload(perfect)
     imp.reload(export_mh_obj)
 else:
     print("Loading maketarget")
@@ -66,6 +67,7 @@ else:
     from . import maketarget
     from . import convert
     from . import pose
+    from . import perfect
     from . import export_mh_obj
 
 Thomas = False
@@ -209,6 +211,9 @@ class MakeTargetPanel(bpy.types.Panel):
                     layout.prop(ob, "MhAffectOnly", expand=True)
                     #layout.operator("mh.delete_irrelevant")
 
+
+        layout.separator()
+        layout.operator("mh.perfect_eyes")
 
         if rig and rig.type == 'ARMATURE':
             layout.separator()
