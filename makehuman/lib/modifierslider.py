@@ -24,6 +24,7 @@ GUI slider widgets for controlling modifiers.
 
 import gui
 import targets
+import os
 from core import G
 
 class ModifierSlider(gui.Slider):
@@ -107,6 +108,8 @@ class GenericSlider(ModifierSlider):
 
     def __init__(self, min, max, modifier, label, image, view):
         image = self.findImage(image)
+        if not os.path.isfile(image):
+            image = None
         super(GenericSlider, self).__init__(min=min, max=max, label=label, modifier=modifier, image=image)
         self.view = getattr(G.app, view)
 
