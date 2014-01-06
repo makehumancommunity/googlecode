@@ -169,10 +169,10 @@ SocketArmature = {
 }
 
 HeadArmature = {
-    'eye_parent.R' :    (0, 'head', 0, L_HELP),
-    'eye_parent.L' :    (0, 'head', 0, L_HELP),
-    'eye.R' :           (0, 'eye_parent.R', F_DEF, L_HEAD),
-    'eye.L' :           (0, 'eye_parent.L', F_DEF, L_HEAD),
+    'eye_parent.R' :    (180*D, 'head', 0, L_HELP),
+    'eye_parent.L' :    (180*D, 'head', 0, L_HELP),
+    'eye.R' :           (180*D, 'eye_parent.R', F_DEF, L_HEAD),
+    'eye.L' :           (180*D, 'eye_parent.L', F_DEF, L_HEAD),
     'gaze_parent' :     (0, None, 0, L_HELP),
     'gaze' :            (180*D, 'gaze_parent', F_NOLOCK, L_HEAD),
     'eyes' :            (0, 'head', 0, L_HELP),
