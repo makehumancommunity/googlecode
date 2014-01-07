@@ -49,11 +49,19 @@ else:
     from bpy.props import *
     import maketarget
     from .error import MHError, handleMHError
-    from maketarget.utils import setObjectMode, drawFileCheck
+    from maketarget.utils import drawFileCheck
     from . import mc
     from . import materials
     from . import makeclothes
     from . import project
+
+
+def setObjectMode(context):
+    if context.object:
+        try:
+            bpy.ops.object.mode_set(mode='OBJECT')
+        except:
+            raise MHError("Could not switch to object mode")
 
 
 def invokeWithFileCheck(self, context, ftypes):

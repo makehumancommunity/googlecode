@@ -54,7 +54,10 @@ def round(x):
 
 def setObjectMode(context):
     if context.object:
-        bpy.ops.object.mode_set(mode='OBJECT')
+        try:
+            bpy.ops.object.mode_set(mode='OBJECT')
+        except:
+            raise MHError("Could not switch to object mode")
 
 #----------------------------------------------------------
 #   Check overwrite

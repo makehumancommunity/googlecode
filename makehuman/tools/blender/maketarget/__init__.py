@@ -47,7 +47,7 @@ if "bpy" in locals():
     imp.reload(maketarget)
     imp.reload(convert)
     imp.reload(pose)
-    imp.reload(perfect)
+    #imp.reload(perfect)
     imp.reload(export_mh_obj)
 else:
     print("Loading maketarget")
@@ -67,7 +67,7 @@ else:
     from . import maketarget
     from . import convert
     from . import pose
-    from . import perfect
+    #from . import perfect
     from . import export_mh_obj
 
 Thomas = False
@@ -212,8 +212,8 @@ class MakeTargetPanel(bpy.types.Panel):
                     #layout.operator("mh.delete_irrelevant")
 
 
-        layout.separator()
-        layout.operator("mh.perfect_eyes")
+        #layout.separator()
+        #layout.operator("mh.perfect_eyes")
 
         if rig and rig.type == 'ARMATURE':
             layout.separator()
