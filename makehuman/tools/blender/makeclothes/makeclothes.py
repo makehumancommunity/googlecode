@@ -455,6 +455,14 @@ def midWeight(pv, r0, r1):
 #    writeClothes(context, hum, clo, data, matfile):
 #
 
+def getHeader(scn):
+    return (
+        "# Exported from MakeClothes (TM)\n" +
+        "# author %s\n" % scn.MCAuthor +
+        "# license %s\n" % scn.MCLicense +
+        "# homepage %s\n" % scn.MCHomePage)
+
+
 def writeClothesHeader(fp, scn):
     import sys
     if sys.platform == 'win32':
@@ -463,11 +471,8 @@ def writeClothesHeader(fp, scn):
     else:
         import uuid
 
-    fp.write(
-        "# author %s\n" % scn.MCAuthor +
-        "# license %s\n" % scn.MCLicense +
-        "# homepage %s\n" % scn.MCHomePage +
-        "uuid %s\n" % uuid.uuid4())
+    fp.write(getHeader(scn))
+    fp.write("uuid %s\n" % uuid.uuid4())
     if theSettings:
         fp.write("basemesh %s\n" % theSettings.baseMesh)
     for n in range(1,6):
@@ -513,7 +518,6 @@ def writeClothes(context, hum, clo, data, matfile):
     printMhcloUvLayers(fp, clo, scn, True)
     fp.close()
     print("%s done" % outfile)
-    return
 
 
 def printFaceNumbers(fp, ob):
@@ -711,7 +715,7 @@ def exportObjFile(context):
     deleteStrayVerts(context, ob)
     (objpath, objfile) = mc.getFileName(ob, scn.MhClothesDir, "obj")
     fp = mc.openOutputFile(objfile)
-    fp.write("Exported from make_clothes.py\n")
+    fp.write(getHeader(scn))
 
     me = ob.data
 
