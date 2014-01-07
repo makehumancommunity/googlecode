@@ -37,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": (0, 940),
+    "version": (0, 941),
     "blender": (2, 6, 9),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -507,8 +507,6 @@ class UtilityPanel(bpy.types.Panel):
 #
 
 props.initInterface(bpy.context)
-target.initPath()
-source.initPath()
 
 def register():
     bpy.utils.register_module(__name__)

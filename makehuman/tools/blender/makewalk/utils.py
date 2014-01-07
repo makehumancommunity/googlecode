@@ -500,28 +500,3 @@ class ErrorOperator(bpy.types.Operator):
         for line in _errorLines:
             self.layout.label(line)
 
-#
-#
-#
-
-import os
-import imp
-import sys
-
-def initModulesPath(basePath, subPath):
-    path = os.path.join(basePath, subPath)
-    rignames = []
-    for relpath in os.listdir():
-        (modname, ext) = os.path.splitext(relpath)
-        if ext == ".py":
-            file = os.path.join(path, relpath)
-            print("Import %s" % modname)
-            fp, pathname, description = imp.find_module(modname)
-            try:
-                imp.load_module(modname, fp, pathname, description)
-            finally:
-                if fp:
-                    fp.close()
-        rignames.append(modname)
-    return rignames
-

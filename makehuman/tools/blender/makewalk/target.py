@@ -46,17 +46,11 @@ _targetInfo = {}
 _targetArmatures = {}
 _trgArmature = None
 _trgArmatureEnums =[("Automatic", "Automatic", "Automatic")]
-_targetRigs = None
 _ikBones = []
 
 def getTargetInfo(rigname):
     global _targetInfo
     return _targetInfo[rigname]
-
-def initPath():
-    global _targetRigs
-    basePath = os.path.realpath(".")
-    _targetRigs = initModulesPath(basePath, "target_rigs")
 
 def loadTargets():
     global _targetInfo

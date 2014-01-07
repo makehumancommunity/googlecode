@@ -43,12 +43,6 @@ from .utils import *
 #_sourceArmatures = { "Automatic" : None }
 _sourceArmatures = {}
 _srcArmature = None
-_sourceRigs = None
-
-def initPath():
-    global _sourceRigs
-    basePath = os.path.realpath(".")
-    _sourceRigs = initModulesPath(basePath, "target_rigs")
 
 def getSourceArmature(name):
     global _sourceArmatures
