@@ -10,7 +10,7 @@
 
 **Authors:**           Jonas Hauquier, Marc Flerackers
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -241,6 +241,11 @@ class MaterialTaskView(gui3d.TaskView):
             searchPaths = self.searchPaths
 
         return getpath.findFile(relPath, searchPaths)
+
+    def onHumanChanged(self, event):
+        if event.change == 'reset':
+            self.humanObjSelector.refresh()
+            self.reloadMaterialChooser()
 
     def saveHandler(self, human, file):
         file.write('skinMaterial %s\n' % self.getRelativeMaterialPath(human.material.filename))

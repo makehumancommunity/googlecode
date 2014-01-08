@@ -12,7 +12,7 @@ Human Object Chooser widget.
 
 **Authors:**           Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -134,6 +134,9 @@ class HumanObjectSelector(gui.QtGui.QWidget, gui.Widget):
                 return None
 
     def onShow(self, event):
+        self.refresh()
+
+    def refresh(self):
         selected = self.selected
 
         self.skinRadio.setChecked(selected == 'skin')
