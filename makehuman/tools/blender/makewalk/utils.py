@@ -475,6 +475,8 @@ def drawObjectProblems(self):
     self.layout.label("MakeWalk cannot use this rig because it has:")
     for problem in self.problems.split("\n"):
         self.layout.label("  %s" % problem)
+    self.layout.label("Apply object transformations before using MakeWalk")
+
 #
 #   showProgress(n, frame):
 #
