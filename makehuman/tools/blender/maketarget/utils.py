@@ -57,7 +57,7 @@ def setObjectMode(context):
         try:
             bpy.ops.object.mode_set(mode='OBJECT')
         except:
-            raise MHError("Could not switch to object mode")
+            pass
 
 #----------------------------------------------------------
 #   Check overwrite
