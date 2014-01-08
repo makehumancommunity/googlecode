@@ -430,6 +430,52 @@ def insertRotationKeyFrame(pb, frame):
         pb.keyframe_insert("rotation_euler", frame=frame, group=grp)
 
 #
+#   checkObjectProblems(self, context):
+#
+
+def getObjectProblems(self, context):
+    self.problems = ""
+    epsilon = 1e-2
+    rig = context.object
+
+    eu = rig.rotation_euler
+    print(eu)
+    if abs(eu.x) + abs(eu.y) + abs(eu.z) > epsilon:
+        self.problems += "object rotation\n"
+
+    vec = rig.scale - Vector((1,1,1))
+    print(vec, vec.length)
+    if vec.length > epsilon:
+        self.problems += "object scaling\n"
+
+    if self.problems:
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self, width=300, height=20)
+    else:
+        return False
+
+
+def checkObjectProblems(self, context):
+    problems = getObjectProblems(self, context)
+    if problems:
+        return problems
+    else:
+        return self.execute(context)
+
+
+def problemFreeFileSelect(self, context):
+    problems = getObjectProblems(self, context)
+    if problems:
+        return problems
+    context.window_manager.fileselect_add(self)
+    return {'RUNNING_MODAL'}
+
+
+def drawObjectProblems(self):
+    self.layout.label("MakeWalk cannot use this rig because it has:")
+    for problem in self.problems.split("\n"):
+        self.layout.label("  %s" % problem)
+#
 #   showProgress(n, frame):
 #
 

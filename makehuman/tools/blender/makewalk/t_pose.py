@@ -286,12 +286,18 @@ class VIEW3D_OT_McpSetTPoseButton(bpy.types.Operator):
     bl_description = "Set pose to stored T-pose"
     bl_options = {'UNDO'}
 
+    problems = ""
+
     def execute(self, context):
         from .retarget import changeTargetData, restoreTargetData
         from .fkik import setRigifyFKIK
 
+        if self.problems:
+            return{'FINISHED'}
+
         rig = context.object
         scn = context.scene
+        print("EXE")
         #data = changeTargetData(rig, scn)
         try:
             initRig(context)
@@ -305,6 +311,12 @@ class VIEW3D_OT_McpSetTPoseButton(bpy.types.Operator):
             pass
             #restoreTargetData(rig, data)
         return{'FINISHED'}
+
+    def invoke(self, context, event):
+        return checkObjectProblems(self, context)
+
+    def draw(self, context):
+        drawObjectProblems(self)
 
 
 class VIEW3D_OT_McpClearTPoseButton(bpy.types.Operator):

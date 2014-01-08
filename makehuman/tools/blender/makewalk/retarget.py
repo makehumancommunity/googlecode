@@ -500,10 +500,16 @@ def loadRetargetSimplify(context, filepath):
 class VIEW3D_OT_NewRetargetMhxButton(bpy.types.Operator):
     bl_idname = "mcp.retarget_mhx"
     bl_label = "Retarget Selected To Active"
+    bl_description = "Retarget animation to the active (target) armature from the other selected (source) armature"
     bl_options = {'UNDO'}
+
+    problems = ""
 
     def execute(self, context):
         from . import target
+
+        if self.problems:
+            return{'FINISHED'}
 
         trgRig = context.object
         scn = context.scene
@@ -520,17 +526,28 @@ class VIEW3D_OT_NewRetargetMhxButton(bpy.types.Operator):
             restoreTargetData(trgRig, data)
         return{'FINISHED'}
 
+    def invoke(self, context, event):
+        return checkObjectProblems(self, context)
+
+    def draw(self, context):
+        drawObjectProblems(self)
+
 
 class VIEW3D_OT_LoadAndRetargetButton(bpy.types.Operator, ImportHelper):
     bl_idname = "mcp.load_and_retarget"
     bl_label = "Load And Retarget"
+    bl_description = "Load animation from bvh file to the active armature"
     bl_options = {'UNDO'}
 
+    problems = ""
     filename_ext = ".bvh"
     filter_glob = StringProperty(default="*.bvh", options={'HIDDEN'})
     filepath = StringProperty(name="File Path", description="Filepath used for importing the BVH file", maxlen=1024, default="")
 
     def execute(self, context):
+        if self.problems:
+            return{'FINISHED'}
+
         try:
             loadRetargetSimplify(context, self.properties.filepath)
         except MocapError:
@@ -538,8 +555,10 @@ class VIEW3D_OT_LoadAndRetargetButton(bpy.types.Operator, ImportHelper):
         return{'FINISHED'}
 
     def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
+        return problemFreeFileSelect(self, context)
+
+    def draw(self, context):
+        drawObjectProblems(self)
 
 
 class VIEW3D_OT_ClearTempPropsButton(bpy.types.Operator):

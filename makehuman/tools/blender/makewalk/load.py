@@ -522,6 +522,7 @@ def renameAndRescaleBvh(context, srcRig, trgRig):
 class VIEW3D_OT_LoadBvhButton(bpy.types.Operator, ImportHelper):
     bl_idname = "mcp.load_bvh"
     bl_label = "Load BVH File (.bvh)"
+    bl_description = "Load an armature from a bvh file"
     bl_options = {'UNDO'}
 
     filename_ext = ".bvh"
@@ -546,6 +547,7 @@ class VIEW3D_OT_LoadBvhButton(bpy.types.Operator, ImportHelper):
 class VIEW3D_OT_RenameBvhButton(bpy.types.Operator):
     bl_idname = "mcp.rename_bvh"
     bl_label = "Rename And Rescale BVH Rig"
+    bl_description = "Rename bones of active armature and scale it to fit other armature"
     bl_options = {'UNDO'}
 
     def execute(self, context):
@@ -574,14 +576,19 @@ class VIEW3D_OT_RenameBvhButton(bpy.types.Operator):
 class VIEW3D_OT_LoadAndRenameBvhButton(bpy.types.Operator, ImportHelper):
     bl_idname = "mcp.load_and_rename_bvh"
     bl_label = "Load And Rename BVH File (.bvh)"
+    bl_description = "Load armature from bvh file and rename bones"
     bl_options = {'UNDO'}
 
+    problems = ""
     filename_ext = ".bvh"
     filter_glob = StringProperty(default="*.bvh", options={'HIDDEN'})
     filepath = StringProperty(name="File Path", description="Filepath used for importing the BVH file", maxlen=1024, default="")
 
     def execute(self, context):
         from .retarget import changeTargetData, restoreTargetData
+        if self.problems:
+            return{'FINISHED'}
+
         scn = context.scene
         trgRig = context.object
         data = changeTargetData(trgRig, scn)
@@ -598,5 +605,7 @@ class VIEW3D_OT_LoadAndRenameBvhButton(bpy.types.Operator, ImportHelper):
         return{'FINISHED'}
 
     def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
+        return problemFreeFileSelect(self, context)
+
+    def draw(self, context):
+        drawObjectProblems(self)
