@@ -153,7 +153,7 @@ Planes = {
     "PlaneArm.L" :         ('l-shoulder', 'l-elbow', 'l-hand'),
     "PlaneHand.L" :        ('l-elbow', 'l-wrist-top', 'l-hand-end'),
     "PlaneLeg.L" :         ('l-upper-leg', 'l-knee', 'l-ankle'),
-    "PlaneFoot.L" :        ('l-ankle', 'l-foot-1', 'l-toe-2'),
+    "PlaneFoot.L" :        ('l-ankle', 'l-toe-2', 'l-foot-1'),
 
     "PlaneThumb.L" :       ('l-plane-thumb-1', 'l-plane-thumb-2', 'l-plane-thumb-3'),
     "PlaneIndex.L" :       ('l-finger-2-1', 'l-finger-2-2', 'l-finger-2-4'),
@@ -164,7 +164,7 @@ Planes = {
     "PlaneArm.R" :         ('r-shoulder', 'r-elbow', 'r-hand'),
     "PlaneHand.R" :        ('r-elbow', 'r-wrist-top', 'r-hand-end'),
     "PlaneLeg.R" :         ('r-upper-leg', 'r-knee', 'r-ankle'),
-    "PlaneFoot.R" :        ('r-ankle', 'r-foot-1', 'r-toe-2'),
+    "PlaneFoot.R" :        ('r-ankle', 'r-toe-2', 'r-foot-1'),
 
     "PlaneThumb.R" :       ('r-plane-thumb-1', 'r-plane-thumb-2', 'r-plane-thumb-3'),
     "PlaneIndex.R" :       ('r-finger-2-1', 'r-finger-2-2', 'r-finger-2-4'),

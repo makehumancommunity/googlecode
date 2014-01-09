@@ -124,9 +124,10 @@ class Parser:
         if options.useFaceRig:
             addDict(rig_face.FaceRigHeadsTails, self.headsTails)
 
-        for bname,parent in options.terminals.items():
+        for bname in options.terminals.keys():
+            parent,offset = options.terminals[bname]
             _head,tail = self.headsTails[parent]
-            self.headsTails[bname] = (tail, (tail, (0,0.5,0)))
+            self.headsTails[bname] = (tail, (tail,offset))
 
         if options.useConstraints:
             self.setConstraints(rig_bones.Constraints)
@@ -180,8 +181,10 @@ class Parser:
         self.addBones(rig_bones.Armature, boneInfo)
         self.addBones(rig_face.Armature, boneInfo)
 
-        for bname,parent in options.terminals.items():
-            self.addBones({bname: (0, parent, 0, L_DEF)}, boneInfo)
+        for bname in options.terminals.keys():
+            pname,_offset = options.terminals[bname]
+            parent = boneInfo[pname]
+            self.addBones({bname: (0, pname, 0, parent.layers)}, boneInfo)
 
         if options.useMasterBone:
             self.master = 'master'

@@ -1,7 +1,7 @@
 {
-    "name" :            "OpenSim",
+    "name" :            "Second Life",
 
-    "description" :     "Rig for use with OpenSim",
+    "description" :     "Rig for use with Second Life",
 
     "bones" : {
         "hips":         "mPelvis",
@@ -35,9 +35,9 @@
     },
     
     "terminals" : {
-    	"mToeLeft":		"toe.L",
-    	"mToeRight":	"toe.R",
-    	"mSkull":		"head"
+    	"mToeLeft":		["toe.L", [0,0,0.5]],
+    	"mToeRight":	["toe.R", [0,0,0.5]],
+    	"mSkull":		["head", [0,0.5,0]]
   	},
 
     "merge" : {
