@@ -232,6 +232,9 @@ def make_user_dir():
     userDir = getpath.getPath()
     if not os.path.isdir(userDir):
         os.makedirs(userDir)
+    userDataDir = getpath.getPath('data')
+    if not os.path.isdir(userDataDir):
+        os.makedirs(userDataDir)
 
 def init_logging():
     import log
