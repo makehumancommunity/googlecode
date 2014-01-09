@@ -169,11 +169,11 @@ class FileSort(object):
     """
     def __init__(self):
         pass
-        
+
     def fields(self):
         """
         Returns the names of the fields on which this FileSort can sort. For each field it is assumed that the method called sortField exists.
-        
+
         :return: The names of the fields on which this FileSort can sort.
         :rtype: list or tuple
         """
@@ -182,19 +182,19 @@ class FileSort(object):
     def sort(self, by, filenames):
         method = getattr(self, "sort%s" % by.capitalize())
         return method(filenames)
-        
+
     def sortName(self, filenames):
         return sorted(filenames)
     def sortModified(self, filenames):
         decorated = [(os.path.getmtime(filename), i, filename) for i, filename in enumerate(filenames)]
         decorated.sort()
         return [filename for modified, i, filename in decorated]
-        
+
     def sortCreated(self, filenames):
         decorated = [(os.path.getctime(filename), i, filename) for i, filename in enumerate(filenames)]
         decorated.sort()
         return [filename for created, i, filename in decorated]
-    
+
     def sortSize(self, filenames):
         decorated = [(os.path.getsize(filename), i, filename) for i, filename in enumerate(filenames)]
         decorated.sort()
@@ -205,7 +205,7 @@ class FileSortRadioButton(gui.RadioButton):
         gui.RadioButton.__init__(self, group, "By %s" % field, selected)
         self.field = field
         self.chooser = chooser
-        
+
     def onClicked(self, event):
         self.chooser.sortBy = self.field
         self.chooser.refresh()
@@ -216,7 +216,7 @@ class TagFilter(gui.GroupBox):
         self.tags = set()
         self.selectedTags = set()
         self.tagToggles = []
-        
+
     def setTags(self, tags):
         self.clearAll()
         for tag in tags:
@@ -308,7 +308,7 @@ class FileHandler(object):
 
         if not filename:
             return fc.notFoundImage
-        
+
         preview = filename
         if preview and fc.previewExtensions:
             #log.debug('%s, %s', fc.extension, fc.previewExtensions)
@@ -424,7 +424,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         if event.type() == QtCore.QEvent.Resize:
             mh.callAsync(self._updateScrollBar)
         return False
-        
+
     def search(self):
         if isinstance(self.extension, str):
             extensions = [self.extension]
@@ -433,6 +433,8 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
 
         if self.doNotRecurse:
             for path in self.paths:
+                if os.path.isdir(path) and not os.path.exists(path):
+                    os.makedirs(path)
                 for f in os.listdir(path):
                     f = os.path.join(path, f)
                     if os.path.isfile(f):
@@ -485,7 +487,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         listItem = self._getListItem(item)
         if listItem:
             listItem.tags = tags
-        
+
     def getAllTags(self):
         tags = set()
         for listItem in self.children.getItems():
@@ -515,7 +517,7 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
 class FileChooser(FileChooserBase):
     """
     A FileChooser widget. This widget can be used to let the user choose an existing file.
-    
+
     :param path: The path from which the recursive search is started.
     :type path: str
     :param extension: The extension(s) of the files to display.
@@ -527,7 +529,7 @@ class FileChooser(FileChooserBase):
     :param sort: A file sorting instance which will be used to provide sorting of the found files.
     :type sort: FileSort
     """
-    
+
     def __init__(self, path, extension, previewExtensions='bmp', notFoundImage=None, sort=FileSort()):
         self.location = gui.TextView('')
         super(FileChooser, self).__init__(path, extension, sort)
