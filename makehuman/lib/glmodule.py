@@ -828,7 +828,7 @@ def renderToBuffer(width, height, productionRender = True):
 
     # Transparent background color
     oldClearColor = G.clearColor
-    G.clearColor = (255,255,255,0)
+    G.clearColor = (oldClearColor[0],oldClearColor[1],oldClearColor[2], 0)
 
     # Draw scene as usual
     draw(productionRender, renderToCanvas = False)
