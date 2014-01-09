@@ -219,7 +219,7 @@ class Cube(module3d.Object3D):
         #       |7---------6|
         
         # The 4 uv values
-        #uv = ([0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0])
+        uv = ([0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0])
         
         # The 6 faces
         f = [
@@ -232,7 +232,7 @@ class Cube(module3d.Object3D):
             ]
 
         self.setCoords(v)
-        # self.setUVs(uv)
+        self.setUVs(uv)
         self.setFaces(f, fg.idx)
 
         self.setTexture(texture)

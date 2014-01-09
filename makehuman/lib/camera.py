@@ -440,6 +440,7 @@ class OrbitalCamera(Camera):
         self.translation = [0.0, 0.0, 0.0]
 
         self.pickedPos = None
+        self._pickPosObj = None
 
         self._limitInclination = True    # Set to true to prevent camera inclining upside-down
         self.debug = False
@@ -754,6 +755,18 @@ class OrbitalCamera(Camera):
         human = G.app.selectedHuman
 
         self.pickedPos = self.convertToWorld2D(mouseX, mouseY, human.mesh)
+
+        '''
+        # Debug picked position
+        if self._pickPosObj is None:
+            import geometry3d
+            import guicommon
+            mesh = geometry3d.Cube(0.1)
+            self._pickPosObj = guicommon.Object(mesh)
+            G.app.addObject(self._pickPosObj)
+        self._pickPosObj.setPosition(tuple(self.pickedPos))
+        '''
+
         self.pickedPos = self._getTranslationForPosition(self.pickedPos)
 
         #self.changed()
