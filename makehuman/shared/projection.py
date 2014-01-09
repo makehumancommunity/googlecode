@@ -402,7 +402,7 @@ def mapSceneLighting(scn, object = None):
                 lmap, mapLighting(calcLightPos(light), object.mesh).data,1,1)       
             i += 1.0
 
-        return mh.Image(data = image_operations.normalizeData(lmap))
+        return image_operations.normalize(lmap)
     else:   # If the scene has no lights, return an empty lightmap.
         return mh.Image(data = np.zeros((1024, 1024, 1), dtype=np.uint8))
 

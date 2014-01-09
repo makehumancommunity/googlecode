@@ -88,13 +88,17 @@ def blurred(img, level=10.0, kernelSize = 15, progressCallback=None):
     return Image(data = data[padSize:data.shape[0], padSize:data.shape[1], :])
 
 def mix(img1, img2, weight1, weight2 = None):
-    return Image(data = mixData(img1.data, img2.data, weight1, weight2).astype(numpy.uint8))
+    data1 = img1.data if isinstance(img1, Image) else img1
+    data2 = img2.data if isinstance(img2, Image) else img2
+    return Image(data = mixData(data1, data2, weight1, weight2).astype(numpy.uint8))
 
 def clip(img):
-    return Image(clipData(img.data).astype(numpy.uint8))
+    data = img.data if isinstance(img, Image) else img
+    return Image(data = clipData(data).astype(numpy.uint8))
 
 def normalize(img):
-    return Image(normalizeData(img.data).astype(numpy.uint8))
+    data = img.data if isinstance(img, Image) else img
+    return Image(data = normalizeData(data).astype(numpy.uint8))
 
 def mixData(data1, data2, weight1, weight2 = None):
     if weight2 is None:
@@ -120,7 +124,7 @@ def compose(channels):
                 raise TypeError("Image No. %i has not enough channels" % i)
             outch.append(c.data[:,:,i:i+1])
         i += 1
-    return Image(data = numpy.dstack(outch))
+    return Image(data = numpy.dstack(outch).astype(numpy.uint8))
 
 def colorAsImage(color, image = None, width = None, height = None):
     """
