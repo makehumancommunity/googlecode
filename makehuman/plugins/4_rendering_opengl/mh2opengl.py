@@ -38,6 +38,20 @@ import numpy as np
 def Render(settings):
     # TODO hide unneeded scene objects
 
+    if settings['lightmapSSS']:
+        import image_operations as imgop
+        human = G.app.selectedHuman
+        lmap = projection.mapSceneLighting(settings['scene'])
+        lmapG = imgop.blurred(lmap, human.material.sssGScale, 13)
+        lmapR = imgop.blurred(lmap, human.material.sssRScale, 13)
+        lmap = imgop.compose([lmapR, lmapG, lmap])
+        lmap.sourcePath = "Internal_Renderer_Lightmap_SSS_Texture"
+        human.material.diffuseTexture = lmap
+        settings['oldDiffuseShaderSetting'] = human.material.shaderConfig['diffuse']
+        human.mesh.configureShading(diffuse = True)
+        settings['oldShadelessSetting'] = human.mesh.shadeless
+        human.mesh.shadeless = True
+
     if not glmodule.hasRenderToRenderbuffer():
         # Limited fallback mode, read from screen buffer
         img = glmodule.grabScreen(0, 0, G.windowWidth, G.windowHeight)
@@ -60,6 +74,11 @@ def Render(settings):
             img = scaledImg
             #img = image.Image(scaledImg)    # Convert back to MH image
             #del scaledImg
+
+    if settings['lightmapSSS']:
+        human = G.app.selectedHuman
+        human.mesh.shadeless = settings['oldShadelessSetting']
+        human.mesh.configureShading(diffuse = settings['oldDiffuseShaderSetting'])
 
     # TODO restore scene object visibility
 

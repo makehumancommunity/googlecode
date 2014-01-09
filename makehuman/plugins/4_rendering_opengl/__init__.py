@@ -43,6 +43,7 @@ class OpenGLTaskView(guipose.PoseModeTaskView):
             "x".join([str(self.resWidth), str(self.resHeight)])))
         self.AAbox = settingsBox.addWidget(gui.ToggleButton("Anti-aliasing"))
         self.AAbox.setSelected( gui3d.app.settings.get('GL_RENDERER_AA', True) )
+        self.lightmapSSS = settingsBox.addWidget(gui.CheckBox("Lightmap SSS", False))
         self.renderButton = settingsBox.addWidget(gui.Button('Render'))
 
         @self.resBox.mhEvent
@@ -68,8 +69,10 @@ class OpenGLTaskView(guipose.PoseModeTaskView):
                 mhscene = scene.Scene()
 
             settings = dict()
+            settings['scene'] = mhscene
             settings['AA'] = self.AAbox.selected
             settings['dimensions'] = (self.resWidth, self.resHeight)
+            settings['lightmapSSS'] = self.lightmapSSS.selected
             
             reload(mh2opengl)
             mh2opengl.Render(settings)
