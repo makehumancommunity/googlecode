@@ -156,7 +156,7 @@ class Canvas(QtOpenGL.QGLWidget):
         self.create()
 
     def create(self):
-        G.swapBuffers = self.swapBuffers
+        G.canvas = self
         self.setFocusPolicy(QtCore.Qt.TabFocus)
         self.setFocus()
         self.setAutoBufferSwap(False)
@@ -168,6 +168,18 @@ class Canvas(QtOpenGL.QGLWidget):
         self.setMouseTracking(True)
         self.setMinimumHeight(5)
         self.setSizePolicy(QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored)
+
+    def getMousePos(self):
+        """
+        Get mouse position relative to this rendering canvas. 
+        Returns None if mouse is outside canvas.
+        """
+        relPos = self.mapFromGlobal(QtGui.QCursor().pos())
+        if relPos.x() < 0 or relPos.x() > G.windowWidth:
+            return None
+        if relPos.y() < 0 or relPos.y() > G.windowHeight:
+            return None
+        return (relPos.x(), relPos.y())
 
     def mousePressEvent(self, ev):
         self.mouseUpDownEvent(ev, "onMouseDownCallback")
@@ -184,14 +196,10 @@ class Canvas(QtOpenGL.QGLWidget):
 
         gg_mouse_pos = x, y
 
-        gl.getPickedColor(x, y)
-
         G.app.callEvent(direction, events3d.MouseEvent(b, x, y))
 
         # Update screen
         self.update()
-
-        gl.updatePickingBuffer()
 
     def wheelEvent(self, ev):
         global gg_mouse_pos
@@ -204,7 +212,6 @@ class Canvas(QtOpenGL.QGLWidget):
 
         if g_mousewheel_t is None or t - g_mousewheel_t > MOUSEWHEEL_PICK_TIMEOUT:
             gg_mouse_pos = x, y
-            gl.getPickedColor(x, y)
         else:
             x = y = None
 
@@ -214,7 +221,6 @@ class Canvas(QtOpenGL.QGLWidget):
         if g_mousewheel_t is None or t - g_mousewheel_t > MOUSEWHEEL_PICK_TIMEOUT:
             # Update screen
             self.update()
-            gl.updatePickingBuffer()
 
         g_mousewheel_t = t
 
@@ -225,6 +231,7 @@ class Canvas(QtOpenGL.QGLWidget):
         y = ev.y()
 
         if gg_mouse_pos is None:
+            # TODO use canvas.getMousePos() instead!
             gg_mouse_pos = x, y
 
         if g_mouse_pos is None:
@@ -246,9 +253,6 @@ class Canvas(QtOpenGL.QGLWidget):
         gg_mouse_pos = x, y
 
         buttons = int(G.app.mouseButtons())
-
-        if not buttons:
-            gl.getPickedColor(x, y)
 
         G.app.callEvent('onMouseMovedCallback', events3d.MouseEvent(buttons, x, y, xrel, yrel))
 

@@ -49,11 +49,6 @@ g_primitiveMap = [GL_POINTS, GL_LINES, GL_TRIANGLES, GL_QUADS]
 TEX_NOT_FOUND = False
 MAX_TEXTURE_UNITS = 0
 
-def queryDepth(sx, sy):
-    sz = np.zeros((1,), dtype=np.float32)
-    glReadPixels(sx, G.windowHeight - sy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, sz)
-    return sz[0]
-
 def grabScreen(x, y, width, height, filename = None):
     if width <= 0 or height <= 0:
         raise RuntimeError("width or height is 0")
@@ -103,6 +98,7 @@ def grabScreen(x, y, width, height, filename = None):
     return surface
 
 pickingBuffer = None
+pickingBufferDirty = True
 
 def updatePickingBuffer():
     width = G.windowWidth
@@ -133,7 +129,6 @@ def updatePickingBuffer():
     #glFlush()
     #glFinish()
     glReadPixels(0, 0, rwidth, height, GL_RGB, GL_UNSIGNED_BYTE, pickingBuffer)
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     # Turn on antialiasing
     glEnable(GL_BLEND)
@@ -144,18 +139,41 @@ def updatePickingBuffer():
     glEnable(GL_LIGHTING)
 
     # draw()
+    global pickingBufferDirty
+    pickingBufferDirty = False
 
-def getPickedColor(x, y):
+def markPickingBufferDirty():
+    """
+    Indicate that the picking buffer is outdated (has gone stale) and should be
+    updated before performing new mouse picking queries (deferred update).
+    """
+    global pickingBufferDirty
+    pickingBufferDirty = True
+
+def getPickedColor(x = None, y = None):
+    if x is None or y is None:
+        pos = getMousePos()
+        if pos is None:
+            return (0, 0, 0)
+        else:
+            x, y = pos
+    elif x is None or y is None:
+        return (0, 0, 0)
+
     y = G.windowHeight - y
 
     if y < 0 or y >= G.windowHeight or x < 0 or x >= G.windowWidth:
-        G.color_picked = (0, 0, 0)
-        return
+        return (0, 0, 0)
 
-    if pickingBuffer is None:
+    if pickingBuffer is None or pickingBufferDirty:
         updatePickingBuffer()
 
-    G.color_picked = tuple(pickingBuffer[y,x,:])
+    return tuple(pickingBuffer[y,x,:])
+
+def queryDepth(sx, sy):
+    sz = np.zeros((1,), dtype=np.float32)
+    glReadPixels(sx, G.windowHeight - sy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, sz)
+    return sz[0]
 
 def reshape(w, h):
     try:
@@ -175,13 +193,23 @@ def reshape(w, h):
     except StandardError:
         log.error('gl.reshape', exc_info=True)
 
+def getMousePos():
+    """
+    Get mouse position relative to rendering canvas. Returns None if mouse is
+    outside canvas.
+    """
+    return G.canvas.getMousePos()
+
 def drawBegin():
     # clear the screen & depth buffer
     glClearColor(G.clearColor[0], G.clearColor[1], G.clearColor[2], G.clearColor[3])
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
 
-def drawEnd():
-    G.swapBuffers()
+def drawEnd(renderToCanvas):
+    if renderToCanvas:
+        G.canvas.swapBuffers()
+        # Indicate that picking buffer is out of sync with rendered frame (deferred update)
+        markPickingBufferDirty()
 
 have_multisample = None
 have_activeTexture = None
@@ -781,7 +809,7 @@ def renderToBuffer(width, height, productionRender = True):
     glViewport(0, 0, width, height)
 
     # Draw scene as usual
-    draw(productionRender)
+    draw(productionRender, renderToCanvas = False)
 
     if have_multisample:
         # If we have drawn to a multisample renderbuffer, we need to transfer it to a simple buffer to read it
@@ -857,16 +885,16 @@ def drawMeshes(pickMode, productionRender = False):
                 cameraMode = obj.cameraMode
             drawOrPick(pickMode, obj)
 
-def _draw(productionRender = False):
+def _draw(productionRender = False, renderToCanvas = True):
     drawBegin()
     drawMeshes(False, productionRender)
-    drawEnd()
+    drawEnd(renderToCanvas)
 
-def draw(productionRender = False):
+def draw(productionRender = False, renderToCanvas = True):
     try:
         if profiler.active():
             profiler.accum('_draw()', globals(), locals())
         else:
-            _draw(productionRender)
+            _draw(productionRender, renderToCanvas)
     except StandardError:
         log.error('gl.draw', exc_info=True)

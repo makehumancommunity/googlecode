@@ -419,11 +419,11 @@ class Application(events3d.EventHandler):
         return True
 
     def getSelectedFaceGroupAndObject(self):
-        picked = mh.getColorPicked()
+        picked = mh.getPickedColor()
         return selection.selectionColorMap.getSelectedFaceGroupAndObject(picked)
 
     def getSelectedFaceGroup(self):
-        picked = mh.getColorPicked()
+        picked = mh.getPickedColor()
         return selection.selectionColorMap.getSelectedFaceGroup(picked)
 
     def addCategory(self, category, sortOrder = None):

@@ -10,7 +10,7 @@
 
 **Authors:**           Glynn Clements
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -26,7 +26,7 @@ from core import G
 from getpath import getPath, getSysDataPath, getSysPath
 from makehuman import getVersion, getVersionStr, getBasemeshVersion, getShortVersion, isRelease
 
-from glmodule import updatePickingBuffer, grabScreen, hasRenderSkin, renderSkin
+from glmodule import grabScreen, hasRenderSkin, renderSkin, getPickedColor, updatePickingBuffer
 
 from image import Image
 from texture import Texture, getTexture, reloadTextures
@@ -40,9 +40,6 @@ from qtui import getSaveFileName, getOpenFileName, getExistingDirectory
 from inifile import parseINI, formatINI
 
 cameras = G.cameras
-
-def getColorPicked():
-    return G.color_picked
 
 def setClearColor(r, g, b, a):
     G.clearColor = (r, g, b, a)

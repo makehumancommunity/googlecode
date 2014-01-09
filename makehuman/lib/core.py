@@ -10,7 +10,7 @@
 
 **Authors:**           Glynn Clements
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -28,10 +28,9 @@ class Globals(object):
         self.args = {}
         self.world = []
         self.cameras = []
+        self.canvas = None
         self.windowHeight = 600
         self.windowWidth = 800
-        self.color_picked = (0, 0, 0)
         self.clearColor = (0.0, 0.0, 0.0, 0.0)
-        self.swapBuffers = None
 
 G = Globals()
