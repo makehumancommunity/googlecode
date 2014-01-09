@@ -826,8 +826,14 @@ def renderToBuffer(width, height, productionRender = True):
     glPushAttrib(GL_VIEWPORT_BIT)
     glViewport(0, 0, width, height)
 
+    # Transparent background color
+    oldClearColor = G.clearColor
+    G.clearColor = (255,255,255,0)
+
     # Draw scene as usual
     draw(productionRender, renderToCanvas = False)
+
+    G.clearColor = G.clearColor
 
     if have_multisample:
         # If we have drawn to a multisample renderbuffer, we need to transfer it to a simple buffer to read it
@@ -853,7 +859,7 @@ def renderToBuffer(width, height, productionRender = True):
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer)
     glReadBuffer(GL_COLOR_ATTACHMENT0)
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, surface)
-    surface = Image(data = np.ascontiguousarray(surface[::-1,:,:3]))
+    surface = Image(data = np.ascontiguousarray(surface[::-1,:,[2,1,0,3]]))
 
     # Unbind frame buffer
     glDeleteFramebuffers(np.array([framebuffer]))
