@@ -225,7 +225,6 @@ class SkeletonLibrary(gui3d.TaskView):
         self.human.material.shader = mh.getSysDataPath('shaders/glsl/xray')
         self.setHumanTransparency(True)
         self.human.meshData.setPickable(False)
-        mh.updatePickingBuffer()
 
         if self.skelObj:
             self.skelObj.show()
@@ -242,6 +241,7 @@ class SkeletonLibrary(gui3d.TaskView):
         if self.humanChanged:
             #self.drawJointHelpers()
             self.humanChanged = False
+        mh.redraw()
 
 
     def onHide(self, event):
@@ -252,7 +252,6 @@ class SkeletonLibrary(gui3d.TaskView):
         self.setHumanTransparency(False)
         self.human.material.shader = self.oldHumanShader
         self.human.meshData.setPickable(True)
-        mh.updatePickingBuffer()
         try:
             self.removeBoneHighlights()
         except:
@@ -260,6 +259,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
         # Reset smooth setting
         self.human.setSubdivided(self.oldSmoothValue)
+        mh.redraw()
 
 
     def chooseSkeleton(self, options):
@@ -327,7 +327,6 @@ class SkeletonLibrary(gui3d.TaskView):
         self.skelMesh = skeleton_drawing.meshFromSkeleton(skel, "Prism")
         self.skelMesh.priority = 100
         self.skelMesh.setPickable(True)
-        mh.updatePickingBuffer()
         self.skelObj = gui3d.app.addObject(gui3d.Object(self.skelMesh, self.human.getPosition()) )
         self.skelObj.setRotation(self.human.getRotation())
 
@@ -339,6 +338,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
         # Store a reference to the skeleton mesh object for other plugins
         self.human._skeleton.object = self.skelObj
+        mh.redraw()
 
 
     def drawJointHelpers(self):
@@ -361,7 +361,6 @@ class SkeletonLibrary(gui3d.TaskView):
         self.jointsMesh = skeleton_drawing.meshFromJoints(jointPositions, jointGroupNames)
         self.jointsMesh.priority = 100
         self.jointsMesh.setPickable(True)
-        mh.updatePickingBuffer()
         self.jointsObj = self.addObject( gui3d.Object(self.jointsMesh, self.human.getPosition()) )
         self.jointsObj.setRotation(self.human.getRotation())
 
@@ -396,6 +395,7 @@ class SkeletonLibrary(gui3d.TaskView):
                 setColorForFaceGroup(self.jointsMesh, self.selectedJoint.name, [255,255,0,255])
                 gui3d.app.statusPersist('')
                 gui3d.app.redraw()
+        mh.redraw()
 
 
     def showBoneWeights(self, boneName, boneWeights):

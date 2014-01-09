@@ -386,7 +386,7 @@ class TextureProjectionView(gui3d.TaskView) :
         def onClicked(event):
             self.backgroundImage.mesh.setPickable(self.dragButton.selected)
             gui3d.app.selectedHuman.mesh.setPickable(not self.dragButton.selected)
-            mh.updatePickingBuffer()
+            mh.redraw()
 
         self.chooseBGButton = self.backgroundBox.addWidget(gui.Button('Choose background'))
 
@@ -425,13 +425,13 @@ class TextureProjectionView(gui3d.TaskView) :
         gui3d.TaskView.onShow(self, event)
         self.backgroundImage.mesh.setPickable(self.dragButton.selected)
         self.human.mesh.setPickable(not self.dragButton.selected)
-        mh.updatePickingBuffer()
         self.human.mesh.setShadeless(1 if self.shadelessButton.selected else 0)
         self.opacitySlider.setValue(self.backgroundChooserView.opacity)
         self.foregroundTggl.setChecked(self.backgroundChooserView.isShowBgInFront())
 
         self.oldDiffuseShaderSetting = self.human.material.shaderConfig['diffuse']
         self.human.mesh.configureShading(diffuse = True)
+        mh.redraw()
 
     def onHide(self, event):
 
@@ -439,9 +439,9 @@ class TextureProjectionView(gui3d.TaskView) :
         self.human.mesh.setShadeless(0)
         self.backgroundImage.mesh.setPickable(False)
         self.human.mesh.setPickable(True)
-        mh.updatePickingBuffer()
 
         self.human.mesh.configureShading(diffuse = self.oldDiffuseShaderSetting)
+        mh.redraw()
 
     def onHumanChanging(self, event):
         # TL: Disabled because texture.png is not found.

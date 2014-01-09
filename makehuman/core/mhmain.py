@@ -532,7 +532,6 @@ class MHApplication(gui3d.Application, mh.Application):
 
         mh.changeCategory("Modelling")
 
-        mh.updatePickingBuffer()
         self.redraw()
 
     def startupSequence(self):
