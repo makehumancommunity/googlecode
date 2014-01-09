@@ -106,7 +106,7 @@ class Object3D(object):
         self._material = material.Material(objName+"_Material")  # Render material
         self._materials = []    # Object material groups        # TODO remove? (I believe this is MHX specific)
         self._groups_rev = {}
-        self.cameraMode = 1
+        self.cameraMode = 0
         self._visibility = True
         self.pickable = True
         self.calculateTangents = True   # TODO disable when not needed by shader
