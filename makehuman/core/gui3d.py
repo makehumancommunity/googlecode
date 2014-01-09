@@ -67,7 +67,6 @@ class View(events3d.EventHandler):
             child._attach()
 
     def _detach(self):
-
         self._attached = False
 
         for object in self.objects:
@@ -420,11 +419,11 @@ class Application(events3d.EventHandler):
         return True
 
     def getSelectedFaceGroupAndObject(self):
-        picked = mh.getColorPicked()
+        picked = mh.getPickedColor()
         return selection.selectionColorMap.getSelectedFaceGroupAndObject(picked)
 
     def getSelectedFaceGroup(self):
-        picked = mh.getColorPicked()
+        picked = mh.getPickedColor()
         return selection.selectionColorMap.getSelectedFaceGroup(picked)
 
     def addCategory(self, category, sortOrder = None):
@@ -546,13 +545,17 @@ class Application(events3d.EventHandler):
     def onMouseDownCallback(self, event):
         # Get picked object
         pickedObject = self.getSelectedFaceGroupAndObject()
+
+        # Do not allow picking detached objects (in case of stale picking buffer)
+        if pickedObject and hasattr(pickedObject, 'view') and not pickedObject.view:
+            pickedObject = None
+
         if pickedObject:
             object = pickedObject[1].object
         else:
             object = self
 
         # It is the object which will receive the following mouse messages
-
         self.mouseDownObject = object
 
         # Send event to the object
@@ -565,10 +568,19 @@ class Application(events3d.EventHandler):
 
         # Get picked object
         pickedObject = self.getSelectedFaceGroupAndObject()
+
+        # Do not allow picking detached objects (in case of stale picking buffer)
+        if pickedObject and hasattr(pickedObject, 'view') and not pickedObject.view:
+            pickedObject = None
+
         if pickedObject:
             object = pickedObject[1].object
         else:
             object = self
+
+        # Clean up handles to detached (guicommon.Object) objects
+        if self.mouseDownObject and hasattr(self.mouseDownObject, 'view') and not self.mouseDownObject.view:
+            self.mouseDownObject = None
 
         if self.mouseDownObject:
             self.mouseDownObject.callEvent('onMouseUp', event)
@@ -579,6 +591,10 @@ class Application(events3d.EventHandler):
         # Get picked object
         picked = self.getSelectedFaceGroupAndObject()
 
+        # Do not allow picking detached objects (in case of stale picking buffer)
+        if picked and hasattr(picked, 'view') and not picked.view:
+            picked = None
+
         if picked:
             group = picked[0]
             object = picked[1].object or self
@@ -588,6 +604,12 @@ class Application(events3d.EventHandler):
 
         event.object = object
         event.group = group
+
+        # Clean up handles to detached (guicommon.Object) objects
+        if self.mouseDownObject and hasattr(self.mouseDownObject, 'view') and not self.mouseDownObject.view:
+            self.mouseDownObject = None
+        if self.enteredObject and hasattr(self.enteredObject, 'view') and not self.enteredObject.view:
+            self.enteredObject = None
 
         if event.button:
             if self.mouseDownObject:

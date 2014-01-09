@@ -108,8 +108,6 @@ class Object(events3d.EventHandler):
     @property
     def view(self):
         if not self._view or not callable(self._view):
-            import log
-            log.debug('The event handler object for mesh %s has no view attached.', self.mesh.name)
             return None
         return self._view()
 
