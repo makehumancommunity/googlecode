@@ -98,6 +98,7 @@ def grabScreen(x, y, width, height, filename = None):
     return surface
 
 pickingBuffer = None
+depthBuffer = None
 pickingBufferDirty = True
 
 def updatePickingBuffer():
@@ -106,9 +107,10 @@ def updatePickingBuffer():
     rwidth = (width + 3) / 4 * 4
 
     # Resize the buffer in case the window size has changed
-    global pickingBuffer
+    global pickingBuffer, depthBuffer
     if pickingBuffer is None or pickingBuffer.shape != (height, rwidth, 3):
         pickingBuffer = np.empty((height, rwidth, 3), dtype = np.uint8)
+        depthBuffer = np.empty((height, rwidth, 1), dtype = np.float32)
 
     # Turn off lighting
     glDisable(GL_LIGHTING)
@@ -129,6 +131,7 @@ def updatePickingBuffer():
     #glFlush()
     #glFinish()
     glReadPixels(0, 0, rwidth, height, GL_RGB, GL_UNSIGNED_BYTE, pickingBuffer)
+    glReadPixels(0, 0, rwidth, height, GL_DEPTH_COMPONENT, GL_FLOAT, depthBuffer)
 
     # Turn on antialiasing
     glEnable(GL_BLEND)
@@ -170,10 +173,25 @@ def getPickedColor(x = None, y = None):
 
     return tuple(pickingBuffer[y,x,:])
 
-def queryDepth(sx, sy):
-    sz = np.zeros((1,), dtype=np.float32)
-    glReadPixels(sx, G.windowHeight - sy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, sz)
-    return sz[0]
+def queryDepth(x, y):
+    if x is None or y is None:
+        pos = getMousePos()
+        if pos is None:
+            return (0, 0, 0)
+        else:
+            x, y = pos
+    elif x is None or y is None:
+        return (0, 0, 0)
+
+    y = G.windowHeight - y
+
+    if y < 0 or y >= G.windowHeight or x < 0 or x >= G.windowWidth:
+        return 0.0
+
+    if pickingBuffer is None or pickingBufferDirty:
+        updatePickingBuffer()
+
+    return depthBuffer[y,x,0]
 
 def reshape(w, h):
     try:
