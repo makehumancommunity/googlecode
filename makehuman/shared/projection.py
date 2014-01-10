@@ -268,7 +268,7 @@ def fixSeams(img):
     img.data[...,-1:][border] = 255
     progress.step()
     
-def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None):
+def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024)):
     """
     Create a lightmap for the selected human (software renderer).
     """
@@ -278,8 +278,8 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None):
     if mesh is None:
         mesh = G.app.selectedHuman.mesh
 
-    W = 1024
-    H = 1024
+    W = res[0]
+    H = res[1]
     
     dstImg = mh.Image(width=W, height=H, components=4)
     dstImg.data[...] = 0
@@ -316,7 +316,7 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None):
     progress(1)
     return dstImg
 
-def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None):
+def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024)):
     """
     Create a lightmap for the selected human (hardware accelerated).
     """
@@ -326,8 +326,8 @@ def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None):
     if mesh is None:
         mesh = G.app.selectedHuman.mesh
 
-    W = 1024
-    H = 1024
+    W = res[0]
+    H = res[1]
 
     delta = lightpos - mesh.coord
     ld = vnormalize(delta)
@@ -360,7 +360,7 @@ def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None):
     progress(1)
     return dstImg
 
-def mapLighting(lightpos = (-10.99, 20.0, 20.0), mesh = None):
+def mapLighting(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024)):
     """
     Bake lightmap for human from one light.
     Uses OpenGL hardware acceleration if the necessary OGL features are
@@ -368,15 +368,15 @@ def mapLighting(lightpos = (-10.99, 20.0, 20.0), mesh = None):
     """
     if mh.hasRenderSkin():
         try:
-            return mapLightingGL(lightpos)
+            return mapLightingGL(lightpos, mesh, res)
         except Exception, e:
             log.debug(e)
             log.debug("Hardware skin rendering failed, falling back to software render.")
-            return mapLightingSoft(lightpos, mesh)
+            return mapLightingSoft(lightpos, mesh, res)
     else:
-        return mapLightingSoft(lightpos, mesh)
+        return mapLightingSoft(lightpos, mesh, res)
 
-def mapSceneLighting(scn, object = None):
+def mapSceneLighting(scn, object = None, res = (1024, 1024)):
     """
     Create a lightmap for a scene with one or multiple lights.
     """
@@ -395,11 +395,11 @@ def mapSceneLighting(scn, object = None):
 
     if (scn.lights):    # Add up all the lightmaps.
         progress = Progress(len(scn.lights), G.app.progress)
-        lmap = mapLighting(calcLightPos(scn.lights[0]), object.mesh).data
+        lmap = mapLighting(calcLightPos(scn.lights[0]), object.mesh, res).data
         i = 1.0        
         for light in scn.lights[1:]:
             lmap = image_operations.mixData(
-                lmap, mapLighting(calcLightPos(light), object.mesh).data,1,1)       
+                lmap, mapLighting(calcLightPos(light), object.mesh, res).data,1,1)
             i += 1.0
 
         return image_operations.normalize(lmap)
