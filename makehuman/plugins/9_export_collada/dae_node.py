@@ -57,16 +57,13 @@ def writeSceneWithoutArmature(fp, rmeshes, config):
 def writeSceneWithArmature(fp, rmeshes, amt, config):
     fp.write(
         '\n  <library_visual_scenes>\n' +
-        '    <visual_scene id="Scene" name="Scene">\n' +
-        '      <node id="%s">\n' % amt.name)
+        '    <visual_scene id="Scene" name="Scene">\n')
 
-    writeMatrix(fp, globalMatrix(config), "transform", "        ")
-
+    #fp.write('      <node id="%s">\n' % amt.name)
+    #writeMatrix(fp, globalMatrix(config), "transform", "        ")
     for root in amt.hierarchy:
         writeBone(fp, root, [0,0,0], 'layer="L1"', "  ", amt, config)
-
-    fp.write(
-        '      </node>\n')
+    #fp.write('      </node>\n')
 
     for rmesh in rmeshes:
         writeMeshArmatureNode(fp, "        ", rmesh, amt, config)
@@ -143,19 +140,17 @@ def writeBone(fp, hier, orig, extra, pad, amt, config):
         idStr = ''
 
     fp.write('%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr))
-    writeMatrix(fp, getRelativeMatrix(bone, amt, config), "transform", pad+"        ")
-
+    relmat = getRelativeMatrix(bone, amt, config)
+    writeMatrix(fp, relmat, "transform", pad+"        ")
     for child in children:
         writeBone(fp, child, bone.head, '', pad+'  ', amt, config)
-
     fp.write('%s      </node>\n' % pad)
-    return
 
 
 def writeMatrix(fp, mat, sid, pad):
     fp.write('%s<matrix sid="%s">\n' % (pad, sid))
     for i in range(4):
-        fp.write('%s  %.5g %.5g %.5g %.5g\n' % (pad, mat[i][0], mat[i][1], mat[i][2], mat[i][3]))
+        fp.write('%s  %.5f %.5f %.5f %.5f\n' % (pad, mat[i][0], mat[i][1], mat[i][2], mat[i][3]))
     fp.write('%s</matrix>\n' % pad)
 
 

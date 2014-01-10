@@ -81,6 +81,10 @@ def exportCollada(human, filepath, config):
         log.error("Unable to open file for writing %s" % filepath)
 
     date = time.strftime(u"%a, %d %b %Y %H:%M:%S +0000".encode('utf-8'), time.localtime()).decode('utf-8')
+    if config.yUpFaceZ or config.yUpFaceX:
+        upvector = "Y_UP"
+    else:
+        upvector = "Z_UP"
     fp.write('<?xml version="1.0" encoding="utf-8"?>\n' +
         '<COLLADA version="1.4.0" xmlns="http://www.collada.org/2005/11/COLLADASchema">\n' +
         '  <asset>\n' +
@@ -90,7 +94,7 @@ def exportCollada(human, filepath, config):
         '    <created>%s</created>\n' % date +
         '    <modified>%s</modified>\n' % date +
         '    <unit meter="%.4f" name="%s"/>\n' % (0.1/config.scale, config.unit) +
-        '    <up_axis>Y_UP</up_axis>\n' +
+        '    <up_axis>%s</up_axis>\n' % upvector +
         '  </asset>\n')
 
     progress(0.55, 0.6, "Exporting images")
