@@ -25,7 +25,12 @@ Node export
 
 import math
 import numpy as np
+import numpy.linalg as la
 import transformations as tm
+
+from armature.utils import getMatrix
+
+import log
 
 #----------------------------------------------------------------------
 #   library_visual_scenes
@@ -71,7 +76,7 @@ def writeSceneWithArmature(fp, rmeshes, amt, config):
         '  </library_visual_scenes>\n')
 
 
-_Identity = np.identity(4, float)
+Identity = np.identity(4, float)
 _RotX = tm.rotation_matrix(math.pi/2, (1,0,0))
 _RotY = tm.rotation_matrix(math.pi/2, (0,1,0))
 _RotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
@@ -81,7 +86,7 @@ def globalMatrix(config):
     mat = np.identity(4, float)
     mat[:3,3] = -config.scale*config.offset
     if config.yUpFaceZ:
-        rot = _Identity
+        rot = Identity
     elif config.yUpFaceX:
         rot = _RotY
     elif config.zUpFaceNegY:
@@ -93,7 +98,7 @@ def globalMatrix(config):
 
 def writeMeshArmatureNode(fp, pad, rmesh, amt, config):
     fp.write('\n%s<node id="%sObject" name="%s">\n' % (pad, rmesh.name, rmesh.name))
-    writeMatrix(fp, _Identity, "transform", pad+"  ")
+    writeMatrix(fp, Identity, "transform", pad+"  ")
     #writeMatrix(fp, globalMatrix(config), "transform", pad+"  ")
     fp.write(
         '%s  <instance_controller url="#%s-skin">\n' % (pad, rmesh.name) +
@@ -106,7 +111,7 @@ def writeMeshArmatureNode(fp, pad, rmesh, amt, config):
 
 def writeMeshNode(fp, pad, rmesh, config):
     fp.write('\n%s<node id="%sObject" name="%s">\n' % (pad, rmesh.name, rmesh.name))
-    writeMatrix(fp, _Identity, "transform", pad+"  ")
+    writeMatrix(fp, Identity, "transform", pad+"  ")
     fp.write(
         '%s  <instance_geometry url="#%sMesh">\n' % (pad, rmesh.name))
     writeBindMaterial(fp, pad, rmesh.material)
@@ -138,7 +143,7 @@ def writeBone(fp, hier, orig, extra, pad, amt, config):
         idStr = ''
 
     fp.write('%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr))
-    writeMatrix(fp, bone.matrixRelative, "transform", pad+"        ")
+    writeMatrix(fp, getRelativeMatrix(bone, amt, config), "transform", pad+"        ")
 
     for child in children:
         writeBone(fp, child, bone.head, '', pad+'  ', amt, config)
@@ -157,3 +162,45 @@ def writeMatrix(fp, mat, sid, pad):
 # To avoid error message about Sax FWL Error in Blender
 def goodBoneName(bname):
     return bname.replace(".","_")
+
+
+#----------------------------------------------------------------------
+#   Different types of coordinate systems
+#----------------------------------------------------------------------
+
+def getRestMatrix(bone, config):
+
+    if config.localY:
+        # Y along bone, X bend
+        return bone.matrixRest
+
+    elif config.localX:
+        # X along bone, Y bend
+        #_,restmat = getMatrix(bone.head, bone.tail, 0)
+        return xyflip(bone.matrixRest)
+
+    elif config.localG:
+        # Global coordinate system
+        #mat = tm.rotation_matrix(-math.pi/2, (1,0,0))
+        mat = np.identity(4, float)
+        mat[:3,3] = bone.head
+        return mat
+
+
+def getRelativeMatrix(bone, amt, config):
+
+    restmat = getRestMatrix(bone, config)
+    if bone.parent:
+        parent = amt.bones[bone.parent]
+        parrestmat = getRestMatrix(parent, config)
+        return np.dot(la.inv(parrestmat), restmat)
+    else:
+        return restmat
+
+
+
+_RotNegX = tm.rotation_matrix(-math.pi/2, (1,0,0))
+_RotXY = np.dot(_RotNegX, _RotY)
+
+def xyflip(mat):
+    return np.dot(mat, _RotXY)

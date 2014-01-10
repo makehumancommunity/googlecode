@@ -50,7 +50,7 @@ def writeLibraryControllers(fp, rmeshes, amt, config):
 
 
 def writeSkinController(fp, rmesh, amt, config):
-    from .dae_node import writeMatrix, globalMatrix, _Identity
+    from .dae_node import writeMatrix, globalMatrix, Identity, getRestMatrix
 
     progress = Progress()
     progress(0, 0.1)
@@ -64,7 +64,7 @@ def writeSkinController(fp, rmesh, amt, config):
     fp.write('\n' +
         '    <controller id="%s-skin">\n' % rmesh.name +
         '      <skin source="#%sMesh">\n' % rmesh.name)
-    writeMatrix(fp, _Identity, "bind_shape_matrix", "        ")
+    writeMatrix(fp, Identity, "bind_shape_matrix", "        ")
     fp.write(
         '        <source id="%s-skin-joints">\n' % rmesh.name +
         '          <IDREF_array count="%d" id="%s-skin-joints-array">\n' % (nBones,rmesh.name) +
@@ -104,7 +104,7 @@ def writeSkinController(fp, rmesh, amt, config):
     progress(0.4, 0.6)
     rot = globalMatrix(config)
     for bone in amt.bones.values():
-        mat4 = np.dot(rot, bone.matrixRest)
+        mat4 = np.dot(rot, getRestMatrix(bone, config))
         mat = la.inv(mat4)
         for i in range(4):
             fp.write('\n           ')

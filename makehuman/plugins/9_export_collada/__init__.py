@@ -36,12 +36,17 @@ class DaeConfig(Config):
 
         self.useRelPaths = True
         self.useNormals = exporter.useNormals.selected
+        self.expressions     = exporter.expressions.selected
+        self.useCustomTargets = exporter.useCustomTargets.selected
+
         self.yUpFaceZ = exporter.yUpFaceZ.selected
         self.yUpFaceX = exporter.yUpFaceX.selected
         self.zUpFaceNegY = exporter.zUpFaceNegY.selected
         self.zUpFaceX = exporter.zUpFaceX.selected
-        self.expressions     = exporter.expressions.selected
-        self.useCustomTargets = exporter.useCustomTargets.selected
+
+        self.localY = exporter.localY.selected
+        self.localX = exporter.localX.selected
+        self.localG = exporter.localG.selected
 
         self.rigOptions = exporter.getRigOptions()
         if not self.rigOptions:
@@ -67,12 +72,16 @@ class ExporterCollada(Exporter):
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
         self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
 
-        #orientBox = self.addWidget(gui.GroupBox('Orientation'))
         orients = []
         self.yUpFaceZ = options.addWidget(gui.RadioButton(orients, "Y up, face Z", True))
         self.yUpFaceX = options.addWidget(gui.RadioButton(orients, "Y up, face X", False))
         self.zUpFaceNegY = options.addWidget(gui.RadioButton(orients, "Z up, face -Y", False))
         self.zUpFaceX = options.addWidget(gui.RadioButton(orients, "Z up, face X", False))
+
+        csyses = []
+        self.localY = options.addWidget(gui.RadioButton(csyses, "Local Y along bone", True))
+        self.localX = options.addWidget(gui.RadioButton(csyses, "Local X along bone", False))
+        self.localG = options.addWidget(gui.RadioButton(csyses, "Local = Global", False))
 
     def export(self, human, filename):
         from .mh2collada import exportCollada
