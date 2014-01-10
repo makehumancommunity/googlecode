@@ -1680,6 +1680,9 @@ class ImageView(QtGui.QLabel, QtGui.QScrollArea, Widget):
         self.setPixmap(pixmap)
 
     def save(self, fname):
+        if not os.path.splitext(fname)[1]:
+            fname = fname + '.png'
+
         if self._pixmap:
             self._pixmap.save (fname)
 
@@ -1756,6 +1759,9 @@ class ZoomableImageView(QtGui.QScrollArea, Widget):
                     scrollBar.setValue(int(scrat[index] * scrollBar.maximum() + displ[index]))
         
     def save(self, fname):
+        if not os.path.splitext(fname)[1]:
+            fname = fname + '.png'
+
         if self.imageLabel.pixmap():
             self.imageLabel.pixmap().save (fname)
             
