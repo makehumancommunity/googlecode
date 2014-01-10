@@ -225,6 +225,7 @@ class Image(object):
         self.modified = time.time()
         self._is_empty = False
 
+    @property
     def isEmpty(self):
         """
         Returns True if the image is empty or new.
