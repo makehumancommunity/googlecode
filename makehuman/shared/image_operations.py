@@ -88,13 +88,17 @@ def blurred(img, level=10.0, kernelSize = 15, progressCallback=None):
     return Image(data = data[padSize:data.shape[0], padSize:data.shape[1], :])
 
 def mix(img1, img2, weight1, weight2 = None):
-    data1 = Image(data = img1).data
-    data2 = Image(data = img2).data
+    if img1 is None and img2 is None:
+        return None
+    data1 = Image(data = img1 if img1 else getBlack(img2)).data
+    data2 = Image(data = img2 if img2 else getBlack(img1)).data
     return Image(data = mixData(data1, data2, weight1, weight2).astype(numpy.uint8))
 
 def multiply(img1, img2):
-    data1 = Image(data = img1).data
-    data2 = Image(data = img2).data
+    if img1 is None and img2 is None:
+        return None
+    data1 = Image(data = img1 if img1 else getWhite(img2)).data
+    data2 = Image(data = img2 if img2 else getWhite(img1)).data
     return Image(data = multiplyData(data1, data2).astype(numpy.uint8))
 
 def clip(img):
