@@ -35,7 +35,8 @@ from progress import Progress
 import numpy as np
 
 def Render(settings):
-    # TODO hide unneeded scene objects
+    if not mh.hasRenderToRenderbuffer():
+        settings['dimensions'] = (G.windowWidth, G.windowHeight)
 
     if settings['lightmapSSS']:
         import image_operations as imgop
