@@ -10,7 +10,7 @@
 
 **Authors:**           Glynn Clements
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -231,7 +231,6 @@ class Canvas(QtOpenGL.QGLWidget):
         y = ev.y()
 
         if gg_mouse_pos is None:
-            # TODO use canvas.getMousePos() instead!
             gg_mouse_pos = x, y
 
         if g_mouse_pos is None:
