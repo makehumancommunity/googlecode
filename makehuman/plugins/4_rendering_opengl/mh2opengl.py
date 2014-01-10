@@ -43,10 +43,15 @@ def Render(settings):
         import material
         human = G.app.selectedHuman
         materialBackup = material.Material(human.material)
+
+        diffuse = imgop.Image(data = human.material.diffuseTexture)
         lmap = projection.mapSceneLighting(settings['scene'])
         lmapG = imgop.blurred(lmap, human.material.sssGScale, 13)
         lmapR = imgop.blurred(lmap, human.material.sssRScale, 13)
         lmap = imgop.compose([lmapR, lmapG, lmap])
+        if not diffuse.isEmpty:
+            lmap = imgop.resized(lmap, diffuse.width, diffuse.height)
+            lmap = imgop.multiply(lmap, diffuse)
         lmap.sourcePath = "Internal_Renderer_Lightmap_SSS_Texture"
         human.material.diffuseTexture = lmap
         human.mesh.configureShading(diffuse = True)
