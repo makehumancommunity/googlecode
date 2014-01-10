@@ -29,6 +29,7 @@ import time
 class Image(object):
     def __init__(self, path = None, width = 0, height = 0, bitsPerPixel = 32, components = None, data = None):
         if path is not None:
+            self._is_empty = False
             if isinstance(path, Image):
                 # Create a copy of the image.
                 self._data = path.data.copy()
@@ -39,6 +40,7 @@ class Image(object):
                 self._data = image_qt.load(path)
                 self.sourcePath = path
         elif data is not None:
+            self._is_empty = False
             if isinstance(data, Image):
                 # Share data between images.
                 self._data = data.data
@@ -47,6 +49,7 @@ class Image(object):
             else:   # Data array.
                 self._data = data
         else:
+            self._is_empty = True
             if components is None:
                 if bitsPerPixel == 32:
                     components = 4
@@ -220,3 +223,11 @@ class Image(object):
         Mark this image as modified.
         """
         self.modified = time.time()
+        self._is_empty = False
+
+    def isEmpty(self):
+        """
+        Returns True if the image is empty or new.
+        Returns False if the image contains data or has been modified.
+        """
+        return self._is_empty
