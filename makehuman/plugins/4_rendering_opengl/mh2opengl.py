@@ -32,7 +32,6 @@ from core import G
 import gui
 import image
 from progress import Progress
-import glmodule
 import numpy as np
 
 def Render(settings):
@@ -52,7 +51,7 @@ def Render(settings):
         human.mesh.configureShading(diffuse = True)
         human.mesh.shadeless = True
 
-    if not glmodule.hasRenderToRenderbuffer():
+    if not mh.hasRenderToRenderbuffer():
         # Limited fallback mode, read from screen buffer
         img = glmodule.grabScreen(0, 0, G.windowWidth, G.windowHeight)
         # TODO disable resolution GUI setting in fallback mode
@@ -62,7 +61,7 @@ def Render(settings):
         if settings['AA']:
             width = width * 2
             height = height * 2
-        img = glmodule.renderToBuffer(width, height)
+        img = mh.renderToBuffer(width, height)
 
         if settings['AA']:
             # Resize to 50% using Qt image class
