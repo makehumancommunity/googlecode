@@ -94,6 +94,7 @@ def grabScreen(x, y, width, height, filename = None):
 
     if filename is not None:
         surface.save(filename)
+        log.message("Saved screengrab to %s", filename)
 
     return surface
 
