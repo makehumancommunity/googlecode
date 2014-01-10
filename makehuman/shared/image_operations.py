@@ -29,6 +29,8 @@ from image import Image
 
 def resized(img, width, height):
     sw, sh = img.size
+    if width is sw and height is sh:
+        return Image(img)
     xmap = numpy.floor((numpy.arange(width) + 0.5) * sw / float(width)).astype(int)
     ymap = numpy.floor((numpy.arange(height) + 0.5) * sh / float(height)).astype(int)
     return Image(data = img.data[ymap,:][:,xmap])
