@@ -40,17 +40,16 @@ def Render(settings):
 
     if settings['lightmapSSS']:
         import image_operations as imgop
+        import material
         human = G.app.selectedHuman
+        materialBackup = material.Material(human.material)
         lmap = projection.mapSceneLighting(settings['scene'])
         lmapG = imgop.blurred(lmap, human.material.sssGScale, 13)
         lmapR = imgop.blurred(lmap, human.material.sssRScale, 13)
         lmap = imgop.compose([lmapR, lmapG, lmap])
         lmap.sourcePath = "Internal_Renderer_Lightmap_SSS_Texture"
-        settings['oldDiffuseTextureSetting'] = human.material.diffuseTexture
         human.material.diffuseTexture = lmap
-        settings['oldDiffuseShaderSetting'] = human.material.shaderConfig['diffuse']
         human.mesh.configureShading(diffuse = True)
-        settings['oldShadelessSetting'] = human.mesh.shadeless
         human.mesh.shadeless = True
 
     if not glmodule.hasRenderToRenderbuffer():
@@ -77,10 +76,7 @@ def Render(settings):
             #del scaledImg
 
     if settings['lightmapSSS']:
-        human = G.app.selectedHuman
-        human.material.diffuseTexture = settings['oldDiffuseTextureSetting']
-        human.mesh.shadeless = settings['oldShadelessSetting']
-        human.mesh.configureShading(diffuse = settings['oldDiffuseShaderSetting'])
+        human.material = materialBackup
 
     # TODO restore scene object visibility
 
