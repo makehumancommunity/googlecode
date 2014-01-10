@@ -189,15 +189,15 @@ class Progress(object):
 
     # Internal method that is responsible for the actual
     # progress bar and parent progress handler updating.
-    def update(self, amount, childDescription = None):
+    def update(self, amount, childDescription = None, childupdate = False):
         self.progress = amount
-        if self.parent != False:
+        if self.parent != False and not childupdate:
             amount = self.start + (self.end - self.start)*amount
         if self.parent:
             if self.description:
-                self.parent.update(amount, self.description)
+                self.parent.update(amount, self.description, True)
             else:
-                self.parent.update(amount, childDescription)
+                self.parent.update(amount, childDescription, True)
         elif self.parent is None and self.progressCallback != False:
             if self.timing:
                 import time
@@ -275,9 +275,10 @@ class Progress(object):
 
     # Basic method for progress updating.
     # It overloads the () operator of the constructed object.
-    def __call__(self, progress, end = None, desc = None, numsubs = None):
+    # Pass None to the description to allow the child update status.
+    def __call__(self, progress, end = None, desc = False, numsubs = None):
 
-        if desc:
+        if not (desc is False):
             self.description = desc
         
         if numsubs is None:

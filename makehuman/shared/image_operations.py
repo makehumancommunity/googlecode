@@ -25,7 +25,7 @@ Various image processing operations.
 
 import numpy
 from image import Image
-
+from progress import Progress
 
 def resized(img, width, height):
     sw, sh = img.size
@@ -35,7 +35,7 @@ def resized(img, width, height):
     ymap = numpy.floor((numpy.arange(height) + 0.5) * sh / float(height)).astype(int)
     return Image(data = img.data[ymap,:][:,xmap])
 
-def blurred(img, level=10.0, kernelSize = 15, progressCallback=None):
+def blurred(img, level=10.0, kernelSize = 15):
     """
     Apply a gaussian blur on the specified image. Returns a new blurred image.
     level is the level of blurring and can be any float.
@@ -48,11 +48,8 @@ def blurred(img, level=10.0, kernelSize = 15, progressCallback=None):
     (CC-by) http://creativecommons.org/licenses/by/3.0/us
     """
 
-    def progress(prog):
-        if (progressCallback is not None):
-            progressCallback(prog)
-        else:
-            pass
+    from progress import Progress
+    progress = Progress()
     progress(0)
 
     kernelSize = int(kernelSize)

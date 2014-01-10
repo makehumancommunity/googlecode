@@ -35,34 +35,49 @@ from progress import Progress
 import numpy as np
 
 def Render(settings):
+    progress = Progress.begin()
+    
     if not mh.hasRenderToRenderbuffer():
         settings['dimensions'] = (G.windowWidth, G.windowHeight)
 
     if settings['lightmapSSS']:
+        progress(0, 0.05, "Storing data")
         import image_operations as imgop
         import material
         human = G.app.selectedHuman
         materialBackup = material.Material(human.material)
 
+        progress(0.05, 0.1, "Projecting lightmaps")
         diffuse = imgop.Image(data = human.material.diffuseTexture)
         lmap = projection.mapSceneLighting(settings['scene'])
+        progress(0.1, 0.4, "Applying medium scattering")
         lmapG = imgop.blurred(lmap, human.material.sssGScale, 13)
+        progress(0.4, 0.7, "Applying high scattering")
         lmapR = imgop.blurred(lmap, human.material.sssRScale, 13)
         lmap = imgop.compose([lmapR, lmapG, lmap])
         if not diffuse.isEmpty:
+            progress(0.7, 0.8, "Combining textures")
             lmap = imgop.resized(lmap, diffuse.width, diffuse.height)
+            progress(0.8, 0.9)
             lmap = imgop.multiply(lmap, diffuse)
         lmap.sourcePath = "Internal_Renderer_Lightmap_SSS_Texture"
+
+        progress(0.9, 0.95, "Setting up renderer")
         human.material.diffuseTexture = lmap
         human.mesh.configureShading(diffuse = True)
         human.mesh.shadeless = True
-
+        progress(0.95, 0.98, None)
+    else:
+        progress(0, 0.99, None)
+        
     if not mh.hasRenderToRenderbuffer():
         # Limited fallback mode, read from screen buffer
         img = mh.grabScreen(0, 0, G.windowWidth, G.windowHeight)
         # TODO disable resolution GUI setting in fallback mode
     else:
         # Render to framebuffer object
+        renderprog = Progress()
+        renderprog(0, 0.99 - 0.59 * settings['AA'], "Rendering")
         width, height = settings['dimensions']
         if settings['AA']:
             width = width * 2
@@ -70,6 +85,7 @@ def Render(settings):
         img = mh.renderToBuffer(width, height)
 
         if settings['AA']:
+            renderprog(0.4, 0.99, "AntiAliasing")
             # Resize to 50% using Qt image class
             qtImg = img.toQImage()
             del img
@@ -79,13 +95,16 @@ def Render(settings):
             img = scaledImg
             #img = image.Image(scaledImg)    # Convert back to MH image
             #del scaledImg
+        renderprog.finish()
 
     if settings['lightmapSSS']:
+        progress(0.98, 0.99, "Restoring data")
         human.material = materialBackup
 
     # TODO restore scene object visibility
 
+    progress(1, None, 'Rendering complete')
+
     gui3d.app.getCategory('Rendering').getTaskByName('Viewer').setImage(img)
     mh.changeTask('Rendering', 'Viewer')
     gui3d.app.statusPersist('Rendering complete.')
-
