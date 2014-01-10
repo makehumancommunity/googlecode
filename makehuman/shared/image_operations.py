@@ -88,16 +88,21 @@ def blurred(img, level=10.0, kernelSize = 15, progressCallback=None):
     return Image(data = data[padSize:data.shape[0], padSize:data.shape[1], :])
 
 def mix(img1, img2, weight1, weight2 = None):
-    data1 = img1.data if isinstance(img1, Image) else img1
-    data2 = img2.data if isinstance(img2, Image) else img2
+    data1 = Image(data = img1).data
+    data2 = Image(data = img2).data
     return Image(data = mixData(data1, data2, weight1, weight2).astype(numpy.uint8))
 
+def multiply(img1, img2):
+    data1 = Image(data = img1).data
+    data2 = Image(data = img2).data
+    return Image(data = multiplyData(data1, data2).astype(numpy.uint8))
+
 def clip(img):
-    data = img.data if isinstance(img, Image) else img
+    data = Image(data = img).data
     return Image(data = clipData(data).astype(numpy.uint8))
 
 def normalize(img):
-    data = img.data if isinstance(img, Image) else img
+    data = Image(data = img).data
     return Image(data = normalizeData(data).astype(numpy.uint8))
 
 def mixData(data1, data2, weight1, weight2 = None):
@@ -105,6 +110,9 @@ def mixData(data1, data2, weight1, weight2 = None):
         weight2 =  1 - weight1
     return numpy.around(weight1*data1.astype(float) +
                         weight2*data2.astype(float)).astype(int)
+
+def multiplyData(data1, data2):
+    return numpy.around((data1.astype(float) * data2.astype(float)) / 255.0).astype(int)
 
 def clipData(data):
     return numpy.clip(data,0,255)
