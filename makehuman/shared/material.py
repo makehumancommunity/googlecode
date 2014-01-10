@@ -128,7 +128,11 @@ class Material(object):
     """
 
     def __init__(self, name="UnnamedMaterial", performConfig=True):
-        self.name = name
+        if isinstance(name, Material):
+            # Copy constructor (after initing the material class)
+            self.name = "UnnamedMaterial"
+        else:
+            self.name = name
 
         self.filename = None
         self.filepath = None
@@ -186,6 +190,10 @@ class Material(object):
             self._updateShaderConfig()
 
         self._uvMap = None
+
+        if isinstance(name, Material):
+            # Copy constructor
+            self.copyFrom(name)
 
     def copyFrom(self, material):
         self.name = material.name
