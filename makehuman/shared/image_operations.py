@@ -94,7 +94,7 @@ def mix(img1, img2, weight1, weight2 = None):
         return None
     img1 = Image(data = img1 if img1 else getBlack(img2))
     img2 = Image(data = img2 if img2 else getBlack(img1))
-    synchronizeChannels(img1, img2)
+    img1, img2 = synchronizeChannels(img1, img2)
     return Image(data = mixData(img1.data, img2.data, weight1, weight2).astype(numpy.uint8))
 
 def multiply(img1, img2):
@@ -102,7 +102,7 @@ def multiply(img1, img2):
         return None
     img1 = Image(data = img1 if img1 else getWhite(img2))
     img2 = Image(data = img2 if img2 else getWhite(img1))
-    synchronizeChannels(img1, img2)
+    img1, img2 = synchronizeChannels(img1, img2)
     return Image(data = multiplyData(img1.data, img2.data).astype(numpy.uint8))
 
 def clip(img):
@@ -144,10 +144,11 @@ def compose(channels):
 
 def synchronizeChannels(img1, img2):
     if img1.components > img2.components:
-        img2.convert(img1.components)
-    elif img2.components > img1.components:
-        img1.convert(img2.components)
-
+        img2 = img2.convert(img1.components)
+    else:
+        img1 = img1.convert(img2.components)
+    return img1, img2
+        
 def colorAsImage(color, image = None, width = None, height = None):
     """
     Create or modify an image filled with a single color.
