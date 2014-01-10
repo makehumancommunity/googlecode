@@ -108,17 +108,17 @@ def normalize(img):
 def mixData(data1, data2, weight1, weight2 = None):
     if weight2 is None:
         weight2 =  1 - weight1
-    return numpy.around(weight1*data1.astype(float) +
-                        weight2*data2.astype(float)).astype(int)
+    return (weight1*data1.astype(float) +
+            weight2*data2.astype(float) + 0.5).astype(int)
 
 def multiplyData(data1, data2):
-    return numpy.around((data1.astype(float) * data2.astype(float)) / 255.0).astype(int)
+    return ((data1.astype(float) * data2.astype(float)) / 255.0 + 0.5).astype(int)
 
 def clipData(data):
     return numpy.clip(data,0,255)
 
 def normalizeData(data):
-    return numpy.around(data.astype(float) * (255.0/float(data.max())) ).astype(int)
+    return (data.astype(float) * (255.0/float(data.max())) + 0.5).astype(int)
 
 def compose(channels):
     # 'channels' is a sequence of Images.
