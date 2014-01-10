@@ -92,16 +92,18 @@ def blurred(img, level=10.0, kernelSize = 15, progressCallback=None):
 def mix(img1, img2, weight1, weight2 = None):
     if img1 is None and img2 is None:
         return None
-    data1 = Image(data = img1 if img1 else getBlack(img2)).data
-    data2 = Image(data = img2 if img2 else getBlack(img1)).data
-    return Image(data = mixData(data1, data2, weight1, weight2).astype(numpy.uint8))
+    img1 = Image(data = img1 if img1 else getBlack(img2))
+    img2 = Image(data = img2 if img2 else getBlack(img1))
+    synchronizeChannels(img1, img2)
+    return Image(data = mixData(img1.data, img2.data, weight1, weight2).astype(numpy.uint8))
 
 def multiply(img1, img2):
     if img1 is None and img2 is None:
         return None
-    data1 = Image(data = img1 if img1 else getWhite(img2)).data
-    data2 = Image(data = img2 if img2 else getWhite(img1)).data
-    return Image(data = multiplyData(data1, data2).astype(numpy.uint8))
+    img1 = Image(data = img1 if img1 else getWhite(img2))
+    img2 = Image(data = img2 if img2 else getWhite(img1))
+    synchronizeChannels(img1, img2)
+    return Image(data = multiplyData(img1.data, img2.data).astype(numpy.uint8))
 
 def clip(img):
     data = Image(data = img).data
@@ -139,6 +141,12 @@ def compose(channels):
             outch.append(c.data[:,:,i:i+1])
         i += 1
     return Image(data = numpy.dstack(outch).astype(numpy.uint8))
+
+def synchronizeChannels(img1, img2):
+    if img1.components > img2.components:
+        img2.convert(img1.components)
+    elif img2.components > img1.components:
+        img1.convert(img2.components)
 
 def colorAsImage(color, image = None, width = None, height = None):
     """
