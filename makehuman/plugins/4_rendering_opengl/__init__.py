@@ -31,6 +31,7 @@ import os
 import gui3d
 import gui
 import guipose
+import mh
 
 class OpenGLTaskView(guipose.PoseModeTaskView):
 
@@ -45,6 +46,10 @@ class OpenGLTaskView(guipose.PoseModeTaskView):
         self.AAbox.setSelected( gui3d.app.settings.get('GL_RENDERER_AA', True) )
         self.lightmapSSS = settingsBox.addWidget(gui.CheckBox("Lightmap SSS", False))
         self.renderButton = settingsBox.addWidget(gui.Button('Render'))
+
+        if not mh.hasRenderToRenderbuffer():
+            # Can only use screen grabbing as fallback, resolution option disabled
+            self.resBox.setEnabled(False)
 
         @self.resBox.mhEvent
         def onChange(value):

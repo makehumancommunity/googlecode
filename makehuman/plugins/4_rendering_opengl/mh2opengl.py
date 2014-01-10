@@ -53,7 +53,7 @@ def Render(settings):
 
     if not mh.hasRenderToRenderbuffer():
         # Limited fallback mode, read from screen buffer
-        img = glmodule.grabScreen(0, 0, G.windowWidth, G.windowHeight)
+        img = mh.grabScreen(0, 0, G.windowWidth, G.windowHeight)
         # TODO disable resolution GUI setting in fallback mode
     else:
         # Render to framebuffer object
