@@ -264,7 +264,7 @@ class Canvas(QtOpenGL.QGLWidget):
 
     def paintGL(self):
         self.app.logger_redraw.debug('paintGL')
-        gl.draw()
+        gl.renderToCanvas()
 
     def resizeGL(self, w, h):
         G.windowHeight = h

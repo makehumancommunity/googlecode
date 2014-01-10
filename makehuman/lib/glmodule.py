@@ -223,11 +223,8 @@ def drawBegin():
     glClearColor(G.clearColor[0], G.clearColor[1], G.clearColor[2], G.clearColor[3])
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT)
 
-def drawEnd(renderToCanvas):
-    if renderToCanvas:
-        G.canvas.swapBuffers()
-        # Indicate that picking buffer is out of sync with rendered frame (deferred update)
-        markPickingBufferDirty()
+def drawEnd():
+    pass
 
 have_multisample = None
 have_activeTexture = None
@@ -831,7 +828,7 @@ def renderToBuffer(width, height, productionRender = True):
     G.clearColor = (oldClearColor[0],oldClearColor[1],oldClearColor[2], 0)
 
     # Draw scene as usual
-    draw(productionRender, renderToCanvas = False)
+    draw(productionRender)
 
     G.clearColor = G.clearColor
 
@@ -909,16 +906,24 @@ def drawMeshes(pickMode, productionRender = False):
                 cameraMode = obj.cameraMode
             drawOrPick(pickMode, obj)
 
-def _draw(productionRender = False, renderToCanvas = True):
+def _draw(productionRender = False):
     drawBegin()
     drawMeshes(False, productionRender)
-    drawEnd(renderToCanvas)
+    drawEnd()
 
-def draw(productionRender = False, renderToCanvas = True):
+def draw(productionRender = False):
     try:
         if profiler.active():
             profiler.accum('_draw()', globals(), locals())
         else:
-            _draw(productionRender, renderToCanvas)
+            _draw(productionRender)
+        return True
     except StandardError:
         log.error('gl.draw', exc_info=True)
+        return False
+
+def renderToCanvas():
+    if draw():
+        G.canvas.swapBuffers()
+        # Indicate that picking buffer is out of sync with rendered frame (deferred update)
+        markPickingBufferDirty()
