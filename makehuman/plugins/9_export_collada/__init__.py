@@ -44,9 +44,9 @@ class DaeConfig(Config):
         self.zUpFaceNegY = exporter.zUpFaceNegY.selected
         self.zUpFaceX = exporter.zUpFaceX.selected
 
-        self.localY = True  #exporter.localY.selected
-        self.localX = False #exporter.localX.selected
-        self.localG = False #exporter.localG.selected
+        self.localY = exporter.localY.selected
+        self.localX = exporter.localX.selected
+        self.localG = exporter.localG.selected
 
         self.rigOptions = exporter.getRigOptions()
         if not self.rigOptions:
@@ -78,10 +78,10 @@ class ExporterCollada(Exporter):
         self.zUpFaceNegY = options.addWidget(gui.RadioButton(orients, "Z up, face -Y", False))
         self.zUpFaceX = options.addWidget(gui.RadioButton(orients, "Z up, face X", False))
 
-        #csyses = []
-        #self.localY = options.addWidget(gui.RadioButton(csyses, "Local Y along bone", True))
-        #self.localX = options.addWidget(gui.RadioButton(csyses, "Local X along bone", False))
-        #self.localG = options.addWidget(gui.RadioButton(csyses, "Local = Global", False))
+        csyses = []
+        self.localY = options.addWidget(gui.RadioButton(csyses, "Local Y along bone", True))
+        self.localX = options.addWidget(gui.RadioButton(csyses, "Local X along bone", False))
+        self.localG = options.addWidget(gui.RadioButton(csyses, "Local = Global", False))
 
     def export(self, human, filename):
         from .mh2collada import exportCollada

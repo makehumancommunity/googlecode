@@ -59,11 +59,11 @@ def writeSceneWithArmature(fp, rmeshes, amt, config):
         '\n  <library_visual_scenes>\n' +
         '    <visual_scene id="Scene" name="Scene">\n')
 
-    #fp.write('      <node id="%s">\n' % amt.name)
-    #writeMatrix(fp, globalMatrix(config), "transform", "        ")
+    fp.write('      <node id="%s">\n' % amt.name)
+    writeMatrix(fp, Identity, "transform", "        ")
     for root in amt.hierarchy:
         writeBone(fp, root, [0,0,0], 'layer="L1"', "  ", amt, config)
-    #fp.write('      </node>\n')
+    fp.write('      </node>\n')
 
     for rmesh in rmeshes:
         writeMeshArmatureNode(fp, "        ", rmesh, amt, config)
@@ -73,28 +73,8 @@ def writeSceneWithArmature(fp, rmeshes, amt, config):
         '  </library_visual_scenes>\n')
 
 
-Identity = np.identity(4, float)
-_RotX = tm.rotation_matrix(math.pi/2, (1,0,0))
-_RotY = tm.rotation_matrix(math.pi/2, (0,1,0))
-_RotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
-_RotZUpFaceX = np.dot(_RotZ, _RotX)
-
-def globalMatrix(config):
-    mat = np.identity(4, float)
-    mat[:3,3] = -config.scale*config.offset
-    if config.yUpFaceZ:
-        rot = Identity
-    elif config.yUpFaceX:
-        rot = _RotY
-    elif config.zUpFaceNegY:
-        rot = _RotX
-    elif config.zUpFaceX:
-        rot = _RotZUpFaceX
-    return np.dot(rot, mat)
-
-
 def writeMeshArmatureNode(fp, pad, rmesh, amt, config):
-    fp.write('\n%s<node id="%sObject" name="%s">\n' % (pad, rmesh.name, rmesh.name))
+    fp.write('\n%s<node id="%sObject" name="%s_%s">\n' % (pad, rmesh.name, amt.name, rmesh.name))
     writeMatrix(fp, Identity, "transform", pad+"  ")
     #writeMatrix(fp, globalMatrix(config), "transform", pad+"  ")
     fp.write(
@@ -176,9 +156,10 @@ def getRestMatrix(bone, config):
 
     elif config.localG:
         # Global coordinate system
-        #mat = tm.rotation_matrix(-math.pi/2, (1,0,0))
         mat = np.identity(4, float)
-        mat[:3,3] = bone.head
+        rot = globalRot(config)[:3,:3]
+        head = bone.head - config.scale*config.offset
+        mat[:3,3] = np.dot(rot, head)
         return mat
 
 
@@ -194,8 +175,34 @@ def getRelativeMatrix(bone, amt, config):
 
 
 
+Identity = np.identity(4, float)
+_RotX = tm.rotation_matrix(math.pi/2, (1,0,0))
+_RotY = tm.rotation_matrix(math.pi/2, (0,1,0))
 _RotNegX = tm.rotation_matrix(-math.pi/2, (1,0,0))
+_RotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
+_RotZUpFaceX = np.dot(_RotZ, _RotX)
 _RotXY = np.dot(_RotNegX, _RotY)
+
 
 def xyflip(mat):
     return np.dot(mat, _RotXY)
+
+
+def globalRot(config):
+    if config.yUpFaceZ:
+        return Identity
+    elif config.yUpFaceX:
+        return _RotY
+    elif config.zUpFaceNegY:
+        return _RotX
+    elif config.zUpFaceX:
+        return _RotZUpFaceX
+
+
+def globalMatrix(config):
+    mat = np.identity(4, float)
+    mat[:3,3] = -config.scale*config.offset
+    rot = globalRot(config)
+    return np.dot(rot, mat)
+
+

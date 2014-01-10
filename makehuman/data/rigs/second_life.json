@@ -34,12 +34,6 @@
         "toe.R":        "mFootRight"
     },
     
-    "terminals" : {
-    	"mToeLeft":		["toe.L", [0,0,0.5]],
-    	"mToeRight":	["toe.R", [0,0,0.5]],
-    	"mSkull":		["head", [0,0.5,0]]
-  	},
-
     "merge" : {
             "spine":        ["spine", "spine-1"],
             
