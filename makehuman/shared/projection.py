@@ -307,7 +307,7 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1
     RasterizeTriangles(dstImg, coords[:,[2,3,0],:], ColorShader(colors[:,[2,3,0],:]))
 
     progress(0.9, 0.99)
-    fixSeams(dstImg)
+    #fixSeams(dstImg)
 
     log.debug("mapLighting: end render")
 
@@ -351,7 +351,7 @@ def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 102
                            color = colors, clearColor = (0, 0, 0, 0))
 
     progress(0.9, 0.99)
-    fixSeams(dstImg)
+    #fixSeams(dstImg)
 
     mesh.setColor([255, 255, 255, 255])
 
