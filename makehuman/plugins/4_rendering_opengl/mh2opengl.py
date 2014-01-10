@@ -46,6 +46,7 @@ def Render(settings):
         lmapR = imgop.blurred(lmap, human.material.sssRScale, 13)
         lmap = imgop.compose([lmapR, lmapG, lmap])
         lmap.sourcePath = "Internal_Renderer_Lightmap_SSS_Texture"
+        settings['oldDiffuseTextureSetting'] = human.material.diffuseTexture
         human.material.diffuseTexture = lmap
         settings['oldDiffuseShaderSetting'] = human.material.shaderConfig['diffuse']
         human.mesh.configureShading(diffuse = True)
@@ -77,6 +78,7 @@ def Render(settings):
 
     if settings['lightmapSSS']:
         human = G.app.selectedHuman
+        human.material.diffuseTexture = settings['oldDiffuseTextureSetting']
         human.mesh.shadeless = settings['oldShadelessSetting']
         human.mesh.configureShading(diffuse = settings['oldDiffuseShaderSetting'])
 
