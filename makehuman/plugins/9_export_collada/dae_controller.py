@@ -50,8 +50,6 @@ def writeLibraryControllers(fp, rmeshes, amt, config):
 
 
 def writeSkinController(fp, rmesh, amt, config):
-    from .dae_node import Identity, getRestMatrix
-
     progress = Progress()
     progress(0, 0.1)
     obj = rmesh.object
@@ -107,8 +105,7 @@ def writeSkinController(fp, rmesh, amt, config):
 
     progress(0.4, 0.6)
     for bone in amt.bones.values():
-        mat4 = getRestMatrix(bone, config)
-        mat = la.inv(mat4)
+        mat = la.inv(bone.getRestMatrix(config))
         for i in range(4):
             fp.write('\n           ')
             for j in range(4):

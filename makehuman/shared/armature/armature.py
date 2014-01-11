@@ -309,11 +309,58 @@ class Bone:
         self.bindMatrix = la.inv(self.bindInverse)
 
 
-def renameBone(bone, locale):
+    def getRestMatrix(self, config):
+        _,rmat = getMatrix(self.head, self.tail, self.roll)
+        rmat[:3,3] -= config.scale*config.offset
+
+        if config.yUpFaceZ:
+            rot = _Identity
+        elif config.yUpFaceX:
+            rot = _RotY
+        elif config.zUpFaceNegY:
+            rot = _RotX
+        elif config.zUpFaceX:
+            rot = _RotZUpFaceX
+
+        if config.localY:
+            # Y along self, X bend
+            return np.dot(rot, rmat)
+
+        elif config.localX:
+            # X along self, Y bend
+            return np.dot(rot, np.dot(rmat, _RotXY) )
+
+        elif config.localG:
+            # Global coordinate system
+            mat = np.identity(4, float)
+            mat[:,3] = np.dot(rot, rmat[:,3])
+            return mat
+
+
+    def getRelativeMatrix(self, amt, config):
+        restmat = self.getRestMatrix(config)
+        if self.parent:
+            parent = amt.bones[self.parent]
+            parrestmat = parent.getRestMatrix(config)
+            return np.dot(la.inv(parrestmat), restmat)
+        else:
+            return restmat
+
+
+_Identity = np.identity(4, float)
+_RotX = tm.rotation_matrix(math.pi/2, (1,0,0))
+_RotY = tm.rotation_matrix(math.pi/2, (0,1,0))
+_RotNegX = tm.rotation_matrix(-math.pi/2, (1,0,0))
+_RotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
+_RotZUpFaceX = np.dot(_RotZ, _RotX)
+_RotXY = np.dot(_RotNegX, _RotY)
+
+
+def renameBone(self, locale):
     if locale:
-        return locale.rename(bone.name)
+        return locale.rename(self.name)
     else:
-        return bone.origName
+        return self.origName
 
 
 

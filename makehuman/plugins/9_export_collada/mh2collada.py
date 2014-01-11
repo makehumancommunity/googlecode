@@ -69,9 +69,6 @@ def exportCollada(human, filepath, config):
         config=config,
         rawTargets = rawTargets)
 
-    if amt:
-        amt.calcBindMatrices()
-
     progress(0.5, 0.55, "Exporting %s" % filepath)
 
     try:
