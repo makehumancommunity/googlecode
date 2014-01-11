@@ -227,6 +227,6 @@ imgopfuncs = {
     'compose': lambda l: imgop.compose(l),
     'getChannel': lambda t, c: imgop.getChannel(imgop.Image(data = t),c) if t else None,
     'getAlpha': lambda t: imgop.getAlpha(imgop.Image(data = t)) if t else None,
-    'growMask': lambda t, p: imgop.growSelection(imgop.Image(data = t), p) if t else None,
-    'shrinkMask': lambda t, p: imgop.shrinkSelection(imgop.Image(data = t), p) if t else None}
+    'growMask': lambda t, p: imgop.growMask(imgop.Image(data = t), p) if t else None,
+    'shrinkMask': lambda t, p: imgop.shrinkMask(imgop.Image(data = t), p) if t else None}
 

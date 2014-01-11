@@ -27,13 +27,10 @@ import numpy
 from image import Image
 from progress import Progress
 
-def resized(img, width, height):
-    sw, sh = img.size
-    if width is sw and height is sh:
-        return Image(img)
-    xmap = numpy.floor((numpy.arange(width) + 0.5) * sw / float(width)).astype(int)
-    ymap = numpy.floor((numpy.arange(height) + 0.5) * sh / float(height)).astype(int)
-    return Image(data = img.data[ymap,:][:,xmap])
+
+'''
+Unary graphical image operations
+'''
 
 def blurred(img, level=10.0, kernelSize = 15):
     """
@@ -86,6 +83,39 @@ def blurred(img, level=10.0, kernelSize = 15):
 
     return Image(data = data[padSize:data.shape[0], padSize:data.shape[1], :])
 
+'''
+Unary arithmetic image operations
+'''
+
+def clip(img):
+    data = Image(data = img).data
+    return Image(data = clipData(data).astype(numpy.uint8))
+
+def clipData(data):
+    return numpy.clip(data,0,255)
+
+def normalize(img):
+    data = Image(data = img).data
+    return Image(data = normalizeData(data).astype(numpy.uint8))
+
+def normalizeData(data):
+    return (data.astype(float) * (255.0/float(data.max())) + 0.5).astype(int)
+
+def invert(img):
+    data = Image(data = img).data
+    return Image(data = invertData(data).astype(numpy.uint8))
+
+def invertData(data):
+    if data.shape[2] in (2, 4):
+        # Avoid inverting alpha channel.
+        return numpy.dstack((255 - data[...,:-1], data[:,:,-1:]))
+    else:
+        return (255 - data)
+
+'''
+Binary arithmetic image operations
+'''
+
 def mix(img1, img2, weight1, weight2 = None):
     if img1 is None and img2 is None:
         return None
@@ -93,6 +123,12 @@ def mix(img1, img2, weight1, weight2 = None):
     img2 = Image(data = img2 if img2 else getBlack(img1))
     img1, img2 = synchronizeChannels(img1, img2)
     return Image(data = mixData(img1.data, img2.data, weight1, weight2).astype(numpy.uint8))
+
+def mixData(data1, data2, weight1, weight2 = None):
+    if weight2 is None:
+        weight2 =  1 - weight1
+    return (weight1*data1.astype(float) +
+            weight2*data2.astype(float) + 0.5).astype(int)
 
 def multiply(img1, img2):
     if img1 is None and img2 is None:
@@ -102,28 +138,38 @@ def multiply(img1, img2):
     img1, img2 = synchronizeChannels(img1, img2)
     return Image(data = multiplyData(img1.data, img2.data).astype(numpy.uint8))
 
-def clip(img):
-    data = Image(data = img).data
-    return Image(data = clipData(data).astype(numpy.uint8))
-
-def normalize(img):
-    data = Image(data = img).data
-    return Image(data = normalizeData(data).astype(numpy.uint8))
-
-def mixData(data1, data2, weight1, weight2 = None):
-    if weight2 is None:
-        weight2 =  1 - weight1
-    return (weight1*data1.astype(float) +
-            weight2*data2.astype(float) + 0.5).astype(int)
-
 def multiplyData(data1, data2):
     return ((data1.astype(float) * data2.astype(float)) / 255.0 + 0.5).astype(int)
 
-def clipData(data):
-    return numpy.clip(data,0,255)
+'''
+Binary bitwise image operations
+'''
 
-def normalizeData(data):
-    return (data.astype(float) * (255.0/float(data.max())) + 0.5).astype(int)
+def bitwiseAnd(img1, img2):
+    if img1 is None and img2 is None:
+        return None
+    img1 = Image(data = img1 if img1 else getWhite(img2))
+    img2 = Image(data = img2 if img2 else getWhite(img1))
+    img1, img2 = synchronizeChannels(img1, img2)
+    return Image(data = bitwiseAndData(img1.data, img2.data).astype(numpy.uint8))
+
+def bitwiseAndData(data1, data2):
+    return numpy.bitwise_and(data1, data2)
+
+def bitwiseOr(img1, img2):
+    if img1 is None and img2 is None:
+        return None
+    img1 = Image(data = img1 if img1 else getBlack(img2))
+    img2 = Image(data = img2 if img2 else getBlack(img1))
+    img1, img2 = synchronizeChannels(img1, img2)
+    return Image(data = bitwiseOrData(img1.data, img2.data).astype(numpy.uint8))
+
+def bitwiseOrData(data1, data2):
+    return numpy.bitwise_or(data1, data2)
+
+'''
+Image synthesis
+'''
 
 def compose(channels):
     # 'channels' is a sequence of Images.
@@ -139,13 +185,6 @@ def compose(channels):
         i += 1
     return Image(data = numpy.dstack(outch).astype(numpy.uint8))
 
-def synchronizeChannels(img1, img2):
-    if img1.components > img2.components:
-        img2 = img2.convert(img1.components)
-    else:
-        img1 = img1.convert(img2.components)
-    return img1, img2
-        
 def colorAsImage(color, image = None, width = None, height = None):
     """
     Create or modify an image filled with a single color.
@@ -177,6 +216,10 @@ def getWhite(img):
     """
     return colorAsImage([255], image=None, width=img.height, height=img.width)
 
+'''
+Image analysis
+'''
+
 def getAlpha(img):
     """
     Returns the alpha channel of the specified image.
@@ -193,43 +236,86 @@ def getChannel(img, channel):
     """
     return Image(data = img.data[:,:,(channel-1):channel])
 
-def growSelection(img, pixels = 1):
+'''
+Image conversions
+'''
+
+def resized(img, width, height):
+    sw, sh = img.size
+    if width is sw and height is sh:
+        return Image(img)
+    xmap = numpy.floor((numpy.arange(width) + 0.5) * sw / float(width)).astype(int)
+    ymap = numpy.floor((numpy.arange(height) + 0.5) * sh / float(height)).astype(int)
+    return Image(data = img.data[ymap,:][:,xmap])
+
+def synchronizeChannels(img1, img2):
+    if img1.components > img2.components:
+        img2 = img2.convert(img1.components)
+    else:
+        img1 = img1.convert(img2.components)
+    return img1, img2
+
+'''
+Mask manipulation
+'''
+
+def growMask(img, pixels = 1):
     out = Image(img)
-    for i in xrange(pixels):
-        out = expandSelection(out)
+    for i in xrange(int(pixels+0.5)):
+        out = expandMask(out)
     return out
 
-def shrinkSelection(img, pixels = 1):
+def shrinkMask(img, pixels = 1):
     out = Image(img)
-    for i in xrange(pixels):
-        out = expandSelection(out, True)
+    for i in xrange(int(pixels+0.5)):
+        out = expandMask(out, True)
     return out
 
-def expandSelection(img, shrink = False):
-    '''
-    In a single alpha channel that serves as a mask,
-    grow or shrink the mask by a pixel.
-
-    Based on projection.py's fixSeams function.
-    '''
-       
-    h,w,c = img.data.shape
-    jitters = numpy.empty((3,3,h,w), dtype=numpy.uint8)
-    jitters[1,1,:,:] = img.data[...,-1]
-    if shrink:
-        jitters[1,1,:,:] = 255 - jitters[1,1,:,:]
-
-    jitters[1,0,:,:] = numpy.roll(jitters[1,1,:,:], -1, axis=-2)
-    jitters[1,2,:,:] = numpy.roll(jitters[1,1,:,:],  1, axis=-2)
-    jitters[0,:,:,:] = numpy.roll(jitters[1,:,:,:], -1, axis=-3)
-    jitters[2,:,:,:] = numpy.roll(jitters[1,:,:,:],  1, axis=-3)
-
-    jitters_f = jitters.reshape(9,h,w)
-    mask = numpy.logical_or(jitters[1,1,:,:] != 0, numpy.any(jitters_f[:,:,:] != 0, axis=0))
+def expandMask(img, shrink = False):
+    """
+    Apply expandData on an image by optionally inverting.
+    On masks, this results on growing and shrinking accordingly.
+    """
 
     if shrink:
-        mask = numpy.logical_not(mask)
+        img = invert(img)
+    img = Image(data = expandData(img.data))
+    if shrink:
+        img = invert(img)
+    return img
 
-    return Image(data = 255*((mask[...,None]).astype(numpy.uint8)))
+def expand(img, mask, pixels):
+    """
+    Expand an image away from its borders defined by mask by
+    an amount of pixels. The function returns the expanded
+    image and mask.
+    """
 
+    for i in xrange(int(pixels+0.5)):
+        expansion = expandMask(img)
+        expansion = bitwiseAnd(invert(mask), expansion)
+        img = bitwiseOr(img, expansion)
+        mask = expandMask(mask)
+        
+    return img, mask
+
+def expandData(data):
+    """
+    Combine with bitwise OR all pixels with their neighbours.
+    """
+
+    neighbours = numpy.empty((3, 3) + data.shape, dtype=numpy.uint8)
+    neighbours[1,1] = data
+
+    neighbours[1,0] = numpy.roll(neighbours[1,1], -1, axis=-2)
+    neighbours[1,2] = numpy.roll(neighbours[1,1],  1, axis=-2)
+    neighbours[0] = numpy.roll(neighbours[1], -1, axis=-3)
+    neighbours[2] = numpy.roll(neighbours[1],  1, axis=-3)
+
+    neighbours[1] = numpy.bitwise_or(neighbours[1], neighbours[0])
+    neighbours[1] = numpy.bitwise_or(neighbours[1], neighbours[2])
+    neighbours[1,1] = numpy.bitwise_or(neighbours[1,1], neighbours[1,0])
+    neighbours[1,1] = numpy.bitwise_or(neighbours[1,1], neighbours[1,2])
+
+    return neighbours[1,1]
 

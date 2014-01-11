@@ -237,38 +237,49 @@ def mapImage(imgMesh, mesh, leftTop, rightBottom):
     else:
         return mapImageSoft(mh.Image(imgMesh.getTexture()), mesh, leftTop, rightBottom)
 
-def fixSeams(img):
-    progress = Progress(4, False)
-    h,w,c = img.data.shape
-    neighbors = np.empty((3,3,h,w,c), dtype=np.uint8)
 
-    neighbors[1,1,:,:,:] = img.data
+'''class SeamFix
 
-    neighbors[1,0,:,:,:] = np.roll(neighbors[1,1,:,:,:], -1, axis=-2)
-    neighbors[1,2,:,:,:] = np.roll(neighbors[1,1,:,:,:],  1, axis=-2)
+A class designed to serve as a tool for removing UV seams
+from projected images.
 
-    progress.step()
-    neighbors[0,:,:,:,:] = np.roll(neighbors[1,:,:,:,:], -1, axis=-3)
-    neighbors[2,:,:,:,:] = np.roll(neighbors[1,:,:,:,:],  1, axis=-3)
+When creating images through projection, interference with the
+limits of the UV map tend to produce dark seams on the mesh
+along the lines that define the limits. Using this class,
+one can repair these seams by projection aided post-processing.
 
-    chroma = neighbors[...,:-1]
-    alpha = neighbors[...,-1]
+The seam fix can be expanded furtherly in case the projected
+image is intented for blurring or other sampling operation
+affected by pixels outside the UV border.
 
-    progress.step()
-    chroma_f = chroma.reshape(9,h,w,c-1)
-    alpha_f = alpha.reshape(9,h,w)
+'''
 
-    border = np.logical_and(alpha[1,1,:,:] == 0, np.any(alpha_f[:,:,:] != 0, axis=0))
+class SeamFix(object):
+    def __init__(self, img, mesh = None, mask = None):
+        if mask is None:
+            if mesh is None:
+                mesh = G.app.selectedHuman.mesh
+            mask = mapMask(img.size, mesh)
+        self.mask = mask
+        self.image = img
+        
+        self.expand()
+        
+    def expand(self, pixels = 1):
+        self.image, self.mask = image_operations.expand(self.image, self.mask, pixels)
+        return self
 
-    progress.step()
-    alpha_f = alpha_f.astype(np.float32)[...,None]
-    fill = np.sum(chroma_f[:,:,:,:] * alpha_f[:,:,:,:], axis=0) / np.sum(alpha_f[:,:,:,:], axis=0)
+    def apply(self):
+        return self.image
 
-    img.data[...,:-1][border] = fill.astype(np.uint8)[border]
-    img.data[...,-1:][border] = 255
-    progress.step()
+'''fixSeams: Convenience function for simple cases.'''
+def fixSeams(img, mesh = None, mask = None):
+    if mask is None and mesh is None:
+        if img.components in (2, 4):
+            mask = image_operations.getAlpha(img)
+    return SeamFix(img, mesh, mask).apply()
     
-def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024)):
+def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024), doFixSeams = True):
     """
     Create a lightmap for the selected human (software renderer).
     """
@@ -307,7 +318,8 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1
     RasterizeTriangles(dstImg, coords[:,[2,3,0],:], ColorShader(colors[:,[2,3,0],:]))
 
     progress(0.9, 0.99)
-    #fixSeams(dstImg)
+    if doFixSeams:
+        dstImg = fixSeams(dstImg, mesh)
 
     log.debug("mapLighting: end render")
 
@@ -316,7 +328,7 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1
     progress(1)
     return dstImg
 
-def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024)):
+def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024), doFixSeams = True):
     """
     Create a lightmap for the selected human (hardware accelerated).
     """
@@ -351,7 +363,8 @@ def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 102
                            color = colors, clearColor = (0, 0, 0, 0))
 
     progress(0.9, 0.99)
-    #fixSeams(dstImg)
+    if doFixSeams:
+        dstImg = fixSeams(dstImg, mesh)
 
     mesh.setColor([255, 255, 255, 255])
 
@@ -360,7 +373,7 @@ def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 102
     progress(1)
     return dstImg
 
-def mapLighting(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024)):
+def mapLighting(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024), doFixSeams = True):
     """
     Bake lightmap for human from one light.
     Uses OpenGL hardware acceleration if the necessary OGL features are
@@ -368,15 +381,15 @@ def mapLighting(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024)
     """
     if mh.hasRenderSkin():
         try:
-            return mapLightingGL(lightpos, mesh, res)
+            return mapLightingGL(lightpos, mesh, res, doFixSeams)
         except Exception, e:
             log.debug(e)
             log.debug("Hardware skin rendering failed, falling back to software render.")
-            return mapLightingSoft(lightpos, mesh, res)
+            return mapLightingSoft(lightpos, mesh, res, doFixSeams)
     else:
-        return mapLightingSoft(lightpos, mesh, res)
+        return mapLightingSoft(lightpos, mesh, res, doFixSeams)
 
-def mapSceneLighting(scn, object = None, res = (1024, 1024)):
+def mapSceneLighting(scn, object = None, res = (1024, 1024), doFixSeams = True):
     """
     Create a lightmap for a scene with one or multiple lights.
     """
@@ -395,11 +408,11 @@ def mapSceneLighting(scn, object = None, res = (1024, 1024)):
 
     if (scn.lights):    # Add up all the lightmaps.
         progress = Progress(len(scn.lights), G.app.progress)
-        lmap = mapLighting(calcLightPos(scn.lights[0]), object.mesh, res).data
+        lmap = mapLighting(calcLightPos(scn.lights[0]), object.mesh, res, doFixSeams).data
         i = 1.0        
         for light in scn.lights[1:]:
             lmap = image_operations.mixData(
-                lmap, mapLighting(calcLightPos(light), object.mesh, res).data,1,1)
+                lmap, mapLighting(calcLightPos(light), object.mesh, res, doFixSeams).data,1,1)
             i += 1.0
 
         return image_operations.normalize(lmap)
