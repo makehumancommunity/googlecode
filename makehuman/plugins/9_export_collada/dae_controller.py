@@ -50,7 +50,7 @@ def writeLibraryControllers(fp, rmeshes, amt, config):
 
 
 def writeSkinController(fp, rmesh, amt, config):
-    from .dae_node import globalMatrix, Identity, getRestMatrix
+    from .dae_node import Identity, getRestMatrix
 
     progress = Progress()
     progress(0, 0.1)
@@ -106,7 +106,6 @@ def writeSkinController(fp, rmesh, amt, config):
         '          <float_array count="%d" id="%s-skin-poses-array">' % (16*nBones,rmesh.name))
 
     progress(0.4, 0.6)
-    #rot = globalMatrix(config)
     for bone in amt.bones.values():
         mat4 = getRestMatrix(bone, config)
         mat = la.inv(mat4)

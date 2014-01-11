@@ -76,7 +76,6 @@ def writeSceneWithArmature(fp, rmeshes, amt, config):
 def writeMeshArmatureNode(fp, pad, rmesh, amt, config):
     fp.write('\n%s<node id="%sObject" name="%s_%s">\n' % (pad, rmesh.name, amt.name, rmesh.name))
     writeMatrix(fp, Identity, "transform", pad+"  ")
-    #writeMatrix(fp, globalMatrix(config), "transform", pad+"  ")
     fp.write(
         '%s  <instance_controller url="#%s-skin">\n' % (pad, rmesh.name) +
         '%s    <skeleton>#%sSkeleton</skeleton>\n' % (pad, amt.roots[0].name))
@@ -143,38 +142,6 @@ def goodBoneName(bname):
 #   Different types of coordinate systems
 #----------------------------------------------------------------------
 
-def getRestMatrix(bone, config):
-
-    if config.localY:
-        # Y along bone, X bend
-        return bone.matrixRest
-
-    elif config.localX:
-        # X along bone, Y bend
-        #_,restmat = getMatrix(bone.head, bone.tail, 0)
-        return xyflip(bone.matrixRest)
-
-    elif config.localG:
-        # Global coordinate system
-        mat = np.identity(4, float)
-        rot = globalRot(config)[:3,:3]
-        head = bone.head - config.scale*config.offset
-        mat[:3,3] = np.dot(rot, head)
-        return mat
-
-
-def getRelativeMatrix(bone, amt, config):
-
-    restmat = getRestMatrix(bone, config)
-    if bone.parent:
-        parent = amt.bones[bone.parent]
-        parrestmat = getRestMatrix(parent, config)
-        return np.dot(la.inv(parrestmat), restmat)
-    else:
-        return restmat
-
-
-
 Identity = np.identity(4, float)
 _RotX = tm.rotation_matrix(math.pi/2, (1,0,0))
 _RotY = tm.rotation_matrix(math.pi/2, (0,1,0))
@@ -184,8 +151,33 @@ _RotZUpFaceX = np.dot(_RotZ, _RotX)
 _RotXY = np.dot(_RotNegX, _RotY)
 
 
-def xyflip(mat):
-    return np.dot(mat, _RotXY)
+def getRestMatrix(bone, config):
+    rmat = bone.matrixRest.copy()
+    rmat[:3,3] -= config.scale*config.offset
+
+    if config.localY:
+        # Y along bone, X bend
+        return np.dot(globalRot(config), rmat)
+
+    elif config.localX:
+        # X along bone, Y bend
+        return np.dot(globalRot(config), np.dot(rmat, _RotXY) )
+
+    elif config.localG:
+        # Global coordinate system
+        mat = np.identity(4, float)
+        mat[:,3] = np.dot(globalRot(config), rmat[:,3])
+        return mat
+
+
+def getRelativeMatrix(bone, amt, config):
+    restmat = getRestMatrix(bone, config)
+    if bone.parent:
+        parent = amt.bones[bone.parent]
+        parrestmat = getRestMatrix(parent, config)
+        return np.dot(la.inv(parrestmat), restmat)
+    else:
+        return restmat
 
 
 def globalRot(config):
