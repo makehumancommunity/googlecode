@@ -8,9 +8,9 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Glynn Clements
+**Authors:**           Glynn Clements, Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -548,9 +548,34 @@ class RadioButton(QtGui.QRadioButton, ButtonBase):
                 return radio
 
 class ListItem(QtGui.QListWidgetItem):
-    def __init__(self, label):
+    def __init__(self, label, tooltip = True):
         super(ListItem, self).__init__(label)
         self.__hasCheckbox = False
+        self.tooltip = tooltip
+
+    def setText(self, text):
+        super(ListItem, self).setText(text)
+        self.updateTooltip(self)
+
+    def updateTooltip(self):
+        """
+        Attach a mouse-over tooltip for this item if the text is too long to fit
+        the widget.
+        """
+        if not self.tooltip:
+            return
+
+        metrics = QtGui.QFontMetrics(self.font())
+
+        labelWidth = self.listWidget().width()
+        if self.icon():
+            labelWidth -= self.listWidget().iconSize().width() + 10
+            # pad size with 10px to account for margin between icon and text (this is an approximation)
+
+        if metrics.width(self.text) > labelWidth:
+            self.setToolTip(self.text)
+        else:
+            self.setToolTip("")
 
     @property
     def hasCheckbox(self):
@@ -589,7 +614,8 @@ class ListItem(QtGui.QListWidgetItem):
     def isChecked(self):
         return self.hasCheckbox and self.checkState() != QtCore.Qt.Unchecked
 
-    def _clicked(self, owner):
+    def _clicked(self):
+        owner = self.listWidget()
         if self.hasCheckbox:
             if self.checkState() != self.checkedState:
                 self.checkedState = self.checkState()
@@ -612,7 +638,7 @@ class ListView(QtGui.QListWidget, Widget):
         self.callEvent('onActivate', item)
 
     def _clicked(self, item):
-        if item._clicked(self):
+        if item._clicked():
             return
         if self.allowsMultipleSelection():
             if item.isSelected():
@@ -1705,17 +1731,8 @@ class ZoomableImageView(QtGui.QScrollArea, Widget):
         self.ratio = 1.0
         self.minratio = 0.1
 
-    def setImage(self, path):
-        import image
-        if isinstance(path, image.Image):
-            img = path.toQImage()
-            pixmap = QtGui.QPixmap.fromImage(img)
-        elif isinstance(path, QtGui.QPixmap):
-            pixmap = path
-        elif isinstance(path, QtGui.QImage):
-            pixmap = QtGui.QPixmap.fromImage(path)
-        else:
-            pixmap = QtGui.QPixmap(path)
+    def setImage(self, img):
+        pixmap = getPixmap(img)
         self.imageLabel.setPixmap(pixmap)
         self.imageLabel.adjustSize()
         self.ratio = float(self.width()) / float(pixmap.width())
@@ -1818,4 +1835,14 @@ def qColorFromColor(color):
                             int(color[1]*255), 
                             int(color[2]*255))
 
-
+def getPixmap(img):
+    import image
+    if isinstance(img, image.Image):
+        img = img.toQImage()
+        return QtGui.QPixmap.fromImage(img)
+    elif isinstance(img, QtGui.QPixmap):
+        return img
+    elif isinstance(img, QtGui.QImage):
+        return QtGui.QPixmap.fromImage(img)
+    else:
+        return QtGui.QPixmap(img)

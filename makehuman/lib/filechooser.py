@@ -12,7 +12,7 @@ Qt filechooser widget.
 
 **Authors:**           Glynn Clements, Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -634,6 +634,10 @@ class ListFileChooser(FileChooserBase):
         @self.children.mhEvent
         def onClearSelection(value):
             self.callEvent('onDeselectAll', None)
+
+    def resizeEvent(self, event):
+        for listItem in self.children.getItems():
+            listItem.updateTooltip()
 
     def setVerticalScrollingEnabled(self, enabled):
             self.children.setVerticalScrollingEnabled(enabled)
