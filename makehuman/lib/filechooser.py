@@ -750,6 +750,9 @@ class ListFileChooser(FileChooserBase):
                 clearIcon = self.clearImage
             self.addItem(None, "None", clearIcon, pos = 0)
 
+        for listItem in self.children.getItems():
+            listItem.updateTooltip()
+
         if keepSelections:
             if self.multiSelect:
                 self.setSelections(selections)
