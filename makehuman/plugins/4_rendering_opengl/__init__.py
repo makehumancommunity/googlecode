@@ -62,7 +62,7 @@ class OpenGLTaskView(guipose.PoseModeTaskView):
                 pass
 
         @self.AAbox.mhEvent
-        def onChange(value):
+        def onClicked(value):
             gui3d.app.settings['GL_RENDERER_AA'] = self.AAbox.selected
 
         @self.renderButton.mhEvent
