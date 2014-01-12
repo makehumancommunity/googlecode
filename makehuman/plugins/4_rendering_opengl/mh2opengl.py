@@ -12,7 +12,7 @@ Internal OpenGL Renderer Functions.
 
 **Authors:**           Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -78,7 +78,7 @@ def Render(settings):
     if not mh.hasRenderToRenderbuffer():
         # Limited fallback mode, read from screen buffer
         img = mh.grabScreen(0, 0, G.windowWidth, G.windowHeight)
-        # TODO disable resolution GUI setting in fallback mode
+        alphaImg = None
     else:
         # Render to framebuffer object
         renderprog = Progress()
@@ -88,6 +88,9 @@ def Render(settings):
             width = width * 2
             height = height * 2
         img = mh.renderToBuffer(width, height)
+        alphaImg = mh.renderAlphaMask(width, height)
+        img = img.convert(components = 4) # Convert RGB -> RGBA (add alpha channel)
+        img._data[:,:,3] = alphaImg._data[:,:,0]
 
         if settings['AA']:
             renderprog(0.4, 0.99, "AntiAliasing")
@@ -105,8 +108,6 @@ def Render(settings):
     if settings['lightmapSSS']:
         progress(0.98, 0.99, "Restoring data")
         human.material = materialBackup
-
-    # TODO restore scene object visibility
 
     progress(1, None, 'Rendering complete')
 
