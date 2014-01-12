@@ -26,7 +26,7 @@ from core import G
 from getpath import getPath, getSysDataPath, getSysPath
 from makehuman import getVersion, getVersionStr, getBasemeshVersion, getShortVersion, isRelease
 
-from glmodule import grabScreen, hasRenderSkin, renderSkin, getPickedColor, hasRenderToRenderbuffer, renderToBuffer
+from glmodule import grabScreen, hasRenderSkin, renderSkin, getPickedColor, hasRenderToRenderbuffer, renderToBuffer, renderAlphaMask
 
 from image import Image
 from texture import Texture, getTexture, reloadTextures
