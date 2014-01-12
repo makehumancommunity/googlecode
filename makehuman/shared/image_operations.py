@@ -190,8 +190,12 @@ def colorAsImage(color, image = None, width = None, height = None):
     Create or modify an image filled with a single color.
     """
     components = min(4, len(color))
-    color = numpy.asarray(color[:components], dtype=numpy.uint8)
-
+    color = color[:components]
+    if isinstance(color[0], float):
+        color = (numpy.asarray(color, dtype=float) * 255 + 0.5).astype(numpy.uint8)
+    else:
+        color = numpy.asarray(color, dtype=numpy.uint8)
+        
     if image:
         if image.components != components:
             raise TypeError("Color (%s) does not have same amount of channels as image (%s)" % (color, image.components))

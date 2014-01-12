@@ -392,6 +392,8 @@ def mapLighting(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024)
 def mapSceneLighting(scn, object = None, res = (1024, 1024), doFixSeams = True):
     """
     Create a lightmap for a scene with one or multiple lights.
+    This happens by adding the lightmaps produced by each light,
+    plus the scene ambience.
     """
 
     if object is None:
@@ -406,18 +408,24 @@ def mapSceneLighting(scn, object = None, res = (1024, 1024), doFixSeams = True):
                 matrix.rotz(-objrot[2]),
                 light.position))
 
-    if (scn.lights):    # Add up all the lightmaps.
-        progress = Progress(len(scn.lights), G.app.progress)
-        lmap = mapLighting(calcLightPos(scn.lights[0]), object.mesh, res, doFixSeams).data
-        i = 1.0        
-        for light in scn.lights[1:]:
+    progress = Progress(1 + len(scn.lights), G.app.progress)
+
+    # Ambience
+    lmap = image_operations.colorAsImage(scn.environment.ambience.values, None, *res)
+    progress.step()
+
+    # Lights
+    if (scn.lights):
+        amb = lmap
+        lmap = lmap.data * len(scn.lights)
+        for light in scn.lights:
             lmap = image_operations.mixData(
                 lmap, mapLighting(calcLightPos(light), object.mesh, res, doFixSeams).data,1,1)
-            i += 1.0
+            progress.step()
+        lmap = image_operations.normalize(lmap)
+        lmap = image_operations.Image(data = np.maximum(amb.data, lmap.data))
 
-        return image_operations.normalize(lmap)
-    else:   # If the scene has no lights, return an empty lightmap.
-        return mh.Image(data = np.zeros((1024, 1024, 1), dtype=np.uint8))
+    return lmap
 
 def mapMask(dimensions = (1024, 1024), mesh = None):
     """
