@@ -44,7 +44,8 @@ class OpenGLTaskView(guipose.PoseModeTaskView):
             "x".join([str(self.resWidth), str(self.resHeight)])))
         self.AAbox = settingsBox.addWidget(gui.CheckBox("Anti-aliasing"))
         self.AAbox.setSelected( gui3d.app.settings.get('GL_RENDERER_AA', True) )
-        self.lightmapSSS = settingsBox.addWidget(gui.CheckBox("Lightmap SSS", False))
+        self.lightmapSSS = settingsBox.addWidget(gui.CheckBox("Lightmap SSS"))
+        self.lightmapSSS.setSelected( gui3d.app.settings.get('GL_RENDERER_SSS', False) )
         self.renderButton = settingsBox.addWidget(gui.Button('Render'))
 
         if not mh.hasRenderToRenderbuffer():
@@ -64,6 +65,10 @@ class OpenGLTaskView(guipose.PoseModeTaskView):
         @self.AAbox.mhEvent
         def onClicked(value):
             gui3d.app.settings['GL_RENDERER_AA'] = self.AAbox.selected
+
+        @self.lightmapSSS.mhEvent
+        def onClicked(value):
+            gui3d.app.settings['GL_RENDERER_SSS'] = self.lightmapSSS.selected
 
         @self.renderButton.mhEvent
         def onClicked(event):
