@@ -12,7 +12,7 @@ Proxy mesh library
 
 **Authors:**           Marc Flerackers
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -30,7 +30,6 @@ import mh
 import proxychooser
 import filechooser as fc
 import os
-import log
 import mh2proxy
 
 
@@ -89,7 +88,6 @@ class ProxyTaskView(proxychooser.ProxyChooserTaskView):
     def getFileExtension(self):
         return 'proxy'
 
-    # ???
     def proxySelected(self, proxy, obj):
         self.human.setProxy(proxy)
         self.human.genitalsProxy = proxy
@@ -117,6 +115,7 @@ class ProxyTaskView(proxychooser.ProxyChooserTaskView):
         self.filechooser.selectItem(mhclofile)
 
         if not mhclofile:
+            self.signalChange()
             return
 
         if mhclofile not in self._proxyCache:
