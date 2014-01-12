@@ -220,25 +220,25 @@ class ArmatureSelector:
         self.box = box
 
         import gui
-        self.useMuscles = box.addWidget(gui.ToggleButton("Muscle bones (MHX only)"))
-        self.useFaceRig = box.addWidget(gui.ToggleButton("Face rig (MHX only)"))
-        self.useReverseHip = box.addWidget(gui.ToggleButton("Reverse hips"))
-        self.addConnectingBones = box.addWidget(gui.ToggleButton("Connecting bones"))
+        self.useMuscles = box.addWidget(gui.CheckBox("Muscle bones (MHX only)"))
+        self.useFaceRig = box.addWidget(gui.CheckBox("Face rig (MHX only)"))
+        self.useReverseHip = box.addWidget(gui.CheckBox("Reverse hips"))
+        self.addConnectingBones = box.addWidget(gui.CheckBox("Connecting bones"))
 
-        self.mergeSpine = box.addWidget(gui.ToggleButton("Merge spine"))
-        self.mergeShoulders = box.addWidget(gui.ToggleButton("Merge shoulders"))
-        self.mergeFingers = box.addWidget(gui.ToggleButton("Merge fingers"))
-        self.mergePalms = box.addWidget(gui.ToggleButton("Merge palms"))
-        self.mergeHead = box.addWidget(gui.ToggleButton("Merge head"))
+        self.mergeSpine = box.addWidget(gui.CheckBox("Merge spine"))
+        self.mergeShoulders = box.addWidget(gui.CheckBox("Merge shoulders"))
+        self.mergeFingers = box.addWidget(gui.CheckBox("Merge fingers"))
+        self.mergePalms = box.addWidget(gui.CheckBox("Merge palms"))
+        self.mergeHead = box.addWidget(gui.CheckBox("Merge head"))
 
-        self.useSplitBones = box.addWidget(gui.ToggleButton("Split forearm (MHX only)"))
-        self.useDeformBones = box.addWidget(gui.ToggleButton("Deform bones (MHX only)"))
-        self.useSockets = box.addWidget(gui.ToggleButton("Sockets (MHX only)"))
-        self.useIkArms = box.addWidget(gui.ToggleButton("Arm IK (MHX only)"))
-        self.useIkLegs = box.addWidget(gui.ToggleButton("Leg IK (MHX only)"))
-        self.useFingers = box.addWidget(gui.ToggleButton("Finger controls (MHX only)"))
+        self.useSplitBones = box.addWidget(gui.CheckBox("Split forearm (MHX only)"))
+        self.useDeformBones = box.addWidget(gui.CheckBox("Deform bones (MHX only)"))
+        self.useSockets = box.addWidget(gui.CheckBox("Sockets (MHX only)"))
+        self.useIkArms = box.addWidget(gui.CheckBox("Arm IK (MHX only)"))
+        self.useIkLegs = box.addWidget(gui.CheckBox("Leg IK (MHX only)"))
+        self.useFingers = box.addWidget(gui.CheckBox("Finger controls (MHX only)"))
 
-        self.useMasterBone = box.addWidget(gui.ToggleButton("Master bone"))
+        self.useMasterBone = box.addWidget(gui.CheckBox("Master bone"))
 
 
     def fromOptions(self, options):

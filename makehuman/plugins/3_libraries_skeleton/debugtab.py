@@ -44,7 +44,7 @@ class SkeletonDebugLibrary(gui3d.TaskView):
 
         '''
         displayBox = mainLib.displayBox
-        mainLib.showWeightsTggl = displayBox.addWidget(gui.ToggleButton("Show bone weights"))
+        mainLib.showWeightsTggl = displayBox.addWidget(gui.CheckBox("Show bone weights"))
         @mainLib.showWeightsTggl.mhEvent
         def onClicked(event):
             if mainLib.showWeightsTggl.selected:

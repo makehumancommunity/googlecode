@@ -228,7 +228,7 @@ class TagFilter(gui.GroupBox):
             return
 
         self.tags.add(tag)
-        toggle = self.addWidget(gui.ToggleButton(tag))
+        toggle = self.addWidget(gui.CheckBox(tag))
         toggle.tag = tag
 
         @toggle.mhEvent

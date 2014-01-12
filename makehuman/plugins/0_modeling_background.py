@@ -145,7 +145,7 @@ class BackgroundChooser(gui3d.TaskView):
             radioBtn.side = side
 
         self.opacitySlider = self.bgSettingsBox.addWidget(gui.Slider(value=self.opacity, min=0,max=255, label = "Opacity: %d"))
-        self.foregroundTggl = self.bgSettingsBox.addWidget(gui.ToggleButton("Show in foreground"))
+        self.foregroundTggl = self.bgSettingsBox.addWidget(gui.CheckBox("Show in foreground"))
 
         @self.opacitySlider.mhEvent
         def onChanging(value):
@@ -354,7 +354,7 @@ class TextureProjectionView(gui3d.TaskView) :
 
         # sliders
         self.opacitySlider = self.backgroundBox.addWidget(gui.Slider(value=backgroundChooserView.opacity, min=0,max=255, label = "Opacity: %d"))
-        self.foregroundTggl = self.backgroundBox.addWidget(gui.ToggleButton("Show in foreground"))
+        self.foregroundTggl = self.backgroundBox.addWidget(gui.CheckBox("Show in foreground"))
 
         @self.opacitySlider.mhEvent
         def onChanging(value):
@@ -380,7 +380,7 @@ class TextureProjectionView(gui3d.TaskView) :
 
                 self.backgroundChooserView.setBackgroundScale(scale)
 
-        self.dragButton = self.backgroundBox.addWidget(gui.ToggleButton('Move && Resize'))
+        self.dragButton = self.backgroundBox.addWidget(gui.CheckBox('Move && Resize'))
 
         @self.dragButton.mhEvent
         def onClicked(event):
@@ -413,7 +413,7 @@ class TextureProjectionView(gui3d.TaskView) :
             self.projectUV()
 
         displayBox = self.addRightWidget(gui.GroupBox('Display settings'))
-        self.shadelessButton = displayBox.addWidget(gui.ToggleButton('Shadeless'))
+        self.shadelessButton = displayBox.addWidget(gui.CheckBox('Shadeless'))
         # TODO should disable shader as well when setting shadeless
 
         @self.shadelessButton.mhEvent

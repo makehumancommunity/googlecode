@@ -42,7 +42,7 @@ class OpenGLTaskView(guipose.PoseModeTaskView):
         settingsBox.addWidget(gui.TextView("Resolution"))
         self.resBox = settingsBox.addWidget(gui.TextEdit(
             "x".join([str(self.resWidth), str(self.resHeight)])))
-        self.AAbox = settingsBox.addWidget(gui.ToggleButton("Anti-aliasing"))
+        self.AAbox = settingsBox.addWidget(gui.CheckBox("Anti-aliasing"))
         self.AAbox.setSelected( gui3d.app.settings.get('GL_RENDERER_AA', True) )
         self.lightmapSSS = settingsBox.addWidget(gui.CheckBox("Lightmap SSS", False))
         self.renderButton = settingsBox.addWidget(gui.Button('Render'))

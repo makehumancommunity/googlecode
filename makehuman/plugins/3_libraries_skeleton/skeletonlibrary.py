@@ -135,7 +135,7 @@ class SkeletonLibrary(gui3d.TaskView):
 
         '''
         self.displayBox = self.addLeftWidget(gui.GroupBox('Display'))
-        self.showHumanTggl = self.displayBox.addWidget(gui.ToggleButton("Show human"))
+        self.showHumanTggl = self.displayBox.addWidget(gui.CheckBox("Show human"))
         @self.showHumanTggl.mhEvent
         def onClicked(event):
             if self.showHumanTggl.selected:
@@ -144,7 +144,7 @@ class SkeletonLibrary(gui3d.TaskView):
                 self.human.hide()
         self.showHumanTggl.setSelected(True)
 
-        self.showJointsTggl = self.displayBox.addWidget(gui.ToggleButton("Show joints"))
+        self.showJointsTggl = self.displayBox.addWidget(gui.CheckBox("Show joints"))
         @self.showJointsTggl.mhEvent
         def onClicked(event):
             if not self.jointsObj:

@@ -504,8 +504,6 @@ class CheckBox(QtGui.QCheckBox, ButtonBase):
         ButtonBase.__init__(self)
         self.setChecked(selected)
 
-ToggleButton = CheckBox
-
 class RadioButton(QtGui.QRadioButton, ButtonBase):
     groups = {}
 

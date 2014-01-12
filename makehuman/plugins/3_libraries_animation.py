@@ -182,7 +182,7 @@ class AnimationLibrary(gui3d.TaskView):
         self.playPauseBtn = None
         self.animateInPlaceTggl = None
 
-        self.showHumanTggl = displayBox.addWidget(gui.ToggleButton("Show human"))
+        self.showHumanTggl = displayBox.addWidget(gui.CheckBox("Show human"))
         @self.showHumanTggl.mhEvent
         def onClicked(event):
             if self.showHumanTggl.selected:
@@ -191,7 +191,7 @@ class AnimationLibrary(gui3d.TaskView):
                 self.human.hide()
         self.showHumanTggl.setSelected(True)
 
-        self.showSkeletonTggl = displayBox.addWidget(gui.ToggleButton("Show skeleton"))
+        self.showSkeletonTggl = displayBox.addWidget(gui.CheckBox("Show skeleton"))
         @self.showSkeletonTggl.mhEvent
         def onClicked(event):
             if not self.skelObj:
@@ -204,7 +204,7 @@ class AnimationLibrary(gui3d.TaskView):
                 self.setHumanTransparency(False)
         self.showSkeletonTggl.setSelected(True)
 
-        self.skinProxiesTggl = displayBox.addWidget(gui.ToggleButton("Skin clothes, hair and eyes"))
+        self.skinProxiesTggl = displayBox.addWidget(gui.CheckBox("Skin clothes, hair and eyes"))
         @self.skinProxiesTggl.mhEvent
         def onClicked(event):
             self.setupProxySkinning()
@@ -371,7 +371,7 @@ class AnimationLibrary(gui3d.TaskView):
             else:
                 self.stopPlayback()
 
-        self.animateInPlaceTggl = self.playbackBox.addWidget(gui.ToggleButton("In-place animation"))
+        self.animateInPlaceTggl = self.playbackBox.addWidget(gui.CheckBox("In-place animation"))
         @self.animateInPlaceTggl.mhEvent
         def onClicked(event):
             self.human.animated.setAnimateInPlace(self.animateInPlaceTggl.selected)
@@ -383,7 +383,7 @@ class AnimationLibrary(gui3d.TaskView):
         def onClicked(value):
             self.setToRestPose()
 
-        self.interpolateTggl = self.playbackBox.addWidget(gui.ToggleButton("Interpolate animation"))
+        self.interpolateTggl = self.playbackBox.addWidget(gui.CheckBox("Interpolate animation"))
         @self.interpolateTggl.mhEvent
         def onClicked(event):
             self.interpolate = self.interpolateTggl.selected

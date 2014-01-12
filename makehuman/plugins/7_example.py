@@ -53,7 +53,7 @@ class ExampleTaskView(gui3d.TaskView):
         # A toggle button fires an event when it is clicked but retains its selected state after the mouse is up,
         # if a selected texture is specified, it is used to show whether the button is toggled
 
-        self.aToggleButton = box.addWidget(gui.ToggleButton('ToggleButton'))
+        self.aToggleButton = box.addWidget(gui.CheckBox('ToggleButton'))
 
         self.aToggleButtonLabel = box.addWidget(gui.TextView('Not selected'))
 
