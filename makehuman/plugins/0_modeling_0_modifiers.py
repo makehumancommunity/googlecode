@@ -568,6 +568,7 @@ class MacroTaskView(ModifierTaskView):
         super(MacroTaskView, self).__init__(category)
         for race, modifier, slider in self.raceSliders():
             slider.setValue(1.0/3)
+            modifier._defaultValue = 1.0/3
 
     def raceSliders(self):
         # TODO refactor using human.getModifiers()

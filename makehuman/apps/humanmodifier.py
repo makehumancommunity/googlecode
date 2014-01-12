@@ -142,6 +142,8 @@ class BaseModifier(object):
         # Macro variables on which the targets controlled by this modifier depend
         self.macroDependencies = []
 
+        self._defaultValue = 0
+
         self.human = None
 
     def setHuman(self, human):
@@ -192,6 +194,9 @@ class BaseModifier(object):
 
     def getValue(self):
         return sum([self.human.getDetail(target[0]) for target in self.targets])
+
+    def getDefaultValue(self):
+        return self._defaultValue
 
     def buildLists(self):
         # Collect vertex and face indices if we didn't yet
@@ -505,6 +510,7 @@ class UniversalModifier(GenericModifier):
 class MacroModifier(GenericModifier):
     def __init__(self, groupName, variable):
         super(MacroModifier, self).__init__(groupName, variable)
+        self._defaultValue = 0.5
 
         #log.debug("MacroModifier(%s, %s)  :  %s", self.groupName, self.name, self.fullName)
 

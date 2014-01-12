@@ -35,6 +35,17 @@ class ModifierSlider(gui.Slider):
         self.value = None
         self.changing = None
 
+    def mousePressEvent(self, event):
+        if event.button() == gui.QtCore.Qt.RightButton:
+            # Right clicking reset the slider to default position
+            if self.modifier.getValue() == self.modifier.getDefaultValue():
+                return
+            self.modifier.setValue(self.modifier.getDefaultValue())
+            self.modifier.human.applyAllTargets()
+        else:
+            # Default behaviour
+            super(ModifierSlider, self).mousePressEvent(event)
+
     def onChanging(self, value):
         if self.changing is not None:
             self.changing = value
