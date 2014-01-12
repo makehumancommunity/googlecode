@@ -230,6 +230,8 @@ def drawEnd():
 have_multisample = None
 have_activeTexture = None
 
+enable_alpha_to_coverage = True
+
 def A(*args):
     if len(args) > 0 and hasattr(args[0], '__iter__'): # Iterable as argument
         if len(args) == 1:
@@ -536,18 +538,18 @@ def drawMesh(obj):
         glDisable(GL_POLYGON_OFFSET_FILL)
         glDisable(GL_COLOR_MATERIAL)
     elif obj.nTransparentPrimitives:
-        if have_multisample:
+        if have_multisample and enable_alpha_to_coverage:
             # Enable alpha-to-coverage (also called CSAA)
             glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE)
             #glEnable(GL_SAMPLE_ALPHA_TO_ONE)  # Enable this if transparent objects are too transparent
-            glDisable(GL_BLEND)    # TODO try not to disable MSAA (anti-aliasing)
+            glDisable(GL_BLEND)    # using the multisample buffer for alpha to coverage disables its use for MSAA (anti-aliasing)
         else:
             glDepthMask(GL_FALSE)
         glEnable(GL_ALPHA_TEST)
         glAlphaFunc(GL_GREATER, 0.0)
         glDrawElements(g_primitiveMap[obj.vertsPerPrimitive-1], obj.primitives.size, GL_UNSIGNED_INT, obj.primitives)
         glDisable(GL_ALPHA_TEST)
-        if have_multisample:
+        if have_multisample and enable_alpha_to_coverage:
             glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE)
             glEnable(GL_BLEND)
         else:
