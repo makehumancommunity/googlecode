@@ -30,6 +30,7 @@ import mh
 import proxychooser
 import filechooser as fc
 import os
+import log
 import mh2proxy
 
 
@@ -113,12 +114,13 @@ class ProxyTaskView(proxychooser.ProxyChooserTaskView):
             # Deselect previously selected proxy
             self.deselectProxy(None, suppressSignal = True)
 
-        human = self.human
-
         self.filechooser.selectItem(mhclofile)
 
+        if not mhclofile:
+            return
+
         if mhclofile not in self._proxyCache:
-            proxy = mh2proxy.readProxyFile(human.meshData,
+            proxy = mh2proxy.readProxyFile(self.human.meshData,
                                            mhclofile,
                                            type=self.proxyName.capitalize())
             self._proxyCache[mhclofile] = proxy

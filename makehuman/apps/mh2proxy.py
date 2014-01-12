@@ -415,13 +415,13 @@ doWeights = 2
 doDeleteVerts = 3
 
 def readProxyFile(obj, filepath, type="Clothes"):
-    folder = os.path.realpath(os.path.expanduser(os.path.dirname(filepath)))
-
     try:
         fp = open(filepath, "rU")
     except IOError:
         log.error("*** Cannot open %s", filepath)
         return None
+
+    folder = os.path.realpath(os.path.expanduser(os.path.dirname(filepath)))
 
     proxy = Proxy(filepath, type)
     proxy.deleteVerts = np.zeros(len(obj.coord), bool)
