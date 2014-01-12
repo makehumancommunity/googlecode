@@ -416,7 +416,7 @@ def mapSceneLighting(scn, object = None, res = (1024, 1024), doFixSeams = True):
 
     # Lights
     if (scn.lights):
-        lmap = lmap.data * len(scn.lights)
+        lmap = lmap.data.astype(int) * len(scn.lights)
         for light in scn.lights:
             lmap = image_operations.mixData(
                 lmap, mapLighting(calcLightPos(light), object.mesh, res, doFixSeams).data,1,1)
