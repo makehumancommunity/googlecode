@@ -861,10 +861,10 @@ def renderToBuffer(width, height, productionRender = True):
         del regularRenderbuffer
 
     # Read pixels
-    surface = np.empty((height, width, 3), dtype = np.uint8)
+    surface = np.empty((height, width, 4), dtype = np.uint8)
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer)
     glReadBuffer(GL_COLOR_ATTACHMENT0)
-    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, surface)
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, surface)
 
     surface = Image(data = np.ascontiguousarray(surface[::-1,:,[2,1,0]]))
 
