@@ -47,8 +47,13 @@ class ModifierSlider(gui.Slider):
             # Right clicking reset the slider to default position
             if self.modifier.getValue() == self.modifier.getDefaultValue():
                 return False
-            self.modifier.setValue(self.modifier.getDefaultValue())
-            self.modifier.human.applyAllTargets()
+
+            # Reset slider to default action
+            import humanmodifier
+            G.app.do(humanmodifier.ModifierAction(self.modifier, 
+                                                  self.modifier.getValue(), 
+                                                  self.modifier.getDefaultValue(), 
+                                                  self.update))
             return False
         else:
             # Default behaviour
