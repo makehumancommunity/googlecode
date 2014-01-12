@@ -416,12 +416,21 @@ def mapSceneLighting(scn, object = None, res = (1024, 1024), doFixSeams = True):
 
     # Lights
     if (scn.lights):
-        lmap = lmap.data.astype(int) * len(scn.lights)
-        for light in scn.lights:
+        amb = lmap
+        lmap = mapLighting(calcLightPos(scn.lights[0]), object.mesh, res, doFixSeams).data
+        progress.step()
+        for light in scn.lights[1:]:
             lmap = image_operations.mixData(
                 lmap, mapLighting(calcLightPos(light), object.mesh, res, doFixSeams).data,1,1)
             progress.step()
-        lmap = image_operations.normalize(lmap)
+        lmap = image_operations.Image(data = lmap)
+        if len(scn.lights) > 1:
+            lmap = image_operations.normalize(lmap)
+
+        # Ambience calculation function: lmap = lmap + (1 - lmap) * amb
+        lmap = image_operations.mix(
+            lmap, image_operations.multiply(
+                image_operations.invert(lmap), amb), 1, 1)
 
     return lmap
 
