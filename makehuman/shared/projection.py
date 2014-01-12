@@ -408,6 +408,10 @@ def mapSceneLighting(scn, object = None, res = (1024, 1024), doFixSeams = True):
                 matrix.rotz(-objrot[2]),
                 light.position))
 
+    def getLightmap(light):
+        lmap = mapLighting(calcLightPos(light), object.mesh, res, doFixSeams)
+        return image_operations.Image(data = lmap.data * light.color.values)
+
     progress = Progress(1 + len(scn.lights), G.app.progress)
 
     # Ambience
@@ -417,11 +421,10 @@ def mapSceneLighting(scn, object = None, res = (1024, 1024), doFixSeams = True):
     # Lights
     if (scn.lights):
         amb = lmap
-        lmap = mapLighting(calcLightPos(scn.lights[0]), object.mesh, res, doFixSeams).data
+        lmap = getLightmap(scn.lights[0]).data
         progress.step()
         for light in scn.lights[1:]:
-            lmap = image_operations.mixData(
-                lmap, mapLighting(calcLightPos(light), object.mesh, res, doFixSeams).data,1,1)
+            lmap = image_operations.mixData(lmap, getLightmap(light).data, 1, 1)
             progress.step()
         lmap = image_operations.Image(data = lmap)
         if len(scn.lights) > 1:
