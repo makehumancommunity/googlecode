@@ -110,6 +110,44 @@ class Color(object):
     def __ge__(self, other):
         return self.asTuple().__ge__(other.asTuple())
 
+    # Arithmetic operators
+    # Vector operators are performed element-wise and expect an iterable with at least 3 elements
+    def __add__(self, other):
+        return type(self)(self.r + other[0], self.g + other[1], self.b + other[2])
+
+    def __radd__(self, other):
+        return type(self)(other[0] + self.r, other[1] + self.g, other[2] + self.b)
+
+    def __sub__(self, other):
+        return type(self)(self.r - other[0], self.g - other[1], self.b - other[2])
+
+    def __rsub__(self, other):
+        return type(self)(other[0] - self.r, other[1] - self.g, other[2] - self.b)
+
+    # Scalar operators work both with iterables as well as single values
+    def __mul__(self, other):
+        if isinstance(other, (int, float, long, bool)):
+            return type(self)(self.r * other, self.g * other, self.b * other)
+        else:
+            return type(self)(self.r * other[0], self.g * other[1], self.b * other[2])
+
+    def __rmul__(self, other):
+        if isinstance(other, (int, float, long, bool)):
+            return type(self)(other * self.r, other * self.g, other * self.b)
+        else:
+            return type(self)(other[0] * self.r, other[1] * self.g, other[2] * self.b)
+
+    def __div__(self, other):
+        if isinstance(other, (int, float, long, bool)):
+            return type(self)(self.r / other, self.g / other, self.b / other)
+        else:
+            return type(self)(self.r / other[0], self.g / other[1], self.b / other[2])
+
+    def __rdiv__(self, other):
+        if isinstance(other, (int, float, long, bool)):
+            return type(self)(other / self.r, other / self.g, other / self.b)
+        else:
+            return type(self)(other[0] / self.r, other[1] / self.g, other[2] / self.b)
 
 # Protected shaderDefine parameters that are set exclusively by means of shaderConfig options (configureShading())
 _shaderConfigDefines = ['DIFFUSE', 'BUMPMAP', 'NORMALMAP', 'DISPLACEMENT', 'SPECULARMAP', 'VERTEX_COLOR', 'TRANSPARENCYMAP']
