@@ -23,6 +23,7 @@ Geometry export
 
 """
 
+import math
 import numpy as np
 import log
 from progress import Progress
@@ -87,14 +88,16 @@ def writeGeometry(fp, rmesh, config):
     # Normals
 
     if config.useNormals:
-        obj.calcFaceNormals()
-        nNormals = len(obj.fnorm)
+        #obj.calcFaceNormals()
+        obj.calcVertexNormals()
+        nNormals = len(obj.vnorm)
         fp.write(
             '        <source id="%s-Normals">\n' % rmesh.name +
             '          <float_array count="%d" id="%s-Normals-array">\n' % (3*nNormals,rmesh.name) +
             '          ')
 
-        fp.write( ''.join([("%.4f %.4f %.4f " % tuple(no)) for no in obj.fnorm]) )
+        normals = rotateCoord(obj.vnorm, config)
+        fp.write( ''.join([("%.4f %.4f %.4f " % tuple(normalize(no))) for no in normals]) )
 
         fp.write('\n' +
             '          </float_array>\n' +
@@ -152,6 +155,11 @@ def writeGeometry(fp, rmesh, config):
             shaprog.step()
 
     progress(1)
+
+
+def normalize(vec):
+    vec = np.array(vec)
+    return vec/math.sqrt(np.dot(vec,vec))
 
 
 def writeShapeKey(fp, name, shape, rmesh, config):
