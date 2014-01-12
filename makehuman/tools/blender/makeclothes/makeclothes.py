@@ -543,7 +543,6 @@ def printFaceNumbers(fp, ob):
         fp.write("    ftn %d %d %d ;\n" % (n, mi, us))
     elif n > 0:
         fp.write("    ft %d %d ;\n" % (mi, us))
-    return
 
 
 def printMhcloUvLayers(fp, clo, scn, hasObj, offset=0):
@@ -576,7 +575,6 @@ def printMhcloUvLayers(fp, clo, scn, hasObj, offset=0):
                     uvLine.append("%d" % (vt+offset))
                     #fp.write("(%.3f %.3f) " % (uv[0], uv[1]))
                 fp.write((" ".join(uvLine)) +"\n")
-    return
 
 
 def reexportMhclo(context):
@@ -1045,11 +1043,17 @@ def checkObjectOK(ob, context, isClothing):
         word = "parent"
         ob.parent = None
 
-    try:
-        (isClothing and ob.data.uv_layers[scn.MCTextureLayer])
-    except:
-        word = "no texture layers"
-        err = True
+    if isClothing:
+        try:
+            ob.data.uv_layers[scn.MCTextureLayer]
+        except:
+            word = "no texture layers"
+            err = True
+
+        if len(ob.data.uv_textures) > 1:
+            word = "%d texture layers. Must be exactly one." % len(ob.data.uv_textures)
+            err = True
+
 
     #if isClothing and not materials.checkObjectHasDiffuseTexture(ob):
     #    word = "no diffuse image texture"
