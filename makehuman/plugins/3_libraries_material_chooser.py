@@ -64,7 +64,7 @@ class MaterialTaskView(gui3d.TaskView):
 
         self.materials = None
 
-        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.materials, 'mhmat', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), 'Material'))
+        self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.materials, 'mhmat', ['thumb', 'png'], mh.getSysDataPath('skins/notfound.thumb'), name='Material'))
         self.filechooser.setIconSize(50,50)
         self.filechooser.enableAutoRefresh(False)
         self.filechooser.setFileLoadHandler(fc.MhmatFileLoader())
