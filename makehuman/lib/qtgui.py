@@ -277,6 +277,22 @@ class NarrowLineEdit(QtGui.QLineEdit):
             QtCore.QSize(w, h).expandedTo(QtGui.QApplication.globalStrut()),
             self)
 
+class _QSlider(QtGui.QSlider):
+    """
+    Mock object around QSlider that allows catching mouse press events and
+    relaying them to the parent widget.
+    """
+
+    def __init__(self, parent, orientation):
+        super(_QSlider, self).__init__(orientation)
+        self.parent = parent
+
+    def mousePressEvent(self, event):
+        if self.parent:
+            if not self.parent.sliderMousePressEvent(event):
+                return
+        super(_QSlider, self).mousePressEvent(event)
+
 class Slider(QtGui.QWidget, Widget):
     _imageCache = {}
     _show_images = False
@@ -296,7 +312,7 @@ class Slider(QtGui.QWidget, Widget):
         self.valueConverter = valueConverter
 
         orient = (QtCore.Qt.Vertical if vertical else QtCore.Qt.Horizontal)
-        self.slider = QtGui.QSlider(orient)
+        self.slider = _QSlider(self, orient)
         if Slider._style is None:
             Slider._style = SliderStyle(self.slider.style())
         self.slider.setStyle(Slider._style)
@@ -352,6 +368,15 @@ class Slider(QtGui.QWidget, Widget):
         self._update_image()
 
         type(self)._instances.add(self)
+
+    def sliderMousePressEvent(self, event):
+        """
+        Can be used to catch mouse press events from the attached QSlider widget.
+        Return True to execute the default behaviour of the slider widget,
+        return False to interrupt further handling of the event.
+        Override this method when needed.
+        """
+        return True
 
     def __del__(self):
         type(self)._instances.remove(self)
