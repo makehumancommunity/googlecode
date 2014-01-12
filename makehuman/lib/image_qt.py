@@ -10,7 +10,7 @@
 
 **Authors:**           Glynn Clements
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -28,6 +28,10 @@ import numpy as np
 from PyQt4 import QtCore, QtGui
 
 def load(path):
+    """
+    Load an Image (data) from specified image file path.
+    Or convert QImage to Image (data).
+    """
     if isinstance(path, QtGui.QImage):
         im = path
     else:
@@ -58,7 +62,10 @@ def load(path):
 
     return data
 
-def save(path, data):
+def toQImage(data):
+    """
+    Convert Image (data) to QImage.
+    """
     h, w, d = data.shape
 
     data = data.astype(np.uint32)
@@ -76,7 +83,14 @@ def save(path, data):
         fmt = QtGui.QImage.Format_ARGB32
         pixels = data[...,3] * 0x1000000 + data[...,0] * 0x10000 + data[...,1] * 0x100 + data[...,2]
 
-    im = QtGui.QImage(pixels.tostring(), w, h, w * 4, fmt)
+    return QtGui.QImage(pixels.tostring(), w, h, w * 4, fmt)
+
+def save(path, data):
+    """
+    Save Image (data) to file.
+    """
+    im = toQImage(data)
     format = "PNG" if path.lower().endswith('.thumb') else None
     if not im.save(path, format):
         raise RuntimeError('error saving image %s' % path)
+

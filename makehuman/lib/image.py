@@ -10,7 +10,7 @@
 
 **Authors:**           Glynn Clements
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -95,6 +95,7 @@ class Image(object):
         image_qt.save(path, self._data)
 
     def toQImage(self):
+        #return image_qt.toQImage(self.data) # For some reason caused problems
         if self.components == 1:
             fmt = image_qt.QtGui.QImage.Format_RGB888
             h,w,c = self.data.shape

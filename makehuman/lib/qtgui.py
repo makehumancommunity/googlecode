@@ -1659,17 +1659,8 @@ class ImageView(QtGui.QLabel, QtGui.QScrollArea, Widget):
         self.workingSize = None
         self._pixmap = None
 
-    def setImage(self, path):
-        import image
-        if isinstance(path, image.Image):
-            img = path.toQImage()
-            self._pixmap = QtGui.QPixmap.fromImage(img)
-        elif isinstance(path, QtGui.QPixmap):
-            self._pixmap = path
-        elif isinstance(path, QtGui.QImage):
-            self._pixmap = QtGui.QPixmap.fromImage(path)
-        else:
-            self._pixmap = QtGui.QPixmap(path)
+    def setImage(self, img):
+        self._pixmap = getPixmap(img)
         self.adjustSize()
         self.updateGeometry()
         self.refreshImage()

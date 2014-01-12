@@ -262,6 +262,7 @@ def OnInit():
         have_multisample = False
     else:
         have_multisample = glInitMultisampleARB()
+
     try:
         # Number of samples is setup in the QGLWidget context
         nb_samples = glGetInteger(OpenGL.GL.ARB.multisample.GL_SAMPLES_ARB)
@@ -324,7 +325,8 @@ def OnInit():
     if have_multisample:
         glEnable(GL_MULTISAMPLE)
         #glSampleCoverage(1.0, GL_FALSE)
-        glSampleCoverageARB(1.0, GL_FALSE)  # TODO flip mask each time
+        # TODO probably not needed, is used for GL_SAMPLE_COVERAGE, which we do not use (do not confuse with GL_SAMPLE_ALPHA_TO_COVERAGE)
+        #glSampleCoverageARB(1.0, GL_FALSE)  # TODO flip mask each time
 
     global TEX_NOT_FOUND
     TEX_NOT_FOUND = getTexture(NOTFOUND_TEXTURE)
@@ -816,6 +818,10 @@ def renderToBuffer(width, height, productionRender = True):
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height)
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderbuffer)
 
+    # TODO check with glCheckFramebufferStatus ?
+    if not glCheckFramebufferStatus(GL_FRAMEBUFFER):
+        pass # TODO
+
     # Adapt camera projection matrix to framebuffer size
     oldWidth = G.windowWidth
     oldHeight = G.windowHeight
@@ -824,14 +830,14 @@ def renderToBuffer(width, height, productionRender = True):
     glPushAttrib(GL_VIEWPORT_BIT)
     glViewport(0, 0, width, height)
 
-    # Transparent background color
+    # Neutral background color
     oldClearColor = G.clearColor
-    G.clearColor = (oldClearColor[0],oldClearColor[1],oldClearColor[2], 0)
+    G.clearColor = (0.5,0.5,0.5, 1)
 
     # Draw scene as usual
     draw(productionRender)
 
-    G.clearColor = G.clearColor
+    G.clearColor = oldClearColor
 
     if have_multisample:
         # If we have drawn to a multisample renderbuffer, we need to transfer it to a simple buffer to read it
@@ -853,11 +859,93 @@ def renderToBuffer(width, height, productionRender = True):
         del regularRenderbuffer
 
     # Read pixels
+    surface = np.empty((height, width, 3), dtype = np.uint8)
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer)
+    glReadBuffer(GL_COLOR_ATTACHMENT0)
+    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, surface)
+
+    surface = Image(data = np.ascontiguousarray(surface[::-1,:,[2,1,0]]))
+
+    # Unbind frame buffer
+    glDeleteFramebuffers(np.array([framebuffer]))
+    glDeleteRenderbuffers(1, np.array([renderbuffer]))
+    glDeleteRenderbuffers(1, np.array([depthRenderbuffer]));
+    glBindRenderbuffer(GL_RENDERBUFFER, 0)
+    glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
+    # Restore viewport dimensions to those of the window
+    G.windowWidth = oldWidth
+    G.windowHeight = oldHeight
+    glPushAttrib(GL_VIEWPORT_BIT)
+    glViewport(0, 0, oldWidth, oldHeight)
+
+    return surface
+
+def renderAlphaMask(width, height, productionRender = True):
+    """
+    Render alpha mask suiting a render to renderbufer, that can be used for
+    compositing the produced render on a background.
+    Verify whether OpenGL drivers support renderbuffers using 
+    hasRenderToRenderbuffer().
+    """
+    # Create and bind framebuffer
+    framebuffer = glGenFramebuffers(1)
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer)
+
+    # Now that framebuffer is bound, verify whether dimensions are within max supported dimensions
+    maxWidth, maxHeight = glGetInteger(GL_MAX_VIEWPORT_DIMS)
+    width = min(width, maxWidth)
+    height = min(height, maxHeight)
+
+    # Create and bind renderbuffers
+    renderbuffer = glGenRenderbuffers(1)    # We need a renderbuffer for both color and depth
+    depthRenderbuffer = glGenRenderbuffers(1)
+    glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer)
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height)
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer)
+
+    glBindRenderbuffer(GL_RENDERBUFFER, depthRenderbuffer)
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height)
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderbuffer)
+
+    # TODO check with glCheckFramebufferStatus ?
+    if not glCheckFramebufferStatus(GL_FRAMEBUFFER):
+        pass # TODO
+
+    # Adapt camera projection matrix to framebuffer size
+    oldWidth = G.windowWidth
+    oldHeight = G.windowHeight
+    G.windowWidth = width
+    G.windowHeight = height
+    glPushAttrib(GL_VIEWPORT_BIT)
+    glViewport(0, 0, width, height)
+
+    # Transparent background color
+    oldClearColor = G.clearColor
+    G.clearColor = (0.5, 0.5, 0.5, 0)
+    # Change blend func to accumulate alpha
+    glBlendFunc(GL_ONE, GL_ONE)
+    # Disable multisampling
+    global have_multisample
+    old_have_multisample = have_multisample
+    have_multisample = False
+
+    # Draw scene as usual
+    draw(productionRender)
+
+    # Restore rendering defaults
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+    have_multisample = old_have_multisample
+    G.clearColor = oldClearColor
+
+    # Read pixels
     surface = np.empty((height, width, 4), dtype = np.uint8)
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer)
     glReadBuffer(GL_COLOR_ATTACHMENT0)
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, surface)
-    surface = Image(data = np.ascontiguousarray(surface[::-1,:,[2,1,0,3]]))
+
+    # Grayscale image of only alpha channel
+    surface = Image(data = np.ascontiguousarray(surface[::-1,:,[3,3,3]]))
 
     # Unbind frame buffer
     glDeleteFramebuffers(np.array([framebuffer]))
