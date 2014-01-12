@@ -65,6 +65,7 @@ class Armature:
         self.bones = OrderedDict()
         self.hierarchy = []
         self.locale = None
+        self._tposes = None
 
         self.objectProps = [
             ("MhVersion", '"%s"' % makehuman.getVersionStr().replace(" ","_")),
@@ -139,31 +140,45 @@ class Armature:
         self.isNormalized = True
 
 
-    def calcBindMatrices(self, config=None):
-        import io_json
+    def getBindMatrix(self, config):
+        bmat = tm.rotation_matrix(math.pi/2, (1,0,0))
+        return bmat
+        restmat = subtractOffset(_Identity, config)
+        return np.dot(restmat, bmat)
 
-        gmat = np.identity(4, float)
-        if config:
-            gmat[:3,3] = -config.offset
 
-        bmat = tm.rotation_matrix(math.pi/2, XUnit)
-        self.bindMatrix = np.dot(gmat, bmat)
-        self.bindInverse = la.inv(self.bindMatrix)
-
-        if self.options.useTPose:
-            filepath = "tools/blender26x/makewalk/t_pose.json"
-            blist = io_json.loadJson(filepath)
-            for bname,quat in blist:
-                pmat = tm.quaternion_matrix(quat)
-                log.debug("TPose %s %s" % ( bname, pmat))
-                self.bones[bname].matrixTPose = pmat
+    def getTPoses(self):
+        if self._tposes:
+            return self._tposes
         else:
-            for bone in self.bones.values():
-                bone.matrixTPose = None
+            self._tposes = readMhpFile("data/mhx/tpose.mhp")
+            return self._tposes
 
-        for bone in self.bones.values():
-            bone.calcBindMatrix(gmat)
+#-------------------------------------------------------------------------------
+#   Loader for the modern mhp format that uses matrices only
+#-------------------------------------------------------------------------------
 
+def readMhpFile(filepath):
+    log.message("Loading MHP file %s", filepath)
+    poses = {}
+    with open(filepath, "rU") as fp:
+        for line in fp:
+            words = line.split()
+            if len(words) < 10:
+                continue
+            elif words[1] == "matrix":
+                bname = words[0]
+                rows = []
+                n = 2
+                for i in range(4):
+                    rows.append((float(words[n]), float(words[n+1]), float(words[n+2]), float(words[n+3])))
+                    n += 4
+                poses[bname] = np.array(rows)
+    return poses
+
+#-------------------------------------------------------------------------------
+#   Bone class
+#-------------------------------------------------------------------------------
 
 class Bone:
     def __init__(self, amt, name):
@@ -202,10 +217,7 @@ class Bone:
 
         self.matrixRest = None
         self.matrixRelative = None
-        self.bindMatrix = None
-        self.bindInverse = None
         self.matrixTPose = None
-        self.matrixPosedRest = None
 
 
     def __repr__(self):
@@ -242,6 +254,7 @@ class Bone:
         self.norot = (flags & F_NOROT)
         self.scale = (flags & F_SCALE)
 
+
     def setBone(self, head, tail):
         self.head = head
         self.tail = tail
@@ -261,8 +274,7 @@ class Bone:
 
         self.matrixRest = None
         self.matrixRelative = None
-        self.bindMatrix = None
-        self.bindInverse = None
+        self.matrixTPose = None
 
 
     def rename(self, locale, newbones):
@@ -289,63 +301,62 @@ class Bone:
             self.matrixRelative = self.matrixRest
 
 
-    def calcBindMatrix(self, gmat):
-        if self.bindMatrix is not None:
-            return
+    def _getTPoseMatrix(self):
+        tposes = self.armature.getTPoses()
+        try:
+            tmat = tposes[self.origName]
+        except KeyError:
+            tmat = _Identity
 
         self.calcRestMatrix()
-
-        if self.matrixTPose is None:
-            self.matrixPosedRest = self.matrixRest
+        if self.parent:
+            parbone = self.armature.bones[self.parent]
+            self.matrixTPose = np.dot(parbone.matrixTPose, np.dot(self.matrixRelative, tmat))
         else:
-            self.matrixPosedRest = np.dot(self.matrixRest, self.matrixTPose)
-            if self.parent:
-                parbone = self.armature.bones[self.parent]
-                self.matrixRelative = np.dot(la.inv(parbone.matrixPosedRest), self.matrixPosedRest)
-            else:
-                self.matrixRelative = self.matrixRest
+            self.matrixTPose = np.dot(self.matrixRest, tmat)
 
-        self.bindInverse = np.transpose(np.dot(gmat, self.matrixRest))
-        self.bindMatrix = la.inv(self.bindInverse)
+        return self.matrixTPose
+
+
+    def _getRestOrTPoseMat(self, config):
+        if config.useTPose:
+            return self._getTPoseMatrix()
+        else:
+            return self.matrixRest
 
 
     def getRestMatrix(self, config):
-        _,rmat = getMatrix(self.head, self.tail, self.roll)
-        rmat[:3,3] -= config.scale*config.offset
-
-        if config.yUpFaceZ:
-            rot = _Identity
-        elif config.yUpFaceX:
-            rot = _RotY
-        elif config.zUpFaceNegY:
-            rot = _RotX
-        elif config.zUpFaceX:
-            rot = _RotZUpFaceX
-
-        if config.localY:
-            # Y along self, X bend
-            return np.dot(rot, rmat)
-
-        elif config.localX:
-            # X along self, Y bend
-            return np.dot(rot, np.dot(rmat, _RotXY) )
-
-        elif config.localG:
-            # Global coordinate system
-            mat = np.identity(4, float)
-            mat[:,3] = np.dot(rot, rmat[:,3])
-            return mat
+        self.calcRestMatrix()
+        return transformBoneMatrix(self.matrixRest, config)
 
 
-    def getRelativeMatrix(self, amt, config):
-        restmat = self.getRestMatrix(config)
+    def getRestOrTPoseMatrix(self, config):
+        self.calcRestMatrix()
+        mat = self._getRestOrTPoseMat(config)
+        return transformBoneMatrix(mat, config)
+
+
+    def getRelativeMatrix(self, config):
+        restmat = self.getRestOrTPoseMatrix(config)
+
         if self.parent:
-            parent = amt.bones[self.parent]
-            parrestmat = parent.getRestMatrix(config)
-            return np.dot(la.inv(parrestmat), restmat)
+            parent = self.armature.bones[self.parent]
+            parmat = parent.getRestMatrix(config)
+            return np.dot(la.inv(parmat), restmat)
         else:
             return restmat
 
+
+    def getBindMatrix(self, config):
+        self.calcRestMatrix()
+        restmat = subtractOffset(self.matrixRest, config)
+        bindinv = np.transpose(restmat)
+        bindmat = la.inv(bindinv)
+        return bindmat,bindinv
+
+#-------------------------------------------------------------------------------
+#   Global variables and utilities
+#-------------------------------------------------------------------------------
 
 _Identity = np.identity(4, float)
 _RotX = tm.rotation_matrix(math.pi/2, (1,0,0))
@@ -354,6 +365,40 @@ _RotNegX = tm.rotation_matrix(-math.pi/2, (1,0,0))
 _RotZ = tm.rotation_matrix(math.pi/2, (0,0,1))
 _RotZUpFaceX = np.dot(_RotZ, _RotX)
 _RotXY = np.dot(_RotNegX, _RotY)
+
+
+def subtractOffset(mat, config):
+    mat = mat.copy()
+    mat[:3,3] -= config.scale*config.offset
+    return mat
+
+
+def transformBoneMatrix(mat, config):
+
+    mat = subtractOffset(mat, config)
+
+    if config.yUpFaceZ:
+        rot = _Identity
+    elif config.yUpFaceX:
+        rot = _RotY
+    elif config.zUpFaceNegY:
+        rot = _RotX
+    elif config.zUpFaceX:
+        rot = _RotZUpFaceX
+
+    if config.localY:
+        # Y along self, X bend
+        return np.dot(rot, mat)
+
+    elif config.localX:
+        # X along self, Y bend
+        return np.dot(rot, np.dot(mat, _RotXY) )
+
+    elif config.localG:
+        # Global coordinate system
+        tmat = np.identity(4, float)
+        tmat[:,3] = np.dot(rot, mat[:,3])
+        return tmat
 
 
 def renameBone(self, locale):

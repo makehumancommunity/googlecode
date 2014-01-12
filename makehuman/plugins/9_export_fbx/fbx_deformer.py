@@ -85,7 +85,7 @@ def writeObjectDefs(fp, rmeshes, amt):
 
 def writeObjectProps(fp, rmeshes, amt, config):
     if amt:
-        writeBindPose(fp, rmeshes, amt)
+        writeBindPose(fp, rmeshes, amt, config)
 
         for rmesh in rmeshes:
             name = getRmeshName(rmesh, amt)
@@ -95,7 +95,7 @@ def writeObjectProps(fp, rmeshes, amt, config):
                     weights = rmesh.weights[bone.name]
                 except KeyError:
                     continue
-                writeSubDeformer(fp, name, bone, weights)
+                writeSubDeformer(fp, name, bone, weights, config)
 
     for rmesh in rmeshes:
         name = getRmeshName(rmesh, amt)
@@ -179,7 +179,7 @@ def writeDeformer(fp, name):
 """)
 
 
-def writeSubDeformer(fp, name, bone, weights):
+def writeSubDeformer(fp, name, bone, weights, config):
     nVertexWeights = len(weights)
     id,key = getId("SubDeformer::%s_%s" % (bone.name, name))
 
@@ -206,13 +206,14 @@ def writeSubDeformer(fp, name, bone, weights):
         fp.write(str(w))
         writeComma(fp, n, last)
 
+    bindmat,bindinv = bone.getBindMatrix(config)
     fp.write('        }\n')
-    writeMatrix(fp, 'Transform', bone.bindMatrix)
-    writeMatrix(fp, 'TransformLink', bone.bindInverse)
+    writeMatrix(fp, 'Transform', bindmat)
+    writeMatrix(fp, 'TransformLink', bindinv)
     fp.write('    }\n')
 
 
-def writeBindPose(fp, rmeshes, amt):
+def writeBindPose(fp, rmeshes, amt, config):
     id,key = getId("Pose::" + amt.name)
     nBones = len(amt.bones)
     nMeshes = len(rmeshes)
@@ -224,14 +225,16 @@ def writeBindPose(fp, rmeshes, amt):
 '        NbPoseNodes: %d\n' % (1+nMeshes+nBones))
 
     startLinking()
-    poseNode(fp, "Model::%s" % amt.name, amt.bindMatrix)
+    amtbindmat = amt.getBindMatrix(config)
+    poseNode(fp, "Model::%s" % amt.name, amtbindmat)
 
     for rmesh in rmeshes:
         name = getRmeshName(rmesh, amt)
-        poseNode(fp, "Model::%sMesh" % name, amt.bindMatrix)
+        poseNode(fp, "Model::%sMesh" % name, amtbindmat)
 
     for bone in amt.bones.values():
-        poseNode(fp, "Model::%s" % bone.name, bone.bindMatrix)
+        bindmat,_ = bone.getBindMatrix(config)
+        poseNode(fp, "Model::%s" % bone.name, bindmat)
 
     stopLinking()
     fp.write('    }\n')

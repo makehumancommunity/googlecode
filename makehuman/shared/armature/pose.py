@@ -711,7 +711,6 @@ class PoseBone:
 def createPoseRig(human):
     options = ArmatureOptions()
     options.useMuscles = True
-    options.useFaceRig = True
     options.addConnectingBones = True
     amt = Pose(human, options)
     return amt

@@ -153,7 +153,7 @@ def writeObjectProps(fp, rmeshes, amt, config):
         writeNodeAttributeProp(fp, bone)
     writeNodeProp(fp, amt, config)
     for bone in amt.bones.values():
-        writeBoneProp(fp, bone)
+        writeBoneProp(fp, bone, config)
 
 
 def writeNodeAttributeProp(fp, bone):
@@ -179,7 +179,6 @@ def writeNodeProp(fp, amt, config):
             P: "InheritType", "enum", "", "",1
             P: "ScalingMax", "Vector3D", "Vector", "",0,0,0
 """ +
-'            P: "Lcl Translation", "Lcl Translation", "", "A",%.4f,%.4f,%.4f\n' % tuple(-config.scale*config.offset) +
 '            P: "MHName", "KString", "", "", "%s"' % amt.name +
 """
         }
@@ -189,7 +188,7 @@ def writeNodeProp(fp, amt, config):
 """)
 
 
-def writeBoneProp(fp, bone):
+def writeBoneProp(fp, bone, config):
     id,key = getId("Model::%s" % bone.name)
     fp.write(
 '    Model: %d, "%s", "LimbNode" {' % (id,key) +
@@ -202,7 +201,7 @@ def writeBoneProp(fp, bone):
             P: "DefaultAttributeIndex", "int", "Integer", "",0
 """)
 
-    mat = bone.matrixRelative
+    mat = bone.getRelativeMatrix(config)
     trans = mat[:3,3]
     e = tm.euler_from_matrix(mat, axes='sxyz')
     fp.write(

@@ -40,6 +40,18 @@ class FbxConfig(Config):
         self.useCustomTargets = exporter.useCustomTargets.selected
         self.useMaterials    = True # for debugging
 
+        # Used by Collada, needed for armature access
+        self.useTPose = False
+
+        self.yUpFaceZ = True
+        self.yUpFaceX = False
+        self.zUpFaceNegY = False
+        self.zUpFaceX = False
+
+        self.localY = True
+        self.localX = False
+        self.localG = False
+
         self.rigOptions = exporter.getRigOptions()
         if not self.rigOptions:
             return

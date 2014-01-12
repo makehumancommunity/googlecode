@@ -121,7 +121,7 @@ def writeBone(fp, hier, orig, extra, pad, amt, config):
         idStr = ''
 
     fp.write('%s      <node %s %s type="JOINT" %s>\n' % (pad, extra, nameStr, idStr))
-    relmat = bone.getRelativeMatrix(amt, config)
+    relmat = bone.getRelativeMatrix(config)
     writeMatrix(fp, relmat, "transform", pad+"        ")
     for child in children:
         writeBone(fp, child, bone.head, '', pad+'  ', amt, config)

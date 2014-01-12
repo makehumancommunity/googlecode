@@ -64,9 +64,6 @@ def exportFbx(human, filepath, config):
         config=config,
         rawTargets=rawTargets)
 
-    if amt:
-        amt.calcBindMatrices(config)
-
     gui3d.app.progress(0.5, text="Exporting %s" % filepath)
 
     fp = codecs.open(filepath, "w", encoding="utf-8")
