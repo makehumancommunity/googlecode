@@ -239,7 +239,6 @@ class BaseModifier(object):
             self.human.meshData.calcNormals(1, 1, self.verts, self.faces)
         self.human.meshData.update()
         event = events3d.HumanEvent(self.human, self.eventType)
-        #print 'onChanging %s' % event
         event.modifier = self.fullName
         self.human.callEvent('onChanging', event)
 

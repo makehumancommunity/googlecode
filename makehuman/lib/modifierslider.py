@@ -96,11 +96,17 @@ class ModifierSlider(gui.Slider):
             return
 
         value = self.getValue()
-        human = G.app.selectedHuman
+        human = self.modifier.human
         if self.value is None:
             self.value = self.modifier.getValue()
         if self.value != value:
             G.app.do(humanmodifier.ModifierAction(self.modifier, self.value, value, self.update))
+        else:
+            # Indicate that onChanging event is ended with onChanged event
+            import events3d
+            event = events3d.HumanEvent(human, self.modifier.eventType)
+            event.modifier = self.modifier.fullName
+            human.callEvent('onChanged', event)
         if human.isSubdivided():
             if human.isProxied():
                 human.getProxyMesh().setVisibility(0)
