@@ -69,11 +69,11 @@ def exportCollada(human, filepath, config):
         config=config,
         rawTargets = rawTargets)
 
-    oldPoses = {}
-    if config.useTPose and amt:
-        for rmesh in rmeshes:
-            oldPoses[rmesh.name] = rmesh.pose
-            rmesh.pose = amt.getTPose()
+    #oldPoses = {}
+    #if config.useTPose and amt:
+    #    for rmesh in rmeshes:
+    #        oldPoses[rmesh.name] = rmesh.pose
+    #        rmesh.pose = amt.getTPose()
 
     try:
         progress(0.5, 0.55, "Exporting %s" % filepath)
@@ -134,7 +134,7 @@ def exportCollada(human, filepath, config):
         if fp:
             fp.close()
 
-        if oldPoses:
-            for rmesh in rmeshes:
-                rmesh.pose = oldPoses[rmesh.name]
+        #if oldPoses:
+        #    for rmesh in rmeshes:
+        #        rmesh.pose = oldPoses[rmesh.name]
 

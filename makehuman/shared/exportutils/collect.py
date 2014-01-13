@@ -249,7 +249,7 @@ def filterMesh(richMesh, deleteGroups, deleteVerts, useFaceMask = False):
             data = morphs1.data[slice]
             shapes.append((name, FakeTarget(name, verts, data)))
 
-    richMesh.fromProxy(coords, texVerts, faceVerts, faceUvs, weights, shapes, obj.material)
+    richMesh.fromData(coords, texVerts, faceVerts, faceUvs, weights, shapes, obj.material)
     richMesh.vertexMask = numpy.logical_not(killVerts)
     richMesh.vertexMapping = newVerts
     richMesh.faceMask = numpy.logical_not(faceMask)

@@ -72,6 +72,8 @@ class RichMesh(object):
 
 
     def getCoord(self):
+        return self.object.coord
+
         if self._coord is not None:
             return self._coord
         elif self._pose:
@@ -111,12 +113,17 @@ class RichMesh(object):
         else:
             return self.object.coord
 
+
     def getVnorm(self):
+        self.object.calcVertexNormals()
+        return self.object.vnorm
+
         if self._vnorm is not None:
             return self._vnorm
         else:
             self.object.calcVertexNormals()
             return self.object.vnorm
+
 
     def getTexco(self):
         return self.object.texco
@@ -129,6 +136,7 @@ class RichMesh(object):
 
 
     def getProxy(self):
+        log.debug((self, self._proxy))
         return self._proxy
 
     def setProxy(self, proxy):
@@ -151,7 +159,7 @@ class RichMesh(object):
     material = property(getMaterial, setMaterial)
 
 
-    def fromProxy(self, coords, texVerts, faceVerts, faceUvs, weights, shapes, material):
+    def fromData(self, coords, texVerts, faceVerts, faceUvs, weights, shapes, material):
         for fv in faceVerts:
             if len(fv) != 4:
                 raise NameError("Mesh %s has non-quad faces and can not be handled by MakeHuman" % self.name)
@@ -170,9 +178,10 @@ class RichMesh(object):
         return self
 
 
-    def fromMesh(self, mesh, type, weights={}, shapes=[]):
+    def fromMesh(self, mesh, proxy, weights={}, shapes=[]):
         self.object = mesh
         self.type = type
+        self._proxy = proxy
         self.setVertexGroups(weights)
         self.shapes = shapes
         self._material = mesh.material
@@ -261,13 +270,13 @@ def getRichMesh(human, proxy, useCurrentMeshes, rawWeights, rawShapes, amt, scal
     if proxy:
         if useCurrentMeshes:
             mesh = proxy.getMesh()
-            return RichMesh(proxy.name, amt).fromMesh(mesh, proxy.type)
+            rmesh = RichMesh(proxy.name, amt).fromMesh(mesh, proxy)
+            return rmesh
         else:
             mesh = proxy.getSeedMesh()
             weights = proxy.getWeights(rawWeights, amt)
             shapes = proxy.getShapes(rawShapes, scale)
-            rmesh = RichMesh(proxy.name, amt).fromMesh(mesh, proxy.type, weights, shapes)
-            rmesh.proxy = proxy
+            rmesh = RichMesh(proxy.name, amt).fromMesh(mesh, proxy, weights, shapes)
             return rmesh
     else:
         if useCurrentMeshes:

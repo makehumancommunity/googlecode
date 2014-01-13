@@ -349,7 +349,8 @@ class Bone:
 
 
     def getRelativeMatrix(self, config):
-        restmat = self.getRestOrTPoseMatrix(config)
+        restmat = self.getRestMatrix(config)
+        #restmat = self.getRestOrTPoseMatrix(config)
 
         if self.parent:
             parent = self.armature.bones[self.parent]
