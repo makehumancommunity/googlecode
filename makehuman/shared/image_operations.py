@@ -119,8 +119,8 @@ Binary arithmetic image operations
 def mix(img1, img2, weight1, weight2 = None):
     if img1 is None and img2 is None:
         return None
-    img1 = Image(data = img1 if img1 else getBlack(img2))
-    img2 = Image(data = img2 if img2 else getBlack(img1))
+    img1 = Image(data = img1 if not (img1 is None) else getBlack(img2))
+    img2 = Image(data = img2 if not (img2 is None) else getBlack(img1))
     img1, img2 = synchronizeChannels(img1, img2)
     return Image(data = mixData(img1.data, img2.data, weight1, weight2).astype(numpy.uint8))
 
@@ -133,8 +133,8 @@ def mixData(data1, data2, weight1, weight2 = None):
 def multiply(img1, img2):
     if img1 is None and img2 is None:
         return None
-    img1 = Image(data = img1 if img1 else getWhite(img2))
-    img2 = Image(data = img2 if img2 else getWhite(img1))
+    img1 = Image(data = img1 if not (img1 is None) else getWhite(img2))
+    img2 = Image(data = img2 if not (img2 is None) else getWhite(img1))
     img1, img2 = synchronizeChannels(img1, img2)
     return Image(data = multiplyData(img1.data, img2.data).astype(numpy.uint8))
 
@@ -148,8 +148,8 @@ Binary bitwise image operations
 def bitwiseAnd(img1, img2):
     if img1 is None and img2 is None:
         return None
-    img1 = Image(data = img1 if img1 else getWhite(img2))
-    img2 = Image(data = img2 if img2 else getWhite(img1))
+    img1 = Image(data = img1 if not (img1 is None) else getWhite(img2))
+    img2 = Image(data = img2 if not (img2 is None) else getWhite(img1))
     img1, img2 = synchronizeChannels(img1, img2)
     return Image(data = bitwiseAndData(img1.data, img2.data).astype(numpy.uint8))
 
@@ -159,8 +159,8 @@ def bitwiseAndData(data1, data2):
 def bitwiseOr(img1, img2):
     if img1 is None and img2 is None:
         return None
-    img1 = Image(data = img1 if img1 else getBlack(img2))
-    img2 = Image(data = img2 if img2 else getBlack(img1))
+    img1 = Image(data = img1 if not (img1 is None) else getBlack(img2))
+    img2 = Image(data = img2 if not (img2 is None) else getBlack(img1))
     img1, img2 = synchronizeChannels(img1, img2)
     return Image(data = bitwiseOrData(img1.data, img2.data).astype(numpy.uint8))
 
