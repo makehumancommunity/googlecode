@@ -8,9 +8,9 @@
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Marc Flerackers
+**Authors:**           Marc Flerackers, Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -32,11 +32,11 @@ import log
 
 class ExportTaskView(guipose.PoseModeTaskView):
     def __init__(self, category):
-
         guipose.PoseModeTaskView.__init__(self, category, 'Export')
 
         self.formats = []
         self.recentlyShown = None
+        self._requiresUpdate = True
 
         exportPath = mh.getPath('exports')
 
@@ -58,8 +58,6 @@ class ExportTaskView(guipose.PoseModeTaskView):
         # Map formats
         self.mapsBox = self.addLeftWidget(gui.GroupBox('Maps'))
 
-        self.empty = True
-
         self.optionsBox = self.addRightWidget(gui.StackedBox())
         self.optionsBox.setAutoResize(True)
 
@@ -70,8 +68,7 @@ class ExportTaskView(guipose.PoseModeTaskView):
         self.boxes = {
             'mesh': self.formatBox,
             'rig': self.rigBox,
-            'map': self.mapsBox,
-            'scale': self.scaleBox
+            'map': self.mapsBox
             }
 
         self.updateGui()
@@ -130,23 +127,21 @@ class ExportTaskView(guipose.PoseModeTaskView):
         return (1, "decimeter")
 
     def addExporter(self, exporter):
-        checked = self.empty and exporter.group == "mesh"
-        radio = self.boxes[exporter.group].addWidget(gui.RadioButton(self.exportBodyGroup, exporter.name, checked))
+        radio = gui.RadioButton(self.exportBodyGroup, exporter.name)
+        radio.exporter = exporter
         options = self.optionsBox.addWidget(gui.GroupBox('Options'))
         exporter.build(options, self)
-        if exporter.group == "mesh":
-            self.empty = False
         self.formats.append((exporter, radio, options))
-        if checked:
-            self.updateGui()
 
         @radio.mhEvent
         def onClicked(event):
             self.updateGui()
 
+        self._requiresUpdate = True
+
     def getExporter(self, exporterName, includeOptions = False):
         for exporterFormat in self.formats:
-            exporter, _, _ = exporterFormat
+            exporter, _, options = exporterFormat
             if exporter.name == exporterName:
                 if includeOptions:
                     return (exporter, options)
@@ -175,15 +170,35 @@ class ExportTaskView(guipose.PoseModeTaskView):
                 self.recentlyShown = exporter
                 break
 
-    def onShow(self, event):
+    def buildGui(self):
+        if not self._requiresUpdate:
+            return
 
+        for group in self.boxes.keys():
+            for eIdx, r in enumerate(self.boxes[group].children):
+                self.boxes[group].removeWidget(r)
+
+            exporters = [e for e in self.formats if e[0].group == group]
+            exporters.sort(key = lambda e: e[0].orderPriority, reverse = True)
+
+            for (exporter, radio, options) in exporters:
+                self.boxes[exporter.group].addWidget(radio)
+
+            # Select first exporter
+            if group == 'mesh' and len(self.boxes[group].children) > 0:
+                self.boxes[group].children[0].setChecked(True)
+
+        self._requiresUpdate = False
+        self.updateGui()
+
+    def onShow(self, event):
         guipose.PoseModeTaskView.onShow(self, event)
+
+        self.buildGui()
 
         self.fileentry.setFocus()
 
         human = gui3d.app.selectedHuman
-        camera = mh.cameras[0]
-
         skel = human.getSkeleton()
         if skel and skel.object:
             skel.object.show()
@@ -191,7 +206,6 @@ class ExportTaskView(guipose.PoseModeTaskView):
 
 
     def onHide(self, event):
-
         guipose.PoseModeTaskView.onHide(self, event)
 
         human = gui3d.app.selectedHuman

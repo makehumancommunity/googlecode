@@ -10,7 +10,7 @@
 
 **Authors:**           Glynn Clements
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -30,6 +30,7 @@ class Exporter(object):
         self.group = "mesh"
         self.fileExtension = ""
         self.filter = 'All Files (*.*)'
+        self.orderPriority = 10.0   # Priority that determines order of exporter in gui. Highest priority is on top.
 
     def build(self, options, taskview):
         import gui
