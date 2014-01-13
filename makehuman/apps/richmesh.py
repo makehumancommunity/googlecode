@@ -25,6 +25,7 @@ TODO
 """
 
 import os
+from collections import OrderedDict
 import numpy as np
 import log
 import module3d
@@ -39,7 +40,7 @@ class RichMesh(object):
         self.type = None
         self.object = None
         self._pose = None
-        self.setVertexWeights({})
+        self.setVertexGroups({})
         self.shapes = []
         self.armature = amt
         self._material = None
@@ -50,11 +51,13 @@ class RichMesh(object):
         self.vertexMapping = None   # Maps vertex index of original object to the attached filtered object
 
 
-    def setVertexWeights(self, weights):
+    def setVertexGroups(self, weights):
         self.weights = weights
-        self.vertexWeights = {}
-        for name,data in weights.items():
-            self.vertexWeights[name] = VertexWeights(data)
+        self.normalizeVertexWeights()
+        self.vertexGroups = OrderedDict()
+        for index,name in enumerate(weights):
+            self.vertexGroups[name] = VertexGroup(name, index, self.weights[name])
+            #log.debug(self.vertexGroups[name])
 
 
     def getCoord(self):
@@ -63,14 +66,27 @@ class RichMesh(object):
             pcoords = np.zeros((len(obj.coord),3), float)
             for bname,pmat in self._pose.items():
                 try:
-                    vw = self.vertexWeights[bname]
+                    vw = self.vertexGroups[bname]
                 except KeyError:
                     continue
                 rmat = np.array(pmat[:3,:3])
-                offset = np.array(pmat[:3,3])
+                offset = np.array(len(vw.verts)*[pmat[:3,3]])
                 vec = np.dot(rmat, obj.coord[vw.verts].transpose())
+                vec += offset.transpose()
                 wvec = vw.weights * vec
                 pcoords[vw.verts] += wvec.transpose()
+                '''
+                log.debug(bname)
+                log.debug(pmat)
+                log.debug(rmat)
+                log.debug(offset)
+                log.debug(obj.coord[vw.verts])
+                log.debug(vec.transpose())
+                log.debug(vec)
+                log.debug(wvec)
+                log.debug(pcoords[vw.verts])
+                log.debug("")
+                '''
             return pcoords
         else:
             return self.object.coord
@@ -134,20 +150,18 @@ class RichMesh(object):
         obj.calcNormals(True, True)
         obj.update()
         obj.updateIndexBuffer()
-        self.setVertexWeights(weights)
+        self.setVertexGroups(weights)
         self.shapes = shapes
         self._material = obj.material = material
-        self.normalizeVertexWeights()
         return self
 
 
     def fromMesh(self, mesh, type, weights={}, shapes=[]):
         self.object = mesh
         self.type = type
-        self.setVertexWeights(weights)
+        self.setVertexGroups(weights)
         self.shapes = shapes
         self._material = mesh.material
-        self.normalizeVertexWeights()
         return self
 
 
@@ -218,10 +232,15 @@ class RichMesh(object):
             self.skinWeights.extend(wts)
     '''
 
-class VertexWeights:
-    def __init__(self, datas):
-        self.verts = [data[0] for data in datas]
-        self.weights = [data[1] for data in datas]
+class VertexGroup:
+    def __init__(self, name, index, weights):
+        self.name = name
+        self.index = index
+        self.verts = [data[0] for data in weights]
+        self.weights = [data[1] for data in weights]
+
+    def __repr__(self):
+        return ("<VertexGroup %s %d %d>" % (self.name, self.index, len(self.verts)))
 
 
 def getRichMesh(human, proxy, useCurrentMeshes, rawWeights, rawShapes, amt, scale=1.0):

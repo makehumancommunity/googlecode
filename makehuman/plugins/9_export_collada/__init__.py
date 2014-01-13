@@ -40,7 +40,7 @@ class DaeConfig(Config):
         self.useCustomTargets = exporter.useCustomTargets.selected
 
         self.useTPose = False
-        #self.useTPose = exporter.useTPose.selected
+        self.useTPose = exporter.useTPose.selected
 
         self.yUpFaceZ = exporter.yUpFaceZ.selected
         self.yUpFaceX = exporter.yUpFaceX.selected
@@ -74,7 +74,7 @@ class ExporterCollada(Exporter):
         Exporter.build(self, options, taskview)
         self.expressions     = options.addWidget(gui.CheckBox("Expressions", False))
         self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
-        #self.useTPose = options.addWidget(gui.CheckBox("T-pose", False))
+        self.useTPose = options.addWidget(gui.CheckBox("T-pose", False))
 
         orients = []
         self.yUpFaceZ = options.addWidget(gui.RadioButton(orients, "Y up, face Z", True))

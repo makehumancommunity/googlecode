@@ -86,7 +86,7 @@ def setupMeshes(name, human, config=None, amt=None, rawTargets=[], hidden=False,
     richMesh = getRichMesh(human, None, useCurrentMeshes, {}, rawTargets, amt)
     richMesh.name = name
     if amt:
-        richMesh.weights = amt.vertexWeights
+        richMesh.setVertexGroups(amt.vertexWeights)
 
     deleteGroups = []
     deleteVerts = None  # Don't load deleteVerts from proxies directly, we use the facemask set in the gui module3d

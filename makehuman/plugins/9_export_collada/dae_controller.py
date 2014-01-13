@@ -117,7 +117,7 @@ def writeSkinController(fp, rmesh, amt, config):
 
     progress(0.4, 0.6)
     for bone in amt.bones.values():
-        mat = la.inv(bone.getRestMatrix(config))
+        mat = la.inv(bone.getRestOrTPoseMatrix(config))
         for i in range(4):
             fp.write('\n           ')
             for j in range(4):

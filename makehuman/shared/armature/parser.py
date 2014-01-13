@@ -966,7 +966,7 @@ class Parser:
                     for child in boneInfo.values():
                         if child.parent == mbone:
                             child.parent = bname
-        amt.vertexWeights[bname] = mergeWeights(vgroup)
+            amt.vertexWeights[bname] = mergeWeights(vgroup)
 
 
     def addCSysBones(self, csysList, boneInfo):

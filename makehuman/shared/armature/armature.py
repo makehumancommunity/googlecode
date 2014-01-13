@@ -147,7 +147,7 @@ class Armature:
         return np.dot(restmat, bmat)
 
 
-    def getTPoses(self):
+    def _getTPoses(self):
         if self._tposes:
             return self._tposes
         else:
@@ -155,13 +155,14 @@ class Armature:
             return self._tposes
 
 
-    def poseMeshTPose(self, rmesh):
+    def getTPose(self):
         pose = {}
         for bone in self.bones.values():
             bone.calcRestMatrix()
-            mat = bone._getTPoseMatrix()
-            pose[bone.name] = mat
-        rmesh.pose = pose
+            tpose = bone._getTPoseMatrix()
+            #tpose = bone.matrixRest
+            pose[bone.name] = np.dot(tpose, la.inv(bone.matrixRest))
+        return pose
 
 
 #-------------------------------------------------------------------------------
@@ -228,6 +229,7 @@ class Bone:
         self.matrixRest = None
         self.matrixRelative = None
         self.matrixTPose = None
+        self.matrixGlobal = None
 
 
     def __repr__(self):
@@ -312,7 +314,7 @@ class Bone:
 
 
     def _getTPoseMatrix(self):
-        tposes = self.armature.getTPoses()
+        tposes = self.armature._getTPoses()
         try:
             tmat = tposes[self.origName]
         except KeyError:
