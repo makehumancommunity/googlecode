@@ -296,10 +296,14 @@ def expand(img, mask, pixels):
     """
 
     for i in xrange(int(pixels+0.5)):
-        expansion = expandMask(img)
-        expansion = bitwiseAnd(invert(mask), expansion)
-        img = bitwiseOr(img, expansion)
-        mask = expandMask(mask)
+        expansion = jitterSum(img.data).astype(float)/255.0
+        expmask = jitterSum(mask.data > 0)
+        newmask = (expmask == 0).astype(numpy.uint8)
+        expmask += newmask
+        expansion /= expmask
+        expansion = bitwiseAnd(invert(mask), (255.0*expansion+0.5).astype(numpy.uint8))
+        img = bitwiseOr(bitwiseAnd(img, mask), expansion)
+        mask = invert(newmask * 255)
         
     return img, mask
 
@@ -320,6 +324,24 @@ def expandData(data):
     neighbours[1] = numpy.bitwise_or(neighbours[1], neighbours[2])
     neighbours[1,1] = numpy.bitwise_or(neighbours[1,1], neighbours[1,0])
     neighbours[1,1] = numpy.bitwise_or(neighbours[1,1], neighbours[1,2])
+
+    return neighbours[1,1]
+
+def jitterSum(data):
+    """
+    Sum all pixels  of an image with their neighbours.
+    """
+
+    neighbours = numpy.empty((3, 3) + data.shape, dtype=numpy.uint16)
+    neighbours[1,1] = data
+
+    neighbours[1,0] = numpy.roll(neighbours[1,1], -1, axis=-2)
+    neighbours[1,2] = numpy.roll(neighbours[1,1],  1, axis=-2)
+    neighbours[0] = numpy.roll(neighbours[1], -1, axis=-3)
+    neighbours[2] = numpy.roll(neighbours[1],  1, axis=-3)
+
+    neighbours[1] += neighbours[0] + neighbours[2]
+    neighbours[1,1] += neighbours[1,0] + neighbours[1,2]
 
     return neighbours[1,1]
 
