@@ -110,6 +110,9 @@ class MaterialEditorTaskView(gui3d.TaskView):
         if sh:
             uniforms = [u.name for u in sh.getUniforms()] + sh.glUniforms
 
+        # TODO reduce code replication by using a more generic approach
+
+        # Diffuse color and texture
         w1 = self.materialBox.addWidget(ColorValue("Diffuse", mat.diffuseColor))
         if sh:
             w1.setEnabled(('diffuse' in uniforms or 'gl_FrontMaterial.diffuse' in uniforms) and not mat.autoBlendSkin)
@@ -127,6 +130,7 @@ class MaterialEditorTaskView(gui3d.TaskView):
             mat.diffuseTexture = w3.value
             self.updateShaderConfig()
 
+        # Phong shading color parameters
         w4 = self.materialBox.addWidget(ColorValue("Ambient", mat.ambientColor))
         if sh:
             w4.setEnabled('ambient' in uniforms or 'gl_FrontMaterial.ambient' in uniforms)
@@ -167,6 +171,7 @@ class MaterialEditorTaskView(gui3d.TaskView):
         def onActivate(event):
             mat.translucency = w10.value
 
+        # Config toggles
         w10a = self.materialBox.addWidget(TruthValue("Shadeless", mat.shadeless))
         @w10a.mhEvent
         def onActivate(event):
@@ -199,6 +204,7 @@ class MaterialEditorTaskView(gui3d.TaskView):
             self.listMaterialSettings(self.getSelectedObject()) # Update diffuse color property state
             self.listUniforms(mat) # Update litsphere texture enabled state
 
+        # Transparency mapping
         transparencyMapAvailable = sh and \
                                    (('transparencymapTexture' in uniforms) or \
                                    ('TRANSPARENCYMAP' in sh.defineables))
@@ -217,6 +223,7 @@ class MaterialEditorTaskView(gui3d.TaskView):
         def onActivate(event):
             mat.transparencyMapIntensity = w12.value
 
+        # Bump mapping
         bumpMapAvailable = sh and \
                            (('bumpmapTexture' in uniforms) or \
                            ('BUMPMAP' in sh.defineables))
@@ -235,6 +242,7 @@ class MaterialEditorTaskView(gui3d.TaskView):
         def onActivate(event):
             mat.bumpMapIntensity = w14.value
 
+        # Normal mapping
         normalMapAvailable = sh and \
                              (('normalmapTexture' in uniforms) or \
                              ('NORMALMAP' in sh.defineables))
@@ -253,6 +261,7 @@ class MaterialEditorTaskView(gui3d.TaskView):
         def onActivate(event):
             mat.normalMapIntensity = w16.value
 
+        # Displacement mapping
         displacementMapAvailable = sh and \
                                    (('displacementmapTexture' in uniforms) or \
                                    ('DISPLACEMENT' in sh.defineables))
@@ -271,6 +280,7 @@ class MaterialEditorTaskView(gui3d.TaskView):
         def onActivate(event):
             mat.displacementMapIntensity = w18.value
 
+        # Specular mapping
         specularMapAvailable = sh and \
                                (('specularmapTexture' in uniforms) or \
                                ('SPECULARMAP' in sh.defineables))
@@ -288,6 +298,25 @@ class MaterialEditorTaskView(gui3d.TaskView):
         @w20.mhEvent
         def onActivate(event):
             mat.specularMapIntensity = w20.value
+
+        # Ambient occlusion
+        aoMapAvailable = sh and \
+                         (('aomapTexture' in uniforms) or \
+                          ('AOMAP' in sh.defineables))
+        w20b = self.materialBox.addWidget(ImageValue("Ambient Occlusion map texture", mat.aoMapTexture, mh.getSysDataPath('textures')))
+        if sh:
+            w20b.setEnabled(aoMapAvailable)
+        @w20b.mhEvent
+        def onActivate(event):
+            mat.aoMapTexture = w20b.value
+            self.updateShaderConfig()
+
+        w20c = self.materialBox.addWidget(ScalarValue("Ambient Occlusion (map) intensity", mat.aoMapIntensity))
+        if sh:
+            w20c.setEnabled(aoMapAvailable)
+        @w20c.mhEvent
+        def onActivate(event):
+            mat.aoMapIntensity = w20c.value
 
         w21 = self.materialBox.addWidget(FileValue("UV map", mat.uvMap, mh.getSysDataPath('uvs')))
         w21.browseBtn.setFilter("UV Set (*.obj)")
@@ -365,6 +394,8 @@ class MaterialEditorTaskView(gui3d.TaskView):
                 child.setEnabled(bool(sh and mat.supportsSpecular()))
             elif name == 'transparency':
                 child.setEnabled(bool(sh and mat.supportsTransparency()))
+            elif name == 'ambientOcclusion':
+                child.setEnabled(bool(sh and mat.supportsAmbientOcclusion()))
             elif name == 'vertexColors':
                 child.setEnabled(bool((not sh) or ('VERTEX_COLOR' in sh.defineables)))
 

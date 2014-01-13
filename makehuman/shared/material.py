@@ -10,7 +10,7 @@
 
 **Authors:**           Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -150,11 +150,12 @@ class Color(object):
             return type(self)(other[0] / self.r, other[1] / self.g, other[2] / self.b)
 
 # Protected shaderDefine parameters that are set exclusively by means of shaderConfig options (configureShading())
-_shaderConfigDefines = ['DIFFUSE', 'BUMPMAP', 'NORMALMAP', 'DISPLACEMENT', 'SPECULARMAP', 'VERTEX_COLOR', 'TRANSPARENCYMAP']
+_shaderConfigDefines = ['DIFFUSE', 'BUMPMAP', 'NORMALMAP', 'DISPLACEMENT', 'SPECULARMAP', 'VERTEX_COLOR', 'TRANSPARENCYMAP', 'AOMAP']
 
 # Protected shader parameters that are set exclusively by means of material properties (configureShading())
-_materialShaderParams = ['diffuse', 'ambient', 'specular', 'emissive', 'diffuseTexture', 'bumpmapTexture', 'bumpmapIntensity', 'normalmapTexture', 'normalmapIntensity', 'displacementmapTexture', 'displacementmapTexture', 'specularmapTexture', 'specularmapIntensity', 'transparencymapTexture', 'transparencymapIntensity']
+_materialShaderParams = ['diffuse', 'ambient', 'specular', 'emissive', 'diffuseTexture', 'bumpmapTexture', 'bumpmapIntensity', 'normalmapTexture', 'normalmapIntensity', 'displacementmapTexture', 'displacementmapTexture', 'specularmapTexture', 'specularmapIntensity', 'transparencymapTexture', 'transparencymapIntensity', 'aomapTexture', 'aomapIntensity']
 
+# TODO a more generic approach to declaring material properties could reduce code duplication a lot
 class Material(object):
     """
     Material definition.
@@ -203,6 +204,8 @@ class Material(object):
         self._specularMapIntensity = 1.0
         self._transparencyMapTexture = None
         self._transparencyMapIntensity = 1.0
+        self._aoMapTexture = None
+        self._aoMapIntensity = 1.0
 
         # Sub-surface scattering parameters
         self._sssEnabled = False
@@ -218,7 +221,8 @@ class Material(object):
             'displacement' : True,
             'spec'         : True,
             'vertexColors' : True,
-            'transparency' : True
+            'transparency' : True,
+            'ambientOcclusion': True
         }
         self._shaderParameters = {}
         self._shaderDefines = []
@@ -267,6 +271,8 @@ class Material(object):
         self._specularMapIntensity = material.specularMapIntensity
         self._transparencyMapTexture = material.transparencyMapTexture
         self._transparencyMapIntensity = material.transparencyMapIntensity
+        self._aoMapTexture = material.aoMapTexture
+        self._aoMapIntensity = material.aoMapIntensity
 
         self._sssEnabled = material.sssEnabled
         self._sssRScale = material.sssRScale
@@ -306,6 +312,7 @@ class Material(object):
         shaderConfig_spec = None
         shaderConfig_vertexColors = None
         shaderConfig_transparency = None
+        shaderConfig_ambientOcclusion = None
 
         for line in f:
             words = line.split()
@@ -368,6 +375,10 @@ class Material(object):
                 self._transparencyMapTexture = getFilePath(words[1], self.filepath)
             elif words[0] == "transparencymapIntensity":
                 self._transparencyMapIntensity = max(0.0, min(1.0, float(words[1])))
+            elif words[0] == "aomapTexture":
+                self._aoMapTexture = getFilePath(words[1], self.filepath)
+            elif words[0] == "aomapIntensity":
+                self._aoMapIntensity = max(0.0, min(1.0, float(words[1])))
             elif words[0] == "sssEnabled":
                 self._sssEnabled = words[1].lower() in ["yes", "enabled", "true"]
             elif words[0] == "sssRScale":
@@ -407,11 +418,13 @@ class Material(object):
                     shaderConfig_vertexColors = words[2].lower() in ["yes", "enabled", "true"]
                 elif words[1] == "transparency":
                     shaderConfig_transparency = words[2].lower() in ["yes", "enabled", "true"]
+                elif words[1] == "ambientOcclusion":
+                    shaderConfig_ambientOcclusion = words[2].lower() in ["yes", "enabled", "true"]
                 else:
                     log.warning('Unknown material shaderConfig property: %s', words[1])
 
         f.close()
-        self.configureShading(diffuse=shaderConfig_diffuse, bump=shaderConfig_bump, normal=shaderConfig_normal, displacement=shaderConfig_displacement, spec=shaderConfig_spec, vertexColors=shaderConfig_vertexColors, transparency=shaderConfig_transparency)
+        self.configureShading(diffuse=shaderConfig_diffuse, bump=shaderConfig_bump, normal=shaderConfig_normal, displacement=shaderConfig_displacement, spec=shaderConfig_spec, vertexColors=shaderConfig_vertexColors, transparency=shaderConfig_transparency, ambientOcclusion=shaderConfig_ambientOcclusion)
 
     def _texPath(self, filename, materialPath = None):
         """
@@ -481,6 +494,10 @@ class Material(object):
         if self.transparencyMapTexture:
             f.write("transparencymapTexture %s\n" % self._texPath(self.transparencyMapTexture, filedir) )
             f.write("transparencymapIntensity %s\n" % self.transparencyMapIntensity)
+            hasTexture = True
+        if self.aoMapTexture:
+            f.write("aomapTexture %s\n" % self._texPath(self.aoMapTexture, filedir) )
+            f.write("aomapIntensity %s\n" % self.aoMapIntensity)
             hasTexture = True
         if hasTexture: f.write('\n')
 
@@ -766,7 +783,15 @@ class Material(object):
         else:
             return result
 
-    def configureShading(self, diffuse=None, bump = None, normal=None, displacement=None, spec = None, vertexColors = None, transparency=None):
+    def supportsAmbientOcclusion(self):
+        result = (self.aoMapTexture != None)
+        if self.shaderObj and result:
+            return ('AOMAP' in self.shaderObj.defineables \
+                    or 'aomapTexture' in self.shaderUniforms)
+        else:
+            return result
+
+    def configureShading(self, diffuse=None, bump = None, normal=None, displacement=None, spec = None, vertexColors = None, transparency=None, ambientOcclusion=None):
         """
         Configure shading options and set the necessary properties based on
         the material configuration of this object. This configuration applies
@@ -783,6 +808,7 @@ class Material(object):
         if spec != None: self._shaderConfig['spec'] = spec
         if vertexColors != None: self._shaderConfig['vertexColors'] = vertexColors
         if transparency != None: self._shaderConfig['transparency'] = transparency
+        if ambientOcclusion != None: self._shaderConfig['ambientOcclusion'] = ambientOcclusion
 
         self._updateShaderConfig()
 
@@ -847,6 +873,10 @@ class Material(object):
             self._shaderDefines.append('TRANSPARENCYMAP')
             self._shaderParameters['transparencymapTexture'] = self.transparencyMapTexture
             self._shaderParameters['transparencymapIntensity'] = self.transparencyMapIntensity
+        if self._shaderConfig['ambientOcclusion'] and self.supportsAmbientOcclusion():
+            self._shaderDefines.append('AOMAP')
+            self._shaderParameters['aomapTexture'] = self.aoMapTexture
+            self._shaderParameters['aomapIntensity'] = self.aoMapIntensity
 
         self._shaderDefines.sort()   # This is important for shader caching
         self.shaderChanged = True
@@ -1116,6 +1146,32 @@ class Material(object):
         self._updateShaderConfig()
 
     transparencyMapIntensity = property(getTransparencyMapIntensity, setTransparencyMapIntensity)
+
+
+    def getAOMapTexture(self):
+        """
+        The Ambient Occlusion map texture.
+        """
+        return self._aoMapTexture
+
+    def setAOMapTexture(self, texture):
+        """
+        Set the Ambient Occlusion map texture.
+        """
+        self._aoMapTexture = self._getTexture(texture)
+        self._updateShaderConfig()
+
+    aoMapTexture = property(getAOMapTexture, setAOMapTexture)
+
+
+    def getAOMapIntensity(self):
+        return self._aoMapIntensity
+
+    def setAOMapIntensity(self, intensity):
+        self._aoMapIntensity = intensity
+        self._updateShaderConfig()
+
+    aoMapIntensity = property(getAOMapIntensity, setAOMapIntensity)
 
 
 def fromFile(filename):
