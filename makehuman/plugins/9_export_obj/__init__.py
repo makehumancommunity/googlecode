@@ -41,6 +41,7 @@ class ExporterOBJ(Exporter):
         self.name = "Wavefront obj"
         self.filter = "Wavefront (*.obj)"
         self.fileExtension = "obj"
+        self.orderPriority = 60.0
 
     def build(self, options, taskview):
         Exporter.build(self, options, taskview)

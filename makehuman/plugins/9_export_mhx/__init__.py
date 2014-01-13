@@ -87,6 +87,7 @@ class ExporterMHX(Exporter):
         self.name = "Blender exchange (mhx)"
         self.filter = "Blender Exchange (*.mhx)"
         self.fileExtension = "mhx"
+        self.orderPriority = 90.0
 
     def build(self, options, taskview):
         self.taskview       = taskview

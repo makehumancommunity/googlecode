@@ -68,6 +68,7 @@ class ExporterCollada(Exporter):
         self.name = "Collada (dae)"
         self.filter = "Collada (*.dae)"
         self.fileExtension = "dae"
+        self.orderPriority = 70.0
 
     def build(self, options, taskview):
         Exporter.build(self, options, taskview)

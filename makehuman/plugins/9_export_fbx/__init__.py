@@ -74,6 +74,7 @@ class ExporterFBX(Exporter):
         self.name = "Filmbox (fbx)"
         self.filter = "Filmbox (*.fbx)"
         self.fileExtension = "fbx"
+        self.orderPriority = 80.0
 
     def build(self, options, taskview):
         Exporter.build(self, options, taskview)
