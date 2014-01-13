@@ -488,63 +488,6 @@ class GenderTaskView(ModifierTaskView):
             ]),
         ]
 
-class AsymmTaskView(ModifierTaskView):
-    _name = 'Asymmetry'
-    _group = 'asymmetry'
-    _features = [
-        ('brow', 'asym', [
-            ('asym-brown-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-brown-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ]),
-        ('cheek', 'asym', [
-            ('asym-cheek-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-cheek-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ]),
-        ('ear', 'asym', [
-            ('asym-ear-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-ear-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-ear-3', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-ear-4', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ]),
-        ('eye', 'asym', [
-            ('asym-eye-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-eye-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-eye-3', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-eye-4', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-eye-5', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-eye-6', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-eye-7', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-eye-8', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ]),
-        ('jaw', 'asym', [
-            ('asym-jaw-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-jaw-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-jaw-3', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ]),
-        ('mouth', 'asym', [
-            ('asym-mouth-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-mouth-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ]),
-        ('nose', 'asym', [
-            ('asym-nose-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-nose-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-nose-3', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-nose-4', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ]),
-        ('temple', 'asym', [
-            ('asym-temple-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-temple-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ]),
-        ('top', 'asym', [
-            ('asym-top-1', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ('asym-top-2', 'l', 'r', {'cam' : 'setFaceCamera'}),
-            ]),
-        ('body', 'asym', [
-            ('asymm-breast-1', 'l', 'r', {'cam' : 'setGlobalCamera'}),
-            ('asymm-trunk-1', 'l', 'r', {'cam' : 'setGlobalCamera'}),
-            ]),
-        ]
-
 class MacroTaskView(ModifierTaskView):
     _name = 'Macro modelling'
     _group = 'macro'
@@ -643,7 +586,7 @@ def load(app):
 
     G.app.noSetCamera = (lambda: None)
 
-    for type in [MacroTaskView, GenderTaskView, FaceTaskView, TorsoTaskView, ArmsLegsTaskView, AsymmTaskView]:
+    for type in [MacroTaskView, GenderTaskView, FaceTaskView, TorsoTaskView, ArmsLegsTaskView]:
         taskview = category.addTask(type(category))
         if taskview._group is not None:
             app.addLoadHandler(taskview._group, taskview.loadHandler)
