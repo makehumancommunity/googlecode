@@ -416,6 +416,11 @@ def mapSceneLighting(scn, object = None, res = (1024, 1024), doFixSeams = True):
 
     # Ambience
     lmap = image_operations.colorAsImage(scn.environment.ambience.values, None, *res)
+    if object.material.aoMapTexture:
+        aomap = image_operations.Image(data = object.material.aoMapTexture)
+        aomap = image_operations.resized(aomap, *lmap.size)
+        lmap = image_operations.multiply(lmap, image_operations.mix(
+            aomap, image_operations.getWhite(lmap), object.material.aoMapIntensity))
     progress.step()
 
     # Lights
