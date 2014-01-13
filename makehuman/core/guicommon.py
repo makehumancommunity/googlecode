@@ -273,7 +273,6 @@ class Object(events3d.EventHandler):
         (or smoothed).
 
         """
-
         return self.mesh == self.__subdivisionMesh or self.mesh == self.__proxySubdivisionMesh
 
     def setSubdivided(self, flag, update=True, progressCallback=None):
@@ -283,7 +282,6 @@ class Object(events3d.EventHandler):
         updated.
 
         """
-
         if flag == self.isSubdivided():
             return
 
@@ -309,9 +307,14 @@ class Object(events3d.EventHandler):
                 self.mesh.update()
             self.mesh.setVisibility(1)
 
-    def updateSubdivisionMesh(self):
-
-        self.getSubdivisionMesh(True)
+    def updateSubdivisionMesh(self, rebuildIndexBuffer=False, progressCallback=None):
+        if rebuildIndexBuffer:
+            # Purge old subdivision mesh and recalculate entirely
+            self.setSubdivided(False)
+            self.__subdivisionMesh = self.__proxySubdivisionMesh = None
+            self.setSubdivided(True, progressCallback=progressCallback)
+        else:
+            self.getSubdivisionMesh(True)
 
     def _setMeshUVMap(self, filename, mesh):
         import material

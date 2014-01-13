@@ -69,37 +69,6 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
         self.human.clothesObjs[uuid] = obj
         self.human.clothesProxies[uuid] = proxy
 
-
-        # TODO Disabled until conflict with new filechooser is sorted out
-        '''
-        for tag in proxy.tags:
-            tag = tag.lower()
-            # Allow only one piece of clothing per known tag
-            if tag in KnownTags:
-                try:
-                    oldUuids = self.taggedClothes[tag]
-                except KeyError:
-                    oldUuids = []
-                newUuids = []
-                for oldUuid in oldUuids:
-                    if oldUuid == uuid:
-                        pass
-                    elif True:  # TODO use parameter here
-                        try:
-                            oldClo = human.clothesObjs[oldUuid]
-                        except KeyError:
-                            continue
-                        gui3d.app.removeObject(oldClo)
-                        del human.clothesObjs[oldUuid]
-                        self.clothesList.remove(oldUuid)
-                        log.message("Removed clothing %s with known tag %s", oldUuid, tag)
-                    else:
-                        log.message("Kept clothing %s with known tag %s", oldUuid, tag)
-                        newUuids.append(oldUuid)
-                newUuids.append(uuid)
-                self.taggedClothes[tag] = newUuids
-        '''
-
         self.updateFaceMasks(self.faceHidingTggl.selected)
 
     def proxyDeselected(self, proxy, obj, suppressSignal = False):
@@ -181,6 +150,11 @@ class ClothesTaskView(proxychooser.ProxyChooserTaskView):
         basemeshMask = human.meshData.getFaceMaskForVertices(np.argwhere(vertsMask)[...,0])
         human.meshData.changeFaceMask(np.logical_and(basemeshMask, self.originalHumanMask))
         human.meshData.updateIndexBufferFaces()
+
+        # Transfer face mask to subdivided mesh if it is set
+        if human.isSubdivided():
+            human.updateSubdivisionMesh(rebuildIndexBuffer=True, progressCallback=gui3d.app.progress)
+
         log.debug("%s faces masked for basemesh", np.count_nonzero(~basemeshMask))
 
 
