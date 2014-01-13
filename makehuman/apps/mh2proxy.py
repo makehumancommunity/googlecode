@@ -10,7 +10,7 @@
 
 **Authors:**           Thomas Larsson
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -451,7 +451,7 @@ def readProxyFile(obj, filepath, type="Clothes"):
         elif key == 'uuid':
             proxy.uuid = " ".join(words[1:])
         elif key == 'tag':
-            proxy.tags.append( " ".join(words[1:]) )
+            proxy.tags.append( " ".join(words[1:]).lower() )
         elif key == 'z_depth':
             proxy.z_depth = int(words[1])
         elif key == 'max_pole':
@@ -736,7 +736,7 @@ def peekMetadata(proxyFilePath):
         elif words[0] == 'uuid':
             uuid = words[1]
         elif words[0] == 'tag':
-            tags.add(words[1])
+            tags.add(words[1].lower())
         elif words[0] == 'verts':
             break
     fp.close()

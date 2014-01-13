@@ -222,13 +222,13 @@ class TagFilter(gui.GroupBox):
         for tag in tags:
             self.addTag(tag)
 
-    # TODO case insensitive tags
     def addTag(self, tag):
+        tag = tag.lower()
         if tag in self.tags:
             return
 
         self.tags.add(tag)
-        toggle = self.addWidget(gui.CheckBox(tag))
+        toggle = self.addWidget(gui.CheckBox(tag.capitalize()))
         toggle.tag = tag
 
         @toggle.mhEvent
@@ -240,6 +240,7 @@ class TagFilter(gui.GroupBox):
             self.addTag(tag)
 
     def setTagState(self, tag, enabled):
+        tag = tag.lower()
         if tag not in self.tags:
             return
 
@@ -479,11 +480,13 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
         return None
 
     def addTags(self, item, tags):
+        tags = [t.lower() for t in tags]
         listItem = self._getListItem(item)
         if listItem:
             listItem.tags = listItem.tags.union(tags)
 
     def setTags(self, item, tags):
+        tags = [t.lower() for t in tags]
         listItem = self._getListItem(item)
         if listItem:
             listItem.tags = tags
