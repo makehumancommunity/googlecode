@@ -37,7 +37,6 @@ class RichMesh(object):
 
     def __init__(self, name, amt):
         self.name = os.path.basename(name)
-        self.type = None
         self.object = None
         self.setPose({})
         self.setVertexGroups({})
@@ -60,6 +59,18 @@ class RichMesh(object):
         self._vnorm = None
 
     pose = property(getPose, setPose)
+
+
+    def getType(self):
+        if self._proxy:
+            return self._proxy.type
+        else:
+            return None
+
+    def setType(self, type):
+        log.debug("RichMesh setType not implemented")
+
+    type = property(getType, setType)
 
 
     def setVertexGroups(self, weights):
@@ -141,7 +152,6 @@ class RichMesh(object):
 
     def setProxy(self, proxy):
         self._proxy = proxy
-        self.type = proxy.type
         self._material = proxy.material
 
     proxy = property(getProxy, setProxy)
@@ -180,7 +190,6 @@ class RichMesh(object):
 
     def fromMesh(self, mesh, proxy, weights={}, shapes=[]):
         self.object = mesh
-        self.type = type
         self._proxy = proxy
         self.setVertexGroups(weights)
         self.shapes = shapes
