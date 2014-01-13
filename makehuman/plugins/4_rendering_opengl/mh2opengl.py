@@ -49,17 +49,13 @@ def Render(settings):
 
         progress(0.05, 0.1, "Projecting lightmaps")
         diffuse = imgop.Image(data = human.material.diffuseTexture)
-        lmap = projection.mapSceneLighting(settings['scene'], doFixSeams = False)
-        # Do advanced seam fixing, to accomodate for blurring.
-        seamfix = projection.SeamFix(lmap)
-        lmapB = seamfix.apply()
+        lmap = projection.mapSceneLighting(
+            settings['scene'], border = human.material.sssRScale)
         progress(0.1, 0.4, "Applying medium scattering")
-        seamfix.expand(human.material.sssGScale - 1)
-        lmapG = imgop.blurred(seamfix.apply(), human.material.sssGScale, 13)
+        lmapG = imgop.blurred(lmap, human.material.sssGScale, 13)
         progress(0.4, 0.7, "Applying high scattering")
-        seamfix.expand(human.material.sssRScale - human.material.sssGScale)
-        lmapR = imgop.blurred(seamfix.apply(), human.material.sssRScale, 13)
-        lmap = imgop.compose([lmapR, lmapG, lmapB])
+        lmapR = imgop.blurred(lmap, human.material.sssRScale, 13)
+        lmap = imgop.compose([lmapR, lmapG, lmap])
         if not diffuse.isEmpty:
             progress(0.7, 0.8, "Combining textures")
             lmap = imgop.resized(lmap, diffuse.width, diffuse.height)

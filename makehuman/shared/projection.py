@@ -238,48 +238,35 @@ def mapImage(imgMesh, mesh, leftTop, rightBottom):
         return mapImageSoft(mh.Image(imgMesh.getTexture()), mesh, leftTop, rightBottom)
 
 
-'''class SeamFix
+'''fixSeams
 
-A class designed to serve as a tool for removing UV seams
-from projected images.
+A function for removing UV seams from projected images.
 
 When creating images through projection, interference with the
 limits of the UV map tend to produce dark seams on the mesh
-along the lines that define the limits. Using this class,
-one can repair these seams by projection aided post-processing.
+along the lines that define the limits. Using this procedure,
+one can repair these seams by UV mask aided post-processing.
+
+Pass the image to be fixed in the 'img' parameter, and the mesh
+from which the UV mask will be projected in the 'mesh' parameter.
+If you already have a mask projected, you can pass it in place
+of the 'mesh' parameter. The function will additionally return
+the new expanded mask.
 
 The seam fix can be expanded furtherly in case the projected
 image is intented for blurring or other sampling operation
-affected by pixels outside the UV border.
+affected by pixels outside the UV border, by adjusting the
+'border' parameter.
 
 '''
 
-class SeamFix(object):
-    def __init__(self, img, mesh = None, mask = None):
-        if mask is None:
-            if mesh is None:
-                mesh = G.app.selectedHuman.mesh
-            mask = mapMask(img.size, mesh)
-        self.mask = mask
-        self.image = img
-        
-        self.expand()
-        
-    def expand(self, pixels = 1):
-        self.image, self.mask = image_operations.expand(self.image, self.mask, pixels)
-        return self
-
-    def apply(self):
-        return self.image
-
-'''fixSeams: Convenience function for simple cases.'''
-def fixSeams(img, mesh = None, mask = None):
-    if mask is None and mesh is None:
-        if img.components in (2, 4):
-            mask = image_operations.getAlpha(img)
-    return SeamFix(img, mesh, mask).apply()
+def fixSeams(img, mesh, border = 1):
+    from image_operations import Image, expand
+    mask = mesh if isinstance(mesh, Image) else mapMask(img.size, mesh)
+    img, mask = expand(img, mask, border)
+    return (img, mask) if isinstance(mesh, Image) else img
     
-def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024), doFixSeams = True):
+def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024), border = 1):
     """
     Create a lightmap for the selected human (software renderer).
     """
@@ -318,8 +305,7 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1
     RasterizeTriangles(dstImg, coords[:,[2,3,0],:], ColorShader(colors[:,[2,3,0],:]))
 
     progress(0.9, 0.99)
-    if doFixSeams:
-        dstImg = fixSeams(dstImg, mesh)
+    dstImg = fixSeams(dstImg, mesh, border)
 
     log.debug("mapLighting: end render")
 
@@ -328,7 +314,7 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1
     progress(1)
     return dstImg
 
-def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024), doFixSeams = True):
+def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024), border = 1):
     """
     Create a lightmap for the selected human (hardware accelerated).
     """
@@ -363,8 +349,7 @@ def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 102
                            color = colors, clearColor = (0, 0, 0, 0))
 
     progress(0.9, 0.99)
-    if doFixSeams:
-        dstImg = fixSeams(dstImg, mesh)
+    dstImg = fixSeams(dstImg, mesh, border)
 
     mesh.setColor([255, 255, 255, 255])
 
@@ -373,7 +358,7 @@ def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 102
     progress(1)
     return dstImg
 
-def mapLighting(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024), doFixSeams = True):
+def mapLighting(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024), border = 1):
     """
     Bake lightmap for human from one light.
     Uses OpenGL hardware acceleration if the necessary OGL features are
@@ -381,15 +366,15 @@ def mapLighting(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024)
     """
     if mh.hasRenderSkin():
         try:
-            return mapLightingGL(lightpos, mesh, res, doFixSeams)
+            return mapLightingGL(lightpos, mesh, res, border)
         except Exception, e:
             log.debug(e)
             log.debug("Hardware skin rendering failed, falling back to software render.")
-            return mapLightingSoft(lightpos, mesh, res, doFixSeams)
+            return mapLightingSoft(lightpos, mesh, res, border)
     else:
-        return mapLightingSoft(lightpos, mesh, res, doFixSeams)
+        return mapLightingSoft(lightpos, mesh, res, border)
 
-def mapSceneLighting(scn, object = None, res = (1024, 1024), doFixSeams = True):
+def mapSceneLighting(scn, object = None, res = (1024, 1024), border = 1):
     """
     Create a lightmap for a scene with one or multiple lights.
     This happens by adding the lightmaps produced by each light,
@@ -409,7 +394,7 @@ def mapSceneLighting(scn, object = None, res = (1024, 1024), doFixSeams = True):
                 light.position))
 
     def getLightmap(light):
-        lmap = mapLighting(calcLightPos(light), object.mesh, res, doFixSeams)
+        lmap = mapLighting(calcLightPos(light), object.mesh, res, border)
         return image_operations.Image(data = lmap.data * light.color.values)
 
     progress = Progress(1 + len(scn.lights), G.app.progress)
@@ -485,12 +470,9 @@ def mapMaskSoft(dimensions = (1024, 1024), mesh = None):
 
     log.debug("mapMask: begin render")
 
-    progress(0.1, 0.9, None, 1)
+    progress(0.1, 0.99, None, 1)
     RasterizeTriangles(dstImg, coords[:,[0,1,2],:], MaskShader())
     RasterizeTriangles(dstImg, coords[:,[2,3,0],:], MaskShader())
-
-    progress(0.9, 0.99)
-    fixSeams(dstImg)
 
     log.debug("mapMask: end render")
 
