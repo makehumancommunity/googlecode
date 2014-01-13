@@ -548,7 +548,7 @@ class AsymmTaskView(ModifierTaskView):
 class MacroTaskView(ModifierTaskView):
     _name = 'Macro modelling'
     _group = 'macro'
-    _label = 'Macro'
+    _label = 'Main'
 
     _features = [
         ('Macro', 'macrodetails', [
