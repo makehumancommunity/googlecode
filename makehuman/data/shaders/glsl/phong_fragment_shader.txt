@@ -32,6 +32,10 @@ varying vec4 ambient_color, diffuse_color, specular_color, emissive_color;
     uniform sampler2D diffuseTexture;
 #endif
 
+#ifdef AOMAP
+    uniform sampler2D aomapTexture;
+#endif
+
 void main (void)
 {
 #ifdef DIFFUSE
@@ -39,6 +43,10 @@ void main (void)
     vec4 tex_color = texture2D(diffuseTexture, gl_TexCoord[0].st);
 #else
     vec4 tex_color = vec4(1.0, 1.0, 1.0, 1.0);
+#endif
+
+#ifdef AOMAP
+    tex_color.rgb = tex_color.rgb * texture2D(aomapTexture, gl_TexCoord[0].st).rgb;
 #endif
 
     // Ambient * texture color

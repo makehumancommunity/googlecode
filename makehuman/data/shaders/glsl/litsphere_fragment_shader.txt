@@ -36,6 +36,10 @@
     #endif
 #endif
 
+#ifdef AOMAP
+    uniform sampler2D aomapTexture;
+#endif
+
 
 #ifdef NORMALMAP
     uniform sampler2D normalmapTexture;
@@ -82,19 +86,26 @@ void main() {
         shading = shading * gl_Color.rgb;
     #endif
 
+    vec4 outColor;
     #ifdef DIFFUSE
         vec4 diffuse = texture2D(diffuseTexture, gl_TexCoord[0].xy).rgba;
-        gl_FragColor.rgb = (1.0 - AdditiveShading)*shading * diffuse.rgb * vec3(2.0 - (shading.r + shading.g + shading.b)/3.0);
-        gl_FragColor.rgb += AdditiveShading*(shading + diffuse.rgb);
-        gl_FragColor.a = diffuse.a;
+        outColor.rgb = (1.0 - AdditiveShading)*shading * diffuse.rgb * vec3(2.0 - (shading.r + shading.g + shading.b)/3.0);
+        outColor.rgb += AdditiveShading*(shading + diffuse.rgb);
+        outColor.a = diffuse.a;
     #else
-        gl_FragColor.rgb = shading.rgb;
+        outColor.rgb = shading.rgb;
         #ifdef ALPHA_MAP
-            gl_FragColor.a = texture2D(alphaTexture, gl_TexCoord[0].xy).a;
+            outColor.a = texture2D(alphaTexture, gl_TexCoord[0].xy).a;
         #else
-            gl_FragColor.a = 1.0;
+            outColor.a = 1.0;
         #endif
     #endif
+
+    #ifdef AOMAP
+        outColor.rgb = outColor.rgb * texture2D(aomapTexture, gl_TexCoord[0].xy).rgb;
+    #endif
+
+    gl_FragColor.rgba = outColor.rgba;
 
 }
 
