@@ -154,6 +154,16 @@ class Armature:
             self._tposes = readMhpFile("data/mhx/tpose.mhp")
             return self._tposes
 
+
+    def poseMeshTPose(self, rmesh):
+        pose = {}
+        for bone in self.bones.values():
+            bone.calcRestMatrix()
+            mat = bone._getTPoseMatrix()
+            pose[bone.name] = mat
+        rmesh.pose = pose
+
+
 #-------------------------------------------------------------------------------
 #   Loader for the modern mhp format that uses matrices only
 #-------------------------------------------------------------------------------
@@ -353,6 +363,7 @@ class Bone:
         bindinv = np.transpose(restmat)
         bindmat = la.inv(bindinv)
         return bindmat,bindinv
+
 
 #-------------------------------------------------------------------------------
 #   Global variables and utilities

@@ -52,11 +52,24 @@ def writeLibraryControllers(fp, rmeshes, amt, config):
 def writeSkinController(fp, rmesh, amt, config):
     progress = Progress()
     progress(0, 0.1)
-    obj = rmesh.object
-    rmesh.calculateSkinWeights(amt)
-    nVerts = len(obj.coord)
+
+    nVerts = len(rmesh.getCoord())
     nBones = len(amt.bones)
-    nWeights = len(rmesh.skinWeights)
+
+    skinWeights = []
+    vertexWeights = [list() for _ in xrange(nVerts)]
+    wn = 0
+    for bn,bname in enumerate(amt.bones):
+        try:
+            wts = rmesh.weights[bname]
+        except KeyError:
+            wts = []
+        log.debug("W %d %s %s" % (bn,bname,wts))
+        skinWeights += wts
+        for (vn,_w) in wts:
+            vertexWeights[int(vn)].append((bn,wn))
+            wn += 1
+    nSkinWeights = len(skinWeights)
 
     progress(0.1, 0.2)
     fp.write('\n' +
@@ -86,16 +99,15 @@ def writeSkinController(fp, rmesh, amt, config):
         '          </technique_common>\n' +
         '        </source>\n' +
         '        <source id="%s-skin-weights">\n' % rmesh.name +
-        '          <float_array count="%d" id="%s-skin-weights-array">\n' % (nWeights,rmesh.name) +
+        '          <float_array count="%d" id="%s-skin-weights-array">\n' % (nSkinWeights,rmesh.name) +
         '           ')
 
-    for w in rmesh.skinWeights:
-        fp.write(' %s' % w[1])
+    fp.write(''.join(' %s' % w[1] for w in skinWeights))
 
     fp.write('\n' +
         '          </float_array>\n' +
         '          <technique_common>\n' +
-        '            <accessor count="%d" source="#%s-skin-weights-array" stride="1">\n' % (nWeights,rmesh.name) +
+        '            <accessor count="%d" source="#%s-skin-weights-array" stride="1">\n' % (nSkinWeights,rmesh.name) +
         '              <param type="float" name="WEIGHT"></param>\n' +
         '            </accessor>\n' +
         '          </technique_common>\n' +
@@ -131,8 +143,7 @@ def writeSkinController(fp, rmesh, amt, config):
         '          <vcount>\n' +
         '            ')
 
-    for wts in rmesh.vertexWeights:
-        fp.write('%d ' % len(wts))
+    fp.write(''.join(['%d ' % len(wts) for wts in vertexWeights]))
 
     progress(0.8, 0.99)
     fp.write('\n' +
@@ -140,9 +151,8 @@ def writeSkinController(fp, rmesh, amt, config):
         '          <v>\n' +
         '           ')
 
-    for wts in rmesh.vertexWeights:
-        for pair in wts:
-            fp.write(' %d %d' % pair)
+    for wts in vertexWeights:
+        fp.write(''.join([' %d %d' % pair for pair in wts]))
 
     fp.write('\n' +
         '          </v>\n' +

@@ -69,58 +69,72 @@ def exportCollada(human, filepath, config):
         config=config,
         rawTargets = rawTargets)
 
-    progress(0.5, 0.55, "Exporting %s" % filepath)
+    oldPoses = {}
+    if config.useTPose and amt:
+        for rmesh in rmeshes:
+            oldPoses[rmesh.name] = rmesh.pose
+            amt.poseMeshTPose(rmesh)
 
     try:
-        fp = codecs.open(filepath, 'w', encoding="utf-8")
-        log.message("Writing Collada file %s" % filepath)
-    except:
-        log.error("Unable to open file for writing %s" % filepath)
+        progress(0.5, 0.55, "Exporting %s" % filepath)
 
-    date = time.strftime(u"%a, %d %b %Y %H:%M:%S +0000".encode('utf-8'), time.localtime()).decode('utf-8')
-    if config.yUpFaceZ or config.yUpFaceX:
-        upvector = "Y_UP"
-    else:
-        upvector = "Z_UP"
-    fp.write('<?xml version="1.0" encoding="utf-8"?>\n' +
-        '<COLLADA version="1.4.0" xmlns="http://www.collada.org/2005/11/COLLADASchema">\n' +
-        '  <asset>\n' +
-        '    <contributor>\n' +
-        '      <author>www.makehuman.org</author>\n' +
-        '    </contributor>\n' +
-        '    <created>%s</created>\n' % date +
-        '    <modified>%s</modified>\n' % date +
-        '    <unit meter="%.4f" name="%s"/>\n' % (0.1/config.scale, config.unit) +
-        '    <up_axis>%s</up_axis>\n' % upvector +
-        '  </asset>\n')
+        try:
+            fp = codecs.open(filepath, 'w', encoding="utf-8")
+            log.message("Writing Collada file %s" % filepath)
+        except:
+            fp = None
+            log.error("Unable to open file for writing %s" % filepath)
 
-    progress(0.55, 0.6, "Exporting images")
-    dae_materials.writeLibraryImages(fp, rmeshes, config)
+        date = time.strftime(u"%a, %d %b %Y %H:%M:%S +0000".encode('utf-8'), time.localtime()).decode('utf-8')
+        if config.yUpFaceZ or config.yUpFaceX:
+            upvector = "Y_UP"
+        else:
+            upvector = "Z_UP"
+        fp.write('<?xml version="1.0" encoding="utf-8"?>\n' +
+            '<COLLADA version="1.4.0" xmlns="http://www.collada.org/2005/11/COLLADASchema">\n' +
+            '  <asset>\n' +
+            '    <contributor>\n' +
+            '      <author>www.makehuman.org</author>\n' +
+            '    </contributor>\n' +
+            '    <created>%s</created>\n' % date +
+            '    <modified>%s</modified>\n' % date +
+            '    <unit meter="%.4f" name="%s"/>\n' % (0.1/config.scale, config.unit) +
+            '    <up_axis>%s</up_axis>\n' % upvector +
+            '  </asset>\n')
 
-    progress(0.6, 0.65, "Exporting effects")
-    dae_materials.writeLibraryEffects(fp, rmeshes, config)
+        progress(0.55, 0.6, "Exporting images")
+        dae_materials.writeLibraryImages(fp, rmeshes, config)
 
-    progress(0.65, 0.7, "Exporting materials")
-    dae_materials.writeLibraryMaterials(fp, rmeshes, config)
+        progress(0.6, 0.65, "Exporting effects")
+        dae_materials.writeLibraryEffects(fp, rmeshes, config)
 
-    progress(0.7, 0.75, "Exporting controllers")
-    dae_controller.writeLibraryControllers(fp, rmeshes, amt, config)
+        progress(0.65, 0.7, "Exporting materials")
+        dae_materials.writeLibraryMaterials(fp, rmeshes, config)
 
-    progress(0.75, 0.9, "Exporting geometry")
-    dae_geometry.writeLibraryGeometry(fp, rmeshes, config)
+        progress(0.7, 0.75, "Exporting controllers")
+        dae_controller.writeLibraryControllers(fp, rmeshes, amt, config)
 
-    progress(0.9, 0.99, "Exporting scene")
-    dae_node.writeLibraryVisualScenes(fp, rmeshes, amt, config)
+        progress(0.75, 0.9, "Exporting geometry")
+        dae_geometry.writeLibraryGeometry(fp, rmeshes, config)
 
-    fp.write(
-        '  <scene>\n' +
-        '    <instance_visual_scene url="#Scene"/>\n' +
-        '  </scene>\n' +
-        '</COLLADA>\n')
+        progress(0.9, 0.99, "Exporting scene")
+        dae_node.writeLibraryVisualScenes(fp, rmeshes, amt, config)
 
-    fp.close()
-    progress(1, None, "Export finished.")
-    time2 = time.clock()
-    log.message("Wrote Collada file in %g s: %s" % (time2-time1, filepath))
-    return
+        fp.write(
+            '  <scene>\n' +
+            '    <instance_visual_scene url="#Scene"/>\n' +
+            '  </scene>\n' +
+            '</COLLADA>\n')
+
+        progress(1, None, "Export finished.")
+        time2 = time.clock()
+        log.message("Wrote Collada file in %g s: %s" % (time2-time1, filepath))
+
+    finally:
+        if fp:
+            fp.close()
+
+        if oldPoses:
+            for rmesh in rmeshes:
+                rmesh.pose = oldPoses[rmesh.name]
 

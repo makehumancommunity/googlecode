@@ -38,7 +38,8 @@ class RichMesh(object):
         self.name = os.path.basename(name)
         self.type = None
         self.object = None
-        self.weights = {}
+        self._pose = None
+        self.setVertexWeights({})
         self.shapes = []
         self.armature = amt
         self._material = None
@@ -47,6 +48,54 @@ class RichMesh(object):
         self.vertexMask = None
         self.faceMask = None
         self.vertexMapping = None   # Maps vertex index of original object to the attached filtered object
+
+
+    def setVertexWeights(self, weights):
+        self.weights = weights
+        self.vertexWeights = {}
+        for name,data in weights.items():
+            self.vertexWeights[name] = VertexWeights(data)
+
+
+    def getCoord(self):
+        if self._pose:
+            obj = self.object
+            pcoords = np.zeros((len(obj.coord),3), float)
+            for bname,pmat in self._pose.items():
+                try:
+                    vw = self.vertexWeights[bname]
+                except KeyError:
+                    continue
+                rmat = np.array(pmat[:3,:3])
+                offset = np.array(pmat[:3,3])
+                vec = np.dot(rmat, obj.coord[vw.verts].transpose())
+                wvec = vw.weights * vec
+                pcoords[vw.verts] += wvec.transpose()
+            return pcoords
+        else:
+            return self.object.coord
+
+    def getTexco(self):
+        return self.object.texco
+
+    def getVnorm(self):
+        self.object.calcVertexNormals()
+        return self.object.vnorm
+
+    def getFvert(self):
+        return self.object.fvert
+
+    def getFuvs(self):
+        return self.object.fuvs
+
+
+    def setPose(self, pose):
+        self._pose = pose
+
+    def getPose(self):
+        return self._pose
+
+    pose = property(getPose, setPose)
 
 
     def getProxy(self):
@@ -85,7 +134,7 @@ class RichMesh(object):
         obj.calcNormals(True, True)
         obj.update()
         obj.updateIndexBuffer()
-        self.weights = weights
+        self.setVertexWeights(weights)
         self.shapes = shapes
         self._material = obj.material = material
         self.normalizeVertexWeights()
@@ -95,7 +144,7 @@ class RichMesh(object):
     def fromMesh(self, mesh, type, weights={}, shapes=[]):
         self.object = mesh
         self.type = type
-        self.weights = weights
+        self.setVertexWeights(weights)
         self.shapes = shapes
         self._material = mesh.material
         self.normalizeVertexWeights()
@@ -149,7 +198,7 @@ class RichMesh(object):
     def __repr__(self):
         return ("<RichMesh %s w %d t %d>" % (self.object, len(self.weights), len(self.shapes)))
 
-
+    '''
     def calculateSkinWeights(self, amt):
         if self.object is None:
             raise NameError("%s has no object. Cannot calculate skin weights" % self)
@@ -167,6 +216,12 @@ class RichMesh(object):
                 self.vertexWeights[int(vn)].append((bn,wn))
                 wn += 1
             self.skinWeights.extend(wts)
+    '''
+
+class VertexWeights:
+    def __init__(self, datas):
+        self.verts = [data[0] for data in datas]
+        self.weights = [data[1] for data in datas]
 
 
 def getRichMesh(human, proxy, useCurrentMeshes, rawWeights, rawShapes, amt, scale=1.0):
