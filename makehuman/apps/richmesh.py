@@ -39,7 +39,7 @@ class RichMesh(object):
         self.name = os.path.basename(name)
         self.type = None
         self.object = None
-        self._pose = None
+        self.setPose({})
         self.setVertexGroups({})
         self.shapes = []
         self.armature = amt
@@ -49,6 +49,17 @@ class RichMesh(object):
         self.vertexMask = None
         self.faceMask = None
         self.vertexMapping = None   # Maps vertex index of original object to the attached filtered object
+
+
+    def getPose(self):
+        return self._pose
+
+    def setPose(self, pose):
+        self._pose = pose
+        self._coord = None
+        self._vnorm = None
+
+    pose = property(getPose, setPose)
 
 
     def setVertexGroups(self, weights):
@@ -61,9 +72,12 @@ class RichMesh(object):
 
 
     def getCoord(self):
-        if self._pose:
+        if self._coord is not None:
+            return self._coord
+        elif self._pose:
             obj = self.object
-            pcoords = np.zeros((len(obj.coord),3), float)
+            self._coord = np.zeros((len(obj.coord),3), float)
+            self._vnorm = np.zeros((len(obj.coord),3), float)
             for bname,pmat in self._pose.items():
                 try:
                     vw = self.vertexGroups[bname]
@@ -74,7 +88,13 @@ class RichMesh(object):
                 vec = np.dot(rmat, obj.coord[vw.verts].transpose())
                 vec += offset.transpose()
                 wvec = vw.weights * vec
-                pcoords[vw.verts] += wvec.transpose()
+                self._coord[vw.verts] += wvec.transpose()
+
+                obj.calcVertexNormals()
+                vec = np.dot(rmat, obj.vnorm[vw.verts].transpose())
+                wvec = vw.weights * vec
+                self._vnorm[vw.verts] += wvec.transpose()
+
                 '''
                 log.debug(bname)
                 log.debug(pmat)
@@ -84,34 +104,28 @@ class RichMesh(object):
                 log.debug(vec.transpose())
                 log.debug(vec)
                 log.debug(wvec)
-                log.debug(pcoords[vw.verts])
+                log.debug(self._coord[vw.verts])
                 log.debug("")
                 '''
-            return pcoords
+            return self._coord
         else:
             return self.object.coord
 
+    def getVnorm(self):
+        if self._vnorm is not None:
+            return self._vnorm
+        else:
+            self.object.calcVertexNormals()
+            return self.object.vnorm
+
     def getTexco(self):
         return self.object.texco
-
-    def getVnorm(self):
-        self.object.calcVertexNormals()
-        return self.object.vnorm
 
     def getFvert(self):
         return self.object.fvert
 
     def getFuvs(self):
         return self.object.fuvs
-
-
-    def setPose(self, pose):
-        self._pose = pose
-
-    def getPose(self):
-        return self._pose
-
-    pose = property(getPose, setPose)
 
 
     def getProxy(self):

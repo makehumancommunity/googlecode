@@ -167,12 +167,15 @@ def writeShapeKey(fp, name, shape, rmesh, config):
         return
 
     progress = Progress()
-    coord = rotateCoord(rmesh.getCoord(), config)
-    nVerts = len(coord)
 
     # Verts
 
     progress(0)
+    target = np.array(rmesh.getCoord())
+    target[shape.verts] += shape.data[np.s_[...]]
+    target = rotateCoord(target, config)
+    nVerts = len(target)
+
     fp.write(
         '    <geometry id="%sMeshMorph_%s" name="%s">\n' % (rmesh.name, name, name) +
         '      <mesh>\n' +
@@ -180,9 +183,6 @@ def writeShapeKey(fp, name, shape, rmesh, config):
         '          <float_array id="%sMeshMorph_%s-positions-array" count="%d">\n' % (rmesh.name, name, 3*nVerts) +
         '           ')
 
-    target = np.array(coord)
-    target[shape.verts] += shape.data[np.s_[...]]
-    target = rotateCoord(target, config)
     fp.write( ''.join([("%.4f %.4f %.4f " % tuple(co)) for co in target]) )
 
     fp.write('\n' +
