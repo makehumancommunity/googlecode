@@ -33,7 +33,7 @@ from progress import Progress
 #----------------------------------------------------------------------
 
 def writeLibraryGeometry(fp, rmeshes, config):
-    progress = Progress(len(rmeshes), False)
+    progress = Progress(len(rmeshes), None)
     fp.write('\n  <library_geometries>\n')
     for rmesh in rmeshes:
         writeGeometry(fp, rmesh, config)

@@ -21,12 +21,10 @@ Definition of Progress class.
 Abstract
 --------
 
-The Progress module defines the Progress class, which provides an easy
-and versatile way to handle MH's progress bar.
-
-It takes care automatically for subroutines,
-so that the programmer can avoid passing progress callbacks,
-and only state the subroutine's impact on the progress, out of it.
+The Progress module defines the Progress class, which provides
+an easy interface for handling MH's progress bar.
+It automatically processes porgress updates in subroutines, so
+passing progress callbacks as function parameters is needless.
 
 *-- Usage --*
 
@@ -65,45 +63,34 @@ def baz(items):
     progress = Progress(len(items))
 
     for item in items:
+        loopprog = Progress()
         ... # do stuff #
-        progress.substep(0.3)
+        loopprog(0.3)
         ... # more stuff #
-        progress.substep(0.6)
+        loopprog(0.6)
         ... # even more stuff #
         progress.step()
 
 
 # All together!!!
-# (ie. time consuming functions that include
-#  subroutines in them, that may have their own progress handler.)
-# [This example shows the use of descriptions too.]
 
 def FooBarBaz():
-    progress = Progress()
+    progress = Progress.begin()
 
     progress(0, 0.3, "Getting some foo")
     somefoo = foo()
 
-    progress(0.3, 0.7, "Getting two bars", 2)
+    progress(0.3, 0.7, None)
+    prog2 = Progress() (0, 0.5, "Getting a bar")
     bar1 = bar()
+    prog2(0.5, 1, "Getting another bar")
     bar2 = bar()
 
     progress(0.7, 0.99, "Bazzing them all together")
     bazzable = [somefoo, bar1, bar2]
     baz(bazzable)
 
-    progress(1.0, None, "I've finished bazzing. Call me bazzer.")
-
-
-----
-
-Note: Progress is newbie-proof, ie. if you tell it that you'll
-      call bar() 2 times (like above) and you call it 4,
-      it won't explode, but when you call the 3rd bar(), it will
-      start counting progress again from the point it was before you
-      called the first bar() [which actually might be useful as a hack].
-      It also has no problem if you call it only 1 time, it will just do
-      the half progress to the next step, then jump to 0.7 of baz().
+    progress(1.0, None, "Foobar bazzed.")
 
 """
 
@@ -113,10 +100,11 @@ current_Progress_ = None
 
 
 class Progress(object):
-    def __init__(self, steps = 0, progressCallback = None, logging = False, timing = False):
+    def __init__(self, steps = 0, progressCallback = True, logging = False, timing = False):
         global current_Progress_
         
         self.progress = 0.0
+        self.nextprog = None
         self.steps = steps
         self.stepsdone = 0
         self.description = None
@@ -127,78 +115,39 @@ class Progress(object):
         self.logging = logging
         self.timing = timing
 
-        self.children = 0
-        self.farstart = 0.0
-        self.farend = 1.0
-        self.nextstart = 0.0
+        # Push self in the global Progress object stack.
+        self.parent = current_Progress_
+        current_Progress_ = self
 
-        if steps > 0:
-            self.prepared = True
-            self.nextend = 1.0/steps
-            self.numsubs = 1
-        else:
-            self.prepared = False
-            self.nextend = 1.0
-            self.numsubs = 0
-        
-        if current_Progress_ is None:
-            # Generic case, where the progress bar is updated directly.
-            self.parent = None
-            current_Progress_ = self
-            self.start = 0.0
-            self.end = 1.0
-        elif current_Progress_.prepared:
-            # Effect a subroutine progress update handler
-            # if the programmer has told us its impact.
-            self.parent = current_Progress_
-            current_Progress_ = self
-            self.parent.childcreated()
-            self.start = self.parent.nextstart
-            self.end = self.parent.nextend
-        else:
-            # In this case the programmer doesn't care about the
-            # progress updates of the current subroutine.
-            self.parent = False
-
-        # Get the callback that updates MH's progress bar.
-        # Has mechanism to avoid importing gui3d, if possible.
+        # If this is a master Progress, get the callback
+        # that updates MH's progress bar.
         if self.parent is None:
-            if progressCallback is None:
-                import gui3d
-                self.progressCallback = gui3d.app.progress
-            else: # In this case the user provided us with a custom
-                #   progress callback to use instead of importing gui3d.
-                #   Update: They can pass False to completely avoid gui3d.
-                self.progressCallback = progressCallback
-        else: # In this case we need no gui3d (most of cases).
-            self.progressCallback = None
-
-
-    # Internal method to be called by subroutine progress hanlders,
-    # to refresh the next start and end limits for the next object.
-    def childcreated(self):
-
-        if self.children >= self.numsubs:
-            self.children = 0
-
-        diff = (self.farend - self.farstart)/self.numsubs
-        self.nextstart = self.farstart + diff*self.children
-        self.children += 1
-        self.nextend = self.farstart + diff*self.children
-
-
-    # Internal method that is responsible for the actual
-    # progress bar and parent progress handler updating.
-    def update(self, amount, childDescription = None, childupdate = False):
-        self.progress = amount
-        if self.parent != False and not childupdate:
-            amount = self.start + (self.end - self.start)*amount
-        if self.parent:
-            if self.description:
-                self.parent.update(amount, self.description, True)
+            if progressCallback is True:
+                from core import G
+                self.progressCallback = G.app.progress
             else:
-                self.parent.update(amount, childDescription, True)
-        elif self.parent is None and self.progressCallback != False:
+                # Bypass importing if the user provided us
+                # with a custom progress callback.
+                self.progressCallback = progressCallback
+            # To completely disable updating when this is a
+            # master Progress, pass None as progressCallback.
+
+
+    # Internal method that is responsible for the
+    # actual progress bar updating.
+    def update(self, prog = None, desc = None):
+
+        if self.steps:
+            prog = float(self.stepsdone) / float(self.steps)
+        if prog is None:
+            prog = self.progress
+
+        if self.description:
+            desc = self.description
+        elif desc is None:
+            desc = ""
+
+        if self.parent is None:
             if self.timing:
                 import time
                 t = time.time()
@@ -210,19 +159,31 @@ class Progress(object):
                         log.debug("  took %s seconds", deltaT)
                 self.time = t
 
-            if childDescription:
-                desc = childDescription
-            elif self.description:
-                desc = self.description
-            else:
-                desc = ""
-            self.progressCallback(amount, desc)
             if self.logging:
                 import log
-                log.debug("Progress %s%%: %s", amount, desc)
+                log.debug("Progress %s%%: %s", prog, desc)
+                
+            if not self.progressCallback is None:
+                self.progressCallback(prog, desc)
 
-        if self.progress >= 0.999999: # Not using 1.0 for precision safety.
+        if prog >= 0.999999: # Not using 1.0 for precision safety.
             self.finish()
+            
+        if self.parent:
+            self.parent.childupdate(prog, desc)
+
+
+    # Internal method that a child Progress calls for doing a
+    # progress update by communicating with its parent.
+    def childupdate(self, prog, desc):
+        if self.steps:
+            prog = (self.stepsdone + prog) / float(self.steps)
+        elif not self.nextprog is None:
+            prog = self.progress + prog * (self.nextprog - self.progress)
+        else:
+            prog = self.progress
+
+        self.update(prog, desc)
 
 
     # Method to be called when a subroutine has finished,
@@ -231,81 +192,58 @@ class Progress(object):
     def finish(self):
         global current_Progress_
 
-        if not self.parent and self.logging and self.timing:
+        if self.parent is None and self.logging and self.timing:
             import log
             log.debug("Total time taken: %s seconds.", self.totalTime)
 
-        if self.parent != False:
-            current_Progress_ = self.parent
-
-
-    # Method useful for smaller tasks that take a number
-    # of roughly equivalent steps to complete.
-    # Update: Each step may accept children Progress objects.
-    def step(self, desc = None, numsubs = 1):
-
-        if desc:
-            self.description = desc
-        
-        if self.steps == 0:
-            self.update(1.0)
-        else:
-            self.numsubs = numsubs
-
-            diff = 1.0/self.steps
-            self.stepsdone += 1
-            self.progress = self.stepsdone*diff
-
-            self.farstart = self.progress
-            self.farend = self.progress + diff
-            self.children = 0
-            self.prepared = True
-            
-            self.update(self.progress)
-
-
-    # Method useful for tasks that process data in loops,
-    # where each loop is a step(), and the progress
-    # inside the loop can be updated with substep().
-    def substep(self, amount, desc = None):
-        temp = self.progress
-        self.update(temp + amount/self.steps, desc)
-        self.progress = temp
+        current_Progress_ = self.parent
 
 
     # Basic method for progress updating.
     # It overloads the () operator of the constructed object.
     # Pass None to the description to allow the child update status.
-    def __call__(self, progress, end = None, desc = False, numsubs = None):
+    def __call__(self, progress, end = None, desc = False):
+        global current_Progress_
+        current_Progress_ = self
+        
+        if not (desc is False):
+            self.description = desc
+
+        self.progress = progress
+        self.nextprog = end
+        self.update()
+        
+        return self
+
+
+    # Method useful for smaller tasks that take a number
+    # of roughly equivalent steps to complete.
+    # You can use this in a non-stepped Progress to just
+    # update the description on the status bar.
+    def step(self, desc = False):
+        global current_Progress_
+        current_Progress_ = self
 
         if not (desc is False):
             self.description = desc
         
-        if numsubs is None:
-            self.numsubs = 1 if end else 0
-        else:
-            self.numsubs = numsubs
+        if self.steps:
+            self.stepsdone += 1
 
-        if end:
-            self.farstart = progress
-            self.farend = end
-            self.children = 0
-            self.prepared = True
-        else:
-            self.prepared = False
+        self.update()
 
-        self.update(progress)
+        return self
 
 
     # Class method for directly creating a master Progress object.
     # Resets all progress to zero. Use this for starting a greater MH task.
     @classmethod
-    def begin(cls):
-        
+    def begin(cls, steps = 0, progressCallback = True, logging = False, timing = False):
+
         global current_Progress_
-        
         current_Progress_ = None
-        return cls()
+
+        return cls(steps, progressCallback, logging, timing)
 
 
     ## Specialized methods follow ##

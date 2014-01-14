@@ -32,7 +32,7 @@ from progress import Progress
 #----------------------------------------------------------------------
 
 def writeLibraryImages(fp, rmeshes, config):
-    progress = Progress(len(rmeshes), False)
+    progress = Progress(len(rmeshes), None)
     fp.write('\n  <library_images>\n')
     for rmesh in rmeshes:
         writeImages(fp, rmesh, config)
@@ -74,7 +74,7 @@ def writeImage(fp, filepath, config):
 #----------------------------------------------------------------------
 
 def writeLibraryEffects(fp, rmeshes, config):
-    progress = Progress(len(rmeshes), False)
+    progress = Progress(len(rmeshes), None)
     fp.write('\n  <library_effects>\n')
     for rmesh in rmeshes:
         writeEffects(fp, rmesh)
@@ -165,7 +165,7 @@ def writeTexture(fp, tech, filepath, color, intensity, s=1.0, a=1.0):
 #----------------------------------------------------------------------
 
 def writeLibraryMaterials(fp, rmeshes, config):
-    progress = Progress(len(rmeshes), False)
+    progress = Progress(len(rmeshes), None)
     fp.write('\n  <library_materials>\n')
     for rmesh in rmeshes:
         writeMaterials(fp, rmesh)

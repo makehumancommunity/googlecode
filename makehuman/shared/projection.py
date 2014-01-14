@@ -96,7 +96,7 @@ def RasterizeTriangles(dst, coords, shader):
     miny = cmin[:,1]
     maxy = cmax[:,1]
 
-    progress = Progress(len(coords), False).HighFrequency(200)
+    progress = Progress(len(coords), None).HighFrequency(200)
     for i in xrange(len(coords)):
         ixy = np.mgrid[miny[i]:maxy[i],minx[i]:maxx[i]].transpose([1,2,0])[:,:,::-1]
         xy = ixy + 0.5
@@ -129,8 +129,7 @@ def getFaces(mesh):
     return faces
 
 def mapImageSoft(srcImg, mesh, leftTop, rightBottom):
-    progress = Progress(0, G.app.progress)
-    progress(0)
+    progress = Progress() (0)
     dstImg = mh.Image(G.app.selectedHuman.getTexture())
 
     dstW = dstImg.width
@@ -179,18 +178,18 @@ def mapImageSoft(srcImg, mesh, leftTop, rightBottom):
 
     log.debug("mapImage: begin render")
 
-    progress(0.2, 0.99, None, 2)
+    progress(0.2, 0.6)
     RasterizeTriangles(dstImg, texco[:,[0,1,2],:], UvAlphaShader(dstImg, srcImg, uva[:,[0,1,2],:]))
+    progress(0.6, 0.99)
     RasterizeTriangles(dstImg, texco[:,[2,3,0],:], UvAlphaShader(dstImg, srcImg, uva[:,[2,3,0],:]))
-    progress(1)
+    progress.finish()
 
     log.debug("mapImage: end render")
 
     return dstImg
 
 def mapImageGL(srcImg, mesh, leftTop, rightBottom):
-    progress = Progress(0, G.app.progress)
-    progress(0)
+    progress = Progress() (0)
     log.debug("mapImageGL: 1")
 
     dstImg = G.app.selectedHuman.meshData.object3d.textureTex
@@ -218,7 +217,7 @@ def mapImageGL(srcImg, mesh, leftTop, rightBottom):
     color = np.ascontiguousarray(color, dtype=np.uint8)
     texco = np.ascontiguousarray(texco, dtype=np.float32)
 
-    progress(0.1, 0.99)
+    progress(0.5, 0.99)
     result = mh.renderSkin(dstImg, mesh.vertsPerPrimitive, coords, index = mesh.index,
                            texture = srcImg, UVs = texco, textureMatrix = texmat,
                            color = color, clearColor = None)
@@ -270,8 +269,7 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1
     """
     Create a lightmap for the selected human (software renderer).
     """
-    progress = Progress(0, G.app.progress)
-    progress(0)
+    progress = Progress() (0)
 
     if mesh is None:
         mesh = G.app.selectedHuman.mesh
@@ -300,8 +298,9 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1
 
     log.debug("mapLighting: begin render")
 
-    progress(0.1, 0.9, None, 2)
+    progress(0.1, 0.5)
     RasterizeTriangles(dstImg, coords[:,[0,1,2],:], ColorShader(colors[:,[0,1,2],:]))
+    progress(0.5, 0.9)
     RasterizeTriangles(dstImg, coords[:,[2,3,0],:], ColorShader(colors[:,[2,3,0],:]))
 
     progress(0.9, 0.99)
@@ -311,15 +310,14 @@ def mapLightingSoft(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1
 
     mesh.setColor([255, 255, 255, 255])
 
-    progress(1)
+    progress.finish()
     return dstImg
 
 def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 1024), border = 1):
     """
     Create a lightmap for the selected human (hardware accelerated).
     """
-    progress = Progress(0, G.app.progress)
-    progress(0)
+    progress = Progress() (0)
     
     if mesh is None:
         mesh = G.app.selectedHuman.mesh
@@ -344,11 +342,11 @@ def mapLightingGL(lightpos = (-10.99, 20.0, 20.0), mesh = None, res = (1024, 102
     coords = mesh.r_texco
     colors = mesh.r_color
 
-    progress(0.2, 0.9)
+    progress(0.2, 0.5)
     dstImg = mh.renderSkin((W, H), mesh.vertsPerPrimitive, coords, index = mesh.index,
                            color = colors, clearColor = (0, 0, 0, 0))
 
-    progress(0.9, 0.99)
+    progress(0.5, 0.99)
     dstImg = fixSeams(dstImg, mesh, border)
 
     mesh.setColor([255, 255, 255, 255])
@@ -397,7 +395,7 @@ def mapSceneLighting(scn, object = None, res = (1024, 1024), border = 1):
         lmap = mapLighting(calcLightPos(light), object.mesh, res, border)
         return image_operations.Image(data = lmap.data * light.color.values)
 
-    progress = Progress(1 + len(scn.lights), G.app.progress)
+    progress = Progress(1 + len(scn.lights))
 
     # Ambience
     lmap = image_operations.colorAsImage(scn.environment.ambience.values, None, *res)
@@ -450,8 +448,7 @@ def mapMaskSoft(dimensions = (1024, 1024), mesh = None):
     """
     Create a texture mask for the selected human (software renderer).
     """
-    progress = Progress(0, G.app.progress)
-    progress(0)
+    progress = Progress() (0)
     if mesh is None:
         mesh = G.app.selectedHuman.mesh
 
@@ -471,13 +468,14 @@ def mapMaskSoft(dimensions = (1024, 1024), mesh = None):
 
     log.debug("mapMask: begin render")
 
-    progress(0.1, 0.99, None, 1)
+    progress(0.1, 0.55)
     RasterizeTriangles(dstImg, coords[:,[0,1,2],:], MaskShader())
+    progress(0.55, 0.99)
     RasterizeTriangles(dstImg, coords[:,[2,3,0],:], MaskShader())
 
     log.debug("mapMask: end render")
 
-    progress(1)
+    progress.finish()
     return dstImg
 
 def rasterizeHLines(dstImg, edges, delta):
@@ -501,7 +499,7 @@ def rasterizeHLines(dstImg, edges, delta):
 
     data = dstImg.data[::-1]
 
-    progress = Progress(len(x0), False)
+    progress = Progress(len(x0), None)
     for i in xrange(len(x0)):
         x = np.arange(x0[i], x1[i])
         y = m[i] * (x + 0.5) + c[i]
@@ -529,7 +527,7 @@ def rasterizeVLines(dstImg, edges, delta):
 
     data = dstImg.data[::-1]
     
-    progress = Progress(len(y0), False)
+    progress = Progress(len(y0), None)
     for i in xrange(len(y0)):
         y = np.arange(y0[i], y1[i]) + 0.5
         x = m[i] * y + c[i]
@@ -541,8 +539,7 @@ def mapUVSoft(mesh = None):
     Project the UV map topology of the selected human mesh onto a texture 
     (software rasterizer).
     """
-    progress = Progress(0, G.app.progress)
-    progress(0)
+    progress = Progress() (0)
 
     if mesh is None:
         mesh = G.app.selectedHuman.mesh
@@ -583,8 +580,9 @@ def mapUVSoft(mesh = None):
 
     log.debug("mapUV: begin render")
 
-    progress(0.1, 0.99, "Projecting UV map", 2)
+    progress(0.1, 0.55, "Projecting UV map")
     rasterizeHLines(dstImg, hedges, hdelta)
+    progress(0.55, 0.99, "Projecting UV map")
     rasterizeVLines(dstImg, vedges, vdelta)
     progress(1)
 
@@ -597,8 +595,7 @@ def mapUVGL():
     Project the UV map topology of the selected human mesh onto a texture 
     (hardware accelerated).
     """
-    progress = Progress(0, G.app.progress)
-    progress(0)
+    progress = Progress() (0)
 
     if mesh is None:
         mesh = G.app.selectedHuman.mesh
@@ -625,7 +622,7 @@ def mapUVGL():
     coords = mesh.r_texco
     edges = np.ascontiguousarray(edges, dtype=np.uint32)
 
-    progress(0.1, 0.99)
+    progress(0.6, 0.99)
     dstImg = mh.renderSkin(dstImg, 2, coords, index = edges, clearColor = (0, 0, 0, 255))
 
     log.debug("mapUV: end render")

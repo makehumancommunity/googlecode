@@ -39,9 +39,7 @@ import log
 
 
 def exportOgreMesh(human, filepath, config, progressCallback = None):
-    progress = Progress()
-    progress.logging = True
-    progress.timing = True
+    progress = Progress.begin(logging = True, timing = True)
 
     progress(0, 0.05, "Setting properties")
     config.setHuman(human)
@@ -61,7 +59,7 @@ def exportOgreMesh(human, filepath, config, progressCallback = None):
 
     config.feetOnGround = feetOnGround
 
-    progress(0.2, 0.95 - 0.35*bool(human.getSkeleton()), "Writing Objects")
+    progress(0.2, 0.95 - 0.35*bool(human.getSkeleton()))
     writeMeshFile(human, filepath, rmeshes, config)
     if human.getSkeleton():
         progress(0.6, 0.95, "Writing Skeleton")
@@ -84,7 +82,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
     f.write('    <submeshes>\n')
 
     for rmeshIdx, rmesh in enumerate(rmeshes):
-        progress.substep(0.0, "Writing %s mesh." % rmesh.name)
+        loopprog = Progress() (0.0, 0.1, "Writing %s mesh." % rmesh.name)
         obj = rmesh.object
         # Make sure vertex normals are calculated
         obj.calcFaceNormals()
@@ -100,7 +98,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
             # Tris
             numFaces = len(obj.r_faces)
 
-        progress.substep(0.1, "Writing faces of %s." % rmesh.name)
+        loopprog(0.1, 0.3, "Writing faces of %s." % rmesh.name)
         f.write('        <submesh material="%s_%s_%s" usesharedvertices="false" use32bitindexes="false" operationtype="triangle_list">\n' % (formatName(name), rmeshIdx, formatName(rmesh.name) if formatName(rmesh.name) != name else "human"))
 
         # Faces
@@ -111,7 +109,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
                 f.write('                <face v1="%s" v2="%s" v3="%s" />\n' % (fv[2], fv[3], fv[0]))
         f.write('            </faces>\n')
 
-        progress.substep(0.3, "Writing vertices of %s." % rmesh.name)
+        loopprog(0.3, 0.7, "Writing vertices of %s." % rmesh.name)
         # Vertices
         f.write('            <geometry vertexcount="%s">\n' % numVerts)
         f.write('                <vertexbuffer positions="true" normals="true">\n')
@@ -129,7 +127,7 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
             f.write('                    </vertex>\n')
         f.write('                </vertexbuffer>\n')
 
-        progress.substep(0.8 - 0.1*bool(human.getSkeleton()), "Writing UVs of %s." % rmesh.name)
+        loopprog(0.8 - 0.1*bool(human.getSkeleton()), 0.9, "Writing UVs of %s." % rmesh.name)
         # UV Texture Coordinates
         f.write('                <vertexbuffer texture_coord_dimensions_0="2" texture_coords="1">\n')
         for vIdx in xrange(numVerts):
@@ -145,9 +143,9 @@ def writeMeshFile(human, filepath, rmeshes, config, progressCallback = None):
         f.write('            </geometry>\n')
 
         if human.getSkeleton():
-            progress.substep(0.89, "Writing bone assignments of %s." % rmesh.name)
+            loopprog(0.9, 0.99, "Writing bone assignments of %s." % rmesh.name)
         else:
-            progress.substep(0.99, "Written %s." % rmesh.name)
+            loopprog(0.99, None, "Written %s." % rmesh.name)
         # Skeleton bone assignments
         if human.getSkeleton():
             bodyWeights = human.getVertexWeights()
@@ -245,16 +243,14 @@ def writeSkeletonFile(human, filepath, config):
     f.write('    </bonehierarchy>\n')
     Pprogress.step()
 
-    if not hasattr(human, 'animations'):
-        Pprogress(1.0)
-        return
-    f.write('    <animations>\n')
-    for anim in human.animations:
-        writeAnimation(human, f, anim.getAnimationTrack())
-    f.write('    </animations>\n')
-    f.write('</skeleton>')
-    f.close()
-    Pprogress.step()
+    if hasattr(human, 'animations'):
+        f.write('    <animations>\n')
+        for anim in human.animations:
+            writeAnimation(human, f, anim.getAnimationTrack())
+        f.write('    </animations>\n')
+        f.write('</skeleton>')
+        f.close()
+    Pprogress.finish()
 
 
 def writeMaterialFile(human, filepath, rmeshes, config):

@@ -105,7 +105,8 @@ def exportMd5(human, filepath, config):
             boneprog.step()
     f.write('}\n\n')
 
-    progress(0.3, 0.8, "Writing Objects", len(rmeshes))
+    progress(0.3, 0.8, "Writing Objects")
+    loopprog = Progress(len(rmeshes))
     for rmeshIdx, rmesh in enumerate(rmeshes):
         # rmesh.type: None is human, "Proxymeshes" is human proxy, "Clothes" for clothing and "Hair" for hair
         objprog = Progress()
@@ -264,7 +265,7 @@ def exportMd5(human, filepath, config):
                 # Note: MD5 has a z-up coordinate system
                 bwprog.step()
         f.write('}\n\n')
-        objprog(1)
+        loopprog.step()
     f.close()
 
     progress(0.8, 0.99, "Writing Animations")

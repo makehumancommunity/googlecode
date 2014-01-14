@@ -32,7 +32,7 @@ from progress import Progress
 #
 
 def exportObj(human, filepath, config=None):
-    progress = Progress(0, False)
+    progress = Progress(0, None)
     if config is None:
         config = exportutils.config.Config()
     config.setHuman(human)
@@ -47,7 +47,7 @@ def exportObj(human, filepath, config=None):
         config=config,
         subdivide=config.subdivide)
 
-    progress(0.3, 1.0, "Writing Objects")
+    progress(0.3, 0.99, "Writing Objects")
     objects = [rmesh.object for rmesh in rmeshes]
     wavefront.writeObjFile(filepath, objects, True, config)
 

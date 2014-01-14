@@ -51,9 +51,7 @@ class ExporterOBJ(Exporter):
         from progress import Progress
         from . import mh2obj
 
-        progress = Progress()
-        progress(0, 1)
-
+        progress = Progress.begin() (0, 1)
         mh2obj.exportObj(human, filename("obj"), ObjConfig(self))
 
 def load(app):

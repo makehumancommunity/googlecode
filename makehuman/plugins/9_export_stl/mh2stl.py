@@ -53,7 +53,7 @@ def exportStlAscii(human, filepath, config, exportJoints = False):
       *Config*.  Export configuration.
     """
 
-    progress = Progress(0, False)
+    progress = Progress(0, None)
 
     obj = human.meshData
     config.setHuman(human)
@@ -111,7 +111,7 @@ def exportStlBinary(human, filepath, config, exportJoints = False):
       *Config*.  Export configuration.
     """
 
-    progress = Progress(0, False)
+    progress = Progress(0, None)
 
     config.setHuman(human)
     config.setupTexFolder(filepath)

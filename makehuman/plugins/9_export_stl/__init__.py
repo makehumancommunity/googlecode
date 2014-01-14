@@ -50,9 +50,7 @@ class ExporterSTL(Exporter):
     def export(self, human, filename):
         from . import mh2stl
         from progress import Progress
-
-        progress = Progress()
-        progress(0, 1)
+        progress = Progress.begin() (0, 1)
 
         if self.stlAscii.selected:
             mh2stl.exportStlAscii(human, filename("stl"), STLConfig(self))

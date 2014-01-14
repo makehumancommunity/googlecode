@@ -45,9 +45,7 @@ def blurred(img, level=10.0, kernelSize = 15):
     (CC-by) http://creativecommons.org/licenses/by/3.0/us
     """
 
-    from progress import Progress
-    progress = Progress()
-    progress(0)
+    progress = Progress(0, None) (0)
 
     kernelSize = int(kernelSize)
     if kernelSize < 5:
@@ -229,7 +227,7 @@ def getAlpha(img):
     Returns the alpha channel of the specified image.
     """
     if img.components in (2, 4):
-        return Image(data = img.data[...,-1])
+        return Image(data = img.data[..., -1][..., None])
     else:
         return getWhite(img)
 
@@ -237,7 +235,7 @@ def getChannel(img, channel):
     """
     Create a new monochrome image from a single channel of another image.
     """
-    return Image(data = img.data[...,channel])
+    return Image(data = img.data[..., channel][..., None])
 
 '''
 Image conversions

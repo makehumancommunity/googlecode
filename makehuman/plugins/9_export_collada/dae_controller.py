@@ -37,12 +37,13 @@ import transformations as tm
 #----------------------------------------------------------------------
 
 def writeLibraryControllers(fp, rmeshes, amt, config):
-    progress = Progress(len(rmeshes), False)
+    progress = Progress(len(rmeshes), None)
     fp.write('\n  <library_controllers>\n')
     for rmesh in rmeshes:
+        subprog = Progress() (0, 0.5)
         if amt:
             writeSkinController(fp, rmesh, amt, config)
-        progress.substep(0.5)
+        subprog(0.5, 1)
         if rmesh.shapes:
             writeMorphController(fp, rmesh, config)
         progress.step()

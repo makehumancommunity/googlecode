@@ -56,8 +56,7 @@ class ExporterMD5(Exporter):
         cfg = MD5Config(self)
         cfg.selectedOptions(self)
 
-        progress = Progress()
-        progress(0, 1)
+        progress = Progress.begin() (0, 1)
         mh2md5.exportMd5(human, filename("md5mesh"), cfg)
 
     def onShow(self, exportTaskView):
