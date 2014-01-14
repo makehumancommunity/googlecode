@@ -402,7 +402,7 @@ def mapSceneLighting(scn, object = None, res = (1024, 1024), border = 1):
     # Ambience
     lmap = image_operations.colorAsImage(scn.environment.ambience.values, None, *res)
     if (object.material.shaderConfig['ambientOcclusion']
-        and object.material.supportsAmbientOcclusion()):
+        and not object.material.aoMapTexture is None):
         aomap = image_operations.Image(data = object.material.aoMapTexture)
         aomap = image_operations.resized(aomap, *lmap.size)
         lmap = image_operations.multiply(lmap, image_operations.mix(
