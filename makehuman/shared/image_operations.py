@@ -228,9 +228,8 @@ def getAlpha(img):
     """
     Returns the alpha channel of the specified image.
     """
-    c = img.components
-    if c == 2 or c == 4:
-        return Image(data = img.data[:,:,-1:])
+    if img.components in (2, 4):
+        return Image(data = img.data[...,-1])
     else:
         return getWhite(img)
 
@@ -238,7 +237,7 @@ def getChannel(img, channel):
     """
     Create a new monochrome image from a single channel of another image.
     """
-    return Image(data = img.data[:,:,(channel-1):channel])
+    return Image(data = img.data[...,channel])
 
 '''
 Image conversions
