@@ -252,6 +252,16 @@ def resized(img, width, height):
     ymap = numpy.floor((numpy.arange(height) + 0.5) * sh / float(height)).astype(int)
     return Image(data = img.data[ymap,:][:,xmap])
 
+def removeAlpha(img):
+    return img.convert(img.components - 1 + img.components % 2)
+
+def addAlpha(img, alpha = None):
+    if alpha:
+        return compose(
+            [img] * (img.components - 1 + img.components % 2) + [alpha])
+    else:
+        return img.convert(img.components + img.components % 2)
+    
 def synchronizeChannels(img1, img2):
     if img1.components > img2.components:
         img2 = img2.convert(img1.components)
