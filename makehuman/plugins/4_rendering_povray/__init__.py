@@ -130,10 +130,14 @@ class PovrayTaskView(guirender.RenderTaskView):
 
 
 def load(app):
+    pass
+    # Development of povray plugin halted for now.
+'''
     category = app.getCategory('Rendering')
     taskview = PovrayTaskView(category)
     taskview.sortOrder = 2.0
     category.addTask(taskview)
+'''
 
 def unload(app):
     pass
