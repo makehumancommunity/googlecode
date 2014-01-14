@@ -118,7 +118,7 @@ class BackgroundChooser(gui3d.TaskView):
         self.backgroundImage = gui3d.app.addObject(gui3d.Object(mesh, [0, 0, 1], visible=False))
         self.backgroundImage.mesh.setCameraProjection(1) # Set to static camera
         self.opacity = 40
-        mesh.setColor([255, 255, 255, self.opacity])
+        mesh.setColor([255, 255, 255, self.opacity*2.55])
         mesh.setPickable(False)
         mesh.setShadeless(True)
         mesh.setDepthless(True)
@@ -144,7 +144,7 @@ class BackgroundChooser(gui3d.TaskView):
             radioBtn = self.backgroundBox.addWidget(gui.RadioButton(self.radioButtonGroup, label=side.capitalize(), selected=len(self.radioButtonGroup)==0))
             radioBtn.side = side
 
-        self.opacitySlider = self.bgSettingsBox.addWidget(gui.Slider(value=self.opacity, min=0,max=100, label = "Opacity: %d"))
+        self.opacitySlider = self.bgSettingsBox.addWidget(gui.Slider(value=self.opacity, min=0,max=100, label = "Opacity: %d%%"))
         self.foregroundTggl = self.bgSettingsBox.addWidget(gui.CheckBox("Show in foreground"))
 
         @self.opacitySlider.mhEvent
@@ -254,7 +254,7 @@ class BackgroundChooser(gui3d.TaskView):
         text = language.language.getLanguageString(u'Images which are placed in %s will show up here.') % self.backgroundsFolder
         gui3d.app.prompt('Info', text, 'OK', helpId='backgroundHelp')
         gui3d.app.statusPersist(text)
-        self.opacitySlider.setValue(self.opacity/2.55)
+        self.opacitySlider.setValue(self.opacity)
         self.foregroundTggl.setChecked(self.isShowBgInFront())
         self.filechooser.refresh()
         self.filechooser.setFocus()
@@ -353,7 +353,7 @@ class TextureProjectionView(gui3d.TaskView) :
         self.backgroundBox = self.addLeftWidget(gui.GroupBox('Background settings'))
 
         # sliders
-        self.opacitySlider = self.backgroundBox.addWidget(gui.Slider(value=backgroundChooserView.opacity, min=0,max=100, label = "Opacity: %d"))
+        self.opacitySlider = self.backgroundBox.addWidget(gui.Slider(value=backgroundChooserView.opacity, min=0,max=100, label = "Opacity: %d%%"))
         self.foregroundTggl = self.backgroundBox.addWidget(gui.CheckBox("Show in foreground"))
 
         @self.opacitySlider.mhEvent
