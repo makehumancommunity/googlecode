@@ -137,13 +137,8 @@ class LoadTaskView(gui3d.TaskView):
         gui3d.app.setFilenameCaption(filename)
         gui3d.app.setFileModified(False)
 
-        mh.changeCategory('Modelling')
-
     def onShow(self, event):
 
-        # When the task gets shown, set the focus to the file chooser
-
-        gui3d.app.selectedHuman.hide()
         gui3d.TaskView.onShow(self, event)
         self.filechooser.setPaths([self.fileentry.directory])
         self.filechooser.setFocus()
@@ -154,7 +149,6 @@ class LoadTaskView(gui3d.TaskView):
 
     def onHide(self, event):
         
-        gui3d.app.selectedHuman.show()
         gui3d.TaskView.onHide(self, event)
 
 class FilesCategory(gui3d.Category):
