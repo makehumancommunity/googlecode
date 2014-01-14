@@ -145,6 +145,7 @@ class BackgroundChooser(gui3d.TaskView):
             radioBtn.side = side
 
         self.opacitySlider = self.bgSettingsBox.addWidget(gui.Slider(value=self.opacity, min=0,max=100, label = "Opacity: %d%%"))
+        self.dragButton = self.bgSettingsBox.addWidget(gui.CheckBox('Move && Resize'))
         self.foregroundTggl = self.bgSettingsBox.addWidget(gui.CheckBox("Show in foreground"))
 
         @self.opacitySlider.mhEvent
@@ -174,6 +175,24 @@ class BackgroundChooser(gui3d.TaskView):
 
             if self.sides[side]:
                 self.human.setRotation(self.sides[side])
+            mh.redraw()
+
+        @self.backgroundImage.mhEvent
+        def onMouseDragged(event):
+            if event.button in [mh.Buttons.LEFT_MASK, mh.Buttons.MIDDLE_MASK]:
+                dx = float(event.dx)/30.0
+                dy = float(-event.dy)/30.0
+                self.moveBackground(dx, dy)
+            elif event.button == mh.Buttons.RIGHT_MASK:
+                scale = self.getBackgroundScale()
+                scale += float(event.dy)/100.0
+
+                self.setBackgroundScale(scale)
+
+        @self.dragButton.mhEvent
+        def onClicked(event):
+            self.backgroundImage.mesh.setPickable(self.dragButton.selected)
+            gui3d.app.selectedHuman.mesh.setPickable(not self.dragButton.selected)
             mh.redraw()
 
     def getSelectedSideCheckbox(self):
@@ -218,7 +237,7 @@ class BackgroundChooser(gui3d.TaskView):
                 self.backgroundImageToggle.setChecked(True)
                 mh.redraw()
             else:
-                mh.changeTask('Textures', 'Background')
+                gui3d.app.prompt('Background', 'No background image is set.\nTo show a background, choose an image from the Background tab\nin Settings.', 'Ok', None, None, None, 'backgroundChooseInfo')
         else: # Disable
             self.backgroundImage.hide()
             self.backgroundImageToggle.setChecked(False)
@@ -256,6 +275,8 @@ class BackgroundChooser(gui3d.TaskView):
         gui3d.app.statusPersist(text)
         self.opacitySlider.setValue(self.opacity)
         self.foregroundTggl.setChecked(self.isShowBgInFront())
+        self.backgroundImage.mesh.setPickable(self.dragButton.selected)
+        self.human.mesh.setPickable(not self.dragButton.selected)
         self.filechooser.refresh()
         self.filechooser.setFocus()
         currentBg = self.filenames[self.getCurrentSide()]
@@ -265,6 +286,8 @@ class BackgroundChooser(gui3d.TaskView):
 
     def onHide(self, event):
 
+        self.backgroundImage.mesh.setPickable(False)
+        self.human.mesh.setPickable(True)
         gui3d.app.statusPersist('')
         gui3d.TaskView.onHide(self, event)
 
@@ -351,48 +374,11 @@ class TextureProjectionView(gui3d.TaskView) :
         self.projectionBox = self.addLeftWidget(gui.GroupBox('Projection'))
 
         self.backgroundBox = self.addLeftWidget(gui.GroupBox('Background settings'))
-
-        # sliders
-        self.opacitySlider = self.backgroundBox.addWidget(gui.Slider(value=backgroundChooserView.opacity, min=0,max=100, label = "Opacity: %d%%"))
-        self.foregroundTggl = self.backgroundBox.addWidget(gui.CheckBox("Show in foreground"))
-
-        @self.opacitySlider.mhEvent
-        def onChanging(value):
-            self.backgroundImage.mesh.setColor([255, 255, 255, 2.55*value])
-        @self.opacitySlider.mhEvent
-        def onChange(value):
-            backgroundChooserView.opacity = value
-            self.backgroundImage.mesh.setColor([255, 255, 255, 2.55*value])
-
-        @self.foregroundTggl.mhEvent
-        def onClicked(value):
-            self.backgroundChooserView.setShowBgInFront(self.foregroundTggl.selected)
-
-        @self.backgroundImage.mhEvent
-        def onMouseDragged(event):
-            if event.button in [mh.Buttons.LEFT_MASK, mh.Buttons.MIDDLE_MASK]:
-                dx = float(event.dx)/30.0
-                dy = float(-event.dy)/30.0
-                self.backgroundChooserView.moveBackground(dx, dy)
-            elif event.button == mh.Buttons.RIGHT_MASK:
-                scale = self.backgroundChooserView.getBackgroundScale()
-                scale += float(event.dy)/100.0
-
-                self.backgroundChooserView.setBackgroundScale(scale)
-
-        self.dragButton = self.backgroundBox.addWidget(gui.CheckBox('Move && Resize'))
-
-        @self.dragButton.mhEvent
-        def onClicked(event):
-            self.backgroundImage.mesh.setPickable(self.dragButton.selected)
-            gui3d.app.selectedHuman.mesh.setPickable(not self.dragButton.selected)
-            mh.redraw()
-
         self.chooseBGButton = self.backgroundBox.addWidget(gui.Button('Choose background'))
 
         @self.chooseBGButton.mhEvent
         def onClicked(event):
-            mh.changeTask('Textures', 'Background')
+            mh.changeTask('Settings', 'Background')
 
         self.projectBackgroundButton = self.projectionBox.addWidget(gui.Button('Project background'))
 
@@ -414,7 +400,6 @@ class TextureProjectionView(gui3d.TaskView) :
 
         displayBox = self.addRightWidget(gui.GroupBox('Display settings'))
         self.shadelessButton = displayBox.addWidget(gui.CheckBox('Shadeless'))
-        # TODO should disable shader as well when setting shadeless
 
         @self.shadelessButton.mhEvent
         def onClicked(event):
@@ -423,11 +408,7 @@ class TextureProjectionView(gui3d.TaskView) :
     def onShow(self, event):
 
         gui3d.TaskView.onShow(self, event)
-        self.backgroundImage.mesh.setPickable(self.dragButton.selected)
-        self.human.mesh.setPickable(not self.dragButton.selected)
         self.human.mesh.setShadeless(1 if self.shadelessButton.selected else 0)
-        self.opacitySlider.setValue(self.backgroundChooserView.opacity)
-        self.foregroundTggl.setChecked(self.backgroundChooserView.isShowBgInFront())
 
         self.oldDiffuseShaderSetting = self.human.material.shaderConfig['diffuse']
         self.human.mesh.configureShading(diffuse = True)
@@ -437,8 +418,6 @@ class TextureProjectionView(gui3d.TaskView) :
 
         gui3d.TaskView.onHide(self, event)
         self.human.mesh.setShadeless(0)
-        self.backgroundImage.mesh.setPickable(False)
-        self.human.mesh.setPickable(True)
 
         self.human.mesh.configureShading(diffuse = self.oldDiffuseShaderSetting)
         mh.redraw()
@@ -528,7 +507,7 @@ class TextureProjectionView(gui3d.TaskView) :
 
 
 def load(app):
-    category = app.getCategory('Materials')
+    category = app.getCategory('Settings')
     bgChooser = BackgroundChooser(category)
     bgChooser.sortOrder = 1
     category.addTask(bgChooser)
