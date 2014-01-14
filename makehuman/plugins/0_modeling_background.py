@@ -532,6 +532,7 @@ def load(app):
     bgChooser = BackgroundChooser(category)
     bgChooser.sortOrder = 1
     category.addTask(bgChooser)
+    category = app.getCategory('Utilities')
     bgSettings = TextureProjectionView(category, bgChooser)
     bgSettings.sortOrder = 1.5
     category.addTask(bgSettings)
