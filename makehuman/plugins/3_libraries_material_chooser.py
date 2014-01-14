@@ -68,7 +68,7 @@ class MaterialTaskView(gui3d.TaskView):
         self.filechooser.setIconSize(50,50)
         self.filechooser.enableAutoRefresh(False)
         self.filechooser.setFileLoadHandler(fc.MhmatFileLoader())
-        self.addLeftWidget(self.filechooser.createSortBox())
+        #self.addLeftWidget(self.filechooser.createSortBox())
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):

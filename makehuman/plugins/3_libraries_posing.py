@@ -73,10 +73,7 @@ class PoseLoadTaskView(gui3d.TaskView):
         #self.filechooser = self.addTopWidget(fc.FileChooser(self.paths, 'mhp', 'thumb', mh.getSysDataPath('notfound.thumb')))
         self.filechooser = self.addRightWidget(fc.IconListFileChooser(self.paths, 'mhp', 'thumb', notFoundImage=mh.getSysDataPath('notfound.thumb'), name='Pose', noneItem=True, clearImage=os.path.join(self.systemPoses, 'clear.thumb')))
         self.filechooser.setIconSize(50,50)
-        self.addLeftWidget(self.filechooser.createSortBox())
-
-        self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
-        self.mediaSync = None
+        #self.addLeftWidget(self.filechooser.createSortBox())
 
         @self.filechooser.mhEvent
         def onFileSelected(filepath):
@@ -87,12 +84,6 @@ class PoseLoadTaskView(gui3d.TaskView):
                 oldFile,
                 filepath))
             #mh.changeCategory('Modelling')
-
-        @self.update.mhEvent
-        def onClicked(event):
-            #self.syncMedia()
-            pass
-
 
     def onShow(self, event):
         gui3d.TaskView.onShow(self, event)

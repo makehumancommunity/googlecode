@@ -215,7 +215,7 @@ class AnimationLibrary(gui3d.TaskView):
         self.filechooser = self.addRightWidget(filechooser.ListFileChooser(self.animPaths, self.extension, 'Animations', True))
 
         self.filechooser.setFileLoadHandler(MhAnimLoader(self))
-        self.addLeftWidget(self.filechooser.createSortBox())
+        #self.addLeftWidget(self.filechooser.createSortBox())
         self.addLeftWidget(self.filechooser.createTagFilter())
         #self.update = self.filechooser.sortBox.addWidget(gui.Button('Check for updates'))
         self.mediaSync = None

@@ -51,7 +51,7 @@ class SceneLibraryTaskView(guirender.RenderTaskView):
             shutil.copy(os.path.normpath(mh.getSysDataPath("uvs/notfound.thumb")), sceneDir)
         self.filechooser = self.addRightWidget( \
         fc.IconListFileChooser(sceneDir , 'mhscene', ['thumb', 'png'], 'notfound.thumb', 'Scene'))
-        self.addLeftWidget(self.filechooser.createSortBox())
+        #self.addLeftWidget(self.filechooser.createSortBox())
         self.filechooser.enableAutoRefresh(False)
 
         glmodule.setSceneLighting(self.scene)

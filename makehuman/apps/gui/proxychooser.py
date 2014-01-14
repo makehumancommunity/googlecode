@@ -130,7 +130,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
 
         self.filechooser.setIconSize(50,50)
         self.filechooser.enableAutoRefresh(False)
-        self.addLeftWidget(self.filechooser.createSortBox())
+        #self.addLeftWidget(self.filechooser.createSortBox())
 
         if self.tagFilter:
             self.filechooser.setFileLoadHandler(fc.TaggedFileLoader(self))
