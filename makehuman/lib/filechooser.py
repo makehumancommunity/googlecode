@@ -775,6 +775,7 @@ class IconListFileChooser(ListFileChooser):
         self.clearImage = clearImage
         self._iconCache = {}
         #self.children.setIconSize(QtCore.QSize(50,50))
+        self.setIconSize(50,50)
 
     def addItem(self, file, label, preview, tags=[], pos = None):
         item = super(IconListFileChooser, self).addItem(file, label, preview, tags, pos)

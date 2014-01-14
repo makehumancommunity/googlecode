@@ -10,7 +10,7 @@
 
 **Authors:**           Marc Flerackers
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -38,8 +38,9 @@ class HumanFileSort(fc.FileSort):
         self.meta = {}
     
     def fields(self):
-        
-        return list(super(HumanFileSort, self).fields()) + ["gender", "age", "muscle", "weight"]
+        return list(super(HumanFileSort, self).fields())
+        # TODO
+        #return list(super(HumanFileSort, self).fields()) + ["gender", "age", "muscle", "weight"]
         
     def sortGender(self, filenames):
         
@@ -72,15 +73,10 @@ class HumanFileSort(fc.FileSort):
     def updateMeta(self, filenames):
         
         for filename in filenames:
-            
             if filename in self.meta:
-                
                 if self.meta[filename]['modified'] < os.path.getmtime(filename):
-                
                     self.meta[filename] = self.getMeta(filename)
-                
             else:
-                
                 self.meta[filename] = self.getMeta(filename)
                 
     def getMeta(self, filename):
@@ -115,8 +111,9 @@ class LoadTaskView(gui3d.TaskView):
             self.filechooser.setPaths([dirpath])
             self.filechooser.refresh()
 
-        self.filechooser = self.addTopWidget(fc.FileChooser(modelPath, 'mhm', 'thumb', mh.getSysDataPath('notfound.thumb'), sort=HumanFileSort()))
-        self.addLeftWidget(self.filechooser.sortBox)
+        self.filechooser = fc.IconListFileChooser(modelPath, 'mhm', 'thumb', mh.getSysDataPath('notfound.thumb'), sort=HumanFileSort())
+        self.addRightWidget(self.filechooser)
+        self.addLeftWidget(self.filechooser.createSortBox())
 
         @self.filechooser.mhEvent
         def onFileSelected(filename):
