@@ -453,6 +453,7 @@ class Parser:
         """
 
         obj = human.meshData
+        scale = self.armature.options.scale
         for (key, type, data) in self.joints:
             if type == 'j':
                 loc = calcJointPos(obj, data)
@@ -466,7 +467,7 @@ class Parser:
             elif type == 'vo':
                 v = int(data[0])
                 offset = np.array((float(data[1]), float(data[3]), -float(data[2])))
-                self.locations[key] = (obj.coord[v] + offset)
+                self.locations[key] = (obj.coord[v] + scale*offset)
             elif type == 'vl':
                 ((k1, v1), (k2, v2)) = data
                 loc1 = obj.coord[int(v1)]
@@ -506,7 +507,7 @@ class Parser:
                 if isinstance(offsSym, str):
                     offs = self.locations[offsSym]
                 else:
-                    offs = np.array(offsSym)
+                    offs = scale * np.array(offsSym)
                 self.locations[key] = self.locations[joint] + offs
             else:
                 raise NameError("Unknown %s" % type)
@@ -514,6 +515,7 @@ class Parser:
 
 
     def setupPlaneJoints (self):
+        scale = self.armature.options.scale
         for key,data in self.planeJoints:
             p0,plane,dist = data
             x0 = self.locations[p0]
@@ -521,7 +523,7 @@ class Parser:
             vec = getUnitVector(self.locations[p3] - self.locations[p1])
             n = self.normals[plane]
             t = np.cross(n, vec)
-            self.locations[key] = x0 + dist*t
+            self.locations[key] = x0 + scale*dist*t
 
 
     def findLocation(self, joint):

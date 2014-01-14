@@ -160,10 +160,10 @@ class Writer(mhx_writer.Writer):
       lock_location Array 1 1 1 ;
       lock_rotation Array 1 1 1 ;
       lock_scale Array 1 1 1  ;
-      Property MhxScale theScale ;
       Property MhxProxy True ;
    """)
         fp.write(
+            '      Property MhxScale theScale*%.4f ;\n' % self.config.scale +
             '      Property MhxProxyName "%s" ;\n' % proxy.name.replace(" ","_") +
             '      Property MhxProxyUuid "%s" ;\n' % proxy.uuid +
             '      Property MhxProxyFile "%s" ;\n' % proxy.file.replace("\\", "/").replace(" ","%20") +

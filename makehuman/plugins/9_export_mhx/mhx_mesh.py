@@ -116,10 +116,10 @@ class Writer(mhx_writer.Writer):
   lock_location Array 1 1 1 ;
   lock_rotation Array 1 1 1 ;
   lock_scale Array 1 1 1  ;
-  Property MhxScale theScale ;
   Property MhxMesh True ;
   Property MhHuman True ;
-""")
+""" +
+    "  Property MhxScale theScale*%.4f ;\n" % scale)
 
         for proxy in self.proxies.values():
             if proxy.deleteVerts.any():

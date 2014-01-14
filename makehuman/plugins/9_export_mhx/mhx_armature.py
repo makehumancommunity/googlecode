@@ -464,10 +464,9 @@ end Armature
   up_axis 'Z' ;
   show_x_ray True ;
   draw_type 'WIRE' ;
-  Property MhxScale theScale ;
-
-  Property _RNA_UI {} ;
-""")
+""" +
+            "  Property MhxScale theScale*%.4f ;\n" % self.config.scale +
+            "  Property _RNA_UI {} ;\n")
 
         self.writeProperties(fp, env)
 

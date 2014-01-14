@@ -365,18 +365,18 @@ RevFootConstraints = {
         ('LimitRot', C_OW_LOCAL, 1, ['Hint', (Hint,Hint, 0,0, 0,0), (1,0,0)])
         ],
     'foot.L' : [
-         ('IK', 0, 0, ['LegIK', 'foot.rev.L', 1, (90, 'foot.pt.ik.L'), (1,0,1)]),
+         ('IK', 0, 0, ['LegIK', 'foot.rev.L', 1, (-90, 'foot.pt.ik.L'), (1,0,1)]),
          #('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,True)])
         ],
     'foot.R' : [
-         ('IK', 0, 0, ['LegIK', 'foot.rev.R', 1, (90, 'foot.pt.ik.R'), (1,0,1)]),
+         ('IK', 0, 0, ['LegIK', 'foot.rev.R', 1, (-90, 'foot.pt.ik.R'), (1,0,1)]),
          #('IK', 0, 0, ['FreeIK', None, 2, None, (True, False,True)])
         ],
     'toe.L' : [
-         ('IK', 0, 0, ['LegIK', 'toe.rev.L', 1, (90, 'foot.pt.ik.L'), (1,0,1)]),
+         ('IK', 0, 0, ['LegIK', 'toe.rev.L', 1, (-90, 'foot.pt.ik.L'), (1,0,1)]),
         ],
     'toe.R' : [
-         ('IK', 0, 0, ['LegIK', 'toe.rev.R', 1, (90, 'foot.pt.ik.R'), (1,0,1)]),
+         ('IK', 0, 0, ['LegIK', 'toe.rev.R', 1, (-90, 'foot.pt.ik.R'), (1,0,1)]),
         ],
     'ankle.ik.L' : [
          ('CopyLoc', 0, 1, ['Foot', 'foot.rev.L', (1,1,1), (0,0,0), 1, False]),
