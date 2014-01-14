@@ -31,8 +31,7 @@ from . import fbx_anim
 def writeHeader(fp, filepath):
 
     fp.write("""; FBX 7.3.0 project file
-; Copyright (C) 1997-2010 Autodesk Inc. and/or its licensors.
-; All rights reserved.
+; Exported from MakeHuman TM
 ; ----------------------------------------------------
 
 FBXHeaderExtension:  {
