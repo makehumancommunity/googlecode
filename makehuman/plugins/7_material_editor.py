@@ -303,7 +303,7 @@ class MaterialEditorTaskView(gui3d.TaskView):
         aoMapAvailable = sh and \
                          (('aomapTexture' in uniforms) or \
                           ('AOMAP' in sh.defineables))
-        w20b = self.materialBox.addWidget(ImageValue("Ambient Occlusion map texture", mat.aoMapTexture, mh.getSysDataPath('textures')))
+        w20b = self.materialBox.addWidget(ImageValue("Ambient Occlusion texture", mat.aoMapTexture, mh.getSysDataPath('textures')))
         if sh:
             w20b.setEnabled(aoMapAvailable)
         @w20b.mhEvent
@@ -311,7 +311,7 @@ class MaterialEditorTaskView(gui3d.TaskView):
             mat.aoMapTexture = w20b.value
             self.updateShaderConfig()
 
-        w20c = self.materialBox.addWidget(ScalarValue("Ambient Occlusion (map) intensity", mat.aoMapIntensity))
+        w20c = self.materialBox.addWidget(ScalarValue("AO map intensity", mat.aoMapIntensity))
         if sh:
             w20c.setEnabled(aoMapAvailable)
         @w20c.mhEvent
