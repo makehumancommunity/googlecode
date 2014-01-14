@@ -31,6 +31,7 @@ import gui3d
 from core import G
 import gui
 import image
+import image_operations as imgop
 from progress import Progress
 import numpy as np
 
@@ -42,7 +43,6 @@ def Render(settings):
 
     if settings['lightmapSSS']:
         progress(0, 0.05, "Storing data")
-        import image_operations as imgop
         import material
         human = G.app.selectedHuman
         materialBackup = material.Material(human.material)
@@ -85,8 +85,7 @@ def Render(settings):
             height = height * 2
         img = mh.renderToBuffer(width, height)
         alphaImg = mh.renderAlphaMask(width, height)
-        img = img.convert(components = 4) # Convert RGB -> RGBA (add alpha channel)
-        img._data[:,:,3] = alphaImg._data[:,:,0]
+        img = imgop.addAlpha(img, imgop.getChannel(alphaImg, 0))
 
         if settings['AA']:
             renderprog(0.4, 0.99, "AntiAliasing")
