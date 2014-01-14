@@ -29,6 +29,7 @@ import gui
 import gui3d
 import geometry3d
 import log
+from core import G
 
 class SaveTaskView(gui3d.TaskView):
 
@@ -39,19 +40,6 @@ class SaveTaskView(gui3d.TaskView):
         self.fileentry = self.addTopWidget(gui.FileEntryView('Save', mode='save'))
         self.fileentry.setDirectory(mh.getPath('models'))
         self.fileentry.setFilter('MakeHuman Models (*.mhm)')
-
-        self.selection_width = 1.2 * 10
-        self.selection_height = 1.3 * 10
-        mesh = geometry3d.FrameMesh(self.selection_width, self.selection_height)
-        mesh.move(-self.selection_width/2, -self.selection_height/2)
-
-        self.selection = gui3d.app.addObject(gui3d.Object(mesh))
-        mesh.setColor([0, 0, 0, 255])
-        mesh.setPickable(False)
-        mesh.setShadeless(True)
-        mesh.setDepthless(True)
-        mesh.priority = 90
-        self.selection.hide()
 
         @self.fileentry.mhEvent
         def onFileSelected(filename):
@@ -70,16 +58,16 @@ class SaveTaskView(gui3d.TaskView):
         if not os.path.exists(dir):
             os.makedirs(dir)
 
-        # Save the thumbnail
+        # Save square sized thumbnail
+        size = min(G.windowWidth, G.windowHeight)
+        img = mh.grabScreen((G.windowWidth-size)/2, (G.windowHeight-size)/2, size, size)
 
-        ((x0,y0,z0),(x1,y1,z1)) = self.selection.mesh.calcBBox()
-        x0,y0,z0 = gui3d.app.guiCamera.convertToScreen(x0, y0, 0)
-        x1,y1,z1 = gui3d.app.guiCamera.convertToScreen(x1, y1, 0)
-        log.debug('grab rectangle: %d %d %d %d', x0, y0, x1, y1)
-        mh.grabScreen(int(x0+1), int(y1+1), int(x1-x0-1), int(y0-y1-1), os.path.join(dir, name + '.thumb'))
+        # Resize thumbnail to max 128x128
+        if size > 128:
+            img.resize(128,128)
+        img.save(os.path.join(dir, name + '.thumb'))
 
         # Save the model
-
         human = gui3d.app.selectedHuman
         human.save(path, name)
         gui3d.app.modified = False
@@ -95,13 +83,9 @@ class SaveTaskView(gui3d.TaskView):
         mh.changeCategory('Modelling')
 
     def onShow(self, event):
-
         # When the task gets shown, set the focus to the file entry
         gui3d.TaskView.onShow(self, event)
         self.fileentry.setFocus()
-        self.selection.show()
 
     def onHide(self, event):
-        
         gui3d.TaskView.onHide(self, event)
-        self.selection.hide()
