@@ -36,7 +36,7 @@ import mh
 class OpenGLTaskView(guipose.PoseModeTaskView):
 
     def __init__(self, category):
-        guipose.PoseModeTaskView.__init__(self, category, 'Internal')
+        guipose.PoseModeTaskView.__init__(self, category, 'Render')
 
         settingsBox = self.addLeftWidget(gui.GroupBox('Settings'))
         settingsBox.addWidget(gui.TextView("Resolution"))

@@ -71,7 +71,7 @@ class ViewerTaskView(gui3d.TaskView):
 def load(app):
     category = app.getCategory('Rendering')
     taskview = ViewerTaskView(category)
-    taskview.sortOrder = 20.0
+    taskview.sortOrder = 2.0
     category.addTask(taskview)
 
 def unload(app):

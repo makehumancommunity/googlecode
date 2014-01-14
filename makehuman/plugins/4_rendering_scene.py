@@ -74,7 +74,7 @@ class SceneLibraryTaskView(guirender.RenderTaskView):
 def load(app):
     category = app.getCategory('Rendering')
     taskview = SceneLibraryTaskView(category)
-    taskview.sortOrder = 1.0
+    taskview.sortOrder = 20.0
     category.addTask(taskview)
 
 def unload(app):
