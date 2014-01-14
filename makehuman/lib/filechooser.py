@@ -184,21 +184,24 @@ class FileSort(object):
         return method(filenames)
 
     def sortName(self, filenames):
-        return sorted(filenames)
+        decorated = [(os.path.basename(filename), i, filename) for i, filename in enumerate(filenames)]
+        return self._decoratedSort(decorated)
+
     def sortModified(self, filenames):
         decorated = [(os.path.getmtime(filename), i, filename) for i, filename in enumerate(filenames)]
-        decorated.sort()
-        return [filename for modified, i, filename in decorated]
+        return self._decoratedSort(decorated)
 
     def sortCreated(self, filenames):
         decorated = [(os.path.getctime(filename), i, filename) for i, filename in enumerate(filenames)]
-        decorated.sort()
-        return [filename for created, i, filename in decorated]
+        return self._decoratedSort(decorated)
 
     def sortSize(self, filenames):
         decorated = [(os.path.getsize(filename), i, filename) for i, filename in enumerate(filenames)]
-        decorated.sort()
-        return [filename for size, i, filename in decorated]
+        return self._decoratedSort(decorated)
+
+    def _decoratedSort(self, toSort):
+        toSort.sort()
+        return [filename for sortKey, i, filename in toSort]
 
 class FileSortRadioButton(gui.RadioButton):
     def __init__(self, chooser, group, selected, field):
@@ -459,7 +462,8 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
     def refresh(self, keepSelections=True):
         self.clearList()
 
-        files = set(self.sort.sort(self.sortBy, list(self.search())))
+        files = set(self.search())
+        files = self.sort.sort(self.sortBy, files)
         self.loadHandler.refresh(files)
 
         self.applyTagFilter()
