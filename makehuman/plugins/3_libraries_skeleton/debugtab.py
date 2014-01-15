@@ -67,10 +67,7 @@ class SkeletonDebugLibrary(gui3d.TaskView):
             Event fired when mouse hovers over a skeleton mesh facegroup
             """
             gui3d.TaskView.onMouseEntered(self, event)
-            try:
-                mainLib.removeBoneHighlights()
-            except:
-                pass
+            mainLib.removeBoneHighlights()
             mainLib.highlightBone(event.group.name)
 
         @mainLib.mhEvent
@@ -79,10 +76,7 @@ class SkeletonDebugLibrary(gui3d.TaskView):
             Event fired when mouse hovers off of a skeleton mesh facegroup
             """
             gui3d.TaskView.onMouseExited(self, event)
-            try:
-                mainLib.removeBoneHighlights()
-            except:
-                pass
+            mainLib.removeBoneHighlights()
 
             # Highlight bone selected in bone explorer again
             for rdio in self.boneSelector:
@@ -122,10 +116,7 @@ class SkeletonDebugLibrary(gui3d.TaskView):
             def onClicked(event):
                 for rdio in self.boneSelector:
                     if rdio.selected:
-                        try:
-                            self.mainLib.removeBoneHighlights()
-                        except:
-                            pass
+                        self.mainLib.removeBoneHighlights()
                         self.mainLib.highlightBone(str(rdio.text()))
 
 

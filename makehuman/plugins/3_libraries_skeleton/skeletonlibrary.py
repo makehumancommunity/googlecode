@@ -113,6 +113,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.human.getVertexWeights = types.MethodType(_getVertexWeights, self.human, self.human.__class__)
 
         self.selectedRig = None
+        self.selectedBone = None
 
         self.oldSmoothValue = False
 
@@ -252,10 +253,7 @@ class SkeletonLibrary(gui3d.TaskView):
         self.setHumanTransparency(False)
         self.human.material.shader = self.oldHumanShader
         self.human.meshData.setPickable(True)
-        try:
-            self.removeBoneHighlights()
-        except:
-            pass
+        self.removeBoneHighlights()
 
         # Reset smooth setting
         self.human.setSubdivided(self.oldSmoothValue)
@@ -268,10 +266,7 @@ class SkeletonLibrary(gui3d.TaskView):
         """
         log.debug("Loading skeleton with options %s", options)
 
-        try:
-            self.removeBoneHighlights()
-        except:
-            pass
+        self.removeBoneHighlights()
 
         if not options:
             # Unload current skeleton
@@ -511,7 +506,10 @@ class SkeletonLibrary(gui3d.TaskView):
 
 
 def setColorForFaceGroup(mesh, fgName, color):
-    color = np.asarray(color, dtype=np.uint8)
-    mesh.color[mesh.getVerticesForGroups([fgName])] = color[None,:]
-    mesh.markCoords(colr=True)
-    mesh.sync_color()
+    try:
+        color = np.asarray(color, dtype=np.uint8)
+        mesh.color[mesh.getVerticesForGroups([fgName])] = color[None,:]
+        mesh.markCoords(colr=True)
+        mesh.sync_color()
+    except KeyError:
+        pass
