@@ -270,27 +270,26 @@ def synchronizeChannels(img1, img2):
 Mask manipulation
 '''
 
-def growMask(img, pixels = 1):
+def growMask(img, radius = 1, step = 1):
+    """Grow a mask by a number of pixels."""
     out = Image(img)
-    for i in xrange(int(pixels+0.5)):
-        out = expandMask(out)
+    for i in xrange(int(float(radius)/float(step)+0.5)):
+        out = expandMask(out, False, step)
     return out
 
-def shrinkMask(img, pixels = 1):
+def shrinkMask(img, radius = 1, step = 1):
+    """Shrink a mask by a number of pixels."""
     out = Image(img)
-    for i in xrange(int(pixels+0.5)):
-        out = expandMask(out, True)
+    for i in xrange(int(float(radius)/float(step)+0.5)):
+        out = expandMask(out, True, step)
     return out
 
-def expandMask(img, shrink = False):
-    """
-    Apply expandData on an image by optionally inverting.
-    On masks, this results on growing and shrinking accordingly.
-    """
-
+def expandMask(img, shrink = False, step = 1):
+    """Grow or shrink a mask by a pixel."""
     if shrink:
         img = invert(img)
-    img = Image(data = expandData(img.data))
+    img = jitterSum(img.data, step) > 0
+    img = Image(data = img.astype(numpy.uint8)*255)
     if shrink:
         img = invert(img)
     return img
@@ -314,27 +313,7 @@ def expand(img, mask, pixels):
         
     return img, mask
 
-def expandData(data):
-    """
-    Combine with bitwise OR all pixels with their neighbours.
-    """
-
-    neighbours = numpy.empty((3, 3) + data.shape, dtype=numpy.uint8)
-    neighbours[1,1] = data
-
-    neighbours[1,0] = numpy.roll(neighbours[1,1], -1, axis=-2)
-    neighbours[1,2] = numpy.roll(neighbours[1,1],  1, axis=-2)
-    neighbours[0] = numpy.roll(neighbours[1], -1, axis=-3)
-    neighbours[2] = numpy.roll(neighbours[1],  1, axis=-3)
-
-    neighbours[1] = numpy.bitwise_or(neighbours[1], neighbours[0])
-    neighbours[1] = numpy.bitwise_or(neighbours[1], neighbours[2])
-    neighbours[1,1] = numpy.bitwise_or(neighbours[1,1], neighbours[1,0])
-    neighbours[1,1] = numpy.bitwise_or(neighbours[1,1], neighbours[1,2])
-
-    return neighbours[1,1]
-
-def jitterSum(data):
+def jitterSum(data, step = 1):
     """
     Sum all pixels  of an image with their neighbours.
     """
@@ -342,10 +321,10 @@ def jitterSum(data):
     neighbours = numpy.empty((3, 3) + data.shape, dtype=numpy.uint16)
     neighbours[1,1] = data
 
-    neighbours[1,0] = numpy.roll(neighbours[1,1], -1, axis=-2)
-    neighbours[1,2] = numpy.roll(neighbours[1,1],  1, axis=-2)
-    neighbours[0] = numpy.roll(neighbours[1], -1, axis=-3)
-    neighbours[2] = numpy.roll(neighbours[1],  1, axis=-3)
+    neighbours[1,0] = numpy.roll(neighbours[1,1], -step, axis=-2)
+    neighbours[1,2] = numpy.roll(neighbours[1,1],  step, axis=-2)
+    neighbours[0] = numpy.roll(neighbours[1], -step, axis=-3)
+    neighbours[2] = numpy.roll(neighbours[1],  step, axis=-3)
 
     neighbours[1] += neighbours[0] + neighbours[2]
     neighbours[1,1] += neighbours[1,0] + neighbours[1,2]
