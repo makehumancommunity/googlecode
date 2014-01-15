@@ -143,6 +143,12 @@ class BackgroundChooser(gui3d.TaskView):
         for side in ['front', 'back', 'left', 'right', 'top', 'bottom', 'other']:
             radioBtn = self.backgroundBox.addWidget(gui.RadioButton(self.radioButtonGroup, label=side.capitalize(), selected=len(self.radioButtonGroup)==0))
             radioBtn.side = side
+            @radioBtn.mhEvent
+            def onClicked(value):
+                side = self.sides[self.getSelectedSideCheckbox()]
+                if side:
+                    gui3d.app.axisView(side)
+                self.refreshFileChooser()
 
         self.opacitySlider = self.bgSettingsBox.addWidget(gui.Slider(value=self.opacity, min=0,max=100, label = "Opacity: %d%%"))
         self.dragButton = self.bgSettingsBox.addWidget(gui.CheckBox('Move && Resize'))
@@ -173,8 +179,6 @@ class BackgroundChooser(gui3d.TaskView):
                 oldBg,
                 filename))
 
-            if self.sides[side]:
-                self.human.setRotation(self.sides[side])
             mh.redraw()
 
         @self.backgroundImage.mhEvent
@@ -201,6 +205,11 @@ class BackgroundChooser(gui3d.TaskView):
                 return checkbox.side
         return None
 
+    def setSelectedSideCheckbox(self, side):
+        for checkbox in self.radioButtonGroup:
+            if checkbox.side == side:
+                checkbox.setSelected(True)
+
     def changeBackgroundImage(self, side, texturePath):
         if not side:
             return
@@ -223,7 +232,7 @@ class BackgroundChooser(gui3d.TaskView):
         self.setBackgroundEnabled(self.isBackgroundSet())
 
     def getCurrentSide(self):
-        rot = self.human.getRotation()
+        rot = gui3d.app.modelCamera.getRotation()
         for (side, rotation) in self.sides.items():
             if rot == rotation:
                 return side
@@ -279,9 +288,14 @@ class BackgroundChooser(gui3d.TaskView):
         self.human.mesh.setPickable(not self.dragButton.selected)
         self.filechooser.refresh()
         self.filechooser.setFocus()
-        currentBg = self.filenames[self.getCurrentSide()]
+        self.setSelectedSideCheckbox(self.getCurrentSide())
+        self.refreshFileChooser()
+
+    def refreshFileChooser(self):
+        currentBg = self.filenames[self.getSelectedSideCheckbox()]
         if currentBg:
             currentBg = currentBg[0]
+        print 'setting %s' % currentBg
         self.filechooser.selectItem(currentBg)
 
     def onHide(self, event):
@@ -290,9 +304,6 @@ class BackgroundChooser(gui3d.TaskView):
         self.human.mesh.setPickable(True)
         gui3d.app.statusPersist('')
         gui3d.TaskView.onHide(self, event)
-
-    def onHumanTranslated(self, event):
-        self.backgroundImage.setPosition(self.human.getPosition()) # TODO other Z offset?
 
     def onHumanChanging(self, event):
         if event.change == 'reset':
@@ -320,7 +331,7 @@ class BackgroundChooser(gui3d.TaskView):
             self.backgroundImage.hide()
         mh.redraw()
 
-    def onHumanRotated(self, event):
+    def onCameraRotated(self, event):
         # TODO when the camera rotates to an angle after pressing a view angle button, this method is called a lot of times repeatedly
         if self.isBackgroundEnabled():
             self.setBackgroundImage(self.getCurrentSide())
