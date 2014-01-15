@@ -32,11 +32,10 @@ from mathutils import Vector
 
 MHDir = "/home/svn/"
 
-def addDriver(rig, rna, path, bprop, props):
+def addDriver(rig, rna, path, bprop, props, expr="x"):
     fcu = rna.driver_add(path)
     drv = fcu.driver
     drv.type = 'SCRIPTED'
-    expr = "x"
     n = 1
     addDriverVar("x", bprop, drv, rig)
     for prop,val in props:
@@ -169,6 +168,7 @@ class VIEW3D_OT_CreateHideDriverButton(bpy.types.Operator):
         scn = context.scene
         if not rig:
             return{'FINISHED'}
+
         for ob in scn.objects:
             if rig == getArmature(ob):
                 prop = "Mhh%s" % ob.name
@@ -176,7 +176,10 @@ class VIEW3D_OT_CreateHideDriverButton(bpy.types.Operator):
                 addDriver(rig, ob, "hide", prop, [])
                 addDriver(rig, ob, "hide_render", prop, [])
                 for mod in ob.modifiers:
-                    if ob.type == 'MASK':
-                        addDriver(rig, mod, "hide", prop, [])
-                        addDriver(rig, mod, "hide_render", prop, [])
+                    if mod.type == 'MASK':
+                        cloname = mod.vertex_group.split("_",1)[1]
+                        mprop = prop[:-4] + cloname
+                        print(mprop)
+                        addDriver(rig, mod, "show_viewport", mprop, [], expr = "not(x)")
+                        addDriver(rig, mod, "show_render", mprop, [], expr = "not(x)")
         return{'FINISHED'}

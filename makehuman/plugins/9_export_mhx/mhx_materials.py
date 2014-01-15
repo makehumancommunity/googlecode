@@ -85,11 +85,9 @@ class Writer(mhx_writer.Writer):
                 "    texture Refer Texture %s ;" % diffuse +
 """
     use_map_color_diffuse True ;
-    use_map_translucency True ;
     use_map_alpha True ;
     alpha_factor 1 ;
     diffuse_color_factor 1.0 ;
-    translucency_factor 1.0 ;
   end MTex
 
 """)

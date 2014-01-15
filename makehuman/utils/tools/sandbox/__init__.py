@@ -85,17 +85,21 @@ class MainPosePanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         scn = context.scene
-        layout.operator("mp.load_trc_file")
-        layout.operator("mp.load_txt_file")
-        layout.prop(scn, "MpFrameStart")
-        layout.prop(scn, "MpFrameEnd")
-        layout.prop(scn, "MpScale")
-        layout.prop(scn, "MpDeltaY")
 
-        layout.separator()
-        layout.operator("mp.save_facerig")
-        layout.operator("mp.load_facerig")
-        layout.operator("mp.transfer_face_anim")
+        layout.prop(scn, "MHFaceRig")
+        if scn.MHFaceRig:
+            ins = inset(layout)
+            ins.operator("mp.load_trc_file")
+            ins.operator("mp.load_txt_file")
+            ins.prop(scn, "MpFrameStart")
+            ins.prop(scn, "MpFrameEnd")
+            ins.prop(scn, "MpScale")
+            ins.prop(scn, "MpDeltaY")
+
+            ins.separator()
+            ins.operator("mp.save_facerig")
+            ins.operator("mp.load_facerig")
+            ins.operator("mp.transfer_face_anim")
 
         layout.separator()
         layout.label("Edit")
@@ -174,8 +178,16 @@ class SetupPanel(bpy.types.Panel):
 #    init
 #
 
+def init():
+
+    bpy.types.Scene.MHFaceRig = BoolProperty(
+        name="Face Rig",
+        description="Use face rig",
+        default=False)
+
 
 def register():
+    init()
     visemes.init()
     markers.init()
     bpy.utils.register_module(__name__)

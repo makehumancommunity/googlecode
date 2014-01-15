@@ -32,6 +32,8 @@ from bpy.props import *
 def deleteHiddenVerts(body, clo):
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='DESELECT')
+    bpy.ops.object.mode_set(mode='OBJECT')
+
     basename = body.name[:-4]
     n = len(basename)
     grpname = "Delete_" + clo.name[n:]
@@ -46,7 +48,7 @@ def deleteHiddenVerts(body, clo):
             if g.group == vgrp.index:
                 v.select = True
 
-    bpy.ops.object.vertex_group_select()
+    bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.delete(type='VERT')
     bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -66,6 +68,25 @@ def mergeObjects(context):
     matnums = []
     if body:
         scn.objects.active = body
+        name = ob.name[:-4]
+        nLetters = len(name)
+
+        names = []
+        for clo in clothes:
+            if clo.name[:nLetters] == name:
+                names.append(clo.name[nLetters:])
+
+        delMods = []
+        for mod in body.modifiers:
+            if mod.type == 'MASK':
+                mod.show_viewport = False
+                delete,vgname = mod.vertex_group.split("_",1)
+                if vgname in names:
+                    delMods.append(mod)
+
+        for mod in delMods:
+            body.modifiers.remove(mod)
+
         for clo in clothes:
             deleteHiddenVerts(body, clo)
             bpy.ops.object.join()
@@ -75,6 +96,11 @@ def mergeObjects(context):
             bpy.ops.object.mode_set(mode='OBJECT')
             mn = len(body.data.materials)-1
             matnums.append(mn)
+
+        for mod in body.modifiers:
+            if mod.type == 'MASK':
+                mod.show_viewport = True
+
     return matnums
 
 
