@@ -293,57 +293,45 @@ class MHApplication(gui3d.Application, mh.Application):
 
         @self.selectedHuman.mhEvent
         def onChanging(event):
-
             for category in self.categories.itervalues():
-
                 for task in category.tasks:
-
                     task.callEvent('onHumanChanging', event)
 
         @self.selectedHuman.mhEvent
         def onChanged(event):
-
             for category in self.categories.itervalues():
-
                 for task in category.tasks:
-
                     task.callEvent('onHumanChanged', event)
 
         @self.selectedHuman.mhEvent
         def onTranslated(event):
-
             for category in self.categories.itervalues():
-
                 for task in category.tasks:
-
                     task.callEvent('onHumanTranslated', event)
 
         @self.selectedHuman.mhEvent
         def onRotated(event):
-
             for category in self.categories.itervalues():
-
                 for task in category.tasks:
-
                     task.callEvent('onHumanRotated', event)
 
         @self.selectedHuman.mhEvent
         def onShown(event):
-
             for category in self.categories.itervalues():
-
                 for task in category.tasks:
-
                     task.callEvent('onHumanShown', event)
 
         @self.selectedHuman.mhEvent
         def onHidden(event):
-
             for category in self.categories.itervalues():
-
                 for task in category.tasks:
-
                     task.callEvent('onHumanHidden', event)
+
+        @self.modelCamera.mhEvent
+        def onRotated(event):
+            for category in self.categories.itervalues():
+                for task in category.tasks:
+                    task.callEvent('onCameraRotated', event)
 
         # Set up categories and tasks
         self.files = guifiles.FilesCategory()

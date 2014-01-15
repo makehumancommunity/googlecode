@@ -561,6 +561,7 @@ class OrbitalCamera(Camera):
         else:
             import log
             log.warning('Orbital camera does not support rotating along Z axis.')
+        self.callEvent('onRotated', self)
         self.changed()
 
         if self.debug:
@@ -576,6 +577,7 @@ class OrbitalCamera(Camera):
     def setRotation(self, rot):
         self.verticalInclination = rot[0]
         self.horizontalRotation = rot[1]
+        self.callEvent('onRotated', self)
         self.changed()
 
     def getRotation(self):
@@ -589,6 +591,7 @@ class OrbitalCamera(Camera):
         if self.translation[axis] > 1.0:
             self.translation[axis] = 1.0
         self.pickedPos = None
+        #self.callEvent('onTranslated', self)
         self.changed()
 
     def addXYTranslation(self, deltaX, deltaY):
