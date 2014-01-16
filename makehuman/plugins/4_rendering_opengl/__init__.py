@@ -28,24 +28,27 @@ TODO
 from . import mh2opengl
 
 import os
-import gui3d
+from core import G
 import gui
-import guipose
+from guirender import RenderTaskView
 import mh
 
-class OpenGLTaskView(guipose.PoseModeTaskView):
+class OpenGLTaskView(RenderTaskView):
 
     def __init__(self, category):
-        guipose.PoseModeTaskView.__init__(self, category, 'Render')
+        RenderTaskView.__init__(self, category, 'Render')
+
+        # Don't change shader for this RenderTaskView.
+        self.taskViewShader = G.app.selectedHuman.material.shader
 
         settingsBox = self.addLeftWidget(gui.GroupBox('Settings'))
         settingsBox.addWidget(gui.TextView("Resolution"))
         self.resBox = settingsBox.addWidget(gui.TextEdit(
-            "x".join([str(self.resWidth), str(self.resHeight)])))
+            "x".join([str(self.renderingWidth), str(self.renderingHeight)])))
         self.AAbox = settingsBox.addWidget(gui.CheckBox("Anti-aliasing"))
-        self.AAbox.setSelected( gui3d.app.settings.get('GL_RENDERER_AA', True) )
+        self.AAbox.setSelected( G.app.settings.get('GL_RENDERER_AA', True) )
         self.lightmapSSS = settingsBox.addWidget(gui.CheckBox("Lightmap SSS"))
-        self.lightmapSSS.setSelected( gui3d.app.settings.get('GL_RENDERER_SSS', False) )
+        self.lightmapSSS.setSelected( G.app.settings.get('GL_RENDERER_SSS', False) )
         self.renderButton = settingsBox.addWidget(gui.Button('Render'))
 
         if not mh.hasRenderToRenderbuffer():
@@ -57,55 +60,36 @@ class OpenGLTaskView(guipose.PoseModeTaskView):
             try:
                 value = value.replace(" ", "")
                 res = [int(x) for x in value.split("x")]
-                self.resWidth = res[0]
-                self.resHeight = res[1]
+                self.renderingWidth = res[0]
+                self.renderingHeight = res[1]
             except: # The user hasn't typed the value correctly yet.
                 pass
 
         @self.AAbox.mhEvent
         def onClicked(value):
-            gui3d.app.settings['GL_RENDERER_AA'] = self.AAbox.selected
+            G.app.settings['GL_RENDERER_AA'] = self.AAbox.selected
 
         @self.lightmapSSS.mhEvent
         def onClicked(value):
-            gui3d.app.settings['GL_RENDERER_SSS'] = self.lightmapSSS.selected
+            G.app.settings['GL_RENDERER_SSS'] = self.lightmapSSS.selected
 
         @self.renderButton.mhEvent
         def onClicked(event):
-            try:
-                mhscene = gui3d.app.getCategory('Rendering').getTaskByName('Scene').scene
-            except:
-                import scene
-                mhscene = scene.Scene()
-
             settings = dict()
-            settings['scene'] = mhscene
+            settings['scene'] = self.getScene()
             settings['AA'] = self.AAbox.selected
-            settings['dimensions'] = (self.resWidth, self.resHeight)
+            settings['dimensions'] = (self.renderingWidth, self.renderingHeight)
             settings['lightmapSSS'] = self.lightmapSSS.selected
             
             reload(mh2opengl)
             mh2opengl.Render(settings)
 
-    @property
-    def resWidth(self):
-        return gui3d.app.settings.get('rendering_width', 800)
-
-    @property
-    def resHeight(self):
-        return gui3d.app.settings.get('rendering_height', 600)
-
-    @resWidth.setter
-    def resWidth(self, value = None):
-        gui3d.app.settings['rendering_width'] = 0 if not value else int(value)
-
-    @resHeight.setter
-    def resHeight(self, value = None):
-        gui3d.app.settings['rendering_height'] = 0 if not value else int(value)
-
     def onShow(self, event):
-        guipose.PoseModeTaskView.onShow(self, event)
+        RenderTaskView.onShow(self, event)
         self.renderButton.setFocus()
+
+    def onHide(self, event):
+        RenderTaskView.onHide(self, event)
 
 
 def load(app):
