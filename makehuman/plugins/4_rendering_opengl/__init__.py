@@ -33,6 +33,10 @@ import gui
 from guirender import RenderTaskView
 import mh
 
+class RenderingMethod(object):
+    def __init__(self):
+        pass
+
 class OpenGLTaskView(RenderTaskView):
 
     def __init__(self, category):
@@ -47,13 +51,27 @@ class OpenGLTaskView(RenderTaskView):
             "x".join([str(self.renderingWidth), str(self.renderingHeight)])))
         self.AAbox = settingsBox.addWidget(gui.CheckBox("Anti-aliasing"))
         self.AAbox.setSelected( G.app.settings.get('GL_RENDERER_AA', True) )
-        self.lightmapSSS = settingsBox.addWidget(gui.CheckBox("Lightmap SSS"))
-        self.lightmapSSS.setSelected( G.app.settings.get('GL_RENDERER_SSS', False) )
         self.renderButton = settingsBox.addWidget(gui.Button('Render'))
 
+        self.lightmapSSS = gui.CheckBox("Lightmap SSS")
+        self.lightmapSSS.setSelected( G.app.settings.get('GL_RENDERER_SSS', False) )
+
+        self.optionsBox = self.addLeftWidget(gui.GroupBox('Options'))
+        self.optionsWidgets = []
+
+        renderMethodBox = self.addRightWidget(gui.GroupBox('Rendering methods'))
+        self.renderMethodList = renderMethodBox.addWidget(gui.ListView())
+        self.renderMethodList.setSizePolicy(gui.SizePolicy.Ignored, gui.SizePolicy.Preferred)
+
+        # Rendering methods
+        self.renderMethodList.addItem('Quick Render')
+        self.renderMethodList.addItem('Advanced Render', data = [self.lightmapSSS])
+        
         if not mh.hasRenderToRenderbuffer():
             # Can only use screen grabbing as fallback, resolution option disabled
             self.resBox.setEnabled(False)
+
+        self.listOptions(None)
 
         @self.resBox.mhEvent
         def onChange(value):
@@ -73,13 +91,17 @@ class OpenGLTaskView(RenderTaskView):
         def onClicked(value):
             G.app.settings['GL_RENDERER_SSS'] = self.lightmapSSS.selected
 
+        @self.renderMethodList.mhEvent
+        def onClicked(item):
+            self.listOptions(item.getUserData())
+            
         @self.renderButton.mhEvent
         def onClicked(event):
             settings = dict()
             settings['scene'] = self.getScene()
             settings['AA'] = self.AAbox.selected
             settings['dimensions'] = (self.renderingWidth, self.renderingHeight)
-            settings['lightmapSSS'] = self.lightmapSSS.selected
+            settings['lightmapSSS'] = self.lightmapSSS.selected and self.lightmapSSS in self.optionsWidgets
             
             reload(mh2opengl)
             mh2opengl.Render(settings)
@@ -90,6 +112,19 @@ class OpenGLTaskView(RenderTaskView):
 
     def onHide(self, event):
         RenderTaskView.onHide(self, event)
+
+    def listOptions(self, widgets):
+        for child in self.optionsBox.children[:]:
+            self.optionsBox.removeWidget(child)
+
+        if widgets:
+            self.optionsWidgets = widgets
+            self.optionsBox.show()
+            for widget in widgets:
+                self.optionsBox.addWidget(widget)
+        else:
+            self.optionsWidgets = []
+            self.optionsBox.hide()
 
 
 def load(app):
