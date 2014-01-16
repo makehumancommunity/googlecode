@@ -23,12 +23,12 @@ This module contains the Render Task View class to serve as a base class
 for task views that implement renderers and rendering related tasks.
 """
 
-import gui3d
-import guipose
+from core import G
+from guipose import PoseModeTaskView
 
-class RenderTaskView(guipose.PoseModeTaskView):
+class RenderTaskView(PoseModeTaskView):
     def __init__(self, category, name, label=None):
-        guipose.PoseModeTaskView.__init__(self, category, name, label)
+        PoseModeTaskView.__init__(self, category, name, label)
 
         self.oldShader = None
         self.taskViewShader = 'shaders/glsl/phong'
@@ -38,35 +38,35 @@ class RenderTaskView(guipose.PoseModeTaskView):
     # selected, so that the actual scene lighting is simulated.
 
     def onShow(self, event):
-        guipose.PoseModeTaskView.onShow(self, event)
+        PoseModeTaskView.onShow(self, event)
         import getpath
 
-        human = gui3d.app.selectedHuman
+        human = G.app.selectedHuman
         self.oldShader = human.material.shader
         human.material.shader = getpath.getSysDataPath(self.taskViewShader)
 
     def onHide(self, event):
-        human = gui3d.app.selectedHuman
+        human = G.app.selectedHuman
         human.material.shader = self.oldShader
 
-        guipose.PoseModeTaskView.onHide(self, event)
+        PoseModeTaskView.onHide(self, event)
 
     # renderingWidth, renderingHeight: properties for getting/setting
     # the rendering width and height stored in the settings.
     
     def getRenderingWidth(self):
-        return gui3d.app.settings.get('rendering_width', 800)
+        return G.app.settings.get('rendering_width', 800)
 
     def setRenderingWidth(self, value = None):
-        gui3d.app.settings['rendering_width'] = 0 if not value else int(value)
+        G.app.settings['rendering_width'] = 0 if not value else int(value)
 
     renderingWidth = property(getRenderingWidth, setRenderingWidth)
 
     def getRenderingHeight(self):
-        return gui3d.app.settings.get('rendering_height', 600)
+        return G.app.settings.get('rendering_height', 600)
 
     def setRenderingHeight(self, value = None):
-        gui3d.app.settings['rendering_height'] = 0 if not value else int(value)
+        G.app.settings['rendering_height'] = 0 if not value else int(value)
 
     renderingHeight = property(getRenderingHeight, setRenderingHeight)
 
@@ -76,7 +76,7 @@ class RenderTaskView(guipose.PoseModeTaskView):
     def getScene():
         mhscene = None
         try:
-            mhscene = gui3d.app.getCategory('Rendering').getTaskByName('Scene').scene
+            mhscene = G.app.getCategory('Rendering').getTaskByName('Scene').scene
         except:
             import scene
             mhscene = scene.Scene()
