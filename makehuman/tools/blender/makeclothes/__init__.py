@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": (0, 941),
+    "version": (0, 942),
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -106,6 +106,9 @@ class MakeClothesPanel(bpy.types.Panel):
         row = layout.row()
         row.operator("mhclo.load_human", text="Nude Human").helpers = False
         row.operator("mhclo.load_human", text="Human With Helpers").helpers = True
+
+        if not (ob and ob.type == 'MESH'):
+            return
 
         layout.separator()
         row = layout.row()
@@ -302,10 +305,6 @@ class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
 
     filepath = StringProperty(default="")
 
-    @classmethod
-    def poll(self, context):
-        return (context.object and context.object.type == 'MESH')
-
     def execute(self, context):
         setObjectMode(context)
         try:
@@ -328,10 +327,6 @@ class OBJECT_OT_ExportMaterialButton(bpy.types.Operator):
     bl_options = {'UNDO'}
 
     filepath = StringProperty(default="")
-
-    @classmethod
-    def poll(self, context):
-        return (context.object and context.object.type == 'MESH')
 
     def execute(self, context):
         setObjectMode(context)
@@ -411,10 +406,6 @@ class OBJECT_OT_MakeHumanButton(bpy.types.Operator):
     bl_options = {'UNDO'}
     isHuman = BoolProperty()
 
-    @classmethod
-    def poll(self, context):
-        return (context.object and context.object.type == 'MESH')
-
     def execute(self, context):
         setObjectMode(context)
         try:
@@ -483,7 +474,11 @@ class OBJECT_OT_LoadHumanButton(bpy.types.Operator):
             ob.name = "Human"
             ob.MhHuman = True
             #bpy.ops.object.vertex_group_remove(all=True)
-            makeclothes.autoVertexGroups(ob, 'Helpers', 'Tights')
+            if self.helpers:
+                makeclothes.autoVertexGroups(ob, 'Helpers', 'Tights')
+            else:
+                makeclothes.autoVertexGroups(ob, 'Body', None)
+            makeclothes.clearSelection()
 
         except MHError:
             handleMHError(context)

@@ -1402,7 +1402,7 @@ def getHelperVerts(me, htype):
 
 def checkEnoughVerts(me, htype, first):
     if len(me.vertices) < first:
-        raise MHError("Mesh has too few vertices for assigning to %s" % (htype))
+        raise MHError("Mesh has too few vertices for selecting %s" % (htype))
 
 
 def addBodyVerts(me, verts):
