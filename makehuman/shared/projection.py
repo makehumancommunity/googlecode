@@ -382,7 +382,7 @@ def mapSceneLighting(scn, object = None, res = (1024, 1024), border = 1):
     if object is None:
         object = G.app.selectedHuman
 
-    objrot = object.getRotation()
+    objrot = G.app.modelCamera.getRotation()
     def calcLightPos(light):
         return tuple(
             matrix.transform3(
