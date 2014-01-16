@@ -772,8 +772,6 @@ def writeColor(fp, string1, string2, color, intensity):
 
 
 def printScale(fp, hum, scn, name, index, vnums):
-    if not scn.MCUseBoundary:
-        return
     verts = hum.data.vertices
     n1,n2 = vnums
     if n1 >=0 and n2 >= 0:
@@ -944,10 +942,10 @@ def makeClothes(context, doFindClothes):
     scn = context.scene
     checkNoTriangles(scn, clo)
     checkObjectOK(hum, context, False)
-    autoVertexGroupsIfNecessary(hum, scn)
-    checkAndVertexDiamonds(context, hum)
+    autoVertexGroupsIfNecessary(hum, 'Selected')
+    #checkAndUnVertexDiamonds(context, hum)
     checkObjectOK(clo, context, True)
-    autoVertexGroupsIfNecessary(clo, scn)
+    autoVertexGroupsIfNecessary(clo)
     checkSingleVertexGroups(clo, scn)
     saveClosest({})
     if scn.MCLogging:
@@ -1316,69 +1314,22 @@ def deleteHelpers(context):
     return
 
 #
-#
-#
-
-def copyVertexGroups(context):
-    scn = context.scene
-    src = context.object
-    objects = []
-    for ob in scn.objects:
-        if (ob.select and ob.type == 'MESH' and ob != src):
-            objects.append(ob)
-            if len(ob.data.vertices) != len(src.data.vertices):
-                raise MHError("Selected objects %s and %s \ndon't have the same number of vertices:\n %d vs %d" %
-                    (ob.name, src.name, len(ob.data.vertices), len(src.data.vertices)))
-
-    for trg in objects:
-        scn.objects.active = trg
-        removeVertexGroups(context, 'All')
-        for sgrp in src.vertex_groups:
-            tgrp = trg.vertex_groups.new(sgrp.name)
-            for v in src.data.vertices:
-                for g in v.groups:
-                    if g.group == sgrp.index:
-                        tgrp.add([v.index], g.weight, 'REPLACE')
-
-    scn.objects.active = src
-
-
-#
-#    removeVertexGroups(context, removeType):
+#   autoVertexGroups(ob):
 #
 
-def removeVertexGroups(context, removeType):
-    ob = context.object
-    if len(ob.vertex_groups) == 0:
-        return
-    bpy.ops.object.mode_set(mode='OBJECT')
-    if removeType == 'All':
-        bpy.ops.object.vertex_group_remove(all=True)
-        print("All vertex groups removed")
-    else:
-        for v in ob.data.vertices:
-            if v.select:
-                for vgrp in ob.vertex_groups:
-                    vgrp.remove([v.index])
-        print("Selected verts removed from all vertex groups")
-
-#
-#   autoVertexGroups(ob, scn):
-#
-
-def autoVertexGroupsIfNecessary(ob, scn):
+def autoVertexGroupsIfNecessary(ob, type='Selected', htype='Tights'):
     if len(ob.vertex_groups) == 0:
         print("Found no vertex groups for %s." % ob)
-        autoVertexGroups(ob, scn)
+        autoVertexGroups(ob, type, htype)
 
 
-def autoVertexGroups(ob, scn):
+def autoVertexGroups(ob, type, htype):
     mid = ob.vertex_groups.new("Mid")
     left = ob.vertex_groups.new("Left")
     right = ob.vertex_groups.new("Right")
     if isOkHuman(ob):
         ob.vertex_groups.new("Delete")
-        verts = getHumanVerts(ob.data, scn)
+        verts = getHumanVerts(ob.data, type, htype)
     else:
         verts = ob.data.vertices
     for v in verts.values():
@@ -1394,35 +1345,39 @@ def autoVertexGroups(ob, scn):
                 left.add([vn], 1.0, 'REPLACE')
                 right.add([vn], 1.0, 'REPLACE')
     if ob.MhHuman:
-        print("Vertex groups auto assigned to human %s, part %s." % (ob, scn.MCAutoGroupType.lower()))
+        print("Vertex groups auto assigned to human %s, part %s." % (ob, type.lower()))
     else:
         print("Vertex groups auto assigned to clothing %s" % ob)
-    return
 
 
-def getHumanVerts(me, scn):
-    verts = {}
-    if scn.MCAutoGroupType == 'Selected':
+def getHumanVerts(me, type, htype):
+    if type == 'Selected':
+        verts = {}
         for v in me.vertices:
             if v.select:
                 verts[v.index] = v
-    elif scn.MCAutoGroupType == 'Helpers':
-        addHelperVerts(me, scn.MCAutoHelperType, verts)
-    elif scn.MCAutoGroupType == 'Body':
+    elif type == 'Helpers':
+        verts = getHelperVerts(me, htype)
+    elif type == 'Body':
+        verts = {}
         addBodyVerts(me, verts)
-    elif scn.MCAutoGroupType == 'All':
-        addHelperVerts(me, 'All', verts)
+    elif type == 'All':
+        verts = getHelperVerts(me, 'All')
         addBodyVerts(me, verts)
+    else:
+        print(type, htype)
+        halt
     return verts
 
 
-def addHelperVerts(me, htype, verts):
+def getHelperVerts(me, htype):
+    verts = {}
     vnums = theSettings.vertices
     if htype == 'All':
         checkEnoughVerts(me, htype, theSettings.clothesVerts[0])
         for vn in range(theSettings.clothesVerts[0], theSettings.clothesVerts[1]):
             verts[vn] = me.vertices[vn]
-    elif htype in ['Skirt', 'Tights']:
+    elif htype in vnums.keys():
         checkEnoughVerts(me, htype, vnums[htype][0])
         for vn in range(vnums[htype][0], vnums[htype][1]):
             verts[vn] = me.vertices[vn]
@@ -1442,6 +1397,8 @@ def addHelperVerts(me, htype, verts):
     else:
         raise MHError("Unknown helper type %s" % htype)
 
+    return verts
+
 
 def checkEnoughVerts(me, htype, first):
     if len(me.vertices) < first:
@@ -1458,19 +1415,34 @@ def addBodyVerts(me, verts):
                 verts[vn] = me.vertices[vn]
     return
 
+
+def selectHumanPart(ob, btype, htype):
+    if isOkHuman(ob):
+        clearSelection()
+        verts = getHumanVerts(ob.data, btype, htype)
+        for v in verts.values():
+            v.select = True
+    else:
+        raise MHError("Object %s is not a human" % ob.name)
+
+
 #
 #   checkAndVertexDiamonds(context, ob):
 #
 
-def checkAndVertexDiamonds(context, ob):
-    print("Unvertex diamonds in %s" % ob)
-    scn = context.scene
-    bpy.ops.object.mode_set(mode='OBJECT')
-    scn.objects.active = ob
+def clearSelection():
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.reveal()
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def checkAndUnVertexDiamonds(context, ob):
+    print("Unvertex diamonds in %s" % ob)
+    scn = context.scene
+    bpy.ops.object.mode_set(mode='OBJECT')
+    scn.objects.active = ob
+    clearSelection()
     me = ob.data
     nverts = len(me.vertices)
 
@@ -1648,10 +1620,6 @@ def init():
         description="Last clothing to keep vertices for",
         default="Tights")
 
-    bpy.types.Scene.MCUseBoundary = BoolProperty(
-        name="Scale Offsets",
-        default=True)
-
     bpy.types.Scene.MCScaleUniform = BoolProperty(
         name="Uniform Scaling",
         description="Scale offset uniformly in the XYZ directions",
@@ -1659,7 +1627,7 @@ def init():
 
     bpy.types.Scene.MCScaleCorrect = FloatProperty(
         name="Scale Correction",
-        default=0.85,
+        default=1.0,
         min=0.5, max=1.5)
 
     bpy.types.Scene.MCBodyPart = EnumProperty(
@@ -1749,12 +1717,12 @@ def init():
 
     bpy.types.Scene.MCShowSettings = BoolProperty(name = "Show Settings", default=False)
     bpy.types.Scene.MCShowUtils = BoolProperty(name = "Show Utilities", default=False)
-    bpy.types.Scene.MCShowAutoVertexGroups = BoolProperty(name = "Show Automatic Vertex Groups", default=False)
+    bpy.types.Scene.MCShowSelect = BoolProperty(name = "Show Selection", default=False)
     bpy.types.Scene.MCShowMaterials = BoolProperty(name = "Show Materials", default=False)
     bpy.types.Scene.MCShowAdvanced = BoolProperty(name = "Show Advanced", default=False)
     bpy.types.Scene.MCShowUVProject = BoolProperty(name = "Show UV Projection", default=False)
-    bpy.types.Scene.MCShowZDepth = BoolProperty(name = "Show ZDepth (%d-%d range)" % (MinZDepth, MaxZDepth), default=False)
-    bpy.types.Scene.MCShowBoundary = BoolProperty(name = "Show Boundary", default=False)
+    bpy.types.Scene.MCShowZDepth = BoolProperty(name = "Show Z-Depth (%d-%d range)" % (MinZDepth, MaxZDepth), default=False)
+    bpy.types.Scene.MCShowBoundary = BoolProperty(name = "Show Offset Scaling", default=False)
     bpy.types.Scene.MCShowLicense = BoolProperty(name = "Show License", default=False)
 
     MCIsInited = True

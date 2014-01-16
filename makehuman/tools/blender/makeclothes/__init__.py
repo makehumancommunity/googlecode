@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": (0, 940),
+    "version": (0, 941),
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -100,14 +100,6 @@ class MakeClothesPanel(bpy.types.Panel):
         ob = context.object
 
         #layout.operator("mhclo.snap_selected_verts")
-        '''
-        layout.prop(scn, "MCShowUtils")
-        if scn.MCShowUtils:
-            ins = inset(layout)
-            ins.operator("mhclo.print_vnums")
-            ins.operator("mhclo.copy_vert_locs")
-            ins.separator()
-        '''
 
         layout.label("Load Human Mesh")
         layout.prop(scn, "MhBodyType", text="Type")
@@ -120,32 +112,27 @@ class MakeClothesPanel(bpy.types.Panel):
         row.label("Mesh Type:")
         if ob and ob.MhHuman:
             row.operator("mhclo.set_human", text="Human").isHuman = False
+            layout.separator()
+            layout.operator("mhclo.auto_vertex_groups", text="Create Vertex Groups From Selection")
         else:
             row.operator("mhclo.set_human", text="Clothing").isHuman = True
+            layout.separator()
+            layout.operator("mhclo.auto_vertex_groups")
 
         layout.separator()
         layout.operator("mhclo.make_clothes")
         layout.separator()
 
-        layout.prop(scn, "MCShowAutoVertexGroups")
-        if scn.MCShowAutoVertexGroups:
-            layout.prop(scn, "MCRemoveGroupType", expand=True)
+        layout.prop(scn, "MCShowSelect")
+        if scn.MCShowSelect:
             ins = inset(layout)
-            ins.operator("mhclo.remove_vertex_groups")
-            layout.separator()
-            if ob and ob.MhHuman:
-                layout.prop(scn, "MCAutoGroupType", expand=True)
-                if scn.MCAutoGroupType == 'Helpers':
-                    layout.prop(scn, "MCAutoHelperType", expand=True)
+            props = ins.operator("mhclo.select_human_part", text="Select Body")
+            props.btype = 'Body'
 
-            ins = inset(layout)
-            ins.operator("mhclo.auto_vertex_groups")
-            ins.separator()
-            ins.operator("mhclo.copy_vertex_groups")
-            ins.separator()
-            #ins.prop(scn, "MCKeepVertsUntil", expand=False)
-            #ins.operator("mhclo.delete_helpers")
-            #ins.separator()
+            for helper in ["Tights", "Skirt", "Coat", "Hair", "Joints"]:
+                props = ins.operator("mhclo.select_human_part", text="Select %s" % helper)
+                props.btype = 'Helpers'
+                props.htype = helper
 
 
         layout.prop(scn, "MCShowMaterials")
@@ -185,17 +172,15 @@ class MakeClothesPanel(bpy.types.Panel):
         layout.prop(scn, "MCShowBoundary")
         if scn.MCShowBoundary:
             ins = inset(layout)
-            ins.prop(scn, "MCUseBoundary")
-            if scn.MCUseBoundary:
-                row = ins.row()
-                row.prop(scn, "MCScaleUniform")
-                row.prop(scn, "MCScaleCorrect")
-                ins.prop(scn, "MCBodyPart")
-                vnums = makeclothes.theSettings.bodyPartVerts[scn.MCBodyPart]
-                self.drawXYZ(vnums[0], "X", ins)
-                self.drawXYZ(vnums[1], "Y", ins)
-                self.drawXYZ(vnums[2], "Z", ins)
-                ins.operator("mhclo.examine_boundary")
+            ins.prop(scn, "MCScaleUniform")
+            ins.prop(scn, "MCScaleCorrect")
+            ins.separator()
+            ins.prop(scn, "MCBodyPart")
+            vnums = makeclothes.theSettings.bodyPartVerts[scn.MCBodyPart]
+            self.drawXYZ(vnums[0], "X", ins)
+            self.drawXYZ(vnums[1], "Y", ins)
+            self.drawXYZ(vnums[2], "Z", ins)
+            ins.operator("mhclo.examine_boundary")
             ins.separator()
 
 
@@ -224,6 +209,15 @@ class MakeClothesPanel(bpy.types.Panel):
             ins.prop(scn, "MCTag4")
             ins.prop(scn, "MCTag5")
             ins.separator()
+
+        '''
+        layout.prop(scn, "MCShowUtils")
+        if scn.MCShowUtils:
+            ins = inset(layout)
+            ins.operator("mhclo.print_vnums")
+            #ins.operator("mhclo.copy_vert_locs")
+            ins.separator()
+        '''
 
         if not scn.MCUseInternal:
             return
@@ -488,8 +482,8 @@ class OBJECT_OT_LoadHumanButton(bpy.types.Operator):
             ob = context.object
             ob.name = "Human"
             ob.MhHuman = True
-            makeclothes.removeVertexGroups(context, 'All')
-            makeclothes.autoVertexGroups(ob, scn)
+            #bpy.ops.object.vertex_group_remove(all=True)
+            makeclothes.autoVertexGroups(ob, 'Helpers', 'Tights')
 
         except MHError:
             handleMHError(context)
@@ -530,6 +524,26 @@ class OBJECT_OT_SetZDepthButton(bpy.types.Operator):
         return{'FINISHED'}
 
 #
+#    class VIEW3D_OT_SelectHumanPartButton(bpy.types.Operator):
+#
+
+class VIEW3D_OT_SelectHumanPartButton(bpy.types.Operator):
+    bl_idname = "mhclo.select_human_part"
+    bl_label = "Select Human Part"
+    bl_options = {'UNDO'}
+
+    btype = StringProperty()
+    htype = StringProperty()
+
+    def execute(self, context):
+        setObjectMode(context)
+        try:
+            makeclothes.selectHumanPart(context.object, self.btype, self.htype)
+        except MHError:
+            handleMHError(context)
+        return{'FINISHED'}
+
+#
 #    class VIEW3D_OT_PrintVnumsButton(bpy.types.Operator):
 #
 
@@ -565,50 +579,19 @@ class VIEW3D_OT_DeleteHelpersButton(bpy.types.Operator):
         return{'FINISHED'}
 
 #
-#    class VIEW3D_OT_RemoveVertexGroupsButton(bpy.types.Operator):
-#
-
-class VIEW3D_OT_RemoveVertexGroupsButton(bpy.types.Operator):
-    bl_idname = "mhclo.remove_vertex_groups"
-    bl_label = "Remove Vertex Groups"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        setObjectMode(context)
-        try:
-            makeclothes.removeVertexGroups(context, context.scene.MCRemoveGroupType)
-        except MHError:
-            handleMHError(context)
-        return{'FINISHED'}
-
-#
 #   class VIEW3D_OT_AutoVertexGroupsButton(bpy.types.Operator):
 #
 
 class VIEW3D_OT_AutoVertexGroupsButton(bpy.types.Operator):
     bl_idname = "mhclo.auto_vertex_groups"
-    bl_label = "Auto Vertex Groups"
+    bl_label = "Create Vertex Groups"
     bl_options = {'UNDO'}
 
     def execute(self, context):
         setObjectMode(context)
         try:
-            makeclothes.removeVertexGroups(context, 'All')
-            makeclothes.autoVertexGroups(context.object, context.scene)
-        except MHError:
-            handleMHError(context)
-        return{'FINISHED'}
-
-
-class VIEW3D_OT_CopyVertexGroupsButton(bpy.types.Operator):
-    bl_idname = "mhclo.copy_vertex_groups"
-    bl_label = "Copy Vertex Groups Active => Selected"
-    bl_options = {'UNDO'}
-
-    def execute(self, context):
-        setObjectMode(context)
-        try:
-            makeclothes.copyVertexGroups(context)
+            bpy.ops.object.vertex_group_remove(all=True)
+            makeclothes.autoVertexGroups(context.object, 'Selected', None)
         except MHError:
             handleMHError(context)
         return{'FINISHED'}
