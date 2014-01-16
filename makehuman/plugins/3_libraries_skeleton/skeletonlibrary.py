@@ -506,10 +506,13 @@ class SkeletonLibrary(gui3d.TaskView):
 
 
 def setColorForFaceGroup(mesh, fgName, color):
+    if mesh is None:
+        return
+    color = np.asarray(color, dtype=np.uint8)
     try:
-        color = np.asarray(color, dtype=np.uint8)
-        mesh.color[mesh.getVerticesForGroups([fgName])] = color[None,:]
-        mesh.markCoords(colr=True)
-        mesh.sync_color()
+        groupVerts = mesh.getVerticesForGroups([fgName])
+        mesh.color[groupVerts] = color[None,:]
     except KeyError:
-        pass
+        return
+    mesh.markCoords(colr=True)
+    mesh.sync_color()
