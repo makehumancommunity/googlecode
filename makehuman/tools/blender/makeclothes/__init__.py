@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": (0, 942),
+    "version": (0, 943),
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -101,11 +101,8 @@ class MakeClothesPanel(bpy.types.Panel):
 
         #layout.operator("mhclo.snap_selected_verts")
 
-        layout.label("Load Human Mesh")
-        layout.prop(scn, "MhBodyType", text="Type")
-        row = layout.row()
-        row.operator("mhclo.load_human", text="Nude Human").helpers = False
-        row.operator("mhclo.load_human", text="Human With Helpers").helpers = True
+        layout.prop(scn, "MCBodyType", text="Type")
+        layout.operator("mhclo.load_human")
 
         if not (ob and ob.type == 'MESH'):
             return
@@ -435,51 +432,14 @@ class OBJECT_OT_MakeHumanButton(bpy.types.Operator):
 
 class OBJECT_OT_LoadHumanButton(bpy.types.Operator):
     bl_idname = "mhclo.load_human"
-    bl_label = "Load Human"
+    bl_label = "Load Human Mesh"
     bl_options = {'UNDO'}
     helpers = BoolProperty()
 
     def execute(self, context):
-        from maketarget import mt, import_obj, utils
         setObjectMode(context)
-        scn = context.scene
-
         try:
-            if self.helpers:
-                basepath = mt.baseMhcloFile
-                import_obj.importBaseMhclo(context, basepath)
-                maketarget.maketarget.afterImport(context, basepath, False, True)
-                scn.MCAutoGroupType = 'Helpers'
-                scn.MCAutoHelperType = 'All'
-            else:
-                basepath = mt.baseObjFile
-                import_obj.importBaseObj(context, basepath)
-                maketarget.maketarget.afterImport(context, basepath, True, False)
-                scn.MCAutoGroupType = 'Body'
-
-            if scn.MhBodyType == 'None':
-                maketarget.maketarget.newTarget(context)
-                found = True
-            else:
-                trgpath = os.path.join(os.path.dirname(__file__), "targets", scn.MhBodyType + ".target")
-                try:
-                    utils.loadTarget(trgpath, context)
-                    found = True
-                except FileNotFoundError:
-                    found = False
-            if not found:
-                raise MHError("Target \"%s\" not found.\nPath \"%s\" does not seem to be the path to the MakeHuman program" % (trgpath, scn.MhProgramPath))
-            maketarget.maketarget.applyTargets(context)
-            ob = context.object
-            ob.name = "Human"
-            ob.MhHuman = True
-            #bpy.ops.object.vertex_group_remove(all=True)
-            if self.helpers:
-                makeclothes.autoVertexGroups(ob, 'Helpers', 'Tights')
-            else:
-                makeclothes.autoVertexGroups(ob, 'Body', None)
-            makeclothes.clearSelection()
-
+            makeclothes.loadHuman(context)
         except MHError:
             handleMHError(context)
         return{'FINISHED'}

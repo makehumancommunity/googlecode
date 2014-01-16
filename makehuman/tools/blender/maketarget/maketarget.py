@@ -1346,15 +1346,6 @@ def init():
 
     bpy.types.Scene.MhUnlock = BoolProperty(default = False)
 
-    bpy.types.Scene.MhBodyType = EnumProperty(
-        items = [('None', 'Base Mesh', 'None'),
-                 ('caucasian-male-young', 'Average Male', 'caucasian-male-young'),
-                 ('caucasian-female-young', 'Average Female', 'caucasian-female-young'),
-                 ('caucasian-male-child', 'Average Child', 'caucasian-male-child'),
-                 ('caucasian-male-baby', 'Average Baby', 'caucasian-male-baby'),
-                 ],
-    default='None')
-
     bpy.types.Object.ProxyFile = StringProperty(default = "")
     bpy.types.Object.ObjFile = StringProperty(default = "")
     bpy.types.Object.MhHuman = BoolProperty(default = False)

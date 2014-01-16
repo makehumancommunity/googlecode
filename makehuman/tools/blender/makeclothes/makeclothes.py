@@ -166,6 +166,55 @@ def selectVerts(verts, ob):
 #
 #
 
+def loadHuman(context):
+    from maketarget import mt, import_obj, utils
+    from maketarget.maketarget import afterImport, newTarget, applyTargets
+
+    scn = context.scene
+    bodytype = scn.MCBodyType
+    if bodytype[:2] == "h-":
+        bodytype = bodytype[2:]
+        helpers = True
+    else:
+        helpers = False
+
+    if helpers:
+        basepath = mt.baseMhcloFile
+        import_obj.importBaseMhclo(context, basepath)
+        afterImport(context, basepath, False, True)
+    else:
+        basepath = mt.baseObjFile
+        import_obj.importBaseObj(context, basepath)
+        afterImport(context, basepath, True, False)
+
+    if bodytype == 'None':
+        newTarget(context)
+        found = True
+    else:
+        trgpath = os.path.join(os.path.dirname(__file__), "targets", bodytype + ".target")
+        try:
+            utils.loadTarget(trgpath, context)
+            found = True
+        except FileNotFoundError:
+            found = False
+    if not found:
+        raise MHError("Target \"%s\" not found.\nPath \"%s\" does not seem to be the path to the MakeHuman program" % (trgpath, scn.MhProgramPath))
+    applyTargets(context)
+    ob = context.object
+    ob.name = "Human"
+    ob.MhHuman = True
+    #bpy.ops.object.vertex_group_remove(all=True)
+    if helpers:
+        autoVertexGroups(ob, 'Helpers', 'Tights')
+    else:
+        autoVertexGroups(ob, 'Body', None)
+    clearSelection()
+
+
+#
+#
+#
+
 theShapeKeys = [
     #'Breathe',
     ]
@@ -1422,6 +1471,7 @@ def selectHumanPart(ob, btype, htype):
         verts = getHumanVerts(ob.data, btype, htype)
         for v in verts.values():
             v.select = True
+        bpy.ops.object.mode_set(mode='EDIT')
     else:
         raise MHError("Object %s is not a human" % ob.name)
 
@@ -1561,6 +1611,22 @@ def init():
             default = False)
         setattr(bpy.types.Scene, 'MC%s' % skey, prop)
 
+    bpy.types.Scene.MCBodyType = EnumProperty(
+        items = [('None', 'Base Mesh', 'None'),
+                 ('caucasian-male-young', 'Average Male', 'caucasian-male-young'),
+                 ('caucasian-female-young', 'Average Female', 'caucasian-female-young'),
+                 ('caucasian-male-child', 'Average Child', 'caucasian-male-child'),
+                 ('caucasian-male-baby', 'Average Baby', 'caucasian-male-baby'),
+
+                 ('h-None', 'Base Mesh  With Helpers', 'None'),
+                 ('h-caucasian-male-young', 'Average Male With Helpers', 'caucasian-male-young'),
+                 ('h-caucasian-female-young', 'Average Female With Helpers', 'caucasian-female-young'),
+                 ('h-caucasian-male-child', 'Average Child With Helpers', 'caucasian-male-child'),
+                 ('h-caucasian-male-baby', 'Average Baby With Helpers', 'caucasian-male-baby'),
+                 ],
+        description = "Body Type To Load",
+    default='None')
+
     bpy.types.Scene.MCMaterials = BoolProperty(
         name="Materials",
         description="Use materials",
@@ -1655,25 +1721,6 @@ def init():
         default=ZDepth['Sweater'],
         min = MinZDepth,
         max = MaxZDepth)
-
-    bpy.types.Scene.MCAutoGroupType = EnumProperty(
-        items = [('Helpers','Helpers','Helpers'),
-                 ('Body','Body','Body'),
-                 ('Selected','Selected','Selected'),
-                 ('All','All','All')],
-    default='Helpers')
-
-    bpy.types.Scene.MCAutoHelperType = EnumProperty(
-        items = [('Skirt','Skirt','Skirt'),
-                 ('Tights','Tights','Tights'),
-                 ('Coat','Coat','Coat'),
-                 ('All','All','All')],
-    default='All')
-
-    bpy.types.Scene.MCRemoveGroupType = EnumProperty(
-        items = [('Selected','Selected','Selected'),
-                 ('All','All','All')],
-        default='All')
 
     bpy.types.Scene.MCAuthor = StringProperty(
         name="Author",
