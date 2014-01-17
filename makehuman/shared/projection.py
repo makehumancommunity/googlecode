@@ -398,7 +398,8 @@ def mapSceneLighting(scn, object = None, res = (1024, 1024), border = 1):
     progress = Progress(1 + len(scn.lights))
 
     # Ambience
-    lmap = image_operations.colorAsImage(scn.environment.ambience.values, None, *res)
+    lmap = image_operations.colorAsImage(
+        (scn.environment.ambience * object.material.diffuseColor).values, None, *res)
     if (object.material.shaderConfig['ambientOcclusion']
         and not object.material.aoMapTexture is None):
         aomap = image_operations.Image(data = object.material.aoMapTexture)
