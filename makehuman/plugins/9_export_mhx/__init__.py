@@ -54,9 +54,9 @@ class MhxConfig(Config):
         self.useAdvancedMHX =       False
 
         self.feetOnGround =         exporter.feetOnGround.selected
-        self.useFaceRig =           False # exporter.useFaceRig.selected
-        self.expressions =          exporter.expressions.selected
-        self.useCustomTargets =     exporter.useCustomTargets.selected
+        self.useFaceRig =           False   # exporter.useFaceRig.selected
+        self.expressions =          False   #exporter.expressions.selected
+        self.useCustomTargets =     False   #exporter.useCustomTargets.selected
 
         if exporter.useRigify.selected:
             self.rigOptions = RigifyOptions(self)
@@ -92,10 +92,10 @@ class ExporterMHX(Exporter):
     def build(self, options, taskview):
         self.taskview       = taskview
         self.feetOnGround   = options.addWidget(gui.CheckBox("Feet on ground", True))
-        self.useRotationLimits   = options.addWidget(gui.CheckBox("Rotation limits", True))
+        self.useRotationLimits   = options.addWidget(gui.CheckBox("Rotation limits", False))
         #self.useFaceRig     = options.addWidget(gui.CheckBox("Face rig", True))
-        self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))
-        self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
+        #self.expressions    = options.addWidget(gui.CheckBox("Expressions", False))
+        #self.useCustomTargets = options.addWidget(gui.CheckBox("Custom targets", False))
         self.useRigify      = options.addWidget(gui.CheckBox("Export for Rigify", False))
 
 
