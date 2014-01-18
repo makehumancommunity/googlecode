@@ -103,6 +103,7 @@ depthBuffer = None
 pickingBufferDirty = True
 
 def updatePickingBuffer():
+    return
     width = G.windowWidth
     height = G.windowHeight
     rwidth = (width + 3) / 4 * 4
@@ -155,6 +156,8 @@ def markPickingBufferDirty():
     pickingBufferDirty = True
 
 def getPickedColor(x = None, y = None):
+    return (0, 0, 0)
+
     if x is None or y is None:
         pos = getMousePos()
         if pos is None:
@@ -799,8 +802,14 @@ def renderToBuffer(width, height, productionRender = True):
 
     # Now that framebuffer is bound, verify whether dimensions are within max supported dimensions
     maxWidth, maxHeight = glGetInteger(GL_MAX_VIEWPORT_DIMS)
+    aspect = float(height) / width
     width = min(width, maxWidth)
     height = min(height, maxHeight)
+    # Maintain original aspect ratio
+    if aspect * width < height:
+        height = int(aspect * width)
+    else:
+        width = int(height / aspect)
 
     # Create and bind renderbuffers
     renderbuffer = glGenRenderbuffers(1)    # We need a renderbuffer for both color and depth
