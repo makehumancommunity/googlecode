@@ -103,7 +103,6 @@ depthBuffer = None
 pickingBufferDirty = True
 
 def updatePickingBuffer():
-    return
     width = G.windowWidth
     height = G.windowHeight
     rwidth = (width + 3) / 4 * 4
@@ -156,8 +155,6 @@ def markPickingBufferDirty():
     pickingBufferDirty = True
 
 def getPickedColor(x = None, y = None):
-    return (0, 0, 0)
-
     if x is None or y is None:
         pos = getMousePos()
         if pos is None:
@@ -880,7 +877,7 @@ def renderToBuffer(width, height, productionRender = True):
     # Unbind frame buffer
     glDeleteFramebuffers(np.array([framebuffer]))
     glDeleteRenderbuffers(1, np.array([renderbuffer]))
-    glDeleteRenderbuffers(1, np.array([depthRenderbuffer]));
+    glDeleteRenderbuffers(1, np.array([depthRenderbuffer]))
     glBindRenderbuffer(GL_RENDERBUFFER, 0)
     glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
