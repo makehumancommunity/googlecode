@@ -105,7 +105,6 @@ class OpenGLTaskView(RenderTaskView):
             settings['dimensions'] = (self.renderingWidth, self.renderingHeight)
             settings['lightmapSSS'] = self.lightmapSSS.selected and self.lightmapSSS in self.optionsWidgets
             
-            reload(mh2opengl)
             mh2opengl.Render(settings)
 
     def onShow(self, event):

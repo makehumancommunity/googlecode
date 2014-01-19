@@ -73,6 +73,7 @@ def Render(settings):
         
     if not mh.hasRenderToRenderbuffer():
         # Limited fallback mode, read from screen buffer
+        log.message("Fallback render: grab screen")
         img = mh.grabScreen(0, 0, G.windowWidth, G.windowHeight)
         alphaImg = None
     else:
@@ -80,6 +81,7 @@ def Render(settings):
         renderprog = Progress()
         renderprog(0, 0.99 - 0.59 * settings['AA'], "Rendering")
         width, height = settings['dimensions']
+        log.message("Rendering at %sx%s", width, height)
         if settings['AA']:
             width = width * 2
             height = height * 2

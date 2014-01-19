@@ -106,8 +106,16 @@ class Image(object):
             data = np.repeat(self.data[:,:,0], 3).reshape((h,w,3))
             data = np.insert(data, 3, values=self.data[:,:,1], axis=2)
         elif self.components == 3:
+            '''
             fmt = image_qt.QtGui.QImage.Format_RGB888
             data = self.data
+            '''
+            # The above causes a crash or misaligned image raster. Quickhack solution:
+            fmt = image_qt.QtGui.QImage.Format_ARGB32
+            _data = self.convert(components=4).data
+            # There appear to be channel mis-alignments, another hack:
+            data = np.zeros(_data.shape, dtype = _data.dtype)
+            data[:,:,:] = _data[:,:,[2,1,0,3]]
         else: # components == 4
             fmt = image_qt.QtGui.QImage.Format_ARGB32
             data = self.data
