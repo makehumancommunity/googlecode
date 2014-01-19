@@ -539,7 +539,7 @@ def writeClothes(context, hum, clo, data, matfile):
     writeClothesHeader(fp, scn)
     fp.write("name %s\n" % clo.name.replace(" ","_"))
     fp.write("obj_file %s.obj\n" % mc.goodName(clo.name))
-    vnums = theSettings.bodyPartVerts[scn.MCBodyPart]
+    vnums = getBodyPartVerts(scn)
     printScale(fp, hum, scn, 'x_scale', 0, vnums[0])
     printScale(fp, hum, scn, 'z_scale', 1, vnums[1])
     printScale(fp, hum, scn, 'y_scale', 2, vnums[2])
@@ -1275,12 +1275,23 @@ def examineBoundary(ob, scn):
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='DESELECT')
     bpy.ops.object.mode_set(mode='OBJECT')
-    vnums = theSettings.bodyPartVerts[scn.MCBodyPart]
+    vnums = getBodyPartVerts(scn)
     for m,n in vnums:
         verts[m].select = True
         verts[n].select = True
     bpy.ops.object.mode_set(mode='EDIT')
     return
+
+
+def getBodyPartVerts(scn):
+    if scn.MCBodyPart == 'Custom':
+        return (
+            (scn.MCCustomX1, scn.MCCustomX2),
+            (scn.MCCustomY1, scn.MCCustomY2),
+            (scn.MCCustomZ1, scn.MCCustomZ2)
+            )
+    else:
+        return theSettings.bodyPartVerts[scn.MCBodyPart]
 
 ###################################################################################
 #
@@ -1332,11 +1343,13 @@ def setZDepth(scn):
 
 def printVertNums(context):
     ob = context.object
+    bpy.ops.object.mode_set(mode='OBJECT')
     print("Verts in ", ob)
     for v in ob.data.vertices:
         if v.select:
             print(v.index)
     print("End verts")
+    bpy.ops.object.mode_set(mode='EDIT')
 
 #
 #   deleteHelpers(context):
@@ -1705,9 +1718,20 @@ def init():
                  ('Leg', 'Leg', 'Leg'),
                  ('Foot', 'Foot', 'Foot'),
                  ('Eye', 'Eye', 'Eye'),
+                 ('Genital', 'Genital', 'Genital'),
                  ('Body', 'Body', 'Body'),
+                 ('Custom', 'Custom', 'Custom'),
                  ],
         default='Head')
+
+    x,y,z = theSettings.bodyPartVerts['Body']
+
+    bpy.types.Scene.MCCustomX1 = IntProperty(name="X1", default=x[0])
+    bpy.types.Scene.MCCustomX2 = IntProperty(name="X2", default=x[1])
+    bpy.types.Scene.MCCustomY1 = IntProperty(name="Y1", default=y[0])
+    bpy.types.Scene.MCCustomY2 = IntProperty(name="Y2", default=y[1])
+    bpy.types.Scene.MCCustomZ1 = IntProperty(name="Z1", default=z[0])
+    bpy.types.Scene.MCCustomZ2 = IntProperty(name="Z2", default=z[1])
 
     setZDepthItems()
     bpy.types.Scene.MCZDepthName = EnumProperty(

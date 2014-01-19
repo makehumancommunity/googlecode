@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": (0, 943),
+    "version": (0, 944),
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -176,13 +176,26 @@ class MakeClothesPanel(bpy.types.Panel):
             ins.prop(scn, "MCScaleCorrect")
             ins.separator()
             ins.prop(scn, "MCBodyPart")
-            vnums = makeclothes.theSettings.bodyPartVerts[scn.MCBodyPart]
+            vnums = makeclothes.getBodyPartVerts(scn)
             self.drawXYZ(vnums[0], "X", ins)
             self.drawXYZ(vnums[1], "Y", ins)
             self.drawXYZ(vnums[2], "Z", ins)
             ins.operator("mhclo.examine_boundary")
-            ins.separator()
 
+            ins.separator()
+            ins.label("Custom Boundary")
+            row = ins.row()
+            row.prop(scn, "MCCustomX1")
+            row.prop(scn, "MCCustomX2")
+            row = ins.row()
+            row.prop(scn, "MCCustomY1")
+            row.prop(scn, "MCCustomY2")
+            row = ins.row()
+            row.prop(scn, "MCCustomZ1")
+            row.prop(scn, "MCCustomZ2")
+            ins.separator()
+            ins.operator("mhclo.print_vnums")
+            ins.separator()
 
         layout.prop(scn, "MCShowSettings")
         if scn.MCShowSettings:
@@ -214,7 +227,6 @@ class MakeClothesPanel(bpy.types.Panel):
         layout.prop(scn, "MCShowUtils")
         if scn.MCShowUtils:
             ins = inset(layout)
-            ins.operator("mhclo.print_vnums")
             #ins.operator("mhclo.copy_vert_locs")
             ins.separator()
         '''
