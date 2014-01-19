@@ -68,8 +68,10 @@ class OpenGLTaskView(RenderTaskView):
         self.renderMethodList.addItem('Advanced Render', data = [self.lightmapSSS])
         
         if not mh.hasRenderToRenderbuffer():
+            self.firstTimeWarn = True
             # Can only use screen grabbing as fallback, resolution option disabled
             self.resBox.setEnabled(False)
+            self.AAbox.setEnabled(False)
 
         self.listOptions(None)
 
@@ -109,6 +111,9 @@ class OpenGLTaskView(RenderTaskView):
     def onShow(self, event):
         RenderTaskView.onShow(self, event)
         self.renderButton.setFocus()
+        if not mh.hasRenderToRenderbuffer() and self.firstTimeWarn:
+            self.firstTimeWarn = False
+            G.app.prompt('Lack of 3D hardware support', 'Your graphics card lacks support for proper rendering.\nOnly limited functionality will be available.', 'Ok', None, None, None, 'renderingGPUSupportWarning')
 
     def onHide(self, event):
         RenderTaskView.onHide(self, event)
