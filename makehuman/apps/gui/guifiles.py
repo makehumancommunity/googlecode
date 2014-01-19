@@ -31,8 +31,8 @@ class FilesCategory(gui3d.Category):
     def __init__(self):
         super(FilesCategory, self).__init__('Files')
 
-        self.save = SaveTaskView(self)
         self.load = LoadTaskView(self)
+        self.save = SaveTaskView(self)
         self.export = ExportTaskView(self)
 
         self.addTask(self.save)
