@@ -330,7 +330,6 @@ class Object(events3d.EventHandler):
             mesh._originalUVMap['fuvs'] = mesh.fuvs
             #self._originalUVMap['fvert'] = mesh.fvert
             #self._originalUVMap['group'] = mesh.group
-            mesh._originalUVMap['fmtls'] = mesh.fmtls
 
         faceMask = mesh.getFaceMask()
         faceGroups = mesh.group
@@ -340,7 +339,7 @@ class Object(events3d.EventHandler):
         if not filename:
             # Restore original UVs
             mesh.setUVs(mesh._originalUVMap['texco'])
-            mesh.setFaces(mesh.fvert, mesh._originalUVMap['fuvs'], faceGroups, mesh._originalUVMap['fmtls'])
+            mesh.setFaces(mesh.fvert, mesh._originalUVMap['fuvs'], faceGroups)
             mesh._originalUVMap = None
         else:
             uvset = material.UVMap(filename)
@@ -351,8 +350,6 @@ class Object(events3d.EventHandler):
                 Number of faces %d != %d" % (filename, mesh.name, \
                 len(uvset.fuvs), len(mesh.fuvs)))
 
-            mesh._materials = []
-            mesh.createMaterial(uvset.materialName)
             mesh.setUVs(uvset.uvs)
             mesh.setFaces(mesh.fvert, uvset.fuvs, faceGroups)
 

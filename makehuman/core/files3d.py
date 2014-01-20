@@ -83,7 +83,6 @@ def unpackStringList(text, index):
 
 def saveBinaryMesh(obj, path):
     fgstr, fgidx = packStringList(fg.name for fg in obj._faceGroups)
-    mtlstr, mtlidx = packStringList(obj._materials)
 
     vars_ = dict(
         coord = obj.coord,
@@ -92,11 +91,8 @@ def saveBinaryMesh(obj, path):
         texco = obj.texco,
         fvert = obj.fvert,
         group = obj.group,
-        fmtls = obj.fmtls,
         fgstr = fgstr,
-        fgidx = fgidx,
-        mtlstr = mtlstr,
-        mtlidx = mtlidx)
+        fgidx = fgidx)
 
     if obj.has_uv:
         vars_['fuvs']  = obj.fuvs
@@ -119,8 +115,7 @@ def loadBinaryMesh(obj, path):
     fvert = npzfile['fvert']
     fuvs = npzfile['fuvs'] if 'fuvs' in npzfile.files else None
     group = npzfile['group']
-    fmtls = npzfile['fmtls']
-    obj.setFaces(fvert, fuvs, group, fmtls, skipUpdate=True)
+    obj.setFaces(fvert, fuvs, group, skipUpdate=True)
 
     obj.vface = npzfile['vface']
     obj.nfaces = npzfile['nfaces']
@@ -134,13 +129,6 @@ def loadBinaryMesh(obj, path):
     del fgstr, fgidx
 
     #log.debug('loadBinaryMesh: unpacked facegroups')
-
-    mtlstr = npzfile['mtlstr']
-    mtlidx = npzfile['mtlidx']
-    obj._materials = unpackStringList(mtlstr, mtlidx)
-    del mtlstr, mtlidx
-
-    #log.debug('loadBinaryMesh: unpacked materials')
 
     obj.calcNormals()
     #log.debug('loadBinaryMesh: calculated normals')

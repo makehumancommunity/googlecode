@@ -159,7 +159,6 @@ class SubdivisionObject(Object3D):
         self.fvert = np.empty((nfaces,4,4), dtype=np.uint32)
         self.fuvs  = np.empty((nfaces,4,4), dtype=np.uint32)
         self.group = np.empty((nfaces,4), dtype=np.uint16)
-        self.fmtls = np.empty((nfaces,4), dtype=np.uint16)
         self.face_mask = np.empty((nfaces,4), dtype=bool)
 
         # Create faces
@@ -176,7 +175,6 @@ class SubdivisionObject(Object3D):
         self.fuvs[:,:,2] = np.arange(nfaces)[:,None] + self.tcbase
 
         self.group[...] = parent.group[self.face_map][:,None]
-        self.fmtls[...] = parent.fmtls[self.face_map][:,None]
         self.face_mask[...] = parent.face_mask[self.face_map][:,None]
 
         progress(7)
@@ -244,7 +242,6 @@ class SubdivisionObject(Object3D):
         self.fvert = self.fvert.reshape((nfaces,4))
         self.fuvs  = self.fuvs.reshape((nfaces,4))
         self.group = self.group.reshape(nfaces)
-        self.fmtls = self.fmtls.reshape(nfaces)
         self.face_mask = self.face_mask.reshape(nfaces)
         self.fnorm = np.zeros((nfaces,3))
 

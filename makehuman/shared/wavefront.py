@@ -47,7 +47,6 @@ def loadObjFile(path, obj = None):
     fverts = []
     fuvs = []
     groups = []
-    fmtls = []
     has_uv = False
     materials = {}
     faceGroups = {}
@@ -70,11 +69,6 @@ def loadObjFile(path, obj = None):
                     if 0 not in faceGroups:
                         faceGroups[0] = obj.createFaceGroup('default-dummy-group')
                     fg = faceGroups[0]
-
-                if mtl is None:
-                    if 0 not in materials:
-                        materials[0] = obj.createMaterial('')
-                    mtl = materials[0]
 
                 uvIndices = []
                 vIndices = []
@@ -102,8 +96,6 @@ def loadObjFile(path, obj = None):
 
                 groups.append(fg.idx)
 
-                fmtls.append(mtl)
-
             elif command == 'g':
                 fgName = lineData[1]
                 if fgName not in faceGroups:
@@ -111,10 +103,7 @@ def loadObjFile(path, obj = None):
                 fg =  faceGroups[fgName]
 
             elif command == 'usemtl':
-                mtlName = lineData[1]
-                if mtlName not in materials:
-                    materials[mtlName] = obj.createMaterial(mtlName)
-                mtl =  materials[mtlName]
+                pass # ignore materials
 
             elif command == 'o':
 
@@ -136,7 +125,7 @@ def loadObjFile(path, obj = None):
 
     obj.setCoords(verts)
     obj.setUVs(uvs)
-    obj.setFaces(fverts, fuvs if has_uv else None, groups, fmtls)
+    obj.setFaces(fverts, fuvs if has_uv else None, groups)
 
     obj.calcNormals()
     obj.updateIndexBuffer()

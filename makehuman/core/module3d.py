@@ -27,7 +27,6 @@ import weakref
 import numpy as np
 import unique # Bugfix for numpy.unique on older numpy versions
 
-from compat import MaterialsProxy
 import matrix
 import material
 
@@ -102,9 +101,7 @@ class Object3D(object):
         self.rot = np.zeros(3)
         self.scale = np.ones(3)
         self._faceGroups = []
-        # TODO _materials and _material should probably be merged
         self._material = material.Material(objName+"_Material")  # Render material
-        self._materials = []    # Object material groups        # TODO remove? (I believe this is MHX specific)
         self._groups_rev = {}
         self.cameraMode = 0
         self._visibility = True
@@ -355,10 +352,6 @@ class Object3D(object):
     def faceGroupCount(self):
         return len(self._faceGroups)
 
-    @property
-    def materials(self):
-        return MaterialsProxy(self)
-
     def clear(self):
         """
         Clears both local and remote data to repurpose this object
@@ -502,14 +495,13 @@ class Object3D(object):
             if self.utexc is not True:
                 self.utexc[indices] = True
 
-    def setFaces(self, verts, uvs = None, groups = None, materials = None, skipUpdate = False):
+    def setFaces(self, verts, uvs = None, groups = None, skipUpdate = False):
         nfaces = len(verts)
 
         self.fvert = np.empty((nfaces, self.vertsPerPrimitive), dtype=np.uint32)
         self.fnorm = np.zeros((nfaces, 3), dtype=np.float32)
         self.fuvs = np.zeros(self.fvert.shape, dtype=np.uint32)
         self.group = np.zeros(nfaces, dtype=np.uint16)
-        self.fmtls = np.zeros(nfaces, dtype=np.uint16)
         self.face_mask = np.ones(nfaces, dtype=bool)
 
         if nfaces != 0:
@@ -518,8 +510,6 @@ class Object3D(object):
                 self.fuvs[...] = uvs
             if groups is not None:
                 self.group[...] = groups
-            if materials is not None:
-                self.fmtls[...] = materials
 
         self.has_uv = uvs is not None
 
@@ -711,12 +701,6 @@ class Object3D(object):
         self._groups_rev[name] = fg
         self._faceGroups.append(fg)
         return fg
-
-    def createMaterial(self, name):
-        # TODO allow multi-material in MH and allow setting a Material object to each material group
-        idx = len(self._materials)
-        self._materials.append(name)
-        return idx
 
     def setColor(self, color):
         """
