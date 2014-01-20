@@ -436,6 +436,9 @@ class OrbitalCamera(Camera):
         self._horizontalRotation = 0.0
         self._verticalInclination = 0.0
 
+        self.minZoomFactor = 0.25
+        self.maxZoomFactor = 15.0
+
         self.zoomFactor = 1.0
         self.translation = [0.0, 0.0, 0.0]
 
@@ -627,10 +630,10 @@ class OrbitalCamera(Camera):
         return list(self.translation)
 
     def setZoomFactor(self, zoomFactor):
-        if zoomFactor < 0.25:
-            self.zoomFactor = 0.25
-        elif zoomFactor > 10.0:
-            self.zoomFactor = 10.0
+        if zoomFactor < self.minZoomFactor:
+            self.zoomFactor = self.minZoomFactor
+        elif zoomFactor > self.maxZoomFactor:
+            self.zoomFactor = self.maxZoomFactor
         else:
             self.zoomFactor = zoomFactor
 
