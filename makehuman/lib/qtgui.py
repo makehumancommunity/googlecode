@@ -1571,20 +1571,34 @@ class Action(QtGui.QAction, Widget):
 
     @classmethod
     def getIcon(cls, name):
+        from qtui import supportsSVG
+
         # icon = G.app.mainwin.style().standardIcon(QtGui.QStyle.SP_MessageBoxWarning)
-        path = os.path.join(getSysDataPath('icons'), name + '.png')
+        svgPath = os.path.join(getSysDataPath('icons'), name + '.svg')
+        if supportsSVG() and os.path.isfile(svgPath):
+            path = svgPath
+        else:
+            path = os.path.join(getSysDataPath('icons'), name + '.png')
+
         if G.app.theme:
-            themePath = os.path.join(getSysDataPath('themes'), G.app.theme, 'icons', name + '.png')
-            if os.path.isfile(themePath):
+            themePath = os.path.join(getSysDataPath('themes'), G.app.theme, 'icons', name + '.svg')
+            if supportsSVG() and os.path.isfile(themePath):
                 path = themePath
+            else:
+                themePath = os.path.join(getSysDataPath('themes'), G.app.theme, 'icons', name + '.png')
+                if os.path.isfile(themePath):
+                    path = themePath
+
         if not os.path.isfile(path):
             path = os.path.join(getSysDataPath('icons'), 'notfound.png')
         icon = QtGui.QIcon(path)
+
         # Allows setting custom icons for active, selected and disabled states
+        ext = os.path.splitext(path)[1]
         for (name, mode) in [ ("disabled", QtGui.QIcon.Disabled), 
                               ("active", QtGui.QIcon.Active),
                               ("selected", QtGui.QIcon.Selected) ]:
-            customIconPath = "%s_%s.png" % (os.path.splitext(path)[0], name)
+            customIconPath = "%s_%s%s" % (os.path.splitext(path)[0], name, ext)
             if os.path.isfile(customIconPath):
                 icon.addFile(customIconPath, QtCore.QSize(), mode)
         return icon

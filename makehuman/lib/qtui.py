@@ -366,6 +366,14 @@ def getQtVersionString():
 def getQtVersion():
     return [ int(versionNb) for versionNb in getQtVersionString().split(".") ]
 
+def supportsSVG():
+    """
+    Determines whether Qt supports SVG image files.
+    """
+    qtVersion = getQtVersion()
+    return qtVersion[0] >= 4 and qtVersion[1] >= 2 \
+           and not sys.platform.startswith("win") # Because pyinstaller windows builds appear to cause issues with this
+
 class Frame(QtGui.QMainWindow):
     title = "MakeHuman"
 
@@ -374,9 +382,7 @@ class Frame(QtGui.QMainWindow):
         super(Frame, self).__init__()
 
         self.setWindowTitle(self.title)
-        qtVersion = getQtVersion()
-        if qtVersion[0] >= 4 and qtVersion[1] >= 2 \
-        and not sys.platform.startswith("win"):
+        if supportsSVG():
             # Explicitly include Qt SVG lib to force pyinstaller to pack it
             #from PyQt4 import QtSvg
             self.setWindowIcon(QtGui.QIcon(getpath.getSysPath("icons/makehuman_bg.svg")))
