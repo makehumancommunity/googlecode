@@ -190,6 +190,7 @@ class Material(object):
         self._transparent = False # Set to True to enable transparency rendering (usually needed when opacity is < 1)
         self._backfaceCull = True # Set to False to disable backface culling (render back of polygons)
         self._depthless = False   # Set to True for depthless rendering (object is not occluded and does not occlude other objects)
+        self._alphaToCoverage = True # Applies when _transparent is True, and GPU supports alpha to coverage (A2C) rendering. Enables A2C feature (disables anti-aliasing for this object which also uses the multisample buffer)
 
         self._autoBlendSkin = False # Set to True to adapt diffuse color and litsphere texture to skin tone
 
@@ -257,6 +258,7 @@ class Material(object):
         self._transparent = material.transparent
         self._backfaceCull = material.backfaceCull
         self._depthless = material.depthless
+        self._alphaToCoverage = material.alphaToCoverage
 
         self._autoBlendSkin = material.autoBlendSkin
 
@@ -347,6 +349,8 @@ class Material(object):
                 self._wireframe = words[1].lower() in ["yes", "enabled", "true"]
             elif words[0] == "transparent":
                 self._transparent = words[1].lower() in ["yes", "enabled", "true"]
+            elif words[0] == "alphaToCoverage":
+                self._alphaToCoverage = words[1].lower() in ["yes", "enabled", "true"]
             elif words[0] == "backfaceCull":
                 self._backfaceCull = words[1].lower() in ["yes", "enabled", "true"]
             elif words[0] == "depthless":
@@ -467,6 +471,7 @@ class Material(object):
         f.write("shadeless %s\n" % self.shadeless)
         f.write("wireframe %s\n" % self.wireframe)
         f.write("transparent %s\n" % self.transparent)
+        f.write("alphaToCoverage %s\n" % self.alphaToCoverage)
         f.write("backfaceCull %s\n" % self.backfaceCull)
         f.write("depthless %s\n\n" % self.depthless)
 
@@ -677,6 +682,14 @@ class Material(object):
         self._transparent = transparent
 
     transparent = property(getTransparent, setTransparent)
+
+    def getAlphaToCoverage(self):
+        return self._alphaToCoverage
+
+    def setAlphaToCoverage(self, a2cEnabled):
+        self._alphaToCoverage = a2cEnabled
+
+    alphaToCoverage = property(getAlphaToCoverage, setAlphaToCoverage)
 
     def getBackfaceCull(self):
         return self._backfaceCull

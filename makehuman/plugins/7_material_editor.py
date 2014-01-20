@@ -187,6 +187,11 @@ class MaterialEditorTaskView(gui3d.TaskView):
         def onActivate(event):
             mat.transparent = w10c.value
 
+        w10c2 = self.materialBox.addWidget(TruthValue("Alpha to Coverage", mat.alphaToCoverage))
+        @w10c2.mhEvent
+        def onActivate(event):
+            mat.alphaToCoverage = w10c2.value
+
         w10d = self.materialBox.addWidget(TruthValue("Backface culling", mat.backfaceCull))
         @w10d.mhEvent
         def onActivate(event):

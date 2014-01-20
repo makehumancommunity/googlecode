@@ -145,6 +145,10 @@ class Object3D(object):
         return self.parent.transparentPrimitives
 
     @property
+    def alphaToCoverage(self):
+        return self.parent.alphaToCoverage
+
+    @property
     def transform(self):
         return self.parent.transform
 

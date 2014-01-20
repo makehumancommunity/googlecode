@@ -1036,6 +1036,14 @@ class Object3D(object):
 
     transparentPrimitives = property(getTransparentPrimitives, setTransparentPrimitives)
 
+    def getAlphaToCoverage(self):
+        return self.material.alphaToCoverage
+
+    def setAlphaToCoverage(self, a2cEnabled):
+        self.material.alphaToCoverage = a2cEnabled
+
+    alphaToCoverage = property(getAlphaToCoverage, setAlphaToCoverage)
+
     def getFaceGroup(self, name):
         """
         This method searches the list of FaceGroups held for this object, and
