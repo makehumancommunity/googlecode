@@ -371,8 +371,12 @@ def supportsSVG():
     Determines whether Qt supports SVG image files.
     """
     qtVersion = getQtVersion()
-    return qtVersion[0] >= 4 and qtVersion[1] >= 2 \
-           and not sys.platform.startswith("win") # Because pyinstaller windows builds appear to cause issues with this
+    # TODO
+    # pyinstaller windows builds appear to cause issues with this
+    # py2app on OSX appears not to include qt svg libs either...
+    return qtVersion[0] >= 4 and qtVersion[1] >= 2 and \
+           not sys.platform.startswith("win") and \
+           not sys.platform == "darwin"
 
 class Frame(QtGui.QMainWindow):
     title = "MakeHuman"
