@@ -62,7 +62,6 @@ def exportUVs(context):
     matfile = makeclothes.materials.writeMaterial(fp, ob, scn.MhUvsDir)
     if matfile:
         fp.write("material %s\n" % matfile)
-    #printFaceNumbers(fp, ob)
     printMhcloUvLayers(fp, ob, scn, False, offset=1)
     fp.close()
     print("File %s written" % outfile)

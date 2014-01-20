@@ -546,7 +546,6 @@ def writeClothes(context, hum, clo, data, matfile):
         fp.write("uniform_scale %.4f\n" % scn.MCScaleCorrect)
 
     writeStuff(fp, clo, context, matfile)
-    printFaceNumbers(fp, clo)
 
     fp.write("verts %d\n" % (firstVert))
 
@@ -566,31 +565,6 @@ def writeClothes(context, hum, clo, data, matfile):
     printMhcloUvLayers(fp, clo, scn, True)
     fp.close()
     print("%s done" % outfile)
-
-
-def printFaceNumbers(fp, ob):
-    if len(ob.data.materials) <= 1:
-        return
-    fp.write("faceNumbers\n")
-    meFaces = getFaces(ob.data)
-    mi = -1
-    us = -1
-    n = 0
-    for f in meFaces:
-        if (f.material_index == mi) and (f.use_smooth == us):
-            n += 1
-        else:
-            if n > 1:
-                fp.write("    ftn %d %d %d ;\n" % (n, mi, us))
-            elif n > 0:
-                fp.write("    ft %d %d ;\n" % (mi, us))
-            mi = f.material_index
-            us = f.use_smooth
-            n = 1
-    if n > 1:
-        fp.write("    ftn %d %d %d ;\n" % (n, mi, us))
-    elif n > 0:
-        fp.write("    ft %d %d ;\n" % (mi, us))
 
 
 def printMhcloUvLayers(fp, clo, scn, hasObj, offset=0):
@@ -1104,11 +1078,14 @@ def checkObjectOK(ob, context, isClothing):
             word = "%d texture layers. Must be exactly one." % len(ob.data.uv_textures)
             err = True
 
+        if len(ob.data.materials) >= 2:
+            word = "%d materials. Must be at most one." % len(ob.data.materials)
+            err = True
 
-    #if isClothing and not materials.checkObjectHasDiffuseTexture(ob):
-    #    word = "no diffuse image texture"
-    #    line2 = "Create texture or delete material before proceeding.\n"
-    #    err = True
+        #if not materials.checkObjectHasDiffuseTexture(ob):
+        #    word = "no diffuse image texture"
+        #    line2 = "Create texture or delete material before proceeding.\n"
+        #    err = True
 
     if word:
         msg = "Object %s\ncan not be used for clothes creation because\nit has %s.\n" % (ob.name, word)
