@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": (0, 944),
+    "version": (0, 945),
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -557,7 +557,6 @@ class VIEW3D_OT_AutoVertexGroupsButton(bpy.types.Operator):
     def execute(self, context):
         setObjectMode(context)
         try:
-            bpy.ops.object.vertex_group_remove(all=True)
             makeclothes.autoVertexGroups(context.object, 'Selected', None)
         except MHError:
             handleMHError(context)

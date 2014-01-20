@@ -203,7 +203,6 @@ def loadHuman(context):
     ob = context.object
     ob.name = "Human"
     ob.MhHuman = True
-    #bpy.ops.object.vertex_group_remove(all=True)
     if helpers:
         autoVertexGroups(ob, 'Helpers', 'Tights')
     else:
@@ -1086,6 +1085,10 @@ def checkObjectOK(ob, context, isClothing):
             word = "an enabled %s modifier" % mod.type
             mod.show_viewport = False
 
+    if ob.data.shape_keys:
+        word = "shape_keys"
+        err = True
+
     if ob.parent:
         word = "parent"
         ob.parent = None
@@ -1386,6 +1389,9 @@ def autoVertexGroupsIfNecessary(ob, type='Selected', htype='Tights'):
 
 
 def autoVertexGroups(ob, type, htype):
+    if ob.vertex_groups:
+        bpy.ops.object.vertex_group_remove(all=True)
+
     mid = ob.vertex_groups.new("Mid")
     left = ob.vertex_groups.new("Left")
     right = ob.vertex_groups.new("Right")

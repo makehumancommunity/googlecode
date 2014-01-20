@@ -21,6 +21,7 @@ Vertex and face numbers
 import bpy
 from bpy.props import *
 import os
+from . import io_json
 
 #
 #    printVertNums(context):
@@ -33,11 +34,13 @@ class VIEW3D_OT_PrintVnumsButton(bpy.types.Operator):
 
     def execute(self, context):
         ob = context.object
+        bpy.ops.object.mode_set(mode='OBJECT')
         print("Verts in ", ob)
         for v in ob.data.vertices:
             if v.select:
-                print("  ", v.index)
+                print("  %d  (%.5f %.5f %.5f)" % (v.index, v.co[0], v.co[1], v.co[2]))
         print("End")
+        bpy.ops.object.mode_set(mode='EDIT')
         return{'FINISHED'}
 
 
@@ -56,7 +59,7 @@ class VIEW3D_OT_PrintVnumsToFileButton(bpy.types.Operator):
             for v in ob.data.vertices:
                 if v.select:
                     vlist.append(v.index)
-            io_json.saveJson(vlist, self.properties.filepath)
+            io_json.saveJson(vlist, self.properties.filepath, maxDepth=0)
         else:
             fp = open(self.properties.filepath, "w")
             for v in ob.data.vertices:
@@ -156,10 +159,16 @@ class VIEW3D_OT_SelectVnumButton(bpy.types.Operator):
 
 def printEdgeNums(context):
     ob = context.object
+    bpy.ops.object.mode_set(mode='OBJECT')
     print("Edges in ", ob)
     for e in ob.data.edges:
         if e.select:
-            print(e.index)
+            vn0,vn1 = e.vertices
+            v0 = ob.data.vertices[vn0]
+            v1 = ob.data.vertices[vn1]
+            vec = v1.co-v0.co
+            print(e.index, vec.length)
+    bpy.ops.object.mode_set(mode='EDIT')
     print("End")
 
 class VIEW3D_OT_PrintEnumsButton(bpy.types.Operator):
