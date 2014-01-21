@@ -25,7 +25,7 @@ import bpy
 import os
 import shutil
 from . import mc
-from .error import MHError
+from .error import MHError, addWarning
 
 '''
 def checkObjectHasDiffuseTexture(ob):
@@ -126,7 +126,10 @@ def writeMaterialFile(fp, mat, name, outdir):
 
         trgpath = os.path.join(outdir, texpath)
         print("Copy texture %s => %s" % (filepath, trgpath))
-        shutil.copy(filepath, trgpath)
+        try:
+            shutil.copy(filepath, trgpath)
+        except FileNotFoundError:
+            addWarning("Texture\n \"%s\" \nnot found\n" % filepath)
 
     fp.write(
         '\n' +

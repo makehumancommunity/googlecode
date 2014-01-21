@@ -66,3 +66,25 @@ class MHError(Exception):
 
 def handleMHError(context):
     global theMessage
+
+#
+#   Warnings
+#
+
+_Warnings = []
+
+def initWarnings():
+    global _Warnings
+    _Warnings = []
+
+def handleWarnings():
+    global _Warnings
+    if _Warnings:
+        string = "Operation succeeded but there were warnings:\n"
+        for warning in _Warnings:
+            string += "\n" + warning
+        raise MHError(string)
+
+def addWarning(string):
+    global _Warnings
+    _Warnings.append(string)

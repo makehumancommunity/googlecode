@@ -25,7 +25,7 @@ Utility for making clothes to MH characters.
 bl_info = {
     "name": "Make Clothes",
     "author": "Thomas Larsson",
-    "version": (0, 946),
+    "version": (0, 947),
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make MH clothes",
     "description": "Make clothes and UVs for MakeHuman characters",
@@ -48,7 +48,7 @@ else:
     import os
     from bpy.props import *
     import maketarget
-    from .error import MHError, handleMHError
+    from .error import MHError, handleMHError, initWarnings, handleWarnings
     from maketarget.utils import drawFileCheck
     from . import mc
     from . import materials
@@ -317,8 +317,10 @@ class OBJECT_OT_MakeClothesButton(bpy.types.Operator):
     def execute(self, context):
         setObjectMode(context)
         try:
+            initWarnings()
             makeclothes.makeClothes(context, True)
             makeclothes.exportObjFile(context)
+            handleWarnings()
         except MHError:
             handleMHError(context)
         return{'FINISHED'}
