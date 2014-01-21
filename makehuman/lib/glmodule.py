@@ -99,7 +99,6 @@ def grabScreen(x, y, width, height, filename = None):
     return surface
 
 pickingBuffer = None
-depthBuffer = None
 pickingBufferDirty = True
 
 def updatePickingBuffer():
@@ -108,10 +107,9 @@ def updatePickingBuffer():
     rwidth = (width + 3) / 4 * 4
 
     # Resize the buffer in case the window size has changed
-    global pickingBuffer, depthBuffer
+    global pickingBuffer
     if pickingBuffer is None or pickingBuffer.shape != (height, rwidth, 3):
         pickingBuffer = np.empty((height, rwidth, 3), dtype = np.uint8)
-        depthBuffer = np.empty((height, rwidth, 1), dtype = np.float32)
 
     # Turn off lighting
     glDisable(GL_LIGHTING)
@@ -131,8 +129,8 @@ def updatePickingBuffer():
     glPixelStorei(GL_PACK_ALIGNMENT, 1)
     #glFlush()
     #glFinish()
+
     glReadPixels(0, 0, rwidth, height, GL_RGB, GL_UNSIGNED_BYTE, pickingBuffer)
-    glReadPixels(0, 0, rwidth, height, GL_DEPTH_COMPONENT, GL_FLOAT, depthBuffer)
 
     # Turn on antialiasing
     glEnable(GL_BLEND)
@@ -189,10 +187,15 @@ def queryDepth(x, y):
     if y < 0 or y >= G.windowHeight or x < 0 or x >= G.windowWidth:
         return 0.0
 
-    if pickingBuffer is None or pickingBufferDirty:
-        updatePickingBuffer()
+    # We read only the depth value for the required pixel directly from GPU memory
+    # Without caching the depth buffer
+    # To be certain the depth buffer in GPU is up to date we force a refresh
+    # of the picking buffer (which fills the depth buffer properly).
+    updatePickingBuffer()
 
-    return depthBuffer[y,x,0]
+    sz = np.zeros((1,), dtype=np.float32)
+    glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, sz)
+    return sz[0]
 
 def reshape(w, h):
     try:
@@ -538,9 +541,10 @@ def drawMesh(obj):
     elif obj.nTransparentPrimitives:
         if have_multisample and obj.alphaToCoverage:
             # Enable alpha-to-coverage (also called CSAA)
+            # using the multisample buffer for alpha to coverage disables its use for MSAA (anti-aliasing)
             glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE)
             #glEnable(GL_SAMPLE_ALPHA_TO_ONE)  # Enable this if transparent objects are too transparent
-            glDisable(GL_BLEND)    # using the multisample buffer for alpha to coverage disables its use for MSAA (anti-aliasing)
+            glDisable(GL_BLEND) # Disable alpha blending
         else:
             glDepthMask(GL_FALSE)
         glEnable(GL_ALPHA_TEST)
