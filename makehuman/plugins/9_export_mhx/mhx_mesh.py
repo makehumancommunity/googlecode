@@ -121,6 +121,7 @@ class Writer(mhx_writer.Writer):
 """ +
     "  Property MhxScale theScale*%.4f ;\n" % scale)
 
+        enable = True
         for proxy in self.proxies.values():
             if proxy.deleteVerts.any():
                 fp.write(
@@ -128,6 +129,8 @@ class Writer(mhx_writer.Writer):
                     "    mode 'VERTEX_GROUP' ;\n" +
                     "    vertex_group 'Delete_%s' ;\n" % proxy.name +
                     "    invert_vertex_group True ;\n" +
+                    "    show_viewport %s ;\n" % enable +
+                    "    show_render %s ;\n" % enable +
                     "  end Modifier\n")
 
         fp.write(
