@@ -38,14 +38,12 @@ Alternatively, run the script in the script editor (Alt-P), and access from the 
 bl_info = {
     'name': 'Import: MakeHuman Exchange (.mhx)',
     'author': 'Thomas Larsson',
-    'version': (1,16,18),
+    'version': (1,16,19),
     "blender": (2, 69, 0),
     'location': "File > Import > MakeHuman (.mhx)",
     'description': 'Import files in the MakeHuman eXchange format (.mhx)',
     'warning': '',
-    'wiki_url': 'http://www.makehuman.org/documentation',
-    'tracker_url': 'https://projects.blender.org/tracker/index.php?'\
-        'func=detail&aid=21872',
+    'wiki_url': 'http://makehuman.org/doc/node/makehuman_blender.html',
     'category': 'MakeHuman'}
 
 MAJOR_VERSION = bl_info["version"][0]
