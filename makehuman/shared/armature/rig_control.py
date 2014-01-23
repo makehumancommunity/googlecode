@@ -442,43 +442,43 @@ IkArmConstraints = {
 }
 
 FingerConstraints = {
-     'thumb.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'thumb.L', (1,0,0), (0,0,0), True])],
+     'thumb.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'thumb.L', (1,0,1), (0,0,0), True])],
      'thumb.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'thumb.L', (1,0,0), (0,0,0), True])],
 
-     'f_index.01.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.L', (1,0,0), (0,0,0), True])],
-     'f_index.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.L', (1,0,1), (0,0,0), True])],
-     'f_index.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.L', (1,0,1), (0,0,0), True])],
+     'f_index.01.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.L', (1,0,1), (0,0,0), True])],
+     'f_index.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.L', (1,0,0), (0,0,0), True])],
+     'f_index.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.L', (1,0,0), (0,0,0), True])],
 
-     'f_middle.01.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.L', (1,0,0), (0,0,0), True])],
-     'f_middle.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.L', (1,0,1), (0,0,0), True])],
-     'f_middle.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.L', (1,0,1), (0,0,0), True])],
+     'f_middle.01.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.L', (1,0,1), (0,0,0), True])],
+     'f_middle.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.L', (1,0,0), (0,0,0), True])],
+     'f_middle.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.L', (1,0,0), (0,0,0), True])],
 
-     'f_ring.01.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.L', (1,0,0), (0,0,0), True])],
-     'f_ring.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.L', (1,0,1), (0,0,0), True])],
-     'f_ring.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.L', (1,0,1), (0,0,0), True])],
+     'f_ring.01.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.L', (1,0,1), (0,0,0), True])],
+     'f_ring.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.L', (1,0,0), (0,0,0), True])],
+     'f_ring.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.L', (1,0,0), (0,0,0), True])],
 
-     'f_pinky.01.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.L', (1,0,0), (0,0,0), True])],
-     'f_pinky.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.L', (1,0,1), (0,0,0), True])],
-     'f_pinky.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.L', (1,0,1), (0,0,0), True])],
+     'f_pinky.01.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.L', (1,0,1), (0,0,0), True])],
+     'f_pinky.02.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.L', (1,0,0), (0,0,0), True])],
+     'f_pinky.03.L' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.L', (1,0,0), (0,0,0), True])],
 
-     'thumb.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'thumb.R', (1,0,0), (0,0,0), True])],
+     'thumb.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'thumb.R', (1,0,1), (0,0,0), True])],
      'thumb.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'thumb.R', (1,0,0), (0,0,0), True])],
 
-     'f_index.01.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.R', (1,0,0), (0,0,0), True])],
-     'f_index.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.R', (1,0,1), (0,0,0), True])],
-     'f_index.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.R', (1,0,1), (0,0,0), True])],
+     'f_index.01.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.R', (1,0,1), (0,0,0), True])],
+     'f_index.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.R', (1,0,0), (0,0,0), True])],
+     'f_index.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'index.R', (1,0,0), (0,0,0), True])],
 
-     'f_middle.01.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.R', (1,0,0), (0,0,0), True])],
-     'f_middle.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.R', (1,0,1), (0,0,0), True])],
-     'f_middle.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.R', (1,0,1), (0,0,0), True])],
+     'f_middle.01.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.R', (1,0,1), (0,0,0), True])],
+     'f_middle.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.R', (1,0,0), (0,0,0), True])],
+     'f_middle.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'middle.R', (1,0,0), (0,0,0), True])],
 
-     'f_ring.01.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.R', (1,0,0), (0,0,0), True])],
-     'f_ring.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.R', (1,0,1), (0,0,0), True])],
-     'f_ring.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.R', (1,0,1), (0,0,0), True])],
+     'f_ring.01.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.R', (1,0,1), (0,0,0), True])],
+     'f_ring.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.R', (1,0,0), (0,0,0), True])],
+     'f_ring.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'ring.R', (1,0,0), (0,0,0), True])],
 
-     'f_pinky.01.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.R', (1,0,0), (0,0,0), True])],
-     'f_pinky.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.R', (1,0,1), (0,0,0), True])],
-     'f_pinky.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.R', (1,0,1), (0,0,0), True])],
+     'f_pinky.01.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.R', (1,0,1), (0,0,0), True])],
+     'f_pinky.02.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.R', (1,0,0), (0,0,0), True])],
+     'f_pinky.03.R' : [('CopyRot', C_LOCAL, 1, ['Rot', 'pinky.R', (1,0,0), (0,0,0), True])],
 
 }
 
