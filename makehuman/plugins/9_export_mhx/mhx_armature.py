@@ -310,14 +310,8 @@ end AnimationData
   Property MhaArmIk_L 0.0 Left_arm_FK/IK ;
   PropKeys MhaArmIk_L "min":0.0,"max":1.0, ;
 
-  Property MhaHandFollowsIKHand_L True Left_hand_follows_wrist ;
-  PropKeys MhaHandFollowsIKHand_L "type":'BOOLEAN',"min":0,"max":1, ;
-
   Property MhaArmIk_R 0.0 Right_arm_FK/IK ;
   PropKeys MhaArmIk_R "min":0.0,"max":1.0, ;
-
-  Property MhaHandFollowsIKHand_R True Right_hand_follows_wrist ;
-  PropKeys MhaHandFollowsIKHand_R "type":'BOOLEAN',"min":0,"max":1, ;
 
 """)
 
