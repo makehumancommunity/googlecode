@@ -224,12 +224,12 @@ RevFootArmature = {
 
 IkArmArmature = {
     'hand.ik.L' :      ('hand.L', None, F_WIR|F_NOLOCK, L_LARMIK),
-    'elbow.pt.ik.L' :  (0, 'clavicle.L', F_WIR|F_NOLOCK, L_LARMIK+L_LEXTRA),
-    'elbow.link.L' :   (0, 'upper_arm.ik.L', F_RES, L_LARMIK+L_LEXTRA),
+    'elbow.pt.ik.L' :  (0, 'clavicle.L', F_WIR|F_NOLOCK, L_LARMIK),
+    'elbow.link.L' :   (0, 'upper_arm.ik.L', F_RES, L_LARMIK),
 
     'hand.ik.R' :      ('hand.R', None, F_WIR|F_NOLOCK, L_RARMIK),
-    'elbow.pt.ik.R' :  (0, 'clavicle.R', F_WIR|F_NOLOCK, L_RARMIK+L_REXTRA),
-    'elbow.link.R' :   (0, 'upper_arm.ik.R', F_RES, L_RARMIK+L_REXTRA),
+    'elbow.pt.ik.R' :  (0, 'clavicle.R', F_WIR|F_NOLOCK, L_RARMIK),
+    'elbow.link.R' :   (0, 'upper_arm.ik.R', F_RES, L_RARMIK),
 }
 
 SocketParents = {
