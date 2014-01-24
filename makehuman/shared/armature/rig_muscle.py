@@ -257,8 +257,8 @@ Constraints = {
         ],
 
     'scapula.L' : [
-        ('TrackTo', 0, 1,
-            ['Chest', 'chest-1', 0, 'TRACK_Y', 'UP_Z', False])
+        ('TrackTo', C_LOCAL, 1,
+            ['Chest', 'chest-1', 1, 'TRACK_Y', 'UP_Z', False])
         ],
 
     'lat_dorsi.L' : [
@@ -325,8 +325,8 @@ Constraints = {
         ],
 
     'scapula.R' : [
-        ('TrackTo', 0, 1,
-            ['Chest', 'chest-1', 0, 'TRACK_Y', 'UP_Z', False])
+        ('TrackTo', C_LOCAL, 1,
+            ['Chest', 'chest-1', 1, 'TRACK_Y', 'UP_Z', False])
         ],
 
     'lat_dorsi.R' : [
