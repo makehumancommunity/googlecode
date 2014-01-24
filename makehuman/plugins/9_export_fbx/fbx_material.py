@@ -179,7 +179,7 @@ def writeMaterial(fp, rmesh, amt):
 '        ShadingModel: "phong"\n' +
 '        MultiLayer: 0\n' +
 '        Properties70:  {\n' +
-'            P: "TransparentColor", "Color", "", "A",0,0,0\n' +
+'            P: "TransparentColor", "Color", "", "A",%.4f,%.4f,%.4f\n' % tuple(3*[1.0 - mat.opacity]) +
 '            P: "TransparencyFactor", "Number", "", "A",%.4f\n' % mat.transparencyMapIntensity +
 #'            P: "SpecularColor", "Color", "", "A",%.4f,%.4f,%.4f\n' % mat.specularColor.asTuple() +
 #'            P: "ShininessExponent", "Number", "", "A",%.4f\n' % mat.shininess +
