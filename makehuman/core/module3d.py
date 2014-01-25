@@ -105,7 +105,7 @@ class Object3D(object):
         self._groups_rev = {}
         self.cameraMode = 0
         self._visibility = True
-        self.pickable = True
+        self.pickable = False
         self.calculateTangents = True   # TODO disable when not needed by shader
         self.object3d = None
         self._priority = 0

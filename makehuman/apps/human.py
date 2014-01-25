@@ -47,6 +47,7 @@ class Human(guicommon.Object):
         self.MID_AGE = 25.0
 
         self.mesh.setCameraProjection(0)
+        self.mesh.setPickable(True)
         self.mesh.setShadeless(0)
         self.mesh.setCull(1)
         self.meshData = self.mesh
