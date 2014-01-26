@@ -266,21 +266,21 @@ Constraints = {
             ['Stretch_To', 'spine', 0, 1, ('spine-3', 'l-lat-2')])
         ],
 
-    'biceps.L' : [
-        ('Transform', C_LOCAL, 1,
-            ['Transform', 'forearm.L',
-                'ROTATION', (0,0,0), (90,0,0),
-                ('X','X','X'),
-                'SCALE', (1,1,1), (1.3,1.4,1.3)])
-        ],
+    #'biceps.L' : [
+    #    ('Transform', C_LOCAL, 1,
+    #        ['Transform', 'forearm.L',
+    #            'ROTATION', (0,0,0), (90,0,0),
+    #            ('X','X','X'),
+    #            'SCALE', (1,1,1), (1.3,1.4,1.3)])
+    #    ],
 
-    'triceps.L' : [
-        ('Transform', C_LOCAL, 1,
-            ['Transform', 'forearm.L',
-                'ROTATION', (0,0,0), (90,0,0),
-                ('X','X','X'),
-                'SCALE', (1,1,1), (1.3,0.8,1.3)])
-        ],
+    #'triceps.L' : [
+    #    ('Transform', C_LOCAL, 1,
+    #        ['Transform', 'forearm.L',
+    #            'ROTATION', (0,0,0), (90,0,0),
+    #            ('X','X','X'),
+    #            'SCALE', (1,1,1), (1.3,0.8,1.3)])
+    #    ],
 
     'gluteus.L' : [
         #('CopyRot', C_LOCAL, 0.5,
@@ -334,21 +334,21 @@ Constraints = {
             ['Stretch_To', 'spine', 0, 1, ('spine-3', 'r-lat-2')])
         ],
 
-    'biceps.R' : [
-        ('Transform', C_LOCAL, 1,
-            ['Transform', 'forearm.R',
-                'ROTATION', (0,0,0), (90,0,0),
-                ('X','X','X'),
-                'SCALE', (1,1,1), (1.3,1.4,1.3)])
-        ],
+    #'biceps.R' : [
+    #    ('Transform', C_LOCAL, 1,
+    #        ['Transform', 'forearm.R',
+    #            'ROTATION', (0,0,0), (90,0,0),
+    #            ('X','X','X'),
+    #            'SCALE', (1,1,1), (1.3,1.4,1.3)])
+    #    ],
 
-    'triceps.R' : [
-        ('Transform', C_LOCAL, 1,
-            ['Transform', 'forearm.R',
-                'ROTATION', (0,0,0), (90,0,0),
-                ('X','X','X'),
-                'SCALE', (1,1,1), (1.3,0.8,1.3)])
-        ],
+    #'triceps.R' : [
+    #    ('Transform', C_LOCAL, 1,
+    #        ['Transform', 'forearm.R',
+    #            'ROTATION', (0,0,0), (90,0,0),
+    #            ('X','X','X'),
+    #            'SCALE', (1,1,1), (1.3,0.8,1.3)])
+    #    ],
 
     'gluteus.R' : [
         #('CopyRot', C_LOCAL, 0.5,

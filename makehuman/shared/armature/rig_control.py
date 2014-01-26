@@ -517,8 +517,8 @@ IkArmPropLRDrivers = [
     ('hand', 'ArmFK', ['ArmIk'], '1-x1'),
     #('hand', 'FreeIK', ['ArmIk', 'ElbowPlant'], '(1-x1)*(1-x2)'),
     #('hand', 'HandLoc', ['ArmIk'], 'x1'),
-    ('hand', 'HandRot', ['ArmIk', 'HandFollowsIKHand'], 'x1*x2'),
-    #('HlpLoArm', 'HandRot', ['ArmIk', 'HandFollowsIKHand'], 'x1*x2'),
+    ('hand', 'HandRot', ['ArmIk'], 'x1'),
+    #('HlpLoArm', 'HandRot', ['ArmIk'], 'x1'),
 ]
 
 FingerPropLRDrivers = [
@@ -566,11 +566,11 @@ LegPropDrivers = [
 ArmPropDrivers = [
     ('upper_arm.L', 'LimitRot', ['RotationLimits', 'ArmIk.L'], 'x1*(1-x2)'),
     #('LoArm.L', 'LimitRot', ['RotationLimits', 'ArmIk.L'], 'x1*(1-x2)'),
-    ('hand.L', 'LimitRot', ['RotationLimits', 'ArmIk.L', 'HandFollowsIKHand.L'], 'x1*(1-x2*x3)'),
+    ('hand.L', 'LimitRot', ['RotationLimits', 'ArmIk.L'], 'x1*(1-x2)'),
 
     ('upper_arm.R', 'LimitRot', ['RotationLimits', 'ArmIk.R'], 'x1*(1-x2)'),
     #('LoArm.R', 'LimitRot', ['RotationLimits', 'ArmIk.R'], 'x1*(1-x2)'),
-    ('hand.R', 'LimitRot', ['RotationLimits', 'ArmIk.R', 'HandFollowsIKHand.R'], 'x1*(1-x2*x3)'),
+    ('hand.R', 'LimitRot', ['RotationLimits', 'ArmIk.R'], 'x1*(1-x2)'),
 ]
 
 #
