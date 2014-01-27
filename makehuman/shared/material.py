@@ -190,6 +190,8 @@ class Material(object):
         self._transparent = False # Set to True to enable transparency rendering (usually needed when opacity is < 1)
         self._backfaceCull = True # Set to False to disable backface culling (render back of polygons)
         self._depthless = False   # Set to True for depthless rendering (object is not occluded and does not occlude other objects)
+        self._castShadows = True  # Set to True to make the object cast shadows on others.
+        self._receiveShadows = True # Set to True to make the object receive shadows from others
         self._alphaToCoverage = True # Applies when _transparent is True, and GPU supports alpha to coverage (A2C) rendering. Enables A2C feature (disables anti-aliasing for this object which also uses the multisample buffer)
 
         self._autoBlendSkin = False # Set to True to adapt diffuse color and litsphere texture to skin tone
@@ -259,6 +261,8 @@ class Material(object):
         self._backfaceCull = material.backfaceCull
         self._depthless = material.depthless
         self._alphaToCoverage = material.alphaToCoverage
+        self._castShadows = material.castShadows
+        self._receiveShadows = material.receiveShadows
 
         self._autoBlendSkin = material.autoBlendSkin
 
@@ -355,6 +359,10 @@ class Material(object):
                 self._backfaceCull = words[1].lower() in ["yes", "enabled", "true"]
             elif words[0] == "depthless":
                 self._depthless = words[1].lower() in ["yes", "enabled", "true"]
+            elif words[0] == "castShadows":
+                self._castShadows = words[1].lower() in ["yes", "enabled", "true"]
+            elif words[0] == "receiveShadows":
+                self._receiveShadows = words[1].lower() in ["yes", "enabled", "true"]
             elif words[0] == "autoBlendSkin":
                 self._autoBlendSkin = words[1].lower() in ["yes", "enabled", "true"]
             elif words[0] == "diffuseTexture":
@@ -474,6 +482,8 @@ class Material(object):
         f.write("alphaToCoverage %s\n" % self.alphaToCoverage)
         f.write("backfaceCull %s\n" % self.backfaceCull)
         f.write("depthless %s\n\n" % self.depthless)
+        f.write("castShadows %s\n\n" % self.castShadows)
+        f.write("receiveShadows %s\n\n" % self.receiveShadows)
 
         hasTexture = False
         filedir = os.path.dirname(filename)
@@ -706,6 +716,22 @@ class Material(object):
         self._depthless = depthless
 
     depthless = property(getDepthless, setDepthless)
+
+    def getCastShadows(self):
+        return self._castShadows
+
+    def setCastShadows(self, enabled):
+        self._castShadows = enabled
+
+    castShadows = property(getCastShadows, setCastShadows)
+
+    def getReceiveShadows(self):
+        return self._receiveShadows
+
+    def setReceiveShadows(self, enabled):
+        self._receiveShadows = enabled
+
+    receiveShadows = property(getReceiveShadows, setReceiveShadows)
 
     def getAutoBlendSkin(self):
         return self._autoBlendSkin
