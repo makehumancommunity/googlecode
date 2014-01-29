@@ -442,7 +442,9 @@ class FileChooserBase(QtGui.QWidget, gui.Widget):
                 for f in os.listdir(path):
                     f = os.path.join(path, f)
                     if os.path.isfile(f):
-                        yield f
+                        ext = os.path.splitext(f)[1][1:].lower()
+                        if ext in extensions:
+                            yield f
         else:
             for path in self.paths:
                 for root, dirs, files in os.walk(path):
