@@ -10,7 +10,7 @@
 
 **Authors:**           Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -20,7 +20,21 @@ Abstract
 --------
 
 Simple download script to fetch additional assets from ftp.
+Syncs local and FTP content using FTP's modified dates and a locally cached
+index file.
 """
+
+## CONFIG #################################
+ftpUrl = "download.tuxfamily.org"
+ftpPath = "/makehuman/a8/"
+defaultRepo = "base"
+
+default_nodelete = False
+###########################################
+
+def version():
+    return "1.1"
+
 
 import os
 import sys
@@ -106,7 +120,16 @@ def getRemovedFiles(oldContents, newContents, destinationFolder):
     return toRemove
 
 def getFTPContents(ftp):
-    def walkFTP(ftp):
+    def walkFTP(ftp, subFraction = None, currentProgress = None):
+        if subFraction is None:
+            subFraction = 1.0
+        if currentProgress is None:
+            currentProgress = 0.0
+
+        percentage = 100 * currentProgress
+        sys.stdout.write("[%d%% done] Getting repository contents\r" % percentage)
+        sys.stdout.flush()
+
         path = ftp.pwd()    # TODO relpath to root path
         contentsList = []
         directories = []
@@ -116,7 +139,12 @@ def getFTPContents(ftp):
             if line.startswith('d'): # is a folder
                 directories.append(line.split()[8])
 
+        if len(directories):
+            subFraction /= float(len(directories))
+
         filesList = [f for f in ftp.nlst() if f not in directories]
+        if len(filesList):
+            filesFraction = 1.0/len(filesList)
         result = []
         for fname in filesList:
             mtime = ftp.sendcmd('MDTM %s' % fname)
@@ -124,17 +152,24 @@ def getFTPContents(ftp):
             #mtime = int(time.mktime(time.strptime(mtime[3:].strip(), '%Y%m%d%H%M%S')))
             fpath = os.path.join(path, fname)
             result.append( (fpath, mtime) )
+            percentage += 100 * (filesFraction * subFraction)
+            sys.stdout.write("[%d%% done] Getting repository contents\r" % percentage)
+            sys.stdout.flush()
 
         for dir_ in directories:
             ftp.cwd(dir_.replace('\\', '/'))
-            result.extend( walkFTP(ftp) )
+            result.extend( walkFTP(ftp, subFraction, currentProgress) )
             ftp.cwd('..')
+            currentProgress += subFraction
 
         return result
 
-    print "Getting repository contents..."
+    print 'Retrieving new repository content...'
     rootPath = ftp.pwd()
     contentsList = walkFTP(ftp)
+    sys.stdout.write("[100% done] Getting repository contents\r")
+    sys.stdout.write('\n')
+    sys.stdout.flush()
     result = {}
     # make paths relative to rootpath
     for (p, mtime) in contentsList:
@@ -142,11 +177,37 @@ def getFTPContents(ftp):
 
     return result
 
+def getArgs():
+    if len(sys.argv) < 2:
+        return dict()
+
+    import argparse    # requires python >= 2.7
+    parser = argparse.ArgumentParser()
+
+    # optional arguments
+    parser.add_argument('-v', '--version', action='version', version=version())
+    parser.add_argument("-d", "--nodelete", action="store_true", help="Don't delete old version when updating files")
+
+    # optional positional arguments
+    parser.add_argument("repository", default=defaultRepo, nargs='?', help="Alternative repository name to download from (optional)")
+
+    argOptions = vars(parser.parse_args())
+    return argOptions
+
 
 if __name__ == '__main__':
-    ftpUrl = "download.tuxfamily.org"
-    ftpPath = "/makehuman/a8/base"
+    global DONTREMOVE
 
+    args = getArgs()
+    repo = args.get('repository', defaultRepo)
+    for c in ['.', '/', '\\']:
+        if c in repo:
+            raise RuntimeError('Invalid argument for "repository", illegal character')
+    DONTREMOVE = args.get('nodelete', default_nodelete)
+
+    print 'Refreshing assets from repository "%s"' % repo
+
+    ftpPath = os.path.join(ftpPath, repo.lstrip('/'))
     ftpPath = os.path.normpath(ftpPath)
     ## Use simple sync mechanism, maybe in the future we can use rsync over http?
     # Download contents list
@@ -162,6 +223,7 @@ if __name__ == '__main__':
         oldContents = {}
 
     # Setup FTP connection
+    print "Connecting to FTP..."
     ftp = FTP(ftpUrl)
     ftp.login()
     ftp.cwd(ftpPath.replace('\\', '/'))
@@ -180,8 +242,17 @@ if __name__ == '__main__':
         if not isSubPath(filename, destinationFolder):
             raise RuntimeError("ERROR: File destinations are jailed inside the sys data path (%s), destination path (%s) tries to escape!" % (destinationFolder, filename))
 
-        print "Removing file %s (removed from FTP)" % filename
-        os.remove(filename)
+        if DONTREMOVE:
+            newFile = filename + '.removedasset'
+            i = 0
+            while os.path.isfile(newFile):
+                newFile = filename + '.' + str(i) + '.removedasset'
+                i = i+1
+            shutil.move(filename, newFile)
+            print "Moved removed file to %s (removed from FTP)" % newFile
+        else:
+            print "Removing file %s (removed from FTP)" % filename
+            os.remove(filename)
 
     TOTAL_FILES = len(toDownload)
 
@@ -191,6 +262,15 @@ if __name__ == '__main__':
 
         if not isSubPath(filename, destinationFolder):
             raise RuntimeError("ERROR: File destinations are jailed inside the sys data path (%s), destination path (%s) tries to escape!" % (destinationFolder, filename))
+
+        if os.path.exists(filename) and DONTREMOVE:
+            newFile = filename + '.oldasset'
+            i = 0
+            while os.path.exists(newFile):
+                newFile = filename + '.' + str(i) + '.oldasset'
+                i = i+1
+            shutil.move(filename, newFile)
+            print "Moved old version of updated file to %s" % newFile
 
         fileProgress = round(100 * float(fIdx)/TOTAL_FILES, 2)
         downloadFile(ftp, filePath, filename, fileProgress)
