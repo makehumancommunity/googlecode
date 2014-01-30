@@ -283,7 +283,7 @@ class Object(events3d.EventHandler):
 
         """
         if flag == self.isSubdivided():
-            return
+            return False
 
         if flag:
             self.mesh.setVisibility(0)
@@ -306,6 +306,7 @@ class Object(events3d.EventHandler):
                 self.mesh.calcNormals()
                 self.mesh.update()
             self.mesh.setVisibility(1)
+        return True
 
     def updateSubdivisionMesh(self, rebuildIndexBuffer=False, progressCallback=None):
         if rebuildIndexBuffer:

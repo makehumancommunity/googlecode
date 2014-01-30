@@ -323,7 +323,8 @@ class Human(guicommon.Object):
                 obj.setSolid(*args, **kwargs)
 
     def setSubdivided(self, *args, **kwargs):
-        guicommon.Object.setSubdivided(self, *args, **kwargs)
+        if not guicommon.Object.setSubdivided(self, *args, **kwargs):
+            return
         for obj in self.getProxyObjects():
             if obj:
                 obj.setSubdivided(*args, **kwargs)
