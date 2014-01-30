@@ -254,7 +254,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
                 self.deselectProxy(None)
                 return
 
-        log.debug('Selecting proxy file "%s" from %s library.', mhclofile, self.proxyName)
+        log.message('Selecting proxy file "%s" from %s library.', mhclofile, self.proxyName)
         human = self.human
 
         proxy = None
@@ -454,7 +454,7 @@ class ProxyChooserTaskView(gui3d.TaskView):
     def adaptAllProxies(self):
         proxyCount = len(self.getSelection())
         if proxyCount > 0:
-            log.debug("Adapting all %s proxies (%s).", self.proxyName, proxyCount)
+            log.message("Adapting all %s proxies (%s).", self.proxyName, proxyCount)
         for pIdx, proxy in enumerate(self.getSelection()):
             obj = self.getObjects()[pIdx]
             self.adaptProxyToHuman(proxy, obj)

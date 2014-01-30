@@ -1059,7 +1059,7 @@ class Human(guicommon.Object):
 
     def load(self, filename, update=True, progressCallback=None):
 
-        log.debug("Loading human from MHM file %s.", filename)
+        log.message("Loading human from MHM file %s.", filename)
 
         self.resetMeshValues()
 
@@ -1077,11 +1077,11 @@ class Human(guicommon.Object):
                     log.message('Version %s', lineData[1])
                 elif lineData[0] == 'tags':
                     for tag in lineData:
-                        log.message('Tag %s', tag)
+                        log.debug('Tag %s', tag)
                 elif lineData[0] in G.app.loadHandlers:
                     G.app.loadHandlers[lineData[0]](self, lineData)
                 else:
-                    log.message('Could not load %s', lineData)
+                    log.debug('Could not load %s', lineData)
 
         log.debug("Finalizing MHM loading.")
         for lh in set(G.app.loadHandlers.values()):
@@ -1095,7 +1095,7 @@ class Human(guicommon.Object):
         if update:
             self.applyAllTargets(progressCallback)
 
-        log.debug("Done loading MHM file.")
+        log.message("Done loading MHM file.")
 
     def save(self, filename, tags):
 
