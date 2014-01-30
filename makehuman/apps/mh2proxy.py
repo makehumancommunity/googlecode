@@ -272,6 +272,7 @@ class Proxy:
         log.debug("Updating proxy %s.", self.name)
         coords = self.getCoords()
         obj.changeCoords(coords)
+        obj.calcNormals()
 
 
     def getUuid(self):
