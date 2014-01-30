@@ -299,6 +299,9 @@ class MHApplication(gui3d.Application, mh.Application):
 
         @self.selectedHuman.mhEvent
         def onChanged(event):
+            if event.change == 'smooth':
+                # Update smooth action state (without triggering it)
+                self.actions.smooth.setChecked(self.selectedHuman.isSubdivided())
             for category in self.categories.itervalues():
                 for task in category.tasks:
                     task.callEvent('onHumanChanged', event)
