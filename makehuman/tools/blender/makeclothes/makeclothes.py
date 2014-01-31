@@ -10,7 +10,7 @@
 
 **Authors:**           Thomas Larsson
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -284,7 +284,7 @@ def findClothes(context, hum, clo, log):
             )
             selectVerts([pv], clo)
             raise MHError(msg)
-        if mindist > 5:
+        if mindist > 50:
             msg = (
             "Vertex %d is %f dm away from closest body vertex in group %s.\n" % (pv.index, mindist, gname) +
             "Max allowed value is 5dm. Check human and clothes scales.\n" +

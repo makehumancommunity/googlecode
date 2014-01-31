@@ -12,7 +12,7 @@ Translation and localization module.
 
 **Authors:**           Manuel Bastioni, Marc Flerackers, Glynn Clements
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 

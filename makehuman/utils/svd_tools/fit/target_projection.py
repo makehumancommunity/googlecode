@@ -4,7 +4,7 @@ Module File Location:        utils/maketarget/svdprojection.py
 Product Home Page:           http://www.makehuman.org/
 SourceForge Home Page:       http://sourceforge.net/projects/makehuman/
 Authors:                     Alexis Mignon
-Copyright(c):                MakeHuman Team 2001-2013
+Copyright(c):                MakeHuman Team 2001-2014
 Licensing:                   AGPL3 (see also http://makehuman.wiki.sourceforge.net/Licensing)
 Coding Standards:            See http://makehuman.wiki.sourceforge.net/DG_Coding_Standards
 ===========================  ===============================================================

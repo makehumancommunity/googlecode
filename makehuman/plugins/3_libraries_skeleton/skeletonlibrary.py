@@ -10,7 +10,7 @@
 
 **Authors:**           Jonas Hauquier
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -60,7 +60,7 @@ class SkeletonAction(gui3d.Action):
 
 
 def _getSkeleton(self):
-    log.debug("Get skeleton %s %s" % (self, self._skeleton))
+    #log.debug("Get skeleton %s %s" % (self, self._skeleton))
     if not self._skeleton:
         return None
     if self._skeleton.dirty:

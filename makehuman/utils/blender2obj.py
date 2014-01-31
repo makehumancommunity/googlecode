@@ -12,7 +12,7 @@ B{Code Home Page:}    U{http://code.google.com/p/makehuman/}
 
 B{Authors:}           Manuel Bastioni
 
-B{Copyright(c):}      MakeHuman Team 2001-2013
+B{Copyright(c):}      MakeHuman Team 2001-2014
 
 B{Licensing:}         AGPL3 (see also U{http://www.makehuman.org/node/318})
 

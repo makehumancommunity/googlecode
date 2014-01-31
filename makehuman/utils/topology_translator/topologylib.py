@@ -8,7 +8,7 @@ Project Name:                **MakeHuman**
 Module File Location:        utils/topology_translator/topologylib.py
 Product Home Page:           http://www.makehuman.org/
 Authors:                     Manuel Bastioni
-Copyright(c):                MakeHuman Team 2001-2013
+Copyright(c):                MakeHuman Team 2001-2014
 Licensing:                   AGPL3 (see also: http://www.makehuman.org/node/318)
 Coding Standards:            See http://www.makehuman.org/node/165#TOC-Coding-Style
 ===========================  ==================================================================
