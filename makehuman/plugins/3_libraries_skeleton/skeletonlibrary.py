@@ -458,10 +458,11 @@ class SkeletonLibrary(gui3d.TaskView):
 
     def onHumanChanged(self, event):
         human = event.human
-        # Set flag to do a deferred skeleton update in the future
-        if human._skeleton:
-            human._skeleton.dirty = True
-        self.humanChanged = True    # Used for updating joints
+        if event.change == 'targets':
+            # Set flag to do a deferred skeleton update in the future
+            if human._skeleton:
+                human._skeleton.dirty = True
+            self.humanChanged = True    # Used for updating joints
 
 
     def onHumanChanging(self, event):
