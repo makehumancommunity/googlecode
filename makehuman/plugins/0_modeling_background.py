@@ -435,10 +435,6 @@ class TextureProjectionView(gui3d.TaskView) :
         mh.redraw()
 
     def onHumanChanging(self, event):
-        # TL: Disabled because texture.png is not found.
-        # Not sure if the is still relevant
-        #if event.change == 'reset':
-        #    texture.reloadTexture(os.path.join(mh.getSysDataPath('textures/texture.png')))
         pass
 
     def projectBackground(self):
