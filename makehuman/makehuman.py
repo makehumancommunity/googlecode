@@ -283,10 +283,9 @@ def main():
         make_user_dir()
         get_platform_paths()
         redirect_standard_streams()
-        if isRelease():
-            os.environ['SVNREVISION'] = ""
-        else:
+        if not isRelease():
             get_svn_revision()
+        os.environ['MH_VERSION'] = getVersionStr()
         args = parse_arguments()
         init_logging()
     except Exception as e:
