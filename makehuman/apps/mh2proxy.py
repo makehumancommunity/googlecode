@@ -138,6 +138,8 @@ class ProxyRefVert:
 class Proxy:
     def __init__(self, file, type):
         log.debug("Loading proxy file: %s.", file)
+        import makehuman
+
         name = os.path.splitext(os.path.basename(file))[0]
         self.name = name.capitalize().replace(" ","_")
         self.type = type
@@ -147,7 +149,7 @@ class Proxy:
         else:
             self.mtime = None
         self.uuid = None
-        self.basemesh = "alpha_7"
+        self.basemesh = makehuman.getBasemeshVersion()
         self.tags = []
 
         self.vertWeights = {}       # (proxy-vert, weight) list for each parent vert
@@ -283,13 +285,14 @@ class Proxy:
 
 
     def getConverter(self):
+        import makehuman
         if self.basemesh in ["alpha_7", "alpha7"]:
             global _A7converter
             if _A7converter is None:
                 _A7converter = readProxyFile(G.app.selectedHuman.meshData, getpath.getSysDataPath("3dobjs/a7_converter.proxy"), type="Converter")
             log.debug("Converting %s with %s", self.name, _A7converter)
             return _A7converter
-        elif self.basemesh == "hm08":
+        elif self.basemesh == makehuman.getBasemeshVersion():
             return None
         else:
             raise NameError("Unknown basemesh for mhclo file: %s" % self.basemesh)
