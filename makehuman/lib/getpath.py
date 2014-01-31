@@ -101,6 +101,8 @@ def getPath(subPath = ""):
     else:
         path = os.path.join(path, "makehuman")
 
+    path = os.path.join(path, 'A8')
+
     if subPath:
         path = os.path.join(path, subPath)
 
