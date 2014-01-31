@@ -10,7 +10,7 @@
 
 **Authors:**           Thomas Larsson
 
-**Copyright(c):**      MakeHuman Team 2001-2013
+**Copyright(c):**      MakeHuman Team 2001-2014
 
 **Licensing:**         AGPL3 (see also http://www.makehuman.org/node/318)
 
@@ -29,6 +29,8 @@ from . import fbx_anim
 
 
 def writeHeader(fp, filepath):
+    import datetime
+    today = datetime.datetime.now()
 
     fp.write("""; FBX 7.3.0 project file
 ; Exported from MakeHuman TM
@@ -37,16 +39,20 @@ def writeHeader(fp, filepath):
 FBXHeaderExtension:  {
     FBXHeaderVersion: 1003
     FBXVersion: 7300
+""" +
+"""
     CreationTimeStamp:  {
         Version: 1000
-        Year: 2013
-        Month: 5
-        Day: 30
-        Hour: 10
-        Minute: 43
-        Second: 56
-        Millisecond: 89
+        Year: %d
+        Month: %d
+        Day: %d
+        Hour: %d
+        Minute: %d
+        Second: %d
+        Millisecond: %d
     }
+""" % (int(today.strftime('%Y')), int(today.strftime('%m')), int(today.strftime('%d')), int(today.strftime('%H')), int(today.strftime('%M')), int(today.strftime('%S')), int(float(today.strftime('%f'))/1000)) +
+"""
     Creator: "FBX SDK/FBX Plugins version 2013.3"
     SceneInfo: "SceneInfo::GlobalInfo", "UserData" {
         Type: "UserData"
