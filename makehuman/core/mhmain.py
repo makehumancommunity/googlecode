@@ -155,23 +155,56 @@ class MHApplication(gui3d.Application, mh.Application):
             (mh.Modifiers.CTRL, mh.Buttons.RIGHT_MASK): self.mouseFocus
         }
 
-        self.settings = {
-            'realtimeUpdates': True,
-            'realtimeNormalUpdates': True,
-            'cameraAutoZoom': False,
-            'shader': None,
-            'lowspeed': 1,
-            'highspeed': 5,
-            'units':'metric',
-            'invertMouseWheel':False,
-            'font':'arial',
-            'language':'english',
-            'excludePlugins':[],
-            'rtl': False,
-            'sliderImages': True,
-            'guiTheme': 'makehuman',
-            'preloadTargets': False
-        }
+        if mh.isRelease():
+            self.settings = {
+                'realtimeUpdates': True,
+                'sliderImages': True,
+                'excludePlugins': [
+                    "0_modeling_5_editing",
+                    "0_modeling_8_random",
+                    "2_posing_expression",
+                    "3_libraries_animation",
+                    "3_libraries_posing",
+                    "4_rendering_mitsuba",
+                    "4_rendering_povray",
+                    "5_settings_censor",
+                    "7_data",
+                    "7_example",
+                    "7_material_editor",
+                    "7_profile",
+                    "7_scene_editor",
+                    "7_scripting",
+                    "7_shell",
+                    "7_targets",
+                    "4_rendering_aqsis"
+                ],
+                'rtl': False,
+                'invertMouseWheel': False,
+                'lowspeed': 1,
+                'preloadTargets': True,
+                'cameraAutoZoom': False,
+                'language': 'english',
+                'highspeed': 5,
+                'realtimeNormalUpdates': True,
+                'units': 'metric',
+                'guiTheme': 'makehuman'
+            }
+        else:
+            self.settings = {
+                'realtimeUpdates': True,
+                'realtimeNormalUpdates': True,
+                'cameraAutoZoom': False,
+                'lowspeed': 1,
+                'highspeed': 5,
+                'units':'metric',
+                'invertMouseWheel':False,
+                'language':'english',
+                'excludePlugins':[],
+                'rtl': False,
+                'sliderImages': True,
+                'guiTheme': 'makehuman',
+                'preloadTargets': False
+            }
 
         self.loadHandlers = {}
         self.saveHandlers = []
