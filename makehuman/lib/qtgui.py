@@ -1575,14 +1575,14 @@ class Action(QtGui.QAction, Widget):
 
         # icon = G.app.mainwin.style().standardIcon(QtGui.QStyle.SP_MessageBoxWarning)
         svgPath = os.path.join(getSysDataPath('icons'), name + '.svg')
-        if supportsSVG() and os.path.isfile(svgPath):
+        if False and supportsSVG() and os.path.isfile(svgPath):
             path = svgPath
         else:
             path = os.path.join(getSysDataPath('icons'), name + '.png')
 
         if G.app.theme:
             themePath = os.path.join(getSysDataPath('themes'), G.app.theme, 'icons', name + '.svg')
-            if supportsSVG() and os.path.isfile(themePath):
+            if False and supportsSVG() and os.path.isfile(themePath):
                 path = themePath
             else:
                 themePath = os.path.join(getSysDataPath('themes'), G.app.theme, 'icons', name + '.png')
