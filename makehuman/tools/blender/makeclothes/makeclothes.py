@@ -31,7 +31,7 @@ from bpy.props import *
 from mathutils import Vector
 
 from maketarget.utils import getMyDocuments
-from .error import MHError
+from .error import MHError, addWarning
 from . import mc
 from . import materials
 
@@ -504,6 +504,8 @@ def midWeight(pv, r0, r1):
 #
 
 def getHeader(scn):
+    if scn.MCAuthor == "Unknown":
+        addWarning("Author unknown")
     return (
         "# Exported from MakeClothes (TM)\n" +
         "# author %s\n" % scn.MCAuthor +
