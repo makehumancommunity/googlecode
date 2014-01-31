@@ -102,7 +102,7 @@ class ModifierSlider(gui.Slider):
         if self.value != value:
             G.app.do(humanmodifier.ModifierAction(self.modifier, self.value, value, self.update))
         else:
-            # Indicate that onChanging event is ended with onChanged event
+            # Indicate that onChanging event is ended with onChanged event (type == 'modifier', not 'targets')
             import events3d
             event = events3d.HumanEvent(human, self.modifier.eventType)
             event.modifier = self.modifier.fullName

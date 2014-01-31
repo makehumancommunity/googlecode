@@ -438,18 +438,17 @@ class ProxyChooserTaskView(gui3d.TaskView):
         if event.change == 'reset':
             self.resetSelection()
         # Ignore some types of events
-        # TODO what is most extensible? specifying which events to react to or which to ignore?
-        if event.change in ['materials', 'proxyObj', 'proxy', 'load', 'smooth']:
-            return
-        self.showObjects() # Make sure objects are shown again after onHumanChanging events
-        #log.debug("Human changed, adapting all proxies (event: %s)", event)
-        self.adaptAllProxies()
+        if event.change in ['targets', 'modifier']:
+            self.showObjects() # Make sure objects are shown again after onHumanChanging events
+            #log.debug("Human changed, adapting all proxies (event: %s)", event)
+            self.adaptAllProxies()
 
     def onHumanChanging(self, event):
-        if gui3d.app.settings.get('realtimeFitting', False):
-            self.adaptAllProxies()
-        else:
-            self.hideObjects()
+        if event.change == 'modifier':
+            if gui3d.app.settings.get('realtimeFitting', False):
+                self.adaptAllProxies()
+            else:
+                self.hideObjects()
 
     def adaptAllProxies(self):
         proxyCount = len(self.getSelection())
