@@ -9,7 +9,7 @@
  *
  **Code Home Page:**    http://code.google.com/p/makehuman/
  *
- **Authors:**           Marc Flerackers
+ **Authors:**           Marc Flerackers, Jonas Hauquier
  *
  **Copyright(c):**      MakeHuman Team 2001-2014
  *
