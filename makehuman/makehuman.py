@@ -10,7 +10,7 @@ MakeHuman python entry-point.
 
 **Code Home Page:**    http://code.google.com/p/makehuman/
 
-**Authors:**           Glynn Clements, Joel Palmius
+**Authors:**           Glynn Clements, Joel Palmius, Jonas Hauquier
 
 **Copyright(c):**      MakeHuman Team 2001-2014
 
@@ -47,11 +47,11 @@ def isRelease():
 
 def isBuild():
     """
+    Determine whether the app is frozen using pyinstaller/py2app.
     Returns True when this is a release or nightly build (eg. it is build as a
     distributable package), returns False if it is a source checkout.
     """
-    # TODO
-    return False
+    return getattr(sys, 'frozen', False)
 
 def getVersion():
     """
@@ -294,6 +294,10 @@ def main():
         bt = traceback.format_exc()
         print >> sys.stderr, bt
         return
+
+    # Pass release info to debug dump using environment variables
+    os.environ['MH_FROZEN'] = "Yes" if isBuild() else "No"
+    os.environ['MH_RELEASE'] = "Yes" if isRelease() else "No"
 
     debug_dump()
     from core import G

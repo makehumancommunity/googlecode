@@ -72,6 +72,8 @@ class DebugDump(object):
         self.open()
 
         self.write("SVN REVISION: %s [%s]", os.environ['SVNREVISION'], os.environ['SVNREVISION_SOURCE'])
+        self.write("IS BUILT (FROZEN): %s", os.environ['MH_FROZEN'])
+        self.write("IS RELEASE VERSION: %s", os.environ['MH_RELEASE'])
         self.write("HOME LOCATION: %s", self.home)
         version = re.sub(r"[\r\n]"," ", sys.version)
         self.write("SYS.VERSION: %s", version)
