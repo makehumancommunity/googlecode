@@ -33,7 +33,7 @@ import subprocess
 ## Version information #########################################################
 version = [1, 0]                        # Major and minor version number
 release = False                         # False for nightly
-versionSub = "Alpha 8"                  # Short version description
+versionSub = "Alpha 8 RC"               # Short version description
 meshVersion = "hm08"                    # Version identifier of the basemesh
 
 _versionStr = ".".join( [str(v) for v in version] ) + " " + versionSub
