@@ -73,12 +73,13 @@ class Writer(mhx_writer.Writer):
 
         # Proxy material
 
+        obj = proxy.getSeedMesh()
         if proxy.type != 'Proxymeshes':
-            self.writeProxyMaterial(fp, proxy)
+            matname = self.writeProxyMaterial(fp, obj, proxy)
 
         # Proxy mesh
 
-        proxyname = self.name + proxy.name
+        proxyname = proxy.name
         fp.write(
             "Mesh %s %s \n" % (proxyname, proxyname) +
             "  Verts\n")
@@ -90,8 +91,6 @@ class Writer(mhx_writer.Writer):
       end Verts
       Faces
     """)
-
-        obj = proxy.getSeedMesh()
 
         fp.write("".join( ["    f %d %d %d %d ;\n" % tuple(fv) for fv in obj.fvert] ))
         fp.write("    ftall 0 1 ;\n")
@@ -117,7 +116,7 @@ class Writer(mhx_writer.Writer):
         if proxy.type == 'Proxymeshes':
             fp.write("  Material %sSkin ;" % self.name)
         elif proxy.material:
-            fp.write("  Material %s_%s ;" % (self.name, proxy.material.name))
+            fp.write("  Material %s ;" % matname)
 
 
         fp.write("""
@@ -203,22 +202,22 @@ class Writer(mhx_writer.Writer):
         return
 
 
-    def writeProxyMaterial(self, fp, proxy):
-        mat = proxy.material
+    def writeProxyMaterial(self, fp, obj, proxy):
+        mat = obj.material
 
         if mat.diffuseTexture:
-            mat.diffuseTexture = proxy.getActualTexture(self.human)
+            #mat.diffuseTexture = proxy.getActualTexture(self.human)
             alpha = 0
         else:
             alpha = 1
 
         prefix = self.name+"_"+proxy.name
+        matname = prefix + mat.name
         texnames = self.matWriter.writeTextures(fp, mat, prefix)
 
         # Write materials
 
-        fp.write("Material %s_%s \n" % (self.name, mat.name))
-        uvlayer = "Texture"
+        fp.write("Material %s \n" % matname)
         self.matWriter.writeMTexes(fp, texnames, mat)
         self.matWriter.writeMaterialSettings(fp, mat, alpha)
 
@@ -226,4 +225,5 @@ class Writer(mhx_writer.Writer):
             "  Property MhxDriven True ;\n" +
             "end Material\n\n")
 
+        return matname
 
