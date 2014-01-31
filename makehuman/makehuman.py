@@ -267,6 +267,7 @@ def parse_arguments():
     parser.add_argument("--nomultisampling", action="store_true", help="disable multisampling (used for anti-aliasing and alpha-to-coverage transparency rendering)")
     parser.add_argument("--debugopengl", action="store_true", help="enable OpenGL error checking and logging (slow)")
     parser.add_argument("--fullloggingopengl", action="store_true", help="log all OpenGL calls (very slow)")
+    parser.add_argument("--debugnumpy", action="store_true", help="enable numpy runtime error messages")
     if not isRelease():
         parser.add_argument("-t", "--runtests", action="store_true", help="run test suite (for developers)")
 
@@ -302,6 +303,12 @@ def main():
     debug_dump()
     from core import G
     G.args = args
+
+    # Set numpy properties
+    if not args.get('debugnumpy', False):
+        import numpy
+        # Suppress runtime errors
+        numpy.seterr(all = 'ignore')
 
     # Here pyQt and PyOpenGL will be imported
     from mhmain import MHApplication
