@@ -187,7 +187,8 @@ class MHApplication(gui3d.Application, mh.Application):
                 'highspeed': 5,
                 'realtimeNormalUpdates': True,
                 'units': 'metric',
-                'guiTheme': 'makehuman'
+                'guiTheme': 'makehuman',
+                'restoreWindowSize': True
             }
         else:
             self.settings = {
@@ -203,7 +204,8 @@ class MHApplication(gui3d.Application, mh.Application):
                 'rtl': False,
                 'sliderImages': True,
                 'guiTheme': 'makehuman',
-                'preloadTargets': False
+                'preloadTargets': False,
+                'restoreWindowSize': False
             }
 
         self.loadHandlers = {}
