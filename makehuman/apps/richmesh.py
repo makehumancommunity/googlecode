@@ -160,10 +160,14 @@ class RichMesh(object):
     def getMaterial(self):
         if self.type == 'Proxymeshes':
             return gui3d.app.selectedHuman.material
+        elif self.object:
+            return self.object.material
         else:
             return self._material
 
     def setMaterial(self, material):
+        if self.object:
+            self.object.material == material
         self._material = material
 
     material = property(getMaterial, setMaterial)
