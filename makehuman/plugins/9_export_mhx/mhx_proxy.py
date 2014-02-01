@@ -79,7 +79,8 @@ class Writer(mhx_writer.Writer):
 
         # Proxy mesh
 
-        proxyname = proxy.name
+        proxyname = self.name+"_"+proxy.name
+        proxyname = proxyname.replace(" ", "_")
         fp.write(
             "Mesh %s %s \n" % (proxyname, proxyname) +
             "  Verts\n")
