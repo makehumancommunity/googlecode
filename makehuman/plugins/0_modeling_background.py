@@ -522,7 +522,7 @@ def load(app):
     category = app.getCategory('Utilities')
     bgSettings = TextureProjectionView(category, bgChooser)
     bgSettings.sortOrder = 1.5
-    category.addTask(bgSettings)
+    #category.addTask(bgSettings)
 
 # This method is called when the plugin is unloaded from makehuman
 # At the moment this is not used, but in the future it will remove the added GUI elements
