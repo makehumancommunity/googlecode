@@ -424,7 +424,7 @@ def ensureInited(context):
 #
 
 def settingsFile():
-    outdir = os.path.expanduser("~/makehuman/settings/")
+    outdir = os.path.expanduser("~/settings/")
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
     return os.path.join(outdir, "mocap.defaults")

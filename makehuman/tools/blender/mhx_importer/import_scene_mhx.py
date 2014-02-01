@@ -68,7 +68,7 @@ from bpy.props import *
 MHX249 = False
 Blender24 = False
 Blender25 = True
-theDir = "~/makehuman/exports"
+theDir = "~"
 
 #
 #

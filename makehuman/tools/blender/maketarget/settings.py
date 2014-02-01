@@ -24,13 +24,13 @@ Abstract
 import bpy
 import os
 from bpy.props import *
-from .utils import getMyDocuments
+from .utils import getMHBlenderDirectory, getMHDirectory
 
 _Paths = ["MhProgramPath", "MhUserPath", "MhTargetPath", "MhClothesDir", "MhUvsDir"]
 
 
 def settingsFile(name, tool="make_target"):
-    outdir = os.path.join(getMyDocuments(), "makehuman/settings/")
+    outdir = os.path.join(getMHBlenderDirectory(), "settings")
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
     return os.path.join(outdir, "%s.%s" % (tool, name))
@@ -134,33 +134,33 @@ class OBJECT_OT_ReadSettingsButton(bpy.types.Operator):
 #----------------------------------------------------------
 
 def init():
-    mydocs = getMyDocuments()
+    mhdir = getMHDirectory()
 
     bpy.types.Scene.MhProgramPath = StringProperty(
         name="MakeHuman Program Directory",
         description="Path to the MakeHuman program",
         maxlen=1024,
-        default=os.path.join(mydocs, "makehuman")
+        default=mhdir
     )
     bpy.types.Scene.MhUserPath = StringProperty(
         name = "User Path",
         maxlen=1024,
-        default=os.path.join(mydocs, "makehuman")
+        default=mhdir
     )
     bpy.types.Scene.MhTargetPath = StringProperty(
         name = "Target Path",
-        default = os.path.join(mydocs, "makehuman", "custom")
+        default = os.path.join(mhdir, "data", "custom")
     )
     bpy.types.Scene.MhClothesDir = StringProperty(
         name="Directory",
         description="Path to the directory where clothes are stored",
         maxlen=1024,
-        default=os.path.join(mydocs, "makehuman", "data", "clothes")
+        default=os.path.join(mhdir, "data", "clothes")
     )
     bpy.types.Scene.MhUvsDir = StringProperty(
         name="Directory",
         description="Path to the directory where UV sets are stored",
         maxlen=1024,
-        default=os.path.join(mydocs, "makehuman", "data", "uvs")
+        default=os.path.join(mhdir, "data", "uvs")
     )
 

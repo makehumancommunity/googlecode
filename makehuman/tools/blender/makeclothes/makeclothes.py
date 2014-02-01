@@ -30,7 +30,7 @@ import ast
 from bpy.props import *
 from mathutils import Vector
 
-from maketarget.utils import getMyDocuments
+from maketarget.utils import getMHBlenderDirectory
 from .error import MHError, addWarning
 from . import mc
 from . import materials
@@ -1527,7 +1527,7 @@ def checkAndUnVertexDiamonds(context, ob):
 #
 
 def settingsFile(name):
-    outdir = os.path.join(getMyDocuments(), "makehuman/settings")
+    outdir = os.path.join(getMHBlenderDirectory(), "settings")
     if not os.path.isdir(outdir):
         os.makedirs(outdir)
     return os.path.join(outdir, "make_clothes.%s" % name)

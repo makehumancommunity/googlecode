@@ -37,7 +37,7 @@ Alternatively, run the script in the script editor (Alt-P), and access from UI p
 bl_info = {
     "name": "MakeWalk",
     "author": "Thomas Larsson",
-    "version": (0, 942),
+    "version": (0, 943),
     "blender": (2, 6, 9),
     "location": "View3D > Tools > MakeWalk",
     "description": "Mocap tool for MakeHuman character",
@@ -47,7 +47,7 @@ bl_info = {
 
 # To support reload properly, try to access a package var, if it's there, reload everything
 if "bpy" in locals():
-    print("Reloading MakeWalk")
+    print("Reloading MakeWalk v %d.%d" % bl_info["version"])
     import imp
     imp.reload(utils)
     imp.reload(io_json)
@@ -65,7 +65,7 @@ if "bpy" in locals():
     imp.reload(edit)
     imp.reload(floor)
 else:
-    print("Loading MakeWalk")
+    print("Loading MakeWalk v %d.%d" % bl_info["version"])
     import bpy, os
     from bpy_extras.io_utils import ImportHelper
     from bpy.props import *
@@ -517,4 +517,5 @@ def unregister():
 if __name__ == "__main__":
     register()
 
+print("MakeWalk loaded")
 

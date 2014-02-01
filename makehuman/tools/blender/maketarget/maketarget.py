@@ -45,7 +45,7 @@ from bpy_extras.io_utils import ExportHelper, ImportHelper
 from . import mh
 from .error import MHError, handleMHError
 from . import utils
-from .utils import round, setObjectMode, invokeWithFileCheck, drawFileCheck
+from .utils import round, setObjectMode, invokeWithFileCheck, drawFileCheck, getMHBlenderDirectory
 from . import import_obj
 from .proxy import CProxy
 from .symmetry_map import *
@@ -603,7 +603,7 @@ def doSaveTarget(context, filepath):
 
 
 def getDefaultComments():
-    filepath = os.path.expanduser("~/makehuman/settings/make_target.notice")
+    filepath = os.path.join(getMHBlenderDirectory(), "make_target.notice")
     try:
         fp = open(filepath, "rU")
     except:
@@ -910,7 +910,7 @@ class VIEW3D_OT_BatchRenderButton(bpy.types.Operator):
         setObjectMode(context)
         scn = context.scene
         folder = os.path.expanduser(scn.MhTargetPath)
-        outdir = os.path.expanduser("~/makehuman/pictures/")
+        outdir = os.path.join(getMHBlenderDirectory(), "pictures/")
         if not os.path.isdir(outdir):
             os.makedirs(outdir)
         scn.frame_start = 1

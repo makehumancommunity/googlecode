@@ -205,6 +205,15 @@ def getMyDocuments():
 
     return os.path.expanduser("~")
 
+
+def getMHDirectory():
+    return os.path.join(getMyDocuments(), "makehuman", "A8")
+
+
+def getMHBlenderDirectory():
+    return os.path.join(getMyDocuments(), "makehuman", "blendertools")
+
+
 #----------------------------------------------------------
 #   loadTarget(filepath, context):
 #----------------------------------------------------------

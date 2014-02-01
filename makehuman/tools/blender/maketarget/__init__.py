@@ -24,7 +24,7 @@ Abstract
 bl_info = {
     "name": "Make Target",
     "author": "Thomas Larsson",
-    "version": (1, 31),
+    "version": (1, 32),
     "blender": (2, 6, 9),
     "location": "View3D > Properties > Make Target",
     "description": "Make MakeHuman Target",
@@ -50,7 +50,7 @@ if "bpy" in locals():
     #imp.reload(perfect)
     imp.reload(export_mh_obj)
 else:
-    print("Loading maketarget")
+    print("Loading maketarget v %d.%d" % bl_info["version"])
     import bpy
     import os
     from bpy.props import *
@@ -329,3 +329,5 @@ def unregister():
 
 if __name__ == "__main__":
     register()
+
+print("MakeTarget loaded")
