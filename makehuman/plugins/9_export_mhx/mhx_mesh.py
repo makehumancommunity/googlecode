@@ -222,8 +222,6 @@ end Object
                 fmats[fmask] = 3
             elif fg.name == "helper-tights":
                 fmats[fmask] = 2
-            elif fg.name == "helper-tongue":
-                fmats[fmask] = 0
             elif fg.name in ["helper-hair", "joint-ground"]:
                 fmats[fmask] = 5
             elif fg.name == "helper-skirt":
