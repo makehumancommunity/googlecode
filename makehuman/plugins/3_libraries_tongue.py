@@ -19,31 +19,31 @@
 Abstract
 --------
 
-Tongues proxy library.
+Tongue proxy library.
 """
 
 import gui3d
 import mh
 import proxychooser
 
-class TonguesTaskView(proxychooser.ProxyChooserTaskView):
+class TongueTaskView(proxychooser.ProxyChooserTaskView):
 
     def __init__(self, category):
-        super(TonguesTaskView, self).__init__(category, 'tongues')
+        super(TonguesTaskView, self).__init__(category, 'tongue')
 
     def getObjectLayer(self):
         return 5
 
     def proxySelected(self, proxy, obj):
         self.human.tongueObj = obj
-        self.human.tonguesProxy = proxy
+        self.human.tongueProxy = proxy
 
     def proxyDeselected(self, proxy, obj, suppressSignal = False):
         self.human.tongueObj = None
-        self.human.tonguesProxy = None
+        self.human.tongueProxy = None
 
     def onShow(self, event):
-        super(TonguesTaskView, self).onShow(event)
+        super(TongueTaskView, self).onShow(event)
         if gui3d.app.settings.get('cameraAutoZoom', True):
             gui3d.app.setFaceCamera()
 
@@ -58,7 +58,7 @@ def load(app):
     global taskview
 
     category = app.getCategory('Geometries')
-    taskview = TonguesTaskView(category)
+    taskview = TongueTaskView(category)
     taskview.sortOrder = 4
     category.addTask(taskview)
 
