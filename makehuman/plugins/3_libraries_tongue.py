@@ -29,7 +29,7 @@ import proxychooser
 class TongueTaskView(proxychooser.ProxyChooserTaskView):
 
     def __init__(self, category):
-        super(TonguesTaskView, self).__init__(category, 'tongue')
+        super(TongueTaskView, self).__init__(category, 'tongue')
 
     def getObjectLayer(self):
         return 5
