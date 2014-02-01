@@ -32,7 +32,10 @@ def get_plugin_files():
 
 SVNREV = SvnInfo()
 VERSION= makehuman.getVersionStr(verbose=False)
-VERSION_FN= str(SVNREV)
+if makehuman.isRelease():
+    VERSION_FN = VERSION.replace('.', '_').replace(' ', '-').lower()
+else:
+    VERSION_FN= str(SVNREV)
 
 VERSION_FILE_PATH = os.path.join('data', 'VERSION')
 
@@ -142,7 +145,8 @@ elif sys.platform == 'win32':
         upx=True,
         name='makehuman')
     target_dir = os.path.join('dist','makehuman')
-    zip = zipfile.ZipFile('dist/makehumansvn-%s-win32.zip' % VERSION_FN, 'w', zipfile.ZIP_DEFLATED)
+    zipfilename = 'dist/makehuman-%s-win32.zip' % VERSION_FN
+    zip = zipfile.ZipFile(zipfilename, 'w', zipfile.ZIP_DEFLATED)
     rootlen = len(target_dir) + 1
     for base, dirs, files in os.walk(target_dir):
         for file in files:
