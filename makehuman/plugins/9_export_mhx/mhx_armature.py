@@ -213,7 +213,7 @@ class ExportArmature(Armature):
         ('ArmIK.R', 'THEME05', L_RARMIK),
         ('LegFK.L', 'THEME06', L_LLEGFK),
         ('LegFK.R', 'THEME07', L_RLEGFK),
-        ('LegIK.L', 'THEME08', L_LLEGIK),
+        ('LegIK.L', 'THEME14', L_LLEGIK),
         ('LegIK.R', 'THEME09', L_RLEGIK),
     ]
 
