@@ -117,7 +117,7 @@ def loadBinaryMesh(obj, path):
     group = npzfile['group']
     obj.setFaces(fvert, fuvs, group, skipUpdate=True)
 
-    obj.vface = npzfile['vface']
+    obj.vface[:,:] = npzfile['vface'][:,:obj.MAX_FACES]
     obj.nfaces = npzfile['nfaces']
 
     #log.debug('loadBinaryMesh: loaded arrays')
