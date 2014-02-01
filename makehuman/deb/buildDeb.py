@@ -16,9 +16,7 @@ pre_deb_scripts = ["cleanpyc.sh","cleannpz.sh","compile_targets.py", "download_a
 
 rsync = "/usr/bin/rsync"
 rsync_common_args = "-av --delete --exclude=.svn"
-rsync_main_excludes = ["deb","SConstruct","*.pyc","*.nsi","*.pyd","*.c","*.h","*.target","utils","compressTargetsASCII.py"]
-
-svn = "/usr/bin/svn"
+rsync_main_excludes = ["deb","SConstruct","*.pyc","*.nsi","*.pyd","*.c","*.h","*.target","utils","compressTargetsASCII.py", "download_assets.py"]
 
 # Set to true to skip compiling targets and models etc
 do_not_execute_scripts = False
@@ -28,9 +26,6 @@ files_to_chmod_executable = [
     "usr/share/makehuman/docs/drupal-export/parse.pl",
     "usr/share/makehuman/docs/drupal-export/syncimages.bash",
     "usr/share/makehuman/makehuman",
-    "usr/share/makehuman/utils/fixmesh/fixall",
-    "usr/share/makehuman/utils/fixmesh/fixshapes",
-    "usr/share/makehuman/utils/fixmesh/macrodet",
     "usr/share/makehuman/cleannpz.sh",
     "usr/share/makehuman/cleanpyc.sh",
     "usr/share/makehuman/compile_models.py",
@@ -39,8 +34,8 @@ files_to_chmod_executable = [
     "usr/share/makehuman/makehuman.py",
     ]
 
-package_name = "makehumansvn"
-package_replaces = "makehuman-nightly,makehuman-alpha"
+package_name = "makehuman"  # Note: 'svn' will be appended if this is a nightly build
+package_replaces = "makehuman-nightly,makehuman-alpha"  # TODO for release, do we need to add 'makehumansvn' to the replaces list too?
 
 
 # --- EVERYTHING BELOW THIS POINT IS LOGIC, HANDS OFF ---
@@ -73,6 +68,12 @@ scriptdir = os.path.abspath( os.path.join(debdir,'..') )
 
 print "Makehuman directory: " + scriptdir
 print "Destination directory: " + destdir
+
+sys.path = sys.path + [scriptdir, os.path.join(scriptdir, 'lib')]
+import makehuman
+
+if not makehuman.isRelease():
+    package_name = package_name + 'svn'
 
 target = os.path.join(destdir,"debroot")
 if not os.path.exists(target):
@@ -160,7 +161,11 @@ print rsyncbin
 os.system(rsyncbin)
 
 svnrevfile = os.path.join(docdir,"SVNREV.txt")
-os.system("svn info " + scriptdir + " | grep Revision | cut -f 2 --delimiter=' ' > " + svnrevfile)
+
+svnrev = makehuman.get_svn_revision_1()
+f = open(svnrevfile, 'w')
+f.write(str(svnrev))
+f.close()
 shutil.copy(svnrevfile, os.path.join(programdir, 'data', 'VERSION'))
 
 rsynccontrol = rsync + " " + rsync_common_args
@@ -182,12 +187,21 @@ f = open("/tmp/makehumansize","r")
 size = f.readline().rstrip()
 f.close()
 
-os.system("sed -i -e 's/SVNREV/" + svnrev + "/' control")
+if makehuman.isRelease():
+    # Conform to: http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version
+    ver = "1:"+makehuman.getVersionStr().replace(' ', '.').lower()
+else:
+    ver = svnrev
+os.system("sed -i -e 's/VERSION/" + ver + "/' control")
 os.system("sed -i -e 's/PKGNAME/" + package_name + "/' control")
 os.system("sed -i -e 's/REPLACES/" + package_replaces + "/' control")
 os.system("sed -i -e 's/SIZE/" + size + "/' control")
 
-os.system("sed -i -e 's/REV/" + svnrev + "/' MakeHuman.desktop")
+if makehuman.isRelease():
+    ver = makehuman.getVersionStr()
+else:
+    ver = svnrev
+os.system("sed -i -e 's/VERSION/" + ver + "/' MakeHuman.desktop")
 
 shortcut = os.path.join(applications,"MakeMuman.desktop")
 os.system("mv MakeHuman.desktop " + shortcut)
@@ -229,7 +243,11 @@ if not os.path.exists(outputdir):
 
 os.chdir(outputdir)
 
-debfile = os.path.join(outputdir,package_name + "-" + svnrev + ".deb")
+if makehuman.isRelease():
+    ver = makehuman.getVersionStr().replace(' ', '.').lower()
+else:
+    ver = svnrev
+debfile = os.path.join(outputdir,package_name + "_" + ver + "_all.deb")
 
 debcmd = "dpkg-deb -Z bzip2 -z 9 -b ../debroot " + debfile + "\n"
 
