@@ -400,34 +400,26 @@ class ArmsLegsTaskView(ModifierTaskView):
     _name = 'Arms and Legs'
     _group = 'armslegs'
     _features = [
-        ('right hand', 'armslegs', [
-            ('r-hand-scale-depth', 'decr', 'incr', {'cam' : 'setRightHandTopCamera'}),
-            ('r-hand-scale-horiz', 'decr', 'incr', {'cam' : 'setRightHandFrontCamera'}),
-            ('r-hand-scale-vert', 'decr', 'incr', {'cam' : 'setRightHandFrontCamera'}),
-            ('r-hand-trans', 'in', 'out', {'cam' : 'setRightHandFrontCamera'}),
-            ('r-hand-trans', 'down', 'up', {'cam' : 'setRightHandFrontCamera'}),
-            ('r-hand-trans', 'forward', 'backward', {'cam' : 'setRightHandTopCamera'}),
+        ('right hand', 'armslegs', [   
+            ('r-hand-fingers-diameter', 'decr', 'incr', {'cam' : 'setRightHandFrontCamera'}),
+            ('r-hand-fingers-length', 'decr', 'incr', {'cam' : 'setRightHandFrontCamera'}), 
+            ('r-hand-scale', 'decr', 'incr', {'cam' : 'setRightHandFrontCamera'}),       
+            ('r-hand-trans', 'in', 'out', {'cam' : 'setRightHandFrontCamera'}),            
             ]),
-        ('left hand', 'armslegs', [
-            ('l-hand-scale-depth', 'decr', 'incr', {'cam' : 'setLeftHandTopCamera'}),
-            ('l-hand-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftHandFrontCamera'}),
-            ('l-hand-scale-vert', 'decr', 'incr', {'cam' : 'setLeftHandFrontCamera'}),
-            ('l-hand-trans', 'in', 'out', {'cam' : 'setLeftHandFrontCamera'}),
-            ('l-hand-trans', 'down', 'up', {'cam' : 'setLeftHandFrontCamera'}),
-            ('l-hand-trans', 'forward', 'backward', {'cam' : 'setLeftHandTopCamera'}),
+        ('left hand', 'armslegs', [  
+            ('l-hand-fingers-diameter', 'decr', 'incr', {'cam' : 'setRightHandFrontCamera'}),
+            ('l-hand-fingers-length', 'decr', 'incr', {'cam' : 'setRightHandFrontCamera'}), 
+            ('l-hand-scale', 'decr', 'incr', {'cam' : 'setRightHandFrontCamera'}),              
+            ('l-hand-trans', 'in', 'out', {'cam' : 'setLeftHandFrontCamera'}),            
             ]),
         ('right foot', 'armslegs', [
-            ('r-foot-scale-depth', 'decr', 'incr', {'cam' : 'setRightFootRightCamera'}),
-            ('r-foot-scale-horiz', 'decr', 'incr', {'cam' : 'setRightFootFrontCamera'}),
-            ('r-foot-scale-vert', 'decr', 'incr', {'cam' : 'setRightFootFrontCamera'}),
+            ('r-foot-scale', 'decr', 'incr', {'cam' : 'setRightFootRightCamera'}),            
             ('r-foot-trans', 'in', 'out', {'cam' : 'setRightFootFrontCamera'}),
             ('r-foot-trans', 'down', 'up', {'cam' : 'setRightFootFrontCamera'}),
             ('r-foot-trans', 'forward', 'backward', {'cam' : 'setRightFootRightCamera'}),
             ]),
         ('left foot', 'armslegs', [
-            ('l-foot-scale-depth', 'decr', 'incr', {'cam' : 'setLeftFootLeftCamera'}),
-            ('l-foot-scale-horiz', 'decr', 'incr', {'cam' : 'setLeftFootFrontCamera'}),
-            ('l-foot-scale-vert', 'decr', 'incr', {'cam' : 'setLeftFootFrontCamera'}),
+            ('l-foot-scale', 'decr', 'incr', {'cam' : 'setLeftFootLeftCamera'}),             
             ('l-foot-trans', 'in', 'out', {'cam' : 'setLeftFootFrontCamera'}),
             ('l-foot-trans', 'down', 'up', {'cam' : 'setLeftFootFrontCamera'}),
             ('l-foot-trans', 'forward', 'backward', {'cam' : 'setLeftFootLeftCamera'}),
