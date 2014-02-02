@@ -1,8 +1,8 @@
 # -*- mode: python -*-
 
 ### Config #########
-skipSvn = True
-skipScripts = True
+skipSvn = False
+skipScripts = False
 ####################
 
 
