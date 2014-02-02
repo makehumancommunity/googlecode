@@ -1,4 +1,11 @@
 # -*- mode: python -*-
+
+### Config #########
+skipSvn = True
+skipScripts = True
+####################
+
+
 import sys
 import subprocess
 import zipfile
@@ -30,40 +37,51 @@ def get_plugin_files():
 
     return pluginModules
 
-SVNREV = SvnInfo()
+VERSION_FILE_PATH = os.path.join('data', 'VERSION')
+
+if skipSvn:
+    try:
+        vfile = open(VERSION_FILE_PATH,"r")
+        SVNREV = int(vfile.read())
+        vfile.close()
+    except:
+        print 'Warning: no VERSION file found, svn revision unknown'
+        SVNREV = 'UNKNOWN'
+else:
+    SVNREV = SvnInfo()
+
+    ### Write VERSION file
+    vfile = open(VERSION_FILE_PATH,"w")
+    vfile.write(SVNREV)
+    vfile.close()
+
 VERSION= makehuman.getVersionStr(verbose=False)
 if makehuman.isRelease():
     VERSION_FN = VERSION.replace('.', '_').replace(' ', '-').lower()
 else:
     VERSION_FN= str(SVNREV)
 
-VERSION_FILE_PATH = os.path.join('data', 'VERSION')
+if not skipScripts:
+    ###COMPILE TARGETS
+    try:
+        subprocess.check_call(["python","compile_targets.py"])
+    except subprocess.CalledProcessError:
+        print "check that compile_targets.py is working correctly"
+        sys.exit(1)
 
-### Write VERSION file
-vfile = open(VERSION_FILE_PATH,"w")
-vfile.write(SVNREV)
-vfile.close()
+    ###DOWNLOAD ASSETS
+    try:
+        subprocess.check_call(["python","download_assets.py"])
+    except subprocess.CalledProcessError:
+        print "check that download_assets.py is working correctly"
+        sys.exit(1)
 
-###COMPILE TARGETS
-try:
-    subprocess.check_call(["python","compile_targets.py"])
-except subprocess.CalledProcessError:
-    print "check that compile_targets.py is working correctly"
-    sys.exit(1)
-
-###DOWNLOAD ASSETS
-try:
-    subprocess.check_call(["python","download_assets.py"])
-except subprocess.CalledProcessError:
-    print "check that download_assets.py is working correctly"
-    sys.exit(1)
-
-###COMPILE MODELS
-try:
-    subprocess.check_call(["python","compile_models.py"])
-except subprocess.CalledProcessError:
-    print "check that compile_models.py is working correctly"
-    sys.exit(1)
+    ###COMPILE MODELS
+    try:
+        subprocess.check_call(["python","compile_models.py"])
+    except subprocess.CalledProcessError:
+        print "check that compile_models.py is working correctly"
+        sys.exit(1)
 
 a = Analysis(['makehuman.py'] + get_plugin_files(),
              pathex=['lib','core','shared','apps','apps/gui', 'plugins'],
