@@ -106,8 +106,20 @@ class Writer(mhx_writer.Writer):
 
         self.writeArmatureModifier(fp, None)
 
+        model = (
+            "caucasian:%.4f_" % self.human.getCaucasian() +
+            "asian:%.4f_" % self.human.getAsian() +
+            "african:%.4f_" % self.human.getAfrican() +
+            "gender:%.4f_" % self.human.getGender() +
+            "age:%.4f_" % self.human.getAge() +
+            "weight:%.4f_" % self.human.getWeight() +
+            "muscle:%.4f_" % self.human.getMuscle() +
+            "height:%.4f_" % self.human.getHeight() +
+            "bodyProportions:%.4f_" % self.human.getBodyProportions()
+        )
+
         fp.write(
-    "  parent Refer Object %s ;" % self.name +
+            "  parent Refer Object %s ;" % self.name +
 """
   parent_type 'OBJECT' ;
 #endif
@@ -119,7 +131,8 @@ class Writer(mhx_writer.Writer):
   Property MhxMesh True ;
   Property MhHuman True ;
 """ +
-    "  Property MhxScale theScale*%.4f ;\n" % scale)
+            "  Property MhxScale theScale*%.4f ;\n" % scale +
+            "  Property MhxModel \"%s\" ;\n" % model)
 
         enable = True
         for proxy in self.proxies.values():
@@ -127,7 +140,7 @@ class Writer(mhx_writer.Writer):
                 fp.write(
                     "  Modifier Mask%s MASK\n" % proxy.name +
                     "    mode 'VERTEX_GROUP' ;\n" +
-                    "    vertex_group 'Delete_%s' ;\n" % proxy.name +
+                    "    vertex_group 'Delete:%s' ;\n" % proxy.name +
                     "    invert_vertex_group True ;\n" +
                     "    show_viewport %s ;\n" % enable +
                     "    show_render %s ;\n" % enable +
