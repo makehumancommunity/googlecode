@@ -59,7 +59,7 @@ python compile_models.py
 grep -v Name deb/debian/MakeHuman.desktop > ../usr/share/applications/MakeHuman.desktop
 echo "Name=MakeHuman REV" >> ../usr/share/applications/MakeHuman.desktop
 find . -name "*.target" -exec "rm" "-f" {} ";"
-rm -rf deb utils tools docs SConstruct setup.nsi makehuman.rc makehuman.spec main.c *.bat
+rm -rf deb utils tools docs SConstruct setup.nsi makehuman.rc makehuman.spec main.c *.bat testsuite
 find . -type f -iname \*.target -exec rm -rf {} \;
 find . -type f -iname \*.obj -exec rm -rf {} \;
 cd ..

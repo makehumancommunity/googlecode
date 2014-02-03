@@ -144,6 +144,9 @@ if not do_not_execute_scripts:
 
 print "\nABOUT TO RSYNC CONTENTS TO DEB DEST\n"
 
+if makehuman.isRelease():
+    rsync_main_excludes.append('testsuite')
+
 rsyncmain = rsync + " " + rsync_common_args
 
 for e in rsync_main_excludes:
