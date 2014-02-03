@@ -112,7 +112,7 @@ def extra_datas(mydir):
 ###########################################
 
 # Add extra data files
-a.datas += ['license.txt']
+extra_datas.append(('license.txt', 'license.txt', 'DATA'))
 
 # append all of our necessary subdirectories
 EXTRA_DATA_PATHS = ['data', 'plugins', 'tools', 'icons', 'licenses']
