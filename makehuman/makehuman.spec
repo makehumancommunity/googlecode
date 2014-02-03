@@ -111,8 +111,11 @@ def extra_datas(mydir):
     return extra_datas
 ###########################################
 
+# Add extra data files
+a.datas += ['license.txt']
+
 # append all of our necessary subdirectories
-EXTRA_DATA_PATHS = ['data', 'plugins', 'tools', 'icons']
+EXTRA_DATA_PATHS = ['data', 'plugins', 'tools', 'icons', 'licenses']
 #EXTRA_DATA_PATHS += ['lib', 'core', 'shared', 'apps', 'qt_menu.nib']
 for p in EXTRA_DATA_PATHS:
     a.datas += extra_datas(p)
