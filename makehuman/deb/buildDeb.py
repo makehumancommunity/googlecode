@@ -145,7 +145,7 @@ if not do_not_execute_scripts:
 print "\nABOUT TO RSYNC CONTENTS TO DEB DEST\n"
 
 if makehuman.isRelease():
-    rsync_main_excludes.append('testsuite')
+    rsync_main_excludes = rsync_main_excludes + ['testsuite', 'plugins/4_rendering_mitsuba', 'plugins/4_rendering_povray', 'plugins/4_rendering_aqsis.py', 'plugins/0_modeling_5_editing.py', 'plugins/0_modeling_8_random.py', 'plugins/3_libraries_animation.py']
 
 rsyncmain = rsync + " " + rsync_common_args
 

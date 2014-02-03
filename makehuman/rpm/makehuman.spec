@@ -60,6 +60,7 @@ grep -v Name deb/debian/MakeHuman.desktop > ../usr/share/applications/MakeHuman.
 echo "Name=MakeHuman REV" >> ../usr/share/applications/MakeHuman.desktop
 find . -name "*.target" -exec "rm" "-f" {} ";"
 rm -rf deb utils tools docs SConstruct setup.nsi makehuman.rc makehuman.spec main.c *.bat testsuite
+rm -rf plugins/4_rendering_mitsuba plugins/4_rendering_povray plugins/4_rendering_aqsis.py plugins/0_modeling_5_editing.py plugins/0_modeling_8_random.py plugins/3_libraries_animation.py
 find . -type f -iname \*.target -exec rm -rf {} \;
 find . -type f -iname \*.obj -exec rm -rf {} \;
 cd ..
