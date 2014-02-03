@@ -103,7 +103,7 @@ def extra_datas(mydir):
     rec_glob("%s/*" % mydir, files)
     extra_datas = []
     for f in files:
-        if mydir == 'data' and f.endswith(".target"):
+        if mydir == 'data' and (f.endswith(".target") or f.endswith(".obj")):
             print "skipping %s" % f
         else:
             extra_datas.append((f, f, 'DATA'))

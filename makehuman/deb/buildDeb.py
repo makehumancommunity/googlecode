@@ -16,7 +16,7 @@ pre_deb_scripts = ["cleanpyc.sh","cleannpz.sh","compile_targets.py", "download_a
 
 rsync = "/usr/bin/rsync"
 rsync_common_args = "-av --delete --exclude=.svn"
-rsync_main_excludes = ["deb","SConstruct","*.pyc","*.nsi","*.pyd","*.c","*.h","*.target","utils","compressTargetsASCII.py", "download_assets.py"]
+rsync_main_excludes = ["deb","SConstruct","*.pyc","*.nsi","*.pyd","*.c","*.h","*.target","*.obj","utils","compressTargetsASCII.py", "download_assets.py"]
 
 # Set to true to skip compiling targets and models etc
 do_not_execute_scripts = False

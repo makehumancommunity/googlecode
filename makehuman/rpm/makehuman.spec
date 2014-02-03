@@ -60,6 +60,8 @@ grep -v Name deb/debian/MakeHuman.desktop > ../usr/share/applications/MakeHuman.
 echo "Name=MakeHuman REV" >> ../usr/share/applications/MakeHuman.desktop
 find . -name "*.target" -exec "rm" "-f" {} ";"
 rm -rf deb utils tools docs SConstruct setup.nsi makehuman.rc makehuman.spec main.c *.bat
+find . -type f -iname \*.target -exec rm -rf {} \;
+find . -type f -iname \*.obj -exec rm -rf {} \;
 cd ..
 mv makehuman/rpm/makehuman usr/bin/makehuman
 mv makehuman usr/share
